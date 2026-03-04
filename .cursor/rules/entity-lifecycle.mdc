@@ -1,0 +1,38 @@
+---
+description: Entity spawn/despawn contracts, binding rules, callback routing, and presenter wiring. Use when changing entity creation, destruction, or view binding.
+alwaysApply: false
+---
+
+# Entity Lifecycle
+
+## Three representations per entity
+1. **State entity** — lives in `RaidState`/`LevelState`, identified by `EntityId`, values and IDs only.
+2. **Binding** — maps `EntityId` to Unity view instance. Only place model and Unity connect.
+3. **Unity view** — prefab instance for rendering/animation/VFX. Stores its `EntityId`. No gameplay rules.
+
+## Ownership
+- `RaidSession` owns entity state and gameplay decisions.
+- Presenter owns Unity views and binding registry.
+- Managers own gameplay rules.
+
+## Spawn (two-step)
+**Domain:** manager creates entity in state, generates `EntityId`, emits spawn intent.
+**View:** presenter instantiates prefab, assigns `EntityId`, registers binding.
+- Managers must not instantiate prefabs. Presenter must not create state entities.
+
+## Despawn (two-step)
+**Domain:** manager removes/marks entity in state, emits despawn intent with `EntityId`.
+**View:** presenter unbinds, optionally plays final VFX/SFX, destroys GameObject.
+- Managers must not destroy GameObjects. Presenter must not delete state entities.
+
+## Unity callbacks → domain inbox
+1. View/sensor MonoBehaviour receives Unity callback (collision, trigger, hit).
+2. Packages a domain event.
+3. Pushes into `RaidSession`-owned inbox.
+4. Managers consume inbox events on next tick.
+- Callbacks must not modify gameplay state directly. Views must not call managers directly.
+
+## Identity rules
+- `EntityId` is the only stable gameplay identity.
+- Logic must work if an entity has no active view.
+- A stale view without a state entity must not produce gameplay effects.

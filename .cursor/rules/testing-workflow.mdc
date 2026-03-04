@@ -1,0 +1,38 @@
+---
+description: Testing strategy, feature implementation flow, and definition of done. Use when adding features or writing tests.
+alwaysApply: false
+---
+
+# Testing and Workflow
+
+## Testing strategy
+
+### Unit tests (EditMode)
+Test managers with synthetic state, fake adapters/ports, deterministic RNG, event buffers. Managers must be testable without scenes.
+
+### Integration tests (PlayMode)
+Only for Unity integration: navmesh validation, bullet collisions, spawn/extraction triggers, launch flow wiring.
+
+## Feature implementation flow
+1. Define affected state (`RaidState`, `LevelState`, `PlayerProfileState`).
+2. Define dependencies → expose through context ports if needed.
+3. Implement logic in a stateless manager function.
+4. Emit domain events for VFX/SFX/UI.
+5. Update presenter/view for visualization and callback routing.
+6. Add/update unit tests.
+7. Add PlayMode coverage only where Unity integration matters.
+
+## Working style
+- Propose a file-level plan before editing.
+- Keep changes small and localized.
+- Avoid broad refactors unless explicitly requested.
+- Maintain naming and folder conventions.
+- Prefer ports + adapters over direct Unity API usage in logic.
+
+## Definition of done
+- Compiles.
+- Follows architecture contract.
+- Tests added/updated where applicable.
+- No hidden dependencies introduced.
+- Diff is minimal and focused.
+- No unrelated formatting churn.

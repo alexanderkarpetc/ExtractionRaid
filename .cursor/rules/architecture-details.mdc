@@ -1,0 +1,49 @@
+---
+description: Detailed architecture layers, data flow, tick model, and entry points. Use for architecture-sensitive changes or new systems.
+alwaysApply: false
+---
+
+# Architecture Details
+
+## Layers
+
+### Composition Root (App)
+- Read launch options, init global services/configs/save/dev tools, create player, start/stop `RaidSession`, handle scene transitions.
+- `App.Instance` allowed only here.
+
+### Session Layer
+- `Player`: persistent profile, meta progression, save/load entry point.
+- `RaidSession`: owns `RaidState`/`LevelState`, constructs `RaidContext`, orchestrates manager execution in stable order.
+
+### Domain Logic (Managers)
+- Stateless static functions operating on explicit state and context.
+- Accept inputs as arguments, mutate state via `ref`.
+- Must not depend on hidden globals.
+
+### Adapters (Ports)
+- All Unity subsystem access (navmesh, physics, time) through interfaces passed via context.
+
+### View / Presenter
+- Translates state and domain events into transforms, animation, VFX, SFX, UI.
+- Must not make gameplay decisions.
+
+## Data flow
+
+### State buckets
+- `PlayerProfileState` (persistent), `RaidState` (per run), `LevelState` (per level/run).
+- Values and IDs only. No Unity object references.
+
+### Context (`RaidContext`)
+- Read-only, passed as `in`. Contains: ports/adapters, config refs, event sink/buffer, constants (`dt`, masks, tuning).
+
+### Events
+- Managers emit domain-to-view intents through `IRaidEvents`. Presenter consumes them.
+
+## Tick model
+1. Gather input and external signals.
+2. Run managers in deterministic order (movement → AI → combat → loot → extraction).
+3. Produce state changes and domain events.
+4. Present state and events in Unity.
+
+## Entry points
+All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
