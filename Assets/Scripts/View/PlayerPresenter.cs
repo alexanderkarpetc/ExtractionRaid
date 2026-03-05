@@ -33,6 +33,15 @@ namespace View
             var go = Instantiate(_playerPrefab, playerState.Position, Quaternion.identity);
             _playerView = go.GetComponent<PlayerView>();
             _playerView.Initialize(_trackedId);
+
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                var cameraController = cam.GetComponent<RaidCameraController>();
+                if (cameraController != null)
+                    cameraController.SetTarget(_playerView.transform);
+            }
+
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }
 
