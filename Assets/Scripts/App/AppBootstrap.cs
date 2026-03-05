@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace App
 {
+    [DefaultExecutionOrder(1000)]
     public class AppBootstrap : MonoBehaviour
     {
         [SerializeField] bool _autoLaunchRaid = true;
@@ -25,6 +26,11 @@ namespace App
         void Update()
         {
             App.Instance.Tick();
+        }
+
+        void LateUpdate()
+        {
+            App.Instance.LateTick();
         }
 
         void OnDestroy()

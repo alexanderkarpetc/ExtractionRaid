@@ -4,13 +4,14 @@ namespace State
     {
         public float ElapsedTime;
         public bool IsRunning;
+        public PlayerEntityState PlayerEntity;
 
-        int _nextEntityIdValue;
+        int _nextEIdValue;
 
-        public EntityId AllocateEntityId()
+        public EId AllocateEId()
         {
-            _nextEntityIdValue++;
-            return new EntityId(_nextEntityIdValue);
+            _nextEIdValue++;
+            return new EId(_nextEIdValue);
         }
 
         public static RaidState Create()
@@ -19,7 +20,7 @@ namespace State
             {
                 ElapsedTime = 0f,
                 IsRunning = true,
-                _nextEntityIdValue = 0,
+                _nextEIdValue = 0,
             };
         }
     }

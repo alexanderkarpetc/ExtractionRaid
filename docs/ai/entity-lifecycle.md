@@ -8,17 +8,17 @@ Each runtime entity exists in three layers:
 
 1. **State entity (source of truth)**
    - lives in `RaidState` / `LevelState`
-   - identified by stable `EntityId`
+   - identified by stable `EId`
    - stores values and IDs only
    - never stores Unity scene references
 
 2. **Binding (registry / glue)**
-   - maps `EntityId` to a Unity view instance
+   - maps `EId` to a Unity view instance
    - this is the only place where model and Unity objects are connected
 
 3. **Unity view (MonoBehaviour / visual)**
    - prefab instance for rendering, animation, VFX/SFX, and Unity callbacks
-   - stores its own `EntityId`
+   - stores its own `EId`
    - must not contain gameplay rules
 
 ## 2) Ownership
@@ -33,13 +33,13 @@ Spawn is always two-step:
 
 ### A) Domain spawn
 - a manager creates the entity in state
-- a manager generates an `EntityId`
+- a manager generates an `EId`
 - a manager emits a domain-to-view spawn intent
 
 ### B) View spawn
 - presenter receives the spawn intent
 - presenter instantiates the prefab
-- presenter assigns `EntityId` to the view
+- presenter assigns `EId` to the view
 - presenter registers the binding
 
 Rules:
@@ -67,7 +67,7 @@ Despawn is also two-step:
 
 ### A) Domain despawn
 - a manager removes or marks the entity in state
-- a manager emits a despawn intent with the `EntityId`
+- a manager emits a despawn intent with the `EId`
 
 ### B) View despawn
 - presenter unbinds the entity
@@ -105,7 +105,7 @@ Forbidden:
 
 ## 8) Identity and binding stability
 
-- `EntityId` is the only stable gameplay identity
+- `EId` is the only stable gameplay identity
 - Unity instance identity is never a domain key
 - binding must support lookups both ways when needed
 - logic must still work if an entity has no active view

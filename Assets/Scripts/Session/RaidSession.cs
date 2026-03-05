@@ -1,4 +1,5 @@
 using Adapters;
+using Managers;
 using State;
 
 namespace Session
@@ -11,10 +12,12 @@ namespace Session
 
         readonly RaidEventBuffer _eventBuffer;
         readonly ITimeAdapter _timeAdapter;
+        readonly IInputAdapter _inputAdapter;
 
-        public RaidSession(string levelId, ITimeAdapter timeAdapter)
+        public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter)
         {
             _timeAdapter = timeAdapter;
+            _inputAdapter = inputAdapter;
             _eventBuffer = new RaidEventBuffer();
             RaidState = RaidState.Create();
             LevelState = LevelState.Create(levelId);
@@ -22,6 +25,7 @@ namespace Session
 
         public void Start()
         {
+            PlayerSpawnManager.SpawnPlayer(RaidState, _eventBuffer);
             _eventBuffer.RaidStarted();
         }
 
@@ -32,11 +36,12 @@ namespace Session
             var context = new RaidContext(
                 deltaTime: _timeAdapter.DeltaTime,
                 events: _eventBuffer,
-                time: _timeAdapter
+                time: _timeAdapter,
+                input: _inputAdapter
             );
 
             // Managers run here in deterministic order.
-            // None yet — this is the extension point.
+            MovementManager.Tick(RaidState, in context);
 
             RaidState.ElapsedTime += context.DeltaTime;
         }

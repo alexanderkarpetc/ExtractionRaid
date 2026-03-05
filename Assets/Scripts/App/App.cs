@@ -16,10 +16,12 @@ namespace App
         public RaidSession RaidSession { get; private set; }
 
         readonly ITimeAdapter _timeAdapter;
+        readonly UnityInputAdapter _inputAdapter;
 
         App()
         {
             _timeAdapter = new UnityTimeAdapter();
+            _inputAdapter = new UnityInputAdapter();
             Player = new Player();
         }
 
@@ -43,7 +45,7 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, _timeAdapter);
+            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter);
             RaidSession.Start();
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
@@ -62,11 +64,17 @@ namespace App
             RaidSession?.Tick();
         }
 
+        public void LateTick()
+        {
+            RaidSession?.ClearEvents();
+        }
+
         internal static void Shutdown()
         {
             if (_instance == null) return;
 
             _instance.EndRaid();
+            _instance._inputAdapter?.Dispose();
             _instance = null;
             Debug.Log("[App] Shutdown.");
         }
