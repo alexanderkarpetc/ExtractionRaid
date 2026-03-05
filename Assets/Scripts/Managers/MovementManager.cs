@@ -23,7 +23,17 @@ namespace Managers
                 moveDirection.Normalize();
 
             player.Velocity = moveDirection * MoveSpeed;
-            player.Position += player.Velocity * context.DeltaTime;
+            var candidatePos = player.Position + player.Velocity * context.DeltaTime;
+
+            if (context.NavMesh != null &&
+                context.NavMesh.SamplePosition(candidatePos, 1f, out var clampedPos))
+            {
+                player.Position = clampedPos;
+            }
+            else
+            {
+                player.Position = candidatePos;
+            }
         }
     }
 }

@@ -17,11 +17,13 @@ namespace App
 
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
+        readonly INavMeshAdapter _navMeshAdapter;
 
         App()
         {
             _timeAdapter = new UnityTimeAdapter();
             _inputAdapter = new UnityInputAdapter();
+            _navMeshAdapter = new UnityNavMeshAdapter();
             Player = new Player();
         }
 
@@ -45,7 +47,7 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter);
+            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter);
             RaidSession.Start();
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }

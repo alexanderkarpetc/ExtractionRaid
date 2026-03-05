@@ -30,6 +30,15 @@ namespace Tests.EditMode
             public void PlayerSpawned(EId id) { }
         }
 
+        class FakeNavMeshAdapter : INavMeshAdapter
+        {
+            public bool SamplePosition(Vector3 source, float maxDistance, out Vector3 result)
+            {
+                result = source;
+                return true;
+            }
+        }
+
         static RaidState CreateStateWithPlayer(Vector3 startPos)
         {
             var state = RaidState.Create();
@@ -44,7 +53,8 @@ namespace Tests.EditMode
                 deltaTime: deltaTime,
                 events: new FakeRaidEvents(),
                 time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: input
+                input: input,
+                navMesh: new FakeNavMeshAdapter()
             );
         }
 

@@ -13,11 +13,14 @@ namespace Session
         readonly RaidEventBuffer _eventBuffer;
         readonly ITimeAdapter _timeAdapter;
         readonly IInputAdapter _inputAdapter;
+        readonly INavMeshAdapter _navMeshAdapter;
 
-        public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter)
+        public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
+            INavMeshAdapter navMeshAdapter)
         {
             _timeAdapter = timeAdapter;
             _inputAdapter = inputAdapter;
+            _navMeshAdapter = navMeshAdapter;
             _eventBuffer = new RaidEventBuffer();
             RaidState = RaidState.Create();
             LevelState = LevelState.Create(levelId);
@@ -37,7 +40,8 @@ namespace Session
                 deltaTime: _timeAdapter.DeltaTime,
                 events: _eventBuffer,
                 time: _timeAdapter,
-                input: _inputAdapter
+                input: _inputAdapter,
+                navMesh: _navMeshAdapter
             );
 
             // Managers run here in deterministic order.
