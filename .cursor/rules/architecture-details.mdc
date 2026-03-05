@@ -47,3 +47,50 @@ alwaysApply: false
 
 ## Entry points
 All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
+
+## Data Flow Reference
+
+### Tick lifecycle
+
+```
+Update
+  └─ App.Tick()
+       └─ RaidSession.Tick()
+            ├─ build RaidContext (readonly struct, passed as in)
+            ├─ Manager_A.Tick(state, in context)   // e.g. MovementManager
+            ├─ Manager_B.Tick(state, in context)   // deterministic order
+            └─ state.ElapsedTime += dt
+
+LateUpdate
+  └─ App.LateTick()
+       ├─ Presenter.LateTick(session)              // consume events + sync views
+       └─ RaidSession.ClearEvents()                // reset event buffer
+```
+
+Managers read adapters from context, write into state.
+Presenters read state + events, write into Unity transforms.
+Events are cleared after all presenters have consumed them.
+
+### Object ownership
+
+```
+App (singleton, composition root)
+  ├─ Adapters (ITimeAdapter, IInputAdapter, ...)   → passed into RaidSession
+  ├─ Presenters (plain C# classes)                 → ticked + disposed by App
+  ├─ Player (persistent profile)
+  └─ RaidSession (created per raid)
+       ├─ RaidEventBuffer
+       ├─ RaidState        → entity states, EIds, elapsed time
+       └─ LevelState       → level metadata
+```
+
+### Data direction
+
+```
+Input → Adapter → Context → Manager → State → Presenter → View
+                                ↓
+                          EventBuffer → Presenter (spawn/destroy intents)
+```
+
+No reverse links. State does not know about View.
+Managers do not know about App. View does not write into State.
