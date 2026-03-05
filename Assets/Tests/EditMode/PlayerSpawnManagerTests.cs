@@ -1,28 +1,13 @@
-using Adapters;
 using Managers;
 using NUnit.Framework;
 using State;
+using Tests.EditMode.Fakes;
 
 namespace Tests.EditMode
 {
     [TestFixture]
     public class PlayerSpawnManagerTests
     {
-        class FakeRaidEvents : IRaidEvents
-        {
-            public bool PlayerSpawnedCalled;
-            public EId SpawnedId;
-
-            public void RaidStarted() { }
-            public void RaidEnded() { }
-
-            public void PlayerSpawned(EId id)
-            {
-                PlayerSpawnedCalled = true;
-                SpawnedId = id;
-            }
-        }
-
         [Test]
         public void SpawnPlayer_CreatesPlayerEntity()
         {

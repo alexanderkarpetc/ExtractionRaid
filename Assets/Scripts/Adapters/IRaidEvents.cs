@@ -1,4 +1,5 @@
 using State;
+using UnityEngine;
 
 namespace Adapters
 {
@@ -7,5 +8,7 @@ namespace Adapters
         void RaidStarted();
         void RaidEnded();
         void PlayerSpawned(EId id);
+        void ProjectileSpawned(EId id, Vector3 position, Vector3 direction);
+        void ProjectileDespawned(EId id);
     }
 }

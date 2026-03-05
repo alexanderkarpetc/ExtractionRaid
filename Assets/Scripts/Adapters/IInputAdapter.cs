@@ -6,5 +6,7 @@ namespace Adapters
     {
         Vector2 MoveInput { get; }
         bool SprintPressed { get; }
+        bool AttackPressed { get; }
+        Vector3 AimWorldPoint { get; }
     }
 }

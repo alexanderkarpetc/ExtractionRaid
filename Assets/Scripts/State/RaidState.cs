@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace State
 {
     public class RaidState
@@ -5,6 +7,7 @@ namespace State
         public float ElapsedTime;
         public bool IsRunning;
         public PlayerEntityState PlayerEntity;
+        public List<ProjectileEntityState> Projectiles;
 
         int _nextEIdValue;
 
@@ -21,6 +24,7 @@ namespace State
                 ElapsedTime = 0f,
                 IsRunning = true,
                 _nextEIdValue = 0,
+                Projectiles = new List<ProjectileEntityState>(),
             };
         }
     }

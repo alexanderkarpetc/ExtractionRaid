@@ -20,6 +20,7 @@ namespace App
         readonly UnityInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
         readonly PlayerPresenter _playerPresenter;
+        readonly ProjectilePresenter _projectilePresenter;
 
         App()
         {
@@ -27,6 +28,7 @@ namespace App
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
             _playerPresenter = new PlayerPresenter();
+            _projectilePresenter = new ProjectilePresenter();
             Player = new Player();
         }
 
@@ -52,6 +54,11 @@ namespace App
 
             RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter);
             RaidSession.Start();
+
+            var cam = Camera.main;
+            if (cam != null)
+                _inputAdapter.SetCamera(cam);
+
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
 
@@ -72,6 +79,7 @@ namespace App
         public void LateTick()
         {
             _playerPresenter.LateTick(RaidSession);
+            _projectilePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
@@ -80,6 +88,7 @@ namespace App
             if (_instance == null) return;
 
             _instance._playerPresenter?.Dispose();
+            _instance._projectilePresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;
