@@ -1,6 +1,7 @@
 using Adapters;
 using Session;
 using UnityEngine;
+using View;
 
 namespace App
 {
@@ -18,12 +19,14 @@ namespace App
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
+        readonly PlayerPresenter _playerPresenter;
 
         App()
         {
             _timeAdapter = new UnityTimeAdapter();
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
+            _playerPresenter = new PlayerPresenter();
             Player = new Player();
         }
 
@@ -68,6 +71,7 @@ namespace App
 
         public void LateTick()
         {
+            _playerPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
@@ -75,6 +79,7 @@ namespace App
         {
             if (_instance == null) return;
 
+            _instance._playerPresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;

@@ -1,21 +1,32 @@
+using Session;
 using State;
 using UnityEngine;
 
 namespace View
 {
-    public class PlayerPresenter : MonoBehaviour
+    public class PlayerPresenter
     {
-        [SerializeField] GameObject _playerPrefab;
+        readonly GameObject _playerPrefab;
 
         PlayerView _playerView;
         EId _trackedId;
 
-        void LateUpdate()
+        public PlayerPresenter()
         {
-            var session = App.App.Instance.RaidSession;
+            _playerPrefab = Resources.Load<GameObject>("Prefabs/PlayerCapsule");
+
+            if (_playerPrefab == null)
+            {
+                Debug.LogError("[PlayerPresenter] Failed to load prefab at Resources/Prefabs/PlayerCapsule.");
+            }
+        }
+
+        public void LateTick(RaidSession session)
+        {
             if (session == null) return;
 
             var events = session.ConsumeEvents();
+
             if (events.HasPlayerSpawned && _playerView == null)
             {
                 _trackedId = events.SpawnedPlayerId;
@@ -30,7 +41,9 @@ namespace View
 
         void SpawnView(PlayerEntityState playerState)
         {
-            var go = Instantiate(_playerPrefab, playerState.Position, Quaternion.identity);
+            if (_playerPrefab == null) return;
+
+            var go = Object.Instantiate(_playerPrefab, playerState.Position, Quaternion.identity);
             _playerView = go.GetComponent<PlayerView>();
             _playerView.Initialize(_trackedId);
 
@@ -45,11 +58,12 @@ namespace View
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }
 
-        void OnDestroy()
+        public void Dispose()
         {
             if (_playerView != null)
             {
-                Destroy(_playerView.gameObject);
+                Object.Destroy(_playerView.gameObject);
+                _playerView = null;
             }
         }
     }
