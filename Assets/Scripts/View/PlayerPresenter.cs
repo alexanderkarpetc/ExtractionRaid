@@ -57,7 +57,7 @@ namespace View
 
             var go = Object.Instantiate(_playerPrefab, playerState.Position, initialRotation);
             _playerView = go.GetComponent<PlayerView>();
-            _playerView.Initialize(_trackedId);
+            _playerView.Initialize(_trackedId, _onMuzzlePointReady);
 
             var cam = Camera.main;
             if (cam != null)
@@ -66,9 +66,6 @@ namespace View
                 if (cameraController != null)
                     cameraController.SetTarget(_playerView.transform);
             }
-
-            if (_playerView.MuzzlePoint != null)
-                _onMuzzlePointReady?.Invoke(_playerView.MuzzlePoint);
 
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }

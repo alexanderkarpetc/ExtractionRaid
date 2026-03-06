@@ -3,6 +3,7 @@ namespace State
     public class WeaponEntityState
     {
         public EId Id;
+        public string PrefabId;
 
         // Shooting parameters
         public float FireInterval;
@@ -22,12 +23,29 @@ namespace State
             return new WeaponEntityState
             {
                 Id = id,
+                PrefabId = "Weapon_Rifle",
                 FireInterval = 0.2f,
                 ProjectileSpeed = 20f,
                 ProjectileLifetime = 3f,
                 ProjectileDamage = 10f,
                 ConeHalfAngle = 45f,
                 BodyRotationSpeed = 270,
+                LastFireTime = -999f,
+            };
+        }
+
+        public static WeaponEntityState CreateSecondary(EId id)
+        {
+            return new WeaponEntityState
+            {
+                Id = id,
+                PrefabId = "Weapon_Shotgun",
+                FireInterval = 0.6f,
+                ProjectileSpeed = 30f,
+                ProjectileLifetime = 2f,
+                ProjectileDamage = 35f,
+                ConeHalfAngle = 20f,
+                BodyRotationSpeed = 180f,
                 LastFireTime = -999f,
             };
         }

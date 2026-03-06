@@ -22,6 +22,9 @@ namespace Systems
             state.PlayerEntity.SelectedHotbarSlot = 0;
             state.PlayerEntity.EquippedWeapon = weapon;
 
+            var weapon2Id = state.AllocateEId();
+            state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateSecondary(weapon2Id);
+
             events.PlayerSpawned(playerId);
         }
     }
