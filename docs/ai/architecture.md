@@ -63,7 +63,8 @@ Typical contents:
 ### Events
 Systems do not play VFX/SFX directly.
 Systems emit domain-to-view intents through `IRaidEvents`.
-Presenter consumes these intents and performs Unity-side work.
+`RaidEventBuffer` stores events as a single `List<RaidEvent>` where `RaidEvent` is a struct with `RaidEventType` enum + flat payload (Id, Position, Direction). Zero-alloc after warm-up.
+Presenter iterates `buffer.All`, filters by `Type`, and performs Unity-side work.
 
 ## 3) Tick model
 

@@ -1,4 +1,5 @@
 using System;
+using Adapters;
 using Session;
 using State;
 using UnityEngine;
@@ -31,10 +32,13 @@ namespace View
 
             var events = session.ConsumeEvents();
 
-            if (events.HasPlayerSpawned && _playerView == null)
+            foreach (var e in events.All)
             {
-                _trackedId = events.SpawnedPlayerId;
-                SpawnView(session.RaidState.PlayerEntity);
+                if (e.Type == RaidEventType.PlayerSpawned && _playerView == null)
+                {
+                    _trackedId = e.Id;
+                    SpawnView(session.RaidState.PlayerEntity);
+                }
             }
 
             if (_playerView != null && session.RaidState.PlayerEntity != null)

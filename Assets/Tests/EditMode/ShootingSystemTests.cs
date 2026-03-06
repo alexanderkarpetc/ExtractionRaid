@@ -1,3 +1,4 @@
+using System.Linq;
 using Adapters;
 using Systems;
 using NUnit.Framework;
@@ -164,8 +165,9 @@ namespace Tests.EditMode
 
             ShootingSystem.Tick(state, in context);
 
-            Assert.AreEqual(1, eventBuffer.SpawnedProjectiles.Count);
-            Assert.AreEqual(state.Projectiles[0].Id, eventBuffer.SpawnedProjectiles[0].Id);
+            var spawned = eventBuffer.All.Where(e => e.Type == RaidEventType.ProjectileSpawned).ToList();
+            Assert.AreEqual(1, spawned.Count);
+            Assert.AreEqual(state.Projectiles[0].Id, spawned[0].Id);
         }
     }
 }

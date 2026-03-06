@@ -37,7 +37,9 @@ alwaysApply: false
 - Read-only, passed as `in`. Contains: ports/adapters, config refs, event sink/buffer, constants (`dt`, masks, tuning).
 
 ### Events
-- Systems emit domain-to-view intents through `IRaidEvents`. Presenter consumes them.
+- Systems emit domain-to-view intents through `IRaidEvents`.
+- `RaidEventBuffer` stores events as `List<RaidEvent>` (struct with enum + flat payload). Zero-alloc after warm-up.
+- Presenter iterates `buffer.All`, filters by `RaidEventType`.
 
 ## Tick model
 1. Gather input and external signals.

@@ -4,8 +4,18 @@ using UnityEngine;
 
 namespace Adapters
 {
-    public struct ProjectileSpawnedEvent
+    public enum RaidEventType : byte
     {
+        RaidStarted,
+        RaidEnded,
+        PlayerSpawned,
+        ProjectileSpawned,
+        ProjectileDespawned,
+    }
+
+    public struct RaidEvent
+    {
+        public RaidEventType Type;
         public EId Id;
         public Vector3 Position;
         public Vector3 Direction;
@@ -13,26 +23,30 @@ namespace Adapters
 
     public class RaidEventBuffer : IRaidEvents
     {
-        public bool HasRaidStarted { get; private set; }
-        public bool HasRaidEnded { get; private set; }
-        public bool HasPlayerSpawned { get; private set; }
-        public EId SpawnedPlayerId { get; private set; }
-        public List<ProjectileSpawnedEvent> SpawnedProjectiles { get; } = new();
-        public List<EId> DespawnedProjectileIds { get; } = new();
+        readonly List<RaidEvent> _events = new();
 
-        public void RaidStarted() => HasRaidStarted = true;
-        public void RaidEnded() => HasRaidEnded = true;
+        public IReadOnlyList<RaidEvent> All => _events;
+
+        public void RaidStarted()
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.RaidStarted });
+        }
+
+        public void RaidEnded()
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.RaidEnded });
+        }
 
         public void PlayerSpawned(EId id)
         {
-            HasPlayerSpawned = true;
-            SpawnedPlayerId = id;
+            _events.Add(new RaidEvent { Type = RaidEventType.PlayerSpawned, Id = id });
         }
 
         public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction)
         {
-            SpawnedProjectiles.Add(new ProjectileSpawnedEvent
+            _events.Add(new RaidEvent
             {
+                Type = RaidEventType.ProjectileSpawned,
                 Id = id,
                 Position = position,
                 Direction = direction,
@@ -41,17 +55,12 @@ namespace Adapters
 
         public void ProjectileDespawned(EId id)
         {
-            DespawnedProjectileIds.Add(id);
+            _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
         }
 
         public void Clear()
         {
-            HasRaidStarted = false;
-            HasRaidEnded = false;
-            HasPlayerSpawned = false;
-            SpawnedPlayerId = EId.None;
-            SpawnedProjectiles.Clear();
-            DespawnedProjectileIds.Clear();
+            _events.Clear();
         }
     }
 }

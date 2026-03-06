@@ -25,14 +25,17 @@ namespace View
 
             var events = session.ConsumeEvents();
 
-            foreach (var spawned in events.SpawnedProjectiles)
+            foreach (var e in events.All)
             {
-                SpawnView(spawned.Id, spawned.Position, spawned.Direction);
-            }
-
-            foreach (var despawnedId in events.DespawnedProjectileIds)
-            {
-                DespawnView(despawnedId);
+                switch (e.Type)
+                {
+                    case RaidEventType.ProjectileSpawned:
+                        SpawnView(e.Id, e.Position, e.Direction);
+                        break;
+                    case RaidEventType.ProjectileDespawned:
+                        DespawnView(e.Id);
+                        break;
+                }
             }
 
             foreach (var proj in session.RaidState.Projectiles)
