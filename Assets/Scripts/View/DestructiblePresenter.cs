@@ -37,6 +37,7 @@ namespace View
             }
         }
 
+        // todo : remove Object.FindObjectsByType and state access in presenter, use explicit spawn/despawn events instead
         void RegisterSceneDestructibles(RaidSession session)
         {
             var sceneViews = Object.FindObjectsByType<DestructibleView>(FindObjectsSortMode.None);
