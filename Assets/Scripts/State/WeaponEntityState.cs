@@ -10,6 +10,8 @@ namespace State
         public float ProjectileSpeed;
         public float ProjectileLifetime;
         public float ProjectileDamage;
+        public int ProjectilesPerShot;
+        public float SpreadAngle;
 
         // Aiming parameters
         public float ConeHalfAngle;
@@ -28,6 +30,8 @@ namespace State
                 ProjectileSpeed = 20f,
                 ProjectileLifetime = 3f,
                 ProjectileDamage = 10f,
+                ProjectilesPerShot = 1,
+                SpreadAngle = 0f,
                 ConeHalfAngle = 45f,
                 BodyRotationSpeed = 270,
                 LastFireTime = -999f,
@@ -43,7 +47,9 @@ namespace State
                 FireInterval = 0.6f,
                 ProjectileSpeed = 30f,
                 ProjectileLifetime = 2f,
-                ProjectileDamage = 35f,
+                ProjectileDamage = 8f,
+                ProjectilesPerShot = 7,
+                SpreadAngle = 30f,
                 ConeHalfAngle = 20f,
                 BodyRotationSpeed = 180f,
                 LastFireTime = -999f,

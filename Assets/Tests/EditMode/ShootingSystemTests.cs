@@ -182,5 +182,98 @@ namespace Tests.EditMode
             Assert.AreEqual(1, spawned.Count);
             Assert.AreEqual(state.Projectiles[0].Id, spawned[0].Id);
         }
+
+        [Test]
+        public void Tick_SpreadWeapon_SpawnsCorrectCount()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(7, state.Projectiles.Count);
+        }
+
+        [Test]
+        public void Tick_SpreadWeapon_AllPelletsWithinSpreadAngle()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.AimDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            foreach (var proj in state.Projectiles)
+            {
+                float angle = Vector3.Angle(Vector3.forward, proj.Direction);
+                Assert.LessOrEqual(angle, 15f + 0.01f,
+                    $"Pellet direction angle {angle}° exceeds half spread 15°");
+            }
+        }
+
+        [Test]
+        public void Tick_ZeroSpread_ExactAimDirection()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var aimDir = new Vector3(1f, 0f, 1f).normalized;
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.AimDirection = aimDir;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 1;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 0f;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(1, state.Projectiles.Count);
+            Assert.AreEqual(aimDir.x, state.Projectiles[0].Direction.x, 0.001f);
+            Assert.AreEqual(aimDir.z, state.Projectiles[0].Direction.z, 0.001f);
+        }
+
+        [Test]
+        public void Tick_SpreadWeapon_AllPelletsHaveSameSpeedAndDamage()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            state.PlayerEntity.EquippedWeapon.ProjectileSpeed = 25f;
+            state.PlayerEntity.EquippedWeapon.ProjectileDamage = 8f;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            foreach (var proj in state.Projectiles)
+            {
+                Assert.AreEqual(25f, proj.Speed, 0.001f);
+                Assert.AreEqual(8f, proj.Damage, 0.001f);
+            }
+        }
+
+        [Test]
+        public void Tick_SpreadWeapon_EmitsEventPerPellet()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 5;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 20f;
+            var eventBuffer = new RaidEventBuffer();
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input, events: eventBuffer);
+
+            ShootingSystem.Tick(state, in context);
+
+            var spawned = eventBuffer.All.Where(e => e.Type == RaidEventType.ProjectileSpawned).ToList();
+            Assert.AreEqual(5, spawned.Count);
+        }
     }
 }

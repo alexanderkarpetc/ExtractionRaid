@@ -1,5 +1,6 @@
 using Session;
 using State;
+using UnityEngine;
 
 namespace Systems
 {
@@ -25,17 +26,26 @@ namespace Systems
             if (dir.sqrMagnitude < 0.001f) return;
 
             var spawnPos = input.MuzzleWorldPoint;
+            var count = Mathf.Max(1, weapon.ProjectilesPerShot);
+            var halfSpread = weapon.SpreadAngle * 0.5f;
 
-            var projectileId = state.AllocateEId();
-            var projectile = ProjectileEntityState.Create(
-                projectileId, spawnPos, dir, weapon.ProjectileSpeed,
-                state.ElapsedTime, weapon.ProjectileLifetime,
-                weapon.ProjectileDamage);
+            for (int i = 0; i < count; i++)
+            {
+                var pelletDir = halfSpread > 0f
+                    ? Quaternion.Euler(0f, Random.Range(-halfSpread, halfSpread), 0f) * dir
+                    : dir;
 
-            state.Projectiles.Add(projectile);
+                var projectileId = state.AllocateEId();
+                var projectile = ProjectileEntityState.Create(
+                    projectileId, spawnPos, pelletDir, weapon.ProjectileSpeed,
+                    state.ElapsedTime, weapon.ProjectileLifetime,
+                    weapon.ProjectileDamage);
+
+                state.Projectiles.Add(projectile);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir);
+            }
+
             weapon.LastFireTime = state.ElapsedTime;
-
-            context.Events.ProjectileSpawned(projectileId, spawnPos, dir);
         }
     }
 }
