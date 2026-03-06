@@ -1,4 +1,5 @@
 using UnityEngine;
+using View;
 
 namespace App
 {
@@ -12,6 +13,7 @@ namespace App
         {
             App.Initialize();
             DontDestroyOnLoad(gameObject);
+            gameObject.AddComponent<HotbarDebugOverlay>();
         }
 
         void Start()
