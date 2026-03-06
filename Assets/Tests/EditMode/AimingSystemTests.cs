@@ -183,14 +183,20 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_NoEquippedWeapon_DoesNotThrow()
+        public void Tick_NoEquippedWeapon_BodyRotatesWithUnarmedSettings()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.EquippedWeapon = null;
-            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
-            var context = CreateContext(input);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var aimDir = Quaternion.Euler(0f, 30f, 0f) * Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
+            var context = CreateContext(input, deltaTime: 1f / 60f);
 
-            Assert.DoesNotThrow(() => AimingSystem.Tick(state, in context));
+            AimingSystem.Tick(state, in context);
+
+            var angle = Vector3.Angle(state.PlayerEntity.FacingDirection, aimDir);
+            Assert.Greater(angle, 0.1f, "Body should not snap instantly");
+            Assert.Less(angle, 30f, "Body should have moved toward aim direction");
         }
 
         [Test]

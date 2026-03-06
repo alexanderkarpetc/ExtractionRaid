@@ -12,7 +12,11 @@ namespace Tests.EditMode
             state.PlayerEntity = PlayerEntityState.Create(playerId, startPos);
 
             var weaponId = state.AllocateEId();
-            state.PlayerEntity.EquippedWeapon = WeaponEntityState.CreateDefault(weaponId);
+            var weapon = WeaponEntityState.CreateDefault(weaponId);
+
+            state.PlayerEntity.Hotbar[0] = weapon;
+            state.PlayerEntity.SelectedHotbarSlot = 0;
+            state.PlayerEntity.EquippedWeapon = weapon;
 
             return state;
         }

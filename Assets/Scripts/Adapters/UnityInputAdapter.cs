@@ -6,6 +6,13 @@ namespace Adapters
 {
     public class UnityInputAdapter : IInputAdapter, IDisposable
     {
+        static readonly Key[] HotbarKeys =
+        {
+            Key.Digit1, Key.Digit2, Key.Digit3,
+            Key.Digit4, Key.Digit5, Key.Digit6,
+            Key.Digit7, Key.Digit8, Key.Digit9,
+        };
+
         readonly InputSystem_Actions _actions;
         Camera _camera;
         Transform _muzzlePoint;
@@ -39,6 +46,23 @@ namespace Adapters
 
         public Vector3 MuzzleWorldPoint =>
             _muzzlePoint != null ? _muzzlePoint.position : Vector3.zero;
+
+        public int HotbarSlotPressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                if (kb == null) return -1;
+
+                for (int i = 0; i < HotbarKeys.Length; i++)
+                {
+                    if (kb[HotbarKeys[i]].wasPressedThisFrame)
+                        return i;
+                }
+
+                return -1;
+            }
+        }
 
         public void SetCamera(Camera camera)
         {

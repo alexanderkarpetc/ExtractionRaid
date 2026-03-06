@@ -10,5 +10,6 @@ namespace Tests.EditMode.Fakes
         public bool AttackPressed { get; set; }
         public Vector3 AimWorldPoint { get; set; }
         public Vector3 MuzzleWorldPoint { get; set; }
+        public int HotbarSlotPressed { get; set; } = -1;
     }
 }

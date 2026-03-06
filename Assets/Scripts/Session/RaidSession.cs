@@ -48,6 +48,7 @@ namespace Session
 
             // Systems run here in deterministic order.
             MovementSystem.Tick(RaidState, in context);
+            WeaponEquipSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
             ProjectileSystem.Tick(RaidState, in context);

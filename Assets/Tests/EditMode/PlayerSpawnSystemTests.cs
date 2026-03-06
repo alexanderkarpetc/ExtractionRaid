@@ -46,6 +46,19 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void SpawnPlayer_WeaponInHotbarSlotZero()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            PlayerSpawnSystem.SpawnPlayer(state, events);
+
+            Assert.IsNotNull(state.PlayerEntity.Hotbar[0]);
+            Assert.AreEqual(state.PlayerEntity.EquippedWeapon, state.PlayerEntity.Hotbar[0]);
+            Assert.AreEqual(0, state.PlayerEntity.SelectedHotbarSlot);
+        }
+
+        [Test]
         public void SpawnPlayer_DoesNotDoubleSpawn()
         {
             var state = RaidState.Create();

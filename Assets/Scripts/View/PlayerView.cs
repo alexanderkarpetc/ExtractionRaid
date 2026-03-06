@@ -25,9 +25,15 @@ namespace View
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
             }
 
-            if (_weaponPivot != null && state.AimDirection.sqrMagnitude > 0.001f)
+            if (_weaponPivot != null)
             {
-                _weaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
+                bool hasWeapon = state.EquippedWeapon != null;
+                _weaponPivot.gameObject.SetActive(hasWeapon);
+
+                if (hasWeapon && state.AimDirection.sqrMagnitude > 0.001f)
+                {
+                    _weaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
+                }
             }
         }
     }
