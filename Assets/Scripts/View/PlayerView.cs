@@ -6,6 +6,7 @@ namespace View
     public class PlayerView : MonoBehaviour
     {
         [SerializeField] Transform _muzzlePoint;
+        [SerializeField] Transform _weaponPivot;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _muzzlePoint;
@@ -22,6 +23,11 @@ namespace View
             if (state.FacingDirection.sqrMagnitude > 0.001f)
             {
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
+            }
+
+            if (_weaponPivot != null && state.AimDirection.sqrMagnitude > 0.001f)
+            {
+                _weaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
             }
         }
     }

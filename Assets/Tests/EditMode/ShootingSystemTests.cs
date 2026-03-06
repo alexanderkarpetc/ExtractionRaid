@@ -81,10 +81,10 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_ZeroFacingDirection_DoesNotSpawn()
+        public void Tick_ZeroAimDirection_DoesNotSpawn()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.zero;
+            state.PlayerEntity.AimDirection = Vector3.zero;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -94,19 +94,20 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_ProjectileDirectionMatchesFacingDirection()
+        public void Tick_ProjectileDirectionMatchesAimDirection()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var facing = new Vector3(1f, 0f, 1f).normalized;
-            state.PlayerEntity.FacingDirection = facing;
+            var aimDir = new Vector3(1f, 0f, 1f).normalized;
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.AimDirection = aimDir;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
-            Assert.AreEqual(facing.x, state.Projectiles[0].Direction.x, 0.001f);
-            Assert.AreEqual(facing.z, state.Projectiles[0].Direction.z, 0.001f);
+            Assert.AreEqual(aimDir.x, state.Projectiles[0].Direction.x, 0.001f);
+            Assert.AreEqual(aimDir.z, state.Projectiles[0].Direction.z, 0.001f);
         }
 
         [Test]

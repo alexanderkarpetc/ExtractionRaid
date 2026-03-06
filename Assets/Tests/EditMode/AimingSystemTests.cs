@@ -108,5 +108,94 @@ namespace Tests.EditMode
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.x, 0.001f);
             Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.z, 0.001f);
         }
+
+        [Test]
+        public void Tick_AimRight_SetsAimDirectionRight()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = CreateContext(input);
+
+            AimingSystem.Tick(state, in context);
+
+            Assert.AreEqual(1f, state.PlayerEntity.AimDirection.x, 0.001f);
+            Assert.AreEqual(0f, state.PlayerEntity.AimDirection.z, 0.001f);
+        }
+
+        [Test]
+        public void Tick_AimInsideCone_BodyDoesNotSnapInstantly()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var aimDir = Quaternion.Euler(0f, 30f, 0f) * Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
+            var context = CreateContext(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(state, in context);
+
+            var angle = Vector3.Angle(state.PlayerEntity.FacingDirection, aimDir);
+            Assert.Greater(angle, 0.1f, "Body should not snap instantly when inside cone");
+            Assert.Less(angle, 30f, "Body should have moved toward aim direction");
+        }
+
+        [Test]
+        public void Tick_AimInsideCone_AimDirectionIsInstant()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var aimDir = Quaternion.Euler(0f, 30f, 0f) * Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
+            var context = CreateContext(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(state, in context);
+
+            Assert.AreEqual(aimDir.x, state.PlayerEntity.AimDirection.x, 0.001f);
+            Assert.AreEqual(aimDir.z, state.PlayerEntity.AimDirection.z, 0.001f);
+        }
+
+        [Test]
+        public void Tick_AimOutsideCone_BodySnapsInstantly()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = CreateContext(input);
+
+            AimingSystem.Tick(state, in context);
+
+            Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.x, 0.001f);
+            Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.z, 0.001f);
+        }
+
+        [Test]
+        public void Tick_AimAtExactConeEdge_BodyLerpsNotSnaps()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var aimDir = Quaternion.Euler(0f, 45f, 0f) * Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
+            var context = CreateContext(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(state, in context);
+
+            var angle = Vector3.Angle(state.PlayerEntity.FacingDirection, aimDir);
+            Assert.Greater(angle, 0.1f, "Body should lerp, not snap at exact cone boundary");
+        }
+
+        [Test]
+        public void Tick_MultipleTicks_InsideCone_BodyConverges()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var aimDir = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward;
+            var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
+            var context = CreateContext(input, deltaTime: 1f / 60f);
+
+            for (int i = 0; i < 120; i++)
+                AimingSystem.Tick(state, in context);
+
+            var angle = Vector3.Angle(state.PlayerEntity.FacingDirection, aimDir);
+            Assert.Less(angle, 2f, "Body should converge on aim direction after many ticks");
+        }
     }
 }

@@ -1,6 +1,5 @@
 using Session;
 using State;
-using UnityEngine;
 
 namespace Systems
 {
@@ -23,7 +22,7 @@ namespace Systems
 
             if (state.ElapsedTime - player.Combat.LastFireTime < FireInterval) return;
 
-            var dir = player.FacingDirection;
+            var dir = player.AimDirection;
 
             if (dir.sqrMagnitude < 0.001f) return;
 
