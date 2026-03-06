@@ -9,6 +9,7 @@ namespace Systems
         public const float FireInterval = 0.2f;
         public const float ProjectileSpeed = 20f;
         public const float ProjectileLifetime = 3f;
+        public const float ProjectileDamage = 10f;
 
         public static void Tick(RaidState state, in RaidContext context)
         {

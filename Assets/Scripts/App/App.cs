@@ -21,6 +21,7 @@ namespace App
         readonly INavMeshAdapter _navMeshAdapter;
         readonly PlayerPresenter _playerPresenter;
         readonly ProjectilePresenter _projectilePresenter;
+        readonly DestructiblePresenter _destructiblePresenter;
 
         App()
         {
@@ -29,6 +30,7 @@ namespace App
             _navMeshAdapter = new UnityNavMeshAdapter();
             _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
+            _destructiblePresenter = new DestructiblePresenter();
             Player = new Player();
         }
 
@@ -78,6 +80,7 @@ namespace App
 
         public void LateTick()
         {
+            _destructiblePresenter.LateTick(RaidSession);
             _playerPresenter.LateTick(RaidSession);
             _projectilePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
@@ -89,6 +92,7 @@ namespace App
 
             _instance._playerPresenter?.Dispose();
             _instance._projectilePresenter?.Dispose();
+            _instance._destructiblePresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;

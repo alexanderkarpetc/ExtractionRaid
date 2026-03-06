@@ -11,6 +11,8 @@ namespace Adapters
         PlayerSpawned,
         ProjectileSpawned,
         ProjectileDespawned,
+        DestructibleDamaged,
+        DestructibleDestroyed,
     }
 
     public struct RaidEvent
@@ -19,6 +21,8 @@ namespace Adapters
         public EId Id;
         public Vector3 Position;
         public Vector3 Direction;
+        public float CurrentHp;
+        public float MaxHp;
     }
 
     public class RaidEventBuffer : IRaidEvents
@@ -56,6 +60,22 @@ namespace Adapters
         public void ProjectileDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
+        }
+
+        public void DestructibleDamaged(EId id, float currentHp, float maxHp)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.DestructibleDamaged,
+                Id = id,
+                CurrentHp = currentHp,
+                MaxHp = maxHp,
+            });
+        }
+
+        public void DestructibleDestroyed(EId id)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.DestructibleDestroyed, Id = id });
         }
 
         public void Clear()

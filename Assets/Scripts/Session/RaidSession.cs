@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Adapters;
 using Systems;
 using State;
@@ -14,6 +15,7 @@ namespace Session
         readonly ITimeAdapter _timeAdapter;
         readonly IInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
+        readonly List<HitSignal> _hitInbox = new();
 
         public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
             INavMeshAdapter navMeshAdapter)
@@ -49,6 +51,8 @@ namespace Session
             AimingSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
             ProjectileSystem.Tick(RaidState, in context);
+            DamageSystem.Tick(RaidState, _hitInbox, in context);
+            _hitInbox.Clear();
 
             RaidState.ElapsedTime += context.DeltaTime;
         }
@@ -56,6 +60,11 @@ namespace Session
         public RaidEventBuffer ConsumeEvents() => _eventBuffer;
 
         public void ClearEvents() => _eventBuffer.Clear();
+
+        public void ReportHit(HitSignal signal)
+        {
+            _hitInbox.Add(signal);
+        }
 
         public void End()
         {

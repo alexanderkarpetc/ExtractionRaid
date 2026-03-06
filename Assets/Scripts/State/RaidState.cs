@@ -8,6 +8,7 @@ namespace State
         public bool IsRunning;
         public PlayerEntityState PlayerEntity;
         public List<ProjectileEntityState> Projectiles;
+        public Dictionary<EId, HealthState> HealthMap;
 
         int _nextEIdValue;
 
@@ -25,6 +26,7 @@ namespace State
                 IsRunning = true,
                 _nextEIdValue = 0,
                 Projectiles = new List<ProjectileEntityState>(),
+                HealthMap = new Dictionary<EId, HealthState>(),
             };
         }
     }
