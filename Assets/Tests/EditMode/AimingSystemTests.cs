@@ -40,7 +40,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input);
+            var context = CreateContext(input, deltaTime: 1f);// Use large deltaTime to ensure instant rotation for this test
 
             AimingSystem.Tick(state, in context);
 
@@ -159,7 +159,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input);
+            var context = CreateContext(input, deltaTime:1);// Large deltaTime to ensure snap
 
             AimingSystem.Tick(state, in context);
 
@@ -180,6 +180,17 @@ namespace Tests.EditMode
 
             var angle = Vector3.Angle(state.PlayerEntity.FacingDirection, aimDir);
             Assert.Greater(angle, 0.1f, "Body should lerp, not snap at exact cone boundary");
+        }
+
+        [Test]
+        public void Tick_NoEquippedWeapon_DoesNotThrow()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.EquippedWeapon = null;
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
+            var context = CreateContext(input);
+
+            Assert.DoesNotThrow(() => AimingSystem.Tick(state, in context));
         }
 
         [Test]

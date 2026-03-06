@@ -8,8 +8,12 @@ namespace Tests.EditMode
         public static RaidState CreateStateWithPlayer(Vector3 startPos)
         {
             var state = RaidState.Create();
-            var id = state.AllocateEId();
-            state.PlayerEntity = PlayerEntityState.Create(id, startPos);
+            var playerId = state.AllocateEId();
+            state.PlayerEntity = PlayerEntityState.Create(playerId, startPos);
+
+            var weaponId = state.AllocateEId();
+            state.PlayerEntity.EquippedWeapon = WeaponEntityState.CreateDefault(weaponId);
+
             return state;
         }
     }

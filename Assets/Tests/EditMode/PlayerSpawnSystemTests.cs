@@ -33,6 +33,19 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void SpawnPlayer_CreatesEquippedWeapon()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            PlayerSpawnSystem.SpawnPlayer(state, events);
+
+            Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
+            Assert.IsTrue(state.PlayerEntity.EquippedWeapon.Id.IsValid);
+            Assert.AreNotEqual(state.PlayerEntity.Id, state.PlayerEntity.EquippedWeapon.Id);
+        }
+
+        [Test]
         public void SpawnPlayer_DoesNotDoubleSpawn()
         {
             var state = RaidState.Create();

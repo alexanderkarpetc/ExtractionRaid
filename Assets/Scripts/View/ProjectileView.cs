@@ -1,5 +1,4 @@
 using State;
-using Systems;
 using UnityEngine;
 
 namespace View
@@ -7,10 +6,12 @@ namespace View
     public class ProjectileView : MonoBehaviour
     {
         public EId EId { get; private set; }
+        float _damage;
 
-        public void Initialize(EId id)
+        public void Initialize(EId id, float damage)
         {
             EId = id;
+            _damage = damage;
         }
 
         public void SyncFromState(ProjectileEntityState state)
@@ -30,7 +31,7 @@ namespace View
             {
                 ProjectileId = EId,
                 TargetId = destructible.EId,
-                Damage = ShootingSystem.ProjectileDamage,
+                Damage = _damage,
             });
         }
     }

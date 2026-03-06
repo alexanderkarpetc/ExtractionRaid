@@ -5,22 +5,20 @@ namespace Systems
 {
     public static class ShootingSystem
     {
-        public const float FireInterval = 0.2f;
-        public const float ProjectileSpeed = 20f;
-        public const float ProjectileLifetime = 3f;
-        public const float ProjectileDamage = 10f;
-
         public static void Tick(RaidState state, in RaidContext context)
         {
             var player = state.PlayerEntity;
             if (player == null) return;
+
+            var weapon = player.EquippedWeapon;
+            if (weapon == null) return;
 
             var input = context.Input;
             if (input == null) return;
 
             if (!input.AttackPressed) return;
 
-            if (state.ElapsedTime - player.Combat.LastFireTime < FireInterval) return;
+            if (state.ElapsedTime - weapon.LastFireTime < weapon.FireInterval) return;
 
             var dir = player.AimDirection;
 
@@ -30,11 +28,12 @@ namespace Systems
 
             var projectileId = state.AllocateEId();
             var projectile = ProjectileEntityState.Create(
-                projectileId, spawnPos, dir, ProjectileSpeed,
-                state.ElapsedTime, ProjectileLifetime);
+                projectileId, spawnPos, dir, weapon.ProjectileSpeed,
+                state.ElapsedTime, weapon.ProjectileLifetime,
+                weapon.ProjectileDamage);
 
             state.Projectiles.Add(projectile);
-            player.Combat.LastFireTime = state.ElapsedTime;
+            weapon.LastFireTime = state.ElapsedTime;
 
             context.Events.ProjectileSpawned(projectileId, spawnPos, dir);
         }

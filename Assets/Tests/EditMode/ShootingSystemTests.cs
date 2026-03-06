@@ -56,7 +56,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 1f;
-            state.PlayerEntity.Combat.LastFireTime = 0.9f;
+            state.PlayerEntity.EquippedWeapon.LastFireTime = 0.9f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -71,7 +71,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 1f;
-            state.PlayerEntity.Combat.LastFireTime = 0.5f;
+            state.PlayerEntity.EquippedWeapon.LastFireTime = 0.5f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -152,7 +152,19 @@ namespace Tests.EditMode
 
             ShootingSystem.Tick(state, in context);
 
-            Assert.AreEqual(2.5f, state.PlayerEntity.Combat.LastFireTime, 0.001f);
+            Assert.AreEqual(2.5f, state.PlayerEntity.EquippedWeapon.LastFireTime, 0.001f);
+        }
+
+        [Test]
+        public void Tick_NoEquippedWeapon_DoesNotSpawn()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.EquippedWeapon = null;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            Assert.DoesNotThrow(() => ShootingSystem.Tick(state, in context));
+            Assert.AreEqual(0, state.Projectiles.Count);
         }
 
         [Test]

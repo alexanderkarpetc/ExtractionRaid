@@ -25,10 +25,11 @@ namespace Tests.EditMode
 
         static ProjectileEntityState CreateProjectile(
             RaidState state, Vector3 position, Vector3 direction,
-            float speed = 20f, float spawnTime = 0f, float lifetime = 3f)
+            float speed = 20f, float spawnTime = 0f, float lifetime = 3f,
+            float damage = 10f)
         {
             var id = state.AllocateEId();
-            var proj = ProjectileEntityState.Create(id, position, direction, speed, spawnTime, lifetime);
+            var proj = ProjectileEntityState.Create(id, position, direction, speed, spawnTime, lifetime, damage);
             state.Projectiles.Add(proj);
             return proj;
         }

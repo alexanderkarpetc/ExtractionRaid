@@ -6,13 +6,13 @@ namespace Systems
 {
     public static class AimingSystem
     {
-        public const float ConeHalfAngle = 45f;
-        public const float BodyRotationSpeed = 270f;
-
         public static void Tick(RaidState state, in RaidContext context)
         {
             var player = state.PlayerEntity;
             if (player == null) return;
+
+            var weapon = player.EquippedWeapon;
+            if (weapon == null) return;
 
             var input = context.Input;
             if (input == null) return;
@@ -36,8 +36,8 @@ namespace Systems
 
             var angle = Vector3.Angle(currentFacing, aimDir);
 
-            var t = angle / ConeHalfAngle;
-            var speed = BodyRotationSpeed * t;
+            var t = angle / weapon.ConeHalfAngle;
+            var speed = weapon.BodyRotationSpeed * t;
             var maxStep = speed * context.DeltaTime * Mathf.Deg2Rad;
             player.FacingDirection = Vector3.RotateTowards(
                 currentFacing, aimDir, maxStep, 0f).normalized;

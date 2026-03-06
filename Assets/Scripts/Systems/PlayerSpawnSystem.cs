@@ -12,9 +12,13 @@ namespace Systems
         {
             if (state.PlayerEntity != null) return;
 
-            var id = state.AllocateEId();
-            state.PlayerEntity = PlayerEntityState.Create(id, DefaultSpawnPosition);
-            events.PlayerSpawned(id);
+            var playerId = state.AllocateEId();
+            state.PlayerEntity = PlayerEntityState.Create(playerId, DefaultSpawnPosition);
+
+            var weaponId = state.AllocateEId();
+            state.PlayerEntity.EquippedWeapon = WeaponEntityState.CreateDefault(weaponId);
+
+            events.PlayerSpawned(playerId);
         }
     }
 }

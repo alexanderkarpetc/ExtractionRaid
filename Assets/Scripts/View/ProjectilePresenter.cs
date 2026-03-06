@@ -30,7 +30,16 @@ namespace View
                 switch (e.Type)
                 {
                     case RaidEventType.ProjectileSpawned:
-                        SpawnView(e.Id, e.Position, e.Direction);
+                        float damage = 0f;
+                        foreach (var p in session.RaidState.Projectiles)
+                        {
+                            if (p.Id == e.Id)
+                            {
+                                damage = p.Damage;
+                                break;
+                            }
+                        }
+                        SpawnView(e.Id, e.Position, e.Direction, damage);
                         break;
                     case RaidEventType.ProjectileDespawned:
                         DespawnView(e.Id);
@@ -47,7 +56,7 @@ namespace View
             }
         }
 
-        void SpawnView(EId id, Vector3 position, Vector3 direction)
+        void SpawnView(EId id, Vector3 position, Vector3 direction, float damage)
         {
             if (_projectilePrefab == null) return;
 
@@ -57,7 +66,7 @@ namespace View
 
             var go = Object.Instantiate(_projectilePrefab, position, rotation);
             var view = go.GetComponent<ProjectileView>();
-            view.Initialize(id);
+            view.Initialize(id, damage);
             _views[id] = view;
         }
 
