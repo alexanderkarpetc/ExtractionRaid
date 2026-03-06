@@ -26,6 +26,10 @@ namespace View
             {
                 switch (e.Type)
                 {
+                    case RaidEventType.DestructibleDamaged:
+                        if (_views.TryGetValue(e.Id, out var damagedView))
+                            damagedView.OnDamaged(e.CurrentHp, e.MaxHp);
+                        break;
                     case RaidEventType.DestructibleDestroyed:
                         HandleDestroyed(e.Id, session);
                         break;
