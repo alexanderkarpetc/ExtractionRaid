@@ -2,9 +2,9 @@ using Session;
 using State;
 using UnityEngine;
 
-namespace Managers
+namespace Systems
 {
-    public static class AimingManager
+    public static class AimingSystem
     {
         public static void Tick(RaidState state, in RaidContext context)
         {

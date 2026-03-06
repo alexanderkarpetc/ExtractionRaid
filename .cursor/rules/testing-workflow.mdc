@@ -8,7 +8,7 @@ alwaysApply: false
 ## Testing strategy
 
 ### Unit tests (EditMode)
-Test managers with synthetic state, fake adapters/ports, deterministic RNG, event buffers. Managers must be testable without scenes.
+Test systems with synthetic state, fake adapters/ports, deterministic RNG, event buffers. Systems must be testable without scenes.
 
 ### Integration tests (PlayMode)
 Only for Unity integration: navmesh validation, bullet collisions, spawn/extraction triggers, launch flow wiring.
@@ -16,7 +16,7 @@ Only for Unity integration: navmesh validation, bullet collisions, spawn/extract
 ## Feature implementation flow
 1. Define affected state (`RaidState`, `LevelState`, `PlayerProfileState`).
 2. Define dependencies → expose through context ports if needed.
-3. Implement logic in a stateless manager function.
+3. Implement logic in a stateless system function.
 4. Emit domain events for VFX/SFX/UI.
 5. Update presenter/view for visualization and callback routing.
 6. Add/update unit tests.

@@ -2,9 +2,9 @@ using Adapters;
 using State;
 using UnityEngine;
 
-namespace Managers
+namespace Systems
 {
-    public static class PlayerSpawnManager
+    public static class PlayerSpawnSystem
     {
         static readonly Vector3 DefaultSpawnPosition = Vector3.zero;
 

@@ -1,5 +1,5 @@
 using Adapters;
-using Managers;
+using Systems;
 using State;
 
 namespace Session
@@ -28,7 +28,7 @@ namespace Session
 
         public void Start()
         {
-            PlayerSpawnManager.SpawnPlayer(RaidState, _eventBuffer);
+            PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
             _eventBuffer.RaidStarted();
         }
 
@@ -44,11 +44,11 @@ namespace Session
                 navMesh: _navMeshAdapter
             );
 
-            // Managers run here in deterministic order.
-            MovementManager.Tick(RaidState, in context);
-            AimingManager.Tick(RaidState, in context);
-            ShootingManager.Tick(RaidState, in context);
-            ProjectileManager.Tick(RaidState, in context);
+            // Systems run here in deterministic order.
+            MovementSystem.Tick(RaidState, in context);
+            AimingSystem.Tick(RaidState, in context);
+            ShootingSystem.Tick(RaidState, in context);
+            ProjectileSystem.Tick(RaidState, in context);
 
             RaidState.ElapsedTime += context.DeltaTime;
         }

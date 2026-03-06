@@ -2,9 +2,9 @@ using Session;
 using State;
 using UnityEngine;
 
-namespace Managers
+namespace Systems
 {
-    public static class ShootingManager
+    public static class ShootingSystem
     {
         public const float FireInterval = 0.2f;
         public const float ProjectileSpeed = 20f;

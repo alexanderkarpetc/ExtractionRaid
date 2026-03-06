@@ -1,4 +1,4 @@
-using Managers;
+using Systems;
 using NUnit.Framework;
 using Session;
 using State;
@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Tests.EditMode
 {
     [TestFixture]
-    public class MovementManagerTests
+    public class MovementSystemTests
     {
         static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f)
         {
@@ -28,10 +28,10 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
             var context = CreateContext(input, deltaTime: 1f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
             Assert.AreEqual(0f, state.PlayerEntity.Position.x, 0.001f);
-            Assert.AreEqual(MovementManager.MoveSpeed, state.PlayerEntity.Position.z, 0.001f);
+            Assert.AreEqual(MovementSystem.MoveSpeed, state.PlayerEntity.Position.z, 0.001f);
             Assert.AreEqual(0f, state.PlayerEntity.Position.y, 0.001f);
         }
 
@@ -42,9 +42,9 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.right };
             var context = CreateContext(input, deltaTime: 1f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
-            Assert.AreEqual(MovementManager.MoveSpeed, state.PlayerEntity.Position.x, 0.001f);
+            Assert.AreEqual(MovementSystem.MoveSpeed, state.PlayerEntity.Position.x, 0.001f);
             Assert.AreEqual(0f, state.PlayerEntity.Position.z, 0.001f);
         }
 
@@ -56,7 +56,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.zero };
             var context = CreateContext(input, deltaTime: 1f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
             Assert.AreEqual(5f, state.PlayerEntity.Position.x, 0.001f);
             Assert.AreEqual(3f, state.PlayerEntity.Position.z, 0.001f);
@@ -69,10 +69,10 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = new Vector2(1f, 1f) };
             var context = CreateContext(input, deltaTime: 1f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
             var distance = state.PlayerEntity.Position.magnitude;
-            Assert.AreEqual(MovementManager.MoveSpeed, distance, 0.01f);
+            Assert.AreEqual(MovementSystem.MoveSpeed, distance, 0.01f);
         }
 
         [Test]
@@ -82,9 +82,9 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
             var context = CreateContext(input, deltaTime: 0.5f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
-            Assert.AreEqual(MovementManager.MoveSpeed * 0.5f, state.PlayerEntity.Position.z, 0.001f);
+            Assert.AreEqual(MovementSystem.MoveSpeed * 0.5f, state.PlayerEntity.Position.z, 0.001f);
         }
 
         [Test]
@@ -94,9 +94,9 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.right };
             var context = CreateContext(input, deltaTime: 1f / 60f);
 
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
-            Assert.AreEqual(MovementManager.MoveSpeed, state.PlayerEntity.Velocity.x, 0.001f);
+            Assert.AreEqual(MovementSystem.MoveSpeed, state.PlayerEntity.Velocity.x, 0.001f);
             Assert.AreEqual(0f, state.PlayerEntity.Velocity.z, 0.001f);
         }
 
@@ -107,7 +107,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
             var context = CreateContext(input, deltaTime: 1f);
 
-            Assert.DoesNotThrow(() => MovementManager.Tick(state, in context));
+            Assert.DoesNotThrow(() => MovementSystem.Tick(state, in context));
         }
 
         [Test]
@@ -117,11 +117,11 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
             var context = CreateContext(input, deltaTime: 1f);
 
-            MovementManager.Tick(state, in context);
-            MovementManager.Tick(state, in context);
-            MovementManager.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
+            MovementSystem.Tick(state, in context);
 
-            Assert.AreEqual(MovementManager.MoveSpeed * 3f, state.PlayerEntity.Position.z, 0.01f);
+            Assert.AreEqual(MovementSystem.MoveSpeed * 3f, state.PlayerEntity.Position.z, 0.01f);
         }
     }
 }

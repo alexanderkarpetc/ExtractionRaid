@@ -1,4 +1,4 @@
-using Managers;
+using Systems;
 using NUnit.Framework;
 using State;
 using Tests.EditMode.Fakes;
@@ -6,7 +6,7 @@ using Tests.EditMode.Fakes;
 namespace Tests.EditMode
 {
     [TestFixture]
-    public class PlayerSpawnManagerTests
+    public class PlayerSpawnSystemTests
     {
         [Test]
         public void SpawnPlayer_CreatesPlayerEntity()
@@ -14,7 +14,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnManager.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, events);
 
             Assert.IsNotNull(state.PlayerEntity);
             Assert.IsTrue(state.PlayerEntity.Id.IsValid);
@@ -26,7 +26,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnManager.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, events);
 
             Assert.IsTrue(events.PlayerSpawnedCalled);
             Assert.AreEqual(state.PlayerEntity.Id, events.SpawnedId);
@@ -38,11 +38,11 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnManager.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, events);
             var firstId = state.PlayerEntity.Id;
 
             events.PlayerSpawnedCalled = false;
-            PlayerSpawnManager.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, events);
 
             Assert.AreEqual(firstId, state.PlayerEntity.Id);
             Assert.IsFalse(events.PlayerSpawnedCalled);

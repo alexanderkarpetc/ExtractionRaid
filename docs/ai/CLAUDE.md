@@ -24,15 +24,15 @@ Do not introduce these unless explicitly requested:
 
 1. The only global singleton is `App.Instance`.
 2. Global access is allowed only through `App.Instance.Player` and `App.Instance.RaidSession`.
-3. Gameplay rules live in stateless static managers.
-4. Managers must not call `App.Instance`.
-5. Managers must not keep hidden mutable static state.
+3. Gameplay rules live in stateless static systems.
+4. Systems must not call `App.Instance`.
+5. Systems must not keep hidden mutable static state.
 6. State stores values and IDs only - never Unity object references.
 7. Model/logic may use Unity value types (`Vector3`, `Quaternion`, `Bounds`, `LayerMask`, `Mathf`, `Unity.Mathematics`).
 8. Model/logic must not store `MonoBehaviour`, `GameObject`, `Transform`, `Animator`, `Rigidbody`, `Collider` references.
 9. Unity-facing access must go through ports/adapters passed via context.
 10. View/Presenter must not contain gameplay rules.
-11. New gameplay logic should be added in a manager or manager sub-function, not scattered across views.
+11. New gameplay logic should be added in a system or system sub-function, not scattered across views.
 12. Never add new singletons.
 13. Keep diffs small and local.
 14. Do not introduce new frameworks unless explicitly requested.
@@ -41,8 +41,8 @@ Do not introduce these unless explicitly requested:
 
 - `App` is the composition root.
 - `RaidSession` is the runtime orchestrator.
-- `RaidSession` owns runtime state and runs managers in a stable order.
-- Managers contain gameplay rules and mutate explicit state.
+- `RaidSession` owns runtime state and runs systems in a stable order.
+- Systems contain gameplay rules and mutate explicit state.
 - `RaidContext` carries read-only dependencies (ports, configs, events, constants).
 - Presenter/View converts state and domain events into Unity visuals.
 
@@ -66,7 +66,7 @@ Forbidden in model/state/logic:
 When implementing a change:
 1. Identify the affected state.
 2. Identify required dependencies and add them to context via ports if needed.
-3. Implement or adjust logic in managers.
+3. Implement or adjust logic in systems.
 4. Emit domain events for VFX/SFX/UI instead of calling Unity APIs directly.
 5. Update presenter/view only for visualization, bindings, and callback routing.
 6. Add or update tests when logic changes.

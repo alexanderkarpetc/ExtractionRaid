@@ -1,5 +1,5 @@
 using Adapters;
-using Managers;
+using Systems;
 using NUnit.Framework;
 using Session;
 using State;
@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Tests.EditMode
 {
     [TestFixture]
-    public class ProjectileManagerTests
+    public class ProjectileSystemTests
     {
         static RaidContext CreateContext(float deltaTime = 1f / 60f, IRaidEvents events = null)
         {
@@ -39,7 +39,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             var context = CreateContext(deltaTime: 1f);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(10f, state.Projectiles[0].Position.z, 0.001f);
         }
@@ -52,7 +52,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 15f);
             var context = CreateContext(deltaTime: 1f);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(5f, state.Projectiles[0].Position.z, 0.001f);
             Assert.AreEqual(15f, state.Projectiles[1].Position.z, 0.001f);
@@ -65,7 +65,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             var context = CreateContext(deltaTime: 0.5f);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(5f, state.Projectiles[0].Position.z, 0.001f);
         }
@@ -78,7 +78,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var context = CreateContext();
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(0, state.Projectiles.Count);
         }
@@ -92,7 +92,7 @@ namespace Tests.EditMode
             var eventBuffer = new RaidEventBuffer();
             var context = CreateContext(events: eventBuffer);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(1, eventBuffer.DespawnedProjectileIds.Count);
             Assert.AreEqual(proj.Id, eventBuffer.DespawnedProjectileIds[0]);
@@ -107,7 +107,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.left, speed: 10f);
             var context = CreateContext(deltaTime: 1f);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(3, state.Projectiles.Count);
             Assert.AreEqual(10f, state.Projectiles[0].Position.z, 0.001f);
@@ -121,7 +121,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var context = CreateContext();
 
-            Assert.DoesNotThrow(() => ProjectileManager.Tick(state, in context));
+            Assert.DoesNotThrow(() => ProjectileSystem.Tick(state, in context));
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace Tests.EditMode
             var alive = CreateProjectile(state, Vector3.zero, Vector3.right, spawnTime: 3f, lifetime: 3f);
             var context = CreateContext();
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
             Assert.AreEqual(alive.Id, state.Projectiles[0].Id);
@@ -149,7 +149,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.left, spawnTime: 0f, lifetime: 2f);
             var context = CreateContext(deltaTime: 1f);
 
-            ProjectileManager.Tick(state, in context);
+            ProjectileSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
             Assert.AreEqual(alive.Id, state.Projectiles[0].Id);

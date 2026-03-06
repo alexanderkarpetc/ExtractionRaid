@@ -1,5 +1,5 @@
 using Adapters;
-using Managers;
+using Systems;
 using NUnit.Framework;
 using Session;
 using State;
@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Tests.EditMode
 {
     [TestFixture]
-    public class ShootingManagerTests
+    public class ShootingSystemTests
     {
         static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f,
             IRaidEvents events = null)
@@ -31,7 +31,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
         }
@@ -44,7 +44,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = false };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(0, state.Projectiles.Count);
         }
@@ -59,7 +59,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(0, state.Projectiles.Count);
         }
@@ -74,7 +74,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
         }
@@ -87,7 +87,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(0, state.Projectiles.Count);
         }
@@ -101,7 +101,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
             Assert.AreEqual(facing.x, state.Projectiles[0].Direction.x, 0.001f);
@@ -121,7 +121,7 @@ namespace Tests.EditMode
             };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             var proj = state.Projectiles[0];
             Assert.AreEqual(muzzlePos.x, proj.Position.x, 0.001f);
@@ -136,7 +136,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            Assert.DoesNotThrow(() => ShootingManager.Tick(state, in context));
+            Assert.DoesNotThrow(() => ShootingSystem.Tick(state, in context));
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(2.5f, state.PlayerEntity.Combat.LastFireTime, 0.001f);
         }
@@ -162,7 +162,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input, events: eventBuffer);
 
-            ShootingManager.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, eventBuffer.SpawnedProjectiles.Count);
             Assert.AreEqual(state.Projectiles[0].Id, eventBuffer.SpawnedProjectiles[0].Id);

@@ -25,16 +25,16 @@ Each runtime entity exists in three layers:
 
 - `RaidSession` owns entity state and gameplay decisions.
 - Presenter owns Unity view instances and the binding registry.
-- Managers own gameplay rules.
+- Systems own gameplay rules.
 
 ## 3) Spawn contract
 
 Spawn is always two-step:
 
 ### A) Domain spawn
-- a manager creates the entity in state
-- a manager generates an `EId`
-- a manager emits a domain-to-view spawn intent
+- a system creates the entity in state
+- a system generates an `EId`
+- a system emits a domain-to-view spawn intent
 
 ### B) View spawn
 - presenter receives the spawn intent
@@ -43,15 +43,15 @@ Spawn is always two-step:
 - presenter registers the binding
 
 Rules:
-- managers must not instantiate prefabs
+- systems must not instantiate prefabs
 - presenter must not create entities in state
 
 ## 4) Update contract
 
 ### Simulation
-- `RaidSession` runs managers in stable order
-- managers read and mutate state
-- managers may emit presentation intents
+- `RaidSession` runs systems in stable order
+- systems read and mutate state
+- systems may emit presentation intents
 
 ### Presentation
 - presenter applies state-driven transforms and animation parameters
@@ -59,15 +59,15 @@ Rules:
 
 Rules:
 - MonoBehaviours must not run AI or combat rules in `Update` / `FixedUpdate`
-- all decision-making lives in managers inside `RaidSession.Tick`
+- all decision-making lives in systems inside `RaidSession.Tick`
 
 ## 5) Despawn contract
 
 Despawn is also two-step:
 
 ### A) Domain despawn
-- a manager removes or marks the entity in state
-- a manager emits a despawn intent with the `EId`
+- a system removes or marks the entity in state
+- a system emits a despawn intent with the `EId`
 
 ### B) View despawn
 - presenter unbinds the entity
@@ -75,7 +75,7 @@ Despawn is also two-step:
 - presenter destroys the GameObject immediately or after a short delay
 
 Rules:
-- managers must not destroy GameObjects
+- systems must not destroy GameObjects
 - presenter must not delete entities from state
 
 ## 6) Unity callbacks -> domain inbox
@@ -86,11 +86,11 @@ Flow:
 1. a view or sensor MonoBehaviour receives a Unity callback
 2. it packages a domain event
 3. it pushes the event into a `RaidSession`-owned inbox
-4. managers consume inbox events on the next tick
+4. systems consume inbox events on the next tick
 
 Rules:
 - Unity callbacks must not directly modify gameplay state
-- views must not call managers directly
+- views must not call systems directly
 
 ## 7) Allowed directions only
 
@@ -99,7 +99,7 @@ Allowed:
 2. Domain -> Unity via `IRaidEvents` and state-driven presentation
 
 Forbidden:
-- managers calling Unity APIs directly
+- systems calling Unity APIs directly
 - MonoBehaviours modifying domain state directly
 - presenter making gameplay decisions
 

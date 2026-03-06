@@ -13,24 +13,24 @@ alwaysApply: false
 ## Ownership
 - `RaidSession` owns entity state and gameplay decisions.
 - Presenter owns Unity views and binding registry.
-- Managers own gameplay rules.
+- Systems own gameplay rules.
 
 ## Spawn (two-step)
-**Domain:** manager creates entity in state, generates `EntityId`, emits spawn intent.
+**Domain:** system creates entity in state, generates `EntityId`, emits spawn intent.
 **View:** presenter instantiates prefab, assigns `EntityId`, registers binding.
-- Managers must not instantiate prefabs. Presenter must not create state entities.
+- Systems must not instantiate prefabs. Presenter must not create state entities.
 
 ## Despawn (two-step)
-**Domain:** manager removes/marks entity in state, emits despawn intent with `EntityId`.
+**Domain:** system removes/marks entity in state, emits despawn intent with `EntityId`.
 **View:** presenter unbinds, optionally plays final VFX/SFX, destroys GameObject.
-- Managers must not destroy GameObjects. Presenter must not delete state entities.
+- Systems must not destroy GameObjects. Presenter must not delete state entities.
 
 ## Unity callbacks → domain inbox
 1. View/sensor MonoBehaviour receives Unity callback (collision, trigger, hit).
 2. Packages a domain event.
 3. Pushes into `RaidSession`-owned inbox.
-4. Managers consume inbox events on next tick.
-- Callbacks must not modify gameplay state directly. Views must not call managers directly.
+4. Systems consume inbox events on next tick.
+- Callbacks must not modify gameplay state directly. Views must not call systems directly.
 
 ## Identity rules
 - `EntityId` is the only stable gameplay identity.

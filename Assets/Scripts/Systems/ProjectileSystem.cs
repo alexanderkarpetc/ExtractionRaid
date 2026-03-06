@@ -1,9 +1,9 @@
 using Session;
 using State;
 
-namespace Managers
+namespace Systems
 {
-    public static class ProjectileManager
+    public static class ProjectileSystem
     {
         public static void Tick(RaidState state, in RaidContext context)
         {

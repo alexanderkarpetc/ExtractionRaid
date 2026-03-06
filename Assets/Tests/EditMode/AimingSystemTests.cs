@@ -1,4 +1,4 @@
-using Managers;
+using Systems;
 using NUnit.Framework;
 using Session;
 using State;
@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Tests.EditMode
 {
     [TestFixture]
-    public class AimingManagerTests
+    public class AimingSystemTests
     {
         static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f)
         {
@@ -28,7 +28,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.x, 0.001f);
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.y, 0.001f);
@@ -42,7 +42,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.x, 0.001f);
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.z, 0.001f);
@@ -55,7 +55,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, 5f) };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.magnitude, 0.001f);
         }
@@ -68,7 +68,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = Vector3.zero };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(Vector3.right, state.PlayerEntity.FacingDirection);
         }
@@ -80,7 +80,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 5f, 10f) };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.y, 0.001f);
             Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.z, 0.001f);
@@ -93,7 +93,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
             var context = CreateContext(input);
 
-            Assert.DoesNotThrow(() => AimingManager.Tick(state, in context));
+            Assert.DoesNotThrow(() => AimingSystem.Tick(state, in context));
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace Tests.EditMode
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, 15f) };
             var context = CreateContext(input);
 
-            AimingManager.Tick(state, in context);
+            AimingSystem.Tick(state, in context);
 
             Assert.AreEqual(0f, state.PlayerEntity.FacingDirection.x, 0.001f);
             Assert.AreEqual(1f, state.PlayerEntity.FacingDirection.z, 0.001f);

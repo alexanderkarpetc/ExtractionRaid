@@ -1,5 +1,5 @@
 ---
-description: Core architecture contract for ExtractionRaid. Defines layers, singletons, manager rules, state rules, and implementation workflow.
+description: Core architecture contract for ExtractionRaid. Defines layers, singletons, system rules, state rules, and implementation workflow.
 alwaysApply: true
 ---
 
@@ -17,8 +17,8 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
 ## Top rules
 1. Only global singleton: `App.Instance`. Never add new ones.
 2. Global access only via `App.Instance.Player` and `App.Instance.RaidSession`.
-3. Gameplay rules live in stateless static managers.
-4. Managers must not call `App.Instance` or keep hidden mutable static state.
+3. Gameplay rules live in stateless static systems.
+4. Systems must not call `App.Instance` or keep hidden mutable static state.
 5. State stores values and IDs only — never Unity object references.
 6. Model/logic may use Unity value types (`Vector3`, `Quaternion`, `Bounds`, `LayerMask`, `Mathf`, `Unity.Mathematics`).
 7. Model/logic must not store `MonoBehaviour`, `GameObject`, `Transform`, `Animator`, `Rigidbody`, `Collider` references.
@@ -28,15 +28,15 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
 
 ## Core architecture
 - `App` — composition root.
-- `RaidSession` — runtime orchestrator, owns `RaidState`/`LevelState`, constructs `RaidContext`, runs managers in stable order.
-- Managers — stateless, contain gameplay rules, mutate explicit state.
+- `RaidSession` — runtime orchestrator, owns `RaidState`/`LevelState`, constructs `RaidContext`, runs systems in stable order.
+- Systems — stateless, contain gameplay rules, mutate explicit state.
 - `RaidContext` — read-only dependencies (ports, configs, events, constants).
 - Presenter/View — converts state and domain events into Unity visuals.
 
 ## Implementation workflow
 1. Identify affected state.
 2. Identify dependencies → add to context via ports if needed.
-3. Implement/adjust logic in managers.
+3. Implement/adjust logic in systems.
 4. Emit domain events for VFX/SFX/UI via `IRaidEvents`.
 5. Update presenter/view only for visualization and callback routing.
 6. Add or update tests.

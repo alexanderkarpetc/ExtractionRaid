@@ -13,9 +13,9 @@ alwaysApply: false
 
 ### Session Layer
 - `Player`: persistent profile, meta progression, save/load entry point.
-- `RaidSession`: owns `RaidState`/`LevelState`, constructs `RaidContext`, orchestrates manager execution in stable order.
+- `RaidSession`: owns `RaidState`/`LevelState`, constructs `RaidContext`, orchestrates system execution in stable order.
 
-### Domain Logic (Managers)
+### Domain Logic (Systems)
 - Stateless static functions operating on explicit state and context.
 - Accept inputs as arguments, mutate state via `ref`.
 - Must not depend on hidden globals.
@@ -37,11 +37,11 @@ alwaysApply: false
 - Read-only, passed as `in`. Contains: ports/adapters, config refs, event sink/buffer, constants (`dt`, masks, tuning).
 
 ### Events
-- Managers emit domain-to-view intents through `IRaidEvents`. Presenter consumes them.
+- Systems emit domain-to-view intents through `IRaidEvents`. Presenter consumes them.
 
 ## Tick model
 1. Gather input and external signals.
-2. Run managers in deterministic order (movement → AI → combat → loot → extraction).
+2. Run systems in deterministic order (movement → AI → combat → loot → extraction).
 3. Produce state changes and domain events.
 4. Present state and events in Unity.
 
@@ -57,8 +57,8 @@ Update
   └─ App.Tick()
        └─ RaidSession.Tick()
             ├─ build RaidContext (readonly struct, passed as in)
-            ├─ Manager_A.Tick(state, in context)   // e.g. MovementManager
-            ├─ Manager_B.Tick(state, in context)   // deterministic order
+            ├─ System_A.Tick(state, in context)   // e.g. MovementSystem
+            ├─ System_B.Tick(state, in context)   // deterministic order
             └─ state.ElapsedTime += dt
 
 LateUpdate
@@ -67,7 +67,7 @@ LateUpdate
        └─ RaidSession.ClearEvents()                // reset event buffer
 ```
 
-Managers read adapters from context, write into state.
+Systems read adapters from context, write into state.
 Presenters read state + events, write into Unity transforms.
 Events are cleared after all presenters have consumed them.
 
@@ -87,10 +87,10 @@ App (singleton, composition root)
 ### Data direction
 
 ```
-Input → Adapter → Context → Manager → State → Presenter → View
+Input → Adapter → Context → System → State → Presenter → View
                                 ↓
                           EventBuffer → Presenter (spawn/destroy intents)
 ```
 
 No reverse links. State does not know about View.
-Managers do not know about App. View does not write into State.
+Systems do not know about App. View does not write into State.

@@ -2,9 +2,9 @@ using Session;
 using State;
 using UnityEngine;
 
-namespace Managers
+namespace Systems
 {
-    public static class MovementManager
+    public static class MovementSystem
     {
         public const float MoveSpeed = 5f;
 

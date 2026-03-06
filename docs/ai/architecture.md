@@ -22,14 +22,14 @@ Responsibilities:
 `RaidSession`:
 - owns `RaidState` and `LevelState`
 - constructs `RaidContext`
-- orchestrates manager execution in a stable order
+- orchestrates system execution in a stable order
 
-### Domain Logic (Managers)
-- stateless static managers operate on explicit state and context
+### Domain Logic (Systems)
+- stateless static systems operate on explicit state and context
 - gameplay rules live here
-- managers accept inputs as arguments
-- managers mutate state explicitly, typically via `ref`
-- managers must not depend on hidden globals
+- systems accept inputs as arguments
+- systems mutate state explicitly, typically via `ref`
+- systems must not depend on hidden globals
 
 ### Adapters (Unity-facing ports)
 All Unity subsystem access goes through interfaces passed via context, for example:
@@ -61,15 +61,15 @@ Typical contents:
 - constants (`dt`, masks, tuning)
 
 ### Events
-Managers do not play VFX/SFX directly.
-Managers emit domain-to-view intents through `IRaidEvents`.
+Systems do not play VFX/SFX directly.
+Systems emit domain-to-view intents through `IRaidEvents`.
 Presenter consumes these intents and performs Unity-side work.
 
 ## 3) Tick model
 
 High-level loop:
 1. gather input and external signals
-2. run managers in a deterministic order
+2. run systems in a deterministic order
 3. produce state changes and domain events
 4. present state and events in Unity
 
@@ -97,14 +97,14 @@ Do not rely on directly loading arbitrary scenes.
 
 ### Must
 - keep dependencies explicit via parameters
-- isolate features by manager or manager sub-function
+- isolate features by system or system sub-function
 - prefer explicit IDs over object references
 - preserve project conventions
 - keep changes as minimal diffs
 
 ### Must not
 - add new global singletons besides `App.Instance`
-- call `App.Instance` from managers
+- call `App.Instance` from systems
 - store Unity objects inside state
 - hide dependencies in static fields
 
@@ -112,7 +112,7 @@ Do not rely on directly loading arbitrary scenes.
 
 - **State**: mutable game-world data (values + IDs)
 - **Context**: read-only dependencies (ports, adapters, config, events)
-- **Manager**: stateless gameplay rule executor
+- **System**: stateless gameplay rule executor
 - **Presenter/View**: Unity-only visualization layer
 - **Entry Point**: launch mode routed through the launcher
 
@@ -125,8 +125,8 @@ Update
   └─ App.Tick()
        └─ RaidSession.Tick()
             ├─ build RaidContext (readonly struct, passed as in)
-            ├─ Manager_A.Tick(state, in context)   // e.g. MovementManager
-            ├─ Manager_B.Tick(state, in context)   // deterministic order
+            ├─ System_A.Tick(state, in context)   // e.g. MovementSystem
+            ├─ System_B.Tick(state, in context)   // deterministic order
             └─ state.ElapsedTime += dt
 
 LateUpdate
@@ -135,7 +135,7 @@ LateUpdate
        └─ RaidSession.ClearEvents()                // reset event buffer
 ```
 
-Managers read adapters from context, write into state.
+Systems read adapters from context, write into state.
 Presenters read state + events, write into Unity transforms.
 Events are cleared after all presenters have consumed them.
 
@@ -155,10 +155,10 @@ App (singleton, composition root)
 ### Data direction
 
 ```
-Input → Adapter → Context → Manager → State → Presenter → View
+Input → Adapter → Context → System → State → Presenter → View
                                 ↓
                           EventBuffer → Presenter (spawn/destroy intents)
 ```
 
 No reverse links. State does not know about View.
-Managers do not know about App. View does not write into State.
+Systems do not know about App. View does not write into State.
