@@ -46,6 +46,7 @@ namespace Session
 
             // Managers run here in deterministic order.
             MovementManager.Tick(RaidState, in context);
+            AimingManager.Tick(RaidState, in context);
             ShootingManager.Tick(RaidState, in context);
             ProjectileManager.Tick(RaidState, in context);
 

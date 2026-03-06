@@ -8,6 +8,7 @@ namespace Adapters
     {
         readonly InputSystem_Actions _actions;
         Camera _camera;
+        Transform _muzzlePoint;
 
         public UnityInputAdapter()
         {
@@ -36,9 +37,17 @@ namespace Adapters
             }
         }
 
+        public Vector3 MuzzleWorldPoint =>
+            _muzzlePoint != null ? _muzzlePoint.position : Vector3.zero;
+
         public void SetCamera(Camera camera)
         {
             _camera = camera;
+        }
+
+        public void SetMuzzlePoint(Transform muzzlePoint)
+        {
+            _muzzlePoint = muzzlePoint;
         }
 
         public void Dispose()

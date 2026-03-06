@@ -9,5 +9,6 @@ namespace Tests.EditMode.Fakes
         public bool SprintPressed { get; set; }
         public bool AttackPressed { get; set; }
         public Vector3 AimWorldPoint { get; set; }
+        public Vector3 MuzzleWorldPoint { get; set; }
     }
 }

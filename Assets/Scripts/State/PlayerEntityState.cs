@@ -7,6 +7,7 @@ namespace State
         public EId Id;
         public Vector3 Position;
         public Vector3 Velocity;
+        public Vector3 FacingDirection;
         public PlayerCombatState Combat;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
@@ -16,6 +17,7 @@ namespace State
                 Id = id,
                 Position = spawnPosition,
                 Velocity = Vector3.zero,
+                FacingDirection = Vector3.forward,
                 Combat = PlayerCombatState.Create(),
             };
         }

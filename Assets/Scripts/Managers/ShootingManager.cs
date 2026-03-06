@@ -9,7 +9,6 @@ namespace Managers
         public const float FireInterval = 0.2f;
         public const float ProjectileSpeed = 20f;
         public const float ProjectileLifetime = 3f;
-        public const float MuzzleOffset = 0.5f;
 
         public static void Tick(RaidState state, in RaidContext context)
         {
@@ -23,16 +22,11 @@ namespace Managers
 
             if (state.ElapsedTime - player.Combat.LastFireTime < FireInterval) return;
 
-            var aimPoint = input.AimWorldPoint;
-            var origin = player.Position;
-            var dir = new Vector3(aimPoint.x - origin.x, 0f, aimPoint.z - origin.z);
+            var dir = player.FacingDirection;
 
             if (dir.sqrMagnitude < 0.001f) return;
 
-            dir.Normalize();
-
-            var spawnPos = origin + dir * MuzzleOffset;
-            spawnPos.y = origin.y;
+            var spawnPos = input.MuzzleWorldPoint;
 
             var projectileId = state.AllocateEId();
             var projectile = ProjectileEntityState.Create(

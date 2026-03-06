@@ -24,14 +24,11 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_WithAttackPressedAndValidAim_SpawnsProjectile()
+        public void Tick_WithAttackPressedAndValidFacing_SpawnsProjectile()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -43,11 +40,8 @@ namespace Tests.EditMode
         public void Tick_WithAttackNotPressed_DoesNotSpawn()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = false,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var input = new FakeInputAdapter { AttackPressed = false };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -59,13 +53,10 @@ namespace Tests.EditMode
         public void Tick_WithinCooldown_DoesNotSpawn()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 1f;
             state.PlayerEntity.Combat.LastFireTime = 0.9f;
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -77,13 +68,10 @@ namespace Tests.EditMode
         public void Tick_AfterCooldownExpires_SpawnsAgain()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 1f;
             state.PlayerEntity.Combat.LastFireTime = 0.5f;
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -92,14 +80,11 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_AimTooCloseToPlayer_DoesNotSpawn()
+        public void Tick_ZeroFacingDirection_DoesNotSpawn()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = Vector3.zero,
-            };
+            state.PlayerEntity.FacingDirection = Vector3.zero;
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -108,52 +93,47 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_ProjectileDirectionIsNormalized()
+        public void Tick_ProjectileDirectionMatchesFacingDirection()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(5f, 0f, 5f),
-            };
+            var facing = new Vector3(1f, 0f, 1f).normalized;
+            state.PlayerEntity.FacingDirection = facing;
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
-            Assert.AreEqual(1f, state.Projectiles[0].Direction.magnitude, 0.001f);
+            Assert.AreEqual(facing.x, state.Projectiles[0].Direction.x, 0.001f);
+            Assert.AreEqual(facing.z, state.Projectiles[0].Direction.z, 0.001f);
         }
 
         [Test]
-        public void Tick_ProjectileSpawnPositionIsAtMuzzleOffset()
+        public void Tick_ProjectileSpawnsAtMuzzleWorldPoint()
         {
-            var playerPos = new Vector3(2f, 0f, 3f);
-            var state = EditModeTestsUtils.CreateStateWithPlayer(playerPos);
+            var muzzlePos = new Vector3(2f, 0.5f, 4.2f);
+            var state = EditModeTestsUtils.CreateStateWithPlayer(new Vector3(2f, 0f, 3f));
+            state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter
             {
                 AttackPressed = true,
-                AimWorldPoint = new Vector3(2f, 0f, 13f),
+                MuzzleWorldPoint = muzzlePos,
             };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
 
             var proj = state.Projectiles[0];
-            var expectedPos = playerPos + Vector3.forward * ShootingManager.MuzzleOffset;
-            Assert.AreEqual(expectedPos.x, proj.Position.x, 0.001f);
-            Assert.AreEqual(expectedPos.z, proj.Position.z, 0.001f);
-            Assert.AreEqual(playerPos.y, proj.Position.y, 0.001f);
+            Assert.AreEqual(muzzlePos.x, proj.Position.x, 0.001f);
+            Assert.AreEqual(muzzlePos.y, proj.Position.y, 0.001f);
+            Assert.AreEqual(muzzlePos.z, proj.Position.z, 0.001f);
         }
 
         [Test]
         public void Tick_NullPlayer_DoesNotThrow()
         {
             var state = RaidState.Create();
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             Assert.DoesNotThrow(() => ShootingManager.Tick(state, in context));
@@ -163,12 +143,9 @@ namespace Tests.EditMode
         public void Tick_SetsLastFireTime()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 2.5f;
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingManager.Tick(state, in context);
@@ -180,12 +157,9 @@ namespace Tests.EditMode
         public void Tick_EmitsProjectileSpawnedEvent()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
             var eventBuffer = new RaidEventBuffer();
-            var input = new FakeInputAdapter
-            {
-                AttackPressed = true,
-                AimWorldPoint = new Vector3(0f, 0f, 10f),
-            };
+            var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input, events: eventBuffer);
 
             ShootingManager.Tick(state, in context);

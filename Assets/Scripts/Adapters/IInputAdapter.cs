@@ -8,5 +8,6 @@ namespace Adapters
         bool SprintPressed { get; }
         bool AttackPressed { get; }
         Vector3 AimWorldPoint { get; }
+        Vector3 MuzzleWorldPoint { get; }
     }
 }

@@ -1,18 +1,22 @@
+using System;
 using Session;
 using State;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace View
 {
     public class PlayerPresenter
     {
         readonly GameObject _playerPrefab;
+        readonly Action<Transform> _onMuzzlePointReady;
 
         PlayerView _playerView;
         EId _trackedId;
 
-        public PlayerPresenter()
+        public PlayerPresenter(Action<Transform> onMuzzlePointReady)
         {
+            _onMuzzlePointReady = onMuzzlePointReady;
             _playerPrefab = Resources.Load<GameObject>("Prefabs/PlayerCapsule");
 
             if (_playerPrefab == null)
@@ -43,7 +47,11 @@ namespace View
         {
             if (_playerPrefab == null) return;
 
-            var go = Object.Instantiate(_playerPrefab, playerState.Position, Quaternion.identity);
+            var initialRotation = playerState.FacingDirection.sqrMagnitude > 0.001f
+                ? Quaternion.LookRotation(playerState.FacingDirection, Vector3.up)
+                : Quaternion.identity;
+
+            var go = Object.Instantiate(_playerPrefab, playerState.Position, initialRotation);
             _playerView = go.GetComponent<PlayerView>();
             _playerView.Initialize(_trackedId);
 
@@ -54,6 +62,9 @@ namespace View
                 if (cameraController != null)
                     cameraController.SetTarget(_playerView.transform);
             }
+
+            if (_playerView.MuzzlePoint != null)
+                _onMuzzlePointReady?.Invoke(_playerView.MuzzlePoint);
 
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }

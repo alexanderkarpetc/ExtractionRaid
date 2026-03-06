@@ -27,7 +27,7 @@ namespace App
             _timeAdapter = new UnityTimeAdapter();
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
-            _playerPresenter = new PlayerPresenter();
+            _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
             Player = new Player();
         }
