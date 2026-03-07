@@ -12,5 +12,7 @@ namespace Adapters
         void ProjectileDespawned(EId id);
         void DestructibleDamaged(EId id, float currentHp, float maxHp);
         void DestructibleDestroyed(EId id);
+        void GroundItemSpawned(EId id, Vector3 position, string definitionId);
+        void GroundItemDespawned(EId id);
     }
 }

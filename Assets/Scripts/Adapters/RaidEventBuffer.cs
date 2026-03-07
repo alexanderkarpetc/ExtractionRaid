@@ -13,6 +13,8 @@ namespace Adapters
         ProjectileDespawned,
         DestructibleDamaged,
         DestructibleDestroyed,
+        GroundItemSpawned,
+        GroundItemDespawned,
     }
 
     public struct RaidEvent
@@ -23,6 +25,7 @@ namespace Adapters
         public Vector3 Direction;
         public float CurrentHp;
         public float MaxHp;
+        public string StringPayload;
     }
 
     public class RaidEventBuffer : IRaidEvents
@@ -76,6 +79,22 @@ namespace Adapters
         public void DestructibleDestroyed(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.DestructibleDestroyed, Id = id });
+        }
+
+        public void GroundItemSpawned(EId id, Vector3 position, string definitionId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.GroundItemSpawned,
+                Id = id,
+                Position = position,
+                StringPayload = definitionId,
+            });
+        }
+
+        public void GroundItemDespawned(EId id)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.GroundItemDespawned, Id = id });
         }
 
         public void Clear()

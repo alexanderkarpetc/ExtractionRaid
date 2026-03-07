@@ -10,5 +10,7 @@ namespace Adapters
         Vector3 AimWorldPoint { get; }
         Vector3 MuzzleWorldPoint { get; }
         int HotbarSlotPressed { get; }
+        bool InventoryTogglePressed { get; }
+        bool PickUpPressed { get; }
     }
 }

@@ -22,5 +22,7 @@ namespace Tests.EditMode.Fakes
         public void ProjectileDespawned(EId id) { }
         public void DestructibleDamaged(EId id, float currentHp, float maxHp) { }
         public void DestructibleDestroyed(EId id) { }
+        public void GroundItemSpawned(EId id, Vector3 position, string definitionId) { }
+        public void GroundItemDespawned(EId id) { }
     }
 }

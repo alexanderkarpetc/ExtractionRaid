@@ -14,6 +14,7 @@ namespace App
             App.Initialize();
             DontDestroyOnLoad(gameObject);
             gameObject.AddComponent<HotbarDebugOverlay>();
+            gameObject.AddComponent<InventoryUI>();
         }
 
         void Start()

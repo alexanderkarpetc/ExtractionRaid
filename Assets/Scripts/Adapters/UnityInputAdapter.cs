@@ -64,6 +64,24 @@ namespace Adapters
             }
         }
 
+        public bool InventoryTogglePressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.Tab].wasPressedThisFrame;
+            }
+        }
+
+        public bool PickUpPressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.F].wasPressedThisFrame;
+            }
+        }
+
         public void SetCamera(Camera camera)
         {
             _camera = camera;

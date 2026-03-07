@@ -31,7 +31,29 @@ namespace Session
         public void Start()
         {
             PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
+            SpawnTestGroundItems();
             _eventBuffer.RaidStarted();
+        }
+
+        void SpawnTestGroundItems()
+        {
+            var testItems = new[]
+            {
+                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f)),
+                ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f)),
+                ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f)),
+                ("Ammo_Box", new UnityEngine.Vector3(-3f, 0f, -3f)),
+                ("Rifle", new UnityEngine.Vector3(4f, 0f, 4f)),
+                ("Shotgun", new UnityEngine.Vector3(-4f, 0f, 1f)),
+            };
+
+            foreach (var (defId, pos) in testItems)
+            {
+                var id = RaidState.AllocateEId();
+                var groundItem = GroundItemState.Create(id, defId, pos);
+                RaidState.GroundItems.Add(groundItem);
+                _eventBuffer.GroundItemSpawned(id, pos, defId);
+            }
         }
 
         public void Tick()
@@ -55,6 +77,13 @@ namespace Session
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
 
+            if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
+            {
+                var nearest = InventorySystem.FindNearestGroundItem(RaidState, RaidState.PlayerEntity.Position);
+                if (nearest.IsValid)
+                    InventorySystem.TryPickUp(RaidState, nearest, _eventBuffer);
+            }
+
             RaidState.ElapsedTime += context.DeltaTime;
         }
 
@@ -65,6 +94,11 @@ namespace Session
         public void ReportHit(HitSignal signal)
         {
             _hitInbox.Add(signal);
+        }
+
+        public bool RequestDrop(InventorySlotRef slot, UnityEngine.Vector3 dropPosition)
+        {
+            return InventorySystem.TryDrop(RaidState, slot, dropPosition, _eventBuffer);
         }
 
         public void End()

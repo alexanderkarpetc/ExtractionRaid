@@ -22,6 +22,7 @@ namespace App
         readonly PlayerPresenter _playerPresenter;
         readonly ProjectilePresenter _projectilePresenter;
         readonly DestructiblePresenter _destructiblePresenter;
+        readonly GroundItemPresenter _groundItemPresenter;
 
         App()
         {
@@ -31,6 +32,7 @@ namespace App
             _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
             _destructiblePresenter = new DestructiblePresenter();
+            _groundItemPresenter = new GroundItemPresenter();
             Player = new Player();
         }
 
@@ -83,6 +85,7 @@ namespace App
             _destructiblePresenter.LateTick(RaidSession);
             _playerPresenter.LateTick(RaidSession);
             _projectilePresenter.LateTick(RaidSession);
+            _groundItemPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
@@ -93,6 +96,7 @@ namespace App
             _instance._playerPresenter?.Dispose();
             _instance._projectilePresenter?.Dispose();
             _instance._destructiblePresenter?.Dispose();
+            _instance._groundItemPresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;
