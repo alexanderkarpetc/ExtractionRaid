@@ -13,8 +13,9 @@ namespace View
         [SerializeField] float _followSpeed = 8f;
 
         [Header("Cursor Offset")]
-        [SerializeField] float _cursorInfluence = 2.5f;
+        [SerializeField] float _cursorInfluence = 4f;
         [SerializeField] float _cursorSmoothing = 5f;
+        [SerializeField] [Range(0f, 1f)] float _deadZone = 0.3f;
 
         Transform _target;
         Vector3 _cursorOffset;
@@ -44,7 +45,17 @@ namespace View
                     var mouseWorld = ray.GetPoint(dist);
                     var dir = mouseWorld - _target.position;
                     dir.y = 0f;
-                    desiredCursorOffset = Vector3.ClampMagnitude(dir, 1f) * _cursorInfluence;
+
+                    float maxRange = cam.orthographic
+                        ? cam.orthographicSize
+                        : Vector3.Distance(cam.transform.position, _target.position);
+                    float normalizedDist = Mathf.Clamp01(dir.magnitude / maxRange);
+
+                    float remapped = normalizedDist > _deadZone
+                        ? (normalizedDist - _deadZone) / (1f - _deadZone)
+                        : 0f;
+
+                    desiredCursorOffset = dir.normalized * remapped * _cursorInfluence;
                 }
             }
 
