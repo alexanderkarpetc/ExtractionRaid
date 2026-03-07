@@ -42,7 +42,7 @@ namespace Systems
                     weapon.ProjectileDamage);
 
                 state.Projectiles.Add(projectile);
-                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);
             }
 
             weapon.LastFireTime = state.ElapsedTime;

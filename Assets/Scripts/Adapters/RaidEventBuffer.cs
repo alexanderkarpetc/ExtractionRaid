@@ -25,6 +25,7 @@ namespace Adapters
         public Vector3 Direction;
         public float CurrentHp;
         public float MaxHp;
+        public float Damage;
         public string StringPayload;
     }
 
@@ -49,7 +50,7 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.PlayerSpawned, Id = id });
         }
 
-        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction)
+        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage)
         {
             _events.Add(new RaidEvent
             {
@@ -57,6 +58,7 @@ namespace Adapters
                 Id = id,
                 Position = position,
                 Direction = direction,
+                Damage = damage,
             });
         }
 

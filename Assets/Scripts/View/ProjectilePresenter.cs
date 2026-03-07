@@ -30,16 +30,7 @@ namespace View
                 switch (e.Type)
                 {
                     case RaidEventType.ProjectileSpawned:
-                        float damage = 0f;
-                        foreach (var p in session.RaidState.Projectiles)
-                        {
-                            if (p.Id == e.Id)
-                            {
-                                damage = p.Damage;
-                                break;
-                            }
-                        }
-                        SpawnView(e.Id, e.Position, e.Direction, damage);
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage);
                         break;
                     case RaidEventType.ProjectileDespawned:
                         DespawnView(e.Id);
