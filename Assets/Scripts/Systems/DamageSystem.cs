@@ -11,6 +11,15 @@ namespace Systems
         {
             foreach (var hit in hits)
             {
+                ProjectileEntityState projectile = null;
+                foreach (var p in state.Projectiles)
+                {
+                    if (p.Id == hit.ProjectileId) { projectile = p; break; }
+                }
+
+                if (projectile != null && projectile.OwnerId == hit.TargetId)
+                    continue;
+
                 if (!state.HealthMap.TryGetValue(hit.TargetId, out var health))
                     continue;
 

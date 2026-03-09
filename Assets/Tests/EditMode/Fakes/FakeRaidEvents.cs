@@ -59,5 +59,6 @@ namespace Tests.EditMode.Fakes
             BotDespawnedCalled = true;
             BotDespawnedId = id;
         }
+        public void WeaponFired(Vector3 position, Vector3 direction) { }
     }
 }

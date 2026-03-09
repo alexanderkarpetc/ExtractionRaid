@@ -17,5 +17,6 @@ namespace Adapters
 
         void BotSpawned(EId id, Vector3 position, string typeId);
         void BotDespawned(EId id);
+        void WeaponFired(Vector3 position, Vector3 direction);
     }
 }

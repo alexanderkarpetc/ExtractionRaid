@@ -34,10 +34,15 @@ namespace View
 
             foreach (var e in events.All)
             {
-                if (e.Type == RaidEventType.PlayerSpawned && _playerView == null)
+                switch (e.Type)
                 {
-                    _trackedId = e.Id;
-                    SpawnView(session.RaidState.PlayerEntity);
+                    case RaidEventType.PlayerSpawned when _playerView == null:
+                        _trackedId = e.Id;
+                        SpawnView(session.RaidState.PlayerEntity);
+                        break;
+                    case RaidEventType.WeaponFired:
+                        _playerView?.WeaponView?.PlayMuzzleFlash();
+                        break;
                 }
 
                 if (e.Type == RaidEventType.EntityDamaged && e.Id == _trackedId && _playerView != null)

@@ -37,7 +37,7 @@ namespace Systems
 
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
-                    projectileId, spawnPos, pelletDir, weapon.ProjectileSpeed,
+                    projectileId, player.Id, spawnPos, pelletDir, weapon.ProjectileSpeed,
                     state.ElapsedTime, weapon.ProjectileLifetime,
                     weapon.ProjectileDamage);
 
@@ -45,6 +45,7 @@ namespace Systems
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);
             }
 
+            context.Events.WeaponFired(spawnPos, dir);
             weapon.LastFireTime = state.ElapsedTime;
         }
     }

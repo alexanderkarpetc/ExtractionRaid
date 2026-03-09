@@ -13,9 +13,11 @@ namespace View
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
         WorldHealthBar _healthBar;
+        WeaponView _currentWeaponView;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _muzzlePoint;
+        public WeaponView WeaponView => _currentWeaponView;
 
         public void Initialize(EId id, Action<Transform> onMuzzlePointChanged)
         {
@@ -81,7 +83,8 @@ namespace View
             _currentWeaponModel.transform.localPosition = Vector3.zero;
             _currentWeaponModel.transform.localRotation = Quaternion.identity;
 
-            _muzzlePoint = _currentWeaponModel.transform.Find("MuzzlePoint");
+            _currentWeaponView = _currentWeaponModel.GetComponent<WeaponView>();
+            _muzzlePoint = _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
             _onMuzzlePointChanged?.Invoke(_muzzlePoint);
         }
 
@@ -92,6 +95,7 @@ namespace View
 
             _currentWeaponPrefabId = null;
             _currentWeaponModel = null;
+            _currentWeaponView = null;
             _muzzlePoint = null;
             _onMuzzlePointChanged?.Invoke(null);
         }

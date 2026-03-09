@@ -29,7 +29,8 @@ namespace Tests.EditMode
             float damage = 10f)
         {
             var id = state.AllocateEId();
-            var proj = ProjectileEntityState.Create(id, position, direction, speed, spawnTime, lifetime, damage);
+            var ownerId = new EId(0);
+            var proj = ProjectileEntityState.Create(id, ownerId, position, direction, speed, spawnTime, lifetime, damage);
             state.Projectiles.Add(proj);
             return proj;
         }

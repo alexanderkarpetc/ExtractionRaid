@@ -275,5 +275,37 @@ namespace Tests.EditMode
             var spawned = eventBuffer.All.Where(e => e.Type == RaidEventType.ProjectileSpawned).ToList();
             Assert.AreEqual(5, spawned.Count);
         }
+
+        [Test]
+        public void Tick_Fires_EmitsWeaponFiredEvent()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var eventBuffer = new RaidEventBuffer();
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input, events: eventBuffer);
+
+            ShootingSystem.Tick(state, in context);
+
+            var fired = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponFired).ToList();
+            Assert.AreEqual(1, fired.Count);
+        }
+
+        [Test]
+        public void Tick_SpreadWeapon_EmitsOneWeaponFiredEvent()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
+            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            var eventBuffer = new RaidEventBuffer();
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input, events: eventBuffer);
+
+            ShootingSystem.Tick(state, in context);
+
+            var fired = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponFired).ToList();
+            Assert.AreEqual(1, fired.Count, "Spread weapon should emit exactly 1 WeaponFired event per volley");
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace Adapters
         GroundItemDespawned,
         BotSpawned,
         BotDespawned,
+        WeaponFired,
     }
 
     public struct RaidEvent
@@ -115,6 +116,16 @@ namespace Adapters
         public void BotDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.BotDespawned, Id = id });
+        }
+
+        public void WeaponFired(Vector3 position, Vector3 direction)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponFired,
+                Position = position,
+                Direction = direction,
+            });
         }
 
         public void Clear()
