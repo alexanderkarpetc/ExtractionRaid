@@ -50,6 +50,19 @@ alwaysApply: false
 ## Entry points
 All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
 
+## Debug tools
+
+### Raid State Debugger (EditorWindow)
+- `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
+- Opens via **Window → Raid State Debugger**
+- Readonly view of entire `RaidState` updated every frame during Play Mode
+- Shows: Player (position, aim, health, weapon, hotbar), Bots (with blackboard + intents), Projectiles (with owner + age), Ground Items, Inventory, Health Map
+- **Rule**: when adding new fields to any state class, add corresponding display in the debugger window
+
+### Other debug tools
+- `HotbarDebugOverlay` (`View/HotbarDebugOverlay.cs`) — IMGUI overlay showing 9 hotbar slots at bottom of game view
+- `BotDebugLabel` (`View/BotDebugLabel.cs`) — 3D TextMesh above bots showing TypeId, AI status, HP, distance
+
 ## Data Flow Reference
 
 ### Tick lifecycle

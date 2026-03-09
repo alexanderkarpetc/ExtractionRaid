@@ -70,8 +70,10 @@ When implementing a change:
 4. Emit domain events for VFX/SFX/UI instead of calling Unity APIs directly.
 5. Update presenter/view only for visualization, bindings, and callback routing.
 6. Add or update tests when logic changes.
-7. Show a file-level plan before editing.
-8. Keep the change incremental.
+7. If new fields were added to any state class, update the Raid State Debugger
+   (`Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`) to display them.
+8. Show a file-level plan before editing.
+9. Keep the change incremental.
 
 ## 7) Definition of done
 
@@ -84,7 +86,15 @@ A change is done when:
 - there is no unrelated formatting churn
 - regression risk was checked
 
-## 8) Task routing (read only what is relevant)
+## 8) Documentation sync
+
+AI docs exist in two places that must stay in sync:
+- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`)
+- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`)
+
+When updating any AI doc, apply the same change to the corresponding Cursor doc.
+
+## 9) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`

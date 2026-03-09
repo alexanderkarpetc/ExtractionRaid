@@ -109,7 +109,20 @@ Do not rely on directly loading arbitrary scenes.
 - store Unity objects inside state
 - hide dependencies in static fields
 
-## 6) Shared terms
+## 6) Debug tools
+
+### Raid State Debugger (EditorWindow)
+- `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
+- Opens via **Window → Raid State Debugger**
+- Readonly view of entire `RaidState` updated every frame during Play Mode
+- Shows: Player (position, aim, health, weapon, hotbar), Bots (with blackboard + intents), Projectiles (with owner + age), Ground Items, Inventory, Health Map
+- **Rule**: when adding new fields to any state class, add corresponding display in the debugger window
+
+### Other debug tools
+- `HotbarDebugOverlay` (`View/HotbarDebugOverlay.cs`) — IMGUI overlay showing 9 hotbar slots at bottom of game view
+- `BotDebugLabel` (`View/BotDebugLabel.cs`) — 3D TextMesh above bots showing TypeId, AI status, HP, distance
+
+## 7) Shared terms
 
 - **State**: mutable game-world data (values + IDs)
 - **Context**: read-only dependencies (ports, adapters, config, events)
@@ -117,7 +130,7 @@ Do not rely on directly loading arbitrary scenes.
 - **Presenter/View**: Unity-only visualization layer
 - **Entry Point**: launch mode routed through the launcher
 
-## 7) Data Flow Reference
+## 8) Data Flow Reference
 
 ### Tick lifecycle
 

@@ -40,5 +40,7 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
 4. Emit domain events for VFX/SFX/UI via `IRaidEvents`.
 5. Update presenter/view only for visualization and callback routing.
 6. Add or update tests.
-7. Show a file-level plan before editing.
-8. Keep the change incremental.
+7. If new fields were added to any state class, update the Raid State Debugger
+   (`Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`) to display them.
+8. Show a file-level plan before editing.
+9. Keep the change incremental.
