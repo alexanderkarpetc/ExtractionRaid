@@ -72,11 +72,11 @@ namespace Systems.Bot
 
                 var engageBranch = new List<IBTNode>();
 
-                if (config.Has(BotBehaviorFlags.Chase))
-                    engageBranch.Add(new ChaseNode());
-
                 if (config.Has(BotBehaviorFlags.Shoot))
                     engageBranch.Add(new ShootNode());
+
+                if (config.Has(BotBehaviorFlags.Chase))
+                    engageBranch.Add(new ChaseNode());
 
                 if (engageBranch.Count > 0)
                     combatBranches.Add(new BTSelector(engageBranch.ToArray()));

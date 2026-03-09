@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Constants
 {
@@ -109,6 +110,11 @@ namespace Constants
 
         // --- Perception tuning ---
         public const float PerceptionTickInterval = 0.2f;
+
+        // Layer mask for vision raycasts — only these layers block line of sight.
+        // Default: layer 0 ("Default"). Set via BotConstants or a ScriptableObject
+        // if your obstacles live on a different layer.
+        public static LayerMask VisionBlockingMask = 1 << 0;
 
         // --- Cover search ---
         public const float CoverSearchRadius = 10f;

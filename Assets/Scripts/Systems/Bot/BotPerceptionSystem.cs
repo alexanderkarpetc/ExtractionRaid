@@ -55,7 +55,8 @@ namespace Systems.Bot
                 {
                     var eyePos = bot.Position + Vector3.up * 1.5f;
                     var targetPos = player.Position + Vector3.up * 1f;
-                    hasLineOfSight = ctx.Physics == null || !ctx.Physics.Linecast(eyePos, targetPos);
+                    hasLineOfSight = ctx.Physics == null
+                        || !ctx.Physics.Linecast(eyePos, targetPos, BotConstants.VisionBlockingMask);
                 }
 
                 bool heard = dist <= config.HearingRange && player.Velocity.sqrMagnitude > 0.1f;

@@ -7,7 +7,7 @@ namespace Tests.EditMode.Fakes
     {
         public bool Blocked;
 
-        public bool Linecast(Vector3 from, Vector3 to)
+        public bool Linecast(Vector3 from, Vector3 to, int layerMask)
         {
             return Blocked;
         }
