@@ -32,6 +32,9 @@ namespace State
         public Vector3 DodgeDirection;
         public float DodgeTimer;
 
+        // Alerts
+        public bool WasDamaged;
+
         // BT re-entry
         public int RunningNodeId;
 
@@ -57,6 +60,7 @@ namespace State
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;
+            WasDamaged = false;
             RunningNodeId = -1;
             DebugStatus = "Idle";
         }

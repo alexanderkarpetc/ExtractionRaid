@@ -19,6 +19,7 @@ namespace App
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
+        readonly IPhysicsAdapter _physicsAdapter;
         readonly PlayerPresenter _playerPresenter;
         readonly ProjectilePresenter _projectilePresenter;
         readonly DestructiblePresenter _destructiblePresenter;
@@ -30,6 +31,7 @@ namespace App
             _timeAdapter = new UnityTimeAdapter();
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
+            _physicsAdapter = new UnityPhysicsAdapter();
             _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
             _destructiblePresenter = new DestructiblePresenter();
@@ -58,7 +60,7 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter);
+            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter, _physicsAdapter);
             RaidSession.Start();
 
             var cam = Camera.main;

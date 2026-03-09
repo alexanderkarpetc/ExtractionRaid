@@ -34,6 +34,9 @@ namespace Systems.Bot
                     continue;
                 }
 
+                bool alerted = bb.WasDamaged;
+                bb.WasDamaged = false;
+
                 var toPlayer = player.Position - bot.Position;
                 toPlayer.y = 0f;
                 var dist = toPlayer.magnitude;
@@ -47,15 +50,23 @@ namespace Systems.Bot
                     inVisionAngle = angle <= config.VisionAngle * 0.5f;
                 }
 
+                bool hasLineOfSight = false;
+                if (inVisionRange && inVisionAngle)
+                {
+                    var eyePos = bot.Position + Vector3.up * 1.5f;
+                    var targetPos = player.Position + Vector3.up * 1f;
+                    hasLineOfSight = ctx.Physics == null || !ctx.Physics.Linecast(eyePos, targetPos);
+                }
+
                 bool heard = dist <= config.HearingRange && player.Velocity.sqrMagnitude > 0.1f;
-                bool detected = (inVisionRange && inVisionAngle) || heard;
+                bool detected = (inVisionRange && inVisionAngle && hasLineOfSight) || heard || alerted;
 
                 if (detected)
                 {
                     bb.TargetEId = player.Id;
                     bb.LastKnownTargetPos = player.Position;
                     bb.HasTarget = true;
-                    bb.CanSeeTarget = inVisionRange && inVisionAngle;
+                    bb.CanSeeTarget = inVisionRange && inVisionAngle && hasLineOfSight;
                     bb.DistanceToTarget = dist;
                     bb.TimeSinceTargetSeen = 0f;
                 }

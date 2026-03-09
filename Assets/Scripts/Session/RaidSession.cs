@@ -16,14 +16,16 @@ namespace Session
         readonly ITimeAdapter _timeAdapter;
         readonly IInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
+        readonly IPhysicsAdapter _physicsAdapter;
         readonly List<HitSignal> _hitInbox = new();
 
         public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
-            INavMeshAdapter navMeshAdapter)
+            INavMeshAdapter navMeshAdapter, IPhysicsAdapter physicsAdapter = null)
         {
             _timeAdapter = timeAdapter;
             _inputAdapter = inputAdapter;
             _navMeshAdapter = navMeshAdapter;
+            _physicsAdapter = physicsAdapter;
             _eventBuffer = new RaidEventBuffer();
             RaidState = RaidState.Create();
             LevelState = LevelState.Create(levelId);
@@ -99,7 +101,8 @@ namespace Session
                 events: _eventBuffer,
                 time: _timeAdapter,
                 input: _inputAdapter,
-                navMesh: _navMeshAdapter
+                navMesh: _navMeshAdapter,
+                physics: _physicsAdapter
             );
 
             MovementSystem.Tick(RaidState, in context);
@@ -115,6 +118,7 @@ namespace Session
             ProjectileSystem.Tick(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
+            ProcessDamageAlerts();
             ProcessDeathEvents();
 
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
@@ -125,6 +129,23 @@ namespace Session
             }
 
             RaidState.ElapsedTime += context.DeltaTime;
+        }
+
+        void ProcessDamageAlerts()
+        {
+            foreach (var e in _eventBuffer.All)
+            {
+                if (e.Type != RaidEventType.EntityDamaged) continue;
+
+                for (int i = 0; i < RaidState.Bots.Count; i++)
+                {
+                    if (RaidState.Bots[i].Id == e.Id)
+                    {
+                        RaidState.Bots[i].Blackboard.WasDamaged = true;
+                        break;
+                    }
+                }
+            }
         }
 
         void ProcessDeathEvents()

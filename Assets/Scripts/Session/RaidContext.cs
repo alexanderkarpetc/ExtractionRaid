@@ -9,15 +9,17 @@ namespace Session
         public readonly ITimeAdapter Time;
         public readonly IInputAdapter Input;
         public readonly INavMeshAdapter NavMesh;
+        public readonly IPhysicsAdapter Physics;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
-            IInputAdapter input, INavMeshAdapter navMesh)
+            IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null)
         {
             DeltaTime = deltaTime;
             Events = events;
             Time = time;
             Input = input;
             NavMesh = navMesh;
+            Physics = physics;
         }
     }
 }
