@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace View
 {
-    public class PlayerView : MonoBehaviour
+    public class PlayerView : MonoBehaviour, IDamageableView
     {
         [SerializeField] Transform _weaponPivot;
 
@@ -12,6 +12,7 @@ namespace View
         Action<Transform> _onMuzzlePointChanged;
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
+        WorldHealthBar _healthBar;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _muzzlePoint;
@@ -20,6 +21,13 @@ namespace View
         {
             EId = id;
             _onMuzzlePointChanged = onMuzzlePointChanged;
+            _healthBar = WorldHealthBar.Create(transform);
+        }
+
+        public void OnDamaged(float currentHp, float maxHp)
+        {
+            if (_healthBar != null)
+                _healthBar.UpdateHealth(currentHp, maxHp);
         }
 
         public void SyncFromState(PlayerEntityState state)

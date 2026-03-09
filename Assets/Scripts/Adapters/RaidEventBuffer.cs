@@ -11,10 +11,12 @@ namespace Adapters
         PlayerSpawned,
         ProjectileSpawned,
         ProjectileDespawned,
-        DestructibleDamaged,
-        DestructibleDestroyed,
+        EntityDamaged,
+        EntityDied,
         GroundItemSpawned,
         GroundItemDespawned,
+        BotSpawned,
+        BotDespawned,
     }
 
     public struct RaidEvent
@@ -67,20 +69,20 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
         }
 
-        public void DestructibleDamaged(EId id, float currentHp, float maxHp)
+        public void EntityDamaged(EId id, float currentHp, float maxHp)
         {
             _events.Add(new RaidEvent
             {
-                Type = RaidEventType.DestructibleDamaged,
+                Type = RaidEventType.EntityDamaged,
                 Id = id,
                 CurrentHp = currentHp,
                 MaxHp = maxHp,
             });
         }
 
-        public void DestructibleDestroyed(EId id)
+        public void EntityDied(EId id)
         {
-            _events.Add(new RaidEvent { Type = RaidEventType.DestructibleDestroyed, Id = id });
+            _events.Add(new RaidEvent { Type = RaidEventType.EntityDied, Id = id });
         }
 
         public void GroundItemSpawned(EId id, Vector3 position, string definitionId)
@@ -97,6 +99,22 @@ namespace Adapters
         public void GroundItemDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.GroundItemDespawned, Id = id });
+        }
+
+        public void BotSpawned(EId id, Vector3 position, string typeId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.BotSpawned,
+                Id = id,
+                Position = position,
+                StringPayload = typeId,
+            });
+        }
+
+        public void BotDespawned(EId id)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.BotDespawned, Id = id });
         }
 
         public void Clear()

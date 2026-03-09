@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace View
 {
-    public class DestructibleView : MonoBehaviour
+    public class DestructibleView : MonoBehaviour, IDamageableView
     {
         [SerializeField] float _maxHp = 100f;
 

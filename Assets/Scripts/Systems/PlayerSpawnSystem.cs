@@ -1,4 +1,5 @@
 using Adapters;
+using Constants;
 using State;
 using UnityEngine;
 
@@ -24,6 +25,8 @@ namespace Systems
 
             var weapon2Id = state.AllocateEId();
             state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateSecondary(weapon2Id);
+
+            state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             events.PlayerSpawned(playerId);
         }

@@ -21,8 +21,8 @@ namespace View
 
         private void OnTriggerEnter(Collider other)
         {
-            var destructible = other.GetComponent<DestructibleView>();
-            if (destructible == null) return;
+            var damageable = other.GetComponent<IDamageableView>();
+            if (damageable == null) return;
 
             var session = App.App.Instance.RaidSession;
             if (session == null) return;
@@ -30,7 +30,7 @@ namespace View
             session.ReportHit(new HitSignal
             {
                 ProjectileId = EId,
-                TargetId = destructible.EId,
+                TargetId = damageable.EId,
                 Damage = _damage,
             });
         }

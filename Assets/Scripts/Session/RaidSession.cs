@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Adapters;
 using Systems;
+using Systems.Bot;
 using State;
 
 namespace Session
@@ -32,6 +33,7 @@ namespace Session
         {
             PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
             SpawnTestGroundItems();
+            SpawnTestBots();
             _eventBuffer.RaidStarted();
         }
 
@@ -56,6 +58,38 @@ namespace Session
             }
         }
 
+        void SpawnTestBots()
+        {
+            BotSpawnSystem.SpawnBot(RaidState, "Scav",
+                new UnityEngine.Vector3(10f, 0f, 10f),
+                new[]
+                {
+                    new UnityEngine.Vector3(10f, 0f, 10f),
+                    new UnityEngine.Vector3(15f, 0f, 5f),
+                    new UnityEngine.Vector3(20f, 0f, 10f),
+                },
+                _eventBuffer);
+
+            // BotSpawnSystem.SpawnBot(RaidState, "PMC",
+            //     new UnityEngine.Vector3(-10f, 0f, 15f),
+            //     new[]
+            //     {
+            //         new UnityEngine.Vector3(-10f, 0f, 15f),
+            //         new UnityEngine.Vector3(-5f, 0f, 20f),
+            //         new UnityEngine.Vector3(-15f, 0f, 20f),
+            //     },
+            //     _eventBuffer);
+            //
+            // BotSpawnSystem.SpawnBot(RaidState, "Boss",
+            //     new UnityEngine.Vector3(0f, 0f, 25f),
+            //     new[]
+            //     {
+            //         new UnityEngine.Vector3(0f, 0f, 25f),
+            //         new UnityEngine.Vector3(5f, 0f, 30f),
+            //     },
+            //     _eventBuffer);
+        }
+
         public void Tick()
         {
             if (!RaidState.IsRunning) return;
@@ -68,14 +102,20 @@ namespace Session
                 navMesh: _navMeshAdapter
             );
 
-            // Systems run here in deterministic order.
             MovementSystem.Tick(RaidState, in context);
             WeaponEquipSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
+
+            BotPerceptionSystem.Tick(RaidState, in context);
+            BotBrainSystem.Tick(RaidState, in context);
+            BotMovementSystem.Tick(RaidState, in context);
+            BotCombatSystem.Tick(RaidState, in context);
+
             ProjectileSystem.Tick(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
+            ProcessDeathEvents();
 
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
             {
@@ -85,6 +125,33 @@ namespace Session
             }
 
             RaidState.ElapsedTime += context.DeltaTime;
+        }
+
+        void ProcessDeathEvents()
+        {
+            int count = _eventBuffer.All.Count;
+            for (int idx = 0; idx < count; idx++)
+            {
+                var e = _eventBuffer.All[idx];
+                if (e.Type != RaidEventType.EntityDied) continue;
+
+                for (int i = RaidState.Bots.Count - 1; i >= 0; i--)
+                {
+                    if (RaidState.Bots[i].Id == e.Id)
+                    {
+                        RaidState.Bots.RemoveAt(i);
+                        _eventBuffer.BotDespawned(e.Id);
+                        break;
+                    }
+                }
+
+                if (RaidState.PlayerEntity != null && RaidState.PlayerEntity.Id == e.Id)
+                {
+                    End();
+                }
+
+                RaidState.HealthMap.Remove(e.Id);
+            }
         }
 
         public RaidEventBuffer ConsumeEvents() => _eventBuffer;

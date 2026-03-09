@@ -19,15 +19,10 @@ namespace Systems
                 ApplyDamage(health, hit.Damage);
 
                 if (health.IsAlive)
-                {
-                    context.Events.DestructibleDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
-                }
+                    context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
                 else
-                {
-                    context.Events.DestructibleDestroyed(hit.TargetId);
-                }
+                    context.Events.EntityDied(hit.TargetId);
 
-                // Consume the projectile
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)
                 {
                     if (state.Projectiles[i].Id == hit.ProjectileId)

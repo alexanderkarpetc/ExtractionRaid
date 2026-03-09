@@ -39,6 +39,11 @@ namespace View
                     _trackedId = e.Id;
                     SpawnView(session.RaidState.PlayerEntity);
                 }
+
+                if (e.Type == RaidEventType.EntityDamaged && e.Id == _trackedId && _playerView != null)
+                {
+                    _playerView.OnDamaged(e.CurrentHp, e.MaxHp);
+                }
             }
 
             if (_playerView != null && session.RaidState.PlayerEntity != null)

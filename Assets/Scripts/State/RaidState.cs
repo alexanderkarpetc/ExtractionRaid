@@ -10,6 +10,7 @@ namespace State
         public List<ProjectileEntityState> Projectiles;
         public Dictionary<EId, HealthState> HealthMap;
         public List<GroundItemState> GroundItems;
+        public List<BotEntityState> Bots;
         public InventoryState Inventory;
 
         int _nextEIdValue;
@@ -30,6 +31,7 @@ namespace State
                 Projectiles = new List<ProjectileEntityState>(),
                 HealthMap = new Dictionary<EId, HealthState>(),
                 GroundItems = new List<GroundItemState>(),
+                Bots = new List<BotEntityState>(),
                 Inventory = new InventoryState(),
             };
         }

@@ -26,12 +26,12 @@ namespace View
             {
                 switch (e.Type)
                 {
-                    case RaidEventType.DestructibleDamaged:
+                    case RaidEventType.EntityDamaged:
                         if (_views.TryGetValue(e.Id, out var damagedView))
                             damagedView.OnDamaged(e.CurrentHp, e.MaxHp);
                         break;
-                    case RaidEventType.DestructibleDestroyed:
-                        HandleDestroyed(e.Id, session);
+                    case RaidEventType.EntityDied:
+                        HandleDestroyed(e.Id);
                         break;
                 }
             }
@@ -55,15 +55,13 @@ namespace View
             }
         }
 
-        void HandleDestroyed(EId id, RaidSession session)
+        void HandleDestroyed(EId id)
         {
             if (_views.TryGetValue(id, out var view))
             {
                 Object.Destroy(view.gameObject);
                 _views.Remove(id);
             }
-
-            session.RaidState.HealthMap.Remove(id);
         }
 
         public void Dispose()
