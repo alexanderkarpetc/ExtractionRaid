@@ -24,6 +24,7 @@ namespace Systems.Bot.Nodes
                 return BTStatus.Success;
             }
 
+            bb.DebugStatus = "Chase";
             bot.DesiredVelocity = (toTarget / dist) * config.ChaseSpeed;
             return BTStatus.Running;
         }

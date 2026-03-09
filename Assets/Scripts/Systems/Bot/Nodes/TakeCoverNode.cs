@@ -31,6 +31,7 @@ namespace Systems.Bot.Nodes
                 }
             }
 
+            bb.DebugStatus = "Cover";
             var toCover = bb.CoverPosition - bot.Position;
             toCover.y = 0f;
             var dist = toCover.magnitude;

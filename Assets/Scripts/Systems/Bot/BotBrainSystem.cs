@@ -19,6 +19,7 @@ namespace Systems.Bot
                     continue;
 
                 bot.ClearIntents();
+                bot.Blackboard.DebugStatus = "Idle";
 
                 var tree = BotTreeBuilder.GetOrBuild(in config);
                 tree.Tick(bot, state, in ctx, in config);

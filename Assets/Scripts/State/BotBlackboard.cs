@@ -35,6 +35,9 @@ namespace State
         // BT re-entry
         public int RunningNodeId;
 
+        // Debug
+        public string DebugStatus;
+
         public void Reset()
         {
             TargetEId = EId.None;
@@ -55,6 +58,7 @@ namespace State
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;
             RunningNodeId = -1;
+            DebugStatus = "Idle";
         }
     }
 }

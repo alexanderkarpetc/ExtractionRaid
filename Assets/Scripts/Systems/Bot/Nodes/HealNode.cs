@@ -19,6 +19,7 @@ namespace Systems.Bot.Nodes
             if (hpRatio > config.HealThreshold)
                 return BTStatus.Failure;
 
+            bot.Blackboard.DebugStatus = "Heal";
             bot.WantsToHeal = true;
             return BTStatus.Success;
         }

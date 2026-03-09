@@ -18,10 +18,12 @@ namespace Systems.Bot.Nodes
 
             if (bb.ReactionTimer < config.ReactionTime)
             {
+                bb.DebugStatus = "Reacting...";
                 bb.ReactionTimer += ctx.DeltaTime;
                 return BTStatus.Running;
             }
 
+            bb.DebugStatus = "Shoot";
             bot.DesiredAimPoint = bb.LastKnownTargetPos;
             bot.WantsToFire = true;
             return BTStatus.Success;

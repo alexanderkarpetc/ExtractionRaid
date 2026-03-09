@@ -17,6 +17,7 @@ namespace Systems.Bot.Nodes
 
             if (bb.PatrolWaitTimer > 0f)
             {
+                bb.DebugStatus = "Patrol (wait)";
                 bb.PatrolWaitTimer -= ctx.DeltaTime;
                 bot.DesiredVelocity = Vector3.zero;
                 return BTStatus.Running;
@@ -35,6 +36,7 @@ namespace Systems.Bot.Nodes
                 return BTStatus.Running;
             }
 
+            bb.DebugStatus = "Patrol";
             bot.DesiredVelocity = (toTarget / dist) * config.PatrolSpeed;
             return BTStatus.Running;
         }

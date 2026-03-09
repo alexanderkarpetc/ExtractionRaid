@@ -14,6 +14,7 @@ namespace Systems.Bot.Nodes
             if (!bb.CanSeeTarget || bb.DistanceToTarget > config.EngageRange)
                 return BTStatus.Failure;
 
+            bb.DebugStatus = "Dodge";
             if (bb.IsDodging)
             {
                 bb.DodgeTimer -= ctx.DeltaTime;

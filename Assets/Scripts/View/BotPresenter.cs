@@ -38,7 +38,15 @@ namespace View
             foreach (var bot in session.RaidState.Bots)
             {
                 if (_views.TryGetValue(bot.Id, out var view))
-                    view.SyncFromState(bot);
+                {
+                    float hp = 0f, maxHp = 0f;
+                    if (session.RaidState.HealthMap.TryGetValue(bot.Id, out var health))
+                    {
+                        hp = health.CurrentHp;
+                        maxHp = health.MaxHp;
+                    }
+                    view.SyncFromState(bot, hp, maxHp);
+                }
             }
         }
 
@@ -56,6 +64,8 @@ namespace View
                 view = go.AddComponent<BotView>();
 
             view.Initialize(id, typeId, config.WeaponPrefabId);
+            view.GizmoVisionRange = config.VisionRange;
+            view.GizmoVisionAngle = config.VisionAngle;
             _views[id] = view;
         }
 
