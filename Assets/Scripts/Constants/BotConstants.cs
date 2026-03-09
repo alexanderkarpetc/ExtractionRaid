@@ -155,7 +155,7 @@ namespace Constants
 
         public static readonly BotTypeConfig PMC = new(
             typeId: "PMC",
-            prefabId: "BotCapsule",
+            prefabId: "BotBossView",
             weaponPrefabId: "Weapon_Rifle",
             maxHp: 100f,
             healAmount: 30f,
@@ -186,7 +186,7 @@ namespace Constants
 
         public static readonly BotTypeConfig Boss = new(
             typeId: "Boss",
-            prefabId: "BotCapsule",
+            prefabId: "BotPmcView",
             weaponPrefabId: "Weapon_Shotgun",
             maxHp: 200f,
             healAmount: 0f,

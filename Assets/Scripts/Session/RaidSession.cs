@@ -72,24 +72,24 @@ namespace Session
                 },
                 _eventBuffer);
 
-            // BotSpawnSystem.SpawnBot(RaidState, "PMC",
-            //     new UnityEngine.Vector3(-10f, 0f, 15f),
-            //     new[]
-            //     {
-            //         new UnityEngine.Vector3(-10f, 0f, 15f),
-            //         new UnityEngine.Vector3(-5f, 0f, 20f),
-            //         new UnityEngine.Vector3(-15f, 0f, 20f),
-            //     },
-            //     _eventBuffer);
-            //
-            // BotSpawnSystem.SpawnBot(RaidState, "Boss",
-            //     new UnityEngine.Vector3(0f, 0f, 25f),
-            //     new[]
-            //     {
-            //         new UnityEngine.Vector3(0f, 0f, 25f),
-            //         new UnityEngine.Vector3(5f, 0f, 30f),
-            //     },
-            //     _eventBuffer);
+            BotSpawnSystem.SpawnBot(RaidState, "PMC",
+                new UnityEngine.Vector3(-10f, 0f, 15f),
+                new[]
+                {
+                    new UnityEngine.Vector3(-10f, 0f, 15f),
+                    new UnityEngine.Vector3(-5f, 0f, 20f),
+                    new UnityEngine.Vector3(-15f, 0f, 20f),
+                },
+                _eventBuffer);
+            
+            BotSpawnSystem.SpawnBot(RaidState, "Boss",
+                new UnityEngine.Vector3(0f, 0f, 25f),
+                new[]
+                {
+                    new UnityEngine.Vector3(0f, 0f, 25f),
+                    new UnityEngine.Vector3(5f, 0f, 30f),
+                },
+                _eventBuffer);
         }
 
         public void Tick()

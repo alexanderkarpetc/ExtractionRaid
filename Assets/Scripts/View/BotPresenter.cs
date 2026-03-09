@@ -85,7 +85,7 @@ namespace View
 
             var prefab = Resources.Load<GameObject>("Prefabs/" + prefabId);
             if (prefab == null)
-                Debug.LogWarning($"[BotPresenter] Prefab not found: Prefabs/{prefabId}");
+                Debug.LogError($"[BotPresenter] Prefab not found: Prefabs/{prefabId}");
 
             _prefabCache[prefabId] = prefab;
             return prefab;
