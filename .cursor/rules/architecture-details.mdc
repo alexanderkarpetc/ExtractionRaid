@@ -52,7 +52,7 @@ Actual system tick order in `RaidSession.Tick()`:
 MovementSystem
 WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
 WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
-AimingSystem
+AimingSystem               // dual-layer: RawAimPoint (instant) → WeaponAimPoint (smoothed) → AimDirection
 ShootingSystem             // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
 BotPerceptionSystem
 BotBrainSystem

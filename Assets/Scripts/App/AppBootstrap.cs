@@ -15,6 +15,7 @@ namespace App
             DontDestroyOnLoad(gameObject);
             gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
+            gameObject.AddComponent<AimCursorOverlay>();
         }
 
         void Start()

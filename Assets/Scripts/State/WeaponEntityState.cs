@@ -26,6 +26,7 @@ namespace State
         // Aiming parameters
         public float ConeHalfAngle;
         public float BodyRotationSpeed;
+        public float AimFollowSharpness;
 
         // Equip/unequip durations
         public float EquipTime;
@@ -56,6 +57,7 @@ namespace State
                 SpreadAngle = 0f,
                 ConeHalfAngle = 45f,
                 BodyRotationSpeed = 270,
+                AimFollowSharpness = 10f,
                 EquipTime = 0.3f,
                 UnequipTime = 0.2f,
                 AmmoType = "Ammo_Rifle",
@@ -82,6 +84,7 @@ namespace State
                 SpreadAngle = 30f,
                 ConeHalfAngle = 20f,
                 BodyRotationSpeed = 180f,
+                AimFollowSharpness = 5f,
                 EquipTime = 0.4f,
                 UnequipTime = 0.25f,
                 AmmoType = "Ammo_Shotgun",

@@ -147,6 +147,35 @@ Ammo values:
 Items are stackable: `ItemState.StackCount`, `ItemDefinition.MaxStackSize`.
 Pickup merges into existing partial stacks first, then overflows to free slots.
 
+## 12) Dual-Layer Aiming
+
+Player aiming has two layers:
+1. **Raw Aim** (`RawAimPoint`) — instant world position from mouse, no smoothing
+2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon angular exponential smoothing
+
+Key fields on `PlayerEntityState`:
+- `RawAimPoint` — instant mouse world position (player intent)
+- `WeaponAimPoint` — smoothed world position (weapon tracking)
+- `AimDirection` — derived from WeaponAimPoint (normalized, used by ShootingSystem)
+- `FacingDirection` — body rotation, follows raw aim (unchanged behavior)
+
+Key field on `WeaponEntityState`:
+- `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
+
+| Weapon | AimFollowSharpness | Behavior |
+|--------|--------------------|----------|
+| Rifle | 10 | Moderate tracking (~95% in 0.3s) |
+| Shotgun | 5 | Heavy lag (~95% in 0.6s) |
+| Unarmed | 30 (const) | Near-instant |
+
+Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
+
+ShootingSystem reads `AimDirection` (now = weapon aim direction) — no changes needed.
+PlayerView reads `AimDirection` for weapon pivot rotation — no changes needed.
+Bots have their own `AimDirection`, not affected by dual-layer.
+
+Key file: `Systems/AimingSystem.cs`
+
 ## 10) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:

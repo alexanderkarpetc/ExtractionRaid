@@ -112,6 +112,8 @@ namespace Editor
             Field("Velocity", p.Velocity);
             Field("Facing", p.FacingDirection);
             Field("Aim", p.AimDirection);
+            Field("Raw Aim Point", p.RawAimPoint);
+            Field("Weapon Aim Point", p.WeaponAimPoint);
             Field("Selected Slot", p.SelectedHotbarSlot);
             Field("Pending Slot", p.PendingHotbarSlot);
             Field("Is Rolling", p.IsRolling);
@@ -395,6 +397,7 @@ namespace Editor
             Field("Proj Damage", w.ProjectileDamage);
             Field("ConeHalfAngle", $"{w.ConeHalfAngle}°");
             Field("BodyRotSpeed", w.BodyRotationSpeed);
+            Field("AimFollowSharpness", w.AimFollowSharpness);
         }
 
         void DrawHealth(EId id, Dictionary<EId, HealthState> healthMap)

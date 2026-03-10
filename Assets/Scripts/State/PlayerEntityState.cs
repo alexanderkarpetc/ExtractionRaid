@@ -11,6 +11,8 @@ namespace State
         public Vector3 Velocity;
         public Vector3 FacingDirection;
         public Vector3 AimDirection;
+        public Vector3 RawAimPoint;
+        public Vector3 WeaponAimPoint;
         public WeaponEntityState EquippedWeapon;
 
         public WeaponEntityState[] Hotbar = new WeaponEntityState[HotbarSize];
@@ -31,6 +33,8 @@ namespace State
                 Velocity = Vector3.zero,
                 FacingDirection = Vector3.forward,
                 AimDirection = Vector3.forward,
+                RawAimPoint = spawnPosition + Vector3.forward,
+                WeaponAimPoint = spawnPosition + Vector3.forward,
             };
         }
     }
