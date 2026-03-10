@@ -30,6 +30,12 @@ namespace Systems
             var weapon2Id = state.AllocateEId();
             state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateSecondary(weapon2Id);
 
+            // Starting reserve ammo
+            var rifleAmmoId = state.AllocateEId();
+            state.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
+            var shotgunAmmoId = state.AllocateEId();
+            state.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
+
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             events.PlayerSpawned(playerId);

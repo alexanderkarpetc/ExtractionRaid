@@ -1,4 +1,5 @@
 using State;
+using Systems;
 using UnityEngine;
 
 namespace View
@@ -9,6 +10,7 @@ namespace View
         Texture2D _pendingTex;
         Texture2D _occupiedTex;
         Texture2D _emptyTex;
+        Texture2D _reloadTex;
         GUIStyle _slotStyle;
 
         void Awake()
@@ -17,6 +19,7 @@ namespace View
             _pendingTex = MakeTex(new Color(1f, 1f, 0f, 0.7f));
             _occupiedTex = MakeTex(new Color(0.3f, 0.3f, 0.3f, 0.9f));
             _emptyTex = MakeTex(new Color(0.15f, 0.15f, 0.15f, 0.8f));
+            _reloadTex = MakeTex(new Color(0.9f, 0.5f, 0.1f, 0.7f));
         }
 
         void OnGUI()
@@ -62,11 +65,36 @@ namespace View
 
                 _slotStyle.normal.textColor = isSelected || isPending ? Color.black : Color.white;
 
-                string label = weapon != null
-                    ? $"[{i + 1}]\n{weapon.PrefabId}"
-                    : $"[{i + 1}]";
+                string label;
+                if (weapon != null)
+                {
+                    string ammoInfo = "";
+                    if (!string.IsNullOrEmpty(weapon.AmmoType))
+                    {
+                        int reserve = AmmoSystem.CountReserve(
+                            session.RaidState.Inventory, weapon.AmmoType);
+                        ammoInfo = $"\n{weapon.AmmoInMagazine}/{reserve}";
+                    }
+                    label = $"[{i + 1}]\n{weapon.PrefabId}{ammoInfo}";
+                }
+                else
+                {
+                    label = $"[{i + 1}]";
+                }
 
                 GUI.Box(rect, label, _slotStyle);
+
+                // Reload progress bar: orange overlay that drains top→bottom
+                if (weapon != null && weapon.Phase == WeaponPhase.Reloading && weapon.ReloadTime > 0f)
+                {
+                    float elapsed = session.RaidState.ElapsedTime - weapon.PhaseStartTime;
+                    float remaining = 1f - Mathf.Clamp01(elapsed / weapon.ReloadTime);
+                    if (remaining > 0.001f)
+                    {
+                        var reloadRect = new Rect(rect.x, rect.y, rect.width, rect.height * remaining);
+                        GUI.DrawTexture(reloadRect, _reloadTex);
+                    }
+                }
             }
         }
 
@@ -84,6 +112,7 @@ namespace View
             if (_pendingTex != null) Destroy(_pendingTex);
             if (_occupiedTex != null) Destroy(_occupiedTex);
             if (_emptyTex != null) Destroy(_emptyTex);
+            if (_reloadTex != null) Destroy(_reloadTex);
         }
     }
 }

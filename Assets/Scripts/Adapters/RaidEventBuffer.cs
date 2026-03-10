@@ -21,6 +21,9 @@ namespace Adapters
         WeaponEquipStarted,
         WeaponUnequipStarted,
         WeaponEquipFinished,
+        WeaponReloadStarted,
+        WeaponReloadFinished,
+        WeaponDryFired,
     }
 
     public struct RaidEvent
@@ -154,6 +157,33 @@ namespace Adapters
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.WeaponEquipFinished,
+                StringPayload = prefabId,
+            });
+        }
+
+        public void WeaponReloadStarted(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponReloadStarted,
+                StringPayload = prefabId,
+            });
+        }
+
+        public void WeaponReloadFinished(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponReloadFinished,
+                StringPayload = prefabId,
+            });
+        }
+
+        public void WeaponDryFired(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponDryFired,
                 StringPayload = prefabId,
             });
         }

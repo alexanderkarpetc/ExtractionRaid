@@ -18,6 +18,10 @@ namespace State
         public string Id;
         public string DisplayName;
         public ItemSlotType AllowedSlots;
+        public int MaxStackSize = 1;
+        public string AmmoType;
+
+        public bool IsStackable => MaxStackSize > 1;
 
         static Dictionary<string, ItemDefinition> _registry;
 
@@ -69,11 +73,21 @@ namespace State
                     DisplayName = "Medkit",
                     AllowedSlots = ItemSlotType.Backpack,
                 },
-                ["Ammo_Box"] = new()
+                ["Ammo_Rifle"] = new()
                 {
-                    Id = "Ammo_Box",
-                    DisplayName = "Ammo Box",
+                    Id = "Ammo_Rifle",
+                    DisplayName = "Rifle Ammo",
                     AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 60,
+                    AmmoType = "Ammo_Rifle",
+                },
+                ["Ammo_Shotgun"] = new()
+                {
+                    Id = "Ammo_Shotgun",
+                    DisplayName = "Shotgun Ammo",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                    AmmoType = "Ammo_Shotgun",
                 },
             };
         }

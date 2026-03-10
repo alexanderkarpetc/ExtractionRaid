@@ -7,6 +7,7 @@ namespace State
         Cooldown,
         Equipping,
         Unequipping,
+        Reloading,
     }
 
     public class WeaponEntityState
@@ -30,6 +31,12 @@ namespace State
         public float EquipTime;
         public float UnequipTime;
 
+        // Ammo parameters
+        public string AmmoType;
+        public int MagazineSize;
+        public int AmmoInMagazine;
+        public float ReloadTime;
+
         // Runtime state
         public float LastFireTime;
         public WeaponPhase Phase;
@@ -51,6 +58,10 @@ namespace State
                 BodyRotationSpeed = 270,
                 EquipTime = 0.3f,
                 UnequipTime = 0.2f,
+                AmmoType = "Ammo_Rifle",
+                MagazineSize = 30,
+                AmmoInMagazine = 30,
+                ReloadTime = 2.0f,
                 LastFireTime = -999f,
                 Phase = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
@@ -73,6 +84,10 @@ namespace State
                 BodyRotationSpeed = 180f,
                 EquipTime = 0.4f,
                 UnequipTime = 0.25f,
+                AmmoType = "Ammo_Shotgun",
+                MagazineSize = 5,
+                AmmoInMagazine = 5,
+                ReloadTime = 2.5f,
                 LastFireTime = -999f,
                 Phase = WeaponPhase.Ready,
                 PhaseStartTime = 0f,

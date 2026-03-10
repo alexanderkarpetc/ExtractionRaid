@@ -21,6 +21,20 @@ namespace Systems
 
             if (weapon.Phase != WeaponPhase.Ready) return;
 
+            // Ammo check: dry fire if magazine empty
+            bool usesAmmo = !string.IsNullOrEmpty(weapon.AmmoType);
+            if (usesAmmo && weapon.AmmoInMagazine <= 0)
+            {
+                context.Events.WeaponDryFired(weapon.PrefabId);
+                if (AmmoSystem.CanReload(weapon, state.Inventory))
+                {
+                    weapon.Phase = WeaponPhase.Reloading;
+                    weapon.PhaseStartTime = state.ElapsedTime;
+                    context.Events.WeaponReloadStarted(weapon.PrefabId);
+                }
+                return;
+            }
+
             var dir = player.AimDirection;
 
             if (dir.sqrMagnitude < 0.001f) return;
@@ -49,6 +63,12 @@ namespace Systems
             weapon.Phase = WeaponPhase.Firing;
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
+
+            // Consume one round (shotgun: 1 shell = multiple pellets)
+            if (usesAmmo)
+            {
+                weapon.AmmoInMagazine -= 1;
+            }
         }
     }
 }

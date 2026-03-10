@@ -138,7 +138,9 @@ namespace View
             else
                 _slotStyle.normal.background = item != null ? _slotBg : _slotBg;
 
-            string text = item != null ? item.DisplayName : "";
+            string text = item != null
+                ? (item.StackCount > 1 ? $"{item.DisplayName}\nx{item.StackCount}" : item.DisplayName)
+                : "";
             GUI.Box(rect, text, _slotStyle);
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))

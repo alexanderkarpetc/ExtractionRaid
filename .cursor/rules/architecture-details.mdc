@@ -51,9 +51,9 @@ Actual system tick order in `RaidSession.Tick()`:
 ```
 MovementSystem
 WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
-WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping
+WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
 AimingSystem
-ShootingSystem             // fires only when Phase == Ready
+ShootingSystem             // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
 BotPerceptionSystem
 BotBrainSystem
 BotMovementSystem
@@ -75,8 +75,9 @@ All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLaunc
 - **Rule**: when adding new fields to any state class, add corresponding display in the debugger window
 
 ### Other debug tools
-- `HotbarDebugOverlay` (`View/HotbarDebugOverlay.cs`) — IMGUI overlay showing 9 hotbar slots at bottom of game view
+- `HotbarDebugOverlay` (`View/HotbarDebugOverlay.cs`) — IMGUI overlay showing 9 hotbar slots at bottom of game view (includes mag/reserve ammo display)
 - `BotDebugLabel` (`View/BotDebugLabel.cs`) — 3D TextMesh above bots showing TypeId, AI status, HP, distance
+- `InventoryUI` (`View/InventoryUI.cs`) — IMGUI inventory screen (Tab key) with drag/drop, context menu, stack counts
 
 ## Data Flow Reference
 

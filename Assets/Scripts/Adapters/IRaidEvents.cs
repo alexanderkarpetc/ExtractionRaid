@@ -21,5 +21,8 @@ namespace Adapters
         void WeaponEquipStarted(string prefabId);
         void WeaponUnequipStarted(string prefabId);
         void WeaponEquipFinished(string prefabId);
+        void WeaponReloadStarted(string prefabId);
+        void WeaponReloadFinished(string prefabId);
+        void WeaponDryFired(string prefabId);
     }
 }

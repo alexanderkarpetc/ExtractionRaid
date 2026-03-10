@@ -52,6 +52,15 @@ namespace View
                     case RaidEventType.WeaponEquipFinished:
                         // Future: finalize equip animation
                         break;
+                    case RaidEventType.WeaponReloadStarted:
+                        // Future: trigger reload animation
+                        break;
+                    case RaidEventType.WeaponReloadFinished:
+                        // Future: end reload animation
+                        break;
+                    case RaidEventType.WeaponDryFired:
+                        // Future: play dry fire click sound
+                        break;
                 }
 
                 if (e.Type == RaidEventType.EntityDamaged && e.Id == _trackedId && _playerView != null)

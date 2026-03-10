@@ -13,5 +13,6 @@ namespace Tests.EditMode.Fakes
         public int HotbarSlotPressed { get; set; } = -1;
         public bool InventoryTogglePressed { get; set; }
         public bool PickUpPressed { get; set; }
+        public bool ReloadPressed { get; set; }
     }
 }

@@ -335,5 +335,120 @@ namespace Tests.EditMode
             var fired = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponFired).ToList();
             Assert.AreEqual(1, fired.Count, "Spread weapon should emit exactly 1 WeaponFired event per volley");
         }
+
+        // ── Ammo tests ─────────────────────────────────────────
+
+        [Test]
+        public void Tick_EmptyMagazine_DoesNotSpawnProjectile()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(0, state.Projectiles.Count);
+        }
+
+        [Test]
+        public void Tick_EmptyMagazine_EmitsDryFireEvent()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            var eventBuffer = new RaidEventBuffer();
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input, events: eventBuffer);
+
+            ShootingSystem.Tick(state, in context);
+
+            var dryFires = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponDryFired).ToList();
+            Assert.AreEqual(1, dryFires.Count);
+        }
+
+        [Test]
+        public void Tick_EmptyMagazine_AutoReloadsIfReserveAvailable()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            // Reserve ammo already in backpack from CreateStateWithPlayer
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Reloading, state.PlayerEntity.EquippedWeapon.Phase);
+        }
+
+        [Test]
+        public void Tick_EmptyMagazine_NoReserve_StaysReady()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            // Clear all reserve ammo
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                state.Inventory.Backpack[i] = null;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, state.PlayerEntity.EquippedWeapon.Phase);
+        }
+
+        [Test]
+        public void Tick_FiringConsumesOneAmmo()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 30;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(29, state.PlayerEntity.EquippedWeapon.AmmoInMagazine);
+        }
+
+        [Test]
+        public void Tick_ShotgunFiringConsumesOneAmmo()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.ProjectilesPerShot = 7;
+            weapon.SpreadAngle = 30f;
+            weapon.AmmoType = "Ammo_Shotgun";
+            weapon.AmmoInMagazine = 5;
+            weapon.MagazineSize = 5;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(7, state.Projectiles.Count, "7 pellets spawned");
+            Assert.AreEqual(4, weapon.AmmoInMagazine, "Only 1 shell consumed");
+        }
+
+        [Test]
+        public void Tick_NullAmmoType_InfiniteAmmo()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoType = null;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(1, state.Projectiles.Count, "Should fire with null AmmoType");
+            Assert.AreEqual(0, state.PlayerEntity.EquippedWeapon.AmmoInMagazine,
+                "Should not change AmmoInMagazine when AmmoType is null");
+        }
     }
 }

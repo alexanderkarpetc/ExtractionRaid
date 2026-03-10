@@ -336,5 +336,164 @@ namespace Tests.EditMode
 
             Assert.AreEqual(WeaponPhase.Unequipping, weapon.Phase);
         }
+
+        // ── Reloading tests ─────────────────────────────────────
+
+        static RaidContext CreateContextWithInput(FakeInputAdapter input, IRaidEvents events = null,
+            float deltaTime = 1f / 60f)
+        {
+            return new RaidContext(
+                deltaTime: deltaTime,
+                events: events ?? new RaidEventBuffer(),
+                time: new FakeTimeAdapter { DeltaTime = deltaTime },
+                input: input,
+                navMesh: new FakeNavMeshAdapter()
+            );
+        }
+
+        [Test]
+        public void Tick_ReloadingDone_TransitionsToReady()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Reloading;
+            weapon.PhaseStartTime = 0f;
+            weapon.ReloadTime = 2.0f;
+            weapon.AmmoInMagazine = 0;
+            state.ElapsedTime = 2.5f;
+            var context = CreateContext();
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
+        }
+
+        [Test]
+        public void Tick_ReloadingDone_FillsMagazine()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Reloading;
+            weapon.PhaseStartTime = 0f;
+            weapon.ReloadTime = 2.0f;
+            weapon.AmmoInMagazine = 0;
+            state.ElapsedTime = 2.5f;
+            // Reserve ammo already in backpack from CreateStateWithPlayer (60 Ammo_Rifle)
+            var context = CreateContext();
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(30, weapon.AmmoInMagazine);
+        }
+
+        [Test]
+        public void Tick_ReloadingDone_EmitsReloadFinished()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Reloading;
+            weapon.PhaseStartTime = 0f;
+            weapon.ReloadTime = 2.0f;
+            weapon.AmmoInMagazine = 0;
+            state.ElapsedTime = 2.5f;
+            var eventBuffer = new RaidEventBuffer();
+            var context = CreateContext(events: eventBuffer);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            var finished = eventBuffer.All
+                .Where(e => e.Type == RaidEventType.WeaponReloadFinished).ToList();
+            Assert.AreEqual(1, finished.Count);
+            Assert.AreEqual(weapon.PrefabId, finished[0].StringPayload);
+        }
+
+        [Test]
+        public void Tick_ReloadingNotDone_StaysReloading()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Reloading;
+            weapon.PhaseStartTime = 0f;
+            weapon.ReloadTime = 2.0f;
+            weapon.AmmoInMagazine = 0;
+            state.ElapsedTime = 1.0f; // only halfway
+            var context = CreateContext();
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Reloading, weapon.Phase);
+            Assert.AreEqual(0, weapon.AmmoInMagazine, "Magazine should not fill until reload complete");
+        }
+
+        [Test]
+        public void Tick_ReloadingWithSwapIntent_InterruptsToUnequipping()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Reloading;
+            weapon.PhaseStartTime = 0f;
+            weapon.ReloadTime = 2.0f;
+            weapon.AmmoInMagazine = 0;
+            state.ElapsedTime = 1.0f;
+            state.PlayerEntity.PendingHotbarSlot = 1;
+            var context = CreateContext();
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Unequipping, weapon.Phase,
+                "Swap should interrupt reload");
+        }
+
+        [Test]
+        public void Tick_ReadyWithReloadPressed_StartsReloading()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Ready;
+            weapon.AmmoInMagazine = 10; // not full
+            var input = new FakeInputAdapter { ReloadPressed = true };
+            var eventBuffer = new RaidEventBuffer();
+            var context = CreateContextWithInput(input, events: eventBuffer);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Reloading, weapon.Phase);
+            var started = eventBuffer.All
+                .Where(e => e.Type == RaidEventType.WeaponReloadStarted).ToList();
+            Assert.AreEqual(1, started.Count);
+        }
+
+        [Test]
+        public void Tick_ReadyWithReloadPressed_FullMag_StaysReady()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Ready;
+            weapon.AmmoInMagazine = 30; // full
+            var input = new FakeInputAdapter { ReloadPressed = true };
+            var context = CreateContextWithInput(input);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
+        }
+
+        [Test]
+        public void Tick_ReadyWithReloadPressed_NoReserve_StaysReady()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = WeaponPhase.Ready;
+            weapon.AmmoInMagazine = 10;
+            // Clear all reserve ammo
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                state.Inventory.Backpack[i] = null;
+            var input = new FakeInputAdapter { ReloadPressed = true };
+            var context = CreateContextWithInput(input);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
+        }
     }
 }

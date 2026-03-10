@@ -23,7 +23,17 @@ namespace Systems
             switch (weapon.Phase)
             {
                 case WeaponPhase.Ready:
-                    ProcessSwapIntent(player, weapon, state, in context);
+                    if (context.Input != null && context.Input.ReloadPressed
+                        && AmmoSystem.CanReload(weapon, state.Inventory))
+                    {
+                        weapon.Phase = WeaponPhase.Reloading;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponReloadStarted(weapon.PrefabId);
+                    }
+                    else
+                    {
+                        ProcessSwapIntent(player, weapon, state, in context);
+                    }
                     break;
 
                 case WeaponPhase.Firing:
@@ -38,7 +48,18 @@ namespace Systems
                         weapon.PhaseStartTime = elapsed;
                     }
 
-                    ProcessSwapIntent(player, weapon, state, in context);
+                    if (weapon.Phase == WeaponPhase.Ready && context.Input != null
+                        && context.Input.ReloadPressed
+                        && AmmoSystem.CanReload(weapon, state.Inventory))
+                    {
+                        weapon.Phase = WeaponPhase.Reloading;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponReloadStarted(weapon.PrefabId);
+                    }
+                    else
+                    {
+                        ProcessSwapIntent(player, weapon, state, in context);
+                    }
                     break;
 
                 case WeaponPhase.Equipping:
@@ -60,7 +81,20 @@ namespace Systems
                     {
                         CompleteUnequip(player, state, in context);
                     }
+                    break;
 
+                case WeaponPhase.Reloading:
+                    if (phaseDuration >= weapon.ReloadTime)
+                    {
+                        AmmoSystem.CompleteReload(weapon, state.Inventory);
+                        weapon.Phase = WeaponPhase.Ready;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponReloadFinished(weapon.PrefabId);
+                    }
+                    else
+                    {
+                        ProcessSwapIntent(player, weapon, state, in context);
+                    }
                     break;
             }
         }

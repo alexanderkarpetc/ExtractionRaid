@@ -41,20 +41,21 @@ namespace Session
 
         void SpawnTestGroundItems()
         {
-            var testItems = new[]
+            var testItems = new (string defId, UnityEngine.Vector3 pos, int count)[]
             {
-                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f)),
-                ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f)),
-                ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f)),
-                ("Ammo_Box", new UnityEngine.Vector3(-3f, 0f, -3f)),
-                ("Rifle", new UnityEngine.Vector3(4f, 0f, 4f)),
-                ("Shotgun", new UnityEngine.Vector3(-4f, 0f, 1f)),
+                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f), 1),
+                ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f), 1),
+                ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f), 1),
+                ("Ammo_Rifle", new UnityEngine.Vector3(-3f, 0f, -3f), 30),
+                ("Ammo_Shotgun", new UnityEngine.Vector3(-1f, 0f, -4f), 10),
+                ("Rifle", new UnityEngine.Vector3(4f, 0f, 4f), 1),
+                ("Shotgun", new UnityEngine.Vector3(-4f, 0f, 1f), 1),
             };
 
-            foreach (var (defId, pos) in testItems)
+            foreach (var (defId, pos, count) in testItems)
             {
                 var id = RaidState.AllocateEId();
-                var groundItem = GroundItemState.Create(id, defId, pos);
+                var groundItem = GroundItemState.Create(id, defId, pos, count);
                 RaidState.GroundItems.Add(groundItem);
                 _eventBuffer.GroundItemSpawned(id, pos, defId);
             }

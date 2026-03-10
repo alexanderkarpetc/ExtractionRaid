@@ -82,6 +82,15 @@ namespace Adapters
             }
         }
 
+        public bool ReloadPressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.R].wasPressedThisFrame;
+            }
+        }
+
         public void SetCamera(Camera camera)
         {
             _camera = camera;

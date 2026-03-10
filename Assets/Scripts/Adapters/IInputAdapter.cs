@@ -12,5 +12,6 @@ namespace Adapters
         int HotbarSlotPressed { get; }
         bool InventoryTogglePressed { get; }
         bool PickUpPressed { get; }
+        bool ReloadPressed { get; }
     }
 }

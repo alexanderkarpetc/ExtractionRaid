@@ -11,8 +11,6 @@ namespace Systems
         public static bool TryPickUp(RaidState state, EId groundItemId, IRaidEvents events)
         {
             var inventory = state.Inventory;
-            int freeSlot = inventory.FindFreeBackpackSlot();
-            if (freeSlot < 0) return false;
 
             GroundItemState groundItem = null;
             int groundIndex = -1;
@@ -25,12 +23,51 @@ namespace Systems
                     break;
                 }
             }
-
             if (groundItem == null) return false;
 
-            var item = ItemState.Create(groundItem.Id, groundItem.DefinitionId);
-            inventory.Backpack[freeSlot] = item;
+            var def = ItemDefinition.Get(groundItem.DefinitionId);
+            int pickupCount = groundItem.StackCount;
 
+            // Stackable item: merge into existing stacks, then overflow to free slots
+            if (def != null && def.IsStackable && pickupCount > 0)
+            {
+                int originalCount = pickupCount;
+
+                // Phase 1: fill existing partial stacks
+                for (int i = 0; i < InventoryState.BackpackSize && pickupCount > 0; i++)
+                {
+                    var slot = inventory.Backpack[i];
+                    if (slot == null || slot.DefinitionId != groundItem.DefinitionId) continue;
+                    int space = def.MaxStackSize - slot.StackCount;
+                    if (space <= 0) continue;
+                    int add = pickupCount < space ? pickupCount : space;
+                    slot.StackCount += add;
+                    pickupCount -= add;
+                }
+
+                // Phase 2: overflow into free slots
+                while (pickupCount > 0)
+                {
+                    int freeSlot = inventory.FindFreeBackpackSlot();
+                    if (freeSlot < 0) break;
+                    int add = pickupCount < def.MaxStackSize ? pickupCount : def.MaxStackSize;
+                    inventory.Backpack[freeSlot] = ItemState.Create(state.AllocateEId(), groundItem.DefinitionId, add);
+                    pickupCount -= add;
+                }
+
+                if (pickupCount == originalCount) return false; // nothing picked up
+
+                state.GroundItems.RemoveAt(groundIndex);
+                events.GroundItemDespawned(groundItemId);
+                return true;
+            }
+
+            // Non-stackable: original behavior
+            int free = inventory.FindFreeBackpackSlot();
+            if (free < 0) return false;
+
+            var item = ItemState.Create(groundItem.Id, groundItem.DefinitionId);
+            inventory.Backpack[free] = item;
             state.GroundItems.RemoveAt(groundIndex);
             events.GroundItemDespawned(groundItemId);
             return true;
@@ -44,7 +81,7 @@ namespace Systems
 
             inventory.SetSlot(slot, null);
 
-            var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPosition);
+            var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPosition, item.StackCount);
             state.GroundItems.Add(groundItem);
             events.GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
             return true;

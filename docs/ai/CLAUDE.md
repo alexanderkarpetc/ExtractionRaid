@@ -112,6 +112,41 @@ Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shoo
 
 Events: `WeaponEquipStarted`, `WeaponUnequipStarted`, `WeaponEquipFinished` (for future animations).
 
+## 11) Ammo & Reload
+
+Weapons have magazine ammo and reserve ammo (from inventory backpack).
+
+Key fields on `WeaponEntityState`:
+- `AmmoType` — `"Ammo_Rifle"` | `"Ammo_Shotgun"` | `null` (infinite, used by bots)
+- `MagazineSize`, `AmmoInMagazine` — current/max rounds in magazine
+- `ReloadTime` — seconds for reload animation
+
+FSM phase `Reloading` added to `WeaponPhase` enum.
+
+Transition rules:
+- Ready + attack + empty mag → DryFire event + auto-reload (if reserve > 0)
+- Ready + R key → Reloading (if `CanReload`)
+- Cooldown → Ready → Reloading (same tick, if R pressed)
+- Reloading timer done → Ready + fill magazine from reserve
+- Reloading + swap intent → Unequipping (interrupt)
+
+`AmmoSystem` (stateless static system in `Systems/AmmoSystem.cs`):
+- `CountReserve(inventory, ammoType)` — sums matching items in backpack
+- `ConsumeAmmo(inventory, ammoType, amount)` — drains from backpack, nulls empty slots
+- `CompleteReload(weapon, inventory)` — fills magazine from reserve
+- `CanReload(weapon, inventory)` — has room AND has reserve
+
+Ammo values:
+| Weapon | AmmoType | MagSize | ReloadTime |
+|--------|----------|---------|------------|
+| Rifle | Ammo_Rifle | 30 | 2.0s |
+| Shotgun | Ammo_Shotgun | 5 | 2.5s |
+
+1 trigger pull = 1 ammo consumed (shotgun: 1 shell = 7 pellets).
+
+Items are stackable: `ItemState.StackCount`, `ItemDefinition.MaxStackSize`.
+Pickup merges into existing partial stacks first, then overflows to free slots.
+
 ## 10) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:

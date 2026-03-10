@@ -84,5 +84,29 @@ namespace Tests.EditMode.Fakes
             WeaponEquipFinishedCalled = true;
             WeaponEquipFinishedPrefabId = prefabId;
         }
+
+        public bool WeaponReloadStartedCalled;
+        public string WeaponReloadStartedPrefabId;
+        public void WeaponReloadStarted(string prefabId)
+        {
+            WeaponReloadStartedCalled = true;
+            WeaponReloadStartedPrefabId = prefabId;
+        }
+
+        public bool WeaponReloadFinishedCalled;
+        public string WeaponReloadFinishedPrefabId;
+        public void WeaponReloadFinished(string prefabId)
+        {
+            WeaponReloadFinishedCalled = true;
+            WeaponReloadFinishedPrefabId = prefabId;
+        }
+
+        public bool WeaponDryFiredCalled;
+        public string WeaponDryFiredPrefabId;
+        public void WeaponDryFired(string prefabId)
+        {
+            WeaponDryFiredCalled = true;
+            WeaponDryFiredPrefabId = prefabId;
+        }
     }
 }

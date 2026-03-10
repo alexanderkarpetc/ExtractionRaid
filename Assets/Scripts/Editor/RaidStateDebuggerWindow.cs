@@ -354,6 +354,10 @@ namespace Editor
                     float uqRemaining = Mathf.Max(0f, w.UnequipTime - (elapsedTime - w.PhaseStartTime));
                     phaseStatus = $"Unequipping ({uqRemaining:F2}s)";
                     break;
+                case State.WeaponPhase.Reloading:
+                    float rlRemaining = Mathf.Max(0f, w.ReloadTime - (elapsedTime - w.PhaseStartTime));
+                    phaseStatus = $"Reloading ({rlRemaining:F2}s)";
+                    break;
                 default:
                     phaseStatus = w.Phase.ToString();
                     break;
@@ -361,6 +365,13 @@ namespace Editor
             Field("Phase", phaseStatus);
             Field("EquipTime", w.EquipTime);
             Field("UnequipTime", w.UnequipTime);
+
+            if (!string.IsNullOrEmpty(w.AmmoType))
+            {
+                Field("AmmoType", w.AmmoType);
+                Field("Magazine", $"{w.AmmoInMagazine} / {w.MagazineSize}");
+                Field("ReloadTime", w.ReloadTime);
+            }
 
             Field("FireInterval", w.FireInterval);
             Field("Projectiles/Shot", w.ProjectilesPerShot);
