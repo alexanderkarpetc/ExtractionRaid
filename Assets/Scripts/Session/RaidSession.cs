@@ -63,7 +63,7 @@ namespace Session
 
         void SpawnTestBots()
         {
-            BotSpawnSystem.SpawnBot(RaidState, "Scav",
+            BotSpawnSystem.SpawnBot(RaidState, "Boss",
                 new UnityEngine.Vector3(10f, 0f, 10f),
                 new[]
                 {

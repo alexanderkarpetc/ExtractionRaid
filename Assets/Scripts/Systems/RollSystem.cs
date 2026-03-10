@@ -22,10 +22,10 @@ namespace Systems
 
             if (player.IsRolling)
             {
-                if (elapsed - player.RollStartTime >= RollConstants.Duration)
+                if (elapsed - player.RollStartTime >= DodgeConstants.Duration)
                 {
                     player.IsRolling = false;
-                    player.RollCooldownEndTime = elapsed + RollConstants.Cooldown;
+                    player.RollCooldownEndTime = elapsed + DodgeConstants.Cooldown;
                 }
                 return;
             }
@@ -52,10 +52,10 @@ namespace Systems
                 var bot = state.Bots[i];
                 if (!bot.IsRolling) continue;
 
-                if (elapsed - bot.RollStartTime >= RollConstants.Duration)
+                if (elapsed - bot.RollStartTime >= DodgeConstants.Duration)
                 {
                     bot.IsRolling = false;
-                    bot.RollCooldownEndTime = elapsed + RollConstants.Cooldown;
+                    bot.RollCooldownEndTime = elapsed + DodgeConstants.Cooldown;
                 }
             }
         }

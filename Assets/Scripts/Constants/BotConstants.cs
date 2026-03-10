@@ -45,9 +45,7 @@ namespace Constants
         public readonly float EngageRange;
 
         // Dodge
-        public readonly float DodgeDistance;
         public readonly float DodgeCooldown;
-        public readonly float DodgeSpeed;
 
         // Weapon overrides
         public readonly float FireInterval;
@@ -68,7 +66,7 @@ namespace Constants
             float moveSpeed, float patrolSpeed, float chaseSpeed,
             float visionRange, float visionAngle, float hearingRange, float targetMemoryDuration,
             float reactionTime, float accuracy, float engageRange,
-            float dodgeDistance, float dodgeCooldown, float dodgeSpeed,
+            float dodgeCooldown,
             float fireInterval, float projectileSpeed, float projectileDamage,
             float projectileLifetime, int projectilesPerShot, float spreadAngle,
             BotBehaviorFlags behaviors)
@@ -90,9 +88,7 @@ namespace Constants
             ReactionTime = reactionTime;
             Accuracy = accuracy;
             EngageRange = engageRange;
-            DodgeDistance = dodgeDistance;
             DodgeCooldown = dodgeCooldown;
-            DodgeSpeed = dodgeSpeed;
             FireInterval = fireInterval;
             ProjectileSpeed = projectileSpeed;
             ProjectileDamage = projectileDamage;
@@ -124,9 +120,6 @@ namespace Constants
         public const float WaypointArrivalDistance = 1f;
         public const float PatrolWaitTime = 2f;
 
-        // --- Dodge ---
-        public const float DodgeDuration = 0.3f;
-
         // --- Bot type definitions ---
 
         public static readonly BotTypeConfig Scav = new(
@@ -147,9 +140,7 @@ namespace Constants
             reactionTime: 0.8f,
             accuracy: 0.5f,
             engageRange: 20f,
-            dodgeDistance: 0f,
             dodgeCooldown: 0f,
-            dodgeSpeed: 0f,
             fireInterval: 0.4f,
             projectileSpeed: 18f,
             projectileDamage: 8f,
@@ -177,9 +168,7 @@ namespace Constants
             reactionTime: 0.4f,
             accuracy: 0.75f,
             engageRange: 28f,
-            dodgeDistance: 3f,
             dodgeCooldown: 5f,
-            dodgeSpeed: 10f,
             fireInterval: 0.25f,
             projectileSpeed: 22f,
             projectileDamage: 12f,
@@ -208,9 +197,7 @@ namespace Constants
             reactionTime: 0.3f,
             accuracy: 0.65f,
             engageRange: 15f,
-            dodgeDistance: 0f,
-            dodgeCooldown: 0f,
-            dodgeSpeed: 0f,
+            dodgeCooldown: 3f,
             fireInterval: 0.5f,
             projectileSpeed: 28f,
             projectileDamage: 7f,
@@ -218,6 +205,7 @@ namespace Constants
             projectilesPerShot: 7,
             spreadAngle: 25f,
             behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot | BotBehaviorFlags.TakeCover
+                     | BotBehaviorFlags.Dodge
         );
 
         static readonly Dictionary<string, BotTypeConfig> Registry = new()

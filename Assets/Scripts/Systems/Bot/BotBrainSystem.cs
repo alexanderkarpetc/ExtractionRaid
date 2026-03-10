@@ -23,6 +23,8 @@ namespace Systems.Bot
 
                 var tree = BotTreeBuilder.GetOrBuild(in config);
                 tree.Tick(bot, state, in ctx, in config);
+
+                bot.Blackboard.WasDamaged = false;
             }
         }
     }

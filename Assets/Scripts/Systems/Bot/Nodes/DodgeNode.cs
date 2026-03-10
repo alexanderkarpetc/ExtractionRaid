@@ -11,31 +11,29 @@ namespace Systems.Bot.Nodes
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
-            if (!bb.CanSeeTarget || bb.DistanceToTarget > config.EngageRange)
-                return BTStatus.Failure;
 
-            bb.DebugStatus = "Dodge";
-            if (bb.IsDodging)
+            if (bot.IsRolling)
             {
-                bb.DodgeTimer -= ctx.DeltaTime;
-                if (bb.DodgeTimer <= 0f)
-                {
-                    bb.IsDodging = false;
-                    return BTStatus.Success;
-                }
-
-                bot.DesiredVelocity = bb.DodgeDirection * config.DodgeSpeed;
+                bb.DebugStatus = "Dodge";
                 return BTStatus.Running;
             }
 
-            bot.WantsToDodge = true;
+            var player = state.PlayerEntity;
+            if (player == null) return BTStatus.Failure;
 
-            var right = Vector3.Cross(Vector3.up, bot.FacingDirection).normalized;
-            bb.DodgeDirection = Random.value > 0.5f ? right : -right;
-            bb.DodgeTimer = BotConstants.DodgeDuration;
-            bb.IsDodging = true;
+            var toPlayer = (player.Position - bot.Position).normalized;
+            var perp = Vector3.Cross(Vector3.up, toPlayer).normalized;
+            if (perp.sqrMagnitude < 0.001f)
+                perp = Vector3.right;
 
-            bot.DesiredVelocity = bb.DodgeDirection * config.DodgeSpeed;
+            var dir = Random.value > 0.5f ? perp : -perp;
+
+            RollSystem.StartBotRoll(bot, dir, state.ElapsedTime);
+
+            if (!bot.IsRolling)
+                return BTStatus.Failure;
+
+            bb.DebugStatus = "Dodge";
             return BTStatus.Running;
         }
     }

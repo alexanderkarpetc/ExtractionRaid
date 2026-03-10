@@ -1,6 +1,6 @@
 namespace Constants
 {
-    public static class RollConstants
+    public static class DodgeConstants
     {
         public const float Duration = 0.5f;
         public const float Speed = 10.4f;

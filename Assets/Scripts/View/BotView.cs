@@ -134,7 +134,7 @@ namespace View
 
             if (state.IsRolling)
             {
-                _rollVisualAngle += (360f / RollConstants.Duration) * Time.deltaTime;
+                _rollVisualAngle += (360f / DodgeConstants.Duration) * Time.deltaTime;
 
                 var rollAxis = Vector3.Cross(Vector3.up, state.RollDirection);
                 if (rollAxis.sqrMagnitude < 0.001f)

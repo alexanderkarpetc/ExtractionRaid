@@ -22,7 +22,7 @@ namespace Systems.Bot
                 Vector3 velocity;
                 if (bot.IsRolling)
                 {
-                    velocity = bot.RollDirection * RollConstants.Speed;
+                    velocity = bot.RollDirection * DodgeConstants.Speed;
                 }
                 else
                 {

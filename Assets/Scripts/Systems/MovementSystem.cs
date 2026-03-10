@@ -16,7 +16,7 @@ namespace Systems
 
             if (player.IsRolling)
             {
-                player.Velocity = player.RollDirection * RollConstants.Speed;
+                player.Velocity = player.RollDirection * DodgeConstants.Speed;
             }
             else
             {

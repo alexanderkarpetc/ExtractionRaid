@@ -43,7 +43,7 @@ namespace Systems.Bot
             if (config.Has(BotBehaviorFlags.Dodge))
             {
                 branches.Add(new BTSequence(
-                    new BTCondition((bot, _, _) => bot.Blackboard.CanSeeTarget),
+                    new BTCondition((bot, _, _) => bot.Blackboard.WasDamaged || bot.IsRolling),
                     new BTCooldown(
                         new DodgeNode(),
                         config.DodgeCooldown,
