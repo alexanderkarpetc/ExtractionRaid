@@ -6,15 +6,15 @@ namespace View
     public class RaidCameraController : MonoBehaviour
     {
         [Header("Offset")]
-        [SerializeField] Vector3 _offset = new Vector3(0f, 12f, -9f);
+        [SerializeField] Vector3 _offset = new Vector3(0f, 15.6f, -11.7f);
         [SerializeField] float _pitch = 55f;
 
         [Header("Follow")]
-        [SerializeField] float _followSpeed = 8f;
+        [SerializeField] float _followSpeed = 12f;
 
         [Header("Cursor Offset")]
         [SerializeField] float _cursorInfluence = 4f;
-        [SerializeField] float _cursorSmoothing = 5f;
+        [SerializeField] float _cursorSmoothing = 8f;
         [SerializeField] [Range(0f, 1f)] float _deadZone = 0.3f;
 
         Transform _target;

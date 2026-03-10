@@ -4828,6 +4828,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: Main Camera
       objectReference: {fileID: 0}
+    - target: {fileID: 7090319286938793503, guid: 96b29382352de264fb4a480cee2c0235, type: 3}
+      propertyPath: _offset.y
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7090319286938793503, guid: 96b29382352de264fb4a480cee2c0235, type: 3}
+      propertyPath: _offset.z
+      value: -12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7090319286938793503, guid: 96b29382352de264fb4a480cee2c0235, type: 3}
+      propertyPath: _followSpeed
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7090319286938793503, guid: 96b29382352de264fb4a480cee2c0235, type: 3}
+      propertyPath: _cursorSmoothing
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7917503877418650389, guid: 96b29382352de264fb4a480cee2c0235, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
