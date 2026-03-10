@@ -22,7 +22,19 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_PressSelectedSlotWithWeapon_DeselectsAndUnequips()
+        public void Tick_PressSlot_SetsPendingHotbarSlot()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var input = new FakeInputAdapter { HotbarSlotPressed = 1 };
+            var context = CreateContext(input);
+
+            WeaponEquipSystem.Tick(state, in context);
+
+            Assert.AreEqual(1, state.PlayerEntity.PendingHotbarSlot);
+        }
+
+        [Test]
+        public void Tick_PressCurrentSlot_SetsPendingToSameSlot()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { HotbarSlotPressed = 0 };
@@ -30,90 +42,24 @@ namespace Tests.EditMode
 
             WeaponEquipSystem.Tick(state, in context);
 
-            Assert.AreEqual(-1, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNull(state.PlayerEntity.EquippedWeapon);
-            Assert.IsNotNull(state.PlayerEntity.Hotbar[0]);
+            Assert.AreEqual(0, state.PlayerEntity.PendingHotbarSlot);
         }
 
         [Test]
-        public void Tick_PressSelectedSlotTwice_ReequipsWeapon()
+        public void Tick_NoSlotPressed_PendingUnchanged()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weaponId = state.PlayerEntity.EquippedWeapon.Id;
-            var input = new FakeInputAdapter { HotbarSlotPressed = 0 };
-            var context = CreateContext(input);
-
-            WeaponEquipSystem.Tick(state, in context);
-            WeaponEquipSystem.Tick(state, in context);
-
-            Assert.AreEqual(0, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
-            Assert.AreEqual(weaponId, state.PlayerEntity.EquippedWeapon.Id);
-        }
-
-        [Test]
-        public void Tick_NoSlotPressed_NoChange()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.PendingHotbarSlot = -1;
             var input = new FakeInputAdapter { HotbarSlotPressed = -1 };
             var context = CreateContext(input);
 
             WeaponEquipSystem.Tick(state, in context);
 
-            Assert.AreEqual(0, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
+            Assert.AreEqual(-1, state.PlayerEntity.PendingHotbarSlot);
         }
 
         [Test]
-        public void Tick_PressEmptySlot_SelectsSlotAndUnequips()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var input = new FakeInputAdapter { HotbarSlotPressed = 4 };
-            var context = CreateContext(input);
-
-            WeaponEquipSystem.Tick(state, in context);
-
-            Assert.AreEqual(4, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNull(state.PlayerEntity.EquippedWeapon);
-        }
-
-        [Test]
-        public void Tick_FromEmptySlot_PressWeaponSlot_Equips()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weaponId = state.PlayerEntity.Hotbar[0].Id;
-
-            state.PlayerEntity.SelectedHotbarSlot = 4;
-            state.PlayerEntity.EquippedWeapon = null;
-
-            var input = new FakeInputAdapter { HotbarSlotPressed = 0 };
-            var context = CreateContext(input);
-
-            WeaponEquipSystem.Tick(state, in context);
-
-            Assert.AreEqual(0, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
-            Assert.AreEqual(weaponId, state.PlayerEntity.EquippedWeapon.Id);
-        }
-
-        [Test]
-        public void Tick_PressSelectedEmptySlot_Deselects()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.SelectedHotbarSlot = 3;
-            state.PlayerEntity.EquippedWeapon = null;
-
-            var input = new FakeInputAdapter { HotbarSlotPressed = 3 };
-            var context = CreateContext(input);
-
-            WeaponEquipSystem.Tick(state, in context);
-
-            Assert.AreEqual(-1, state.PlayerEntity.SelectedHotbarSlot);
-            Assert.IsNull(state.PlayerEntity.EquippedWeapon);
-        }
-
-        [Test]
-        public void Tick_NoPlayer_DoesNotThrow()
+        public void Tick_NullPlayer_DoesNotThrow()
         {
             var state = RaidState.Create();
             var input = new FakeInputAdapter { HotbarSlotPressed = 0 };
@@ -123,7 +69,48 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_Deselect_WeaponRemainsInHotbarSlot()
+        public void Tick_PressEmptySlot_SetsPending()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var input = new FakeInputAdapter { HotbarSlotPressed = 5 };
+            var context = CreateContext(input);
+
+            WeaponEquipSystem.Tick(state, in context);
+
+            Assert.AreEqual(5, state.PlayerEntity.PendingHotbarSlot);
+        }
+
+        [Test]
+        public void Tick_AlreadyHasPending_Overwrites()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.PendingHotbarSlot = 1;
+            var input = new FakeInputAdapter { HotbarSlotPressed = 3 };
+            var context = CreateContext(input);
+
+            WeaponEquipSystem.Tick(state, in context);
+
+            Assert.AreEqual(3, state.PlayerEntity.PendingHotbarSlot);
+        }
+
+        [Test]
+        public void Tick_DoesNotChangeEquippedWeapon()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var originalWeapon = state.PlayerEntity.EquippedWeapon;
+            var input = new FakeInputAdapter { HotbarSlotPressed = 1 };
+            var context = CreateContext(input);
+
+            WeaponEquipSystem.Tick(state, in context);
+
+            Assert.AreSame(originalWeapon, state.PlayerEntity.EquippedWeapon,
+                "EquipSystem should only set PendingHotbarSlot, not change EquippedWeapon");
+            Assert.AreEqual(0, state.PlayerEntity.SelectedHotbarSlot,
+                "EquipSystem should not change SelectedHotbarSlot");
+        }
+
+        [Test]
+        public void Tick_WeaponRemainsInHotbarSlot()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var weaponId = state.PlayerEntity.Hotbar[0].Id;

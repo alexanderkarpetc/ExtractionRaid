@@ -43,6 +43,15 @@ namespace View
                     case RaidEventType.WeaponFired:
                         _playerView?.WeaponView?.PlayMuzzleFlash();
                         break;
+                    case RaidEventType.WeaponEquipStarted:
+                        // Future: trigger equip animation
+                        break;
+                    case RaidEventType.WeaponUnequipStarted:
+                        // Future: trigger unequip animation
+                        break;
+                    case RaidEventType.WeaponEquipFinished:
+                        // Future: finalize equip animation
+                        break;
                 }
 
                 if (e.Type == RaidEventType.EntityDamaged && e.Id == _trackedId && _playerView != null)

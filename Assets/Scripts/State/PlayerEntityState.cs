@@ -15,6 +15,7 @@ namespace State
 
         public WeaponEntityState[] Hotbar = new WeaponEntityState[HotbarSize];
         public int SelectedHotbarSlot = -1;
+        public int PendingHotbarSlot = -1;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

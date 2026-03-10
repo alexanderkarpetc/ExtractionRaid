@@ -19,7 +19,7 @@ namespace Systems
 
             if (!input.AttackPressed) return;
 
-            if (state.ElapsedTime - weapon.LastFireTime < weapon.FireInterval) return;
+            if (weapon.Phase != WeaponPhase.Ready) return;
 
             var dir = player.AimDirection;
 
@@ -46,6 +46,8 @@ namespace Systems
             }
 
             context.Events.WeaponFired(spawnPos, dir);
+            weapon.Phase = WeaponPhase.Firing;
+            weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
         }
     }

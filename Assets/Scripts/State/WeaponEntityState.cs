@@ -1,5 +1,14 @@
 namespace State
 {
+    public enum WeaponPhase : byte
+    {
+        Ready,
+        Firing,
+        Cooldown,
+        Equipping,
+        Unequipping,
+    }
+
     public class WeaponEntityState
     {
         public EId Id;
@@ -17,8 +26,14 @@ namespace State
         public float ConeHalfAngle;
         public float BodyRotationSpeed;
 
+        // Equip/unequip durations
+        public float EquipTime;
+        public float UnequipTime;
+
         // Runtime state
         public float LastFireTime;
+        public WeaponPhase Phase;
+        public float PhaseStartTime;
 
         public static WeaponEntityState CreateDefault(EId id)
         {
@@ -34,7 +49,11 @@ namespace State
                 SpreadAngle = 0f,
                 ConeHalfAngle = 45f,
                 BodyRotationSpeed = 270,
+                EquipTime = 0.3f,
+                UnequipTime = 0.2f,
                 LastFireTime = -999f,
+                Phase = WeaponPhase.Ready,
+                PhaseStartTime = 0f,
             };
         }
 
@@ -52,7 +71,11 @@ namespace State
                 SpreadAngle = 30f,
                 ConeHalfAngle = 20f,
                 BodyRotationSpeed = 180f,
+                EquipTime = 0.4f,
+                UnequipTime = 0.25f,
                 LastFireTime = -999f,
+                Phase = WeaponPhase.Ready,
+                PhaseStartTime = 0f,
             };
         }
     }

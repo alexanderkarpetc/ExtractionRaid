@@ -6,6 +6,7 @@ namespace View
     public class HotbarDebugOverlay : MonoBehaviour
     {
         Texture2D _selectedTex;
+        Texture2D _pendingTex;
         Texture2D _occupiedTex;
         Texture2D _emptyTex;
         GUIStyle _slotStyle;
@@ -13,6 +14,7 @@ namespace View
         void Awake()
         {
             _selectedTex = MakeTex(Color.green);
+            _pendingTex = MakeTex(new Color(1f, 1f, 0f, 0.7f));
             _occupiedTex = MakeTex(new Color(0.3f, 0.3f, 0.3f, 0.9f));
             _emptyTex = MakeTex(new Color(0.15f, 0.15f, 0.15f, 0.8f));
         }
@@ -47,15 +49,18 @@ namespace View
             {
                 var rect = new Rect(startX + i * (slotW + gap), startY, slotW, slotH);
                 bool isSelected = i == player.SelectedHotbarSlot;
+                bool isPending = i == player.PendingHotbarSlot;
                 var weapon = player.Hotbar[i];
 
                 _slotStyle.normal.background = isSelected
                     ? _selectedTex
-                    : weapon != null
-                        ? _occupiedTex
-                        : _emptyTex;
+                    : isPending
+                        ? _pendingTex
+                        : weapon != null
+                            ? _occupiedTex
+                            : _emptyTex;
 
-                _slotStyle.normal.textColor = isSelected ? Color.black : Color.white;
+                _slotStyle.normal.textColor = isSelected || isPending ? Color.black : Color.white;
 
                 string label = weapon != null
                     ? $"[{i + 1}]\n{weapon.PrefabId}"
@@ -76,6 +81,7 @@ namespace View
         void OnDestroy()
         {
             if (_selectedTex != null) Destroy(_selectedTex);
+            if (_pendingTex != null) Destroy(_pendingTex);
             if (_occupiedTex != null) Destroy(_occupiedTex);
             if (_emptyTex != null) Destroy(_emptyTex);
         }

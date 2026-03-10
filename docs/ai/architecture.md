@@ -77,10 +77,27 @@ High-level loop:
 The execution order is part of the design and must remain stable.
 Typical conceptual groups:
 - movement / locomotion
+- weapon equip intent + weapon state machine
+- aiming / shooting
 - AI decisions / spawning
 - combat resolution
 - loot / interactions
 - extraction / end conditions
+
+Actual system tick order in `RaidSession.Tick()`:
+```
+MovementSystem
+WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
+WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping
+AimingSystem
+ShootingSystem             // fires only when Phase == Ready
+BotPerceptionSystem
+BotBrainSystem
+BotMovementSystem
+BotCombatSystem            // bots use LastFireTime, no FSM
+ProjectileSystem
+DamageSystem
+```
 
 ## 4) Entry points
 

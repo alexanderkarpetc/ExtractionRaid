@@ -51,12 +51,11 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_WithinCooldown_DoesNotSpawn()
+        public void Tick_InCooldownPhase_DoesNotSpawn()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.ElapsedTime = 1f;
-            state.PlayerEntity.EquippedWeapon.LastFireTime = 0.9f;
+            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Cooldown;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -66,18 +65,45 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_AfterCooldownExpires_SpawnsAgain()
+        public void Tick_InReadyPhase_SpawnsProjectile()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.ElapsedTime = 1f;
-            state.PlayerEntity.EquippedWeapon.LastFireTime = 0.5f;
+            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Ready;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
+        }
+
+        [Test]
+        public void Tick_DuringEquipping_DoesNotSpawn()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Equipping;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(0, state.Projectiles.Count);
+        }
+
+        [Test]
+        public void Tick_DuringUnequipping_DoesNotSpawn()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Unequipping;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(0, state.Projectiles.Count);
         }
 
         [Test]
@@ -142,7 +168,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_SetsLastFireTime()
+        public void Tick_SetsLastFireTimeAndFiringPhase()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
@@ -153,6 +179,8 @@ namespace Tests.EditMode
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(2.5f, state.PlayerEntity.EquippedWeapon.LastFireTime, 0.001f);
+            Assert.AreEqual(WeaponPhase.Firing, state.PlayerEntity.EquippedWeapon.Phase);
+            Assert.AreEqual(2.5f, state.PlayerEntity.EquippedWeapon.PhaseStartTime, 0.001f);
         }
 
         [Test]

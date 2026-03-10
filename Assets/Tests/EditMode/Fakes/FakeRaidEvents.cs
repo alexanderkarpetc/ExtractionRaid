@@ -60,5 +60,29 @@ namespace Tests.EditMode.Fakes
             BotDespawnedId = id;
         }
         public void WeaponFired(Vector3 position, Vector3 direction) { }
+
+        public bool WeaponEquipStartedCalled;
+        public string WeaponEquipStartedPrefabId;
+        public void WeaponEquipStarted(string prefabId)
+        {
+            WeaponEquipStartedCalled = true;
+            WeaponEquipStartedPrefabId = prefabId;
+        }
+
+        public bool WeaponUnequipStartedCalled;
+        public string WeaponUnequipStartedPrefabId;
+        public void WeaponUnequipStarted(string prefabId)
+        {
+            WeaponUnequipStartedCalled = true;
+            WeaponUnequipStartedPrefabId = prefabId;
+        }
+
+        public bool WeaponEquipFinishedCalled;
+        public string WeaponEquipFinishedPrefabId;
+        public void WeaponEquipFinished(string prefabId)
+        {
+            WeaponEquipFinishedCalled = true;
+            WeaponEquipFinishedPrefabId = prefabId;
+        }
     }
 }

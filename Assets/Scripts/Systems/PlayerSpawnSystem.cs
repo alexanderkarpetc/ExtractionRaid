@@ -19,9 +19,13 @@ namespace Systems
             var weaponId = state.AllocateEId();
             var weapon = WeaponEntityState.CreateDefault(weaponId);
 
+            weapon.Phase = WeaponPhase.Ready;
+            weapon.PhaseStartTime = 0f;
+
             state.PlayerEntity.Hotbar[0] = weapon;
             state.PlayerEntity.SelectedHotbarSlot = 0;
             state.PlayerEntity.EquippedWeapon = weapon;
+            state.PlayerEntity.PendingHotbarSlot = -1;
 
             var weapon2Id = state.AllocateEId();
             state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateSecondary(weapon2Id);

@@ -113,6 +113,7 @@ namespace Editor
             Field("Facing", p.FacingDirection);
             Field("Aim", p.AimDirection);
             Field("Selected Slot", p.SelectedHotbarSlot);
+            Field("Pending Slot", p.PendingHotbarSlot);
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -336,6 +337,31 @@ namespace Editor
         {
             Field("Id", w.Id);
             Field("PrefabId", w.PrefabId);
+
+            // Phase status with remaining timer
+            string phaseStatus;
+            switch (w.Phase)
+            {
+                case State.WeaponPhase.Cooldown:
+                    float cdRemaining = Mathf.Max(0f, w.FireInterval - (elapsedTime - w.PhaseStartTime));
+                    phaseStatus = cdRemaining > 0.001f ? $"Cooldown ({cdRemaining:F2}s)" : "Ready";
+                    break;
+                case State.WeaponPhase.Equipping:
+                    float eqRemaining = Mathf.Max(0f, w.EquipTime - (elapsedTime - w.PhaseStartTime));
+                    phaseStatus = $"Equipping ({eqRemaining:F2}s)";
+                    break;
+                case State.WeaponPhase.Unequipping:
+                    float uqRemaining = Mathf.Max(0f, w.UnequipTime - (elapsedTime - w.PhaseStartTime));
+                    phaseStatus = $"Unequipping ({uqRemaining:F2}s)";
+                    break;
+                default:
+                    phaseStatus = w.Phase.ToString();
+                    break;
+            }
+            Field("Phase", phaseStatus);
+            Field("EquipTime", w.EquipTime);
+            Field("UnequipTime", w.UnequipTime);
+
             Field("FireInterval", w.FireInterval);
             Field("Projectiles/Shot", w.ProjectilesPerShot);
             Field("SpreadAngle", $"{w.SpreadAngle}°");
@@ -344,9 +370,6 @@ namespace Editor
             Field("Proj Damage", w.ProjectileDamage);
             Field("ConeHalfAngle", $"{w.ConeHalfAngle}°");
             Field("BodyRotSpeed", w.BodyRotationSpeed);
-
-            float cooldown = Mathf.Max(0f, w.FireInterval - (elapsedTime - w.LastFireTime));
-            Field("Cooldown", cooldown > 0.001f ? $"{cooldown:F2}s" : "Ready");
         }
 
         void DrawHealth(EId id, Dictionary<EId, HealthState> healthMap)

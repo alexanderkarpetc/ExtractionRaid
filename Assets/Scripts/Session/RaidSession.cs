@@ -107,6 +107,7 @@ namespace Session
 
             MovementSystem.Tick(RaidState, in context);
             WeaponEquipSystem.Tick(RaidState, in context);
+            WeaponStateMachineSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 

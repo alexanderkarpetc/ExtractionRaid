@@ -18,6 +18,9 @@ namespace Adapters
         BotSpawned,
         BotDespawned,
         WeaponFired,
+        WeaponEquipStarted,
+        WeaponUnequipStarted,
+        WeaponEquipFinished,
     }
 
     public struct RaidEvent
@@ -125,6 +128,33 @@ namespace Adapters
                 Type = RaidEventType.WeaponFired,
                 Position = position,
                 Direction = direction,
+            });
+        }
+
+        public void WeaponEquipStarted(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponEquipStarted,
+                StringPayload = prefabId,
+            });
+        }
+
+        public void WeaponUnequipStarted(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponUnequipStarted,
+                StringPayload = prefabId,
+            });
+        }
+
+        public void WeaponEquipFinished(string prefabId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.WeaponEquipFinished,
+                StringPayload = prefabId,
             });
         }
 

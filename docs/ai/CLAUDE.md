@@ -94,7 +94,25 @@ AI docs exist in two places that must stay in sync:
 
 When updating any AI doc, apply the same change to the corresponding Cursor doc.
 
-## 9) Task routing (read only what is relevant)
+## 9) Weapon State Machine (V1)
+
+Player weapons use an enum-based FSM (`WeaponPhase` in `WeaponEntityState`).
+Phases: `Ready`, `Firing`, `Cooldown`, `Equipping`, `Unequipping`.
+
+Key files:
+- `State/WeaponEntityState.cs` — `WeaponPhase` enum, `Phase`, `PhaseStartTime`, `EquipTime`, `UnequipTime`
+- `State/PlayerEntityState.cs` — `PendingHotbarSlot` (swap intent written by WeaponEquipSystem)
+- `Systems/WeaponStateMachineSystem.cs` — FSM orchestrator (runs after WeaponEquipSystem, before AimingSystem)
+- `Systems/WeaponEquipSystem.cs` — writes `PendingHotbarSlot` only (no instant swap)
+- `Systems/ShootingSystem.cs` — fires only when `Phase == Ready`, sets `Phase = Firing`
+
+Bots do NOT use the FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
+
+Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → ...`
+
+Events: `WeaponEquipStarted`, `WeaponUnequipStarted`, `WeaponEquipFinished` (for future animations).
+
+## 10) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`

@@ -43,9 +43,24 @@ alwaysApply: false
 
 ## Tick model
 1. Gather input and external signals.
-2. Run systems in deterministic order (movement → AI → combat → loot → extraction).
+2. Run systems in deterministic order.
 3. Produce state changes and domain events.
 4. Present state and events in Unity.
+
+Actual system tick order in `RaidSession.Tick()`:
+```
+MovementSystem
+WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
+WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping
+AimingSystem
+ShootingSystem             // fires only when Phase == Ready
+BotPerceptionSystem
+BotBrainSystem
+BotMovementSystem
+BotCombatSystem            // bots use LastFireTime, no FSM
+ProjectileSystem
+DamageSystem
+```
 
 ## Entry points
 All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
