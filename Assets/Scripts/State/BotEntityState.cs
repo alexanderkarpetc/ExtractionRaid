@@ -19,6 +19,12 @@ namespace State
         // AI working memory
         public BotBlackboard Blackboard;
 
+        // Roll
+        public bool IsRolling;
+        public Vector3 RollDirection;
+        public float RollStartTime;
+        public float RollCooldownEndTime;
+
         // Intents (written by BT, consumed by movement/combat systems)
         public Vector3 DesiredVelocity;
         public Vector3 DesiredAimPoint;

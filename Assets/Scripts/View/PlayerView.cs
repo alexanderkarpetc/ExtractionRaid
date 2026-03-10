@@ -1,4 +1,5 @@
 using System;
+using Constants;
 using State;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace View
     public class PlayerView : MonoBehaviour, IDamageableView
     {
         [SerializeField] Transform _weaponPivot;
+        [SerializeField] Transform _capsuleVisual;
 
         Transform _muzzlePoint;
         Action<Transform> _onMuzzlePointChanged;
@@ -14,6 +16,7 @@ namespace View
         GameObject _currentWeaponModel;
         WorldHealthBar _healthBar;
         WeaponView _currentWeaponView;
+        float _rollVisualAngle;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _muzzlePoint;
@@ -41,6 +44,8 @@ namespace View
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
             }
 
+            SyncRollVisual(state);
+
             if (_weaponPivot != null)
             {
                 bool hasWeapon = state.EquippedWeapon != null;
@@ -60,6 +65,29 @@ namespace View
                 {
                     ClearWeaponModel();
                 }
+            }
+        }
+
+        void SyncRollVisual(PlayerEntityState state)
+        {
+            if (_capsuleVisual == null) return;
+
+            if (state.IsRolling)
+            {
+                _rollVisualAngle += (360f / RollConstants.Duration) * Time.deltaTime;
+
+                var rollAxis = Vector3.Cross(Vector3.up, state.RollDirection);
+                if (rollAxis.sqrMagnitude < 0.001f)
+                    rollAxis = Vector3.right;
+
+                _capsuleVisual.localRotation = Quaternion.AngleAxis(
+                    _rollVisualAngle,
+                    transform.InverseTransformDirection(rollAxis.normalized));
+            }
+            else if (_rollVisualAngle != 0f)
+            {
+                _rollVisualAngle = 0f;
+                _capsuleVisual.localRotation = Quaternion.identity;
             }
         }
 

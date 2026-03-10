@@ -106,6 +106,7 @@ namespace Session
                 physics: _physicsAdapter
             );
 
+            RollSystem.Tick(RaidState, in context);
             MovementSystem.Tick(RaidState, in context);
             WeaponEquipSystem.Tick(RaidState, in context);
             WeaponStateMachineSystem.Tick(RaidState, in context);

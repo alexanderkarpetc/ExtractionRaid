@@ -19,9 +19,17 @@ namespace Systems.Bot
                 if (!BotConstants.TryGetConfig(bot.TypeId, out var config))
                     continue;
 
-                var velocity = bot.DesiredVelocity;
-                if (velocity.sqrMagnitude > config.ChaseSpeed * config.ChaseSpeed)
-                    velocity = velocity.normalized * config.ChaseSpeed;
+                Vector3 velocity;
+                if (bot.IsRolling)
+                {
+                    velocity = bot.RollDirection * RollConstants.Speed;
+                }
+                else
+                {
+                    velocity = bot.DesiredVelocity;
+                    if (velocity.sqrMagnitude > config.ChaseSpeed * config.ChaseSpeed)
+                        velocity = velocity.normalized * config.ChaseSpeed;
+                }
 
                 bot.Velocity = velocity;
                 var candidatePos = bot.Position + velocity * ctx.DeltaTime;

@@ -1,3 +1,4 @@
+using Constants;
 using Session;
 using State;
 using UnityEngine;
@@ -13,16 +14,24 @@ namespace Systems
             var player = state.PlayerEntity;
             if (player == null) return;
 
-            var input = context.Input;
-            if (input == null) return;
+            if (player.IsRolling)
+            {
+                player.Velocity = player.RollDirection * RollConstants.Speed;
+            }
+            else
+            {
+                var input = context.Input;
+                if (input == null) return;
 
-            var moveInput = input.MoveInput;
-            var moveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
+                var moveInput = input.MoveInput;
+                var moveDirection = new Vector3(moveInput.x, 0f, moveInput.y);
 
-            if (moveDirection.sqrMagnitude > 1f)
-                moveDirection.Normalize();
+                if (moveDirection.sqrMagnitude > 1f)
+                    moveDirection.Normalize();
 
-            player.Velocity = moveDirection * MoveSpeed;
+                player.Velocity = moveDirection * MoveSpeed;
+            }
+
             var candidatePos = player.Position + player.Velocity * context.DeltaTime;
 
             if (context.NavMesh != null &&

@@ -91,6 +91,15 @@ namespace Adapters
             }
         }
 
+        public bool DodgePressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.Space].wasPressedThisFrame;
+            }
+        }
+
         public void SetCamera(Camera camera)
         {
             _camera = camera;

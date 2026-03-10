@@ -114,6 +114,13 @@ namespace Editor
             Field("Aim", p.AimDirection);
             Field("Selected Slot", p.SelectedHotbarSlot);
             Field("Pending Slot", p.PendingHotbarSlot);
+            Field("Is Rolling", p.IsRolling);
+            if (p.IsRolling)
+            {
+                Field("Roll Direction", p.RollDirection);
+                Field("Roll Start", $"{p.RollStartTime:F2}s");
+            }
+            Field("Roll Cooldown End", $"{p.RollCooldownEndTime:F2}s");
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -174,6 +181,13 @@ namespace Editor
                 Field("Position", bot.Position);
                 Field("Velocity", bot.Velocity);
                 Field("Aim Dir", bot.AimDirection);
+                Field("Is Rolling", bot.IsRolling);
+                if (bot.IsRolling)
+                {
+                    Field("Roll Direction", bot.RollDirection);
+                    Field("Roll Start", $"{bot.RollStartTime:F2}s");
+                }
+                Field("Roll CD End", $"{bot.RollCooldownEndTime:F2}s");
 
                 DrawHealth(bot.Id, state.HealthMap);
 

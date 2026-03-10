@@ -13,5 +13,6 @@ namespace Adapters
         bool InventoryTogglePressed { get; }
         bool PickUpPressed { get; }
         bool ReloadPressed { get; }
+        bool DodgePressed { get; }
     }
 }

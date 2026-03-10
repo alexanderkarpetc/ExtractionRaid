@@ -14,5 +14,6 @@ namespace Tests.EditMode.Fakes
         public bool InventoryTogglePressed { get; set; }
         public bool PickUpPressed { get; set; }
         public bool ReloadPressed { get; set; }
+        public bool DodgePressed { get; set; }
     }
 }

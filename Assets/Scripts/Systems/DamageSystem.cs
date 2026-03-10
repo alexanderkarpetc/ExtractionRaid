@@ -25,6 +25,9 @@ namespace Systems
 
                 if (!health.IsAlive) continue;
 
+                if (IsRolling(state, hit.TargetId))
+                    continue;
+
                 ApplyDamage(health, hit.Damage);
 
                 if (health.IsAlive)
@@ -42,6 +45,20 @@ namespace Systems
                     }
                 }
             }
+        }
+
+        static bool IsRolling(RaidState state, EId targetId)
+        {
+            if (state.PlayerEntity != null && targetId == state.PlayerEntity.Id)
+                return state.PlayerEntity.IsRolling;
+
+            for (int i = 0; i < state.Bots.Count; i++)
+            {
+                if (state.Bots[i].Id == targetId)
+                    return state.Bots[i].IsRolling;
+            }
+
+            return false;
         }
 
         public static void ApplyDamage(HealthState health, float damage)
