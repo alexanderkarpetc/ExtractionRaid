@@ -81,7 +81,7 @@ namespace Systems
 
             var id = state.AllocateEId();
             var grenade = GrenadeEntityState.Create(
-                id, player.Id, velocity, state.ElapsedTime,
+                id, player.Id, state.ElapsedTime,
                 GrenadeConstants.FuseTime, GrenadeConstants.Damage,
                 GrenadeConstants.ExplosionRadius);
 

@@ -302,9 +302,8 @@ namespace Editor
                 _grenadeFolds[key] = EditorGUILayout.Foldout(_grenadeFolds[key], header, true);
                 if (!_grenadeFolds[key]) continue;
 
-                EditorGUI.indentLevel++;
-                Field("Throw Velocity", g.ThrowVelocity);
-                Field("Damage", g.Damage);
+            EditorGUI.indentLevel++;
+            Field("Damage", g.Damage);
                 Field("Explosion Radius", g.ExplosionRadius);
                 EditorGUI.indentLevel--;
             }
