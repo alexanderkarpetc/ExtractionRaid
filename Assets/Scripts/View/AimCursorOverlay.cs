@@ -1,25 +1,51 @@
 using State;
+using Systems;
 using UnityEngine;
 
 namespace View
 {
     /// <summary>
-    /// Hides the system cursor and draws two dots on screen:
-    /// 1. Raw aim point (white) — instant mouse position on ground
-    /// 2. Weapon aim point (green) — smoothed weapon tracking point
+    /// Hides the system cursor and draws a weapon-state crosshair:
+    /// 1. Raw aim dot (white) — instant mouse position (player intent)
+    /// 2. Weapon crosshair — shape/color reflects weapon phase
     /// </summary>
     public class AimCursorOverlay : MonoBehaviour
     {
-        Texture2D _rawDotTex;
-        Texture2D _weaponDotTex;
+        Texture2D _pixelTex;
 
+        // Crosshair geometry
+        const float LineLength = 24f;
+        const float LineThickness = 6f;
+        const float BaseGap = 15f;
+        const float CenterDotSize = 9f;
+
+        // Bloom animation
+        const float BloomExtraGap = 30f;
+
+        // Reload ring
+        const int ReloadDotCount = 12;
+        const float ReloadRingRadius = 42f;
+        const float ReloadDotSize = 9f;
+
+        // Sizes
         const float RawDotSize = 6f;
-        const float WeaponDotSize = 10f;
+        const float UnarmedDotSize = 15f;
+
+        // Rolling
+        const float RollingAlpha = 0.3f;
+
+        // Colors
+        static readonly Color RawDotColor = new Color(1f, 1f, 1f, 0.6f);
+        static readonly Color NormalColor = new Color(0.2f, 1f, 0.3f, 0.9f);
+        static readonly Color WarningColor = new Color(1f, 0.25f, 0.2f, 0.9f);
+        static readonly Color BloomColor = new Color(1f, 1f, 1f, 0.95f);
+        static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
+        static readonly Color ReloadEmptyColor = new Color(0.4f, 0.4f, 0.4f, 0.4f);
+        static readonly Color UnarmedColor = new Color(0.7f, 0.7f, 0.7f, 0.6f);
 
         void Awake()
         {
-            _rawDotTex = MakeTex(new Color(1f, 1f, 1f, 0.6f));
-            _weaponDotTex = MakeTex(new Color(0.2f, 1f, 0.3f, 0.9f));
+            _pixelTex = MakeTex(Color.white);
         }
 
         void Update()
@@ -36,32 +62,179 @@ namespace View
             var session = App.App.Instance?.RaidSession;
             if (session == null) return;
 
-            var player = session.RaidState?.PlayerEntity;
+            var state = session.RaidState;
+            var player = state?.PlayerEntity;
             if (player == null) return;
 
             var cam = Camera.main;
             if (cam == null) return;
 
-            // Raw aim dot (white) — player intent
-            DrawDot(cam, player.RawAimPoint, _rawDotTex, RawDotSize);
+            if (WorldToGUI(cam, player.RawAimPoint, out var rawPos))
+                DrawRawCursor(rawPos);
 
-            // Weapon aim dot (green) — where weapon actually points
-            DrawDot(cam, player.WeaponAimPoint, _weaponDotTex, WeaponDotSize);
+            if (WorldToGUI(cam, player.WeaponAimPoint, out var weaponPos))
+                DrawWeaponCrosshair(weaponPos, player, state);
         }
 
-        void DrawDot(Camera cam, Vector3 worldPoint, Texture2D tex, float size)
+        // ── Raw cursor ──────────────────────────────────────────
+
+        void DrawRawCursor(Vector2 pos)
         {
-            var screenPos = cam.WorldToScreenPoint(worldPoint);
+            GUI.color = RawDotColor;
+            DrawRect(pos, RawDotSize);
+            GUI.color = Color.white;
+        }
 
-            // Behind camera check
-            if (screenPos.z < 0f) return;
+        // ── Weapon crosshair state router ────────────────────────
 
-            // Unity GUI Y is flipped (0 = top)
-            float guiY = Screen.height - screenPos.y;
+        void DrawWeaponCrosshair(Vector2 pos, PlayerEntityState player, RaidState state)
+        {
+            var weapon = player.EquippedWeapon;
+            float alphaMul = player.IsRolling ? RollingAlpha : 1f;
+
+            if (weapon == null)
+            {
+                DrawUnarmedDot(pos, alphaMul);
+                return;
+            }
+
+            float elapsed = state.ElapsedTime - weapon.PhaseStartTime;
+
+            switch (weapon.Phase)
+            {
+                case WeaponPhase.Ready:
+                    var readyColor = HasAmmo(weapon, state) ? NormalColor : WarningColor;
+                    DrawCrosshairLines(pos, BaseGap, readyColor, alphaMul);
+                    break;
+
+                case WeaponPhase.Firing:
+                    // Max bloom — Firing lasts 1 tick before becoming Cooldown
+                    DrawCrosshairLines(pos, BaseGap + BloomExtraGap, BloomColor, alphaMul);
+                    break;
+
+                case WeaponPhase.Cooldown:
+                    float cooldownT = weapon.FireInterval > 0f
+                        ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.FireInterval))
+                        : 1f;
+                    float bloomGap = BaseGap + BloomExtraGap * (1f - cooldownT);
+                    var bloomLerp = Color.Lerp(BloomColor, NormalColor, cooldownT);
+                    DrawCrosshairLines(pos, bloomGap, bloomLerp, alphaMul);
+                    break;
+
+                case WeaponPhase.Reloading:
+                    float reloadProgress = weapon.ReloadTime > 0f
+                        ? Mathf.Clamp01(elapsed / weapon.ReloadTime)
+                        : 1f;
+                    DrawReloadRing(pos, reloadProgress, alphaMul);
+                    break;
+
+                case WeaponPhase.Equipping:
+                    float equipAlpha = weapon.EquipTime > 0f
+                        ? Mathf.Clamp01(elapsed / weapon.EquipTime)
+                        : 1f;
+                    DrawCrosshairLines(pos, BaseGap, NormalColor, equipAlpha * alphaMul);
+                    break;
+
+                case WeaponPhase.Unequipping:
+                    float unequipAlpha = weapon.UnequipTime > 0f
+                        ? 1f - Mathf.Clamp01(elapsed / weapon.UnequipTime)
+                        : 0f;
+                    DrawCrosshairLines(pos, BaseGap, NormalColor, unequipAlpha * alphaMul);
+                    break;
+            }
+        }
+
+        // ── Drawing primitives ───────────────────────────────────
+
+        void DrawCrosshairLines(Vector2 center, float gap, Color color, float alpha)
+        {
+            GUI.color = new Color(color.r, color.g, color.b, color.a * alpha);
+
+            float halfThick = LineThickness * 0.5f;
+
+            // Top
+            GUI.DrawTexture(
+                new Rect(center.x - halfThick, center.y - gap - LineLength, LineThickness, LineLength),
+                _pixelTex);
+            // Bottom
+            GUI.DrawTexture(
+                new Rect(center.x - halfThick, center.y + gap, LineThickness, LineLength),
+                _pixelTex);
+            // Left
+            GUI.DrawTexture(
+                new Rect(center.x - gap - LineLength, center.y - halfThick, LineLength, LineThickness),
+                _pixelTex);
+            // Right
+            GUI.DrawTexture(
+                new Rect(center.x + gap, center.y - halfThick, LineLength, LineThickness),
+                _pixelTex);
+
+            // Center dot
+            DrawRect(center, CenterDotSize);
+
+            GUI.color = Color.white;
+        }
+
+        void DrawReloadRing(Vector2 center, float progress, float alpha)
+        {
+            int filledCount = Mathf.FloorToInt(progress * ReloadDotCount);
+
+            for (int i = 0; i < ReloadDotCount; i++)
+            {
+                // Start from 12 o'clock, go clockwise
+                float angle = i * (2f * Mathf.PI / ReloadDotCount) - Mathf.PI * 0.5f;
+                float x = center.x + Mathf.Cos(angle) * ReloadRingRadius;
+                float y = center.y + Mathf.Sin(angle) * ReloadRingRadius;
+
+                var dotColor = i < filledCount ? ReloadFilledColor : ReloadEmptyColor;
+                GUI.color = new Color(dotColor.r, dotColor.g, dotColor.b, dotColor.a * alpha);
+                DrawRect(new Vector2(x, y), ReloadDotSize);
+            }
+
+            // Center dot in reload color
+            GUI.color = new Color(ReloadFilledColor.r, ReloadFilledColor.g, ReloadFilledColor.b,
+                ReloadFilledColor.a * alpha);
+            DrawRect(center, CenterDotSize);
+
+            GUI.color = Color.white;
+        }
+
+        void DrawUnarmedDot(Vector2 center, float alpha)
+        {
+            GUI.color = new Color(UnarmedColor.r, UnarmedColor.g, UnarmedColor.b, UnarmedColor.a * alpha);
+            DrawRect(center, UnarmedDotSize);
+            GUI.color = Color.white;
+        }
+
+        void DrawRect(Vector2 center, float size)
+        {
             float half = size * 0.5f;
+            GUI.DrawTexture(new Rect(center.x - half, center.y - half, size, size), _pixelTex);
+        }
 
-            var rect = new Rect(screenPos.x - half, guiY - half, size, size);
-            GUI.DrawTexture(rect, tex);
+        // ── Helpers ──────────────────────────────────────────────
+
+        static bool WorldToGUI(Camera cam, Vector3 worldPoint, out Vector2 guiPos)
+        {
+            var sp = cam.WorldToScreenPoint(worldPoint);
+            if (sp.z < 0f)
+            {
+                guiPos = default;
+                return false;
+            }
+            guiPos = new Vector2(sp.x, Screen.height - sp.y);
+            return true;
+        }
+
+        bool HasAmmo(WeaponEntityState weapon, RaidState state)
+        {
+            // Infinite ammo weapons (bots, melee)
+            if (string.IsNullOrEmpty(weapon.AmmoType)) return true;
+            // Has rounds in magazine
+            if (weapon.AmmoInMagazine > 0) return true;
+            // Has reserve ammo in inventory
+            return state.Inventory != null
+                && AmmoSystem.CountReserve(state.Inventory, weapon.AmmoType) > 0;
         }
 
         static Texture2D MakeTex(Color color)
@@ -75,8 +248,7 @@ namespace View
         void OnDestroy()
         {
             Cursor.visible = true;
-            if (_rawDotTex != null) Destroy(_rawDotTex);
-            if (_weaponDotTex != null) Destroy(_weaponDotTex);
+            if (_pixelTex != null) Destroy(_pixelTex);
         }
     }
 }

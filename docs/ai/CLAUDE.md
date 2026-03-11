@@ -89,8 +89,8 @@ A change is done when:
 ## 8) Documentation sync
 
 AI docs exist in two places that must stay in sync:
-- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`)
-- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`)
+- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`)
+- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`)
 
 When updating any AI doc, apply the same change to the corresponding Cursor doc.
 
@@ -182,6 +182,7 @@ Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`
 - Spawn/despawn, entity binding, callbacks, presenter wiring -> `docs/ai/entity-lifecycle.md`
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`
+- Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 
 Do not load all docs unless the task spans multiple areas.
 Prefer the smallest relevant context.
