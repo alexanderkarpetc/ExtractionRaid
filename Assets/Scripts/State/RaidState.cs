@@ -8,6 +8,7 @@ namespace State
         public bool IsRunning;
         public PlayerEntityState PlayerEntity;
         public List<ProjectileEntityState> Projectiles;
+        public List<GrenadeEntityState> Grenades;
         public Dictionary<EId, HealthState> HealthMap;
         public List<GroundItemState> GroundItems;
         public List<BotEntityState> Bots;
@@ -29,6 +30,7 @@ namespace State
                 IsRunning = true,
                 _nextEIdValue = 0,
                 Projectiles = new List<ProjectileEntityState>(),
+                Grenades = new List<GrenadeEntityState>(),
                 HealthMap = new Dictionary<EId, HealthState>(),
                 GroundItems = new List<GroundItemState>(),
                 Bots = new List<BotEntityState>(),

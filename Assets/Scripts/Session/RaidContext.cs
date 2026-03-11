@@ -10,9 +10,11 @@ namespace Session
         public readonly IInputAdapter Input;
         public readonly INavMeshAdapter NavMesh;
         public readonly IPhysicsAdapter Physics;
+        public readonly IGrenadePositionAdapter GrenadePositions;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
-            IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null)
+            IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
+            IGrenadePositionAdapter grenadePositions = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -20,6 +22,7 @@ namespace Session
             Input = input;
             NavMesh = navMesh;
             Physics = physics;
+            GrenadePositions = grenadePositions;
         }
     }
 }

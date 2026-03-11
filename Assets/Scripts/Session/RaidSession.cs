@@ -63,15 +63,15 @@ namespace Session
 
         void SpawnTestBots()
         {
-            BotSpawnSystem.SpawnBot(RaidState, "Boss",
-                new UnityEngine.Vector3(10f, 0f, 10f),
-                new[]
-                {
-                    new UnityEngine.Vector3(10f, 0f, 10f),
-                    new UnityEngine.Vector3(15f, 0f, 5f),
-                    new UnityEngine.Vector3(20f, 0f, 10f),
-                },
-                _eventBuffer);
+            // BotSpawnSystem.SpawnBot(RaidState, "Scav",
+            //     new UnityEngine.Vector3(10f, 0f, 10f),
+            //     new[]
+            //     {
+            //         new UnityEngine.Vector3(10f, 0f, 10f),
+            //         new UnityEngine.Vector3(15f, 0f, 5f),
+            //         new UnityEngine.Vector3(20f, 0f, 10f),
+            //     },
+            //     _eventBuffer);
 
             // BotSpawnSystem.SpawnBot(RaidState, "PMC",
             //     new UnityEngine.Vector3(-10f, 0f, 15f),
@@ -119,6 +119,7 @@ namespace Session
             BotCombatSystem.Tick(RaidState, in context);
 
             ProjectileSystem.Tick(RaidState, in context);
+            GrenadeSystem.TickExplosions(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
             ProcessDamageAlerts();

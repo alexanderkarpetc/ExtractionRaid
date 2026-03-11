@@ -5,6 +5,9 @@ alwaysApply: true
 
 # Architecture Contract
 
+## Reference game
+**Escape from Duckov** — extraction shooter. Core mechanics (grenade throwing, looting, inventory, raids) use this game as the gameplay reference.
+
 ## Primary goal
 Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, test scenarios). Gameplay logic testable without scenes. Clear separation: state, logic, adapters, view.
 

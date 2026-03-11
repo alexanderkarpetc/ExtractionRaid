@@ -13,6 +13,7 @@ namespace View
         readonly Action<Transform> _onMuzzlePointReady;
 
         PlayerView _playerView;
+        GrenadeTrajectoryOverlay _trajectoryOverlay;
         EId _trackedId;
 
         public PlayerPresenter(Action<Transform> onMuzzlePointReady)
@@ -72,6 +73,7 @@ namespace View
             if (_playerView != null && session.RaidState.PlayerEntity != null)
             {
                 _playerView.SyncFromState(session.RaidState.PlayerEntity);
+                _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
             }
         }
 
@@ -95,11 +97,20 @@ namespace View
                     cameraController.SetTarget(_playerView.transform);
             }
 
+            var overlayGo = new GameObject("GrenadeTrajectoryOverlay");
+            _trajectoryOverlay = overlayGo.AddComponent<GrenadeTrajectoryOverlay>();
+
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }
 
         public void Dispose()
         {
+            if (_trajectoryOverlay != null)
+            {
+                Object.Destroy(_trajectoryOverlay.gameObject);
+                _trajectoryOverlay = null;
+            }
+
             if (_playerView != null)
             {
                 Object.Destroy(_playerView.gameObject);

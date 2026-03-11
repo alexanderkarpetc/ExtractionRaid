@@ -20,11 +20,13 @@ namespace App
         readonly UnityInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
+        readonly GrenadePositionAdapter _grenadePositionAdapter;
         readonly PlayerPresenter _playerPresenter;
         readonly ProjectilePresenter _projectilePresenter;
         readonly DestructiblePresenter _destructiblePresenter;
         readonly GroundItemPresenter _groundItemPresenter;
         readonly BotPresenter _botPresenter;
+        readonly GrenadePresenter _grenadePresenter;
 
         App()
         {
@@ -32,11 +34,13 @@ namespace App
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
             _physicsAdapter = new UnityPhysicsAdapter();
+            _grenadePositionAdapter = new GrenadePositionAdapter();
             _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
             _destructiblePresenter = new DestructiblePresenter();
             _groundItemPresenter = new GroundItemPresenter();
             _botPresenter = new BotPresenter();
+            _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
             Player = new Player();
         }
 
@@ -60,7 +64,8 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter, _physicsAdapter);
+            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter,
+                _physicsAdapter, _grenadePositionAdapter);
             RaidSession.Start();
 
             var cam = Camera.main;
@@ -90,6 +95,7 @@ namespace App
             _playerPresenter.LateTick(RaidSession);
             _botPresenter.LateTick(RaidSession);
             _projectilePresenter.LateTick(RaidSession);
+            _grenadePresenter.LateTick(RaidSession);
             _groundItemPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
@@ -103,6 +109,7 @@ namespace App
             _instance._destructiblePresenter?.Dispose();
             _instance._groundItemPresenter?.Dispose();
             _instance._botPresenter?.Dispose();
+            _instance._grenadePresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;

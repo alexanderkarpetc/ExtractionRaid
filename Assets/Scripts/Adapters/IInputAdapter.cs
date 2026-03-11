@@ -14,5 +14,7 @@ namespace Adapters
         bool PickUpPressed { get; }
         bool ReloadPressed { get; }
         bool DodgePressed { get; }
+        bool GrenadePressed { get; }
+        bool AttackJustReleased { get; }
     }
 }

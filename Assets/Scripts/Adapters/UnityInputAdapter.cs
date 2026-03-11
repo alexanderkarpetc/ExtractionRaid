@@ -100,6 +100,17 @@ namespace Adapters
             }
         }
 
+        public bool GrenadePressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.G].wasPressedThisFrame;
+            }
+        }
+
+        public bool AttackJustReleased => _actions.Player.Attack.WasReleasedThisFrame();
+
         public void SetCamera(Camera camera)
         {
             _camera = camera;

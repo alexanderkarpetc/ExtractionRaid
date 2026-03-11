@@ -15,5 +15,7 @@ namespace Tests.EditMode.Fakes
         public bool PickUpPressed { get; set; }
         public bool ReloadPressed { get; set; }
         public bool DodgePressed { get; set; }
+        public bool GrenadePressed { get; set; }
+        public bool AttackJustReleased { get; set; }
     }
 }

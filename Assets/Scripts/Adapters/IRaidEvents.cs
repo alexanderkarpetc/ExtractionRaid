@@ -24,5 +24,9 @@ namespace Adapters
         void WeaponReloadStarted(string prefabId);
         void WeaponReloadFinished(string prefabId);
         void WeaponDryFired(string prefabId);
+
+        void GrenadeSpawned(EId id, Vector3 position, Vector3 velocity);
+        void GrenadeExploded(EId id, Vector3 position);
+        void GrenadeDespawned(EId id);
     }
 }

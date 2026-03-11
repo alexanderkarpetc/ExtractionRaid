@@ -24,6 +24,9 @@ namespace Adapters
         WeaponReloadStarted,
         WeaponReloadFinished,
         WeaponDryFired,
+        GrenadeSpawned,
+        GrenadeExploded,
+        GrenadeDespawned,
     }
 
     public struct RaidEvent
@@ -186,6 +189,32 @@ namespace Adapters
                 Type = RaidEventType.WeaponDryFired,
                 StringPayload = prefabId,
             });
+        }
+
+        public void GrenadeSpawned(EId id, Vector3 position, Vector3 velocity)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.GrenadeSpawned,
+                Id = id,
+                Position = position,
+                Direction = velocity,
+            });
+        }
+
+        public void GrenadeExploded(EId id, Vector3 position)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.GrenadeExploded,
+                Id = id,
+                Position = position,
+            });
+        }
+
+        public void GrenadeDespawned(EId id)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.GrenadeDespawned, Id = id });
         }
 
         public void Clear()

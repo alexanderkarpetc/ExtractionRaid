@@ -14,12 +14,14 @@ namespace Editor
         bool _foldPlayerHotbar;
         bool _foldBots = true;
         bool _foldProjectiles;
+        bool _foldGrenades;
         bool _foldGroundItems;
         bool _foldInventory;
         bool _foldHealthMap;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
+        readonly Dictionary<int, bool> _grenadeFolds = new();
 
         [MenuItem("Window/Raid State Debugger")]
         static void Open()
@@ -50,6 +52,7 @@ namespace Editor
                     EditorGUILayout.HelpBox("No active raid session.", MessageType.Warning);
                     return;
                 }
+
                 state = session.RaidState;
             }
             catch
@@ -70,6 +73,7 @@ namespace Editor
             DrawPlayer(state);
             DrawBots(state);
             DrawProjectiles(state);
+            DrawGrenades(state);
             DrawGroundItems(state);
             DrawInventory(state);
             DrawHealthMap(state);
@@ -85,6 +89,7 @@ namespace Editor
             Field("Elapsed Time", $"{state.ElapsedTime:F2}s");
             Field("Is Running", state.IsRunning);
             Field("Projectiles", state.Projectiles.Count);
+            Field("Grenades", state.Grenades.Count);
             Field("Bots", state.Bots.Count);
             Field("Ground Items", state.GroundItems.Count);
             EditorGUILayout.Space(4);
@@ -122,7 +127,12 @@ namespace Editor
                 Field("Roll Direction", p.RollDirection);
                 Field("Roll Start", $"{p.RollStartTime:F2}s");
             }
+
             Field("Roll Cooldown End", $"{p.RollCooldownEndTime:F2}s");
+            Field("Grenade Mode", p.IsInGrenadeMode);
+            Field("Grenade Charging", p.GrenadeThrowCharging);
+            Field("Grenade Target Dist", p.GrenadeTargetDistance);
+            Field("Grenade Count", p.GrenadeCount);
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -150,6 +160,7 @@ namespace Editor
                     string sel = i == p.SelectedHotbarSlot ? " ◄" : "";
                     Field($"[{i + 1}]", w != null ? $"{w.PrefabId}{sel}" : $"[empty]{sel}");
                 }
+
                 EditorGUI.indentLevel--;
             }
 
@@ -189,6 +200,7 @@ namespace Editor
                     Field("Roll Direction", bot.RollDirection);
                     Field("Roll Start", $"{bot.RollStartTime:F2}s");
                 }
+
                 Field("Roll CD End", $"{bot.RollCooldownEndTime:F2}s");
 
                 DrawHealth(bot.Id, state.HealthMap);
@@ -220,6 +232,7 @@ namespace Editor
                         Field("Distance", $"{bb.DistanceToTarget:F1}");
                         Field("Last Known Pos", bb.LastKnownTargetPos);
                     }
+
                     Field("IsDodging", bb.IsDodging);
                     EditorGUI.indentLevel--;
                 }
@@ -259,6 +272,40 @@ namespace Editor
                 Field("Direction", proj.Direction);
                 Field("Speed", proj.Speed);
                 Field("Damage", proj.Damage);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4);
+        }
+
+        // ── Grenades ──────────────────────────────────────────────
+
+        void DrawGrenades(RaidState state)
+        {
+            _foldGrenades = EditorGUILayout.Foldout(_foldGrenades,
+                $"Grenades ({state.Grenades.Count})", true, EditorStyles.foldoutHeader);
+            if (!_foldGrenades) return;
+
+            EditorGUI.indentLevel++;
+
+            for (int i = 0; i < state.Grenades.Count; i++)
+            {
+                var g = state.Grenades[i];
+                int key = g.Id.Value;
+
+                if (!_grenadeFolds.ContainsKey(key)) _grenadeFolds[key] = false;
+
+                float fuseRemaining = Mathf.Max(0f, g.FuseTime - (state.ElapsedTime - g.SpawnTime));
+                string header = $"{g.Id} → Owner({g.OwnerId.Value})  [fuse {fuseRemaining:F1}s]";
+
+                _grenadeFolds[key] = EditorGUILayout.Foldout(_grenadeFolds[key], header, true);
+                if (!_grenadeFolds[key]) continue;
+
+                EditorGUI.indentLevel++;
+                Field("Throw Velocity", g.ThrowVelocity);
+                Field("Damage", g.Damage);
+                Field("Explosion Radius", g.ExplosionRadius);
                 EditorGUI.indentLevel--;
             }
 
@@ -320,6 +367,7 @@ namespace Editor
                 if (item != null)
                     Field($"[{i}]", item.DisplayName);
             }
+
             EditorGUI.indentLevel--;
 
             EditorGUI.indentLevel--;
@@ -378,6 +426,7 @@ namespace Editor
                     phaseStatus = w.Phase.ToString();
                     break;
             }
+
             Field("Phase", phaseStatus);
             Field("EquipTime", w.EquipTime);
             Field("UnequipTime", w.UnequipTime);

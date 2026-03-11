@@ -108,5 +108,31 @@ namespace Tests.EditMode.Fakes
             WeaponDryFiredCalled = true;
             WeaponDryFiredPrefabId = prefabId;
         }
+
+        public bool GrenadeSpawnedCalled;
+        public EId GrenadeSpawnedId;
+        public Vector3 GrenadeSpawnedVelocity;
+        public void GrenadeSpawned(EId id, Vector3 position, Vector3 velocity)
+        {
+            GrenadeSpawnedCalled = true;
+            GrenadeSpawnedId = id;
+            GrenadeSpawnedVelocity = velocity;
+        }
+
+        public bool GrenadeExplodedCalled;
+        public EId GrenadeExplodedId;
+        public void GrenadeExploded(EId id, Vector3 position)
+        {
+            GrenadeExplodedCalled = true;
+            GrenadeExplodedId = id;
+        }
+
+        public bool GrenadeDespawnedCalled;
+        public EId GrenadeDespawnedId;
+        public void GrenadeDespawned(EId id)
+        {
+            GrenadeDespawnedCalled = true;
+            GrenadeDespawnedId = id;
+        }
     }
 }

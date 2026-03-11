@@ -3,6 +3,10 @@
 This file is the repo-level operating contract for Claude Code.
 Read it first. Follow it by default.
 
+## Reference game
+
+**Escape from Duckov** — extraction shooter. Core mechanics (grenade throwing, looting, inventory, raids) use this game as the gameplay reference.
+
 ## 1) Primary goal
 
 Build fast without turning the project into spaghetti.

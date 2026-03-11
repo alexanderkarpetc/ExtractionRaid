@@ -24,6 +24,11 @@ namespace State
         public float RollStartTime;
         public float RollCooldownEndTime;
 
+        public bool IsInGrenadeMode;
+        public bool GrenadeThrowCharging;
+        public float GrenadeTargetDistance;
+        public int GrenadeCount;
+
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {
             return new PlayerEntityState
@@ -35,6 +40,7 @@ namespace State
                 AimDirection = Vector3.forward,
                 RawAimPoint = spawnPosition + Vector3.forward,
                 WeaponAimPoint = spawnPosition + Vector3.forward,
+                GrenadeCount = Constants.GrenadeConstants.StartingCount,
             };
         }
     }
