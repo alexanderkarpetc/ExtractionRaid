@@ -17,15 +17,18 @@ namespace Session
         readonly IInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
+        readonly IGrenadePositionAdapter _grenadePositionAdapter;
         readonly List<HitSignal> _hitInbox = new();
 
         public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
-            INavMeshAdapter navMeshAdapter, IPhysicsAdapter physicsAdapter = null)
+            INavMeshAdapter navMeshAdapter, IPhysicsAdapter physicsAdapter = null,
+            IGrenadePositionAdapter grenadePositionAdapter = null)
         {
             _timeAdapter = timeAdapter;
             _inputAdapter = inputAdapter;
             _navMeshAdapter = navMeshAdapter;
             _physicsAdapter = physicsAdapter;
+            _grenadePositionAdapter = grenadePositionAdapter;
             _eventBuffer = new RaidEventBuffer();
             RaidState = RaidState.Create();
             LevelState = LevelState.Create(levelId);
@@ -103,7 +106,8 @@ namespace Session
                 time: _timeAdapter,
                 input: _inputAdapter,
                 navMesh: _navMeshAdapter,
-                physics: _physicsAdapter
+                physics: _physicsAdapter,
+                grenadePositions: _grenadePositionAdapter
             );
 
             RollSystem.Tick(RaidState, in context);
@@ -111,6 +115,7 @@ namespace Session
             WeaponEquipSystem.Tick(RaidState, in context);
             WeaponStateMachineSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
+            GrenadeSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
             BotPerceptionSystem.Tick(RaidState, in context);
