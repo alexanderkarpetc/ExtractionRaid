@@ -70,6 +70,9 @@ namespace Systems.Bot
                     bb.CanSeeTarget = inVisionRange && inVisionAngle && hasLineOfSight;
                     bb.DistanceToTarget = dist;
                     bb.TimeSinceTargetSeen = 0f;
+
+                    if (bb.CanSeeTarget)
+                        bb.GrenadeThrowDelayTimer = -1f;
                 }
                 else
                 {

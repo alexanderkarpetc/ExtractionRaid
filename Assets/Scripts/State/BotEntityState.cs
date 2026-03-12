@@ -31,6 +31,8 @@ namespace State
         public bool WantsToFire;
         public bool WantsToDodge;
         public bool WantsToHeal;
+        public bool WantsToThrowGrenade;
+        public Vector3 GrenadeThrowTarget;
 
         public static BotEntityState Create(EId id, string typeId, Vector3 position, Vector3[] patrolWaypoints)
         {
@@ -58,6 +60,8 @@ namespace State
             WantsToFire = false;
             WantsToDodge = false;
             WantsToHeal = false;
+            WantsToThrowGrenade = false;
+            GrenadeThrowTarget = Vector3.zero;
         }
     }
 }

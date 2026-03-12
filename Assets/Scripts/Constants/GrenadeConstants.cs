@@ -7,7 +7,7 @@ namespace Constants
         public const float FuseTime = 3.5f;
         public const float UpwardAngle = 30f;
         public const float LaunchHeight = 1.2f;
-        public const float MaxThrowRange = 20f;
+        public const float MaxThrowRange = 50f;
         public const float MinThrowRange = 1.5f;
         public const float Damage = 120f;
         public const float ExplosionRadius = 5f;

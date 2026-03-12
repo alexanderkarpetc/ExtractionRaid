@@ -30,6 +30,8 @@ namespace Systems.Bot
                 LastFireTime = -999f,
             };
 
+            bot.Blackboard.GrenadesRemaining = config.GrenadeCount;
+
             state.Bots.Add(bot);
             state.HealthMap[id] = HealthState.Create(config.MaxHp);
             events.BotSpawned(id, position, typeId);

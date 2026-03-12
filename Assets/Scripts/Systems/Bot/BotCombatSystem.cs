@@ -24,6 +24,9 @@ namespace Systems.Bot
 
                 if (bot.WantsToFire)
                     ProcessFire(bot, state, in ctx, in config);
+
+                if (bot.WantsToThrowGrenade)
+                    ProcessThrowGrenade(bot, state, in ctx);
             }
         }
 
@@ -73,6 +76,34 @@ namespace Systems.Bot
             }
 
             weapon.LastFireTime = state.ElapsedTime;
+        }
+
+        static void ProcessThrowGrenade(BotEntityState bot, RaidState state, in RaidContext ctx)
+        {
+            var target = bot.GrenadeThrowTarget;
+            var toTarget = target - bot.Position;
+            toTarget.y = 0f;
+            float dist = toTarget.magnitude;
+            dist = Mathf.Clamp(dist, GrenadeConstants.MinThrowRange, GrenadeConstants.MaxThrowRange);
+
+            var horizontalDir = dist > 0.001f ? toTarget / dist : bot.FacingDirection;
+            horizontalDir.y = 0f;
+            if (horizontalDir.sqrMagnitude < 0.001f)
+                horizontalDir = Vector3.forward;
+            horizontalDir.Normalize();
+
+            var velocity = GrenadeSystem.ComputeThrowVelocity(horizontalDir, dist);
+            var spawnPos = bot.Position + Vector3.up * GrenadeConstants.LaunchHeight + horizontalDir * 0.5f;
+
+            var id = state.AllocateEId();
+            var grenade = GrenadeEntityState.Create(
+                id, bot.Id, state.ElapsedTime,
+                GrenadeConstants.FuseTime, GrenadeConstants.Damage, GrenadeConstants.ExplosionRadius);
+
+            state.Grenades.Add(grenade);
+            ctx.Events.GrenadeSpawned(id, spawnPos, velocity);
+
+            bot.Blackboard.GrenadesRemaining--;
         }
     }
 }

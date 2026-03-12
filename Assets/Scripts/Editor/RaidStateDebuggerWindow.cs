@@ -217,6 +217,7 @@ namespace Editor
                 Field("WantsToFire", bot.WantsToFire);
                 Field("WantsToDodge", bot.WantsToDodge);
                 Field("WantsToHeal", bot.WantsToHeal);
+                Field("WantsToThrowGrenade", bot.WantsToThrowGrenade);
                 EditorGUI.indentLevel--;
 
                 // Blackboard
@@ -235,6 +236,11 @@ namespace Editor
                     }
 
                     Field("IsDodging", bb.IsDodging);
+                    Field("Grenades", bb.GrenadesRemaining);
+                    if (bb.GrenadeThrowDelayTimer >= 0f)
+                        Field("Grenade Delay", $"{bb.GrenadeThrowDelayTimer:F2}s");
+                    if (bb.GrenadeCooldownTimer > 0f)
+                        Field("Grenade CD", $"{bb.GrenadeCooldownTimer:F1}s");
                     EditorGUI.indentLevel--;
                 }
 

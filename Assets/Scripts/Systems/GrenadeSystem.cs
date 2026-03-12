@@ -58,7 +58,7 @@ namespace Systems
                 GrenadeConstants.MinThrowRange, GrenadeConstants.MaxThrowRange);
         }
 
-        static Vector3 ComputeThrowVelocity(Vector3 horizontalDir, float distance)
+        public static Vector3 ComputeThrowVelocity(Vector3 horizontalDir, float distance)
         {
             float gravity = Mathf.Abs(Physics.gravity.y);
             float speed = GrenadeConstants.ComputeThrowSpeed(distance, gravity);

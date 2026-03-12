@@ -70,6 +70,16 @@ namespace Systems.Bot
                     ));
                 }
 
+                if (config.Has(BotBehaviorFlags.ThrowGrenade))
+                {
+                    combatBranches.Add(new BTCooldown(
+                        new ThrowGrenadeNode(),
+                        config.GrenadeCooldown,
+                        bb => bb.GrenadeCooldownTimer,
+                        (bb, v) => bb.GrenadeCooldownTimer = v
+                    ));
+                }
+
                 var engageBranch = new List<IBTNode>();
 
                 if (config.Has(BotBehaviorFlags.Shoot))

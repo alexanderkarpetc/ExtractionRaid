@@ -32,6 +32,11 @@ namespace State
         public Vector3 DodgeDirection;
         public float DodgeTimer;
 
+        // Grenade
+        public int   GrenadesRemaining;
+        public float GrenadeCooldownTimer;
+        public float GrenadeThrowDelayTimer = -1;   // -1 = idle; counts down to 0 then fires
+
         // Alerts
         public bool WasDamaged;
 
@@ -60,6 +65,9 @@ namespace State
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;
+            GrenadesRemaining = 0;
+            GrenadeCooldownTimer = 0f;
+            GrenadeThrowDelayTimer = -1f;
             WasDamaged = false;
             RunningNodeId = -1;
             DebugStatus = "Idle";

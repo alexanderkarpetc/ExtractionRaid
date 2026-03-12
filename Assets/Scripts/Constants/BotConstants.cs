@@ -7,13 +7,14 @@ namespace Constants
     [Flags]
     public enum BotBehaviorFlags
     {
-        None      = 0,
-        Patrol    = 1 << 0,
-        Chase     = 1 << 1,
-        Shoot     = 1 << 2,
-        TakeCover = 1 << 3,
-        Heal      = 1 << 4,
-        Dodge     = 1 << 5,
+        None         = 0,
+        Patrol       = 1 << 0,
+        Chase        = 1 << 1,
+        Shoot        = 1 << 2,
+        TakeCover    = 1 << 3,
+        Heal         = 1 << 4,
+        Dodge        = 1 << 5,
+        ThrowGrenade = 1 << 6,
     }
 
     public readonly struct BotTypeConfig
@@ -47,6 +48,11 @@ namespace Constants
         // Dodge
         public readonly float DodgeCooldown;
 
+        // Grenade
+        public readonly int   GrenadeCount;
+        public readonly float GrenadeCooldown;
+        public readonly float GrenadeMinThrowDist;
+
         // Weapon overrides
         public readonly float FireInterval;
         public readonly float ProjectileSpeed;
@@ -71,6 +77,7 @@ namespace Constants
             float dodgeCooldown = 0f,
             float fireInterval = 0.3f, float projectileSpeed = 20f, float projectileDamage = 10f,
             float projectileLifetime = 3f, int projectilesPerShot = 1, float spreadAngle = 5f,
+            int grenadeCount = 0, float grenadeCooldown = 0f, float grenadeMinThrowDist = 5f,
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot)
         {
             TypeId = typeId;
@@ -91,6 +98,9 @@ namespace Constants
             Accuracy = accuracy;
             EngageRange = engageRange;
             DodgeCooldown = dodgeCooldown;
+            GrenadeCount = grenadeCount;
+            GrenadeCooldown = grenadeCooldown;
+            GrenadeMinThrowDist = grenadeMinThrowDist;
             FireInterval = fireInterval;
             ProjectileSpeed = projectileSpeed;
             ProjectileDamage = projectileDamage;
@@ -142,8 +152,10 @@ namespace Constants
             dodgeCooldown: 5f,
             fireInterval: 0.25f, projectileSpeed: 22f, projectileDamage: 12f,
             spreadAngle: 4f,
+            grenadeCount: 2, grenadeCooldown: 20f, grenadeMinThrowDist: 5f,
             behaviors: BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.TakeCover | BotBehaviorFlags.Heal | BotBehaviorFlags.Dodge
+                     | BotBehaviorFlags.ThrowGrenade
         );
 
         public static readonly BotTypeConfig Boss = new(
