@@ -50,11 +50,13 @@ namespace View
 
         void Update()
         {
+#if !UNITY_EDITOR
             // Force-hide system cursor every frame during active gameplay.
             // Unity resets Cursor.visible when editor regains focus.
             var session = App.App.Instance?.RaidSession;
             bool inGameplay = session?.RaidState?.PlayerEntity != null;
             Cursor.visible = !inGameplay;
+#endif
         }
 
         void OnGUI()
