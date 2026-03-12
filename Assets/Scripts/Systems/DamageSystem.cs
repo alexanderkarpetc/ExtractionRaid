@@ -39,6 +39,7 @@ namespace Systems
                 {
                     if (state.Projectiles[i].Id == hit.ProjectileId)
                     {
+                        context.Events.ProjectileHit(hit.ProjectileId, state.Projectiles[i].Position);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
                         break;

@@ -20,6 +20,7 @@ namespace Tests.EditMode.Fakes
 
         public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage) { }
         public void ProjectileDespawned(EId id) { }
+        public void ProjectileHit(EId id, Vector3 position) { }
 
         public bool EntityDamagedCalled;
         public EId EntityDamagedId;

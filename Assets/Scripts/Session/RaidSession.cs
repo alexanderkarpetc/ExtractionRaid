@@ -19,6 +19,7 @@ namespace Session
         readonly IPhysicsAdapter _physicsAdapter;
         readonly IGrenadePositionAdapter _grenadePositionAdapter;
         readonly List<HitSignal> _hitInbox = new();
+        readonly List<CollisionSignal> _collisionInbox = new();
 
         public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
             INavMeshAdapter navMeshAdapter, IPhysicsAdapter physicsAdapter = null,
@@ -127,6 +128,8 @@ namespace Session
             GrenadeSystem.TickExplosions(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
+            ProcessCollisions(in context);
+            _collisionInbox.Clear();
             ProcessDamageAlerts();
             ProcessDeathEvents();
 
@@ -138,6 +141,23 @@ namespace Session
             }
 
             RaidState.ElapsedTime += context.DeltaTime;
+        }
+
+        void ProcessCollisions(in RaidContext context)
+        {
+            foreach (var col in _collisionInbox)
+            {
+                for (int i = RaidState.Projectiles.Count - 1; i >= 0; i--)
+                {
+                    if (RaidState.Projectiles[i].Id == col.ProjectileId)
+                    {
+                        context.Events.ProjectileHit(col.ProjectileId, col.Position);
+                        context.Events.ProjectileDespawned(col.ProjectileId);
+                        RaidState.Projectiles.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
         }
 
         void ProcessDamageAlerts()
@@ -191,6 +211,11 @@ namespace Session
         public void ReportHit(HitSignal signal)
         {
             _hitInbox.Add(signal);
+        }
+
+        public void ReportCollision(CollisionSignal signal)
+        {
+            _collisionInbox.Add(signal);
         }
 
         public bool RequestDrop(InventorySlotRef slot, UnityEngine.Vector3 dropPosition)

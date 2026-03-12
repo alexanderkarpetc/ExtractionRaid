@@ -27,6 +27,7 @@ namespace Adapters
         GrenadeSpawned,
         GrenadeExploded,
         GrenadeDespawned,
+        ProjectileHit,
     }
 
     public struct RaidEvent
@@ -77,6 +78,16 @@ namespace Adapters
         public void ProjectileDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
+        }
+
+        public void ProjectileHit(EId id, Vector3 position)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.ProjectileHit,
+                Id = id,
+                Position = position,
+            });
         }
 
         public void EntityDamaged(EId id, float currentHp, float maxHp)

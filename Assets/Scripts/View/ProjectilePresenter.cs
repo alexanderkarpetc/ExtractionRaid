@@ -9,11 +9,13 @@ namespace View
     public class ProjectilePresenter
     {
         readonly GameObject _projectilePrefab;
+        readonly GameObject _impactVfxPrefab;
         readonly Dictionary<EId, ProjectileView> _views = new();
 
         public ProjectilePresenter()
         {
             _projectilePrefab = Resources.Load<GameObject>("Prefabs/Projectile");
+            _impactVfxPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BulletImpact");
 
             if (_projectilePrefab == null)
                 Debug.LogWarning("[ProjectilePresenter] Prefab not found at Resources/Prefabs/Projectile");
@@ -31,6 +33,9 @@ namespace View
                 {
                     case RaidEventType.ProjectileSpawned:
                         SpawnView(e.Id, e.Position, e.Direction, e.Damage);
+                        break;
+                    case RaidEventType.ProjectileHit:
+                        SpawnImpactVfx(e.Position);
                         break;
                     case RaidEventType.ProjectileDespawned:
                         DespawnView(e.Id);
@@ -59,6 +64,13 @@ namespace View
             var view = go.GetComponent<ProjectileView>();
             view.Initialize(id, damage);
             _views[id] = view;
+        }
+
+        void SpawnImpactVfx(Vector3 position)
+        {
+            if (_impactVfxPrefab == null) return;
+            var go = Object.Instantiate(_impactVfxPrefab, position, Quaternion.identity);
+            Object.Destroy(go, 2f);
         }
 
         void DespawnView(EId id)

@@ -21,18 +21,29 @@ namespace View
 
         private void OnTriggerEnter(Collider other)
         {
-            var damageable = other.GetComponent<IDamageableView>();
-            if (damageable == null) return;
-
             var session = App.App.Instance.RaidSession;
             if (session == null) return;
 
-            session.ReportHit(new HitSignal
+            var damageable = other.GetComponent<IDamageableView>();
+            if (damageable != null)
             {
-                ProjectileId = EId,
-                TargetId = damageable.EId,
-                Damage = _damage,
-            });
+                // Damageable target → damage path (DamageSystem handles destruction + VFX)
+                session.ReportHit(new HitSignal
+                {
+                    ProjectileId = EId,
+                    TargetId = damageable.EId,
+                    Damage = _damage,
+                });
+            }
+            else
+            {
+                // Non-damageable collider → wall/obstacle path
+                session.ReportCollision(new CollisionSignal
+                {
+                    ProjectileId = EId,
+                    Position = transform.position,
+                });
+            }
         }
     }
 }
