@@ -66,7 +66,7 @@ namespace Constants
             float healAmount = 0f, float healThreshold = 0f, float healCooldown = 0f,
             float moveSpeed = 4f, float patrolSpeed = 2f, float chaseSpeed = 5f,
             float visionRange = 30f, float visionAngle = 120f,
-            float hearingRange = 15f, float targetMemoryDuration = 8f,
+            float hearingRange = 6f, float targetMemoryDuration = 8f,
             float reactionTime = 0.5f, float accuracy = 0.6f, float engageRange = 20f,
             float dodgeCooldown = 0f,
             float fireInterval = 0.3f, float projectileSpeed = 20f, float projectileDamage = 10f,
@@ -127,7 +127,7 @@ namespace Constants
         public static readonly BotTypeConfig Scav = new(
             typeId: "Scav", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
             maxHp: 80f, moveSpeed: 3.5f, chaseSpeed: 4f,
-            visionRange: 25f, visionAngle: 110f, hearingRange: 12f,
+            visionRange: 25f, visionAngle: 110f,
             targetMemoryDuration: 5f, reactionTime: 0.8f, accuracy: 0.5f,
             fireInterval: 0.4f, projectileSpeed: 18f, projectileDamage: 8f,
             spreadAngle: 8f
@@ -137,7 +137,7 @@ namespace Constants
             typeId: "PMC", prefabId: "BotBossView", weaponPrefabId: "Weapon_Rifle",
             healAmount: 30f, healThreshold: 0.35f, healCooldown: 15f,
             moveSpeed: 4.5f, patrolSpeed: 2.5f,
-            visionRange: 35f, hearingRange: 18f,
+            visionRange: 35f,
             reactionTime: 0.4f, accuracy: 0.75f, engageRange: 28f,
             dodgeCooldown: 5f,
             fireInterval: 0.25f, projectileSpeed: 22f, projectileDamage: 12f,
@@ -149,7 +149,7 @@ namespace Constants
         public static readonly BotTypeConfig Boss = new(
             typeId: "Boss", prefabId: "BotPmcView", weaponPrefabId: "Weapon_Shotgun",
             maxHp: 200f, chaseSpeed: 5.5f,
-            visionRange: 40f, visionAngle: 140f, hearingRange: 25f,
+            visionRange: 40f, visionAngle: 140f,
             targetMemoryDuration: 12f, reactionTime: 0.3f, accuracy: 0.65f,
             engageRange: 15f, dodgeCooldown: 3f,
             fireInterval: 0.5f, projectileSpeed: 28f, projectileDamage: 7f,
