@@ -165,20 +165,20 @@ Key fields on `PlayerEntityState`:
 
 Key fields on `WeaponEntityState`:
 - `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
-- `RecoilKickBack` — world units backward displacement per shot (toward player)
+- `RecoilKickForward` — world units forward displacement per shot (away from player)
 - `RecoilKickSide` — world units max sideways displacement per shot (perpendicular scatter)
 - `RecoilRecoverySpeed` — independent recoil decay rate
 - `RecoilOffset` — runtime accumulated recoil displacement (Vector3)
 
-| Weapon | AimFollowSharpness | RecoilKickBack | RecoilKickSide | RecoilRecoverySpeed |
-|--------|--------------------|---------------|----------------|---------------------|
-| Rifle | 10 | 4.5 | 2.25 | 4 |
-| Shotgun | 5 | 12.0 | 6.75 | 2 |
+| Weapon | AimFollowSharpness | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed |
+|--------|--------------------|------------------|----------------|---------------------|
+| Rifle | 10 | 2 | 2 | 6 |
+| Shotgun | 5 | 6 | 6 | 6 |
 | Unarmed | 30 (const) | — | — | — |
 
 Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
 
-Recoil: backward kick + sideways scatter (displaces WeaponAimPoint toward player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
+Recoil: forward kick + sideways scatter (displaces WeaponAimPoint away from player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
 
 Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
 

@@ -16,5 +16,6 @@ namespace Adapters
         bool DodgePressed { get; }
         bool GrenadePressed { get; }
         bool AttackJustReleased { get; }
+        Vector3 CameraWorldPosition { get; }
     }
 }

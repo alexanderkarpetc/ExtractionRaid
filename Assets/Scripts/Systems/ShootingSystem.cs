@@ -36,11 +36,30 @@ namespace Systems
                 return;
             }
 
-            var dir = player.AimDirection;
+            var spawnPos = input.MuzzleWorldPoint;
+
+            // Parallax correction: find where camera ray through crosshair
+            // intersects the muzzle-height plane (so bullets visually pass through crosshair)
+            var camPos = input.CameraWorldPosition;
+            var groundAim = player.WeaponAimPoint;
+            Vector3 correctedAim;
+            if (camPos.y > 0.01f && spawnPos.y > 0.01f)
+            {
+                float ratio = spawnPos.y / camPos.y;
+                correctedAim = Vector3.Lerp(groundAim, camPos, ratio);
+            }
+            else
+            {
+                correctedAim = groundAim;
+            }
+
+            var toAim = correctedAim - spawnPos;
+            toAim.y = 0f;
+            var dir = toAim.sqrMagnitude > 0.001f
+                ? toAim.normalized
+                : player.AimDirection;
 
             if (dir.sqrMagnitude < 0.001f) return;
-
-            var spawnPos = input.MuzzleWorldPoint;
             var count = Mathf.Max(1, weapon.ProjectilesPerShot);
             var halfSpread = weapon.SpreadAngle * 0.5f;
 
@@ -65,20 +84,18 @@ namespace Systems
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
 
-            // Apply recoil — backward kick + sideways scatter
-            if (weapon.RecoilKickBack > 0f || weapon.RecoilKickSide > 0f)
+            // Apply recoil — forward kick + sideways scatter
+            if (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f)
             {
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
-                // Backward: pull toward player
-                var backward = -aimDir * weapon.RecoilKickBack;
+                // Forward: push WeaponAimPoint directly (AimFollowSharpness handles recovery)
+                player.WeaponAimPoint += aimDir * weapon.RecoilKickForward;
 
-                // Sideways: perpendicular scatter
+                // Sideways: through RecoilOffset (RecoilRecoverySpeed handles recovery)
                 var right = new Vector3(aimDir.z, 0f, -aimDir.x);
                 float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
-                var sideways = right * sideAmount;
-
-                weapon.RecoilOffset += backward + sideways;
+                weapon.RecoilOffset += right * sideAmount;
             }
 
             // Consume one round (shotgun: 1 shell = multiple pellets)

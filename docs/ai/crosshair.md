@@ -64,10 +64,10 @@ Filled dots = orange, unfilled = dim gray. Center dot in orange. Crosshair lines
 
 ## Recoil
 
-Firing displaces the crosshair (WeaponAimPoint) toward the player. The gap between raw dot and crosshair = recoil magnitude.
+Firing displaces the crosshair (WeaponAimPoint) away from the player. The gap between raw dot and crosshair = recoil magnitude.
 
 **Two components per shot:**
-1. **Backward kick** (`RecoilKickBack`) — pulls aim toward player along `-AimDirection` (main recoil)
+1. **Forward kick** (`RecoilKickForward`) — pushes aim away from player along `+AimDirection` (main recoil)
 2. **Sideways scatter** (`RecoilKickSide`) — random perpendicular displacement (spread)
 
 **Subtract-apply pattern** in AimingSystem prevents double-recovery:
@@ -81,16 +81,16 @@ WeaponAimPoint = cleanAim + RecoilOffset         // combine
 ShootingSystem applies kick after firing:
 ```
 aimDir = normalize(WeaponAimPoint - PlayerPosition)
-backward = -aimDir * RecoilKickBack
+forward = aimDir * RecoilKickForward
 right = perpendicular(aimDir)  // 90° CW on XZ
 sideways = right * Random(-RecoilKickSide, +RecoilKickSide)
-RecoilOffset += backward + sideways
+RecoilOffset += forward + sideways
 ```
 
-| Weapon | RecoilKickBack | RecoilKickSide | RecoilRecoverySpeed | Behavior |
-|--------|---------------|----------------|---------------------|----------|
-| Rifle | 4.5 | 2.25 | 4 | Moderate backward, slight scatter. Full-auto accumulates. |
-| Shotgun | 12.0 | 6.75 | 2 | Heavy backward kick, noticeable scatter. Mostly recovers between shots. |
+| Weapon | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed | Behavior |
+|--------|------------------|----------------|---------------------|----------|
+| Rifle | 2 | 2 | 6 | Moderate forward, slight scatter. Full-auto accumulates. |
+| Shotgun | 6 | 6 | 6 | Heavy forward kick, noticeable scatter. Mostly recovers between shots. |
 
 ## Technical Notes
 

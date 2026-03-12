@@ -56,9 +56,12 @@ namespace View
                     if (state.EquippedWeapon.PrefabId != _currentWeaponPrefabId)
                         SwapWeaponModel(state.EquippedWeapon.PrefabId);
 
-                    if (state.AimDirection.sqrMagnitude > 0.001f)
+                    // Rotate weapon toward aim point (not just AimDirection from center)
+                    var toAim = state.WeaponAimPoint - _weaponPivot.position;
+                    toAim.y = 0f;
+                    if (toAim.sqrMagnitude > 0.001f)
                     {
-                        _weaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
+                        _weaponPivot.rotation = Quaternion.LookRotation(toAim.normalized, Vector3.up);
                     }
                 }
                 else if (_currentWeaponPrefabId != null)
