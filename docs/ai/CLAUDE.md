@@ -155,30 +155,32 @@ Pickup merges into existing partial stacks first, then overflows to free slots.
 
 Player aiming has two layers:
 1. **Raw Aim** (`RawAimPoint`) — instant world position from mouse, no smoothing
-2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon angular exponential smoothing
+2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon exponential smoothing + recoil
 
 Key fields on `PlayerEntityState`:
 - `RawAimPoint` — instant mouse world position (player intent)
-- `WeaponAimPoint` — smoothed world position (weapon tracking)
+- `WeaponAimPoint` — smoothed world position + recoil offset (weapon tracking)
 - `AimDirection` — derived from WeaponAimPoint (normalized, used by ShootingSystem)
 - `FacingDirection` — body rotation, follows raw aim (unchanged behavior)
 
-Key field on `WeaponEntityState`:
+Key fields on `WeaponEntityState`:
 - `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
+- `RecoilKickBack` — world units backward displacement per shot (toward player)
+- `RecoilKickSide` — world units max sideways displacement per shot (perpendicular scatter)
+- `RecoilRecoverySpeed` — independent recoil decay rate
+- `RecoilOffset` — runtime accumulated recoil displacement (Vector3)
 
-| Weapon | AimFollowSharpness | Behavior |
-|--------|--------------------|----------|
-| Rifle | 10 | Moderate tracking (~95% in 0.3s) |
-| Shotgun | 5 | Heavy lag (~95% in 0.6s) |
-| Unarmed | 30 (const) | Near-instant |
+| Weapon | AimFollowSharpness | RecoilKickBack | RecoilKickSide | RecoilRecoverySpeed |
+|--------|--------------------|---------------|----------------|---------------------|
+| Rifle | 10 | 4.5 | 2.25 | 4 |
+| Shotgun | 5 | 12.0 | 6.75 | 2 |
+| Unarmed | 30 (const) | — | — | — |
 
 Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
 
-ShootingSystem reads `AimDirection` (now = weapon aim direction) — no changes needed.
-PlayerView reads `AimDirection` for weapon pivot rotation — no changes needed.
-Bots have their own `AimDirection`, not affected by dual-layer.
+Recoil: backward kick + sideways scatter (displaces WeaponAimPoint toward player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
 
-Key file: `Systems/AimingSystem.cs`
+Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
 
 ## 10) Task routing (read only what is relevant)
 

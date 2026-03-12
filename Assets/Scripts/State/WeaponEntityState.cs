@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace State
 {
     public enum WeaponPhase : byte
@@ -28,6 +30,11 @@ namespace State
         public float BodyRotationSpeed;
         public float AimFollowSharpness;
 
+        // Recoil parameters
+        public float RecoilKickBack;
+        public float RecoilKickSide;
+        public float RecoilRecoverySpeed;
+
         // Equip/unequip durations
         public float EquipTime;
         public float UnequipTime;
@@ -42,6 +49,7 @@ namespace State
         public float LastFireTime;
         public WeaponPhase Phase;
         public float PhaseStartTime;
+        public Vector3 RecoilOffset;
 
         public static WeaponEntityState CreateDefault(EId id)
         {
@@ -58,6 +66,9 @@ namespace State
                 ConeHalfAngle = 45f,
                 BodyRotationSpeed = 270,
                 AimFollowSharpness = 10f,
+                RecoilKickBack = 4.5f,
+                RecoilKickSide = 2.25f,
+                RecoilRecoverySpeed = 4f,
                 EquipTime = 0.3f,
                 UnequipTime = 0.2f,
                 AmmoType = "Ammo_Rifle",
@@ -85,6 +96,9 @@ namespace State
                 ConeHalfAngle = 20f,
                 BodyRotationSpeed = 180f,
                 AimFollowSharpness = 5f,
+                RecoilKickBack = 12.0f,
+                RecoilKickSide = 6.75f,
+                RecoilRecoverySpeed = 2f,
                 EquipTime = 0.4f,
                 UnequipTime = 0.25f,
                 AmmoType = "Ammo_Shotgun",

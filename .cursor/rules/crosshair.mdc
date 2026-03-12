@@ -52,6 +52,36 @@ color = Lerp(white, green, progress)
 
 12 dots in circle (radius 14px), from 12 o'clock clockwise. Filled = orange, empty = gray.
 
+## Recoil
+
+Firing displaces the crosshair (WeaponAimPoint) toward the player. The gap between raw dot and crosshair = recoil magnitude.
+
+**Two components per shot:**
+1. **Backward kick** (`RecoilKickBack`) — pulls aim toward player along `-AimDirection` (main recoil)
+2. **Sideways scatter** (`RecoilKickSide`) — random perpendicular displacement (spread)
+
+**Subtract-apply pattern** in AimingSystem prevents double-recovery:
+```
+cleanAim = WeaponAimPoint - RecoilOffset       // strip recoil
+cleanAim = Lerp(cleanAim, mouse, smoothFactor)  // base tracking (AimFollowSharpness)
+RecoilOffset = Lerp(RecoilOffset, zero, decay)  // recoil decay (RecoilRecoverySpeed)
+WeaponAimPoint = cleanAim + RecoilOffset         // combine
+```
+
+ShootingSystem applies kick after firing:
+```
+aimDir = normalize(WeaponAimPoint - PlayerPosition)
+backward = -aimDir * RecoilKickBack
+right = perpendicular(aimDir)  // 90° CW on XZ
+sideways = right * Random(-RecoilKickSide, +RecoilKickSide)
+RecoilOffset += backward + sideways
+```
+
+| Weapon | RecoilKickBack | RecoilKickSide | RecoilRecoverySpeed | Behavior |
+|--------|---------------|----------------|---------------------|----------|
+| Rifle | 4.5 | 2.25 | 4 | Moderate backward, slight scatter. Full-auto accumulates. |
+| Shotgun | 12.0 | 6.75 | 2 | Heavy backward kick, noticeable scatter. Mostly recovers between shots. |
+
 ## Technical Notes
 
 - Single `Texture2D(1,1)` white pixel; all colors via `GUI.color`
@@ -59,6 +89,8 @@ color = Lerp(white, green, progress)
 - Progress: `elapsed = RaidState.ElapsedTime - weapon.PhaseStartTime`
 - World-to-GUI: `cam.WorldToScreenPoint()` + Y-flip
 
-## Key File
+## Key Files
 
-`Assets/Scripts/View/AimCursorOverlay.cs`
+- `Assets/Scripts/View/AimCursorOverlay.cs` — crosshair rendering
+- `Assets/Scripts/Systems/AimingSystem.cs` — recoil decay (subtract-apply pattern)
+- `Assets/Scripts/Systems/ShootingSystem.cs` — recoil kick application

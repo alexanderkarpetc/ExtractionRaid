@@ -65,6 +65,22 @@ namespace Systems
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
 
+            // Apply recoil — backward kick + sideways scatter
+            if (weapon.RecoilKickBack > 0f || weapon.RecoilKickSide > 0f)
+            {
+                var aimDir = (player.WeaponAimPoint - player.Position).normalized;
+
+                // Backward: pull toward player
+                var backward = -aimDir * weapon.RecoilKickBack;
+
+                // Sideways: perpendicular scatter
+                var right = new Vector3(aimDir.z, 0f, -aimDir.x);
+                float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
+                var sideways = right * sideAmount;
+
+                weapon.RecoilOffset += backward + sideways;
+            }
+
             // Consume one round (shotgun: 1 shell = multiple pellets)
             if (usesAmmo)
             {

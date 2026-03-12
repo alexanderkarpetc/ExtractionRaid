@@ -31,12 +31,27 @@ namespace Systems
             float rawDist = toRaw.magnitude;
             var rawDir = toRaw / rawDist;
 
-            // 2. Weapon aim — position-based exponential smoothing
+            // 2. Weapon aim — position-based exponential smoothing with recoil
             var weapon = player.EquippedWeapon;
             float aimFollowSharpness = weapon != null ? weapon.AimFollowSharpness : UnarmedAimFollowSharpness;
 
+            // Strip recoil to get clean base position
+            var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
+            var cleanAim = player.WeaponAimPoint - recoilOffset;
+
+            // Smooth clean position toward mouse
             float smoothFactor = 1f - Mathf.Exp(-aimFollowSharpness * context.DeltaTime);
-            player.WeaponAimPoint = Vector3.Lerp(player.WeaponAimPoint, aimPoint, smoothFactor);
+            cleanAim = Vector3.Lerp(cleanAim, aimPoint, smoothFactor);
+
+            // Decay recoil independently
+            if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
+            {
+                float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * context.DeltaTime);
+                weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
+            }
+
+            // Final aim = base + decayed recoil
+            player.WeaponAimPoint = cleanAim + (weapon != null ? weapon.RecoilOffset : Vector3.zero);
 
             // 3. AimDirection derived from weapon aim
             var weaponAimDir = player.WeaponAimPoint - origin;

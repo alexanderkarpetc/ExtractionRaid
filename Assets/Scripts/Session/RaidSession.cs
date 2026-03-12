@@ -38,7 +38,7 @@ namespace Session
         {
             PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
             SpawnTestGroundItems();
-            SpawnTestBots();
+            //SpawnTestBots();
             _eventBuffer.RaidStarted();
         }
 
