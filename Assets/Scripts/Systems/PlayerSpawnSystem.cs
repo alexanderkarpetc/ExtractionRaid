@@ -36,6 +36,10 @@ namespace Systems
             var shotgunAmmoId = state.AllocateEId();
             state.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
 
+            // Starting grenades — 1 per backpack slot
+            for (int i = 0; i < GrenadeConstants.StartingCount; i++)
+                state.Inventory.Backpack[2 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
+
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             events.PlayerSpawned(playerId);

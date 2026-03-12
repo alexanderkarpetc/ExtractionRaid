@@ -27,7 +27,6 @@ namespace State
         public bool IsInGrenadeMode;
         public bool GrenadeThrowCharging;
         public float GrenadeTargetDistance;
-        public int GrenadeCount;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {
@@ -40,7 +39,6 @@ namespace State
                 AimDirection = Vector3.forward,
                 RawAimPoint = spawnPosition + Vector3.forward,
                 WeaponAimPoint = spawnPosition + Vector3.forward,
-                GrenadeCount = Constants.GrenadeConstants.StartingCount,
             };
         }
     }

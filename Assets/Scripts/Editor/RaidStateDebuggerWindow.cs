@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using State;
+using Systems;
 using UnityEditor;
 using UnityEngine;
 
@@ -132,7 +133,7 @@ namespace Editor
             Field("Grenade Mode", p.IsInGrenadeMode);
             Field("Grenade Charging", p.GrenadeThrowCharging);
             Field("Grenade Target Dist", p.GrenadeTargetDistance);
-            Field("Grenade Count", p.GrenadeCount);
+            Field("Grenade Count", InventorySystem.CountGrenades(state.Inventory));
 
             DrawHealth(p.Id, state.HealthMap);
 

@@ -89,6 +89,13 @@ namespace State
                     MaxStackSize = 20,
                     AmmoType = "Ammo_Shotgun",
                 },
+                ["Grenade"] = new()
+                {
+                    Id = "Grenade",
+                    DisplayName = "Grenade",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
             };
         }
     }

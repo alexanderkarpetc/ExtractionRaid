@@ -115,6 +115,27 @@ namespace Systems
             return true;
         }
 
+        public static int CountGrenades(InventoryState inventory)
+        {
+            int count = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i]?.DefinitionId == "Grenade") count++;
+            return count;
+        }
+
+        public static bool ConsumeOneGrenade(InventoryState inventory)
+        {
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                if (inventory.Backpack[i]?.DefinitionId == "Grenade")
+                {
+                    inventory.Backpack[i] = null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public static EId FindNearestGroundItem(RaidState state, Vector3 playerPosition)
         {
             float bestDist = float.MaxValue;

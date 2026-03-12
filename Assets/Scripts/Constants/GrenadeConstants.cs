@@ -11,7 +11,7 @@ namespace Constants
         public const float MinThrowRange = 1.5f;
         public const float Damage = 120f;
         public const float ExplosionRadius = 5f;
-        public const int StartingCount = 30;
+        public const int StartingCount = 3;
 
         public const float TrajectoryTimeStep = 0.05f;
         public const float MaxTrajectoryTime = 3f;

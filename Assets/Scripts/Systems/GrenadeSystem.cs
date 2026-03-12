@@ -23,7 +23,7 @@ namespace Systems
                     return;
                 }
 
-                if (player.GrenadeCount > 0 && !player.IsRolling)
+                if (InventorySystem.CountGrenades(state.Inventory) > 0 && !player.IsRolling)
                 {
                     player.IsInGrenadeMode = true;
                     player.GrenadeThrowCharging = false;
@@ -86,7 +86,7 @@ namespace Systems
                 GrenadeConstants.ExplosionRadius);
 
             state.Grenades.Add(grenade);
-            player.GrenadeCount--;
+            InventorySystem.ConsumeOneGrenade(state.Inventory);
 
             context.Events.GrenadeSpawned(id, spawnPos, velocity);
         }
