@@ -9,6 +9,7 @@ namespace View
     {
         [SerializeField] Transform _weaponPivot;
         [SerializeField] Transform _capsuleVisual;
+        [SerializeField] Animator _animator;
 
         Transform _muzzlePoint;
         Action<Transform> _onMuzzlePointChanged;
@@ -45,6 +46,9 @@ namespace View
             }
 
             SyncRollVisual(state);
+
+            if (_animator != null)
+                _animator.SetBool("Run", state.Velocity.sqrMagnitude > 0.01f);
 
             if (_weaponPivot != null)
             {
