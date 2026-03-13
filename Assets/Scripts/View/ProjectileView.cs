@@ -7,6 +7,7 @@ namespace View
     {
         public EId EId { get; private set; }
         float _damage;
+        bool _hit;
 
         public void Initialize(EId id, float damage)
         {
@@ -16,21 +17,40 @@ namespace View
 
         public void SyncFromState(ProjectileEntityState state)
         {
-            transform.position = state.Position;
+            if (_hit) return;
+
+            var oldPos = transform.position;
+            var newPos = state.Position;
+            var delta = newPos - oldPos;
+            float dist = delta.magnitude;
+
+            if (dist > 0.001f)
+            {
+                // Raycast along movement path — frame-rate independent, no FixedUpdate dependency
+                if (Physics.Raycast(oldPos, delta / dist, out var hit, dist,
+                        Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
+                {
+                    // Skip other projectiles
+                    if (hit.collider.GetComponent<ProjectileView>() == null)
+                    {
+                        _hit = true;
+                        ReportHit(hit.collider, hit.point);
+                        return;
+                    }
+                }
+            }
+
+            transform.position = newPos;
         }
 
-        private void OnTriggerEnter(Collider other)
+        void ReportHit(Collider other, Vector3 hitPoint)
         {
             var session = App.App.Instance.RaidSession;
             if (session == null) return;
 
-            // Ignore collisions with other projectiles (e.g. shotgun pellets)
-            if (other.GetComponent<ProjectileView>() != null) return;
-
             var damageable = other.GetComponent<IDamageableView>();
             if (damageable != null)
             {
-                // Damageable target → damage path (DamageSystem handles destruction + VFX)
                 session.ReportHit(new HitSignal
                 {
                     ProjectileId = EId,
@@ -40,11 +60,10 @@ namespace View
             }
             else
             {
-                // Non-damageable collider → wall/obstacle path
                 session.ReportCollision(new CollisionSignal
                 {
                     ProjectileId = EId,
-                    Position = transform.position,
+                    Position = hitPoint,
                 });
             }
         }
