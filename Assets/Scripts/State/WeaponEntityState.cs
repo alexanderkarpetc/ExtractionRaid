@@ -51,7 +51,7 @@ namespace State
         public float PhaseStartTime;
         public Vector3 RecoilOffset;
 
-        public static WeaponEntityState CreateDefault(EId id)
+        public static WeaponEntityState CreateRifle(EId id)
         {
             return new WeaponEntityState
             {
@@ -81,7 +81,7 @@ namespace State
             };
         }
 
-        public static WeaponEntityState CreateSecondary(EId id)
+        public static WeaponEntityState CreateShotgun(EId id)
         {
             return new WeaponEntityState
             {
@@ -105,6 +105,36 @@ namespace State
                 MagazineSize = 5,
                 AmmoInMagazine = 5,
                 ReloadTime = 2.5f,
+                LastFireTime = -999f,
+                Phase = WeaponPhase.Ready,
+                PhaseStartTime = 0f,
+            };
+        }
+
+        public static WeaponEntityState CreatePistol(EId id)
+        {
+            return new WeaponEntityState
+            {
+                Id = id,
+                PrefabId = "Weapon_Pistol",
+                FireInterval = 0.4f,
+                ProjectileSpeed = 25f,
+                ProjectileLifetime = 2.5f,
+                ProjectileDamage = 15f,
+                ProjectilesPerShot = 1,
+                SpreadAngle = 0f,
+                ConeHalfAngle = 35f,
+                BodyRotationSpeed = 300f,
+                AimFollowSharpness = 15f,
+                RecoilKickForward = 1.5f,
+                RecoilKickSide = 1f,
+                RecoilRecoverySpeed = 4f,
+                EquipTime = 0.2f,
+                UnequipTime = 0.15f,
+                AmmoType = "Ammo_Pistol",
+                MagazineSize = 12,
+                AmmoInMagazine = 12,
+                ReloadTime = 1.5f,
                 LastFireTime = -999f,
                 Phase = WeaponPhase.Ready,
                 PhaseStartTime = 0f,

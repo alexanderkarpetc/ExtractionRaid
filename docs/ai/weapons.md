@@ -1,0 +1,94 @@
+# Weapons
+
+## Weapon State Machine (V1)
+
+Player weapons use an enum-based FSM (`WeaponPhase` in `WeaponEntityState`).
+Phases: `Ready`, `Firing`, `Cooldown`, `Equipping`, `Unequipping`, `Reloading`.
+
+Key files:
+- `State/WeaponEntityState.cs` — `WeaponPhase` enum, `Phase`, `PhaseStartTime`, `EquipTime`, `UnequipTime`
+- `State/PlayerEntityState.cs` — `PendingHotbarSlot` (swap intent written by WeaponEquipSystem)
+- `Systems/WeaponStateMachineSystem.cs` — FSM orchestrator (runs after WeaponEquipSystem, before AimingSystem)
+- `Systems/WeaponEquipSystem.cs` — writes `PendingHotbarSlot` only (no instant swap)
+- `Systems/ShootingSystem.cs` — fires only when `Phase == Ready`, sets `Phase = Firing`
+
+Bots do NOT use the FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
+
+Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → ...`
+
+Events: `WeaponEquipStarted`, `WeaponUnequipStarted`, `WeaponEquipFinished` (for future animations).
+
+## Ammo & Reload
+
+Weapons have magazine ammo and reserve ammo (from inventory backpack).
+
+Key fields on `WeaponEntityState`:
+- `AmmoType` — `"Ammo_Rifle"` | `"Ammo_Shotgun"` | `"Ammo_Pistol"` | `null` (infinite, used by bots)
+- `MagazineSize`, `AmmoInMagazine` — current/max rounds in magazine
+- `ReloadTime` — seconds for reload animation
+
+Transition rules:
+- Ready + attack + empty mag → DryFire event + auto-reload (if reserve > 0)
+- Ready + R key → Reloading (if `CanReload`)
+- Cooldown → Ready → Reloading (same tick, if R pressed)
+- Reloading timer done → Ready + fill magazine from reserve
+- Reloading + swap intent → Unequipping (interrupt)
+
+`AmmoSystem` (stateless static system in `Systems/AmmoSystem.cs`):
+- `CountReserve(inventory, ammoType)` — sums matching items in backpack
+- `ConsumeAmmo(inventory, ammoType, amount)` — drains from backpack, nulls empty slots
+- `CompleteReload(weapon, inventory)` — fills magazine from reserve
+- `CanReload(weapon, inventory)` — has room AND has reserve
+
+1 trigger pull = 1 ammo consumed (shotgun: 1 shell = 7 pellets).
+
+Items are stackable: `ItemState.StackCount`, `ItemDefinition.MaxStackSize`.
+Pickup merges into existing partial stacks first, then overflows to free slots.
+
+## Dual-Layer Aiming
+
+Player aiming has two layers:
+1. **Raw Aim** (`RawAimPoint`) — instant world position from mouse, no smoothing
+2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon exponential smoothing + recoil
+
+Key fields on `PlayerEntityState`:
+- `RawAimPoint` — instant mouse world position (player intent)
+- `WeaponAimPoint` — smoothed world position + recoil offset (weapon tracking)
+- `AimDirection` — derived from WeaponAimPoint (normalized, used by ShootingSystem)
+- `FacingDirection` — body rotation, follows raw aim (unchanged behavior)
+
+Key fields on `WeaponEntityState`:
+- `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
+- `RecoilKickForward` — world units forward displacement per shot (away from player)
+- `RecoilKickSide` — world units max sideways displacement per shot (perpendicular scatter)
+- `RecoilRecoverySpeed` — independent recoil decay rate
+- `RecoilOffset` — runtime accumulated recoil displacement (Vector3)
+
+Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
+
+Recoil: forward kick + sideways scatter (displaces WeaponAimPoint away from player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
+
+Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
+
+## Weapon Stats
+
+| Weapon | PrefabId | FireInterval | Damage | ProjPerShot | SpreadAngle | ProjSpeed | ProjLifetime |
+|--------|----------|-------------|--------|-------------|-------------|-----------|-------------|
+| Rifle | Weapon_Rifle | 0.2 | 10 | 1 | 0 | 20 | 3.0 |
+| Shotgun | Weapon_Shotgun | 0.6 | 8 | 7 | 30 | 30 | 2.0 |
+| Pistol | Weapon_Pistol | 0.4 | 15 | 1 | 0 | 25 | 2.5 |
+
+| Weapon | AmmoType | MagSize | ReloadTime | EquipTime | UnequipTime |
+|--------|----------|---------|------------|-----------|-------------|
+| Rifle | Ammo_Rifle | 30 | 2.0s | 0.3s | 0.2s |
+| Shotgun | Ammo_Shotgun | 5 | 2.5s | 0.4s | 0.25s |
+| Pistol | Ammo_Pistol | 12 | 1.5s | 0.2s | 0.15s |
+
+| Weapon | AimFollowSharpness | ConeHalfAngle | BodyRotationSpeed | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed |
+|--------|--------------------|---------------|--------------------|--------------------|----------------|---------------------|
+| Rifle | 10 | 45 | 270 | 2 | 1.5 | 2 |
+| Shotgun | 5 | 20 | 180 | 3 | 6 | 3 |
+| Pistol | 15 | 35 | 300 | 1.5 | 1 | 4 |
+| Unarmed | 30 (const) | — | — | — | — | — |
+
+Factory methods: `WeaponEntityState.CreateRifle(id)`, `CreateShotgun(id)`, `CreatePistol(id)`.

@@ -24,6 +24,9 @@ namespace View
             var session = App.App.Instance.RaidSession;
             if (session == null) return;
 
+            // Ignore collisions with other projectiles (e.g. shotgun pellets)
+            if (other.GetComponent<ProjectileView>() != null) return;
+
             var damageable = other.GetComponent<IDamageableView>();
             if (damageable != null)
             {

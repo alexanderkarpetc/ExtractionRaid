@@ -93,101 +93,18 @@ A change is done when:
 ## 8) Documentation sync
 
 AI docs exist in two places that must stay in sync:
-- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`)
-- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`)
+- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`)
+- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`, `weapons.mdc`)
 
 When updating any AI doc, apply the same change to the corresponding Cursor doc.
 
-## 9) Weapon State Machine (V1)
-
-Player weapons use an enum-based FSM (`WeaponPhase` in `WeaponEntityState`).
-Phases: `Ready`, `Firing`, `Cooldown`, `Equipping`, `Unequipping`.
-
-Key files:
-- `State/WeaponEntityState.cs` — `WeaponPhase` enum, `Phase`, `PhaseStartTime`, `EquipTime`, `UnequipTime`
-- `State/PlayerEntityState.cs` — `PendingHotbarSlot` (swap intent written by WeaponEquipSystem)
-- `Systems/WeaponStateMachineSystem.cs` — FSM orchestrator (runs after WeaponEquipSystem, before AimingSystem)
-- `Systems/WeaponEquipSystem.cs` — writes `PendingHotbarSlot` only (no instant swap)
-- `Systems/ShootingSystem.cs` — fires only when `Phase == Ready`, sets `Phase = Firing`
-
-Bots do NOT use the FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
-
-Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → ...`
-
-Events: `WeaponEquipStarted`, `WeaponUnequipStarted`, `WeaponEquipFinished` (for future animations).
-
-## 11) Ammo & Reload
-
-Weapons have magazine ammo and reserve ammo (from inventory backpack).
-
-Key fields on `WeaponEntityState`:
-- `AmmoType` — `"Ammo_Rifle"` | `"Ammo_Shotgun"` | `null` (infinite, used by bots)
-- `MagazineSize`, `AmmoInMagazine` — current/max rounds in magazine
-- `ReloadTime` — seconds for reload animation
-
-FSM phase `Reloading` added to `WeaponPhase` enum.
-
-Transition rules:
-- Ready + attack + empty mag → DryFire event + auto-reload (if reserve > 0)
-- Ready + R key → Reloading (if `CanReload`)
-- Cooldown → Ready → Reloading (same tick, if R pressed)
-- Reloading timer done → Ready + fill magazine from reserve
-- Reloading + swap intent → Unequipping (interrupt)
-
-`AmmoSystem` (stateless static system in `Systems/AmmoSystem.cs`):
-- `CountReserve(inventory, ammoType)` — sums matching items in backpack
-- `ConsumeAmmo(inventory, ammoType, amount)` — drains from backpack, nulls empty slots
-- `CompleteReload(weapon, inventory)` — fills magazine from reserve
-- `CanReload(weapon, inventory)` — has room AND has reserve
-
-Ammo values:
-| Weapon | AmmoType | MagSize | ReloadTime |
-|--------|----------|---------|------------|
-| Rifle | Ammo_Rifle | 30 | 2.0s |
-| Shotgun | Ammo_Shotgun | 5 | 2.5s |
-
-1 trigger pull = 1 ammo consumed (shotgun: 1 shell = 7 pellets).
-
-Items are stackable: `ItemState.StackCount`, `ItemDefinition.MaxStackSize`.
-Pickup merges into existing partial stacks first, then overflows to free slots.
-
-## 12) Dual-Layer Aiming
-
-Player aiming has two layers:
-1. **Raw Aim** (`RawAimPoint`) — instant world position from mouse, no smoothing
-2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon exponential smoothing + recoil
-
-Key fields on `PlayerEntityState`:
-- `RawAimPoint` — instant mouse world position (player intent)
-- `WeaponAimPoint` — smoothed world position + recoil offset (weapon tracking)
-- `AimDirection` — derived from WeaponAimPoint (normalized, used by ShootingSystem)
-- `FacingDirection` — body rotation, follows raw aim (unchanged behavior)
-
-Key fields on `WeaponEntityState`:
-- `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
-- `RecoilKickForward` — world units forward displacement per shot (away from player)
-- `RecoilKickSide` — world units max sideways displacement per shot (perpendicular scatter)
-- `RecoilRecoverySpeed` — independent recoil decay rate
-- `RecoilOffset` — runtime accumulated recoil displacement (Vector3)
-
-| Weapon | AimFollowSharpness | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed |
-|--------|--------------------|------------------|----------------|---------------------|
-| Rifle | 10 | 2 | 2 | 6 |
-| Shotgun | 5 | 6 | 6 | 6 |
-| Unarmed | 30 (const) | — | — | — |
-
-Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
-
-Recoil: forward kick + sideways scatter (displaces WeaponAimPoint away from player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
-
-Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
-
-## 10) Task routing (read only what is relevant)
+## 9) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`
 - Spawn/despawn, entity binding, callbacks, presenter wiring -> `docs/ai/entity-lifecycle.md`
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`
+- Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 
 Do not load all docs unless the task spans multiple areas.

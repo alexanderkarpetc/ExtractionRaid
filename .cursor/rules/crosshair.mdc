@@ -79,8 +79,9 @@ RecoilOffset += forward + sideways
 
 | Weapon | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed | Behavior |
 |--------|------------------|----------------|---------------------|----------|
-| Rifle | 2 | 2 | 6 | Moderate forward, slight scatter. Full-auto accumulates. |
-| Shotgun | 6 | 6 | 6 | Heavy forward kick, noticeable scatter. Mostly recovers between shots. |
+| Rifle | 2 | 1.5 | 2 | Moderate forward, slight scatter. Full-auto accumulates. |
+| Shotgun | 3 | 6 | 3 | Heavy forward kick, noticeable scatter. Mostly recovers between shots. |
+| Pistol | 1.5 | 1 | 4 | Light kick, minimal scatter. Fast recovery between semi-auto shots. |
 
 ## Technical Notes
 

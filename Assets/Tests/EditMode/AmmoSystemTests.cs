@@ -119,7 +119,7 @@ namespace Tests.EditMode
         [Test]
         public void CompleteReload_FillsMagazineFromReserve()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 5;
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(2), "Ammo_Rifle", 60);
@@ -133,7 +133,7 @@ namespace Tests.EditMode
         [Test]
         public void CompleteReload_PartialReload_InsufficientReserve()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 0;
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(2), "Ammo_Rifle", 10);
@@ -147,7 +147,7 @@ namespace Tests.EditMode
         [Test]
         public void CompleteReload_FullMagazine_DoesNothing()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 30; // already full
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(2), "Ammo_Rifle", 60);
@@ -161,7 +161,7 @@ namespace Tests.EditMode
         [Test]
         public void CompleteReload_NullAmmoType_DoesNothing()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoType = null;
             weapon.AmmoInMagazine = 0;
             var inventory = new InventoryState();
@@ -177,7 +177,7 @@ namespace Tests.EditMode
         [Test]
         public void CanReload_EmptyMagWithReserve_ReturnsTrue()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 0;
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(2), "Ammo_Rifle", 30);
@@ -188,7 +188,7 @@ namespace Tests.EditMode
         [Test]
         public void CanReload_FullMag_ReturnsFalse()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 30; // full
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(2), "Ammo_Rifle", 30);
@@ -199,7 +199,7 @@ namespace Tests.EditMode
         [Test]
         public void CanReload_EmptyMagNoReserve_ReturnsFalse()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoInMagazine = 0;
             var inventory = new InventoryState();
 
@@ -209,7 +209,7 @@ namespace Tests.EditMode
         [Test]
         public void CanReload_NullAmmoType_ReturnsFalse()
         {
-            var weapon = WeaponEntityState.CreateDefault(new EId(1));
+            var weapon = WeaponEntityState.CreateRifle(new EId(1));
             weapon.AmmoType = null;
             weapon.AmmoInMagazine = 0;
             var inventory = new InventoryState();

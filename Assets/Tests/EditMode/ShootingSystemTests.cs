@@ -111,6 +111,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.AimDirection = Vector3.zero;
+            state.PlayerEntity.WeaponAimPoint = Vector3.zero;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -126,6 +127,7 @@ namespace Tests.EditMode
             var aimDir = new Vector3(1f, 0f, 1f).normalized;
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.AimDirection = aimDir;
+            state.PlayerEntity.WeaponAimPoint = aimDir * 10f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -254,6 +256,7 @@ namespace Tests.EditMode
             var aimDir = new Vector3(1f, 0f, 1f).normalized;
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.AimDirection = aimDir;
+            state.PlayerEntity.WeaponAimPoint = aimDir * 10f;
             state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 1;
             state.PlayerEntity.EquippedWeapon.SpreadAngle = 0f;
             var input = new FakeInputAdapter { AttackPressed = true };

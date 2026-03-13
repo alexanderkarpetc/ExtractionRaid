@@ -12,7 +12,7 @@ namespace Tests.EditMode
             state.PlayerEntity = PlayerEntityState.Create(playerId, startPos);
 
             var weaponId = state.AllocateEId();
-            var weapon = WeaponEntityState.CreateDefault(weaponId);
+            var weapon = WeaponEntityState.CreateRifle(weaponId);
 
             weapon.Phase = WeaponPhase.Ready;
 
@@ -22,7 +22,7 @@ namespace Tests.EditMode
             state.PlayerEntity.PendingHotbarSlot = -1;
 
             var weapon2Id = state.AllocateEId();
-            state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateSecondary(weapon2Id);
+            state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateShotgun(weapon2Id);
 
             // Starting reserve ammo for tests
             var rifleAmmoId = state.AllocateEId();
