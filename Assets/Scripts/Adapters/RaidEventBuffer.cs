@@ -28,6 +28,7 @@ namespace Adapters
         GrenadeExploded,
         GrenadeDespawned,
         ProjectileHit,
+        HitConfirmed,
     }
 
     public struct RaidEvent
@@ -226,6 +227,15 @@ namespace Adapters
         public void GrenadeDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.GrenadeDespawned, Id = id });
+        }
+
+        public void HitConfirmed(bool isKill)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.HitConfirmed,
+                Damage = isKill ? 1f : 0f,
+            });
         }
 
         public void Clear()

@@ -29,5 +29,7 @@ namespace Adapters
         void GrenadeSpawned(EId id, Vector3 position, Vector3 velocity);
         void GrenadeExploded(EId id, Vector3 position);
         void GrenadeDespawned(EId id);
+
+        void HitConfirmed(bool isKill);
     }
 }

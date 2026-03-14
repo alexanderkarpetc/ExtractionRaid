@@ -40,6 +40,10 @@ namespace Session
             PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
             SpawnTestGroundItems();
             //SpawnTestBots();
+
+            if (LevelState.LevelId == "shooting_range")
+                SpawnShootingRangeTargets();
+
             _eventBuffer.RaidStarted();
         }
 
@@ -95,6 +99,25 @@ namespace Session
             //         new UnityEngine.Vector3(5f, 0f, 30f),
             //     },
             //     _eventBuffer);
+        }
+
+        void SpawnShootingRangeTargets()
+        {
+            // Left group: 5 immortal targets (10000 HP)
+            for (int i = 0; i < 5; i++)
+            {
+                float x = -8f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 15f);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // Right group: 5 weak targets (50 HP) for kill testing
+            for (int i = 0; i < 5; i++)
+            {
+                float x = 16f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 15f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetWeak", pos, new[] { pos }, _eventBuffer);
+            }
         }
 
         public void Tick()

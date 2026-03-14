@@ -35,6 +35,12 @@ namespace Systems
                 else
                     context.Events.EntityDied(hit.TargetId);
 
+                if (projectile != null && state.PlayerEntity != null
+                    && projectile.OwnerId == state.PlayerEntity.Id)
+                {
+                    context.Events.HitConfirmed(isKill: !health.IsAlive);
+                }
+
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)
                 {
                     if (state.Projectiles[i].Id == hit.ProjectileId)

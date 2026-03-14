@@ -170,11 +170,29 @@ namespace Constants
                      | BotBehaviorFlags.Dodge
         );
 
+        public static readonly BotTypeConfig Target = new(
+            typeId: "Target", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 10000f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetWeak = new(
+            typeId: "TargetWeak", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 50f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
         static readonly Dictionary<string, BotTypeConfig> Registry = new()
         {
             { Scav.TypeId, Scav },
             { PMC.TypeId, PMC },
             { Boss.TypeId, Boss },
+            { Target.TypeId, Target },
+            { TargetWeak.TypeId, TargetWeak },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

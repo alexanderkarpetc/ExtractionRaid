@@ -135,5 +135,13 @@ namespace Tests.EditMode.Fakes
             GrenadeDespawnedCalled = true;
             GrenadeDespawnedId = id;
         }
+
+        public bool HitConfirmedCalled;
+        public bool HitConfirmedIsKill;
+        public void HitConfirmed(bool isKill)
+        {
+            HitConfirmedCalled = true;
+            HitConfirmedIsKill = isKill;
+        }
     }
 }
