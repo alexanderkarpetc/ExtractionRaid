@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 3318487983847400867}
   - component: {fileID: 3807242819677618615}
   - component: {fileID: 2667393886519790692}
+  - component: {fileID: -8795030200470005071}
   m_Layer: 0
   m_Name: Weapon_Shotgun
   m_TagString: Untagged
@@ -197,6 +198,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::View.WeaponView
   _muzzlePoint: {fileID: 6078565370622074250}
   _muzzleFlashPrefab: {fileID: 0}
+  _animator: {fileID: -8795030200470005071}
+--- !u!95 &-8795030200470005071
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6141121177088631937}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 22100000, guid: 6eb0619908e494646be4502c35dcbc67, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &7264483704375432076
 GameObject:
   m_ObjectHideFlags: 0

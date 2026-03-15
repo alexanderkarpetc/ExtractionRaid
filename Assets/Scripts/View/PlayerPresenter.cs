@@ -42,25 +42,41 @@ namespace View
                         SpawnView(session.RaidState.PlayerEntity);
                         break;
                     case RaidEventType.WeaponFired:
+                    {
+                        var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         _playerView?.WeaponView?.PlayMuzzleFlash();
+                        if (weapon != null)
+                            _playerView?.WeaponView?.PlayFire(weapon.FireInterval);
                         break;
+                    }
                     case RaidEventType.WeaponEquipStarted:
-                        // Future: trigger equip animation
+                    {
+                        var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
+                        if (weapon != null)
+                            _playerView?.WeaponView?.PlayEquip(weapon.EquipTime);
                         break;
+                    }
                     case RaidEventType.WeaponUnequipStarted:
-                        // Future: trigger unequip animation
+                    {
+                        // Cache unequip duration — weapon may become null during unequip
+                        var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
+                        if (weapon != null)
+                            _playerView?.WeaponView?.PlayUnequip(weapon.UnequipTime);
                         break;
+                    }
                     case RaidEventType.WeaponEquipFinished:
-                        // Future: finalize equip animation
                         break;
                     case RaidEventType.WeaponReloadStarted:
-                        // Future: trigger reload animation
+                    {
+                        var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
+                        if (weapon != null)
+                            _playerView?.WeaponView?.PlayReload(weapon.ReloadTime);
                         break;
+                    }
                     case RaidEventType.WeaponReloadFinished:
-                        // Future: end reload animation
                         break;
                     case RaidEventType.WeaponDryFired:
-                        // Future: play dry fire click sound
+                        _playerView?.WeaponView?.PlayDryFire();
                         break;
                 }
 
