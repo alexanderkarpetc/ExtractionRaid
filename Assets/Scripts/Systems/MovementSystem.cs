@@ -1,4 +1,5 @@
 using Constants;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -29,7 +30,7 @@ namespace Systems
                 if (moveDirection.sqrMagnitude > 1f)
                     moveDirection.Normalize();
 
-                player.Velocity = moveDirection * MoveSpeed;
+                player.Velocity = moveDirection * (MoveSpeed * DevCheats.MoveSpeedMultiplier);
             }
 
             var candidatePos = player.Position + player.Velocity * context.DeltaTime;

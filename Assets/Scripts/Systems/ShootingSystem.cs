@@ -1,3 +1,4 @@
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -71,9 +72,10 @@ namespace Systems
 
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
-                    projectileId, player.Id, spawnPos, pelletDir, weapon.ProjectileSpeed,
+                    projectileId, player.Id, spawnPos, pelletDir,
+                    weapon.ProjectileSpeed * DevCheats.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.ProjectileLifetime,
-                    weapon.ProjectileDamage);
+                    weapon.ProjectileDamage * DevCheats.DamageMultiplier);
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);
@@ -85,21 +87,23 @@ namespace Systems
             weapon.LastFireTime = state.ElapsedTime;
 
             // Apply recoil — forward kick + sideways scatter
-            if (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f)
+            if (!DevCheats.NoRecoil
+                && (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f))
             {
+                float recoilMul = DevCheats.RecoilMultiplier;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward: push WeaponAimPoint directly (AimFollowSharpness handles recovery)
-                player.WeaponAimPoint += aimDir * weapon.RecoilKickForward;
+                player.WeaponAimPoint += aimDir * (weapon.RecoilKickForward * recoilMul);
 
                 // Sideways: through RecoilOffset (RecoilRecoverySpeed handles recovery)
                 var right = new Vector3(aimDir.z, 0f, -aimDir.x);
                 float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
-                weapon.RecoilOffset += right * sideAmount;
+                weapon.RecoilOffset += right * (sideAmount * recoilMul);
             }
 
             // Consume one round (shotgun: 1 shell = multiple pellets)
-            if (usesAmmo)
+            if (usesAmmo && !DevCheats.InfiniteAmmo)
             {
                 weapon.AmmoInMagazine -= 1;
             }

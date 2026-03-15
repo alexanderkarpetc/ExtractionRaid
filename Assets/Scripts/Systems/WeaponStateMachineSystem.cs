@@ -1,3 +1,4 @@
+using Dev;
 using Session;
 using State;
 
@@ -43,7 +44,8 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Cooldown:
-                    if (phaseDuration >= weapon.FireInterval)
+                    float effectiveInterval = weapon.FireInterval / DevCheats.FireRateMultiplier;
+                    if (phaseDuration >= effectiveInterval)
                     {
                         weapon.Phase = WeaponPhase.Ready;
                         weapon.PhaseStartTime = elapsed;

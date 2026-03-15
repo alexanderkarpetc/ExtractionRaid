@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -26,6 +27,10 @@ namespace Systems
                 if (!health.IsAlive) continue;
 
                 if (IsRolling(state, hit.TargetId))
+                    continue;
+
+                if (DevCheats.GodMode && state.PlayerEntity != null
+                    && hit.TargetId == state.PlayerEntity.Id)
                     continue;
 
                 ApplyDamage(health, hit.Damage);
