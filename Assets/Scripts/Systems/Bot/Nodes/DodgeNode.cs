@@ -8,6 +8,8 @@ namespace Systems.Bot.Nodes
 {
     public class DodgeNode : IBTNode
     {
+        public string Name => "Dodge";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
@@ -15,11 +17,11 @@ namespace Systems.Bot.Nodes
             if (bot.IsRolling)
             {
                 bb.DebugStatus = "Dodge";
-                return BTStatus.Running;
+                return this.Traced(bot, BTStatus.Running);
             }
 
             var player = state.PlayerEntity;
-            if (player == null) return BTStatus.Failure;
+            if (player == null) return this.Traced(bot, BTStatus.Failure);
 
             var toPlayer = (player.Position - bot.Position).normalized;
             var perp = Vector3.Cross(Vector3.up, toPlayer).normalized;
@@ -31,10 +33,10 @@ namespace Systems.Bot.Nodes
             RollSystem.StartBotRoll(bot, dir, state.ElapsedTime);
 
             if (!bot.IsRolling)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             bb.DebugStatus = "Dodge";
-            return BTStatus.Running;
+            return this.Traced(bot, BTStatus.Running);
         }
     }
 }

@@ -7,26 +7,28 @@ namespace Systems.Bot.Nodes
 {
     public class ShootNode : IBTNode
     {
+        public string Name => "Shoot";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
             if (!bb.HasTarget || !bb.CanSeeTarget)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             if (bb.DistanceToTarget > config.EngageRange)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             if (bb.ReactionTimer < config.ReactionTime)
             {
                 bb.DebugStatus = "Reacting...";
                 bb.ReactionTimer += ctx.DeltaTime;
-                return BTStatus.Running;
+                return this.Traced(bot, BTStatus.Running);
             }
 
             bb.DebugStatus = "Shoot";
             bot.DesiredAimPoint = bb.LastKnownTargetPos;
             bot.WantsToFire = true;
-            return BTStatus.Success;
+            return this.Traced(bot, BTStatus.Success);
         }
     }
 }

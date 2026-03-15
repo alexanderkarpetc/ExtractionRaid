@@ -25,13 +25,13 @@ namespace Systems.Bot
 
             if (config.Has(BotBehaviorFlags.Heal))
             {
-                branches.Add(new BTSequence(
-                    new BTCondition((bot, _, cfg) =>
+                branches.Add(new BTSequence("Heal",
+                    new BTCondition("HasTarget?", (bot, _, cfg) =>
                     {
                         if (!bot.Blackboard.HasTarget) return false;
                         return true;
                     }),
-                    new BTCooldown(
+                    new BTCooldown("Heal CD",
                         new HealNode(),
                         config.HealCooldown,
                         bb => bb.HealCooldownTimer,
@@ -42,9 +42,9 @@ namespace Systems.Bot
 
             if (config.Has(BotBehaviorFlags.Dodge))
             {
-                branches.Add(new BTSequence(
-                    new BTCondition((bot, _, _) => bot.Blackboard.WasDamaged || bot.IsRolling),
-                    new BTCooldown(
+                branches.Add(new BTSequence("Dodge",
+                    new BTCondition("Damaged?", (bot, _, _) => bot.Blackboard.WasDamaged || bot.IsRolling),
+                    new BTCooldown("Dodge CD",
                         new DodgeNode(),
                         config.DodgeCooldown,
                         bb => bb.DodgeCooldownTimer,
@@ -60,8 +60,8 @@ namespace Systems.Bot
 
                 if (config.Has(BotBehaviorFlags.TakeCover))
                 {
-                    combatBranches.Add(new BTSequence(
-                        new BTCondition((bot, state, _) =>
+                    combatBranches.Add(new BTSequence("Take Cover",
+                        new BTCondition("HP < 50%?", (bot, state, _) =>
                         {
                             if (!state.HealthMap.TryGetValue(bot.Id, out var hp)) return false;
                             return hp.CurrentHp / hp.MaxHp < 0.5f;
@@ -72,7 +72,7 @@ namespace Systems.Bot
 
                 if (config.Has(BotBehaviorFlags.ThrowGrenade))
                 {
-                    combatBranches.Add(new BTCooldown(
+                    combatBranches.Add(new BTCooldown("Grenade CD",
                         new ThrowGrenadeNode(),
                         config.GrenadeCooldown,
                         bb => bb.GrenadeCooldownTimer,
@@ -89,11 +89,11 @@ namespace Systems.Bot
                     engageBranch.Add(new ChaseNode());
 
                 if (engageBranch.Count > 0)
-                    combatBranches.Add(new BTSelector(engageBranch.ToArray()));
+                    combatBranches.Add(new BTSelector("Engage", engageBranch.ToArray()));
 
-                branches.Add(new BTSequence(
-                    new BTCondition((bot, _, _) => bot.Blackboard.HasTarget),
-                    new BTSelector(combatBranches.ToArray())
+                branches.Add(new BTSequence("Combat",
+                    new BTCondition("HasTarget?", (bot, _, _) => bot.Blackboard.HasTarget),
+                    new BTSelector("Tactics", combatBranches.ToArray())
                 ));
             }
 
@@ -102,7 +102,7 @@ namespace Systems.Bot
                 branches.Add(new PatrolNode());
             }
 
-            return new BTSelector(branches.ToArray());
+            return new BTSelector("Root", branches.ToArray());
         }
     }
 }

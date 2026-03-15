@@ -45,6 +45,7 @@ namespace State
 
         // Debug
         public string DebugStatus;
+        public BTTrace Trace;
 
         public void Reset()
         {

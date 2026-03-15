@@ -17,6 +17,8 @@ namespace Systems.Bot.Nodes
     /// </summary>
     public class ThrowGrenadeNode : IBTNode
     {
+        public string Name => "Throw Grenade";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
@@ -24,14 +26,14 @@ namespace Systems.Bot.Nodes
             if (!bb.HasTarget || bb.GrenadesRemaining <= 0 || bb.CanSeeTarget)
             {
                 bb.GrenadeThrowDelayTimer = -1f;
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
             }
 
             float dist = bb.DistanceToTarget;
             if (dist < config.GrenadeMinThrowDist || dist > GrenadeConstants.MaxThrowRange)
             {
                 bb.GrenadeThrowDelayTimer = -1f;
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
             }
 
             if (bb.GrenadeThrowDelayTimer < 0f)
@@ -42,14 +44,14 @@ namespace Systems.Bot.Nodes
             if (bb.GrenadeThrowDelayTimer > 0f)
             {
                 bb.DebugStatus = $"Grenade {bb.GrenadeThrowDelayTimer:F1}s";
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
             }
 
             bb.GrenadeThrowDelayTimer = -1f;
             bot.WantsToThrowGrenade = true;
             bot.GrenadeThrowTarget = bb.LastKnownTargetPos;
             bb.DebugStatus = "ThrowGrenade";
-            return BTStatus.Success;
+            return this.Traced(bot, BTStatus.Success);
         }
     }
 }

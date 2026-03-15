@@ -8,11 +8,13 @@ namespace Systems.Bot.Nodes
 {
     public class TakeCoverNode : IBTNode
     {
+        public string Name => "Take Cover";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
             if (!bb.HasTarget)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             if (!bb.HasCover)
             {
@@ -27,7 +29,7 @@ namespace Systems.Bot.Nodes
                 }
                 else
                 {
-                    return BTStatus.Failure;
+                    return this.Traced(bot, BTStatus.Failure);
                 }
             }
 
@@ -39,11 +41,11 @@ namespace Systems.Bot.Nodes
             if (dist < BotConstants.MinCoverDistance)
             {
                 bot.DesiredVelocity = Vector3.zero;
-                return BTStatus.Success;
+                return this.Traced(bot, BTStatus.Success);
             }
 
             bot.DesiredVelocity = (toCover / dist) * config.ChaseSpeed;
-            return BTStatus.Running;
+            return this.Traced(bot, BTStatus.Running);
         }
     }
 }

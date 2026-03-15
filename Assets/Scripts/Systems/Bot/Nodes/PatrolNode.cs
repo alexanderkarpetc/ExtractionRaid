@@ -8,19 +8,21 @@ namespace Systems.Bot.Nodes
 {
     public class PatrolNode : IBTNode
     {
+        public string Name => "Patrol";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
             var waypoints = bb.PatrolWaypoints;
             if (waypoints == null || waypoints.Length == 0)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             if (bb.PatrolWaitTimer > 0f)
             {
                 bb.DebugStatus = "Patrol (wait)";
                 bb.PatrolWaitTimer -= ctx.DeltaTime;
                 bot.DesiredVelocity = Vector3.zero;
-                return BTStatus.Running;
+                return this.Traced(bot, BTStatus.Running);
             }
 
             var target = waypoints[bb.PatrolWaypointIndex];
@@ -33,12 +35,12 @@ namespace Systems.Bot.Nodes
                 bb.PatrolWaypointIndex = (bb.PatrolWaypointIndex + 1) % waypoints.Length;
                 bb.PatrolWaitTimer = BotConstants.PatrolWaitTime;
                 bot.DesiredVelocity = Vector3.zero;
-                return BTStatus.Running;
+                return this.Traced(bot, BTStatus.Running);
             }
 
             bb.DebugStatus = "Patrol";
             bot.DesiredVelocity = (toTarget / dist) * config.PatrolSpeed;
-            return BTStatus.Running;
+            return this.Traced(bot, BTStatus.Running);
         }
     }
 }

@@ -8,11 +8,13 @@ namespace Systems.Bot.Nodes
 {
     public class ChaseNode : IBTNode
     {
+        public string Name => "Chase";
+
         public BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var bb = bot.Blackboard;
             if (!bb.HasTarget)
-                return BTStatus.Failure;
+                return this.Traced(bot, BTStatus.Failure);
 
             var toTarget = bb.LastKnownTargetPos - bot.Position;
             toTarget.y = 0f;
@@ -21,12 +23,12 @@ namespace Systems.Bot.Nodes
             if (dist < 1f)
             {
                 bot.DesiredVelocity = Vector3.zero;
-                return BTStatus.Success;
+                return this.Traced(bot, BTStatus.Success);
             }
 
             bb.DebugStatus = "Chase";
             bot.DesiredVelocity = (toTarget / dist) * config.ChaseSpeed;
-            return BTStatus.Running;
+            return this.Traced(bot, BTStatus.Running);
         }
     }
 }

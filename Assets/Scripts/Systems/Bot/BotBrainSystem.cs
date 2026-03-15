@@ -21,6 +21,9 @@ namespace Systems.Bot
                 bot.ClearIntents();
                 bot.Blackboard.DebugStatus = "Idle";
 
+                bot.Blackboard.Trace ??= new BTTrace();
+                bot.Blackboard.Trace.Clear();
+
                 var tree = BotTreeBuilder.GetOrBuild(in config);
                 tree.Tick(bot, state, in ctx, in config);
             }
