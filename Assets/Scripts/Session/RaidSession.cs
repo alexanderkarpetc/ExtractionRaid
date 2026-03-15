@@ -142,6 +142,7 @@ namespace Session
             GrenadeSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
+            PlayerFOVSystem.Tick(RaidState);
             BotPerceptionSystem.Tick(RaidState, in context);
             BotBrainSystem.Tick(RaidState, in context);
             BotMovementSystem.Tick(RaidState, in context);

@@ -1,4 +1,5 @@
 using Constants;
+using Dev;
 using State;
 using UnityEngine;
 
@@ -45,6 +46,13 @@ namespace View
 
         public void SyncFromState(BotEntityState state, float currentHp, float maxHp)
         {
+            // FOV visibility toggle
+            bool shouldShow = state.IsVisibleToPlayer || !DevCheats.FOVEnabled || DevCheats.ForceShowAllBots;
+            if (_capsuleVisual != null)
+                _capsuleVisual.gameObject.SetActive(shouldShow);
+            if (_weaponPivot != null)
+                _weaponPivot.gameObject.SetActive(shouldShow);
+
             transform.position = state.Position;
 
             if (state.FacingDirection.sqrMagnitude > 0.001f)

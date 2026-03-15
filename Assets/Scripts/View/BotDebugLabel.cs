@@ -1,3 +1,4 @@
+using Dev;
 using State;
 using UnityEngine;
 
@@ -36,7 +37,10 @@ namespace View
 
         public void UpdateLabel(BotEntityState bot, float currentHp, float maxHp)
         {
-            if (!Enabled)
+            bool hidden = !Enabled
+                          || (DevCheats.FOVEnabled && !DevCheats.ForceShowAllBots && !bot.IsVisibleToPlayer);
+
+            if (hidden)
             {
                 if (_renderer.enabled) _renderer.enabled = false;
                 return;

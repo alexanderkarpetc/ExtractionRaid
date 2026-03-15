@@ -35,6 +35,16 @@ namespace Editor
             EditorGUILayout.LabelField("Player Tweaks", EditorStyles.boldLabel);
             DevCheats.MoveSpeedMultiplier = EditorGUILayout.Slider("Move Speed", DevCheats.MoveSpeedMultiplier, 0.1f, 10f);
 
+            EditorGUILayout.Space(8);
+
+            // ── FOV ─────────────────────────────────────────
+            EditorGUILayout.LabelField("FOV", EditorStyles.boldLabel);
+            DevCheats.FOVEnabled      = EditorGUILayout.Toggle("FOV Enabled", DevCheats.FOVEnabled);
+            DevCheats.FOVNearRadius   = EditorGUILayout.Slider("Near Radius", DevCheats.FOVNearRadius, 1f, 15f);
+            DevCheats.FOVFarRadius    = EditorGUILayout.Slider("Far Radius", DevCheats.FOVFarRadius, 10f, 100f);
+            DevCheats.FOVAngle        = EditorGUILayout.Slider("FOV Angle", DevCheats.FOVAngle, 30f, 360f);
+            DevCheats.ForceShowAllBots = EditorGUILayout.Toggle("Force Show All Bots", DevCheats.ForceShowAllBots);
+
             EditorGUILayout.Space(12);
 
             // ── Reset ───────────────────────────────────────

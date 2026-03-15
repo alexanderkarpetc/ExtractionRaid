@@ -14,6 +14,13 @@ namespace Dev
         public static float MoveSpeedMultiplier = 1f;
         public static float RecoilMultiplier = 1f;
 
+        // ── FOV ────────────────────────────────────────────
+        public static bool FOVEnabled = true;
+        public static float FOVNearRadius = 5f;
+        public static float FOVFarRadius = 30f;
+        public static float FOVAngle = 120f;
+        public static bool ForceShowAllBots;
+
         public static void Reset()
         {
             GodMode = false;
@@ -24,6 +31,11 @@ namespace Dev
             FireRateMultiplier = 1f;
             MoveSpeedMultiplier = 1f;
             RecoilMultiplier = 1f;
+            FOVEnabled = true;
+            FOVNearRadius = 5f;
+            FOVFarRadius = 30f;
+            FOVAngle = 120f;
+            ForceShowAllBots = false;
         }
     }
 }

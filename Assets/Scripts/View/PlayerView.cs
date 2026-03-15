@@ -1,5 +1,6 @@
 using System;
 using Constants;
+using Dev;
 using State;
 using UnityEngine;
 
@@ -122,6 +123,42 @@ namespace View
             _muzzlePoint = _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
             _onMuzzlePointChanged?.Invoke(_muzzlePoint);
         }
+
+#if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            if (!DevCheats.FOVEnabled) return;
+
+            var pos = transform.position + Vector3.up * 0.1f;
+            var forward = transform.forward;
+
+            // Inner sphere (near radius) — yellow
+            Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
+            Gizmos.DrawWireSphere(pos, DevCheats.FOVNearRadius);
+
+            // Outer sector (far radius) — green cone
+            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+            float halfAngle = DevCheats.FOVAngle * 0.5f;
+
+            var leftDir = Quaternion.Euler(0f, -halfAngle, 0f) * forward;
+            var rightDir = Quaternion.Euler(0f, halfAngle, 0f) * forward;
+
+            Gizmos.DrawLine(pos, pos + leftDir * DevCheats.FOVFarRadius);
+            Gizmos.DrawLine(pos, pos + rightDir * DevCheats.FOVFarRadius);
+
+            int segments = 24;
+            var prevPoint = pos + leftDir * DevCheats.FOVFarRadius;
+            for (int i = 1; i <= segments; i++)
+            {
+                float t = (float)i / segments;
+                float angle = Mathf.Lerp(-halfAngle, halfAngle, t);
+                var dir = Quaternion.Euler(0f, angle, 0f) * forward;
+                var point = pos + dir * DevCheats.FOVFarRadius;
+                Gizmos.DrawLine(prevPoint, point);
+                prevPoint = point;
+            }
+        }
+#endif
 
         void ClearWeaponModel()
         {

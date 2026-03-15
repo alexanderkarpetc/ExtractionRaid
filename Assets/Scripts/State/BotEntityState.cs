@@ -25,6 +25,9 @@ namespace State
         public float RollStartTime;
         public float RollCooldownEndTime;
 
+        // Visibility
+        public bool IsVisibleToPlayer = true;
+
         // Intents (written by BT, consumed by movement/combat systems)
         public Vector3 DesiredVelocity;
         public Vector3 DesiredAimPoint;
