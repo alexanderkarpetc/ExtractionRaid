@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Constants;
 using State;
 using Systems;
 using UnityEditor;
@@ -134,6 +135,17 @@ namespace Editor
             Field("Grenade Charging", p.GrenadeThrowCharging);
             Field("Grenade Target Dist", p.GrenadeTargetDistance);
             Field("Grenade Count", InventorySystem.CountGrenades(state.Inventory));
+            Field("Using Medkit", p.IsUsingMedkit);
+            if (p.IsUsingMedkit)
+            {
+                float delayRemaining = Mathf.Max(0f,
+                    MedConstants.UseDelay - (state.ElapsedTime - p.MedkitUseStartTime));
+                Field("Medkit Healing", p.MedkitHealingActive);
+                if (!p.MedkitHealingActive)
+                    Field("Medkit Delay", $"{delayRemaining:F2}s");
+                Field("Active Slot", p.ActiveMedkitSlot);
+            }
+            Field("Medkit Count", CountMedkits(state.Inventory));
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -370,8 +382,12 @@ namespace Editor
             for (int i = 0; i < InventoryState.BackpackSize; i++)
             {
                 var item = inv.Backpack[i];
-                if (item != null)
-                    Field($"[{i}]", item.DisplayName);
+                if (item == null) continue;
+                var def = item.Definition;
+                string label = def != null && def.IsStackable
+                    ? $"{item.DisplayName} ({item.StackCount}/{def.MaxStackSize})"
+                    : item.DisplayName;
+                Field($"[{i}]", label);
             }
 
             EditorGUI.indentLevel--;
@@ -485,6 +501,14 @@ namespace Editor
         static void Field(string label, bool value)
         {
             EditorGUILayout.LabelField(label, value ? "✓" : "✗");
+        }
+
+        static int CountMedkits(InventoryState inventory)
+        {
+            int count = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i]?.DefinitionId == "Medkit") count++;
+            return count;
         }
 
         static void Field(string label, float value)

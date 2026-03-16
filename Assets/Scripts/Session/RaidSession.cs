@@ -51,7 +51,7 @@ namespace Session
         {
             var testItems = new (string defId, UnityEngine.Vector3 pos, int count)[]
             {
-                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f), 1),
+                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f), (int)Constants.MedConstants.TotalHealAmount),
                 ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f), 1),
                 ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f), 1),
                 ("Ammo_Rifle", new UnityEngine.Vector3(-3f, 0f, -3f), 30),
@@ -140,6 +140,7 @@ namespace Session
             WeaponStateMachineSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
             GrenadeSystem.Tick(RaidState, in context);
+            MedkitSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
             PlayerFOVSystem.Tick(RaidState);

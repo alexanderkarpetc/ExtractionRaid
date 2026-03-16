@@ -16,6 +16,7 @@ namespace Tests.EditMode.Fakes
         public bool ReloadPressed { get; set; }
         public bool DodgePressed { get; set; }
         public bool GrenadePressed { get; set; }
+        public bool HealPressed { get; set; }
         public bool AttackJustReleased { get; set; }
         public Vector3 CameraWorldPosition { get; set; }
     }

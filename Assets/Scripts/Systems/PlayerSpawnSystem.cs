@@ -45,6 +45,9 @@ namespace Systems
             for (int i = 0; i < GrenadeConstants.StartingCount; i++)
                 state.Inventory.Backpack[3 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
 
+            state.Inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit",
+                (int)MedConstants.TotalHealAmount);
+
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             events.PlayerSpawned(playerId);

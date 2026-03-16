@@ -28,6 +28,8 @@ namespace Adapters
         GrenadeExploded,
         GrenadeDespawned,
         ProjectileHit,
+        MedkitUseStarted,
+        MedkitUseStopped,
         HitConfirmed,
     }
 
@@ -227,6 +229,16 @@ namespace Adapters
         public void GrenadeDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.GrenadeDespawned, Id = id });
+        }
+
+        public void MedkitUseStarted()
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.MedkitUseStarted });
+        }
+
+        public void MedkitUseStopped()
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.MedkitUseStopped });
         }
 
         public void HitConfirmed(bool isKill)

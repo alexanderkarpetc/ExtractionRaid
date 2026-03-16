@@ -115,6 +115,14 @@ namespace Systems
             return true;
         }
 
+        public static int FindFirstMedkitSlot(InventoryState inventory)
+        {
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i]?.DefinitionId == "Medkit" && inventory.Backpack[i].StackCount > 0)
+                    return i;
+            return -1;
+        }
+
         public static int CountGrenades(InventoryState inventory)
         {
             int count = 0;

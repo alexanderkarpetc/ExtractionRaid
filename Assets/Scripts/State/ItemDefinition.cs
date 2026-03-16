@@ -72,6 +72,7 @@ namespace State
                     Id = "Medkit",
                     DisplayName = "Medkit",
                     AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 200,
                 },
                 ["Ammo_Rifle"] = new()
                 {

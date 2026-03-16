@@ -136,6 +136,12 @@ namespace Tests.EditMode.Fakes
             GrenadeDespawnedId = id;
         }
 
+        public bool MedkitUseStartedCalled;
+        public void MedkitUseStarted() { MedkitUseStartedCalled = true; }
+
+        public bool MedkitUseStoppedCalled;
+        public void MedkitUseStopped() { MedkitUseStoppedCalled = true; }
+
         public bool HitConfirmedCalled;
         public bool HitConfirmedIsKill;
         public void HitConfirmed(bool isKill)

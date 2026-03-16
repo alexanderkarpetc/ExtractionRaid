@@ -30,6 +30,9 @@ namespace Adapters
         void GrenadeExploded(EId id, Vector3 position);
         void GrenadeDespawned(EId id);
 
+        void MedkitUseStarted();
+        void MedkitUseStopped();
+
         void HitConfirmed(bool isKill);
     }
 }
