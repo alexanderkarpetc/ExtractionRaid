@@ -1,5 +1,7 @@
+using Adapters;
 using Dev;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems;
 using Systems.Bot;
@@ -17,6 +19,7 @@ namespace Tests.EditMode
             DevCheats.Reset();
             DevCheats.FOVEnabled = true;
             DevCheats.ForceShowAllBots = false;
+            DevCheats.FOVOcclusionEnabled = true;
             DevCheats.FOVNearRadius = 5f;
             DevCheats.FOVFarRadius = 30f;
             DevCheats.FOVAngle = 120f;
@@ -26,6 +29,18 @@ namespace Tests.EditMode
         public void TearDown()
         {
             DevCheats.Reset();
+        }
+
+        static RaidContext CreateContext(IPhysicsAdapter physics = null)
+        {
+            return new RaidContext(
+                deltaTime: 1f / 60f,
+                events: new RaidEventBuffer(),
+                time: new FakeTimeAdapter { DeltaTime = 1f / 60f },
+                input: new FakeInputAdapter(),
+                navMesh: new FakeNavMeshAdapter(),
+                physics: physics
+            );
         }
 
         static RaidState CreateStateWithBot(Vector3 playerPos, Vector3 playerFacing, Vector3 botPos)
@@ -38,13 +53,15 @@ namespace Tests.EditMode
             return state;
         }
 
+        // ── Distance + Angle tests (no physics) ─────────────────
+
         [Test]
         public void BotInNearRadius_IsVisible()
         {
-            // Bot is 3m away (< NearRadius 5m), behind the player
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -3f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -52,10 +69,10 @@ namespace Tests.EditMode
         [Test]
         public void BotInSectorAngle_IsVisible()
         {
-            // Bot is 15m ahead (within FarRadius 30m, within 120° cone)
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -63,10 +80,10 @@ namespace Tests.EditMode
         [Test]
         public void BotOutsideSector_NotVisible()
         {
-            // Bot is 15m directly behind (angle = 180° > halfAngle 60°)
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -15f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsFalse(state.Bots[0].IsVisibleToPlayer);
         }
@@ -74,10 +91,10 @@ namespace Tests.EditMode
         [Test]
         public void BotBeyondFarRadius_NotVisible()
         {
-            // Bot is 50m ahead (> FarRadius 30m)
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 50f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsFalse(state.Bots[0].IsVisibleToPlayer);
         }
@@ -85,10 +102,10 @@ namespace Tests.EditMode
         [Test]
         public void BotBehindPlayer_InNearRadius_StillVisible()
         {
-            // Bot is 4m behind (< NearRadius 5m) — near sphere is 360°
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -4f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -97,11 +114,10 @@ namespace Tests.EditMode
         public void FOVDisabled_AllBotsVisible()
         {
             DevCheats.FOVEnabled = false;
-
-            // Bot is far behind — would normally be invisible
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -50f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -110,11 +126,10 @@ namespace Tests.EditMode
         public void ForceShowAllBots_AllVisible()
         {
             DevCheats.ForceShowAllBots = true;
-
-            // Bot is far behind — would normally be invisible
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -50f));
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -122,13 +137,12 @@ namespace Tests.EditMode
         [Test]
         public void BotAtSectorEdge_IsVisible()
         {
-            // Bot at 59° angle (just inside halfAngle 60°), 20m distance — should be visible
             float angle = 59f * Mathf.Deg2Rad;
             var botPos = new Vector3(Mathf.Sin(angle) * 20f, 0f, Mathf.Cos(angle) * 20f);
-
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, botPos);
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
@@ -136,15 +150,88 @@ namespace Tests.EditMode
         [Test]
         public void BotJustOutsideSectorEdge_NotVisible()
         {
-            // Bot at 65° angle (> halfAngle 60°), 20m distance — should be invisible
             float angle = 65f * Mathf.Deg2Rad;
             var botPos = new Vector3(Mathf.Sin(angle) * 20f, 0f, Mathf.Cos(angle) * 20f);
-
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, botPos);
+            var ctx = CreateContext();
 
-            PlayerFOVSystem.Tick(state);
+            PlayerFOVSystem.Tick(state, in ctx);
 
             Assert.IsFalse(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        // ── Occlusion tests ─────────────────────────────────────
+
+        [Test]
+        public void BotInSector_Occluded_NotVisible()
+        {
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var ctx = CreateContext(physics);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        [Test]
+        public void BotInNearRadius_Occluded_NotVisible()
+        {
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 3f));
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var ctx = CreateContext(physics);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        [Test]
+        public void BotInSector_NotOccluded_IsVisible()
+        {
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
+            var physics = new FakePhysicsAdapter { Blocked = false };
+            var ctx = CreateContext(physics);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        [Test]
+        public void BotInNearRadius_NotOccluded_IsVisible()
+        {
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -3f));
+            var physics = new FakePhysicsAdapter { Blocked = false };
+            var ctx = CreateContext(physics);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        [Test]
+        public void OcclusionDisabledViaCheats_OccludedBotStillVisible()
+        {
+            DevCheats.FOVOcclusionEnabled = false;
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var ctx = CreateContext(physics);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
+        }
+
+        [Test]
+        public void NullPhysics_NoOcclusion_BotVisible()
+        {
+            var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
+            var ctx = CreateContext(null);
+
+            PlayerFOVSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(state.Bots[0].IsVisibleToPlayer);
         }
     }
 }

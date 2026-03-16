@@ -23,6 +23,7 @@ namespace Dev
         public static float FOVFarRadius = 30f;
         public static float FOVAngle = 120f;
         public static bool ForceShowAllBots;
+        public static bool FOVOcclusionEnabled = true;
 
         public static void Reset()
         {
@@ -40,6 +41,7 @@ namespace Dev
             FOVAngle = 120f;
             ForceShowAllBots = false;
             ForceBleedPlayer = false;
+            FOVOcclusionEnabled = true;
         }
     }
 }

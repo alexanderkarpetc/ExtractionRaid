@@ -145,7 +145,7 @@ namespace Session
             BandageSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
-            PlayerFOVSystem.Tick(RaidState);
+            PlayerFOVSystem.Tick(RaidState, in context);
             BotPerceptionSystem.Tick(RaidState, in context);
             BotBrainSystem.Tick(RaidState, in context);
             BotMovementSystem.Tick(RaidState, in context);

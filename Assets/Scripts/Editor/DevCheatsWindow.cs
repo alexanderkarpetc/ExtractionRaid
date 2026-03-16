@@ -44,6 +44,7 @@ namespace Editor
             DevCheats.FOVFarRadius    = EditorGUILayout.Slider("Far Radius", DevCheats.FOVFarRadius, 10f, 100f);
             DevCheats.FOVAngle        = EditorGUILayout.Slider("FOV Angle", DevCheats.FOVAngle, 30f, 360f);
             DevCheats.ForceShowAllBots = EditorGUILayout.Toggle("Force Show All Bots", DevCheats.ForceShowAllBots);
+            DevCheats.FOVOcclusionEnabled = EditorGUILayout.Toggle("FOV Occlusion", DevCheats.FOVOcclusionEnabled);
 
             EditorGUILayout.Space(8);
 

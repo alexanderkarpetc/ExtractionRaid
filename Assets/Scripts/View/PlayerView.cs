@@ -146,33 +146,107 @@ namespace View
         {
             if (!DevCheats.FOVEnabled) return;
 
-            var pos = transform.position + Vector3.up * 0.1f;
+            var drawPos = transform.position + Vector3.up * 0.1f;
+            var rayOrigin = transform.position + Vector3.up * BotConstants.PlayerEyeHeight;
             var forward = transform.forward;
-
-            // Inner sphere (near radius) — yellow
-            Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
-            Gizmos.DrawWireSphere(pos, DevCheats.FOVNearRadius);
-
-            // Outer sector (far radius) — green cone
-            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+            float nearR = DevCheats.FOVNearRadius;
+            float farR = DevCheats.FOVFarRadius;
             float halfAngle = DevCheats.FOVAngle * 0.5f;
+            bool occlusion = DevCheats.FOVOcclusionEnabled;
+            int layerMask = BotConstants.VisionBlockingMask;
 
-            var leftDir = Quaternion.Euler(0f, -halfAngle, 0f) * forward;
-            var rightDir = Quaternion.Euler(0f, halfAngle, 0f) * forward;
-
-            Gizmos.DrawLine(pos, pos + leftDir * DevCheats.FOVFarRadius);
-            Gizmos.DrawLine(pos, pos + rightDir * DevCheats.FOVFarRadius);
-
-            int segments = 24;
-            var prevPoint = pos + leftDir * DevCheats.FOVFarRadius;
-            for (int i = 1; i <= segments; i++)
+            if (!occlusion)
             {
-                float t = (float)i / segments;
-                float angle = Mathf.Lerp(-halfAngle, halfAngle, t);
-                var dir = Quaternion.Euler(0f, angle, 0f) * forward;
-                var point = pos + dir * DevCheats.FOVFarRadius;
-                Gizmos.DrawLine(prevPoint, point);
+                // Simple wireframe (no raycasts)
+                Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
+                Gizmos.DrawWireSphere(drawPos, nearR);
+
+                Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+                var leftDir = Quaternion.Euler(0f, -halfAngle, 0f) * forward;
+                var rightDir = Quaternion.Euler(0f, halfAngle, 0f) * forward;
+                Gizmos.DrawLine(drawPos, drawPos + leftDir * farR);
+                Gizmos.DrawLine(drawPos, drawPos + rightDir * farR);
+
+                int segments = 24;
+                var prevPoint = drawPos + leftDir * farR;
+                for (int i = 1; i <= segments; i++)
+                {
+                    float t = (float)i / segments;
+                    float a = Mathf.Lerp(-halfAngle, halfAngle, t);
+                    var dir = Quaternion.Euler(0f, a, 0f) * forward;
+                    var point = drawPos + dir * farR;
+                    Gizmos.DrawLine(prevPoint, point);
+                    prevPoint = point;
+                }
+                return;
+            }
+
+            // Temporarily disable player colliders so rays don't hit self
+            var colliders = GetComponentsInChildren<Collider>();
+            foreach (var c in colliders) c.enabled = false;
+
+            var clearYellow = new Color(1f, 1f, 0f, 0.4f);
+            var clearGreen = new Color(0f, 1f, 0f, 0.4f);
+            var blockedColor = new Color(1f, 0.2f, 0f, 0.3f);
+
+            // Inner sphere: 360°, 5° step
+            DrawOccludedArc(rayOrigin, drawPos, forward, nearR, -180f, 180f, 5f,
+                layerMask, clearYellow, blockedColor);
+
+            // Outer sector: FOV angle, 1° step
+            DrawOccludedArc(rayOrigin, drawPos, forward, farR, -halfAngle, halfAngle, 1f,
+                layerMask, clearGreen, blockedColor);
+
+            foreach (var c in colliders) c.enabled = true;
+        }
+
+        void DrawOccludedArc(Vector3 rayOrigin, Vector3 drawOrigin, Vector3 forward,
+            float maxDist, float startAngle, float endAngle, float stepDeg, int layerMask,
+            Color clearColor, Color blockedColor)
+        {
+            Vector3 prevPoint = drawOrigin;
+            bool prevBlocked = false;
+            bool first = true;
+
+            for (float a = startAngle; a <= endAngle; a += stepDeg)
+            {
+                var dir = Quaternion.Euler(0f, a, 0f) * forward;
+                float drawDist = maxDist;
+                bool blocked = false;
+
+                if (Physics.Raycast(rayOrigin, dir, out var hit, maxDist, layerMask))
+                {
+                    drawDist = hit.distance;
+                    blocked = true;
+                }
+
+                var point = drawOrigin + dir * drawDist;
+
+                if (blocked)
+                {
+                    // Green up to hit, red beyond
+                    var hitPoint = drawOrigin + dir * drawDist;
+                    var endPoint = drawOrigin + dir * maxDist;
+                    Gizmos.color = clearColor;
+                    Gizmos.DrawLine(drawOrigin, hitPoint);
+                    Gizmos.color = blockedColor;
+                    Gizmos.DrawLine(hitPoint, endPoint);
+                }
+                else
+                {
+                    Gizmos.color = clearColor;
+                    Gizmos.DrawLine(drawOrigin, point);
+                }
+
+                if (!first)
+                {
+                    Gizmos.color = (blocked || prevBlocked) ? blockedColor : clearColor;
+                    Gizmos.DrawLine(prevPoint, point);
+                }
+
                 prevPoint = point;
+                prevBlocked = blocked;
+                first = false;
             }
         }
 #endif

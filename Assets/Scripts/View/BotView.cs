@@ -48,10 +48,8 @@ namespace View
         {
             // FOV visibility toggle
             bool shouldShow = state.IsVisibleToPlayer || !DevCheats.FOVEnabled || DevCheats.ForceShowAllBots;
-            if (_capsuleVisual != null)
-                _capsuleVisual.gameObject.SetActive(shouldShow);
-            if (_weaponPivot != null)
-                _weaponPivot.gameObject.SetActive(shouldShow);
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+                r.enabled = shouldShow;
 
             transform.position = state.Position;
 

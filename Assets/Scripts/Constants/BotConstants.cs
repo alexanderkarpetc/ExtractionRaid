@@ -115,6 +115,7 @@ namespace Constants
     {
         // --- Player ---
         public const float PlayerMaxHp = 100f;
+        public const float PlayerEyeHeight = 1.0f;
 
         // --- Perception tuning ---
         public const float PerceptionTickInterval = 0.2f;
