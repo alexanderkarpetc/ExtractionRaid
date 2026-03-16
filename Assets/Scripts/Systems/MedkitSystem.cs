@@ -62,7 +62,7 @@ namespace Systems
             }
 
             if (!input.HealPressed) return;
-            if (player.IsRolling || player.IsInGrenadeMode) return;
+            if (player.IsRolling || player.AreHandsBusy) return;
             if (health.CurrentHp >= health.MaxHp) return;
 
             int slot = InventorySystem.FindFirstMedkitSlot(state.Inventory);

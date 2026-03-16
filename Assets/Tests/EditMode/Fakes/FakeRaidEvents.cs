@@ -149,5 +149,21 @@ namespace Tests.EditMode.Fakes
             HitConfirmedCalled = true;
             HitConfirmedIsKill = isKill;
         }
+
+        public bool StatusEffectAppliedCalled;
+        public string StatusEffectAppliedType;
+        public void StatusEffectApplied(EId entityId, string effectType)
+        {
+            StatusEffectAppliedCalled = true;
+            StatusEffectAppliedType = effectType;
+        }
+
+        public bool StatusEffectRemovedCalled;
+        public string StatusEffectRemovedType;
+        public void StatusEffectRemoved(EId entityId, string effectType)
+        {
+            StatusEffectRemovedCalled = true;
+            StatusEffectRemovedType = effectType;
+        }
     }
 }

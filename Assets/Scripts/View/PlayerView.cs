@@ -2,6 +2,7 @@ using System;
 using Constants;
 using Dev;
 using State;
+using Systems;
 using UnityEngine;
 
 namespace View
@@ -17,6 +18,7 @@ namespace View
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
         WorldHealthBar _healthBar;
+        WorldProgressBar _progressBar;
         WeaponView _currentWeaponView;
         float _rollVisualAngle;
 
@@ -29,6 +31,7 @@ namespace View
             EId = id;
             _onMuzzlePointChanged = onMuzzlePointChanged;
             _healthBar = WorldHealthBar.Create(transform);
+            _progressBar = WorldProgressBar.Create(transform);
         }
 
         public void OnDamaged(float currentHp, float maxHp)
@@ -37,9 +40,23 @@ namespace View
                 _healthBar.UpdateHealth(currentHp, maxHp);
         }
 
-        public void SyncFromState(PlayerEntityState state)
+        public void SyncFromState(PlayerEntityState state, float elapsedTime)
         {
             transform.position = state.Position;
+
+            if (_progressBar != null)
+            {
+                if (state.IsUsingBandage)
+                {
+                    float progress = (elapsedTime - state.BandageUseStartTime)
+                                     / StatusEffectConstants.BandageUseTime;
+                    _progressBar.SetProgress(progress);
+                }
+                else
+                {
+                    _progressBar.Hide();
+                }
+            }
 
             if (state.FacingDirection.sqrMagnitude > 0.001f)
             {

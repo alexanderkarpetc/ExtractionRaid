@@ -141,6 +141,8 @@ namespace Session
             AimingSystem.Tick(RaidState, in context);
             GrenadeSystem.Tick(RaidState, in context);
             MedkitSystem.Tick(RaidState, in context);
+            StatusEffectSystem.Tick(RaidState, in context);
+            BandageSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
             PlayerFOVSystem.Tick(RaidState);

@@ -144,6 +144,14 @@ namespace Systems
             return false;
         }
 
+        public static int FindFirstBandageSlot(InventoryState inventory)
+        {
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i]?.DefinitionId == "Bandage")
+                    return i;
+            return -1;
+        }
+
         public static EId FindNearestGroundItem(RaidState state, Vector3 playerPosition)
         {
             float bestDist = float.MaxValue;

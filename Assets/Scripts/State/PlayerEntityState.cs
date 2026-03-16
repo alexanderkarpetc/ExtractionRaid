@@ -28,11 +28,17 @@ namespace State
         public bool GrenadeThrowCharging;
         public float GrenadeTargetDistance;
 
+        public bool IsUsingBandage;
+        public float BandageUseStartTime;
+        public int ActiveBandageSlot = -1;
+
         public bool IsUsingMedkit;
         public float MedkitUseStartTime;
         public bool MedkitHealingActive;
         public int ActiveMedkitSlot = -1;
         public float MedkitHealFraction;
+
+        public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

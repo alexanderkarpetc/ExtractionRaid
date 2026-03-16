@@ -48,6 +48,9 @@ namespace Systems
             state.Inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit",
                 (int)MedConstants.TotalHealAmount);
 
+            state.Inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
+            state.Inventory.Backpack[8] = ItemState.Create(state.AllocateEId(), "Bandage");
+
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             events.PlayerSpawned(playerId);

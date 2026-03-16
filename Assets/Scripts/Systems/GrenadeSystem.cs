@@ -23,7 +23,7 @@ namespace Systems
                     return;
                 }
 
-                if (InventorySystem.CountGrenades(state.Inventory) > 0 && !player.IsRolling)
+                if (InventorySystem.CountGrenades(state.Inventory) > 0 && !player.IsRolling && !player.AreHandsBusy)
                 {
                     player.IsInGrenadeMode = true;
                     player.GrenadeThrowCharging = false;

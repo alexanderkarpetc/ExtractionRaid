@@ -20,6 +20,7 @@ namespace Editor
         bool _foldGroundItems;
         bool _foldInventory;
         bool _foldHealthMap;
+        bool _foldStatusEffects;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
@@ -79,6 +80,7 @@ namespace Editor
             DrawGroundItems(state);
             DrawInventory(state);
             DrawHealthMap(state);
+            DrawStatusEffects(state);
 
             EditorGUILayout.EndScrollView();
         }
@@ -146,6 +148,16 @@ namespace Editor
                 Field("Active Slot", p.ActiveMedkitSlot);
             }
             Field("Medkit Count", CountMedkits(state.Inventory));
+            Field("Using Bandage", p.IsUsingBandage);
+            if (p.IsUsingBandage)
+            {
+                float remaining = Mathf.Max(0f,
+                    Constants.StatusEffectConstants.BandageUseTime - (state.ElapsedTime - p.BandageUseStartTime));
+                Field("Bandage Remaining", $"{remaining:F2}s");
+                Field("Active Bandage Slot", p.ActiveBandageSlot);
+            }
+            Field("Bandage Count", CountBandages(state.Inventory));
+            Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -417,6 +429,38 @@ namespace Editor
             EditorGUILayout.Space(4);
         }
 
+        // ── Status Effects ───────────────────────────────────
+
+        void DrawStatusEffects(RaidState state)
+        {
+            int totalEffects = 0;
+            foreach (var kvp in state.StatusEffects)
+                totalEffects += kvp.Value.Count;
+
+            _foldStatusEffects = EditorGUILayout.Foldout(_foldStatusEffects,
+                $"Status Effects ({totalEffects})", true, EditorStyles.foldoutHeader);
+            if (!_foldStatusEffects) return;
+
+            EditorGUI.indentLevel++;
+
+            foreach (var kvp in state.StatusEffects)
+            {
+                var effects = kvp.Value;
+                if (effects.Count == 0) continue;
+
+                string entityLabel = kvp.Key == state.PlayerEntity?.Id ? $"{kvp.Key} (Player)" : kvp.Key.ToString();
+
+                for (int i = 0; i < effects.Count; i++)
+                {
+                    float duration = state.ElapsedTime - effects[i].AppliedTime;
+                    Field(entityLabel, $"{effects[i].Type} ({duration:F1}s)");
+                }
+            }
+
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4);
+        }
+
         // ── Shared helpers ───────────────────────────────────────
 
         void DrawWeapon(WeaponEntityState w, float elapsedTime)
@@ -501,6 +545,19 @@ namespace Editor
         static void Field(string label, bool value)
         {
             EditorGUILayout.LabelField(label, value ? "✓" : "✗");
+        }
+
+        static int CountBandages(InventoryState inventory)
+        {
+            int count = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i]?.DefinitionId == "Bandage") count++;
+            return count;
+        }
+
+        static bool StatusEffectActive(RaidState state, EId entityId, State.StatusEffectType type)
+        {
+            return Systems.StatusEffectSystem.HasEffect(state, entityId, type);
         }
 
         static int CountMedkits(InventoryState inventory)

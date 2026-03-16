@@ -121,6 +121,15 @@ namespace Adapters
             }
         }
 
+        public bool BandagePressed
+        {
+            get
+            {
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.B].IsPressed();
+            }
+        }
+
         public bool AttackJustReleased => _actions.Player.Attack.WasReleasedThisFrame();
 
         public void SetCamera(Camera camera)

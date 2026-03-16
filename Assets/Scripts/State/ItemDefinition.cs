@@ -105,6 +105,13 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
+                ["Bandage"] = new()
+                {
+                    Id = "Bandage",
+                    DisplayName = "Bandage",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
             };
         }
     }

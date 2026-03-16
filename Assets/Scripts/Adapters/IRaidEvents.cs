@@ -34,5 +34,7 @@ namespace Adapters
         void MedkitUseStopped();
 
         void HitConfirmed(bool isKill);
+        void StatusEffectApplied(EId entityId, string effectType);
+        void StatusEffectRemoved(EId entityId, string effectType);
     }
 }

@@ -16,6 +16,7 @@ namespace App
             gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<AimCursorOverlay>();
+            gameObject.AddComponent<StatusEffectOverlay>();
         }
 
         void Start()

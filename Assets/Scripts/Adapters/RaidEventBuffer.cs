@@ -31,6 +31,8 @@ namespace Adapters
         MedkitUseStarted,
         MedkitUseStopped,
         HitConfirmed,
+        StatusEffectApplied,
+        StatusEffectRemoved,
     }
 
     public struct RaidEvent
@@ -247,6 +249,26 @@ namespace Adapters
             {
                 Type = RaidEventType.HitConfirmed,
                 Damage = isKill ? 1f : 0f,
+            });
+        }
+
+        public void StatusEffectApplied(EId entityId, string effectType)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.StatusEffectApplied,
+                Id = entityId,
+                StringPayload = effectType,
+            });
+        }
+
+        public void StatusEffectRemoved(EId entityId, string effectType)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.StatusEffectRemoved,
+                Id = entityId,
+                StringPayload = effectType,
             });
         }
 

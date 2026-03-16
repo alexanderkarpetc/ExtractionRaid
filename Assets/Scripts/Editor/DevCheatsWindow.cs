@@ -45,6 +45,13 @@ namespace Editor
             DevCheats.FOVAngle        = EditorGUILayout.Slider("FOV Angle", DevCheats.FOVAngle, 30f, 360f);
             DevCheats.ForceShowAllBots = EditorGUILayout.Toggle("Force Show All Bots", DevCheats.ForceShowAllBots);
 
+            EditorGUILayout.Space(8);
+
+            // ── Status Effects ───────────────────────────────
+            EditorGUILayout.LabelField("Status Effects", EditorStyles.boldLabel);
+            if (GUILayout.Button("Apply Bleed to Player"))
+                DevCheats.ForceBleedPlayer = true;
+
             EditorGUILayout.Space(12);
 
             // ── Reset ───────────────────────────────────────

@@ -14,6 +14,9 @@ namespace Dev
         public static float MoveSpeedMultiplier = 1f;
         public static float RecoilMultiplier = 1f;
 
+        // ── Status Effects ────────────────────────────────
+        public static bool ForceBleedPlayer;
+
         // ── FOV ────────────────────────────────────────────
         public static bool FOVEnabled = true;
         public static float FOVNearRadius = 5f;
@@ -36,6 +39,7 @@ namespace Dev
             FOVFarRadius = 30f;
             FOVAngle = 120f;
             ForceShowAllBots = false;
+            ForceBleedPlayer = false;
         }
     }
 }

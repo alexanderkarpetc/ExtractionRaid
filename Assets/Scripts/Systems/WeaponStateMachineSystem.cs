@@ -10,7 +10,7 @@ namespace Systems
         {
             var player = state.PlayerEntity;
             if (player == null) return;
-            if (player.IsInGrenadeMode) return;
+            if (player.AreHandsBusy) return;
 
             var weapon = player.EquippedWeapon;
             if (weapon == null)

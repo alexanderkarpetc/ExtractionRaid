@@ -88,7 +88,7 @@ namespace View
 
             if (_playerView != null && session.RaidState.PlayerEntity != null)
             {
-                _playerView.SyncFromState(session.RaidState.PlayerEntity);
+                _playerView.SyncFromState(session.RaidState.PlayerEntity, session.RaidState.ElapsedTime);
                 _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
             }
         }
