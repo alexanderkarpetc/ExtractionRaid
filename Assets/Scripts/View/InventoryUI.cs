@@ -220,8 +220,10 @@ namespace View
         void DrawSlot(Rect rect, InventorySlotRef slotRef, ItemState item,
             InventoryState inventory, bool isLoot)
         {
-            bool isDragOver = _dragSource.HasValue && rect.Contains(Event.current.mousePosition);
-            bool isDragSource = _dragSource.HasValue && _dragSource.Value.Equals(slotRef) && _dragFromLoot == isLoot;
+            bool isDragOver = !_showContextMenu && _dragSource.HasValue
+                && rect.Contains(Event.current.mousePosition);
+            bool isDragSource = _dragSource.HasValue
+                && _dragSource.Value.Equals(slotRef) && _dragFromLoot == isLoot;
 
             if (isDragSource || isDragOver)
                 _slotStyle.normal.background = _slotHighlight;
@@ -232,6 +234,8 @@ namespace View
                 ? (item.StackCount > 1 ? $"{item.DisplayName}\nx{item.StackCount}" : item.DisplayName)
                 : "";
             GUI.Box(rect, text, _slotStyle);
+
+            if (_showContextMenu) return;
 
             if (Event.current.type == EventType.MouseDown && Event.current.button == 0
                 && rect.Contains(Event.current.mousePosition))
@@ -281,7 +285,7 @@ namespace View
                     _showContextMenu = true;
                     _contextMenuSlot = slotRef;
                     _contextMenuFromLoot = isLoot;
-                    _contextMenuPos = Event.current.mousePosition;
+                    _contextMenuPos = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
                     Event.current.Use();
                 }
             }
@@ -347,14 +351,14 @@ namespace View
         {
             if (!_showContextMenu) return;
 
-            float menuW = 80f;
-            float menuItemH = 22f;
-            float menuH = menuItemH + 4f;
+            float menuW = 140f;
+            float menuItemH = 40f;
+            float menuH = menuItemH + 6f;
             var menuRect = new Rect(_contextMenuPos.x, _contextMenuPos.y, menuW, menuH);
 
             GUI.Box(menuRect, "", GUI.skin.box);
 
-            _dropBtnStyle.fontSize = Mathf.RoundToInt(menuItemH * 0.55f);
+            _dropBtnStyle.fontSize = Mathf.RoundToInt(menuItemH * 0.5f);
             if (GUI.Button(new Rect(menuRect.x + 2f, menuRect.y + 2f, menuW - 4f, menuItemH), "Drop", _dropBtnStyle))
             {
                 var playerInv = state.Inventory;
