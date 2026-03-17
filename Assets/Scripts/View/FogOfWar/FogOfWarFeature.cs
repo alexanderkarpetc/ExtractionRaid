@@ -7,15 +7,14 @@ using UnityEngine.Rendering.Universal;
 namespace View.FogOfWar
 {
     /// <summary>
-    /// URP ScriptableRendererFeature that blurs the raw FOV visibility mask
-    /// and composites it over the scene (darken + desaturate non-visible areas).
-    /// Add to PC_Renderer.asset, assign Blur and Composite materials in Inspector.
-    /// Uses RenderGraph API (Unity 6 URP default).
+    /// URP ScriptableRendererFeature: blur → temporal blend → composite.
+    /// Assign Blur, TemporalBlend and Composite materials in Inspector.
     /// </summary>
     public class FogOfWarFeature : ScriptableRendererFeature
     {
         [Header("Materials")]
         public Material blurMaterial;
+        public Material temporalBlendMaterial;
         public Material compositeMaterial;
 
         FogOfWarPass _pass;
@@ -32,13 +31,13 @@ namespace View.FogOfWar
         {
             if (blurMaterial == null || compositeMaterial == null) return;
 
-            // Only apply to the main game camera — skip scene view, preview, and FOV camera (has targetTexture)
             if (renderingData.cameraData.cameraType != CameraType.Game) return;
             if (renderingData.cameraData.camera.targetTexture != null) return;
 
-            _pass.Setup(blurMaterial, compositeMaterial,
+            _pass.Setup(blurMaterial, temporalBlendMaterial, compositeMaterial,
                 DevCheats.FogBlurRadius, DevCheats.FogBlurIterations,
-                DevCheats.FogIntensity, DevCheats.FogDesaturation, DevCheats.FogColor);
+                DevCheats.FogIntensity, DevCheats.FogDesaturation,
+                DevCheats.FogColor, DevCheats.FogTemporalBlend);
             renderer.EnqueuePass(_pass);
         }
 
@@ -50,48 +49,57 @@ namespace View.FogOfWar
         class FogOfWarPass : ScriptableRenderPass
         {
             Material _blurMat;
+            Material _temporalMat;
             Material _compositeMat;
             float _blurSize;
             int _blurIterations;
             float _fogIntensity;
             float _fogDesaturation;
             Color _fogColor;
+            float _temporalBlend;
 
             static readonly int BlurSizeId = Shader.PropertyToID("_BlurSize");
             static readonly int FoWBlurredId = Shader.PropertyToID("_FoWBlurred");
             static readonly int FoWVisibilityId = Shader.PropertyToID("_FoWVisibility");
+            static readonly int FoWPrevBlurredId = Shader.PropertyToID("_FoWPrevBlurred");
             static readonly int FogIntensityId = Shader.PropertyToID("_FogIntensity");
             static readonly int DesaturationId = Shader.PropertyToID("_DesaturationAmount");
             static readonly int FogColorId = Shader.PropertyToID("_FogColor");
+            static readonly int PrevTexId = Shader.PropertyToID("_PrevTex");
+            static readonly int BlendFactorId = Shader.PropertyToID("_BlendFactor");
 
-            public void Setup(Material blur, Material composite,
+            public void Setup(Material blur, Material temporal, Material composite,
                 float blurSize, int iterations,
-                float fogIntensity, float fogDesaturation, Color fogColor)
+                float fogIntensity, float fogDesaturation,
+                Color fogColor, float temporalBlend)
             {
                 _blurMat = blur;
+                _temporalMat = temporal;
                 _compositeMat = composite;
                 _blurSize = blurSize;
                 _blurIterations = iterations;
                 _fogIntensity = fogIntensity;
                 _fogDesaturation = fogDesaturation;
                 _fogColor = fogColor;
+                _temporalBlend = temporalBlend;
             }
-
-            // ── Render Graph path (Unity 6 default) ──────────────────────────
 
             class PassData
             {
                 public Material blurMat;
+                public Material temporalMat;
                 public Material compositeMat;
                 public float blurSize;
                 public int blurIterations;
                 public float fogIntensity;
                 public float fogDesaturation;
                 public Color fogColor;
+                public float temporalBlend;
                 public TextureHandle cameraColor;
                 public TextureHandle tempA;
                 public TextureHandle tempB;
                 public Texture rawFoW;
+                public Texture prevBlurred; // persistent RT from Controller
             }
 
             public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -111,16 +119,19 @@ namespace View.FogOfWar
                 using (var builder = renderGraph.AddUnsafePass<PassData>("FogOfWar", out var passData))
                 {
                     passData.blurMat = _blurMat;
+                    passData.temporalMat = _temporalMat;
                     passData.compositeMat = _compositeMat;
                     passData.blurSize = _blurSize;
                     passData.blurIterations = _blurIterations;
                     passData.fogIntensity = _fogIntensity;
                     passData.fogDesaturation = _fogDesaturation;
                     passData.fogColor = _fogColor;
+                    passData.temporalBlend = _temporalBlend;
                     passData.cameraColor = resourceData.activeColorTexture;
                     passData.tempA = tempA;
                     passData.tempB = tempB;
                     passData.rawFoW = rawTex;
+                    passData.prevBlurred = Shader.GetGlobalTexture(FoWPrevBlurredId);
 
                     builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
                     builder.UseTexture(tempA, AccessFlags.ReadWrite);
@@ -133,24 +144,43 @@ namespace View.FogOfWar
                         // --- Blur passes ---
                         data.blurMat.SetFloat(BlurSizeId, data.blurSize);
 
-                        // First iteration: raw → tempA (H) → tempB (V)
                         cmd.Blit(data.rawFoW, data.tempA, data.blurMat, 0);
                         cmd.Blit(data.tempA, data.tempB, data.blurMat, 1);
 
-                        // Additional iterations
                         for (int i = 1; i < data.blurIterations; i++)
                         {
                             cmd.Blit(data.tempB, data.tempA, data.blurMat, 0);
                             cmd.Blit(data.tempA, data.tempB, data.blurMat, 1);
                         }
 
+                        // --- Temporal blend pass ---
+                        // tempB has current blurred, prevBlurred has last frame's result
+                        if (data.temporalMat != null && data.prevBlurred != null
+                            && data.temporalBlend < 0.99f)
+                        {
+                            data.temporalMat.SetTexture(PrevTexId, data.prevBlurred);
+                            data.temporalMat.SetFloat(BlendFactorId, data.temporalBlend);
+                            // tempB (current) → tempA (blended)
+                            cmd.Blit(data.tempB, data.tempA, data.temporalMat, 0);
+                            // Copy blended result back to prevBlurred for next frame
+                            cmd.Blit(data.tempA, data.prevBlurred);
+                            // Use blended result for composite
+                            data.compositeMat.SetTexture(FoWBlurredId, data.tempA);
+                        }
+                        else
+                        {
+                            // No temporal — copy current to prevBlurred for next frame
+                            if (data.prevBlurred != null)
+                                cmd.Blit(data.tempB, data.prevBlurred);
+                            data.compositeMat.SetTexture(FoWBlurredId, data.tempB);
+                        }
+
                         // --- Composite pass ---
                         data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
                         data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
                         data.compositeMat.SetColor(FogColorId, data.fogColor);
-                        data.compositeMat.SetTexture(FoWBlurredId, data.tempB);
-                        cmd.Blit(data.cameraColor, data.tempA, data.compositeMat, 0);
-                        cmd.Blit(data.tempA, data.cameraColor);
+                        cmd.Blit(data.cameraColor, data.tempB, data.compositeMat, 0);
+                        cmd.Blit(data.tempB, data.cameraColor);
                     });
                 }
             }

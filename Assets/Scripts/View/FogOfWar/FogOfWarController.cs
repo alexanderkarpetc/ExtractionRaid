@@ -18,8 +18,11 @@ namespace View.FogOfWar
     {
         const string GlobalTextureName = "_FoWVisibility";
 
+        static readonly int FoWPrevBlurredId = Shader.PropertyToID("_FoWPrevBlurred");
+
         Camera _fovCamera;
         RenderTexture _rawRT;
+        RenderTexture _blurredRT; // persistent for temporal blend
         FOVMeshBuilder _meshBuilder;
         Material _fovMeshMaterial;
         Collider[] _playerColliders;
@@ -59,6 +62,15 @@ namespace View.FogOfWar
                 wrapMode = TextureWrapMode.Clamp,
                 name = "FOW_RawVisibility"
             };
+
+            if (_blurredRT != null) _blurredRT.Release();
+            _blurredRT = new RenderTexture(w, h, 0, RenderTextureFormat.R8)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                name = "FOW_BlurredPersistent"
+            };
+
             _currentRTScale = scale;
 
             if (_fovCamera != null)
@@ -132,6 +144,7 @@ namespace View.FogOfWar
             SyncFOVCamera();
             RebuildVisibilityMesh();
             Shader.SetGlobalTexture(GlobalTextureName, _rawRT);
+            Shader.SetGlobalTexture(FoWPrevBlurredId, _blurredRT);
         }
 
         void ToggleFOVCamera(bool on)
@@ -177,6 +190,12 @@ namespace View.FogOfWar
             {
                 _rawRT.Release();
                 _rawRT = null;
+            }
+
+            if (_blurredRT != null)
+            {
+                _blurredRT.Release();
+                _blurredRT = null;
             }
 
             if (_fovMeshMaterial != null)

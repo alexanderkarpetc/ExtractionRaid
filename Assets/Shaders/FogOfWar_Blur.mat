@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Hidden_FogOfWar_Composite
-  m_Shader: {fileID: 4800000, guid: a010631292c584aadbb042ba679e482b, type: 3}
+  m_Name: FogOfWar_Blur
+  m_Shader: {fileID: 4800000, guid: aaeb454ceca9c4584b7b3dbb0159cc23, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -23,19 +23,13 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _FoWBlurred:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DesaturationAmount: 0.705
-    - _FogIntensity: 0.843
-    m_Colors:
-    - _FogColor: {r: 0.02, g: 0.02, b: 0.05, a: 1}
+    - _BlurSize: 3
+    m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -70,9 +70,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::View.FogOfWar.FogOfWarFeature
   m_Active: 1
   blurMaterial: {fileID: 2100000, guid: 55146e11c386a4ebd806ecb71510c65a, type: 2}
+  temporalBlendMaterial: {fileID: 2100000, guid: e800ff8fd3af940d0a556cdedb782832, type: 2}
   compositeMaterial: {fileID: 2100000, guid: 7740a8a9a783840408590e3264f50c8b, type: 2}
-  blurSize: 3
-  blurIterations: 2
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -58,6 +58,7 @@ namespace Editor
             DevCheats.FogColor         = EditorGUILayout.ColorField("Fog Color", DevCheats.FogColor);
             DevCheats.FoWRTScale       = EditorGUILayout.IntSlider("RT Resolution", DevCheats.FoWRTScale, 64, 1024);
             DevCheats.FOVRayStep       = EditorGUILayout.Slider("Ray Step (°)", DevCheats.FOVRayStep, 0.5f, 5f);
+            DevCheats.FogTemporalBlend = EditorGUILayout.Slider("Temporal Blend", DevCheats.FogTemporalBlend, 0.05f, 1f);
 
             EditorGUILayout.Space(8);
 

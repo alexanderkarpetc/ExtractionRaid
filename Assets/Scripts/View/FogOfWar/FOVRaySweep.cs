@@ -1,20 +1,31 @@
 using System.Collections.Generic;
 using Constants;
-using Dev;
 using UnityEngine;
 
 namespace View.FogOfWar
 {
     /// <summary>
     /// Runtime ray sweep that produces a continuous visibility polygon.
-    /// Unified sweep: 360° with varying maxDist (nearRadius outside FOV cone, farRadius inside).
+    /// Two-pass: coarse sweep → edge-finding binary search at shadow boundaries.
     /// endpoints[0] = center (playerPos), endpoints[1..N] = perimeter.
     /// </summary>
     public static class FOVRaySweep
     {
-        static readonly List<Vector3> Endpoints = new(256);
+        static readonly List<Vector3> Endpoints = new(512);
 
-        const float FineEdgeMargin = 3f; // degrees of fine step around FOV edges
+        const float FineEdgeMargin = 3f;
+        const float EdgeThreshold = 0.5f; // distance diff to trigger edge-finding
+        const int BinarySearchIterations = 4;
+
+        struct RawRay
+        {
+            public float Angle;
+            public float Dist;
+            public float MaxDist;
+            public bool Hit;
+        }
+
+        static readonly List<RawRay> RawRays = new(256);
 
         public static List<Vector3> Sweep(Vector3 playerPos, Vector3 forward,
             float nearRadius, float farRadius, float fovAngle,
@@ -32,35 +43,110 @@ namespace View.FogOfWar
 
             try
             {
+                // ── Pass 1: Coarse sweep ──────────────────────────
+                RawRays.Clear();
                 float fineStep = Mathf.Max(rayStep * 0.5f, 0.25f);
                 float angle = -180f;
                 while (angle <= 180f)
                 {
                     float absAngle = Mathf.Abs(angle);
-
-                    // Determine max distance: inside FOV cone → far, outside → near
                     float maxDist = absAngle <= halfFOV ? farRadius : nearRadius;
 
-                    // Raycast
                     var dir = Quaternion.Euler(0f, angle, 0f) * forward;
                     float dist = maxDist;
-                    if (Physics.Raycast(rayOrigin, dir, out var hit, maxDist, layerMask))
-                        dist = hit.distance;
+                    bool hit = Physics.Raycast(rayOrigin, dir, out var hitInfo, maxDist, layerMask);
+                    if (hit) dist = hitInfo.distance;
 
-                    Endpoints.Add(playerPos + dir * dist);
+                    RawRays.Add(new RawRay { Angle = angle, Dist = dist, MaxDist = maxDist, Hit = hit });
 
-                    bool nearEdge = Mathf.Abs(absAngle - halfFOV) < FineEdgeMargin;
-                    angle += nearEdge ? fineStep : rayStep;
+                    bool nearFovEdge = Mathf.Abs(absAngle - halfFOV) < FineEdgeMargin;
+                    angle += nearFovEdge ? fineStep : rayStep;
+                }
+
+                // ── Pass 2: Build endpoints with edge-finding ─────
+                for (int i = 0; i < RawRays.Count; i++)
+                {
+                    var ray = RawRays[i];
+                    AddRayEndpoint(playerPos, forward, ray);
+
+                    // Edge-finding between consecutive rays with large distance jump
+                    if (i < RawRays.Count - 1)
+                    {
+                        var next = RawRays[i + 1];
+                        if (Mathf.Abs(ray.Dist - next.Dist) > EdgeThreshold)
+                        {
+                            BinarySearchEdge(playerPos, forward, rayOrigin, layerMask,
+                                halfFOV, nearRadius, farRadius, ray, next);
+                        }
+                    }
                 }
             }
             finally
             {
-                // Re-enable colliders even if an exception occurs
                 for (int i = 0; i < collidersToDisable.Length; i++)
                     collidersToDisable[i].enabled = true;
             }
 
             return Endpoints;
+        }
+
+        static void AddRayEndpoint(Vector3 playerPos, Vector3 forward, in RawRay ray)
+        {
+            var dir = Quaternion.Euler(0f, ray.Angle, 0f) * forward;
+            Endpoints.Add(playerPos + dir * ray.Dist);
+        }
+
+        static void BinarySearchEdge(Vector3 playerPos, Vector3 forward, Vector3 rayOrigin,
+            int layerMask, float halfFOV, float nearRadius, float farRadius,
+            RawRay rayA, RawRay rayB)
+        {
+            float lo = rayA.Angle;
+            float hi = rayB.Angle;
+            float loDistFromA = 0f; // tracks which "side" lo is on
+            float hiDistFromA = Mathf.Abs(rayB.Dist - rayA.Dist);
+
+            for (int iter = 0; iter < BinarySearchIterations; iter++)
+            {
+                float mid = (lo + hi) * 0.5f;
+                float absMid = Mathf.Abs(mid);
+                float maxDist = absMid <= halfFOV ? farRadius : nearRadius;
+
+                var dir = Quaternion.Euler(0f, mid, 0f) * forward;
+                float dist = maxDist;
+                if (Physics.Raycast(rayOrigin, dir, out var hit, maxDist, layerMask))
+                    dist = hit.distance;
+
+                float distFromA = Mathf.Abs(dist - rayA.Dist);
+                float distFromB = Mathf.Abs(dist - rayB.Dist);
+
+                if (distFromA < distFromB)
+                {
+                    lo = mid;
+                    loDistFromA = distFromA;
+                }
+                else
+                {
+                    hi = mid;
+                    hiDistFromA = distFromA;
+                }
+            }
+
+            // Add both sides of the edge for a sharp silhouette
+            float absLo = Mathf.Abs(lo);
+            float maxDistLo = absLo <= halfFOV ? farRadius : nearRadius;
+            var dirLo = Quaternion.Euler(0f, lo, 0f) * forward;
+            float distLo = maxDistLo;
+            if (Physics.Raycast(rayOrigin, dirLo, out var hitLo, maxDistLo, layerMask))
+                distLo = hitLo.distance;
+            Endpoints.Add(playerPos + dirLo * distLo);
+
+            float absHi = Mathf.Abs(hi);
+            float maxDistHi = absHi <= halfFOV ? farRadius : nearRadius;
+            var dirHi = Quaternion.Euler(0f, hi, 0f) * forward;
+            float distHi = maxDistHi;
+            if (Physics.Raycast(rayOrigin, dirHi, out var hitHi, maxDistHi, layerMask))
+                distHi = hitHi.distance;
+            Endpoints.Add(playerPos + dirHi * distHi);
         }
     }
 }

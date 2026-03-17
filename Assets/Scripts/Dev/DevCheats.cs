@@ -29,13 +29,14 @@ namespace Dev
 
         // ── Fog of War ────────────────────────────────────
         public static bool FogOfWarEnabled = true;
-        public static float FogBlurRadius = 3f;
-        public static int FogBlurIterations = 2;
-        public static float FogIntensity = 0.85f;
+        public static float FogBlurRadius = 1.74f;
+        public static int FogBlurIterations = 3;
+        public static float FogIntensity = 0.4f;
         public static float FogDesaturation = 0.7f;
         public static Color FogColor = new(0.02f, 0.02f, 0.05f, 1f);
         public static int FoWRTScale = 256;
         public static float FOVRayStep = 2f;
+        public static float FogTemporalBlend = 0.2f;
 
         public static void Reset()
         {
@@ -55,13 +56,14 @@ namespace Dev
             ForceBleedPlayer = false;
             FOVOcclusionEnabled = true;
             FogOfWarEnabled = true;
-            FogBlurRadius = 3f;
-            FogBlurIterations = 2;
-            FogIntensity = 0.85f;
+            FogBlurRadius = 1.74f;
+            FogBlurIterations = 3;
+            FogIntensity = 0.4f;
             FogDesaturation = 0.7f;
             FogColor = new Color(0.02f, 0.02f, 0.05f, 1f);
             FoWRTScale = 256;
             FOVRayStep = 2f;
+            FogTemporalBlend = 0.2f;
         }
     }
 }

@@ -206,7 +206,11 @@ namespace View
         {
             Vector3 prevPoint = drawOrigin;
             bool prevBlocked = false;
+            float prevDist = 0f;
+            float prevAngle = startAngle;
             bool first = true;
+            var edgeColor = Color.cyan;
+            const float edgeThreshold = 0.5f;
 
             for (float a = startAngle; a <= endAngle; a += stepDeg)
             {
@@ -222,9 +226,15 @@ namespace View
 
                 var point = drawOrigin + dir * drawDist;
 
+                // Edge-finding: binary search between consecutive rays with large distance jump
+                if (!first && Mathf.Abs(drawDist - prevDist) > edgeThreshold)
+                {
+                    DrawEdgeSearch(rayOrigin, drawOrigin, forward, maxDist, layerMask,
+                        prevAngle, a, edgeColor);
+                }
+
                 if (blocked)
                 {
-                    // Green up to hit, red beyond
                     var hitPoint = drawOrigin + dir * drawDist;
                     var endPoint = drawOrigin + dir * maxDist;
                     Gizmos.color = clearColor;
@@ -246,7 +256,46 @@ namespace View
 
                 prevPoint = point;
                 prevBlocked = blocked;
+                prevDist = drawDist;
+                prevAngle = a;
                 first = false;
+            }
+        }
+
+        void DrawEdgeSearch(Vector3 rayOrigin, Vector3 drawOrigin, Vector3 forward,
+            float maxDist, int layerMask, float angleA, float angleB, Color color)
+        {
+            // Cast at angleA to determine reference distance
+            var dirA = Quaternion.Euler(0f, angleA, 0f) * forward;
+            float distA = maxDist;
+            if (Physics.Raycast(rayOrigin, dirA, out var hitA, maxDist, layerMask))
+                distA = hitA.distance;
+
+            float lo = angleA, hi = angleB;
+            for (int i = 0; i < 4; i++)
+            {
+                float mid = (lo + hi) * 0.5f;
+                var dirMid = Quaternion.Euler(0f, mid, 0f) * forward;
+                float distMid = maxDist;
+                if (Physics.Raycast(rayOrigin, dirMid, out var hitMid, maxDist, layerMask))
+                    distMid = hitMid.distance;
+
+                if (Mathf.Abs(distMid - distA) < Mathf.Abs(distMid - (maxDist - distA)))
+                    lo = mid;
+                else
+                    hi = mid;
+            }
+
+            // Draw the two edge rays in cyan
+            Gizmos.color = color;
+            for (float ea = lo; ea <= hi; ea += (hi - lo))
+            {
+                var dirE = Quaternion.Euler(0f, ea, 0f) * forward;
+                float distE = maxDist;
+                if (Physics.Raycast(rayOrigin, dirE, out var hitE, maxDist, layerMask))
+                    distE = hitE.distance;
+                Gizmos.DrawLine(drawOrigin, drawOrigin + dirE * distE);
+                if (Mathf.Approximately(lo, hi)) break;
             }
         }
 #endif
