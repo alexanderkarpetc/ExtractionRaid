@@ -103,10 +103,18 @@ namespace View.FogOfWar
 
             meshGo.AddComponent<MeshFilter>();
             var renderer = meshGo.AddComponent<MeshRenderer>();
-            _fovMeshMaterial = new Material(Shader.Find("Unlit/Color"))
+            // Must use URP-compatible shader — built-in "Unlit/Color" may not render in URP on all platforms
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null)
             {
-                color = Color.white
-            };
+                Debug.LogError("[FoW] Cannot find 'Universal Render Pipeline/Unlit' shader! " +
+                               "FoW mesh will not render. Falling back to Unlit/Color.");
+                shader = Shader.Find("Unlit/Color");
+            }
+
+            _fovMeshMaterial = new Material(shader);
+            _fovMeshMaterial.SetColor("_BaseColor", Color.white);
+            _fovMeshMaterial.SetFloat("_Surface", 0); // Opaque
             renderer.material = _fovMeshMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
