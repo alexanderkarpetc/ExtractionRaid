@@ -32,8 +32,9 @@ namespace Systems.Bot
 
         static void ProcessHeal(BotEntityState bot, HealthState hp, in BotTypeConfig config)
         {
-            hp.CurrentHp = Mathf.Min(hp.CurrentHp + config.HealAmount, hp.MaxHp);
+            hp.CurrentHp = hp.MaxHp;
             bot.Blackboard.MedkitsRemaining--;
+            bot.Blackboard.TimeSinceTargetSeen = 0f;
         }
 
         static void ProcessFire(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)

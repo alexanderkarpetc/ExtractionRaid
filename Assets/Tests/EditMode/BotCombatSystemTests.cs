@@ -60,22 +60,26 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_BotWantsToHeal_IncreasesHpAndConsumesMedkit()
+        public void Tick_BotWantsToHeal_HealsToFullAndConsumesMedkit()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var events = new FakeRaidEvents();
             BotSpawnSystem.SpawnBot(state, "PMC", Vector3.zero, new[] { Vector3.zero }, events);
 
             var bot = state.Bots[0];
-            state.HealthMap[bot.Id].CurrentHp = 50f;
+            var hp = state.HealthMap[bot.Id];
+            hp.CurrentHp = 50f;
             bot.WantsToHeal = true;
+            bot.Blackboard.TimeSinceTargetSeen = 5f;
             int medkitsBefore = bot.Blackboard.MedkitsRemaining;
             var ctx = CreateContext();
 
             BotCombatSystem.Tick(state, in ctx);
 
-            Assert.AreEqual(80f, state.HealthMap[bot.Id].CurrentHp, 0.01f);
+            Assert.AreEqual(hp.MaxHp, hp.CurrentHp, 0.01f, "Should heal to full HP");
             Assert.AreEqual(medkitsBefore - 1, bot.Blackboard.MedkitsRemaining);
+            Assert.AreEqual(0f, bot.Blackboard.TimeSinceTargetSeen,
+                "Should reset target memory so bot doesn't lose target after healing");
         }
 
         [Test]
