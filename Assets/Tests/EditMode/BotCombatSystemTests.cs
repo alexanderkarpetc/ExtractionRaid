@@ -60,7 +60,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_BotWantsToHeal_IncreasesHp()
+        public void Tick_BotWantsToHeal_IncreasesHpAndConsumesMedkit()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var events = new FakeRaidEvents();
@@ -69,11 +69,13 @@ namespace Tests.EditMode
             var bot = state.Bots[0];
             state.HealthMap[bot.Id].CurrentHp = 50f;
             bot.WantsToHeal = true;
+            int medkitsBefore = bot.Blackboard.MedkitsRemaining;
             var ctx = CreateContext();
 
             BotCombatSystem.Tick(state, in ctx);
 
             Assert.AreEqual(80f, state.HealthMap[bot.Id].CurrentHp, 0.01f);
+            Assert.AreEqual(medkitsBefore - 1, bot.Blackboard.MedkitsRemaining);
         }
 
         [Test]

@@ -198,6 +198,7 @@ namespace Session
                     if (RaidState.Bots[i].Id == e.Id)
                     {
                         RaidState.Bots[i].Blackboard.WasDamaged = true;
+                        RaidState.Bots[i].Blackboard.LastDamageTime = RaidState.ElapsedTime;
                         break;
                     }
                 }

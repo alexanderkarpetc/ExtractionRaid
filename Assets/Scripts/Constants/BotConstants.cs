@@ -11,7 +11,6 @@ namespace Constants
         Patrol       = 1 << 0,
         Chase        = 1 << 1,
         Shoot        = 1 << 2,
-        TakeCover    = 1 << 3,
         Heal         = 1 << 4,
         Dodge        = 1 << 5,
         ThrowGrenade = 1 << 6,
@@ -28,6 +27,12 @@ namespace Constants
         public readonly float HealAmount;
         public readonly float HealThreshold;
         public readonly float HealCooldown;
+        public readonly float EmergencyHealThreshold;
+        public readonly float EmergencyHealDelay;
+        public readonly float EmergencyHealCooldown;
+        public readonly float HealSafeDelay;
+        public readonly float HealSafeEnemyDistance;
+        public readonly int MedkitCount;
 
         // Movement
         public readonly float MoveSpeed;
@@ -70,6 +75,9 @@ namespace Constants
             string typeId, string prefabId, string weaponPrefabId,
             float maxHp = 100f,
             float healAmount = 0f, float healThreshold = 0f, float healCooldown = 0f,
+            float emergencyHealThreshold = 0.3f, float emergencyHealDelay = 1.5f,
+            float emergencyHealCooldown = 8f, float healSafeDelay = 3f, float healSafeEnemyDistance = 10f,
+            int medkitCount = 0,
             float moveSpeed = 4f, float patrolSpeed = 2f, float chaseSpeed = 5f,
             float visionRange = 30f, float visionAngle = 120f,
             float hearingRange = 6f, float targetMemoryDuration = 8f,
@@ -87,6 +95,12 @@ namespace Constants
             HealAmount = healAmount;
             HealThreshold = healThreshold;
             HealCooldown = healCooldown;
+            EmergencyHealThreshold = emergencyHealThreshold;
+            EmergencyHealDelay = emergencyHealDelay;
+            EmergencyHealCooldown = emergencyHealCooldown;
+            HealSafeDelay = healSafeDelay;
+            HealSafeEnemyDistance = healSafeEnemyDistance;
+            MedkitCount = medkitCount;
             MoveSpeed = moveSpeed;
             PatrolSpeed = patrolSpeed;
             ChaseSpeed = chaseSpeed;
@@ -125,10 +139,6 @@ namespace Constants
         // if your obstacles live on a different layer.
         public static LayerMask VisionBlockingMask = 1 << 0;
 
-        // --- Cover search ---
-        public const float CoverSearchRadius = 10f;
-        public const float MinCoverDistance = 2f;
-
         // --- Patrol ---
         public const float WaypointArrivalDistance = 1f;
         public const float PatrolWaitTime = 2f;
@@ -146,7 +156,7 @@ namespace Constants
 
         public static readonly BotTypeConfig PMC = new(
             typeId: "PMC", prefabId: "BotBossView", weaponPrefabId: "Weapon_Rifle",
-            healAmount: 30f, healThreshold: 0.35f, healCooldown: 15f,
+            healAmount: 30f, healThreshold: 0.5f, healCooldown: 15f,
             moveSpeed: 4.5f, patrolSpeed: 2.5f,
             visionRange: 35f,
             reactionTime: 0.4f, accuracy: 0.75f, engageRange: 28f,
@@ -154,8 +164,9 @@ namespace Constants
             fireInterval: 0.25f, projectileSpeed: 22f, projectileDamage: 12f,
             spreadAngle: 4f,
             grenadeCount: 2, grenadeCooldown: 20f, grenadeMinThrowDist: 5f,
+            medkitCount: 2,
             behaviors: BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
-                     | BotBehaviorFlags.TakeCover | BotBehaviorFlags.Heal | BotBehaviorFlags.Dodge
+                     | BotBehaviorFlags.Heal | BotBehaviorFlags.Dodge
                      | BotBehaviorFlags.ThrowGrenade
         );
 
@@ -167,7 +178,7 @@ namespace Constants
             engageRange: 15f, dodgeCooldown: 3f,
             fireInterval: 0.5f, projectileSpeed: 28f, projectileDamage: 7f,
             projectileLifetime: 2f, projectilesPerShot: 7, spreadAngle: 25f,
-            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot | BotBehaviorFlags.TakeCover
+            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.Dodge
         );
 

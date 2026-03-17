@@ -17,10 +17,6 @@ namespace State
         public int PatrolWaypointIndex;
         public float PatrolWaitTimer;
 
-        // Cover
-        public Vector3 CoverPosition;
-        public bool HasCover;
-
         // Timers
         public float ReactionTimer;
         public float DodgeCooldownTimer;
@@ -32,13 +28,15 @@ namespace State
         public Vector3 DodgeDirection;
         public float DodgeTimer;
 
-        // Grenade
+        // Consumables
+        public int   MedkitsRemaining;
         public int   GrenadesRemaining;
         public float GrenadeCooldownTimer;
         public float GrenadeThrowDelayTimer = -1;   // -1 = idle; counts down to 0 then fires
 
         // Alerts
         public bool WasDamaged;
+        public float LastDamageTime;
 
         // BT re-entry
         public int RunningNodeId;
@@ -57,8 +55,6 @@ namespace State
             TimeSinceTargetSeen = float.MaxValue;
             PatrolWaypointIndex = 0;
             PatrolWaitTimer = 0f;
-            CoverPosition = Vector3.zero;
-            HasCover = false;
             ReactionTimer = 0f;
             DodgeCooldownTimer = 0f;
             HealCooldownTimer = 0f;
@@ -66,10 +62,12 @@ namespace State
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;
+            MedkitsRemaining = 0;
             GrenadesRemaining = 0;
             GrenadeCooldownTimer = 0f;
             GrenadeThrowDelayTimer = -1f;
             WasDamaged = false;
+            LastDamageTime = -999f;
             RunningNodeId = -1;
             DebugStatus = "Idle";
         }

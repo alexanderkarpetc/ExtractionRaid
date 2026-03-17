@@ -25,19 +25,7 @@ namespace Systems.Bot
 
             if (config.Has(BotBehaviorFlags.Heal))
             {
-                branches.Add(new BTSequence("Heal",
-                    new BTCondition("HasTarget?", (bot, _, cfg) =>
-                    {
-                        if (!bot.Blackboard.HasTarget) return false;
-                        return true;
-                    }),
-                    new BTCooldown("Heal CD",
-                        new HealNode(),
-                        config.HealCooldown,
-                        bb => bb.HealCooldownTimer,
-                        (bb, v) => bb.HealCooldownTimer = v
-                    )
-                ));
+                branches.Add(new HealNode());
             }
 
             if (config.Has(BotBehaviorFlags.Dodge))
@@ -53,22 +41,9 @@ namespace Systems.Bot
                 ));
             }
 
-            if (config.Has(BotBehaviorFlags.Shoot) || config.Has(BotBehaviorFlags.Chase)
-                || config.Has(BotBehaviorFlags.TakeCover))
+            if (config.Has(BotBehaviorFlags.Shoot) || config.Has(BotBehaviorFlags.Chase))
             {
                 var combatBranches = new List<IBTNode>();
-
-                if (config.Has(BotBehaviorFlags.TakeCover))
-                {
-                    combatBranches.Add(new BTSequence("Take Cover",
-                        new BTCondition("HP < 50%?", (bot, state, _) =>
-                        {
-                            if (!state.HealthMap.TryGetValue(bot.Id, out var hp)) return false;
-                            return hp.CurrentHp / hp.MaxHp < 0.5f;
-                        }),
-                        new TakeCoverNode()
-                    ));
-                }
 
                 if (config.Has(BotBehaviorFlags.ThrowGrenade))
                 {

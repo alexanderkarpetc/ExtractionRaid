@@ -95,7 +95,6 @@ namespace Systems.Bot
             bb.DistanceToTarget = float.MaxValue;
             bb.TimeSinceTargetSeen = float.MaxValue;
             bb.ReactionTimer = 0f;
-            bb.HasCover = false;
         }
     }
 }

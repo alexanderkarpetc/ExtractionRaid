@@ -17,13 +17,47 @@ namespace Systems.Bot.Nodes
             if (!health.IsAlive)
                 return this.Traced(bot, BTStatus.Failure);
 
-            var hpRatio = health.CurrentHp / health.MaxHp;
-            if (hpRatio > config.HealThreshold)
+            var bb = bot.Blackboard;
+
+            if (bb.MedkitsRemaining <= 0)
                 return this.Traced(bot, BTStatus.Failure);
 
-            bot.Blackboard.DebugStatus = "Heal";
-            bot.WantsToHeal = true;
-            return this.Traced(bot, BTStatus.Success);
+            if (bb.HealCooldownTimer > 0f)
+            {
+                bb.HealCooldownTimer -= ctx.DeltaTime;
+                return this.Traced(bot, BTStatus.Failure);
+            }
+
+            float hpRatio = health.CurrentHp / health.MaxHp;
+            float timeSinceDamage = state.ElapsedTime - bb.LastDamageTime;
+
+            if (hpRatio < config.EmergencyHealThreshold
+                && timeSinceDamage > config.EmergencyHealDelay)
+            {
+                bot.WantsToHeal = true;
+                bb.HealCooldownTimer = config.EmergencyHealCooldown;
+                bb.DebugStatus = "Emergency Heal";
+                return this.Traced(bot, BTStatus.Success);
+            }
+
+            if (hpRatio < config.HealThreshold
+                && timeSinceDamage > config.HealSafeDelay
+                && !bb.CanSeeTarget
+                && bb.DistanceToTarget > config.HealSafeEnemyDistance
+                && !IsReloading(bot))
+            {
+                bot.WantsToHeal = true;
+                bb.HealCooldownTimer = config.HealCooldown;
+                bb.DebugStatus = "Heal";
+                return this.Traced(bot, BTStatus.Success);
+            }
+
+            return this.Traced(bot, BTStatus.Failure);
+        }
+
+        static bool IsReloading(BotEntityState bot)
+        {
+            return bot.Weapon != null && bot.Weapon.Phase == WeaponPhase.Reloading;
         }
     }
 }

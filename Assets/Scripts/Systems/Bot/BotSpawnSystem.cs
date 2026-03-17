@@ -30,6 +30,7 @@ namespace Systems.Bot
                 LastFireTime = -999f,
             };
 
+            bot.Blackboard.MedkitsRemaining = config.MedkitCount;
             bot.Blackboard.GrenadesRemaining = config.GrenadeCount;
 
             state.Bots.Add(bot);

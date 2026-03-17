@@ -259,6 +259,15 @@ namespace Editor
                         Field("Last Known Pos", bb.LastKnownTargetPos);
                     }
 
+                    if (bb.HealCooldownTimer > 0f)
+                        Field("Heal CD", $"{bb.HealCooldownTimer:F1}s");
+                    if (bb.LastDamageTime > -900f)
+                    {
+                        float timeSinceDmg = state.ElapsedTime - bb.LastDamageTime;
+                        Field("Time Since Damage", $"{timeSinceDmg:F1}s");
+                    }
+
+                    Field("Medkits", bb.MedkitsRemaining);
                     Field("IsDodging", bb.IsDodging);
                     Field("Grenades", bb.GrenadesRemaining);
                     if (bb.GrenadeThrowDelayTimer >= 0f)

@@ -93,20 +93,21 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_PMC_CanHeal()
+        public void Tick_PMC_CanHeal_WhenSafe()
         {
             var state = CreateStateWithBot("PMC", new Vector3(0, 0, 10f));
             var bot = state.Bots[0];
             bot.Blackboard.HasTarget = true;
-            bot.Blackboard.CanSeeTarget = true;
-            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.CanSeeTarget = false;
+            bot.Blackboard.DistanceToTarget = 15f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             state.HealthMap[bot.Id].CurrentHp = 10f;
+            state.ElapsedTime = 5f;
             var ctx = CreateContext();
 
             BotBrainSystem.Tick(state, in ctx);
 
-            Assert.IsTrue(bot.WantsToHeal, "PMC should want to heal when HP is low");
+            Assert.IsTrue(bot.WantsToHeal, "PMC should want to heal when safe");
         }
 
         [Test]
