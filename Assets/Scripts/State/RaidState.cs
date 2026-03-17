@@ -12,6 +12,7 @@ namespace State
         public Dictionary<EId, HealthState> HealthMap;
         public List<GroundItemState> GroundItems;
         public List<BotEntityState> Bots;
+        public List<LootableContainerState> Lootables;
         public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
 
@@ -35,6 +36,7 @@ namespace State
                 HealthMap = new Dictionary<EId, HealthState>(),
                 GroundItems = new List<GroundItemState>(),
                 Bots = new List<BotEntityState>(),
+                Lootables = new List<LootableContainerState>(),
                 Inventory = new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
             };

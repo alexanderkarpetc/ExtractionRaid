@@ -21,10 +21,12 @@ namespace Editor
         bool _foldInventory;
         bool _foldHealthMap;
         bool _foldStatusEffects;
+        bool _foldLootables;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
         readonly Dictionary<int, bool> _grenadeFolds = new();
+        readonly Dictionary<int, bool> _lootableFolds = new();
 
         [MenuItem("Window/Raid State Debugger")]
         static void Open()
@@ -81,6 +83,7 @@ namespace Editor
             DrawInventory(state);
             DrawHealthMap(state);
             DrawStatusEffects(state);
+            DrawLootables(state);
 
             EditorGUILayout.EndScrollView();
         }
@@ -158,6 +161,7 @@ namespace Editor
             }
             Field("Bandage Count", CountBandages(state.Inventory));
             Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
+            Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -585,6 +589,44 @@ namespace Editor
         static void Field(string label, int value)
         {
             EditorGUILayout.LabelField(label, value.ToString());
+        }
+
+        void DrawLootables(RaidState state)
+        {
+            _foldLootables = EditorGUILayout.Foldout(_foldLootables,
+                $"Lootables [{state.Lootables.Count}]");
+            if (!_foldLootables) return;
+
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < state.Lootables.Count; i++)
+            {
+                var loot = state.Lootables[i];
+                int key = loot.Id.GetHashCode();
+                if (!_lootableFolds.ContainsKey(key)) _lootableFolds[key] = false;
+
+                _lootableFolds[key] = EditorGUILayout.Foldout(_lootableFolds[key],
+                    $"[{i}] {loot.TypeId} (Id={loot.Id})");
+                if (!_lootableFolds[key]) continue;
+
+                EditorGUI.indentLevel++;
+                Field("Position", loot.Position.ToString("F1"));
+                if (loot.Inventory != null)
+                {
+                    for (int w = 0; w < InventoryState.WeaponSlotCount; w++)
+                    {
+                        var wi = loot.Inventory.WeaponSlots[w];
+                        Field($"Weapon[{w}]", wi != null ? wi.DefinitionId : "(empty)");
+                    }
+                    for (int b = 0; b < InventoryState.BackpackSize; b++)
+                    {
+                        var bi = loot.Inventory.Backpack[b];
+                        if (bi != null)
+                            Field($"Backpack[{b}]", $"{bi.DefinitionId} x{bi.StackCount}");
+                    }
+                }
+                EditorGUI.indentLevel--;
+            }
+            EditorGUI.indentLevel--;
         }
     }
 }

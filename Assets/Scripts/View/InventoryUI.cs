@@ -7,8 +7,9 @@ namespace View
 {
     public class InventoryUI : MonoBehaviour
     {
-        const int BackpackColumns = 10;
-        const float ScreenMargin = 30f;
+        const int BackpackColumns = 5;
+        const float ScreenMargin = 20f;
+        const float PanelGap = 10f;
 
         bool _isOpen;
 
@@ -16,18 +17,24 @@ namespace View
         Texture2D _slotHighlight;
         Texture2D _equipBg;
         Texture2D _dragBg;
+        Texture2D _panelBg;
+        Texture2D _promptBg;
         GUIStyle _slotStyle;
         GUIStyle _labelStyle;
         GUIStyle _headerStyle;
         GUIStyle _dropBtnStyle;
+        GUIStyle _promptStyle;
 
         InventorySlotRef? _dragSource;
+        bool _dragFromLoot;
         string _dragLabel;
 
         bool _showContextMenu;
         InventorySlotRef _contextMenuSlot;
+        bool _contextMenuFromLoot;
         Vector2 _contextMenuPos;
-        Rect _inventoryRect;
+        Rect _playerPanelRect;
+        Rect _lootPanelRect;
 
         void Awake()
         {
@@ -35,6 +42,8 @@ namespace View
             _slotHighlight = MakeTex(new Color(0.4f, 0.6f, 0.3f, 0.9f));
             _equipBg = MakeTex(new Color(0.25f, 0.25f, 0.35f, 0.9f));
             _dragBg = MakeTex(new Color(0.5f, 0.5f, 0.2f, 0.85f));
+            _panelBg = MakeTex(new Color(0.12f, 0.12f, 0.14f, 0.95f));
+            _promptBg = MakeTex(new Color(0.1f, 0.1f, 0.1f, 0.8f));
         }
 
         void Update()
@@ -42,58 +51,99 @@ namespace View
             var kb = Keyboard.current;
             if (kb != null && kb[Key.Tab].wasPressedThisFrame)
                 _isOpen = !_isOpen;
+
+            var session = App.App.Instance?.RaidSession;
+            if (session == null) return;
+            var player = session.RaidState?.PlayerEntity;
+            if (player == null) return;
+
+            if (player.LootTargetId != EId.None)
+                _isOpen = true;
+
+            if (!_isOpen && player.LootTargetId != EId.None)
+                player.LootTargetId = EId.None;
         }
 
         void OnGUI()
         {
-            if (!_isOpen) return;
-
             var session = App.App.Instance?.RaidSession;
             if (session == null) return;
-
             var state = session.RaidState;
             if (state == null) return;
+            var player = state.PlayerEntity;
+            if (player == null) return;
+
+            DrawLootPrompt(state, player);
+
+            if (!_isOpen) return;
 
             var inventory = state.Inventory;
             if (inventory == null) return;
 
             EnsureStyles();
 
-            float totalW = Screen.width - ScreenMargin * 2f;
+            LootableContainerState lootTarget = null;
+            if (player.LootTargetId != EId.None)
+                lootTarget = LootSystem.GetLootable(state, player.LootTargetId);
+
             float totalH = Screen.height - ScreenMargin * 2f;
-            float windowX = ScreenMargin;
-            float windowY = ScreenMargin;
+            float panelW;
+            if (lootTarget != null)
+                panelW = (Screen.width - ScreenMargin * 2f - PanelGap) * 0.5f;
+            else
+                panelW = (Screen.width - ScreenMargin * 2f) * 0.5f;
 
-            float padding = totalW * 0.02f;
-            float slotGap = Mathf.Max(4f, totalW * 0.005f);
+            float panelX = ScreenMargin;
+            float panelY = ScreenMargin;
 
-            float availableW = totalW - padding * 2f;
+            _playerPanelRect = new Rect(panelX, panelY, panelW, totalH);
+            GUI.DrawTexture(_playerPanelRect, _panelBg);
+            DrawInventoryPanel(_playerPanelRect, "INVENTORY", inventory, false, session, state);
+
+            if (lootTarget != null)
+            {
+                float lootX = panelX + panelW + PanelGap;
+                _lootPanelRect = new Rect(lootX, panelY, panelW, totalH);
+                GUI.DrawTexture(_lootPanelRect, _panelBg);
+                string header = $"{lootTarget.TypeId.ToUpper()} LOOT";
+                DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state);
+            }
+            else
+            {
+                _lootPanelRect = Rect.zero;
+            }
+
+            HandleDrag(session, state, lootTarget);
+            DrawContextMenu(session, state, lootTarget);
+        }
+
+        void DrawInventoryPanel(Rect panelRect, string title, InventoryState inventory,
+            bool isLoot, Session.RaidSession session, RaidState state)
+        {
+            float padding = panelRect.width * 0.03f;
+            float slotGap = Mathf.Max(3f, panelRect.width * 0.008f);
+            float availableW = panelRect.width - padding * 2f;
             float slotSize = (availableW - (BackpackColumns - 1) * slotGap) / BackpackColumns;
             slotSize = Mathf.Floor(slotSize);
 
-            int backpackRows = Mathf.CeilToInt((float)InventoryState.BackpackSize / BackpackColumns);
-
-            _inventoryRect = new Rect(windowX, windowY, totalW, totalH);
-            GUI.Box(_inventoryRect, "", GUI.skin.box);
-
-            float curY = windowY + padding;
-            float curX = windowX + padding;
-
-            float headerH = Mathf.Max(22f, slotSize * 0.35f);
+            float headerH = Mathf.Max(20f, slotSize * 0.32f);
             _headerStyle.fontSize = Mathf.RoundToInt(headerH * 0.7f);
-            _slotStyle.fontSize = Mathf.RoundToInt(slotSize * 0.18f);
-            _labelStyle.fontSize = Mathf.RoundToInt(slotSize * 0.2f);
+            _slotStyle.fontSize = Mathf.RoundToInt(slotSize * 0.16f);
+            _labelStyle.fontSize = Mathf.RoundToInt(slotSize * 0.18f);
 
-            GUI.Label(new Rect(curX, curY, availableW, headerH), "EQUIPMENT", _headerStyle);
+            float curX = panelRect.x + padding;
+            float curY = panelRect.y + padding;
+
+            GUI.Label(new Rect(curX, curY, availableW, headerH), title, _headerStyle);
             curY += headerH + slotGap;
 
-            float equipSlotSpacing = slotSize + slotGap + slotSize * 0.4f;
-            DrawEquipSlot(inventory, curX, curY, "Weapon 1", InventorySlotRef.Weapon(0), slotSize, slotGap);
-            DrawEquipSlot(inventory, curX + equipSlotSpacing, curY, "Weapon 2", InventorySlotRef.Weapon(1), slotSize, slotGap);
-            DrawEquipSlot(inventory, curX + 2 * equipSlotSpacing, curY, "Helmet", InventorySlotRef.Helmet(), slotSize, slotGap);
-            DrawEquipSlot(inventory, curX + 3 * equipSlotSpacing, curY, "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap);
+            float equipSlotSpacing = slotSize + slotGap + slotSize * 0.2f;
+            DrawEquipSlot(inventory, curX, curY, "W1", InventorySlotRef.Weapon(0), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + equipSlotSpacing, curY, "W2", InventorySlotRef.Weapon(1), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + 2 * equipSlotSpacing, curY, "Helm", InventorySlotRef.Helmet(), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + 3 * equipSlotSpacing, curY, "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap, isLoot);
 
-            curY += slotSize + slotGap * 2f + headerH * 0.5f;
+            curY += slotSize + slotGap * 2f + headerH * 0.4f;
 
             GUI.Label(new Rect(curX, curY, availableW, headerH), "BACKPACK", _headerStyle);
             curY += headerH + slotGap;
@@ -107,60 +157,71 @@ namespace View
                 var slotRef = InventorySlotRef.BackpackSlot(i);
                 var item = inventory.Backpack[i];
 
-                DrawSlot(new Rect(x, y, slotSize, slotSize), slotRef, item);
+                DrawSlot(new Rect(x, y, slotSize, slotSize), slotRef, item, inventory, isLoot);
             }
-
-            HandleDrag(slotSize, session, state);
-            DrawContextMenu(session, state, slotSize);
         }
 
         void DrawEquipSlot(InventoryState inventory, float x, float y, string label,
-            InventorySlotRef slotRef, float slotSize, float slotGap)
+            InventorySlotRef slotRef, float slotSize, float slotGap, bool isLoot)
         {
-            float labelH = slotSize * 0.25f;
-            GUI.Label(new Rect(x, y - labelH - 2f, slotSize + slotSize * 0.6f, labelH), label, _labelStyle);
+            float labelH = slotSize * 0.22f;
+            GUI.Label(new Rect(x, y - labelH - 1f, slotSize + slotSize * 0.4f, labelH), label, _labelStyle);
             var item = inventory.GetSlot(slotRef);
             var rect = new Rect(x, y, slotSize, slotSize);
 
             _slotStyle.normal.background = _equipBg;
-            DrawSlot(rect, slotRef, item);
+            DrawSlot(rect, slotRef, item, inventory, isLoot);
         }
 
-        void DrawSlot(Rect rect, InventorySlotRef slotRef, ItemState item)
+        void DrawSlot(Rect rect, InventorySlotRef slotRef, ItemState item,
+            InventoryState inventory, bool isLoot)
         {
             bool isDragOver = _dragSource.HasValue && rect.Contains(Event.current.mousePosition);
-            bool isDragSource = _dragSource.HasValue && _dragSource.Value.Equals(slotRef);
+            bool isDragSource = _dragSource.HasValue && _dragSource.Value.Equals(slotRef) && _dragFromLoot == isLoot;
 
-            if (isDragSource)
-                _slotStyle.normal.background = _slotHighlight;
-            else if (isDragOver)
+            if (isDragSource || isDragOver)
                 _slotStyle.normal.background = _slotHighlight;
             else
-                _slotStyle.normal.background = item != null ? _slotBg : _slotBg;
+                _slotStyle.normal.background = _slotBg;
 
             string text = item != null
                 ? (item.StackCount > 1 ? $"{item.DisplayName}\nx{item.StackCount}" : item.DisplayName)
                 : "";
             GUI.Box(rect, text, _slotStyle);
 
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 0
+                && rect.Contains(Event.current.mousePosition))
             {
                 if (item != null)
                 {
                     _dragSource = slotRef;
+                    _dragFromLoot = isLoot;
                     _dragLabel = item.DisplayName;
                     Event.current.Use();
                 }
             }
 
-            if (Event.current.type == EventType.MouseUp && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.MouseUp && Event.current.button == 0
+                && rect.Contains(Event.current.mousePosition))
             {
-                if (_dragSource.HasValue && !_dragSource.Value.Equals(slotRef))
+                if (_dragSource.HasValue && !(_dragSource.Value.Equals(slotRef) && _dragFromLoot == isLoot))
                 {
                     var session = App.App.Instance?.RaidSession;
                     if (session != null)
                     {
-                        InventorySystem.TryMove(session.RaidState.Inventory, _dragSource.Value, slotRef);
+                        var state = session.RaidState;
+                        var playerInv = state.Inventory;
+                        LootableContainerState lootTarget = null;
+                        if (state.PlayerEntity.LootTargetId != EId.None)
+                            lootTarget = LootSystem.GetLootable(state, state.PlayerEntity.LootTargetId);
+
+                        var fromInv = _dragFromLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
+                        var toInv = isLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
+
+                        if (fromInv == toInv)
+                            InventorySystem.TryMove(fromInv, _dragSource.Value, slotRef);
+                        else
+                            LootSystem.TryTransfer(fromInv, _dragSource.Value, toInv, slotRef);
                     }
                     _dragSource = null;
                     _dragLabel = null;
@@ -168,32 +229,35 @@ namespace View
                 }
             }
 
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.MouseDown && Event.current.button == 1
+                && rect.Contains(Event.current.mousePosition))
             {
                 if (item != null)
                 {
                     _showContextMenu = true;
                     _contextMenuSlot = slotRef;
+                    _contextMenuFromLoot = isLoot;
                     _contextMenuPos = Event.current.mousePosition;
                     Event.current.Use();
                 }
             }
         }
 
-        void HandleDrag(float slotSize, Session.RaidSession session, RaidState state)
+        void HandleDrag(Session.RaidSession session, RaidState state,
+            LootableContainerState lootTarget)
         {
             if (!_dragSource.HasValue) return;
 
             if (_dragLabel != null)
             {
                 var mousePos = Event.current.mousePosition;
-                float dragW = slotSize * 1.6f;
-                float dragH = slotSize * 0.45f;
+                float dragW = 100f;
+                float dragH = 24f;
                 var dragRect = new Rect(mousePos.x + 10f, mousePos.y + 10f, dragW, dragH);
 
                 var style = new GUIStyle(GUI.skin.box)
                 {
-                    fontSize = Mathf.RoundToInt(dragH * 0.5f),
+                    fontSize = Mathf.RoundToInt(dragH * 0.55f),
                     alignment = TextAnchor.MiddleCenter,
                 };
                 style.normal.background = _dragBg;
@@ -203,30 +267,72 @@ namespace View
 
             if (Event.current.type == EventType.MouseUp && Event.current.button == 0)
             {
-                if (!_inventoryRect.Contains(Event.current.mousePosition))
+                bool insideAnyPanel = _playerPanelRect.Contains(Event.current.mousePosition)
+                    || (_lootPanelRect.width > 0 && _lootPanelRect.Contains(Event.current.mousePosition));
+
+                if (!insideAnyPanel)
                 {
-                    DropItem(session, state, _dragSource.Value);
+                    var playerInv = state.Inventory;
+                    InventoryState fromInv;
+                    if (_dragFromLoot && lootTarget != null)
+                        fromInv = lootTarget.Inventory;
+                    else
+                        fromInv = playerInv;
+
+                    var dropPos = state.PlayerEntity != null
+                        ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
+                        : Vector3.zero;
+
+                    var item = fromInv.GetSlot(_dragSource.Value);
+                    if (item != null)
+                    {
+                        fromInv.SetSlot(_dragSource.Value, null);
+                        var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+                        state.GroundItems.Add(groundItem);
+                        session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
+                    }
                 }
+
                 _dragSource = null;
                 _dragLabel = null;
             }
         }
 
-        void DrawContextMenu(Session.RaidSession session, RaidState state, float slotSize)
+        void DrawContextMenu(Session.RaidSession session, RaidState state,
+            LootableContainerState lootTarget)
         {
             if (!_showContextMenu) return;
 
-            float menuW = slotSize * 1.4f;
-            float menuItemH = slotSize * 0.4f;
+            float menuW = 80f;
+            float menuItemH = 22f;
             float menuH = menuItemH + 4f;
             var menuRect = new Rect(_contextMenuPos.x, _contextMenuPos.y, menuW, menuH);
 
             GUI.Box(menuRect, "", GUI.skin.box);
 
-            _dropBtnStyle.fontSize = Mathf.RoundToInt(menuItemH * 0.5f);
+            _dropBtnStyle.fontSize = Mathf.RoundToInt(menuItemH * 0.55f);
             if (GUI.Button(new Rect(menuRect.x + 2f, menuRect.y + 2f, menuW - 4f, menuItemH), "Drop", _dropBtnStyle))
             {
-                DropItem(session, state, _contextMenuSlot);
+                var playerInv = state.Inventory;
+                InventoryState fromInv;
+                if (_contextMenuFromLoot && lootTarget != null)
+                    fromInv = lootTarget.Inventory;
+                else
+                    fromInv = playerInv;
+
+                var dropPos = state.PlayerEntity != null
+                    ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
+                    : Vector3.zero;
+
+                var item = fromInv.GetSlot(_contextMenuSlot);
+                if (item != null)
+                {
+                    fromInv.SetSlot(_contextMenuSlot, null);
+                    var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+                    state.GroundItems.Add(groundItem);
+                    session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
+                }
+
                 _showContextMenu = false;
             }
 
@@ -237,12 +343,36 @@ namespace View
             }
         }
 
-        void DropItem(Session.RaidSession session, RaidState state, InventorySlotRef slot)
+        void DrawLootPrompt(RaidState state, PlayerEntityState player)
         {
-            var dropPos = state.PlayerEntity != null
-                ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
-                : Vector3.zero;
-            session.RequestDrop(slot, dropPos);
+            if (_isOpen) return;
+            if (player.LootTargetId != EId.None) return;
+
+            var nearest = LootSystem.FindNearestLootable(state, player.Position);
+            if (!nearest.IsValid) return;
+
+            EnsureStyles();
+
+            string text = "Press F to loot";
+            float w = 200f;
+            float h = 32f;
+            float x = (Screen.width - w) * 0.5f;
+            float y = Screen.height * 0.65f;
+
+            var rect = new Rect(x, y, w, h);
+            GUI.DrawTexture(rect, _promptBg);
+
+            if (_promptStyle == null)
+            {
+                _promptStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                };
+                _promptStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
+            }
+            GUI.Label(rect, text, _promptStyle);
         }
 
         void EnsureStyles()
@@ -293,6 +423,8 @@ namespace View
             if (_slotHighlight != null) Destroy(_slotHighlight);
             if (_equipBg != null) Destroy(_equipBg);
             if (_dragBg != null) Destroy(_dragBg);
+            if (_panelBg != null) Destroy(_panelBg);
+            if (_promptBg != null) Destroy(_promptBg);
         }
     }
 }

@@ -36,5 +36,8 @@ namespace Adapters
         void HitConfirmed(bool isKill);
         void StatusEffectApplied(EId entityId, string effectType);
         void StatusEffectRemoved(EId entityId, string effectType);
+
+        void LootableSpawned(EId id, Vector3 position, string typeId);
+        void LootableDespawned(EId id);
     }
 }

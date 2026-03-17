@@ -165,5 +165,23 @@ namespace Tests.EditMode.Fakes
             StatusEffectRemovedCalled = true;
             StatusEffectRemovedType = effectType;
         }
+
+        public bool LootableSpawnedCalled;
+        public EId LootableSpawnedId;
+        public string LootableSpawnedTypeId;
+        public void LootableSpawned(EId id, Vector3 position, string typeId)
+        {
+            LootableSpawnedCalled = true;
+            LootableSpawnedId = id;
+            LootableSpawnedTypeId = typeId;
+        }
+
+        public bool LootableDespawnedCalled;
+        public EId LootableDespawnedId;
+        public void LootableDespawned(EId id)
+        {
+            LootableDespawnedCalled = true;
+            LootableDespawnedId = id;
+        }
     }
 }

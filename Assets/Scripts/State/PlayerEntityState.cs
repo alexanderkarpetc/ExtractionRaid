@@ -38,6 +38,8 @@ namespace State
         public int ActiveMedkitSlot = -1;
         public float MedkitHealFraction;
 
+        public EId LootTargetId;
+
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)

@@ -33,6 +33,8 @@ namespace Adapters
         HitConfirmed,
         StatusEffectApplied,
         StatusEffectRemoved,
+        LootableSpawned,
+        LootableDespawned,
     }
 
     public struct RaidEvent
@@ -270,6 +272,22 @@ namespace Adapters
                 Id = entityId,
                 StringPayload = effectType,
             });
+        }
+
+        public void LootableSpawned(EId id, Vector3 position, string typeId)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.LootableSpawned,
+                Id = id,
+                Position = position,
+                StringPayload = typeId,
+            });
+        }
+
+        public void LootableDespawned(EId id)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.LootableDespawned, Id = id });
         }
 
         public void Clear()

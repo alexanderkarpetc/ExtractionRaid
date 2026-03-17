@@ -27,6 +27,7 @@ namespace App
         readonly GroundItemPresenter _groundItemPresenter;
         readonly BotPresenter _botPresenter;
         readonly GrenadePresenter _grenadePresenter;
+        readonly CorpsePresenter _corpsePresenter;
 
         App()
         {
@@ -41,6 +42,7 @@ namespace App
             _groundItemPresenter = new GroundItemPresenter();
             _botPresenter = new BotPresenter();
             _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
+            _corpsePresenter = new CorpsePresenter();
             Player = new Player();
         }
 
@@ -97,6 +99,7 @@ namespace App
             _projectilePresenter.LateTick(RaidSession);
             _grenadePresenter.LateTick(RaidSession);
             _groundItemPresenter.LateTick(RaidSession);
+            _corpsePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
@@ -110,6 +113,7 @@ namespace App
             _instance._groundItemPresenter?.Dispose();
             _instance._botPresenter?.Dispose();
             _instance._grenadePresenter?.Dispose();
+            _instance._corpsePresenter?.Dispose();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;
