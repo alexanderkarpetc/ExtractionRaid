@@ -3,6 +3,7 @@ using Adapters;
 using Session;
 using State;
 using UnityEngine;
+using View.FogOfWar;
 using Object = UnityEngine.Object;
 
 namespace View
@@ -14,6 +15,7 @@ namespace View
 
         PlayerView _playerView;
         GrenadeTrajectoryOverlay _trajectoryOverlay;
+        FogOfWarController _fogOfWarController;
         EId _trackedId;
 
         public PlayerPresenter(Action<Transform> onMuzzlePointReady)
@@ -116,11 +118,21 @@ namespace View
             var overlayGo = new GameObject("GrenadeTrajectoryOverlay");
             _trajectoryOverlay = overlayGo.AddComponent<GrenadeTrajectoryOverlay>();
 
+            var fowGo = new GameObject("FogOfWarController");
+            _fogOfWarController = fowGo.AddComponent<FogOfWarController>();
+            _fogOfWarController.Initialize(_playerView.transform);
+
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }
 
         public void Dispose()
         {
+            if (_fogOfWarController != null)
+            {
+                Object.Destroy(_fogOfWarController.gameObject);
+                _fogOfWarController = null;
+            }
+
             if (_trajectoryOverlay != null)
             {
                 Object.Destroy(_trajectoryOverlay.gameObject);

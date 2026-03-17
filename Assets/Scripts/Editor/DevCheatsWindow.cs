@@ -48,6 +48,19 @@ namespace Editor
 
             EditorGUILayout.Space(8);
 
+            // ── Fog of War ─────────────────────────────────────
+            EditorGUILayout.LabelField("Fog of War", EditorStyles.boldLabel);
+            DevCheats.FogOfWarEnabled  = EditorGUILayout.Toggle("FoW Enabled", DevCheats.FogOfWarEnabled);
+            DevCheats.FogBlurRadius    = EditorGUILayout.Slider("Blur Radius", DevCheats.FogBlurRadius, 0f, 10f);
+            DevCheats.FogBlurIterations = EditorGUILayout.IntSlider("Blur Iterations", DevCheats.FogBlurIterations, 1, 6);
+            DevCheats.FogIntensity     = EditorGUILayout.Slider("Fog Intensity", DevCheats.FogIntensity, 0f, 1f);
+            DevCheats.FogDesaturation  = EditorGUILayout.Slider("Desaturation", DevCheats.FogDesaturation, 0f, 1f);
+            DevCheats.FogColor         = EditorGUILayout.ColorField("Fog Color", DevCheats.FogColor);
+            DevCheats.FoWRTScale       = EditorGUILayout.IntSlider("RT Resolution", DevCheats.FoWRTScale, 64, 1024);
+            DevCheats.FOVRayStep       = EditorGUILayout.Slider("Ray Step (°)", DevCheats.FOVRayStep, 0.5f, 5f);
+
+            EditorGUILayout.Space(8);
+
             // ── Status Effects ───────────────────────────────
             EditorGUILayout.LabelField("Status Effects", EditorStyles.boldLabel);
             if (GUILayout.Button("Apply Bleed to Player"))
