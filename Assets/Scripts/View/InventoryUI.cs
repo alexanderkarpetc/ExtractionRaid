@@ -149,17 +149,17 @@ namespace View
             float scrollBarW = 16f;
             float availableW = panelRect.width - padding * 2f - scrollBarW;
 
-            const float maxSlotSize = 104f;
+            const float maxSlotSize = 135f;
             const int equipCount = 4;
 
             float slotGap = Mathf.Max(3f, availableW * 0.015f);
             float slotSize = (availableW - (BackpackColumns - 1) * slotGap) / BackpackColumns;
             slotSize = Mathf.Min(Mathf.Floor(slotSize), maxSlotSize);
 
-            float headerH = Mathf.Clamp(slotSize * 0.3f, 20f, 34f);
-            _headerStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(headerH * 0.85f), 18, 28);
-            _slotStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 14, 22);
-            _labelStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 14, 22);
+            float headerH = Mathf.Clamp(slotSize * 0.3f, 26f, 44f);
+            _headerStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(headerH * 0.85f), 23, 36);
+            _slotStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 18, 28);
+            _labelStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 18, 28);
 
             float labelH = slotSize * 0.22f;
             int backpackRows = Mathf.CeilToInt((float)InventoryState.BackpackSize / BackpackColumns);
