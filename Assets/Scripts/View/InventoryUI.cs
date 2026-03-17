@@ -12,6 +12,7 @@ namespace View
         const float PanelGap = 10f;
 
         bool _isOpen;
+        bool _openedByLoot;
 
         Texture2D _slotBg;
         Texture2D _slotHighlight;
@@ -36,6 +37,9 @@ namespace View
         Rect _playerPanelRect;
         Rect _lootPanelRect;
 
+        Vector2 _playerScrollPos;
+        Vector2 _lootScrollPos;
+
         void Awake()
         {
             _slotBg = MakeTex(new Color(0.2f, 0.2f, 0.2f, 0.9f));
@@ -48,20 +52,38 @@ namespace View
 
         void Update()
         {
+            var session = App.App.Instance?.RaidSession;
+            var player = session?.RaidState?.PlayerEntity;
+
             var kb = Keyboard.current;
             if (kb != null && kb[Key.Tab].wasPressedThisFrame)
-                _isOpen = !_isOpen;
+            {
+                if (_isOpen)
+                {
+                    _isOpen = false;
+                    _openedByLoot = false;
+                    if (player != null)
+                        player.LootTargetId = EId.None;
+                }
+                else
+                {
+                    _isOpen = true;
+                }
+            }
 
-            var session = App.App.Instance?.RaidSession;
-            if (session == null) return;
-            var player = session.RaidState?.PlayerEntity;
             if (player == null) return;
 
-            if (player.LootTargetId != EId.None)
+            if (player.LootTargetId != EId.None && !_isOpen)
+            {
                 _isOpen = true;
+                _openedByLoot = true;
+            }
 
-            if (!_isOpen && player.LootTargetId != EId.None)
-                player.LootTargetId = EId.None;
+            if (player.LootTargetId == EId.None && _openedByLoot)
+            {
+                _isOpen = false;
+                _openedByLoot = false;
+            }
         }
 
         void OnGUI()
@@ -98,7 +120,8 @@ namespace View
 
             _playerPanelRect = new Rect(panelX, panelY, panelW, totalH);
             GUI.DrawTexture(_playerPanelRect, _panelBg);
-            DrawInventoryPanel(_playerPanelRect, "INVENTORY", inventory, false, session, state);
+            DrawInventoryPanel(_playerPanelRect, "INVENTORY", inventory, false, session, state,
+                ref _playerScrollPos);
 
             if (lootTarget != null)
             {
@@ -106,7 +129,8 @@ namespace View
                 _lootPanelRect = new Rect(lootX, panelY, panelW, totalH);
                 GUI.DrawTexture(_lootPanelRect, _panelBg);
                 string header = $"{lootTarget.TypeId.ToUpper()} LOOT";
-                DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state);
+                DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state,
+                    ref _lootScrollPos);
             }
             else
             {
@@ -118,30 +142,48 @@ namespace View
         }
 
         void DrawInventoryPanel(Rect panelRect, string title, InventoryState inventory,
-            bool isLoot, Session.RaidSession session, RaidState state)
+            bool isLoot, Session.RaidSession session, RaidState state,
+            ref Vector2 scrollPos)
         {
-            float padding = panelRect.width * 0.03f;
-            float slotGap = Mathf.Max(3f, panelRect.width * 0.008f);
-            float availableW = panelRect.width - padding * 2f;
+            float padding = panelRect.width * 0.04f;
+            float scrollBarW = 16f;
+            float availableW = panelRect.width - padding * 2f - scrollBarW;
+
+            const float maxSlotSize = 104f;
+            const int equipCount = 4;
+
+            float slotGap = Mathf.Max(3f, availableW * 0.015f);
             float slotSize = (availableW - (BackpackColumns - 1) * slotGap) / BackpackColumns;
-            slotSize = Mathf.Floor(slotSize);
+            slotSize = Mathf.Min(Mathf.Floor(slotSize), maxSlotSize);
 
-            float headerH = Mathf.Max(20f, slotSize * 0.32f);
-            _headerStyle.fontSize = Mathf.RoundToInt(headerH * 0.7f);
-            _slotStyle.fontSize = Mathf.RoundToInt(slotSize * 0.16f);
-            _labelStyle.fontSize = Mathf.RoundToInt(slotSize * 0.18f);
+            float headerH = Mathf.Clamp(slotSize * 0.3f, 20f, 34f);
+            _headerStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(headerH * 0.85f), 18, 28);
+            _slotStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 14, 22);
+            _labelStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 14, 22);
 
-            float curX = panelRect.x + padding;
-            float curY = panelRect.y + padding;
+            float labelH = slotSize * 0.22f;
+            int backpackRows = Mathf.CeilToInt((float)InventoryState.BackpackSize / BackpackColumns);
+            float contentH = padding
+                + headerH + slotGap
+                + labelH + 1f + slotSize + slotGap * 2f + headerH * 0.4f
+                + headerH + slotGap
+                + backpackRows * (slotSize + slotGap)
+                + padding;
+
+            var contentRect = new Rect(0f, 0f, panelRect.width - scrollBarW, contentH);
+            scrollPos = GUI.BeginScrollView(panelRect, scrollPos, contentRect);
+
+            float curX = padding;
+            float curY = padding;
 
             GUI.Label(new Rect(curX, curY, availableW, headerH), title, _headerStyle);
             curY += headerH + slotGap;
 
-            float equipSlotSpacing = slotSize + slotGap + slotSize * 0.2f;
+            float equipSpacing = (availableW - slotSize) / Mathf.Max(1, equipCount - 1);
             DrawEquipSlot(inventory, curX, curY, "W1", InventorySlotRef.Weapon(0), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + equipSlotSpacing, curY, "W2", InventorySlotRef.Weapon(1), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + 2 * equipSlotSpacing, curY, "Helm", InventorySlotRef.Helmet(), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + 3 * equipSlotSpacing, curY, "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + equipSpacing, curY, "W2", InventorySlotRef.Weapon(1), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + 2 * equipSpacing, curY, "Helm", InventorySlotRef.Helmet(), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + 3 * equipSpacing, curY, "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap, isLoot);
 
             curY += slotSize + slotGap * 2f + headerH * 0.4f;
 
@@ -159,6 +201,8 @@ namespace View
 
                 DrawSlot(new Rect(x, y, slotSize, slotSize), slotRef, item, inventory, isLoot);
             }
+
+            GUI.EndScrollView();
         }
 
         void DrawEquipSlot(InventoryState inventory, float x, float y, string label,
