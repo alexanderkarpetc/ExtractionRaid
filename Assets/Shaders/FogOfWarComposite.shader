@@ -3,7 +3,8 @@ Shader "FogOfWar/Composite"
     Properties
     {
         _MainTex ("Scene Color", 2D) = "white" {}
-        _FoWBlurred ("FoW Blurred Mask", 2D) = "white" {}
+        // _FoWBlurred is set globally via cmd.SetGlobalTexture — NOT per-material.
+        // Keeping it out of Properties ensures the global value is always used.
         _FogColor ("Fog Color", Color) = (0.02, 0.02, 0.05, 1)
         _FogIntensity ("Fog Intensity", Range(0, 1)) = 0.85
         _DesaturationAmount ("Desaturation", Range(0, 1)) = 0.7

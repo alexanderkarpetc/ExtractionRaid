@@ -3,7 +3,7 @@ Shader "FogOfWar/TemporalBlend"
     Properties
     {
         _MainTex ("Current", 2D) = "white" {}
-        _PrevTex ("Previous", 2D) = "white" {}
+        // _PrevTex is set via Material.SetTexture (real RT, not TextureHandle)
         _BlendFactor ("Blend Factor", Range(0.05, 1)) = 0.3
     }
 

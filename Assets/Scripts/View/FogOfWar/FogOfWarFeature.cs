@@ -150,7 +150,7 @@ namespace View.FogOfWar
                         if (data.bypassBlur)
                         {
                             // ── BYPASS: skip blur+temporal, feed raw RT directly to composite ──
-                            data.compositeMat.SetTexture(FoWBlurredId, data.rawFoW);
+                            cmd.SetGlobalTexture(FoWBlurredId, data.rawFoW);
                             data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
                             data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
                             data.compositeMat.SetColor(FogColorId, data.fogColor);
@@ -172,7 +172,11 @@ namespace View.FogOfWar
                         }
 
                         // --- Temporal blend pass ---
-                        // tempB has current blurred, prevBlurred has last frame's result
+                        // tempB has current blurred, prevBlurred has last frame's result.
+                        // After blur: result is in tempB. After temporal: result is in tempA.
+                        // We track which texture has the final result to pass to composite.
+                        RenderTargetIdentifier compositeSource;
+
                         if (data.temporalMat != null && data.prevBlurred != null
                             && data.temporalBlend < 0.99f)
                         {
@@ -180,20 +184,23 @@ namespace View.FogOfWar
                             data.temporalMat.SetFloat(BlendFactorId, data.temporalBlend);
                             // tempB (current) → tempA (blended)
                             cmd.Blit(data.tempB, data.tempA, data.temporalMat, 0);
-                            // Copy blended result back to prevBlurred for next frame
+                            // Copy blended result to persistent RT for next frame
                             cmd.Blit(data.tempA, data.prevBlurred);
-                            // Use blended result for composite
-                            data.compositeMat.SetTexture(FoWBlurredId, data.tempA);
+                            compositeSource = data.tempA;
                         }
                         else
                         {
-                            // No temporal — copy current to prevBlurred for next frame
+                            // No temporal — copy current to persistent RT for next frame
                             if (data.prevBlurred != null)
                                 cmd.Blit(data.tempB, data.prevBlurred);
-                            data.compositeMat.SetTexture(FoWBlurredId, data.tempB);
+                            compositeSource = data.tempB;
                         }
 
                         // --- Composite pass ---
+                        // Use cmd.SetGlobalTexture (takes RenderTargetIdentifier)
+                        // instead of Material.SetTexture (needs real Texture).
+                        // TextureHandle → RTI conversion works on all platforms.
+                        cmd.SetGlobalTexture(FoWBlurredId, compositeSource);
                         data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
                         data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
                         data.compositeMat.SetColor(FogColorId, data.fogColor);
