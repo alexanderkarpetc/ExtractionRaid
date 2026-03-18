@@ -5,6 +5,15 @@ using UnityEngine;
 
 namespace Systems
 {
+    public enum InteractableType : byte { None, Lootable, GroundItem }
+
+    public struct InteractableResult
+    {
+        public EId Id;
+        public InteractableType Type;
+        public bool IsValid => Id.IsValid;
+    }
+
     public static class LootSystem
     {
         public const float LootRange = 3f;
@@ -95,6 +104,54 @@ namespace Systems
             }
 
             return bestId;
+        }
+
+        public static InteractableResult FindNearestInteractable(RaidState state, Vector3 playerPosition,
+            Vector3 facingDirection)
+        {
+            float bestScore = float.MaxValue;
+            var result = new InteractableResult();
+
+            for (int i = 0; i < state.Lootables.Count; i++)
+            {
+                float dist = Vector3.Distance(playerPosition, state.Lootables[i].Position);
+                if (dist > LootRange) continue;
+                float score = ScoreInteractable(playerPosition, facingDirection, state.Lootables[i].Position, dist);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    result.Id = state.Lootables[i].Id;
+                    result.Type = InteractableType.Lootable;
+                }
+            }
+
+            for (int i = 0; i < state.GroundItems.Count; i++)
+            {
+                float dist = Vector3.Distance(playerPosition, state.GroundItems[i].Position);
+                if (dist > LootRange) continue;
+                float score = ScoreInteractable(playerPosition, facingDirection, state.GroundItems[i].Position, dist);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    result.Id = state.GroundItems[i].Id;
+                    result.Type = InteractableType.GroundItem;
+                }
+            }
+
+            return result;
+        }
+
+        static float ScoreInteractable(Vector3 playerPos, Vector3 facing, Vector3 targetPos, float distance)
+        {
+            if (distance < 0.01f) return 0f;
+            var dirToTarget = targetPos - playerPos;
+            dirToTarget.y = 0f;
+            var flatFacing = facing;
+            flatFacing.y = 0f;
+            if (dirToTarget.sqrMagnitude < 0.0001f || flatFacing.sqrMagnitude < 0.0001f)
+                return distance;
+            float dot = Vector3.Dot(flatFacing.normalized, dirToTarget.normalized);
+            return distance * (1f - 0.5f * dot);
         }
 
         public static LootableContainerState GetLootable(RaidState state, EId id)

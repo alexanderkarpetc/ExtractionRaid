@@ -40,6 +40,10 @@ namespace View
         Vector2 _playerScrollPos;
         Vector2 _lootScrollPos;
 
+        bool _isFloorMode;
+        InventoryState _floorInventory;
+        EId[] _floorItemEIds;
+
         void Awake()
         {
             _slotBg = MakeTex(new Color(0.2f, 0.2f, 0.2f, 0.9f));
@@ -108,9 +112,18 @@ namespace View
             if (player.LootTargetId != EId.None)
                 lootTarget = LootSystem.GetLootable(state, player.LootTargetId);
 
+            _isFloorMode = false;
+            if (lootTarget == null)
+            {
+                RebuildFloorInventory(state, player.Position);
+                _isFloorMode = HasFloorItems();
+            }
+
+            bool hasRightPanel = lootTarget != null || _isFloorMode;
+
             float totalH = Screen.height - ScreenMargin * 2f;
             float panelW;
-            if (lootTarget != null)
+            if (hasRightPanel)
                 panelW = (Screen.width - ScreenMargin * 2f - PanelGap) * 0.5f;
             else
                 panelW = (Screen.width - ScreenMargin * 2f) * 0.5f;
@@ -135,6 +148,14 @@ namespace View
                 else
                     DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state,
                         ref _lootScrollPos);
+            }
+            else if (_isFloorMode)
+            {
+                float lootX = panelX + panelW + PanelGap;
+                _lootPanelRect = new Rect(lootX, panelY, panelW, totalH);
+                GUI.DrawTexture(_lootPanelRect, _panelBg);
+                DrawContainerPanel(_lootPanelRect, "ON THE FLOOR", _floorInventory, session, state,
+                    ref _lootScrollPos);
             }
             else
             {
@@ -310,17 +331,32 @@ namespace View
                     {
                         var state = session.RaidState;
                         var playerInv = state.Inventory;
-                        LootableContainerState lootTarget = null;
-                        if (state.PlayerEntity.LootTargetId != EId.None)
-                            lootTarget = LootSystem.GetLootable(state, state.PlayerEntity.LootTargetId);
 
-                        var fromInv = _dragFromLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
-                        var toInv = isLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
-
-                        if (fromInv == toInv)
-                            InventorySystem.TryMove(fromInv, _dragSource.Value, slotRef);
+                        if (_isFloorMode)
+                        {
+                            if (_dragFromLoot && !isLoot)
+                                TryPickUpFloorItem(state, session, _dragSource.Value.Index, slotRef);
+                            else if (!_dragFromLoot && isLoot)
+                                DropToFloor(state, session, _dragSource.Value);
+                            else if (!_dragFromLoot && !isLoot)
+                                InventorySystem.TryMove(playerInv, _dragSource.Value, slotRef);
+                        }
                         else
-                            LootSystem.TryTransfer(fromInv, _dragSource.Value, toInv, slotRef);
+                        {
+                            LootableContainerState lootTarget = null;
+                            if (state.PlayerEntity.LootTargetId != EId.None)
+                                lootTarget = LootSystem.GetLootable(state, state.PlayerEntity.LootTargetId);
+
+                            var fromInv = _dragFromLoot && lootTarget != null
+                                ? lootTarget.Inventory
+                                : playerInv;
+                            var toInv = isLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
+
+                            if (fromInv == toInv)
+                                InventorySystem.TryMove(fromInv, _dragSource.Value, slotRef);
+                            else
+                                LootSystem.TryTransfer(fromInv, _dragSource.Value, toInv, slotRef);
+                        }
                     }
                     _dragSource = null;
                     _dragLabel = null;
@@ -371,24 +407,33 @@ namespace View
 
                 if (!insideAnyPanel)
                 {
-                    var playerInv = state.Inventory;
-                    InventoryState fromInv;
-                    if (_dragFromLoot && lootTarget != null)
-                        fromInv = lootTarget.Inventory;
-                    else
-                        fromInv = playerInv;
-
-                    var dropPos = state.PlayerEntity != null
-                        ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
-                        : Vector3.zero;
-
-                    var item = fromInv.GetSlot(_dragSource.Value);
-                    if (item != null)
+                    if (_isFloorMode && _dragFromLoot)
                     {
-                        fromInv.SetSlot(_dragSource.Value, null);
-                        var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
-                        state.GroundItems.Add(groundItem);
-                        session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
+                        // Item is already on the floor — do nothing
+                    }
+                    else
+                    {
+                        var playerInv = state.Inventory;
+                        InventoryState fromInv;
+                        if (_dragFromLoot && lootTarget != null)
+                            fromInv = lootTarget.Inventory;
+                        else
+                            fromInv = playerInv;
+
+                        var dropPos = state.PlayerEntity != null
+                            ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
+                            : Vector3.zero;
+
+                        var item = fromInv.GetSlot(_dragSource.Value);
+                        if (item != null)
+                        {
+                            fromInv.SetSlot(_dragSource.Value, null);
+                            var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos,
+                                item.StackCount);
+                            state.GroundItems.Add(groundItem);
+                            session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position,
+                                groundItem.DefinitionId);
+                        }
                     }
                 }
 
@@ -410,29 +455,48 @@ namespace View
             GUI.Box(menuRect, "", GUI.skin.box);
 
             _dropBtnStyle.fontSize = Mathf.RoundToInt(menuItemH * 0.5f);
-            if (GUI.Button(new Rect(menuRect.x + 2f, menuRect.y + 2f, menuW - 4f, menuItemH), "Drop", _dropBtnStyle))
+
+            if (_isFloorMode && _contextMenuFromLoot)
             {
-                var playerInv = state.Inventory;
-                InventoryState fromInv;
-                if (_contextMenuFromLoot && lootTarget != null)
-                    fromInv = lootTarget.Inventory;
-                else
-                    fromInv = playerInv;
-
-                var dropPos = state.PlayerEntity != null
-                    ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
-                    : Vector3.zero;
-
-                var item = fromInv.GetSlot(_contextMenuSlot);
-                if (item != null)
+                if (GUI.Button(new Rect(menuRect.x + 2f, menuRect.y + 2f, menuW - 4f, menuItemH),
+                    "Pick up", _dropBtnStyle))
                 {
-                    fromInv.SetSlot(_contextMenuSlot, null);
-                    var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
-                    state.GroundItems.Add(groundItem);
-                    session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
+                    int slotIdx = _contextMenuSlot.Index;
+                    int freeSlot = state.Inventory.FindFreeBackpackSlot();
+                    if (freeSlot >= 0)
+                        TryPickUpFloorItem(state, session, slotIdx, InventorySlotRef.BackpackSlot(freeSlot));
+                    _showContextMenu = false;
                 }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(menuRect.x + 2f, menuRect.y + 2f, menuW - 4f, menuItemH),
+                    "Drop", _dropBtnStyle))
+                {
+                    var playerInv = state.Inventory;
+                    InventoryState fromInv;
+                    if (_contextMenuFromLoot && lootTarget != null)
+                        fromInv = lootTarget.Inventory;
+                    else
+                        fromInv = playerInv;
 
-                _showContextMenu = false;
+                    var dropPos = state.PlayerEntity != null
+                        ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
+                        : Vector3.zero;
+
+                    var item = fromInv.GetSlot(_contextMenuSlot);
+                    if (item != null)
+                    {
+                        fromInv.SetSlot(_contextMenuSlot, null);
+                        var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos,
+                            item.StackCount);
+                        state.GroundItems.Add(groundItem);
+                        session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position,
+                            groundItem.DefinitionId);
+                    }
+
+                    _showContextMenu = false;
+                }
             }
 
             if (Event.current.type == EventType.MouseDown && !menuRect.Contains(Event.current.mousePosition))
@@ -447,12 +511,12 @@ namespace View
             if (_isOpen) return;
             if (player.LootTargetId != EId.None) return;
 
-            var nearest = LootSystem.FindNearestLootable(state, player.Position);
+            var nearest = LootSystem.FindNearestInteractable(state, player.Position, player.FacingDirection);
             if (!nearest.IsValid) return;
 
             EnsureStyles();
 
-            string text = "Press F to loot";
+            string text = nearest.Type == InteractableType.Lootable ? "Press F to loot" : "Press F to pick up";
             float w = 200f;
             float h = 32f;
             float x = (Screen.width - w) * 0.5f;
@@ -472,6 +536,85 @@ namespace View
                 _promptStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
             }
             GUI.Label(rect, text, _promptStyle);
+        }
+
+        void TryPickUpFloorItem(RaidState state, Session.RaidSession session, int floorSlotIndex,
+            InventorySlotRef targetSlot)
+        {
+            if (floorSlotIndex < 0 || floorSlotIndex >= InventoryState.BackpackSize) return;
+            var floorItemEId = _floorItemEIds[floorSlotIndex];
+            if (!floorItemEId.IsValid) return;
+
+            for (int i = 0; i < state.GroundItems.Count; i++)
+            {
+                if (state.GroundItems[i].Id != floorItemEId) continue;
+
+                var gi = state.GroundItems[i];
+                var def = ItemDefinition.Get(gi.DefinitionId);
+                var slotType = targetSlot.ToItemSlotType();
+                if (def != null && (def.AllowedSlots & slotType) == 0) return;
+                if (state.Inventory.GetSlot(targetSlot) != null) return;
+
+                state.Inventory.SetSlot(targetSlot,
+                    ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
+                state.GroundItems.RemoveAt(i);
+                session.ConsumeEvents().GroundItemDespawned(gi.Id);
+
+                _floorInventory.Backpack[floorSlotIndex] = null;
+                _floorItemEIds[floorSlotIndex] = EId.None;
+                break;
+            }
+        }
+
+        void DropToFloor(RaidState state, Session.RaidSession session, InventorySlotRef sourceSlot)
+        {
+            var item = state.Inventory.GetSlot(sourceSlot);
+            if (item == null) return;
+
+            state.Inventory.SetSlot(sourceSlot, null);
+
+            var dropPos = state.PlayerEntity != null
+                ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
+                : UnityEngine.Vector3.zero;
+
+            var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+            state.GroundItems.Add(groundItem);
+            session.ConsumeEvents().GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
+        }
+
+        void RebuildFloorInventory(RaidState state, UnityEngine.Vector3 playerPos)
+        {
+            if (_floorInventory == null)
+            {
+                _floorInventory = new InventoryState();
+                _floorItemEIds = new EId[InventoryState.BackpackSize];
+            }
+
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                _floorInventory.Backpack[i] = null;
+                _floorItemEIds[i] = EId.None;
+            }
+
+            int slot = 0;
+            for (int i = 0; i < state.GroundItems.Count && slot < InventoryState.BackpackSize; i++)
+            {
+                float dist = UnityEngine.Vector3.Distance(playerPos, state.GroundItems[i].Position);
+                if (dist > LootSystem.LootRange) continue;
+
+                var gi = state.GroundItems[i];
+                _floorInventory.Backpack[slot] = ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount);
+                _floorItemEIds[slot] = gi.Id;
+                slot++;
+            }
+        }
+
+        bool HasFloorItems()
+        {
+            if (_floorInventory == null) return false;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (_floorInventory.Backpack[i] != null) return true;
+            return false;
         }
 
         void EnsureStyles()
