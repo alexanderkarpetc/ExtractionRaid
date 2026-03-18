@@ -66,7 +66,13 @@ Key fields on `WeaponEntityState`:
 
 Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
 
-Recoil: forward kick + sideways scatter (displaces WeaponAimPoint away from player). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
+Recoil: forward kick + sideways scatter. Both go through `RecoilOffset` (not directly into `WeaponAimPoint`). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
+
+DevCheats controls:
+- `AimSplitEnabled` (bool) — when false, weapon aim follows mouse instantly (sharpness=1000), recoil still works
+- `AimFollowMultiplier` (float) — scales `AimFollowSharpness` when aim split is enabled
+- `RecoilMultiplier`, `RecoilForwardMultiplier`, `RecoilSideMultiplier` — kick strength
+- `RecoilRecoveryMultiplier` — decay speed
 
 Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
 

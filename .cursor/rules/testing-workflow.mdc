@@ -1,5 +1,5 @@
 ---
-description: Testing strategy, feature implementation flow, and definition of done. Use when adding features or writing tests.
+description: Testing strategy and feature implementation flow. Use when adding features or writing tests.
 alwaysApply: false
 ---
 
@@ -21,18 +21,3 @@ Only for Unity integration: navmesh validation, bullet collisions, spawn/extract
 5. Update presenter/view for visualization and callback routing.
 6. Add/update unit tests.
 7. Add PlayMode coverage only where Unity integration matters.
-
-## Working style
-- Propose a file-level plan before editing.
-- Keep changes small and localized.
-- Avoid broad refactors unless explicitly requested.
-- Maintain naming and folder conventions.
-- Prefer ports + adapters over direct Unity API usage in logic.
-
-## Definition of done
-- Compiles.
-- Follows architecture contract.
-- Tests added/updated where applicable.
-- No hidden dependencies introduced.
-- Diff is minimal and focused.
-- No unrelated formatting churn.

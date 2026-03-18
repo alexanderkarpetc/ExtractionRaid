@@ -86,17 +86,24 @@ Typical conceptual groups:
 
 Actual system tick order in `RaidSession.Tick()`:
 ```
+RollSystem                 // dodge roll state machine
 MovementSystem
 WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
 WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
 AimingSystem               // dual-layer: RawAimPoint (instant) → WeaponAimPoint (smoothed) → AimDirection
+GrenadeSystem              // grenade throw + trajectory
+MedkitSystem               // healing consumable
+StatusEffectSystem         // bleed, buffs, etc.
+BandageSystem              // bandage healing
 ShootingSystem             // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
+PlayerFOVSystem            // visibility cone queries
 BotPerceptionSystem
 BotBrainSystem
 BotMovementSystem
 BotCombatSystem            // bots use LastFireTime, no FSM
 ProjectileSystem
-DamageSystem
+GrenadeSystem.TickExplosions  // grenade detonation + area damage
+DamageSystem               // consumes hit inbox, applies damage, emits death events
 ```
 
 ## 4) Entry points
@@ -111,22 +118,7 @@ All entry points must go through:
 
 Do not rely on directly loading arbitrary scenes.
 
-## 5) Coding rules
-
-### Must
-- keep dependencies explicit via parameters
-- isolate features by system or system sub-function
-- prefer explicit IDs over object references
-- preserve project conventions
-- keep changes as minimal diffs
-
-### Must not
-- add new global singletons besides `App.Instance`
-- call `App.Instance` from systems
-- store Unity objects inside state
-- hide dependencies in static fields
-
-## 6) Debug tools
+## 5) Debug tools
 
 ### Raid State Debugger (EditorWindow)
 - `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
@@ -140,7 +132,7 @@ Do not rely on directly loading arbitrary scenes.
 - `BotDebugLabel` (`View/BotDebugLabel.cs`) — 3D TextMesh above bots showing TypeId, AI status, HP, distance
 - `InventoryUI` (`View/InventoryUI.cs`) — IMGUI inventory screen (Tab key) with drag/drop, context menu, stack counts
 
-## 7) Shared terms
+## 6) Shared terms
 
 - **State**: mutable game-world data (values + IDs)
 - **Context**: read-only dependencies (ports, adapters, config, events)
@@ -148,7 +140,7 @@ Do not rely on directly loading arbitrary scenes.
 - **Presenter/View**: Unity-only visualization layer
 - **Entry Point**: launch mode routed through the launcher
 
-## 8) Data Flow Reference
+## 7) Data Flow Reference
 
 ### Tick lifecycle
 

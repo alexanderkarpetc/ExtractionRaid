@@ -1,0 +1,99 @@
+---
+description: Fog of War system — ray sweep, mesh build, FOV camera, post-processing pipeline, DX12 compatibility. Use for FoW/visibility changes.
+alwaysApply: false
+---
+
+# Fog of War (FoW)
+
+5-stage pipeline running every frame: Ray Sweep → Mesh Build → FOV Camera → Post-Process → Final Image.
+
+## Pipeline Overview
+
+```
+Player Position → FOVRaySweep → FOVMeshBuilder → FOV Camera (_rawRT)
+                                                       |
+                                            Graphics.Blit → _rawColorRT
+                                                       |
+                                            FogOfWarFeature (URP pass):
+                                              Blur → Temporal Blend → Composite → Screen
+```
+
+## Stage 1: Ray Sweep (`FOVRaySweep.cs`)
+
+Two-pass algorithm builds visibility polygon:
+- **Pass 1 — Coarse sweep**: rays every `FOVRayStep` degrees (360°), finer near FOV edges
+- **Pass 2 — Edge-finding**: binary search (4 iterations) between rays with >0.5m distance jump
+
+Two zones: FOV cone (farRadius) + behind player (nearRadius, 360°).
+Output: `List<Vector3>` endpoints (fan center + perimeter).
+
+## Stage 2: Mesh Build (`FOVMeshBuilder.cs`)
+
+Triangle fan from sweep endpoints. Lives on "FOV" layer (only FOV camera renders it).
+`mesh.MarkDynamic()` for per-frame updates. Arrays grow, never shrink.
+
+## Stage 3: FOV Camera (`FogOfWarController.cs`)
+
+Separate camera renders FOV mesh as white-on-black into `_rawRT` (R8, depth=16).
+Syncs position/rotation/projection from main camera every frame.
+
+### Three RenderTextures
+| Name | Format | Purpose |
+|------|--------|---------|
+| `_rawRT` | R8, depth=16 | FOV camera target |
+| `_rawColorRT` | R8, depth=0 | Color-only copy for RenderGraph import |
+| `_blurredRT` | R8, depth=0 | Previous frame's blurred result (temporal) |
+
+`_rawColorRT` exists because `renderGraph.ImportTexture()` rejects textures with both color and depth.
+`Graphics.Blit(_rawRT, _rawColorRT)` in LateUpdate strips depth.
+
+## Stage 4: Post-Processing (`FogOfWarFeature.cs`)
+
+URP `ScriptableRendererFeature` with `AddUnsafePass`. Three steps:
+
+1. **Blur** (`FogOfWarBlur.shader`) — separable Gaussian 9-tap, H+V, repeated N times
+2. **Temporal Blend** (`FogOfWarTemporalBlend.shader`) — `lerp(prev, curr, blendFactor)`, saves to `_blurredRT`
+3. **Composite** (`FogOfWarComposite.shader`) — desaturate + darken toward fog color
+
+### DX12 Compatibility: ImportTexture Pattern
+
+All external RTs imported via `renderGraph.ImportTexture(RTHandles.Alloc(rt))` so blits are `TextureHandle↔TextureHandle`.
+`cmd.Blit(Texture, TextureHandle)` silently fails on DX12 — source never bound as `_MainTex`.
+RTHandle wrappers cached via `GetOrCreateRTHandle()` to avoid GC.
+
+`_FoWBlurred` and `_PrevTex` NOT in shader Properties blocks — per-material Properties shadow global binds from `cmd.SetGlobalTexture()`.
+
+## DevCheats Parameters
+
+Defaults live in `DevCheats.Reset()` (single source of truth).
+
+| Parameter | Purpose |
+|-----------|---------|
+| `FOVEnabled` | Master on/off |
+| `FogOfWarEnabled` | Post-processing on/off |
+| `FOVNearRadius` | Behind-player radius (m) |
+| `FOVFarRadius` | Forward vision radius (m) |
+| `FOVAngle` | Forward cone width (°) |
+| `FOVRayStep` | Ray spacing (°) |
+| `FoWRTScale` | RT resolution (px) |
+| `FogBlurRadius` | Blur kernel size |
+| `FogBlurIterations` | Blur pass count |
+| `FogIntensity` | Fog darkness (0–1) |
+| `FogDesaturation` | Color removal in fog (0–1) |
+| `FogColor` | Fog tint |
+| `FogTemporalBlend` | Smoothing (1=off, 0.05=max) |
+
+## Key Files
+
+```
+Scripts/View/FogOfWar/
+  FOVRaySweep.cs          — Stage 1: raycasts + edge-finding
+  FOVMeshBuilder.cs       — Stage 2: triangle fan mesh
+  FogOfWarController.cs   — Stage 3: FOV camera + RT management
+  FogOfWarFeature.cs      — Stage 4: URP render feature
+Shaders/
+  FogOfWarVisibility.shader      — FOV mesh (pure white output)
+  FogOfWarBlur.shader            — Gaussian blur
+  FogOfWarTemporalBlend.shader   — Frame smoothing
+  FogOfWarComposite.shader       — Scene darkening/desaturation
+```

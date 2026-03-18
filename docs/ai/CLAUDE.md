@@ -55,17 +55,7 @@ Detailed rules live here:
 - `docs/ai/entity-lifecycle.md`
 - `docs/ai/testing-and-workflow.md`
 
-## 5) Domain boundaries
-
-Allowed in model/state/logic:
-- value types and math helpers from Unity
-
-Forbidden in model/state/logic:
-- direct scene object references
-- gameplay logic inside MonoBehaviours
-- hidden dependencies through globals or static fields
-
-## 6) Standard implementation workflow
+## 5) Standard implementation workflow
 
 When implementing a change:
 1. Identify the affected state.
@@ -79,26 +69,15 @@ When implementing a change:
 8. Show a file-level plan before editing.
 9. Keep the change incremental.
 
-## 7) Definition of done
-
-A change is done when:
-- it compiles
-- it follows this contract
-- tests are added or updated when applicable
-- no hidden dependencies were introduced
-- the diff is minimal and focused
-- there is no unrelated formatting churn
-- regression risk was checked
-
-## 8) Documentation sync
+## 6) Documentation sync
 
 AI docs exist in two places that must stay in sync:
-- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`)
-- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`, `weapons.mdc`)
+- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`, `fog-of-war.md`)
+- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`, `weapons.mdc`, `fog-of-war.mdc`)
 
 When updating any AI doc, apply the same change to the corresponding Cursor doc.
 
-## 9) Task routing (read only what is relevant)
+## 7) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`
@@ -106,6 +85,7 @@ Read extra docs depending on the task:
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`
 - Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
+- Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
 
 Do not load all docs unless the task spans multiple areas.
 Prefer the smallest relevant context.

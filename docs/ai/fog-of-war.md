@@ -51,13 +51,13 @@ Where it doesn't hit anything — it reaches max range.
 ```
 
 **Two zones:**
-- **FOV cone** (default 120): rays go up to `farRadius` (30m)
-- **Behind player** (the other 240): rays only go `nearRadius` (5m) — peripheral awareness
+- **FOV cone** (`FOVAngle`): rays go up to `FOVFarRadius`
+- **Behind player** (the rest of 360°): rays only go `FOVNearRadius` — peripheral awareness
 
 ### The two-pass algorithm
 
 **Pass 1 — Coarse sweep:**
-- Cast rays every `rayStep` degrees (default 2) in a full 360 circle
+- Cast rays every `FOVRayStep` degrees in a full 360° circle
 - Near the FOV cone edges, use finer steps (half of rayStep) for smoother transitions
 - Store each ray's angle, distance, and whether it hit something
 
@@ -149,7 +149,7 @@ This layer is special — only the FOV camera renders it.
 **Key details:**
 - FOV camera copies position, rotation, and projection settings from the main camera every frame
 - Both cameras must be perfectly synced so the black/white mask aligns with the scene
-- RT resolution is configurable (`FoWRTScale`, default 256) — lower = faster but blurrier edges
+- RT resolution is configurable (`FoWRTScale`) — lower = faster but blurrier edges
 - RT aspect ratio matches the screen to prevent stretching
 
 ### Three RenderTextures
@@ -197,7 +197,7 @@ RTHandle wrappers are cached (`GetOrCreateRTHandle()`) to avoid GC allocations e
    ┌─────────────────┐
    │  BLUR            │  FogOfWarBlur.shader
    │  (Gaussian 9-tap)│  Softens the harsh edges
-   │  H pass → V pass │  Repeated N times (default 3)
+   │  H pass → V pass │  Repeated N times (FogBlurIterations)
    └────────┬────────┘
             v
    ┌─────────────────┐
@@ -223,7 +223,7 @@ RTHandle wrappers are cached (`GetOrCreateRTHandle()`) to avoid GC allocations e
 **Separable Gaussian blur** — one of the cheapest ways to blur an image:
 1. Blur horizontally (9 pixel samples in a row)
 2. Blur vertically (9 pixel samples in a column)
-3. Repeat steps 1-2 for `FogBlurIterations` times (default 3)
+3. Repeat steps 1-2 for `FogBlurIterations` times
 
 Each pass uses a weighted average (Gaussian curve) — center pixels matter more, far pixels matter less.
 
@@ -247,11 +247,10 @@ Temporal blend smooths this by mixing the current frame with the previous frame.
 
 - `blendFactor = 1.0` → no smoothing (only current frame)
 - `blendFactor = 0.05` → heavy smoothing (95% previous frame, 5% current)
-- Default: `0.2` (20% current, 80% previous)
 
 The blurred result is saved into `_blurredRT` for use as `previousFrame` next frame.
 
-**Trade-off:** Lower blend = smoother but the fog "lags" behind fast rotation. Default 0.2 is a good balance.
+**Trade-off:** Lower blend = smoother but the fog "lags" behind fast rotation.
 
 ### 4c. Composite (`FogOfWarComposite.shader`)
 
@@ -309,23 +308,25 @@ Assets/
 
 ## DevCheats Parameters
 
-| Parameter | Default | What it does |
-|-----------|---------|-------------|
-| **FOVEnabled** | true | Master on/off for the entire FOV system |
-| **FogOfWarEnabled** | true | On/off for the fog post-processing |
-| **FOVNearRadius** | 5 | See-behind-you radius (360, meters) |
-| **FOVFarRadius** | 30 | Forward vision radius (FOV cone, meters) |
-| **FOVAngle** | 120 | Width of the forward vision cone (degrees) |
-| **FOVRayStep** | 2 | Angle between rays (degrees, lower = more precise = slower) |
-| **FoWRTScale** | 256 | Visibility texture resolution (pixels wide) |
-| **FogBlurRadius** | 1.74 | How far the blur reaches (shader units) |
-| **FogBlurIterations** | 3 | How many blur passes (more = softer) |
-| **FogIntensity** | 0.4 | How dark the fog gets (0 = invisible, 1 = pitch black) |
-| **FogDesaturation** | 0.7 | How much color is removed in fog (0 = full color, 1 = grayscale) |
-| **FogColor** | (0.02, 0.02, 0.05) | The color of the fog (dark blue-black) |
-| **FogTemporalBlend** | 0.2 | Temporal smoothing strength (1 = off, 0.05 = max smooth) |
-| **ForceShowAllBots** | false | Debug: ignore visibility for bots |
-| **FOVOcclusionEnabled** | true | Gizmo: show raycast-based occlusion in Editor |
+All defaults live in `DevCheats.Reset()` (single source of truth).
+
+| Parameter | What it does |
+|-----------|-------------|
+| **FOVEnabled** | Master on/off for the entire FOV system |
+| **FogOfWarEnabled** | On/off for the fog post-processing |
+| **FOVNearRadius** | See-behind-you radius (360°, meters) |
+| **FOVFarRadius** | Forward vision radius (FOV cone, meters) |
+| **FOVAngle** | Width of the forward vision cone (degrees) |
+| **FOVRayStep** | Angle between rays (degrees, lower = more precise = slower) |
+| **FoWRTScale** | Visibility texture resolution (pixels wide) |
+| **FogBlurRadius** | How far the blur reaches (shader units) |
+| **FogBlurIterations** | How many blur passes (more = softer) |
+| **FogIntensity** | How dark the fog gets (0 = invisible, 1 = pitch black) |
+| **FogDesaturation** | How much color is removed in fog (0 = full color, 1 = grayscale) |
+| **FogColor** | The color of the fog |
+| **FogTemporalBlend** | Temporal smoothing strength (1 = off, 0.05 = max smooth) |
+| **ForceShowAllBots** | Debug: ignore visibility for bots |
+| **FOVOcclusionEnabled** | Gizmo: show raycast-based occlusion in Editor |
 
 ---
 

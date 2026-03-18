@@ -31,25 +31,3 @@ When implementing a feature:
 6. add or update unit tests
 7. add PlayMode coverage only where Unity integration matters
 
-## 3) Claude Code working style in this repo
-
-For implementation tasks:
-- read `CLAUDE.md` first
-- read only the relevant extra doc for the current task
-- propose a file-level plan before editing
-- keep changes small and localized
-- avoid broad refactors unless explicitly requested
-- avoid new frameworks unless explicitly requested
-- maintain naming and folder conventions
-- prefer ports + adapters over direct Unity API usage in logic
-
-## 4) Definition of done
-
-A change should:
-- compile
-- follow the architecture contract
-- include test updates where applicable
-- avoid hidden dependencies
-- stay minimal and focused
-- avoid unrelated formatting churn
-- include a regression check when relevant

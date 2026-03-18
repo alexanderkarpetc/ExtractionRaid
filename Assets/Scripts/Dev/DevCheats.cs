@@ -4,64 +4,87 @@ namespace Dev
 {
     public static class DevCheats
     {
-        // ── Toggles ─────────────────────────────────────────
+        // ── Cheats ──────────────────────────────────────────
         public static bool GodMode;
         public static bool InfiniteAmmo;
+
+        // ── Weapon ──────────────────────────────────────────
+        public static float DamageMultiplier;
+        public static float ProjectileSpeedMultiplier;
+        public static float FireRateMultiplier;
+
+        // ── Recoil ──────────────────────────────────────────
         public static bool NoRecoil;
+        public static float RecoilMultiplier;
+        public static float RecoilForwardMultiplier;
+        public static float RecoilSideMultiplier;
+        public static float RecoilRecoveryMultiplier;
 
-        // ── Multipliers (1.0 = default, no change) ─────────
-        public static float DamageMultiplier = 1f;
-        public static float ProjectileSpeedMultiplier = 1f;
-        public static float FireRateMultiplier = 1f;
-        public static float MoveSpeedMultiplier = 1f;
-        public static float RecoilMultiplier = .5f;
-        public static float RecoilForwardMultiplier = 1f;
-        public static float RecoilSideMultiplier = 1f;
-        public static float RecoilRecoveryMultiplier = 1f;
+        // ── Aim Split ───────────────────────────────────────
+        public static bool AimSplitEnabled;
+        public static float AimFollowMultiplier;
 
-        // ── Aim Split ────────────────────────────────────
-        public static bool AimSplitEnabled = false;
-        public static float AimFollowMultiplier = 1f;
+        // ── Player ──────────────────────────────────────────
+        public static float MoveSpeedMultiplier;
 
-        // ── Status Effects ────────────────────────────────
+        // ── FOV ─────────────────────────────────────────────
+        public static bool FOVEnabled;
+        public static float FOVNearRadius;
+        public static float FOVFarRadius;
+        public static float FOVAngle;
+        public static bool ForceShowAllBots;
+        public static bool FOVOcclusionEnabled;
+
+        // ── Fog of War ──────────────────────────────────────
+        public static bool FogOfWarEnabled;
+        public static float FogBlurRadius;
+        public static int FogBlurIterations;
+        public static float FogIntensity;
+        public static float FogDesaturation;
+        public static Color FogColor;
+        public static int FoWRTScale;
+        public static float FOVRayStep;
+        public static float FogTemporalBlend;
+
+        // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer;
 
-        // ── FOV ────────────────────────────────────────────
-        public static bool FOVEnabled = true;
-        public static float FOVNearRadius = 5f;
-        public static float FOVFarRadius = 30f;
-        public static float FOVAngle = 120f;
-        public static bool ForceShowAllBots;
-        public static bool FOVOcclusionEnabled = true;
-
-        // ── Fog of War ────────────────────────────────────
-        public static bool FogOfWarEnabled = true;
-        public static float FogBlurRadius = 1.74f;
-        public static int FogBlurIterations = 3;
-        public static float FogIntensity = 0.4f;
-        public static float FogDesaturation = 0.7f;
-        public static Color FogColor = new(0.02f, 0.02f, 0.05f, 1f);
-        public static int FoWRTScale = 256;
-        public static float FOVRayStep = 2f;
-        public static float FogTemporalBlend = 0.2f;
+        static DevCheats() => Reset();
 
         public static void Reset()
         {
+            // Cheats
             GodMode = false;
             InfiniteAmmo = false;
-            NoRecoil = false;
+
+            // Weapon
             DamageMultiplier = 1f;
             ProjectileSpeedMultiplier = 1f;
             FireRateMultiplier = 1f;
-            MoveSpeedMultiplier = 1f;
+
+            // Recoil
+            NoRecoil = false;
             RecoilMultiplier = .5f;
+            RecoilForwardMultiplier = 1f;
+            RecoilSideMultiplier = 1f;
+            RecoilRecoveryMultiplier = 1f;
+
+            // Aim Split
+            AimSplitEnabled = false;
+            AimFollowMultiplier = 1f;
+
+            // Player
+            MoveSpeedMultiplier = 1f;
+
+            // FOV
             FOVEnabled = true;
             FOVNearRadius = 5f;
             FOVFarRadius = 30f;
             FOVAngle = 120f;
             ForceShowAllBots = false;
-            ForceBleedPlayer = false;
             FOVOcclusionEnabled = true;
+
+            // Fog of War
             FogOfWarEnabled = true;
             FogBlurRadius = 1.74f;
             FogBlurIterations = 3;
@@ -71,11 +94,9 @@ namespace Dev
             FoWRTScale = 256;
             FOVRayStep = 2f;
             FogTemporalBlend = 0.2f;
-            RecoilForwardMultiplier = 1f;
-            RecoilSideMultiplier = 1f;
-            RecoilRecoveryMultiplier = 1f;
-            AimSplitEnabled = false;
-            AimFollowMultiplier = 1f;
+
+            // Status Effects
+            ForceBleedPlayer = false;
         }
     }
 }

@@ -49,17 +49,24 @@ alwaysApply: false
 
 Actual system tick order in `RaidSession.Tick()`:
 ```
+RollSystem                 // dodge roll state machine
 MovementSystem
 WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
 WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
 AimingSystem               // dual-layer: RawAimPoint (instant) → WeaponAimPoint (smoothed) → AimDirection
+GrenadeSystem              // grenade throw + trajectory
+MedkitSystem               // healing consumable
+StatusEffectSystem         // bleed, buffs, etc.
+BandageSystem              // bandage healing
 ShootingSystem             // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
+PlayerFOVSystem            // visibility cone queries
 BotPerceptionSystem
 BotBrainSystem
 BotMovementSystem
 BotCombatSystem            // bots use LastFireTime, no FSM
 ProjectileSystem
-DamageSystem
+GrenadeSystem.TickExplosions  // grenade detonation + area damage
+DamageSystem               // consumes hit inbox, applies damage, emits death events
 ```
 
 ## Entry points

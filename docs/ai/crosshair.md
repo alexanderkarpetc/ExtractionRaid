@@ -78,14 +78,19 @@ RecoilOffset = Lerp(RecoilOffset, zero, decay)  // recoil decay (RecoilRecoveryS
 WeaponAimPoint = cleanAim + RecoilOffset         // combine
 ```
 
-ShootingSystem applies kick after firing:
+ShootingSystem applies kick after firing (both components go through `RecoilOffset`):
 ```
 aimDir = normalize(WeaponAimPoint - PlayerPosition)
-forward = aimDir * RecoilKickForward
+RecoilOffset += aimDir * RecoilKickForward * RecoilMultiplier * RecoilForwardMultiplier
 right = perpendicular(aimDir)  // 90° CW on XZ
-sideways = right * Random(-RecoilKickSide, +RecoilKickSide)
-RecoilOffset += forward + sideways
+RecoilOffset += right * Random(-RecoilKickSide, +RecoilKickSide) * RecoilMultiplier * RecoilSideMultiplier
 ```
+
+DevCheats multipliers (all stack):
+- `RecoilMultiplier` — global kick scale
+- `RecoilForwardMultiplier` — forward channel only
+- `RecoilSideMultiplier` — side channel only
+- `RecoilRecoveryMultiplier` — decay speed
 
 | Weapon | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed | Behavior |
 |--------|------------------|----------------|---------------------|----------|
