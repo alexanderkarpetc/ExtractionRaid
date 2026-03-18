@@ -100,10 +100,10 @@ namespace View.FogOfWar
                 public Color fogColor;
                 public float temporalBlend;
                 public TextureHandle cameraColor;
-                public TextureHandle tempA;
-                public TextureHandle tempB;
-                public Texture rawFoW;
-                public Texture prevBlurred; // persistent RT from Controller
+                public TextureHandle tempA;  // RenderGraph managed
+                public TextureHandle tempB;  // RenderGraph managed
+                public Texture rawFoW;       // persistent RT from Controller
+                public Texture prevBlurred;  // persistent RT from Controller
                 public bool bypassBlur;
             }
 
@@ -147,65 +147,67 @@ namespace View.FogOfWar
                     {
                         var cmd = CommandBufferHelpers.GetNativeCommandBuffer(ctx.cmd);
 
-                        if (data.bypassBlur)
+                        // --- Composite helper ---
+                        void Composite(RenderTargetIdentifier blurredSource)
                         {
-                            // ── BYPASS: skip blur+temporal, feed raw RT directly to composite ──
-                            cmd.SetGlobalTexture(FoWBlurredId, data.rawFoW);
+                            cmd.SetGlobalTexture(FoWBlurredId, blurredSource);
                             data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
                             data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
                             data.compositeMat.SetColor(FogColorId, data.fogColor);
-                            cmd.Blit(data.cameraColor, data.tempB, data.compositeMat, 0);
-                            cmd.Blit(data.tempB, data.cameraColor);
+                            cmd.Blit(data.cameraColor, data.tempA, data.compositeMat, 0);
+                            cmd.Blit(data.tempA, data.cameraColor);
+                        }
+
+                        if (data.bypassBlur)
+                        {
+                            Composite(data.rawFoW);
                             return;
                         }
 
-                        // --- Blur passes ---
+                        // ── KEY FIX for DX12 compatibility ──
+                        // cmd.Blit(Texture, TextureHandle, Material) fails on DX12:
+                        // the external Texture isn't properly bound as _MainTex.
+                        // Fix: first copy external RT into a RenderGraph-managed TextureHandle
+                        // (raw copy without material works everywhere), then all subsequent
+                        // blur blits are TextureHandle↔TextureHandle which works on all APIs.
+                        cmd.Blit(data.rawFoW, data.tempA); // raw copy: Texture → TextureHandle
+
+                        // --- Blur passes (all TextureHandle ↔ TextureHandle) ---
                         data.blurMat.SetFloat(BlurSizeId, data.blurSize);
 
-                        cmd.Blit(data.rawFoW, data.tempA, data.blurMat, 0);
-                        cmd.Blit(data.tempA, data.tempB, data.blurMat, 1);
-
-                        for (int i = 1; i < data.blurIterations; i++)
+                        for (int i = 0; i < data.blurIterations; i++)
                         {
-                            cmd.Blit(data.tempB, data.tempA, data.blurMat, 0);
-                            cmd.Blit(data.tempA, data.tempB, data.blurMat, 1);
+                            cmd.Blit(data.tempA, data.tempB, data.blurMat, 0); // H blur
+                            cmd.Blit(data.tempB, data.tempA, data.blurMat, 1); // V blur
                         }
 
+                        // After blur: result is in tempA.
+
                         // --- Temporal blend pass ---
-                        // tempB has current blurred, prevBlurred has last frame's result.
-                        // After blur: result is in tempB. After temporal: result is in tempA.
-                        // We track which texture has the final result to pass to composite.
-                        RenderTargetIdentifier compositeSource;
+                        // compositeSource tracks which TextureHandle has the final result.
+                        TextureHandle compositeSource;
 
                         if (data.temporalMat != null && data.prevBlurred != null
                             && data.temporalBlend < 0.99f)
                         {
                             data.temporalMat.SetTexture(PrevTexId, data.prevBlurred);
                             data.temporalMat.SetFloat(BlendFactorId, data.temporalBlend);
-                            // tempB (current) → tempA (blended)
-                            cmd.Blit(data.tempB, data.tempA, data.temporalMat, 0);
-                            // Copy blended result to persistent RT for next frame
-                            cmd.Blit(data.tempA, data.prevBlurred);
-                            compositeSource = data.tempA;
+                            // tempA (current blurred) → tempB (blended with previous)
+                            cmd.Blit(data.tempA, data.tempB, data.temporalMat, 0);
+                            // Save blended result to persistent RT for next frame
+                            cmd.Blit(data.tempB, data.prevBlurred);
+                            compositeSource = data.tempB;
                         }
                         else
                         {
-                            // No temporal — copy current to persistent RT for next frame
+                            // No temporal — save current to persistent RT for next frame
                             if (data.prevBlurred != null)
-                                cmd.Blit(data.tempB, data.prevBlurred);
-                            compositeSource = data.tempB;
+                                cmd.Blit(data.tempA, data.prevBlurred);
+                            compositeSource = data.tempA;
                         }
 
                         // --- Composite pass ---
-                        // Use cmd.SetGlobalTexture (takes RenderTargetIdentifier)
-                        // instead of Material.SetTexture (needs real Texture).
-                        // TextureHandle → RTI conversion works on all platforms.
-                        cmd.SetGlobalTexture(FoWBlurredId, compositeSource);
-                        data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
-                        data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
-                        data.compositeMat.SetColor(FogColorId, data.fogColor);
-                        cmd.Blit(data.cameraColor, data.tempB, data.compositeMat, 0);
-                        cmd.Blit(data.tempB, data.cameraColor);
+                        Composite(compositeSource);
                     });
                 }
             }
