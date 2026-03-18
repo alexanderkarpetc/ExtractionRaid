@@ -604,11 +604,13 @@ namespace Editor
                 int key = loot.Id.GetHashCode();
                 if (!_lootableFolds.ContainsKey(key)) _lootableFolds[key] = false;
 
+                string containerTag = loot.IsContainer ? " [Container]" : " [Corpse]";
                 _lootableFolds[key] = EditorGUILayout.Foldout(_lootableFolds[key],
-                    $"[{i}] {loot.TypeId} (Id={loot.Id})");
+                    $"[{i}] {loot.TypeId}{containerTag} (Id={loot.Id})");
                 if (!_lootableFolds[key]) continue;
 
                 EditorGUI.indentLevel++;
+                Field("IsContainer", loot.IsContainer);
                 Field("Position", loot.Position.ToString("F1"));
                 if (loot.Inventory != null)
                 {

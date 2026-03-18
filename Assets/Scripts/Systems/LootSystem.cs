@@ -9,6 +9,33 @@ namespace Systems
     {
         public const float LootRange = 3f;
 
+        public static void CreateContainer(RaidState state, in ContainerTypeConfig config, Vector3 position,
+            IRaidEvents events)
+        {
+            var id = state.AllocateEId();
+            var inventory = new InventoryState();
+
+            int dropCount = Random.Range(config.MinDrops, config.MaxDrops + 1);
+            int slot = 0;
+
+            for (int i = 0; i < dropCount && slot < InventoryState.BackpackSize; i++)
+            {
+                var drop = config.PossibleDrops[Random.Range(0, config.PossibleDrops.Length)];
+                var itemId = state.AllocateEId();
+                int count = Random.Range(drop.MinCount, drop.MaxCount + 1);
+
+                var def = ItemDefinition.Get(drop.DefinitionId);
+                if (def != null)
+                    count = Mathf.Min(count, def.MaxStackSize);
+
+                inventory.Backpack[slot++] = ItemState.Create(itemId, drop.DefinitionId, count);
+            }
+
+            var lootable = LootableContainerState.Create(id, position, config.TypeId, inventory, isContainer: true);
+            state.Lootables.Add(lootable);
+            events.LootableSpawned(id, position, config.TypeId);
+        }
+
         public static void CreateLootable(RaidState state, BotEntityState bot, in BotTypeConfig config,
             IRaidEvents events)
         {

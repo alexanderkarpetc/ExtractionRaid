@@ -129,8 +129,12 @@ namespace View
                 _lootPanelRect = new Rect(lootX, panelY, panelW, totalH);
                 GUI.DrawTexture(_lootPanelRect, _panelBg);
                 string header = $"{lootTarget.TypeId.ToUpper()} LOOT";
-                DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state,
-                    ref _lootScrollPos);
+                if (lootTarget.IsContainer)
+                    DrawContainerPanel(_lootPanelRect, header, lootTarget.Inventory, session, state,
+                        ref _lootScrollPos);
+                else
+                    DrawInventoryPanel(_lootPanelRect, header, lootTarget.Inventory, true, session, state,
+                        ref _lootScrollPos);
             }
             else
             {
@@ -200,6 +204,53 @@ namespace View
                 var item = inventory.Backpack[i];
 
                 DrawSlot(new Rect(x, y, slotSize, slotSize), slotRef, item, inventory, isLoot);
+            }
+
+            GUI.EndScrollView();
+        }
+
+        void DrawContainerPanel(Rect panelRect, string title, InventoryState inventory,
+            Session.RaidSession session, RaidState state, ref Vector2 scrollPos)
+        {
+            float padding = panelRect.width * 0.04f;
+            float scrollBarW = 16f;
+            float availableW = panelRect.width - padding * 2f - scrollBarW;
+
+            const float maxSlotSize = 135f;
+
+            float slotGap = Mathf.Max(3f, availableW * 0.015f);
+            float slotSize = (availableW - (BackpackColumns - 1) * slotGap) / BackpackColumns;
+            slotSize = Mathf.Min(Mathf.Floor(slotSize), maxSlotSize);
+
+            float headerH = Mathf.Clamp(slotSize * 0.3f, 26f, 44f);
+            _headerStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(headerH * 0.85f), 23, 36);
+            _slotStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.18f), 18, 28);
+
+            int backpackRows = Mathf.CeilToInt((float)InventoryState.BackpackSize / BackpackColumns);
+            float contentH = padding
+                + headerH + slotGap
+                + backpackRows * (slotSize + slotGap)
+                + padding;
+
+            var contentRect = new Rect(0f, 0f, panelRect.width - scrollBarW, contentH);
+            scrollPos = GUI.BeginScrollView(panelRect, scrollPos, contentRect);
+
+            float curX = padding;
+            float curY = padding;
+
+            GUI.Label(new Rect(curX, curY, availableW, headerH), title, _headerStyle);
+            curY += headerH + slotGap;
+
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                int col = i % BackpackColumns;
+                int row = i / BackpackColumns;
+                float x = curX + col * (slotSize + slotGap);
+                float y = curY + row * (slotSize + slotGap);
+                var slotRef = InventorySlotRef.BackpackSlot(i);
+                var item = inventory.Backpack[i];
+
+                DrawSlot(new Rect(x, y, slotSize, slotSize), slotRef, item, inventory, true);
             }
 
             GUI.EndScrollView();

@@ -8,8 +8,10 @@ namespace State
         public Vector3 Position;
         public string TypeId;
         public InventoryState Inventory;
+        public bool IsContainer;
 
-        public static LootableContainerState Create(EId id, Vector3 position, string typeId, InventoryState inventory)
+        public static LootableContainerState Create(EId id, Vector3 position, string typeId,
+            InventoryState inventory, bool isContainer = false)
         {
             return new LootableContainerState
             {
@@ -17,6 +19,7 @@ namespace State
                 Position = position,
                 TypeId = typeId,
                 Inventory = inventory,
+                IsContainer = isContainer,
             };
         }
     }
