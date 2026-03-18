@@ -56,7 +56,10 @@ namespace View.FogOfWar
             float aspect = mainCam != null ? mainCam.aspect : 16f / 9f;
             int w = Mathf.Max(scale, 64);
             int h = Mathf.Max(Mathf.RoundToInt(w / aspect), 64);
-            _rawRT = new RenderTexture(w, h, 16, RenderTextureFormat.R8)
+            // Force Linear (not sRGB!) — visibility mask must stay in linear space.
+            // R8 may not be supported on all GPUs; Unity auto-falls back to ARGB32,
+            // but without Linear flag the fallback would be sRGB → broken visibility values.
+            _rawRT = new RenderTexture(w, h, 16, RenderTextureFormat.R8, RenderTextureReadWrite.Linear)
             {
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
@@ -64,7 +67,7 @@ namespace View.FogOfWar
             };
 
             if (_blurredRT != null) _blurredRT.Release();
-            _blurredRT = new RenderTexture(w, h, 0, RenderTextureFormat.R8)
+            _blurredRT = new RenderTexture(w, h, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear)
             {
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
