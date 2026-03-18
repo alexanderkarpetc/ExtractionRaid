@@ -14,7 +14,14 @@ namespace Dev
         public static float ProjectileSpeedMultiplier = 1f;
         public static float FireRateMultiplier = 1f;
         public static float MoveSpeedMultiplier = 1f;
-        public static float RecoilMultiplier = 1f;
+        public static float RecoilMultiplier = .5f;
+        public static float RecoilForwardMultiplier = 1f;
+        public static float RecoilSideMultiplier = 1f;
+        public static float RecoilRecoveryMultiplier = 1f;
+
+        // ── Aim Split ────────────────────────────────────
+        public static bool AimSplitEnabled = false;
+        public static float AimFollowMultiplier = 1f;
 
         // ── Status Effects ────────────────────────────────
         public static bool ForceBleedPlayer;
@@ -47,7 +54,7 @@ namespace Dev
             ProjectileSpeedMultiplier = 1f;
             FireRateMultiplier = 1f;
             MoveSpeedMultiplier = 1f;
-            RecoilMultiplier = 1f;
+            RecoilMultiplier = .5f;
             FOVEnabled = true;
             FOVNearRadius = 5f;
             FOVFarRadius = 30f;
@@ -64,6 +71,11 @@ namespace Dev
             FoWRTScale = 256;
             FOVRayStep = 2f;
             FogTemporalBlend = 0.2f;
+            RecoilForwardMultiplier = 1f;
+            RecoilSideMultiplier = 1f;
+            RecoilRecoveryMultiplier = 1f;
+            AimSplitEnabled = false;
+            AimFollowMultiplier = 1f;
         }
     }
 }

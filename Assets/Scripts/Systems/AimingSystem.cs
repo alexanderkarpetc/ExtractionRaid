@@ -1,3 +1,4 @@
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -33,25 +34,34 @@ namespace Systems
 
             // 2. Weapon aim — position-based exponential smoothing with recoil
             var weapon = player.EquippedWeapon;
-            float aimFollowSharpness = weapon != null ? weapon.AimFollowSharpness : UnarmedAimFollowSharpness;
 
-            // Strip recoil to get clean base position
-            var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
-            var cleanAim = player.WeaponAimPoint - recoilOffset;
-
-            // Smooth clean position toward mouse
-            float smoothFactor = 1f - Mathf.Exp(-aimFollowSharpness * context.DeltaTime);
-            cleanAim = Vector3.Lerp(cleanAim, aimPoint, smoothFactor);
-
-            // Decay recoil independently
-            if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
             {
-                float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * context.DeltaTime);
-                weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
-            }
+                float aimFollowSharpness = weapon != null ? weapon.AimFollowSharpness : UnarmedAimFollowSharpness;
 
-            // Final aim = base + decayed recoil
-            player.WeaponAimPoint = cleanAim + (weapon != null ? weapon.RecoilOffset : Vector3.zero);
+                // When aim split disabled — skip smoothing (instant follow)
+                if (!DevCheats.AimSplitEnabled)
+                    aimFollowSharpness = 1000f;
+                else
+                    aimFollowSharpness *= DevCheats.AimFollowMultiplier;
+
+                // Strip recoil to get clean base position
+                var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
+                var cleanAim = player.WeaponAimPoint - recoilOffset;
+
+                // Smooth clean position toward mouse
+                float smoothFactor = 1f - Mathf.Exp(-aimFollowSharpness * context.DeltaTime);
+                cleanAim = Vector3.Lerp(cleanAim, aimPoint, smoothFactor);
+
+                // Decay recoil independently
+                if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
+                {
+                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * DevCheats.RecoilRecoveryMultiplier * context.DeltaTime);
+                    weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
+                }
+
+                // Final aim = base + decayed recoil
+                player.WeaponAimPoint = cleanAim + (weapon != null ? weapon.RecoilOffset : Vector3.zero);
+            }
 
             // 3. AimDirection derived from weapon aim
             var weaponAimDir = player.WeaponAimPoint - origin;

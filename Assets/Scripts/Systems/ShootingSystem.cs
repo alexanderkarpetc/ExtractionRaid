@@ -87,19 +87,20 @@ namespace Systems
             weapon.LastFireTime = state.ElapsedTime;
 
             // Apply recoil — forward kick + sideways scatter
+            // Both go through RecoilOffset so they survive smoothing and decay via RecoilRecoverySpeed
             if (!DevCheats.NoRecoil
                 && (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f))
             {
                 float recoilMul = DevCheats.RecoilMultiplier;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
-                // Forward: push WeaponAimPoint directly (AimFollowSharpness handles recovery)
-                player.WeaponAimPoint += aimDir * (weapon.RecoilKickForward * recoilMul);
+                // Forward kick through RecoilOffset
+                weapon.RecoilOffset += aimDir * (weapon.RecoilKickForward * recoilMul * DevCheats.RecoilForwardMultiplier);
 
-                // Sideways: through RecoilOffset (RecoilRecoverySpeed handles recovery)
+                // Sideways scatter through RecoilOffset
                 var right = new Vector3(aimDir.z, 0f, -aimDir.x);
                 float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
-                weapon.RecoilOffset += right * (sideAmount * recoilMul);
+                weapon.RecoilOffset += right * (sideAmount * recoilMul * DevCheats.RecoilSideMultiplier);
             }
 
             // Consume one round (shotgun: 1 shell = multiple pellets)
