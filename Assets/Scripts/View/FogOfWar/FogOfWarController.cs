@@ -21,8 +21,9 @@ namespace View.FogOfWar
         static readonly int FoWPrevBlurredId = Shader.PropertyToID("_FoWPrevBlurred");
 
         Camera _fovCamera;
-        RenderTexture _rawRT;
-        RenderTexture _blurredRT; // persistent for temporal blend
+        RenderTexture _rawRT;         // FOV camera target (has depth for URP)
+        RenderTexture _rawColorRT;    // color-only copy for RenderGraph import (no depth)
+        RenderTexture _blurredRT;     // persistent for temporal blend
         FOVMeshBuilder _meshBuilder;
         Material _fovMeshMaterial;
         Collider[] _playerColliders;
@@ -64,6 +65,16 @@ namespace View.FogOfWar
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
                 name = "FOW_RawVisibility"
+            };
+
+            // Color-only copy of rawRT (depth=0) for RenderGraph ImportTexture.
+            // ImportTexture rejects textures with both color + depth formats.
+            if (_rawColorRT != null) _rawColorRT.Release();
+            _rawColorRT = new RenderTexture(w, h, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                name = "FOW_RawColor"
             };
 
             if (_blurredRT != null) _blurredRT.Release();
@@ -151,7 +162,9 @@ namespace View.FogOfWar
             ToggleFOVCamera(true);
             SyncFOVCamera();
             RebuildVisibilityMesh();
-            Shader.SetGlobalTexture(GlobalTextureName, _rawRT);
+            // Copy camera output (has depth) to color-only RT (no depth) for RenderGraph import.
+            Graphics.Blit(_rawRT, _rawColorRT);
+            Shader.SetGlobalTexture(GlobalTextureName, _rawColorRT);
             Shader.SetGlobalTexture(FoWPrevBlurredId, _blurredRT);
         }
 
@@ -202,10 +215,11 @@ namespace View.FogOfWar
             float previewW = 200;
             float previewH = previewW / ((float)_rawRT.width / _rawRT.height);
 
-            // Top-right: raw RT (what FOV camera renders)
+            // Top-right: color-only RT (what goes into blur pipeline)
+            var srcRT = _rawColorRT != null ? _rawColorRT : _rawRT;
             var rawRect = new Rect(Screen.width - previewW - 10, 10, previewW, previewH);
-            GUI.DrawTexture(rawRect, _rawRT);
-            GUI.Label(rawRect, $"<b>RAW</b> ({_rawRT.graphicsFormat})");
+            GUI.DrawTexture(rawRect, srcRT);
+            GUI.Label(rawRect, $"<b>RAW</b> ({srcRT.graphicsFormat})");
 
             // Below: blurred persistent RT (what temporal blend accumulates)
             if (_blurredRT != null)
@@ -223,6 +237,12 @@ namespace View.FogOfWar
             {
                 _rawRT.Release();
                 _rawRT = null;
+            }
+
+            if (_rawColorRT != null)
+            {
+                _rawColorRT.Release();
+                _rawColorRT = null;
             }
 
             if (_blurredRT != null)

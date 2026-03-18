@@ -60,6 +60,12 @@ namespace View.FogOfWar
             float _temporalBlend;
             bool _bypassBlur;
 
+            // Cached RTHandle wrappers for ImportTexture (avoid GC alloc every frame)
+            RTHandle _rawRTHandle;
+            RTHandle _prevBlurredRTHandle;
+            RenderTexture _cachedRawRT;
+            RenderTexture _cachedPrevRT;
+
             static readonly int BlurSizeId = Shader.PropertyToID("_BlurSize");
             static readonly int FoWBlurredId = Shader.PropertyToID("_FoWBlurred");
             static readonly int FoWVisibilityId = Shader.PropertyToID("_FoWVisibility");
@@ -100,20 +106,57 @@ namespace View.FogOfWar
                 public Color fogColor;
                 public float temporalBlend;
                 public TextureHandle cameraColor;
-                public TextureHandle tempA;  // RenderGraph managed
-                public TextureHandle tempB;  // RenderGraph managed
-                public Texture rawFoW;       // persistent RT from Controller
-                public Texture prevBlurred;  // persistent RT from Controller
+                public TextureHandle tempA;
+                public TextureHandle tempB;
+                public TextureHandle rawFoW;       // imported via RenderGraph
+                public TextureHandle prevBlurred;  // imported via RenderGraph
+                public bool hasPrevBlurred;
                 public bool bypassBlur;
+            }
+
+            /// <summary>
+            /// Get or create a cached RTHandle wrapper for a RenderTexture.
+            /// Only re-allocates if the underlying RT changed.
+            /// </summary>
+            RTHandle GetOrCreateRTHandle(ref RTHandle handle, ref RenderTexture cached, RenderTexture rt)
+            {
+                if (rt == null) return null;
+                if (cached == rt && handle != null) return handle;
+
+                handle?.Release();
+                handle = RTHandles.Alloc(rt);
+                cached = rt;
+                return handle;
             }
 
             public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
             {
-                var rawTex = Shader.GetGlobalTexture(FoWVisibilityId);
+                var rawTex = Shader.GetGlobalTexture(FoWVisibilityId) as RenderTexture;
                 if (rawTex == null || _blurMat == null || _compositeMat == null) return;
+
+                var prevTex = Shader.GetGlobalTexture(FoWPrevBlurredId) as RenderTexture;
 
                 var resourceData = frameData.Get<UniversalResourceData>();
 
+                // ── Import external RTs into RenderGraph ──
+                // This is the correct way to use external textures in RenderGraph.
+                // On DX12, cmd.Blit(Texture, TextureHandle) silently fails —
+                // the external Texture isn't bound as _MainTex.
+                // ImportTexture wraps external RTs as TextureHandles so all blits
+                // are TextureHandle↔TextureHandle, which works on all graphics APIs.
+                var rawRTH = GetOrCreateRTHandle(ref _rawRTHandle, ref _cachedRawRT, rawTex);
+                var rawHandle = renderGraph.ImportTexture(rawRTH);
+
+                TextureHandle prevHandle = TextureHandle.nullHandle;
+                bool hasPrev = false;
+                if (prevTex != null)
+                {
+                    var prevRTH = GetOrCreateRTHandle(ref _prevBlurredRTHandle, ref _cachedPrevRT, prevTex);
+                    prevHandle = renderGraph.ImportTexture(prevRTH);
+                    hasPrev = true;
+                }
+
+                // Transient temps for blur + composite
                 var desc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
                 desc.depthBufferBits = 0;
                 desc.name = "_FoWTempA";
@@ -135,20 +178,24 @@ namespace View.FogOfWar
                     passData.cameraColor = resourceData.activeColorTexture;
                     passData.tempA = tempA;
                     passData.tempB = tempB;
-                    passData.rawFoW = rawTex;
-                    passData.prevBlurred = Shader.GetGlobalTexture(FoWPrevBlurredId);
+                    passData.rawFoW = rawHandle;
+                    passData.prevBlurred = prevHandle;
+                    passData.hasPrevBlurred = hasPrev;
                     passData.bypassBlur = _bypassBlur;
 
                     builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
                     builder.UseTexture(tempA, AccessFlags.ReadWrite);
                     builder.UseTexture(tempB, AccessFlags.ReadWrite);
+                    builder.UseTexture(rawHandle, AccessFlags.Read);
+                    if (hasPrev)
+                        builder.UseTexture(prevHandle, AccessFlags.ReadWrite);
 
                     builder.SetRenderFunc(static (PassData data, UnsafeGraphContext ctx) =>
                     {
                         var cmd = CommandBufferHelpers.GetNativeCommandBuffer(ctx.cmd);
 
                         // --- Composite helper ---
-                        void Composite(RenderTargetIdentifier blurredSource)
+                        void Composite(TextureHandle blurredSource)
                         {
                             cmd.SetGlobalTexture(FoWBlurredId, blurredSource);
                             data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
@@ -164,46 +211,43 @@ namespace View.FogOfWar
                             return;
                         }
 
-                        // ── KEY FIX for DX12 compatibility ──
-                        // cmd.Blit(Texture, TextureHandle, Material) fails on DX12:
-                        // the external Texture isn't properly bound as _MainTex.
-                        // Fix: first copy external RT into a RenderGraph-managed TextureHandle
-                        // (raw copy without material works everywhere), then all subsequent
-                        // blur blits are TextureHandle↔TextureHandle which works on all APIs.
-                        cmd.Blit(data.rawFoW, data.tempA); // raw copy: Texture → TextureHandle
-
                         // --- Blur passes (all TextureHandle ↔ TextureHandle) ---
                         data.blurMat.SetFloat(BlurSizeId, data.blurSize);
 
-                        for (int i = 0; i < data.blurIterations; i++)
+                        // First H blur reads from rawFoW (imported TextureHandle)
+                        cmd.Blit(data.rawFoW, data.tempA, data.blurMat, 0);   // H blur
+                        cmd.Blit(data.tempA, data.tempB, data.blurMat, 1);     // V blur
+
+                        for (int i = 1; i < data.blurIterations; i++)
                         {
-                            cmd.Blit(data.tempA, data.tempB, data.blurMat, 0); // H blur
-                            cmd.Blit(data.tempB, data.tempA, data.blurMat, 1); // V blur
+                            cmd.Blit(data.tempB, data.tempA, data.blurMat, 0); // H blur
+                            cmd.Blit(data.tempA, data.tempB, data.blurMat, 1); // V blur
                         }
 
-                        // After blur: result is in tempA.
+                        // After blur: result is in tempB.
 
                         // --- Temporal blend pass ---
-                        // compositeSource tracks which TextureHandle has the final result.
                         TextureHandle compositeSource;
 
-                        if (data.temporalMat != null && data.prevBlurred != null
+                        if (data.temporalMat != null && data.hasPrevBlurred
                             && data.temporalBlend < 0.99f)
                         {
-                            data.temporalMat.SetTexture(PrevTexId, data.prevBlurred);
+                            // _PrevTex is not in Properties — use cmd.SetGlobalTexture
+                            // so it works with imported TextureHandle on all platforms.
+                            cmd.SetGlobalTexture(PrevTexId, data.prevBlurred);
                             data.temporalMat.SetFloat(BlendFactorId, data.temporalBlend);
-                            // tempA (current blurred) → tempB (blended with previous)
-                            cmd.Blit(data.tempA, data.tempB, data.temporalMat, 0);
+                            // tempB (current blurred) → tempA (blended with previous)
+                            cmd.Blit(data.tempB, data.tempA, data.temporalMat, 0);
                             // Save blended result to persistent RT for next frame
-                            cmd.Blit(data.tempB, data.prevBlurred);
-                            compositeSource = data.tempB;
+                            cmd.Blit(data.tempA, data.prevBlurred);
+                            compositeSource = data.tempA;
                         }
                         else
                         {
                             // No temporal — save current to persistent RT for next frame
-                            if (data.prevBlurred != null)
-                                cmd.Blit(data.tempA, data.prevBlurred);
-                            compositeSource = data.tempA;
+                            if (data.hasPrevBlurred)
+                                cmd.Blit(data.tempB, data.prevBlurred);
+                            compositeSource = data.tempB;
                         }
 
                         // --- Composite pass ---
@@ -212,7 +256,16 @@ namespace View.FogOfWar
                 }
             }
 
-            public void Dispose() { }
+            public void Dispose()
+            {
+                _rawRTHandle?.Release();
+                _rawRTHandle = null;
+                _cachedRawRT = null;
+
+                _prevBlurredRTHandle?.Release();
+                _prevBlurredRTHandle = null;
+                _cachedPrevRT = null;
+            }
         }
     }
 }
