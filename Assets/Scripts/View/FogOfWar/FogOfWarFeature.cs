@@ -37,7 +37,8 @@ namespace View.FogOfWar
             _pass.Setup(blurMaterial, temporalBlendMaterial, compositeMaterial,
                 DevCheats.FogBlurRadius, DevCheats.FogBlurIterations,
                 DevCheats.FogIntensity, DevCheats.FogDesaturation,
-                DevCheats.FogColor, DevCheats.FogTemporalBlend);
+                DevCheats.FogColor, DevCheats.FogTemporalBlend,
+                DevCheats.FoWBypassBlur);
             renderer.EnqueuePass(_pass);
         }
 
@@ -57,6 +58,7 @@ namespace View.FogOfWar
             float _fogDesaturation;
             Color _fogColor;
             float _temporalBlend;
+            bool _bypassBlur;
 
             static readonly int BlurSizeId = Shader.PropertyToID("_BlurSize");
             static readonly int FoWBlurredId = Shader.PropertyToID("_FoWBlurred");
@@ -71,7 +73,8 @@ namespace View.FogOfWar
             public void Setup(Material blur, Material temporal, Material composite,
                 float blurSize, int iterations,
                 float fogIntensity, float fogDesaturation,
-                Color fogColor, float temporalBlend)
+                Color fogColor, float temporalBlend,
+                bool bypassBlur)
             {
                 _blurMat = blur;
                 _temporalMat = temporal;
@@ -82,6 +85,7 @@ namespace View.FogOfWar
                 _fogDesaturation = fogDesaturation;
                 _fogColor = fogColor;
                 _temporalBlend = temporalBlend;
+                _bypassBlur = bypassBlur;
             }
 
             class PassData
@@ -100,6 +104,7 @@ namespace View.FogOfWar
                 public TextureHandle tempB;
                 public Texture rawFoW;
                 public Texture prevBlurred; // persistent RT from Controller
+                public bool bypassBlur;
             }
 
             public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -132,6 +137,7 @@ namespace View.FogOfWar
                     passData.tempB = tempB;
                     passData.rawFoW = rawTex;
                     passData.prevBlurred = Shader.GetGlobalTexture(FoWPrevBlurredId);
+                    passData.bypassBlur = _bypassBlur;
 
                     builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
                     builder.UseTexture(tempA, AccessFlags.ReadWrite);
@@ -140,6 +146,18 @@ namespace View.FogOfWar
                     builder.SetRenderFunc(static (PassData data, UnsafeGraphContext ctx) =>
                     {
                         var cmd = CommandBufferHelpers.GetNativeCommandBuffer(ctx.cmd);
+
+                        if (data.bypassBlur)
+                        {
+                            // ── BYPASS: skip blur+temporal, feed raw RT directly to composite ──
+                            data.compositeMat.SetTexture(FoWBlurredId, data.rawFoW);
+                            data.compositeMat.SetFloat(FogIntensityId, data.fogIntensity);
+                            data.compositeMat.SetFloat(DesaturationId, data.fogDesaturation);
+                            data.compositeMat.SetColor(FogColorId, data.fogColor);
+                            cmd.Blit(data.cameraColor, data.tempB, data.compositeMat, 0);
+                            cmd.Blit(data.tempB, data.cameraColor);
+                            return;
+                        }
 
                         // --- Blur passes ---
                         data.blurMat.SetFloat(BlurSizeId, data.blurSize);

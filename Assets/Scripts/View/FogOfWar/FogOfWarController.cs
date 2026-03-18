@@ -192,20 +192,28 @@ namespace View.FogOfWar
             _meshBuilder.RebuildMesh(endpoints);
         }
 
-        // ── Debug overlay: shows raw RT in corner so we can see what FOV camera renders ──
+        // ── Debug overlay: shows raw + blurred RTs in corner ──
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         void OnGUI()
         {
             if (!_initialized || _rawRT == null || !DevCheats.FogOfWarEnabled) return;
             if (!DevCheats.FOVEnabled) return;
 
-            // 200x113 preview in top-right corner
             float previewW = 200;
             float previewH = previewW / ((float)_rawRT.width / _rawRT.height);
-            var rect = new Rect(Screen.width - previewW - 10, 10, previewW, previewH);
 
-            GUI.DrawTexture(rect, _rawRT);
-            GUI.Label(rect, $"FoW RT ({_rawRT.width}x{_rawRT.height} {_rawRT.graphicsFormat})");
+            // Top-right: raw RT (what FOV camera renders)
+            var rawRect = new Rect(Screen.width - previewW - 10, 10, previewW, previewH);
+            GUI.DrawTexture(rawRect, _rawRT);
+            GUI.Label(rawRect, $"<b>RAW</b> ({_rawRT.graphicsFormat})");
+
+            // Below: blurred persistent RT (what temporal blend accumulates)
+            if (_blurredRT != null)
+            {
+                var blurRect = new Rect(Screen.width - previewW - 10, 20 + previewH, previewW, previewH);
+                GUI.DrawTexture(blurRect, _blurredRT);
+                GUI.Label(blurRect, $"<b>BLURRED</b> ({_blurredRT.graphicsFormat})");
+            }
         }
 #endif
 
