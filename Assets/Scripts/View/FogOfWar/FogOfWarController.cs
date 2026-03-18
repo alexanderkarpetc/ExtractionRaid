@@ -106,18 +106,15 @@ namespace View.FogOfWar
 
             meshGo.AddComponent<MeshFilter>();
             var renderer = meshGo.AddComponent<MeshRenderer>();
-            // Must use URP-compatible shader — built-in "Unlit/Color" may not render in URP on all platforms
-            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            // Custom minimal shader — outputs pure white, no keywords/variants to worry about
+            var shader = Shader.Find("FogOfWar/Visibility");
             if (shader == null)
             {
-                Debug.LogError("[FoW] Cannot find 'Universal Render Pipeline/Unlit' shader! " +
-                               "FoW mesh will not render. Falling back to Unlit/Color.");
-                shader = Shader.Find("Unlit/Color");
+                Debug.LogError("[FoW] Cannot find 'FogOfWar/Visibility' shader! Falling back to URP/Unlit.");
+                shader = Shader.Find("Universal Render Pipeline/Unlit");
             }
 
             _fovMeshMaterial = new Material(shader);
-            _fovMeshMaterial.SetColor("_BaseColor", Color.white);
-            _fovMeshMaterial.SetFloat("_Surface", 0); // Opaque
             renderer.material = _fovMeshMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
@@ -194,6 +191,23 @@ namespace View.FogOfWar
 
             _meshBuilder.RebuildMesh(endpoints);
         }
+
+        // ── Debug overlay: shows raw RT in corner so we can see what FOV camera renders ──
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        void OnGUI()
+        {
+            if (!_initialized || _rawRT == null || !DevCheats.FogOfWarEnabled) return;
+            if (!DevCheats.FOVEnabled) return;
+
+            // 200x113 preview in top-right corner
+            float previewW = 200;
+            float previewH = previewW / ((float)_rawRT.width / _rawRT.height);
+            var rect = new Rect(Screen.width - previewW - 10, 10, previewW, previewH);
+
+            GUI.DrawTexture(rect, _rawRT);
+            GUI.Label(rect, $"FoW RT ({_rawRT.width}x{_rawRT.height} {_rawRT.graphicsFormat})");
+        }
+#endif
 
         void OnDestroy()
         {
