@@ -4,6 +4,7 @@ using Dev;
 using State;
 using Systems;
 using UnityEngine;
+using View.FogOfWar;
 
 namespace View
 {
@@ -147,155 +148,90 @@ namespace View
             if (!DevCheats.FOVEnabled) return;
 
             var drawPos = transform.position + Vector3.up * 0.1f;
-            var rayOrigin = transform.position + Vector3.up * BotConstants.PlayerEyeHeight;
             var forward = transform.forward;
-            float nearR = DevCheats.FOVNearRadius;
-            float farR = DevCheats.FOVFarRadius;
             float halfAngle = DevCheats.FOVAngle * 0.5f;
-            bool occlusion = DevCheats.FOVOcclusionEnabled;
-            int layerMask = BotConstants.VisionBlockingMask;
 
-            if (!occlusion)
+            if (!DevCheats.FOVOcclusionEnabled)
             {
                 // Simple wireframe (no raycasts)
                 Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
-                Gizmos.DrawWireSphere(drawPos, nearR);
+                Gizmos.DrawWireSphere(drawPos, DevCheats.FOVNearRadius);
 
                 Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
                 var leftDir = Quaternion.Euler(0f, -halfAngle, 0f) * forward;
                 var rightDir = Quaternion.Euler(0f, halfAngle, 0f) * forward;
-                Gizmos.DrawLine(drawPos, drawPos + leftDir * farR);
-                Gizmos.DrawLine(drawPos, drawPos + rightDir * farR);
+                Gizmos.DrawLine(drawPos, drawPos + leftDir * DevCheats.FOVFarRadius);
+                Gizmos.DrawLine(drawPos, drawPos + rightDir * DevCheats.FOVFarRadius);
 
                 int segments = 24;
-                var prevPoint = drawPos + leftDir * farR;
+                var prevPoint = drawPos + leftDir * DevCheats.FOVFarRadius;
                 for (int i = 1; i <= segments; i++)
                 {
                     float t = (float)i / segments;
                     float a = Mathf.Lerp(-halfAngle, halfAngle, t);
                     var dir = Quaternion.Euler(0f, a, 0f) * forward;
-                    var point = drawPos + dir * farR;
+                    var point = drawPos + dir * DevCheats.FOVFarRadius;
                     Gizmos.DrawLine(prevPoint, point);
                     prevPoint = point;
                 }
                 return;
             }
 
-            // Temporarily disable player colliders so rays don't hit self
-            var colliders = GetComponentsInChildren<Collider>();
-            foreach (var c in colliders) c.enabled = false;
+            // Draw from cached FOVRaySweep data (exact same rays the FoW system uses)
+            var rays = FOVRaySweep.LastRawRays;
+            if (rays.Count == 0) return;
 
             var clearYellow = new Color(1f, 1f, 0f, 0.4f);
             var clearGreen = new Color(0f, 1f, 0f, 0.4f);
             var blockedColor = new Color(1f, 0.2f, 0f, 0.3f);
-
-            // Inner sphere: 360°, 5° step
-            DrawOccludedArc(rayOrigin, drawPos, forward, nearR, -180f, 180f, 5f,
-                layerMask, clearYellow, blockedColor);
-
-            // Outer sector: FOV angle, 1° step
-            DrawOccludedArc(rayOrigin, drawPos, forward, farR, -halfAngle, halfAngle, 1f,
-                layerMask, clearGreen, blockedColor);
-
-            foreach (var c in colliders) c.enabled = true;
-        }
-
-        void DrawOccludedArc(Vector3 rayOrigin, Vector3 drawOrigin, Vector3 forward,
-            float maxDist, float startAngle, float endAngle, float stepDeg, int layerMask,
-            Color clearColor, Color blockedColor)
-        {
-            Vector3 prevPoint = drawOrigin;
-            bool prevBlocked = false;
-            float prevDist = 0f;
-            float prevAngle = startAngle;
-            bool first = true;
             var edgeColor = Color.cyan;
             const float edgeThreshold = 0.5f;
 
-            for (float a = startAngle; a <= endAngle; a += stepDeg)
+            Vector3 prevPoint2 = drawPos;
+            bool prevBlocked = false;
+            bool first = true;
+
+            for (int i = 0; i < rays.Count; i++)
             {
-                var dir = Quaternion.Euler(0f, a, 0f) * forward;
-                float drawDist = maxDist;
-                bool blocked = false;
+                var ray = rays[i];
+                var dir = Quaternion.Euler(0f, ray.Angle, 0f) * forward;
+                var point = drawPos + dir * ray.Dist;
+                bool isInFOV = Mathf.Abs(ray.Angle) <= halfAngle;
+                var clearColor = isInFOV ? clearGreen : clearYellow;
 
-                if (Physics.Raycast(rayOrigin, dir, out var hit, maxDist, layerMask))
+                // Draw ray line from center
+                if (ray.Hit)
                 {
-                    drawDist = hit.distance;
-                    blocked = true;
-                }
-
-                var point = drawOrigin + dir * drawDist;
-
-                // Edge-finding: binary search between consecutive rays with large distance jump
-                if (!first && Mathf.Abs(drawDist - prevDist) > edgeThreshold)
-                {
-                    DrawEdgeSearch(rayOrigin, drawOrigin, forward, maxDist, layerMask,
-                        prevAngle, a, edgeColor);
-                }
-
-                if (blocked)
-                {
-                    var hitPoint = drawOrigin + dir * drawDist;
-                    var endPoint = drawOrigin + dir * maxDist;
+                    var hitPoint = drawPos + dir * ray.Dist;
+                    var endPoint = drawPos + dir * ray.MaxDist;
                     Gizmos.color = clearColor;
-                    Gizmos.DrawLine(drawOrigin, hitPoint);
+                    Gizmos.DrawLine(drawPos, hitPoint);
                     Gizmos.color = blockedColor;
                     Gizmos.DrawLine(hitPoint, endPoint);
                 }
                 else
                 {
                     Gizmos.color = clearColor;
-                    Gizmos.DrawLine(drawOrigin, point);
+                    Gizmos.DrawLine(drawPos, point);
                 }
 
+                // Perimeter line connecting consecutive endpoints
                 if (!first)
                 {
-                    Gizmos.color = (blocked || prevBlocked) ? blockedColor : clearColor;
-                    Gizmos.DrawLine(prevPoint, point);
+                    Gizmos.color = (ray.Hit || prevBlocked) ? blockedColor : clearColor;
+                    Gizmos.DrawLine(prevPoint2, point);
+
+                    // Edge-finding marker: cyan lines between rays with large distance jump
+                    if (Mathf.Abs(ray.Dist - rays[i - 1].Dist) > edgeThreshold)
+                    {
+                        Gizmos.color = edgeColor;
+                        Gizmos.DrawLine(prevPoint2, point);
+                    }
                 }
 
-                prevPoint = point;
-                prevBlocked = blocked;
-                prevDist = drawDist;
-                prevAngle = a;
+                prevPoint2 = point;
+                prevBlocked = ray.Hit;
                 first = false;
-            }
-        }
-
-        void DrawEdgeSearch(Vector3 rayOrigin, Vector3 drawOrigin, Vector3 forward,
-            float maxDist, int layerMask, float angleA, float angleB, Color color)
-        {
-            // Cast at angleA to determine reference distance
-            var dirA = Quaternion.Euler(0f, angleA, 0f) * forward;
-            float distA = maxDist;
-            if (Physics.Raycast(rayOrigin, dirA, out var hitA, maxDist, layerMask))
-                distA = hitA.distance;
-
-            float lo = angleA, hi = angleB;
-            for (int i = 0; i < 4; i++)
-            {
-                float mid = (lo + hi) * 0.5f;
-                var dirMid = Quaternion.Euler(0f, mid, 0f) * forward;
-                float distMid = maxDist;
-                if (Physics.Raycast(rayOrigin, dirMid, out var hitMid, maxDist, layerMask))
-                    distMid = hitMid.distance;
-
-                if (Mathf.Abs(distMid - distA) < Mathf.Abs(distMid - (maxDist - distA)))
-                    lo = mid;
-                else
-                    hi = mid;
-            }
-
-            // Draw the two edge rays in cyan
-            Gizmos.color = color;
-            for (float ea = lo; ea <= hi; ea += (hi - lo))
-            {
-                var dirE = Quaternion.Euler(0f, ea, 0f) * forward;
-                float distE = maxDist;
-                if (Physics.Raycast(rayOrigin, dirE, out var hitE, maxDist, layerMask))
-                    distE = hitE.distance;
-                Gizmos.DrawLine(drawOrigin, drawOrigin + dirE * distE);
-                if (Mathf.Approximately(lo, hi)) break;
             }
         }
 #endif

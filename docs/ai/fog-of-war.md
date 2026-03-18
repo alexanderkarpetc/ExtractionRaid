@@ -152,13 +152,16 @@ This layer is special — only the FOV camera renders it.
 - RT resolution is configurable (`FoWRTScale`, default 256) — lower = faster but blurrier edges
 - RT aspect ratio matches the screen to prevent stretching
 
-### Two RenderTextures
+### Three RenderTextures
 | Name | Format | Purpose |
 |------|--------|---------|
-| `_rawRT` | R8, depth=16 | Current frame's raw visibility |
+| `_rawRT` | R8, depth=16 | FOV camera target (needs depth for URP rendering) |
+| `_rawColorRT` | R8, depth=0 | Color-only copy of `_rawRT` (for RenderGraph import, see DX12 note below) |
 | `_blurredRT` | R8, depth=0 | Previous frame's blurred result (for temporal blend) |
 
-Both are exposed as **global shader textures** so the post-process shaders can access them.
+`_rawColorRT` and `_blurredRT` are exposed as **global shader textures** so the post-process shaders can access them.
+
+> **Why `_rawColorRT`?** `renderGraph.ImportTexture()` rejects textures that have both color and depth formats. Since the FOV camera needs depth for rendering, we blit to a color-only copy in LateUpdate: `Graphics.Blit(_rawRT, _rawColorRT)`.
 
 ---
 
@@ -167,6 +170,23 @@ Both are exposed as **global shader textures** so the post-process shaders can a
 **Goal:** Take the raw black/white mask and turn it into a nice-looking fog effect on the actual scene.
 
 This is a **URP ScriptableRendererFeature** — it injects custom render passes into Unity's rendering pipeline.
+
+### DX12 Compatibility: ImportTexture Pattern
+
+The post-process pass uses `renderGraph.ImportTexture()` to wrap external RTs (`_rawColorRT`, `_blurredRT`) as `TextureHandle`s. This ensures all `cmd.Blit()` calls operate on `TextureHandle↔TextureHandle`.
+
+**Why?** `cmd.Blit(Texture, TextureHandle, Material)` silently fails on DX12 — the source `Texture` is never bound as `_MainTex`. By importing external RTs into the RenderGraph, the API handles resource barriers and binding correctly on all backends (Metal, DX12, Vulkan).
+
+```
+Without ImportTexture (broken on DX12):
+  cmd.Blit(externalRT, tempHandle, material)  ← _MainTex not bound!
+
+With ImportTexture (works everywhere):
+  var handle = renderGraph.ImportTexture(RTHandles.Alloc(externalRT))
+  cmd.Blit(handle, tempHandle, material)       ← RenderGraph binds _MainTex correctly
+```
+
+RTHandle wrappers are cached (`GetOrCreateRTHandle()`) to avoid GC allocations every frame. They only re-allocate if the underlying RT changes (e.g., resolution change via DevCheats).
 
 ### The three-step pipeline
 
@@ -275,6 +295,7 @@ Assets/
      FogOfWarController.cs   ← Stage 3: FOV camera + RT management + orchestration
      FogOfWarFeature.cs      ← Stage 4: URP render feature (blur→temporal→composite)
  Shaders/
+   FogOfWarVisibility.shader ← FOV mesh shader (outputs pure white, FOV layer)
    FogOfWarBlur.shader       ← Stage 4a: Gaussian blur (H + V passes)
    FogOfWarTemporalBlend.shader ← Stage 4b: Frame-to-frame smoothing
    FogOfWarComposite.shader  ← Stage 4c: Apply fog to scene
@@ -322,7 +343,8 @@ DevCheats (tweakable values)
     ├──→ FogOfWarController.LateUpdate()  creates cameras + RTs, reads: FoWRTScale
     |         |
     |         v
-    |    Shader.SetGlobalTexture("_FoWVisibility", _rawRT)
+    |    Graphics.Blit(_rawRT, _rawColorRT)          strips depth for RenderGraph
+    |    Shader.SetGlobalTexture("_FoWVisibility", _rawColorRT)
     |    Shader.SetGlobalTexture("_FoWPrevBlurred", _blurredRT)
     |         |
     |         v
@@ -353,3 +375,9 @@ A: Increase `FogTemporalBlend` toward 1.0 (less smoothing, more responsive). Tra
 
 **Q: The fog edges look too sharp/blocky — what to tweak?**
 A: Increase `FogBlurRadius` or `FogBlurIterations`. Or increase `FoWRTScale` for higher resolution mask.
+
+**Q: FoW works on Mac/Metal but the screen is fully dark on Windows/DX12 — why?**
+A: Most likely a `cmd.Blit(Texture, TextureHandle)` call where the source is a raw `Texture`/`RenderTexture` instead of a `TextureHandle`. DX12 silently fails to bind `_MainTex` in this case. Solution: import external RTs via `renderGraph.ImportTexture(RTHandles.Alloc(rt))` so all blits are `TextureHandle↔TextureHandle`. Also ensure RTs use `RenderTextureReadWrite.Linear` — Windows may fall back from `R8` to `R8G8B8A8_SRGB` without it.
+
+**Q: Why are `_FoWBlurred` and `_PrevTex` not in the shader Properties blocks?**
+A: Per-material `Properties` override global values. Since the feature sets these via `cmd.SetGlobalTexture()` (needed for TextureHandle compatibility), having them in Properties would shadow the global binds. The HLSL `TEXTURE2D()` declarations remain — only the Properties block entries are removed.

@@ -205,32 +205,6 @@ namespace View.FogOfWar
             _meshBuilder.RebuildMesh(endpoints);
         }
 
-        // ── Debug overlay: shows raw + blurred RTs in corner ──
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        void OnGUI()
-        {
-            if (!_initialized || _rawRT == null || !DevCheats.FogOfWarEnabled) return;
-            if (!DevCheats.FOVEnabled) return;
-
-            float previewW = 200;
-            float previewH = previewW / ((float)_rawRT.width / _rawRT.height);
-
-            // Top-right: color-only RT (what goes into blur pipeline)
-            var srcRT = _rawColorRT != null ? _rawColorRT : _rawRT;
-            var rawRect = new Rect(Screen.width - previewW - 10, 10, previewW, previewH);
-            GUI.DrawTexture(rawRect, srcRT);
-            GUI.Label(rawRect, $"<b>RAW</b> ({srcRT.graphicsFormat})");
-
-            // Below: blurred persistent RT (what temporal blend accumulates)
-            if (_blurredRT != null)
-            {
-                var blurRect = new Rect(Screen.width - previewW - 10, 20 + previewH, previewW, previewH);
-                GUI.DrawTexture(blurRect, _blurredRT);
-                GUI.Label(blurRect, $"<b>BLURRED</b> ({_blurredRT.graphicsFormat})");
-            }
-        }
-#endif
-
         void OnDestroy()
         {
             if (_rawRT != null)

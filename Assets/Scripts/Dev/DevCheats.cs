@@ -37,7 +37,6 @@ namespace Dev
         public static int FoWRTScale = 256;
         public static float FOVRayStep = 2f;
         public static float FogTemporalBlend = 0.2f;
-        public static bool FoWBypassBlur; // Debug: skip blur+temporal, pass raw RT to composite
 
         public static void Reset()
         {

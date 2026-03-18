@@ -17,7 +17,7 @@ namespace View.FogOfWar
         const float EdgeThreshold = 0.5f; // distance diff to trigger edge-finding
         const int BinarySearchIterations = 4;
 
-        struct RawRay
+        public struct RawRay
         {
             public float Angle;
             public float Dist;
@@ -26,6 +26,12 @@ namespace View.FogOfWar
         }
 
         static readonly List<RawRay> RawRays = new(256);
+
+        /// <summary>
+        /// Cached copy of the last sweep's raw rays (for gizmo visualization).
+        /// Updated every Sweep() call.
+        /// </summary>
+        public static readonly List<RawRay> LastRawRays = new(256);
 
         public static List<Vector3> Sweep(Vector3 playerPos, Vector3 forward,
             float nearRadius, float farRadius, float fovAngle,
@@ -86,6 +92,10 @@ namespace View.FogOfWar
                 for (int i = 0; i < collidersToDisable.Length; i++)
                     collidersToDisable[i].enabled = true;
             }
+
+            // Cache for gizmo visualization
+            LastRawRays.Clear();
+            LastRawRays.AddRange(RawRays);
 
             return Endpoints;
         }
