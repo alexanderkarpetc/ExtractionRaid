@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using Dev;
 using State;
 using Systems;
 using UnityEngine;
@@ -11,20 +12,24 @@ namespace View
     /// 1. Raw aim dot (white) — instant mouse position (player intent)
     /// 2. Weapon crosshair — shape/color reflects weapon phase
     /// 3. Hit/kill X-markers on crosshair (COD-style)
+    /// Geometry/colors are tweakable via DevCheats (Crosshair section).
     /// </summary>
     public class AimCursorOverlay : MonoBehaviour
     {
         Texture2D _pixelTex;
 
-        // Crosshair geometry
-        const float LineLength = 24f;
-        const float LineThickness = 6f;
-        const float BaseGap = 15f;
-        const float CenterDotSize = 9f;
+        // ── Configurable via DevCheats ─────────────────────
+        // Read each frame from DevCheats.CrosshairXxx properties
+        float LineLength      => DevCheats.CrosshairLineLength;
+        float LineThickness   => DevCheats.CrosshairLineThickness;
+        float BaseGap         => DevCheats.CrosshairBaseGap;
+        float CenterDotSize   => DevCheats.CrosshairCenterDotSize;
+        float BloomExtraGap   => DevCheats.CrosshairBloomExtraGap;
+        Color NormalColor     => DevCheats.CrosshairNormalColor;
+        Color WarningColor    => DevCheats.CrosshairWarningColor;
+        Color BloomColor      => DevCheats.CrosshairBloomColor;
 
-        // Bloom animation
-        const float BloomExtraGap = 30f;
-
+        // ── Non-configurable constants ─────────────────────
         // Reload ring
         const int ReloadDotCount = 12;
         const float ReloadRingRadius = 42f;
@@ -48,11 +53,8 @@ namespace View
         const float HitGapStart = 8f;
         const float HitGapExpand = 14f;
 
-        // Colors
+        // Colors (non-configurable)
         static readonly Color RawDotColor = new Color(1f, 1f, 1f, 0.6f);
-        static readonly Color NormalColor = new Color(0.2f, 1f, 0.3f, 0.9f);
-        static readonly Color WarningColor = new Color(1f, 0.25f, 0.2f, 0.9f);
-        static readonly Color BloomColor = new Color(1f, 1f, 1f, 0.95f);
         static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
         static readonly Color ReloadEmptyColor = new Color(0.4f, 0.4f, 0.4f, 0.4f);
         static readonly Color UnarmedColor = new Color(0.7f, 0.7f, 0.7f, 0.6f);
@@ -68,9 +70,10 @@ namespace View
         {
             // Force-hide system cursor every frame during active gameplay.
             // Unity resets Cursor.visible when editor regains focus.
+            // When crosshair is disabled, show normal system cursor instead.
             var session = App.App.Instance?.RaidSession;
             bool inGameplay = session?.RaidState?.PlayerEntity != null;
-            Cursor.visible = !inGameplay;
+            Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled;
         }
 
         void LateUpdate()
@@ -90,6 +93,8 @@ namespace View
 
         void OnGUI()
         {
+            if (!DevCheats.CrosshairEnabled) return;
+
             var session = App.App.Instance?.RaidSession;
             if (session == null) return;
 

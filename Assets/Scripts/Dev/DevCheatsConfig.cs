@@ -59,6 +59,18 @@ namespace Dev
         public float FOVRayStep = 2f;
         public float FogTemporalBlend = 0.2f;
 
+        // ── Crosshair ─────────────────────────────────────
+        [Header("Crosshair")]
+        public bool CrosshairEnabled = true;
+        public float CrosshairLineLength = 24f;
+        public float CrosshairLineThickness = 6f;
+        public float CrosshairBaseGap = 15f;
+        public float CrosshairCenterDotSize = 9f;
+        public float CrosshairBloomExtraGap = 30f;
+        public Color CrosshairNormalColor = new(0.2f, 1f, 0.3f, 0.9f);
+        public Color CrosshairWarningColor = new(1f, 0.25f, 0.2f, 0.9f);
+        public Color CrosshairBloomColor = new(1f, 1f, 1f, 0.95f);
+
         // ── Status Effects ──────────────────────────────────
         [Header("Status Effects")]
         public bool ForceBleedPlayer;

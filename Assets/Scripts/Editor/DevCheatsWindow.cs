@@ -13,6 +13,7 @@ namespace Editor
         static bool _foldFOV;
         static bool _foldFoW;
         static bool _foldAim;
+        static bool _foldCrosshair;
 
         Vector2 _scroll;
         SerializedObject _so;
@@ -32,6 +33,7 @@ namespace Editor
             _foldFOV    = EditorPrefs.GetBool("DevCheats_foldFOV", false);
             _foldFoW    = EditorPrefs.GetBool("DevCheats_foldFoW", false);
             _foldAim    = EditorPrefs.GetBool("DevCheats_foldAim", false);
+            _foldCrosshair = EditorPrefs.GetBool("DevCheats_foldCrosshair", false);
 
             BindConfig();
         }
@@ -51,6 +53,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldFOV", _foldFOV);
             EditorPrefs.SetBool("DevCheats_foldFoW", _foldFoW);
             EditorPrefs.SetBool("DevCheats_foldAim", _foldAim);
+            EditorPrefs.SetBool("DevCheats_foldCrosshair", _foldCrosshair);
         }
 
         void MarkDirty()
@@ -144,6 +147,21 @@ namespace Editor
                 DevCheats.AimFollowMultiplier = EditorGUILayout.Slider("Follow Speed ×", DevCheats.AimFollowMultiplier, 0.1f, 5f);
             });
             DevCheats.AimSplitEnabled = aimEnabled;
+
+            // ── Crosshair ─────────────────────────────────────
+            bool crosshairEnabled = DevCheats.CrosshairEnabled;
+            DrawToggleFoldout(ref _foldCrosshair, ref crosshairEnabled, "Crosshair", () =>
+            {
+                DevCheats.CrosshairLineLength    = EditorGUILayout.Slider("Line Length", DevCheats.CrosshairLineLength, 4f, 60f);
+                DevCheats.CrosshairLineThickness = EditorGUILayout.Slider("Line Thickness", DevCheats.CrosshairLineThickness, 1f, 16f);
+                DevCheats.CrosshairBaseGap       = EditorGUILayout.Slider("Base Gap", DevCheats.CrosshairBaseGap, 0f, 40f);
+                DevCheats.CrosshairCenterDotSize  = EditorGUILayout.Slider("Center Dot Size", DevCheats.CrosshairCenterDotSize, 0f, 20f);
+                DevCheats.CrosshairBloomExtraGap = EditorGUILayout.Slider("Bloom Extra Gap", DevCheats.CrosshairBloomExtraGap, 0f, 80f);
+                DevCheats.CrosshairNormalColor   = EditorGUILayout.ColorField("Normal Color", DevCheats.CrosshairNormalColor);
+                DevCheats.CrosshairWarningColor  = EditorGUILayout.ColorField("Warning Color", DevCheats.CrosshairWarningColor);
+                DevCheats.CrosshairBloomColor    = EditorGUILayout.ColorField("Bloom Color", DevCheats.CrosshairBloomColor);
+            });
+            DevCheats.CrosshairEnabled = crosshairEnabled;
 
             EditorGUILayout.Space(8);
 

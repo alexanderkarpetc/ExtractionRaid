@@ -204,6 +204,61 @@ namespace Dev
             set => Config.FogTemporalBlend = value;
         }
 
+        // ── Crosshair ─────────────────────────────────────
+        public static bool CrosshairEnabled
+        {
+            get => Config.CrosshairEnabled;
+            set => Config.CrosshairEnabled = value;
+        }
+
+        public static float CrosshairLineLength
+        {
+            get => Config.CrosshairLineLength;
+            set => Config.CrosshairLineLength = value;
+        }
+
+        public static float CrosshairLineThickness
+        {
+            get => Config.CrosshairLineThickness;
+            set => Config.CrosshairLineThickness = value;
+        }
+
+        public static float CrosshairBaseGap
+        {
+            get => Config.CrosshairBaseGap;
+            set => Config.CrosshairBaseGap = value;
+        }
+
+        public static float CrosshairCenterDotSize
+        {
+            get => Config.CrosshairCenterDotSize;
+            set => Config.CrosshairCenterDotSize = value;
+        }
+
+        public static float CrosshairBloomExtraGap
+        {
+            get => Config.CrosshairBloomExtraGap;
+            set => Config.CrosshairBloomExtraGap = value;
+        }
+
+        public static Color CrosshairNormalColor
+        {
+            get => Config.CrosshairNormalColor;
+            set => Config.CrosshairNormalColor = value;
+        }
+
+        public static Color CrosshairWarningColor
+        {
+            get => Config.CrosshairWarningColor;
+            set => Config.CrosshairWarningColor = value;
+        }
+
+        public static Color CrosshairBloomColor
+        {
+            get => Config.CrosshairBloomColor;
+            set => Config.CrosshairBloomColor = value;
+        }
+
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {
