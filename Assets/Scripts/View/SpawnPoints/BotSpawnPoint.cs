@@ -50,6 +50,9 @@ namespace View.SpawnPoints
             Gizmos.color = new Color(1f, 0.2f, 0.2f, 1f);
             Gizmos.DrawWireSphere(transform.position, 0.5f);
 
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.35f);
+            Gizmos.DrawWireSphere(transform.position, patrolRadius);
+
             if (patrolWaypoints != null)
             {
                 Gizmos.color = Color.yellow;
@@ -72,3 +75,4 @@ namespace View.SpawnPoints
 #endif
     }
 }
+
