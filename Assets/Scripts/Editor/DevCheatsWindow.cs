@@ -15,6 +15,8 @@ namespace Editor
         static bool _foldAim;
 
         Vector2 _scroll;
+        SerializedObject _so;
+        DevCheatsConfig _config;
 
         [MenuItem("Window/Dev Cheats")]
         static void Open()
@@ -30,6 +32,15 @@ namespace Editor
             _foldFOV    = EditorPrefs.GetBool("DevCheats_foldFOV", false);
             _foldFoW    = EditorPrefs.GetBool("DevCheats_foldFoW", false);
             _foldAim    = EditorPrefs.GetBool("DevCheats_foldAim", false);
+
+            BindConfig();
+        }
+
+        void BindConfig()
+        {
+            _config = DevCheats.Config;
+            if (_config != null)
+                _so = new SerializedObject(_config);
         }
 
         void SaveFoldouts()
@@ -42,8 +53,28 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldAim", _foldAim);
         }
 
+        void MarkDirty()
+        {
+            if (_config != null)
+                EditorUtility.SetDirty(_config);
+        }
+
         void OnGUI()
         {
+            if (_so == null || _so.targetObject == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "DevCheatsConfig asset not found.\nCreate it via Assets → Create → Dev → Cheats Config\nand place in a Resources folder.",
+                    MessageType.Warning);
+
+                if (GUILayout.Button("Create in Resources"))
+                    CreateConfigAsset();
+
+                return;
+            }
+
+            _so.Update();
+
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
             // ── Cheats ──────────────────────────────────────
@@ -80,7 +111,8 @@ namespace Editor
             });
 
             // ── FOV ─────────────────────────────────────────
-            DrawToggleFoldout(ref _foldFOV, ref DevCheats.FOVEnabled, "FOV", () =>
+            bool fovEnabled = DevCheats.FOVEnabled;
+            DrawToggleFoldout(ref _foldFOV, ref fovEnabled, "FOV", () =>
             {
                 DevCheats.FOVNearRadius      = EditorGUILayout.Slider("Near Radius", DevCheats.FOVNearRadius, 1f, 15f);
                 DevCheats.FOVFarRadius       = EditorGUILayout.Slider("Far Radius", DevCheats.FOVFarRadius, 10f, 100f);
@@ -88,9 +120,11 @@ namespace Editor
                 DevCheats.ForceShowAllBots   = EditorGUILayout.Toggle("Force Show All Bots", DevCheats.ForceShowAllBots);
                 DevCheats.FOVOcclusionEnabled = EditorGUILayout.Toggle("FOV Occlusion", DevCheats.FOVOcclusionEnabled);
             });
+            DevCheats.FOVEnabled = fovEnabled;
 
             // ── Fog of War ─────────────────────────────────────
-            DrawToggleFoldout(ref _foldFoW, ref DevCheats.FogOfWarEnabled, "Fog of War", () =>
+            bool fowEnabled = DevCheats.FogOfWarEnabled;
+            DrawToggleFoldout(ref _foldFoW, ref fowEnabled, "Fog of War", () =>
             {
                 DevCheats.FogBlurRadius    = EditorGUILayout.Slider("Blur Radius", DevCheats.FogBlurRadius, 0f, 10f);
                 DevCheats.FogBlurIterations = EditorGUILayout.IntSlider("Blur Iterations", DevCheats.FogBlurIterations, 1, 6);
@@ -101,12 +135,15 @@ namespace Editor
                 DevCheats.FOVRayStep       = EditorGUILayout.Slider("Ray Step (°)", DevCheats.FOVRayStep, 0.5f, 5f);
                 DevCheats.FogTemporalBlend = EditorGUILayout.Slider("Temporal Blend", DevCheats.FogTemporalBlend, 0.05f, 1f);
             });
+            DevCheats.FogOfWarEnabled = fowEnabled;
 
             // ── Aim Split ─────────────────────────────────────
-            DrawToggleFoldout(ref _foldAim, ref DevCheats.AimSplitEnabled, "Aim Split", () =>
+            bool aimEnabled = DevCheats.AimSplitEnabled;
+            DrawToggleFoldout(ref _foldAim, ref aimEnabled, "Aim Split", () =>
             {
                 DevCheats.AimFollowMultiplier = EditorGUILayout.Slider("Follow Speed ×", DevCheats.AimFollowMultiplier, 0.1f, 5f);
             });
+            DevCheats.AimSplitEnabled = aimEnabled;
 
             EditorGUILayout.Space(8);
 
@@ -115,16 +152,32 @@ namespace Editor
             if (GUILayout.Button("Apply Bleed to Player"))
                 DevCheats.ForceBleedPlayer = true;
 
-            EditorGUILayout.Space(12);
-
-            // ── Reset ───────────────────────────────────────
-            if (GUILayout.Button("Reset All to Defaults"))
-                DevCheats.Reset();
-
             EditorGUILayout.EndScrollView();
+
+            // Auto-save: if anything changed, mark dirty
+            if (GUI.changed)
+                MarkDirty();
+
+            _so.ApplyModifiedProperties();
         }
 
         // ── Helpers ─────────────────────────────────────────
+
+        void CreateConfigAsset()
+        {
+            const string folder = "Assets/Resources";
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder("Assets", "Resources");
+
+            var asset = ScriptableObject.CreateInstance<DevCheatsConfig>();
+            AssetDatabase.CreateAsset(asset, folder + "/DevCheatsConfig.asset");
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            // Re-bind to the newly created asset
+            BindConfig();
+            Debug.Log("[DevCheats] Created config asset at " + folder + "/DevCheatsConfig.asset");
+        }
 
         /// <summary>Collapsible foldout group.</summary>
         void DrawFoldout(ref bool foldout, string title, System.Action drawContent)
@@ -171,5 +224,6 @@ namespace Editor
                 }
             }
         }
+
     }
 }

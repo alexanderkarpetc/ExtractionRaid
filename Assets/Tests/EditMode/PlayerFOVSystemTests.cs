@@ -16,19 +16,12 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            DevCheats.Reset();
             DevCheats.FOVEnabled = true;
             DevCheats.ForceShowAllBots = false;
             DevCheats.FOVOcclusionEnabled = true;
             DevCheats.FOVNearRadius = 5f;
             DevCheats.FOVFarRadius = 25f;
             DevCheats.FOVAngle = 130f;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            DevCheats.Reset();
         }
 
         static RaidContext CreateContext(IPhysicsAdapter physics = null)

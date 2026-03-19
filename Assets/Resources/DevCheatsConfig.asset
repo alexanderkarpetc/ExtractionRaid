@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db85c92c76d2a444095d30bd1cc61484, type: 3}
+  m_Name: DevCheatsConfig
+  m_EditorClassIdentifier: Game::Dev.DevCheatsConfig
+  GodMode: 0
+  InfiniteAmmo: 0
+  DamageMultiplier: 1
+  ProjectileSpeedMultiplier: 1
+  FireRateMultiplier: 1
+  NoRecoil: 0
+  RecoilMultiplier: 0.5
+  RecoilForwardMultiplier: 1
+  RecoilSideMultiplier: 1
+  RecoilRecoveryMultiplier: 1
+  AimSplitEnabled: 0
+  AimFollowMultiplier: 1
+  MoveSpeedMultiplier: 1
+  FOVEnabled: 1
+  FOVNearRadius: 6
+  FOVFarRadius: 25
+  FOVAngle: 130
+  ForceShowAllBots: 0
+  FOVOcclusionEnabled: 1
+  FogOfWarEnabled: 1
+  FogBlurRadius: 10
+  FogBlurIterations: 3
+  FogIntensity: 0.6
+  FogDesaturation: 0
+  FogColor: {r: 0.02, g: 0.02, b: 0.05, a: 1}
+  FoWRTScale: 256
+  FOVRayStep: 2
+  FogTemporalBlend: 0.2
+  ForceBleedPlayer: 0

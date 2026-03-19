@@ -2,101 +2,221 @@ using UnityEngine;
 
 namespace Dev
 {
+    /// <summary>
+    /// Thin static accessor over <see cref="DevCheatsConfig"/> ScriptableObject.
+    /// All 16 call-sites keep using DevCheats.X — zero refactor needed.
+    /// The SO asset lives at Resources/DevCheatsConfig.
+    /// </summary>
     public static class DevCheats
     {
+        static DevCheatsConfig _cfg;
+
+        public static DevCheatsConfig Config
+        {
+            get
+            {
+                if (_cfg == null)
+                    _cfg = Resources.Load<DevCheatsConfig>("DevCheatsConfig");
+#if UNITY_EDITOR
+                // Fallback: create in-memory instance so editor never NPEs
+                if (_cfg == null)
+                {
+                    Debug.LogWarning("[DevCheats] DevCheatsConfig asset not found in Resources. Using in-memory defaults.");
+                    _cfg = ScriptableObject.CreateInstance<DevCheatsConfig>();
+                }
+#endif
+                return _cfg;
+            }
+        }
+
         // ── Cheats ──────────────────────────────────────────
-        public static bool GodMode;
-        public static bool InfiniteAmmo;
+        public static bool GodMode
+        {
+            get => Config.GodMode;
+            set => Config.GodMode = value;
+        }
+
+        public static bool InfiniteAmmo
+        {
+            get => Config.InfiniteAmmo;
+            set => Config.InfiniteAmmo = value;
+        }
 
         // ── Weapon ──────────────────────────────────────────
-        public static float DamageMultiplier;
-        public static float ProjectileSpeedMultiplier;
-        public static float FireRateMultiplier;
+        public static float DamageMultiplier
+        {
+            get => Config.DamageMultiplier;
+            set => Config.DamageMultiplier = value;
+        }
+
+        public static float ProjectileSpeedMultiplier
+        {
+            get => Config.ProjectileSpeedMultiplier;
+            set => Config.ProjectileSpeedMultiplier = value;
+        }
+
+        public static float FireRateMultiplier
+        {
+            get => Config.FireRateMultiplier;
+            set => Config.FireRateMultiplier = value;
+        }
 
         // ── Recoil ──────────────────────────────────────────
-        public static bool NoRecoil;
-        public static float RecoilMultiplier;
-        public static float RecoilForwardMultiplier;
-        public static float RecoilSideMultiplier;
-        public static float RecoilRecoveryMultiplier;
+        public static bool NoRecoil
+        {
+            get => Config.NoRecoil;
+            set => Config.NoRecoil = value;
+        }
+
+        public static float RecoilMultiplier
+        {
+            get => Config.RecoilMultiplier;
+            set => Config.RecoilMultiplier = value;
+        }
+
+        public static float RecoilForwardMultiplier
+        {
+            get => Config.RecoilForwardMultiplier;
+            set => Config.RecoilForwardMultiplier = value;
+        }
+
+        public static float RecoilSideMultiplier
+        {
+            get => Config.RecoilSideMultiplier;
+            set => Config.RecoilSideMultiplier = value;
+        }
+
+        public static float RecoilRecoveryMultiplier
+        {
+            get => Config.RecoilRecoveryMultiplier;
+            set => Config.RecoilRecoveryMultiplier = value;
+        }
 
         // ── Aim Split ───────────────────────────────────────
-        public static bool AimSplitEnabled;
-        public static float AimFollowMultiplier;
+        public static bool AimSplitEnabled
+        {
+            get => Config.AimSplitEnabled;
+            set => Config.AimSplitEnabled = value;
+        }
+
+        public static float AimFollowMultiplier
+        {
+            get => Config.AimFollowMultiplier;
+            set => Config.AimFollowMultiplier = value;
+        }
 
         // ── Player ──────────────────────────────────────────
-        public static float MoveSpeedMultiplier;
+        public static float MoveSpeedMultiplier
+        {
+            get => Config.MoveSpeedMultiplier;
+            set => Config.MoveSpeedMultiplier = value;
+        }
 
         // ── FOV ─────────────────────────────────────────────
-        public static bool FOVEnabled;
-        public static float FOVNearRadius;
-        public static float FOVFarRadius;
-        public static float FOVAngle;
-        public static bool ForceShowAllBots;
-        public static bool FOVOcclusionEnabled;
+        public static bool FOVEnabled
+        {
+            get => Config.FOVEnabled;
+            set => Config.FOVEnabled = value;
+        }
+
+        public static float FOVNearRadius
+        {
+            get => Config.FOVNearRadius;
+            set => Config.FOVNearRadius = value;
+        }
+
+        public static float FOVFarRadius
+        {
+            get => Config.FOVFarRadius;
+            set => Config.FOVFarRadius = value;
+        }
+
+        public static float FOVAngle
+        {
+            get => Config.FOVAngle;
+            set => Config.FOVAngle = value;
+        }
+
+        public static bool ForceShowAllBots
+        {
+            get => Config.ForceShowAllBots;
+            set => Config.ForceShowAllBots = value;
+        }
+
+        public static bool FOVOcclusionEnabled
+        {
+            get => Config.FOVOcclusionEnabled;
+            set => Config.FOVOcclusionEnabled = value;
+        }
 
         // ── Fog of War ──────────────────────────────────────
-        public static bool FogOfWarEnabled;
-        public static float FogBlurRadius;
-        public static int FogBlurIterations;
-        public static float FogIntensity;
-        public static float FogDesaturation;
-        public static Color FogColor;
-        public static int FoWRTScale;
-        public static float FOVRayStep;
-        public static float FogTemporalBlend;
+        public static bool FogOfWarEnabled
+        {
+            get => Config.FogOfWarEnabled;
+            set => Config.FogOfWarEnabled = value;
+        }
+
+        public static float FogBlurRadius
+        {
+            get => Config.FogBlurRadius;
+            set => Config.FogBlurRadius = value;
+        }
+
+        public static int FogBlurIterations
+        {
+            get => Config.FogBlurIterations;
+            set => Config.FogBlurIterations = value;
+        }
+
+        public static float FogIntensity
+        {
+            get => Config.FogIntensity;
+            set => Config.FogIntensity = value;
+        }
+
+        public static float FogDesaturation
+        {
+            get => Config.FogDesaturation;
+            set => Config.FogDesaturation = value;
+        }
+
+        public static Color FogColor
+        {
+            get => Config.FogColor;
+            set => Config.FogColor = value;
+        }
+
+        public static int FoWRTScale
+        {
+            get => Config.FoWRTScale;
+            set => Config.FoWRTScale = value;
+        }
+
+        public static float FOVRayStep
+        {
+            get => Config.FOVRayStep;
+            set => Config.FOVRayStep = value;
+        }
+
+        public static float FogTemporalBlend
+        {
+            get => Config.FogTemporalBlend;
+            set => Config.FogTemporalBlend = value;
+        }
 
         // ── Status Effects ──────────────────────────────────
-        public static bool ForceBleedPlayer;
-
-        static DevCheats() => Reset();
-
-        public static void Reset()
+        public static bool ForceBleedPlayer
         {
-            // Cheats
-            GodMode = false;
-            InfiniteAmmo = false;
+            get => Config.ForceBleedPlayer;
+            set => Config.ForceBleedPlayer = value;
+        }
 
-            // Weapon
-            DamageMultiplier = 1f;
-            ProjectileSpeedMultiplier = 1f;
-            FireRateMultiplier = 1f;
-
-            // Recoil
-            NoRecoil = false;
-            RecoilMultiplier = .5f;
-            RecoilForwardMultiplier = 1f;
-            RecoilSideMultiplier = 1f;
-            RecoilRecoveryMultiplier = 1f;
-
-            // Aim Split
-            AimSplitEnabled = false;
-            AimFollowMultiplier = 1f;
-
-            // Player
-            MoveSpeedMultiplier = 1f;
-
-            // FOV
-            FOVEnabled = true;
-            FOVNearRadius = 6f;
-            FOVFarRadius = 25f;
-            FOVAngle = 130f;
-            ForceShowAllBots = false;
-            FOVOcclusionEnabled = true;
-
-            // Fog of War
-            FogOfWarEnabled = true;
-            FogBlurRadius = 10f;
-            FogBlurIterations = 3;
-            FogIntensity = 0.6f;
-            FogDesaturation = 0f;
-            FogColor = new Color(0.02f, 0.02f, 0.05f, 1f);
-            FoWRTScale = 256;
-            FOVRayStep = 2f;
-            FogTemporalBlend = 0.2f;
-
-            // Status Effects
-            ForceBleedPlayer = false;
+        /// <summary>Mark asset dirty so editor saves it. Call after batch changes.</summary>
+        public static void SetDirty()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(Config);
+#endif
         }
     }
 }

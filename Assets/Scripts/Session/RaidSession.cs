@@ -4,6 +4,7 @@ using Constants;
 using Systems;
 using Systems.Bot;
 using State;
+using UnityEngine;
 using View.SpawnPoints;
 
 namespace Session
@@ -39,8 +40,13 @@ namespace Session
 
         public void Start()
         {
-            var spawnPoint = UnityEngine.Object.FindObjectOfType<PlayerSpawnPoint>();
-            var spawnPos = spawnPoint != null ? spawnPoint.transform.position : UnityEngine.Vector3.zero;
+            var spawnPoints = Object.FindObjectsByType<PlayerSpawnPoint>(FindObjectsSortMode.None);
+            if (spawnPoints.Length != 1)
+            {
+                Debug.LogWarning($"{nameof(spawnPoints)} must contain exactly 1 SpawnPoint in the scene. Found: {spawnPoints.Length}. " +
+                                 $"Player will spawn at world origin. Please add exactly one PlayerSpawnPoint to the scene.");
+            }
+            var spawnPos = spawnPoints.Length > 0 ? spawnPoints[0].transform.position : Vector3.zero;
             PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer);
             SpawnFromScenePoints();
             // SpawnTestGroundItems();
@@ -53,9 +59,9 @@ namespace Session
 
         void SpawnFromScenePoints()
         {
-            var botPoints = UnityEngine.Object.FindObjectsOfType<BotSpawnPoint>();
-            var lootPoints = UnityEngine.Object.FindObjectsOfType<LooseLootSpawnPoint>();
-            var containerPoints = UnityEngine.Object.FindObjectsOfType<LootContainerSpawnPoint>();
+            var botPoints = Object.FindObjectsByType<BotSpawnPoint>(FindObjectsSortMode.None);
+            var lootPoints = Object.FindObjectsByType<LooseLootSpawnPoint>(FindObjectsSortMode.None);
+            var containerPoints = Object.FindObjectsByType<LootContainerSpawnPoint>(FindObjectsSortMode.None);
 
             foreach (var sp in botPoints)
             {
