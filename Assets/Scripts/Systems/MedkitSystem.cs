@@ -14,13 +14,13 @@ namespace Systems
 
             if (!state.HealthMap.TryGetValue(player.Id, out var health)) return;
 
-            var input = context.Input;
-            if (input == null) return;
+            bool wantsHeal = QuickSlotSystem.GetActiveDefinitionId(player, state.Inventory) == "Medkit"
+                && player.QuickSlotHeld;
 
             if (player.IsUsingMedkit)
             {
                 var medkit = GetActiveMedkit(state, player);
-                if (!input.HealPressed || !health.IsAlive || medkit == null)
+                if (!wantsHeal || !health.IsAlive || medkit == null)
                 {
                     StopMedkit(state, player, context);
                     return;
@@ -61,12 +61,13 @@ namespace Systems
                 return;
             }
 
-            if (!input.HealPressed) return;
+            if (!wantsHeal) return;
             if (player.IsRolling || player.AreHandsBusy) return;
             if (health.CurrentHp >= health.MaxHp) return;
 
-            int slot = InventorySystem.FindFirstMedkitSlot(state.Inventory);
+            int slot = QuickSlotSystem.GetActiveBoundSlot(player, state.Inventory);
             if (slot < 0) return;
+            if (state.Inventory.Backpack[slot]?.DefinitionId != "Medkit") return;
 
             player.IsUsingMedkit = true;
             player.ActiveMedkitSlot = slot;

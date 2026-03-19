@@ -9,6 +9,10 @@ namespace Adapters
         static readonly Key[] HotbarKeys =
         {
             Key.Digit1, Key.Digit2, Key.Digit3,
+        };
+
+        static readonly Key[] QuickSlotKeys =
+        {
             Key.Digit4, Key.Digit5, Key.Digit6,
             Key.Digit7, Key.Digit8, Key.Digit9,
         };
@@ -112,21 +116,37 @@ namespace Adapters
             }
         }
 
-        public bool HealPressed
+        public int QuickSlotPressed
         {
             get
             {
                 var kb = Keyboard.current;
-                return kb != null && kb[Key.H].IsPressed();
+                if (kb == null) return -1;
+
+                for (int i = 0; i < QuickSlotKeys.Length; i++)
+                {
+                    if (kb[QuickSlotKeys[i]].wasPressedThisFrame)
+                        return i;
+                }
+
+                return -1;
             }
         }
 
-        public bool BandagePressed
+        public int QuickSlotHeld
         {
             get
             {
                 var kb = Keyboard.current;
-                return kb != null && kb[Key.B].IsPressed();
+                if (kb == null) return -1;
+
+                for (int i = 0; i < QuickSlotKeys.Length; i++)
+                {
+                    if (kb[QuickSlotKeys[i]].IsPressed())
+                        return i;
+                }
+
+                return -1;
             }
         }
 

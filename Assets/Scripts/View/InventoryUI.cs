@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using State;
 using Systems;
 using UnityEngine;
@@ -11,6 +12,17 @@ namespace View
         const float ScreenMargin = 20f;
         const float PanelGap = 10f;
 
+        static readonly Key[] QuickSlotKeys =
+        {
+            Key.Digit4, Key.Digit5, Key.Digit6,
+            Key.Digit7, Key.Digit8, Key.Digit9,
+        };
+
+        static readonly HashSet<string> QuickSlotAssignable = new()
+        {
+            "Medkit", "Bandage", "Grenade",
+        };
+
         bool _isOpen;
         bool _openedByLoot;
 
@@ -20,7 +32,9 @@ namespace View
         Texture2D _dragBg;
         Texture2D _panelBg;
         Texture2D _promptBg;
+        Texture2D _quickSlotBadgeBg;
         GUIStyle _slotStyle;
+        GUIStyle _quickSlotBadgeStyle;
         GUIStyle _labelStyle;
         GUIStyle _headerStyle;
         GUIStyle _dropBtnStyle;
@@ -52,6 +66,7 @@ namespace View
             _dragBg = MakeTex(new Color(0.5f, 0.5f, 0.2f, 0.85f));
             _panelBg = MakeTex(new Color(0.12f, 0.12f, 0.14f, 0.95f));
             _promptBg = MakeTex(new Color(0.1f, 0.1f, 0.1f, 0.8f));
+            _quickSlotBadgeBg = MakeTex(new Color(0.8f, 0.6f, 0.1f, 0.9f));
         }
 
         void Update()
@@ -376,6 +391,60 @@ namespace View
                     Event.current.Use();
                 }
             }
+
+            if (!isLoot && slotRef.Type == SlotType.Backpack && item != null
+                && QuickSlotAssignable.Contains(item.DefinitionId)
+                && rect.Contains(Event.current.mousePosition))
+            {
+                var kb = Keyboard.current;
+                if (kb != null)
+                {
+                    for (int qi = 0; qi < QuickSlotKeys.Length; qi++)
+                    {
+                        if (kb[QuickSlotKeys[qi]].wasPressedThisFrame)
+                        {
+                            inventory.QuickSlotBindings[qi] = slotRef.Index;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            DrawQuickSlotBadge(rect, slotRef, inventory);
+        }
+
+        void DrawQuickSlotBadge(Rect slotRect, InventorySlotRef slotRef, InventoryState inventory)
+        {
+            if (slotRef.Type != SlotType.Backpack) return;
+
+            for (int qi = 0; qi < InventoryState.QuickSlotCount; qi++)
+            {
+                if (inventory.QuickSlotBindings[qi] == slotRef.Index)
+                {
+                    EnsureQuickSlotBadgeStyle();
+                    int keyNum = qi + InventoryState.QuickSlotKeyOffset;
+                    float badgeSize = Mathf.Max(20f, slotRect.width * 0.25f);
+                    var badgeRect = new Rect(
+                        slotRect.xMax - badgeSize - 2f,
+                        slotRect.y + 2f,
+                        badgeSize, badgeSize);
+                    _quickSlotBadgeStyle.fontSize = Mathf.RoundToInt(badgeSize * 0.65f);
+                    GUI.Box(badgeRect, keyNum.ToString(), _quickSlotBadgeStyle);
+                    break;
+                }
+            }
+        }
+
+        void EnsureQuickSlotBadgeStyle()
+        {
+            if (_quickSlotBadgeStyle != null) return;
+            _quickSlotBadgeStyle = new GUIStyle(GUI.skin.box)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = FontStyle.Bold,
+            };
+            _quickSlotBadgeStyle.normal.background = _quickSlotBadgeBg;
+            _quickSlotBadgeStyle.normal.textColor = Color.black;
         }
 
         void HandleDrag(Session.RaidSession session, RaidState state,
@@ -667,6 +736,7 @@ namespace View
             if (_dragBg != null) Destroy(_dragBg);
             if (_panelBg != null) Destroy(_panelBg);
             if (_promptBg != null) Destroy(_promptBg);
+            if (_quickSlotBadgeBg != null) Destroy(_quickSlotBadgeBg);
         }
     }
 }

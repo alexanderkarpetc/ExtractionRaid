@@ -4,7 +4,7 @@ namespace State
 {
     public class PlayerEntityState
     {
-        public const int HotbarSize = 9;
+        public const int HotbarSize = 3;
 
         public EId Id;
         public Vector3 Position;
@@ -39,6 +39,9 @@ namespace State
         public float MedkitHealFraction;
 
         public EId LootTargetId;
+
+        public int ActiveQuickSlot = -1;
+        public bool QuickSlotHeld;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
 

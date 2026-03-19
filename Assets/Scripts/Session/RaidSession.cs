@@ -177,6 +177,7 @@ namespace Session
             WeaponEquipSystem.Tick(RaidState, in context);
             WeaponStateMachineSystem.Tick(RaidState, in context);
             AimingSystem.Tick(RaidState, in context);
+            QuickSlotSystem.Tick(RaidState, in context);
             GrenadeSystem.Tick(RaidState, in context);
             MedkitSystem.Tick(RaidState, in context);
             StatusEffectSystem.Tick(RaidState, in context);

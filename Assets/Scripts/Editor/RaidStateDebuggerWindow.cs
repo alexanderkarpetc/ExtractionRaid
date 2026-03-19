@@ -162,6 +162,10 @@ namespace Editor
             Field("Bandage Count", CountBandages(state.Inventory));
             Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
+            Field("Active QuickSlot", p.ActiveQuickSlot >= 0
+                ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {state.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
+                : "None");
+            Field("QuickSlot Held", p.QuickSlotHeld);
 
             DrawHealth(p.Id, state.HealthMap);
 
@@ -415,6 +419,26 @@ namespace Editor
                 Field($"[{i}]", label);
             }
 
+            EditorGUI.indentLevel--;
+
+            EditorGUILayout.LabelField("Quick Slots", EditorStyles.miniLabel);
+            EditorGUI.indentLevel++;
+            for (int qi = 0; qi < InventoryState.QuickSlotCount; qi++)
+            {
+                int keyNum = qi + InventoryState.QuickSlotKeyOffset;
+                int boundSlot = inv.QuickSlotBindings[qi];
+                if (boundSlot >= 0)
+                {
+                    var boundItem = inv.Backpack[boundSlot];
+                    Field($"[{keyNum}]", boundItem != null
+                        ? $"Backpack[{boundSlot}] → {boundItem.DisplayName}"
+                        : $"Backpack[{boundSlot}] → (empty)");
+                }
+                else
+                {
+                    Field($"[{keyNum}]", "[unbound]");
+                }
+            }
             EditorGUI.indentLevel--;
 
             EditorGUI.indentLevel--;

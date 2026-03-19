@@ -15,7 +15,10 @@ namespace Systems
             var input = context.Input;
             if (input == null) return;
 
-            if (input.GrenadePressed)
+            bool grenadeViaQuickSlot = input.QuickSlotPressed >= 0
+                && QuickSlotSystem.GetActiveDefinitionId(player, state.Inventory) == "Grenade";
+
+            if (input.GrenadePressed || grenadeViaQuickSlot)
             {
                 if (player.IsInGrenadeMode)
                 {

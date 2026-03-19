@@ -11,7 +11,11 @@ namespace View
         Texture2D _occupiedTex;
         Texture2D _emptyTex;
         Texture2D _reloadTex;
+        Texture2D _quickSlotBoundTex;
+        Texture2D _quickSlotActiveTex;
         GUIStyle _slotStyle;
+
+        const int TotalSlots = PlayerEntityState.HotbarSize + InventoryState.QuickSlotCount;
 
         void Awake()
         {
@@ -20,6 +24,8 @@ namespace View
             _occupiedTex = MakeTex(new Color(0.3f, 0.3f, 0.3f, 0.9f));
             _emptyTex = MakeTex(new Color(0.15f, 0.15f, 0.15f, 0.8f));
             _reloadTex = MakeTex(new Color(0.9f, 0.5f, 0.1f, 0.7f));
+            _quickSlotBoundTex = MakeTex(new Color(0.35f, 0.3f, 0.2f, 0.9f));
+            _quickSlotActiveTex = MakeTex(new Color(0.8f, 0.6f, 0.1f, 0.9f));
         }
 
         void OnGUI()
@@ -29,6 +35,8 @@ namespace View
 
             var player = session.RaidState?.PlayerEntity;
             if (player == null) return;
+
+            var inventory = session.RaidState.Inventory;
 
             if (_slotStyle == null)
             {
@@ -44,58 +52,92 @@ namespace View
             const float slotW = 200f;
             const float slotH = 140f;
             const float gap = 6f;
-            float totalW = PlayerEntityState.HotbarSize * slotW + (PlayerEntityState.HotbarSize - 1) * gap;
+            float totalW = TotalSlots * slotW + (TotalSlots - 1) * gap;
             float startX = (Screen.width - totalW) / 2f;
             float startY = Screen.height - slotH - 16f;
 
             for (int i = 0; i < PlayerEntityState.HotbarSize; i++)
             {
                 var rect = new Rect(startX + i * (slotW + gap), startY, slotW, slotH);
-                bool isSelected = i == player.SelectedHotbarSlot;
-                bool isPending = i == player.PendingHotbarSlot;
-                var weapon = player.Hotbar[i];
+                DrawWeaponSlot(rect, i, player, session);
+            }
 
-                _slotStyle.normal.background = isSelected
-                    ? _selectedTex
-                    : isPending
-                        ? _pendingTex
-                        : weapon != null
-                            ? _occupiedTex
-                            : _emptyTex;
+            for (int qi = 0; qi < InventoryState.QuickSlotCount; qi++)
+            {
+                int visualIndex = PlayerEntityState.HotbarSize + qi;
+                var rect = new Rect(startX + visualIndex * (slotW + gap), startY, slotW, slotH);
+                DrawQuickSlot(rect, qi, player, inventory);
+            }
+        }
 
-                _slotStyle.normal.textColor = isSelected || isPending ? Color.black : Color.white;
+        void DrawWeaponSlot(Rect rect, int i, PlayerEntityState player, Session.RaidSession session)
+        {
+            bool isSelected = i == player.SelectedHotbarSlot;
+            bool isPending = i == player.PendingHotbarSlot;
+            var weapon = player.Hotbar[i];
 
-                string label;
-                if (weapon != null)
+            _slotStyle.normal.background = isSelected
+                ? _selectedTex
+                : isPending
+                    ? _pendingTex
+                    : weapon != null
+                        ? _occupiedTex
+                        : _emptyTex;
+
+            _slotStyle.normal.textColor = isSelected || isPending ? Color.black : Color.white;
+
+            string label;
+            if (weapon != null)
+            {
+                string ammoInfo = "";
+                if (!string.IsNullOrEmpty(weapon.AmmoType))
                 {
-                    string ammoInfo = "";
-                    if (!string.IsNullOrEmpty(weapon.AmmoType))
-                    {
-                        int reserve = AmmoSystem.CountReserve(
-                            session.RaidState.Inventory, weapon.AmmoType);
-                        ammoInfo = $"\n{weapon.AmmoInMagazine}/{reserve}";
-                    }
-                    label = $"[{i + 1}]\n{weapon.PrefabId}{ammoInfo}";
+                    int reserve = AmmoSystem.CountReserve(
+                        session.RaidState.Inventory, weapon.AmmoType);
+                    ammoInfo = $"\n{weapon.AmmoInMagazine}/{reserve}";
                 }
-                else
-                {
-                    label = $"[{i + 1}]";
-                }
+                label = $"[{i + 1}]\n{weapon.PrefabId}{ammoInfo}";
+            }
+            else
+            {
+                label = $"[{i + 1}]";
+            }
 
-                GUI.Box(rect, label, _slotStyle);
+            GUI.Box(rect, label, _slotStyle);
 
-                // Reload progress bar: orange overlay that drains top→bottom
-                if (weapon != null && weapon.Phase == WeaponPhase.Reloading && weapon.ReloadTime > 0f)
+            if (weapon != null && weapon.Phase == WeaponPhase.Reloading && weapon.ReloadTime > 0f)
+            {
+                float elapsed = session.RaidState.ElapsedTime - weapon.PhaseStartTime;
+                float remaining = 1f - Mathf.Clamp01(elapsed / weapon.ReloadTime);
+                if (remaining > 0.001f)
                 {
-                    float elapsed = session.RaidState.ElapsedTime - weapon.PhaseStartTime;
-                    float remaining = 1f - Mathf.Clamp01(elapsed / weapon.ReloadTime);
-                    if (remaining > 0.001f)
-                    {
-                        var reloadRect = new Rect(rect.x, rect.y, rect.width, rect.height * remaining);
-                        GUI.DrawTexture(reloadRect, _reloadTex);
-                    }
+                    var reloadRect = new Rect(rect.x, rect.y, rect.width, rect.height * remaining);
+                    GUI.DrawTexture(reloadRect, _reloadTex);
                 }
             }
+        }
+
+        void DrawQuickSlot(Rect rect, int qi, PlayerEntityState player, InventoryState inventory)
+        {
+            int boundSlot = inventory.QuickSlotBindings[qi];
+            bool hasBind = boundSlot >= 0;
+            var boundItem = hasBind ? inventory.Backpack[boundSlot] : null;
+            bool isActive = player.ActiveQuickSlot == qi;
+            int keyNum = qi + InventoryState.QuickSlotKeyOffset;
+
+            _slotStyle.normal.background = isActive
+                ? _quickSlotActiveTex
+                : hasBind
+                    ? _quickSlotBoundTex
+                    : _emptyTex;
+
+            _slotStyle.normal.textColor = isActive ? Color.black : Color.white;
+
+            string label = boundItem != null
+                ? $"[{keyNum}]\n{boundItem.DisplayName}"
+                : $"[{keyNum}]";
+
+            GUI.Box(rect, label, _slotStyle);
         }
 
         static Texture2D MakeTex(Color color)
@@ -113,6 +155,8 @@ namespace View
             if (_occupiedTex != null) Destroy(_occupiedTex);
             if (_emptyTex != null) Destroy(_emptyTex);
             if (_reloadTex != null) Destroy(_reloadTex);
+            if (_quickSlotBoundTex != null) Destroy(_quickSlotBoundTex);
+            if (_quickSlotActiveTex != null) Destroy(_quickSlotActiveTex);
         }
     }
 }
