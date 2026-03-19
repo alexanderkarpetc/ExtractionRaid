@@ -68,7 +68,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 200
-  field of view: 50
+  field of view: 45
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -150,9 +150,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b58d1c4229844276a78758e39f42dcd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _offset: {x: 0, y: 15, z: -12}
+  _offset: {x: 0, y: 20, z: -9.5}
   _pitch: 55
-  _followSpeed: 7
+  _followSpeed: 6
   _cursorInfluence: 2.5
-  _cursorSmoothing: 8
-  _deadZone: 0.3
+  _cursorSmoothing: 12
+  _deadZone: 0.1
