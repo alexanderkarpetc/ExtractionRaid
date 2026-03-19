@@ -21,8 +21,8 @@ namespace Tests.EditMode
             DevCheats.ForceShowAllBots = false;
             DevCheats.FOVOcclusionEnabled = true;
             DevCheats.FOVNearRadius = 5f;
-            DevCheats.FOVFarRadius = 30f;
-            DevCheats.FOVAngle = 120f;
+            DevCheats.FOVFarRadius = 25f;
+            DevCheats.FOVAngle = 130f;
         }
 
         [TearDown]

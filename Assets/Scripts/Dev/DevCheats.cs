@@ -78,18 +78,18 @@ namespace Dev
 
             // FOV
             FOVEnabled = true;
-            FOVNearRadius = 5f;
-            FOVFarRadius = 30f;
-            FOVAngle = 120f;
+            FOVNearRadius = 6f;
+            FOVFarRadius = 25f;
+            FOVAngle = 130f;
             ForceShowAllBots = false;
             FOVOcclusionEnabled = true;
 
             // Fog of War
             FogOfWarEnabled = true;
-            FogBlurRadius = 1.74f;
+            FogBlurRadius = 10f;
             FogBlurIterations = 3;
-            FogIntensity = 0.4f;
-            FogDesaturation = 0.7f;
+            FogIntensity = 0.6f;
+            FogDesaturation = 0f;
             FogColor = new Color(0.02f, 0.02f, 0.05f, 1f);
             FoWRTScale = 256;
             FOVRayStep = 2f;
