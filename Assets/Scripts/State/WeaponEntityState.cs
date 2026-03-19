@@ -140,5 +140,16 @@ namespace State
                 PhaseStartTime = 0f,
             };
         }
+
+        public static WeaponEntityState CreateFromDefinitionId(EId id, string definitionId)
+        {
+            return definitionId switch
+            {
+                "Rifle" => CreateRifle(id),
+                "Shotgun" => CreateShotgun(id),
+                "Pistol" => CreatePistol(id),
+                _ => null,
+            };
+        }
     }
 }

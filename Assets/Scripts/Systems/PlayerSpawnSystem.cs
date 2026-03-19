@@ -24,12 +24,11 @@ namespace Systems
             state.PlayerEntity.SelectedHotbarSlot = 0;
             state.PlayerEntity.EquippedWeapon = weapon;
             state.PlayerEntity.PendingHotbarSlot = -1;
+            state.Inventory.WeaponSlots[0] = ItemState.Create(weaponId, "Rifle");
 
             var weapon2Id = state.AllocateEId();
             state.PlayerEntity.Hotbar[1] = WeaponEntityState.CreateShotgun(weapon2Id);
-
-            var pistolId = state.AllocateEId();
-            state.PlayerEntity.Hotbar[2] = WeaponEntityState.CreatePistol(pistolId);
+            state.Inventory.WeaponSlots[1] = ItemState.Create(weapon2Id, "Shotgun");
 
             // Starting reserve ammo
             var rifleAmmoId = state.AllocateEId();
@@ -38,6 +37,8 @@ namespace Systems
             state.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
             var pistolAmmoId = state.AllocateEId();
             state.Inventory.Backpack[2] = ItemState.Create(pistolAmmoId, "Ammo_Pistol", 36);
+
+            state.Inventory.Backpack[9] = ItemState.Create(state.AllocateEId(), "Pistol");
 
             // Starting grenades — 1 per backpack slot
             for (int i = 0; i < GrenadeConstants.StartingCount; i++)

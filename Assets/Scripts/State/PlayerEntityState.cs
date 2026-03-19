@@ -4,7 +4,7 @@ namespace State
 {
     public class PlayerEntityState
     {
-        public const int HotbarSize = 3;
+        public const int HotbarSize = 2;
 
         public EId Id;
         public Vector3 Position;

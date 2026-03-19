@@ -4,14 +4,14 @@ namespace State
     {
         public const int WeaponSlotCount = 2;
         public const int BackpackSize = 20;
-        public const int QuickSlotCount = 6;
-        public const int QuickSlotKeyOffset = 4;
+        public const int QuickSlotCount = 7;
+        public const int QuickSlotKeyOffset = 3;
 
         public ItemState[] WeaponSlots = new ItemState[WeaponSlotCount];
         public ItemState HelmetSlot;
         public ItemState BodyArmorSlot;
         public ItemState[] Backpack = new ItemState[BackpackSize];
-        public int[] QuickSlotBindings = { -1, -1, -1, -1, -1, -1 };
+        public int[] QuickSlotBindings = { -1, -1, -1, -1, -1, -1, -1 };
 
         public ItemState GetSlot(InventorySlotRef slot)
         {

@@ -55,6 +55,12 @@ namespace State
                     DisplayName = "Shotgun",
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
                 },
+                ["Pistol"] = new()
+                {
+                    Id = "Pistol",
+                    DisplayName = "Pistol",
+                    AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
+                },
                 ["Helmet_Basic"] = new()
                 {
                     Id = "Helmet_Basic",

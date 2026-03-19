@@ -14,8 +14,8 @@ namespace View
 
         static readonly Key[] QuickSlotKeys =
         {
-            Key.Digit4, Key.Digit5, Key.Digit6,
-            Key.Digit7, Key.Digit8, Key.Digit9,
+            Key.Digit3, Key.Digit4, Key.Digit5,
+            Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9,
         };
 
         static readonly HashSet<string> QuickSlotAssignable = new()
@@ -190,7 +190,7 @@ namespace View
             float availableW = panelRect.width - padding * 2f - scrollBarW;
 
             const float maxSlotSize = 135f;
-            const int equipCount = 4;
+            int equipCount = InventoryState.WeaponSlotCount + 2;
 
             float slotGap = Mathf.Max(3f, availableW * 0.015f);
             float slotSize = (availableW - (BackpackColumns - 1) * slotGap) / BackpackColumns;
@@ -220,10 +220,13 @@ namespace View
             curY += headerH + slotGap;
 
             float equipSpacing = (availableW - slotSize) / Mathf.Max(1, equipCount - 1);
-            DrawEquipSlot(inventory, curX, curY, "W1", InventorySlotRef.Weapon(0), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + equipSpacing, curY, "W2", InventorySlotRef.Weapon(1), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + 2 * equipSpacing, curY, "Helm", InventorySlotRef.Helmet(), slotSize, slotGap, isLoot);
-            DrawEquipSlot(inventory, curX + 3 * equipSpacing, curY, "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap, isLoot);
+            for (int wi = 0; wi < InventoryState.WeaponSlotCount; wi++)
+                DrawEquipSlot(inventory, curX + wi * equipSpacing, curY,
+                    $"W{wi + 1}", InventorySlotRef.Weapon(wi), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + InventoryState.WeaponSlotCount * equipSpacing, curY,
+                "Helm", InventorySlotRef.Helmet(), slotSize, slotGap, isLoot);
+            DrawEquipSlot(inventory, curX + (InventoryState.WeaponSlotCount + 1) * equipSpacing, curY,
+                "Armor", InventorySlotRef.BodyArmor(), slotSize, slotGap, isLoot);
 
             curY += slotSize + slotGap * 2f + headerH * 0.4f;
 

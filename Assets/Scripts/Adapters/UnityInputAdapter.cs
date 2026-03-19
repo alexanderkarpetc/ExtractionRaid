@@ -8,13 +8,13 @@ namespace Adapters
     {
         static readonly Key[] HotbarKeys =
         {
-            Key.Digit1, Key.Digit2, Key.Digit3,
+            Key.Digit1, Key.Digit2,
         };
 
         static readonly Key[] QuickSlotKeys =
         {
-            Key.Digit4, Key.Digit5, Key.Digit6,
-            Key.Digit7, Key.Digit8, Key.Digit9,
+            Key.Digit3, Key.Digit4, Key.Digit5,
+            Key.Digit6, Key.Digit7, Key.Digit8, Key.Digit9,
         };
 
         readonly InputSystem_Actions _actions;
