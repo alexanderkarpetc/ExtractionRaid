@@ -7,14 +7,12 @@ namespace Systems
 {
     public static class PlayerSpawnSystem
     {
-        static readonly Vector3 DefaultSpawnPosition = Vector3.zero;
-
-        public static void SpawnPlayer(RaidState state, IRaidEvents events)
+        public static void SpawnPlayer(RaidState state, Vector3 spawnPosition, IRaidEvents events)
         {
             if (state.PlayerEntity != null) return;
 
             var playerId = state.AllocateEId();
-            state.PlayerEntity = PlayerEntityState.Create(playerId, DefaultSpawnPosition);
+            state.PlayerEntity = PlayerEntityState.Create(playerId, spawnPosition);
 
             var weaponId = state.AllocateEId();
             var weapon = WeaponEntityState.CreateRifle(weaponId);

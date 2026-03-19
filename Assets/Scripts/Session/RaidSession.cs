@@ -39,7 +39,9 @@ namespace Session
 
         public void Start()
         {
-            PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
+            var spawnPoint = UnityEngine.Object.FindObjectOfType<PlayerSpawnPoint>();
+            var spawnPos = spawnPoint != null ? spawnPoint.transform.position : UnityEngine.Vector3.zero;
+            PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer);
             SpawnFromScenePoints();
             // SpawnTestGroundItems();
             // SpawnTestBots();

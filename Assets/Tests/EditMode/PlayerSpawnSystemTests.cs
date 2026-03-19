@@ -2,6 +2,7 @@ using Systems;
 using NUnit.Framework;
 using State;
 using Tests.EditMode.Fakes;
+using UnityEngine;
 
 namespace Tests.EditMode
 {
@@ -14,7 +15,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsNotNull(state.PlayerEntity);
             Assert.IsTrue(state.PlayerEntity.Id.IsValid);
@@ -26,7 +27,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsTrue(events.PlayerSpawnedCalled);
             Assert.AreEqual(state.PlayerEntity.Id, events.SpawnedId);
@@ -38,7 +39,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
             Assert.IsTrue(state.PlayerEntity.EquippedWeapon.Id.IsValid);
@@ -51,7 +52,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsNotNull(state.PlayerEntity.Hotbar[0]);
             Assert.AreEqual(state.PlayerEntity.EquippedWeapon, state.PlayerEntity.Hotbar[0]);
@@ -64,7 +65,7 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsNotNull(state.PlayerEntity.Hotbar[1]);
             Assert.IsTrue(state.PlayerEntity.Hotbar[1].Id.IsValid);
@@ -77,11 +78,11 @@ namespace Tests.EditMode
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
             var firstId = state.PlayerEntity.Id;
 
             events.PlayerSpawnedCalled = false;
-            PlayerSpawnSystem.SpawnPlayer(state, events);
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.AreEqual(firstId, state.PlayerEntity.Id);
             Assert.IsFalse(events.PlayerSpawnedCalled);
