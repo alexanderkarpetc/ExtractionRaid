@@ -35,6 +35,13 @@ namespace Constants
         }
     }
 
+    public enum ContainerType
+    {
+        MedContainer,
+        AmmoBox,
+        RandomLootBox,
+    }
+
     public static class ContainerConstants
     {
         public static readonly ContainerTypeConfig MedContainer = new(
@@ -85,6 +92,11 @@ namespace Constants
         public static bool TryGetConfig(string typeId, out ContainerTypeConfig config)
         {
             return Registry.TryGetValue(typeId, out config);
+        }
+
+        public static bool TryGetConfig(ContainerType type, out ContainerTypeConfig config)
+        {
+            return Registry.TryGetValue(type.ToString(), out config);
         }
     }
 }

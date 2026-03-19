@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using Adapters;
+using Constants;
 using Systems;
 using Systems.Bot;
 using State;
+using View.SpawnPoints;
 
 namespace Session
 {
@@ -38,13 +40,45 @@ namespace Session
         public void Start()
         {
             PlayerSpawnSystem.SpawnPlayer(RaidState, _eventBuffer);
-            SpawnTestGroundItems();
-            //SpawnTestBots();
-
+            SpawnFromScenePoints();
+            // SpawnTestGroundItems();
+            // SpawnTestBots();
             if (LevelState.LevelId == "shooting_range")
                 SpawnShootingRangeTargets();
 
             _eventBuffer.RaidStarted();
+        }
+
+        void SpawnFromScenePoints()
+        {
+            var botPoints = UnityEngine.Object.FindObjectsOfType<BotSpawnPoint>();
+            var lootPoints = UnityEngine.Object.FindObjectsOfType<LooseLootSpawnPoint>();
+            var containerPoints = UnityEngine.Object.FindObjectsOfType<LootContainerSpawnPoint>();
+
+            foreach (var sp in botPoints)
+            {
+                if (UnityEngine.Random.value > sp.spawnChance) continue;
+                BotSpawnSystem.SpawnBot(RaidState, sp.botTypeId,
+                    sp.transform.position, sp.GetPatrolPositions(), _eventBuffer);
+            }
+
+            foreach (var sp in lootPoints)
+            {
+                if (UnityEngine.Random.value > sp.spawnChance) continue;
+                var (defId, count) = sp.RollItem();
+                if (defId == null) continue;
+                var id = RaidState.AllocateEId();
+                var groundItem = GroundItemState.Create(id, defId, sp.transform.position, count);
+                RaidState.GroundItems.Add(groundItem);
+                _eventBuffer.GroundItemSpawned(id, sp.transform.position, defId);
+            }
+
+            foreach (var sp in containerPoints)
+            {
+                if (UnityEngine.Random.value > sp.spawnChance) continue;
+                if (ContainerConstants.TryGetConfig(sp.containerType, out var config))
+                    LootSystem.CreateContainer(RaidState, in config, sp.transform.position, _eventBuffer);
+            }
         }
 
         void SpawnTestGroundItems()
@@ -71,15 +105,15 @@ namespace Session
 
         void SpawnTestBots()
         {
-            // BotSpawnSystem.SpawnBot(RaidState, "Scav",
-            //     new UnityEngine.Vector3(10f, 0f, 10f),
-            //     new[]
-            //     {
-            //         new UnityEngine.Vector3(10f, 0f, 10f),
-            //         new UnityEngine.Vector3(15f, 0f, 5f),
-            //         new UnityEngine.Vector3(20f, 0f, 10f),
-            //     },
-            //     _eventBuffer);
+            BotSpawnSystem.SpawnBot(RaidState, "Scav",
+                new UnityEngine.Vector3(10f, 0f, 10f),
+                new[]
+                {
+                    new UnityEngine.Vector3(10f, 0f, 10f),
+                    new UnityEngine.Vector3(15f, 0f, 5f),
+                    new UnityEngine.Vector3(20f, 0f, 10f),
+                },
+                _eventBuffer);
 
             // BotSpawnSystem.SpawnBot(RaidState, "PMC",
             //     new UnityEngine.Vector3(-10f, 0f, 15f),
@@ -90,15 +124,19 @@ namespace Session
             //         new UnityEngine.Vector3(-15f, 0f, 20f),
             //     },
             //     _eventBuffer);
-            //
-            // BotSpawnSystem.SpawnBot(RaidState, "Boss",
-            //     new UnityEngine.Vector3(0f, 0f, 25f),
-            //     new[]
-            //     {
-            //         new UnityEngine.Vector3(0f, 0f, 25f),
-            //         new UnityEngine.Vector3(5f, 0f, 30f),
-            //     },
-            //     _eventBuffer);
+        }
+
+        void SpawnTestContainers()
+        {
+            var spawns = new (ContainerTypeConfig config, UnityEngine.Vector3 pos)[]
+            {
+                (ContainerConstants.MedContainer, new UnityEngine.Vector3(6f, 0f, 6f)),
+                (ContainerConstants.AmmoBox, new UnityEngine.Vector3(-6f, 0f, 6f)),
+                (ContainerConstants.RandomLootBox, new UnityEngine.Vector3(0f, 0f, -6f)),
+            };
+
+            foreach (var (config, pos) in spawns)
+                LootSystem.CreateContainer(RaidState, in config, pos, _eventBuffer);
         }
 
         void SpawnShootingRangeTargets()
@@ -162,9 +200,20 @@ namespace Session
 
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
             {
-                var nearest = InventorySystem.FindNearestGroundItem(RaidState, RaidState.PlayerEntity.Position);
-                if (nearest.IsValid)
-                    InventorySystem.TryPickUp(RaidState, nearest, _eventBuffer);
+                var player = RaidState.PlayerEntity;
+                if (player.LootTargetId != EId.None)
+                {
+                    player.LootTargetId = EId.None;
+                }
+                else
+                {
+                    var nearest = LootSystem.FindNearestInteractable(
+                        RaidState, player.Position, player.FacingDirection);
+                    if (nearest.Type == InteractableType.Lootable)
+                        player.LootTargetId = nearest.Id;
+                    else if (nearest.Type == InteractableType.GroundItem)
+                        InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
+                }
             }
 
             RaidState.ElapsedTime += context.DeltaTime;
@@ -217,6 +266,10 @@ namespace Session
                 {
                     if (RaidState.Bots[i].Id == e.Id)
                     {
+                        var deadBot = RaidState.Bots[i];
+                        if (BotConstants.TryGetConfig(deadBot.TypeId, out var cfg))
+                            LootSystem.CreateLootable(RaidState, deadBot, in cfg, _eventBuffer);
+
                         RaidState.Bots.RemoveAt(i);
                         _eventBuffer.BotDespawned(e.Id);
                         break;
