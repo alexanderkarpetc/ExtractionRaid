@@ -19,11 +19,11 @@ namespace View
         public EId EId { get; private set; }
         public string TypeId { get; private set; }
 
-        public void Initialize(EId id, string typeId, string weaponPrefabId)
+        public void Initialize(EId id, string typeId, string weaponPrefabId, float maxHp)
         {
             EId = id;
             TypeId = typeId;
-            _healthBar = WorldHealthBar.Create(transform);
+            _healthBar = WorldHealthBar.Create(transform, maxHp);
             _debugLabel = BotDebugLabel.Create(transform);
 
             if (!string.IsNullOrEmpty(weaponPrefabId))

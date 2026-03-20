@@ -1,5 +1,6 @@
 using System;
 using Adapters;
+using Constants;
 using Session;
 using State;
 using UnityEngine;
@@ -105,7 +106,7 @@ namespace View
 
             var go = Object.Instantiate(_playerPrefab, playerState.Position, initialRotation);
             _playerView = go.GetComponent<PlayerView>();
-            _playerView.Initialize(_trackedId, _onMuzzlePointReady);
+            _playerView.Initialize(_trackedId, _onMuzzlePointReady, BotConstants.PlayerMaxHp);
 
             var cam = Camera.main;
             if (cam != null)

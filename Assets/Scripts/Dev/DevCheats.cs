@@ -259,6 +259,103 @@ namespace Dev
             set => Config.CrosshairBloomColor = value;
         }
 
+        // ── Health Bar ─────────────────────────────────────
+        public static float HBarWidth
+        {
+            get => Config.HBarWidth;
+            set => Config.HBarWidth = value;
+        }
+
+        public static float HBarHeight
+        {
+            get => Config.HBarHeight;
+            set => Config.HBarHeight = value;
+        }
+
+        public static float HBarOffsetY
+        {
+            get => Config.HBarOffsetY;
+            set => Config.HBarOffsetY = value;
+        }
+
+        public static float HBarBorderSize
+        {
+            get => Config.HBarBorderSize;
+            set => Config.HBarBorderSize = value;
+        }
+
+        public static float HBarTrailDelay
+        {
+            get => Config.HBarTrailDelay;
+            set => Config.HBarTrailDelay = value;
+        }
+
+        public static float HBarTrailSpeed
+        {
+            get => Config.HBarTrailSpeed;
+            set => Config.HBarTrailSpeed = value;
+        }
+
+        public static float HBarFlashDuration
+        {
+            get => Config.HBarFlashDuration;
+            set => Config.HBarFlashDuration = value;
+        }
+
+        public static float HBarFlashExpandX
+        {
+            get => Config.HBarFlashExpandX;
+            set => Config.HBarFlashExpandX = value;
+        }
+
+        public static float HBarFlashExpandY
+        {
+            get => Config.HBarFlashExpandY;
+            set => Config.HBarFlashExpandY = value;
+        }
+
+        public static float HBarFlashPower
+        {
+            get => Config.HBarFlashPower;
+            set => Config.HBarFlashPower = value;
+        }
+
+        public static float HBarHpPerSegment
+        {
+            get => Config.HBarHpPerSegment;
+            set => Config.HBarHpPerSegment = value;
+        }
+
+        public static float HBarSegmentLineWidth
+        {
+            get => Config.HBarSegmentLineWidth;
+            set => Config.HBarSegmentLineWidth = value;
+        }
+
+        public static Color HBarSegmentLineColor
+        {
+            get => Config.HBarSegmentLineColor;
+            set => Config.HBarSegmentLineColor = value;
+        }
+
+        public static Color HBarTrailColor
+        {
+            get => Config.HBarTrailColor;
+            set => Config.HBarTrailColor = value;
+        }
+
+        public static Color HBarFlashColor
+        {
+            get => Config.HBarFlashColor;
+            set => Config.HBarFlashColor = value;
+        }
+
+        public static Color HBarBgColor
+        {
+            get => Config.HBarBgColor;
+            set => Config.HBarBgColor = value;
+        }
+
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {

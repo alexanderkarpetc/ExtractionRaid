@@ -14,6 +14,7 @@ namespace Editor
         static bool _foldFoW;
         static bool _foldAim;
         static bool _foldCrosshair;
+        static bool _foldHealthBar;
 
         Vector2 _scroll;
         SerializedObject _so;
@@ -34,6 +35,7 @@ namespace Editor
             _foldFoW    = EditorPrefs.GetBool("DevCheats_foldFoW", false);
             _foldAim    = EditorPrefs.GetBool("DevCheats_foldAim", false);
             _foldCrosshair = EditorPrefs.GetBool("DevCheats_foldCrosshair", false);
+            _foldHealthBar = EditorPrefs.GetBool("DevCheats_foldHealthBar", false);
 
             BindConfig();
         }
@@ -54,6 +56,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldFoW", _foldFoW);
             EditorPrefs.SetBool("DevCheats_foldAim", _foldAim);
             EditorPrefs.SetBool("DevCheats_foldCrosshair", _foldCrosshair);
+            EditorPrefs.SetBool("DevCheats_foldHealthBar", _foldHealthBar);
         }
 
         void MarkDirty()
@@ -162,6 +165,34 @@ namespace Editor
                 DevCheats.CrosshairBloomColor    = EditorGUILayout.ColorField("Bloom Color", DevCheats.CrosshairBloomColor);
             });
             DevCheats.CrosshairEnabled = crosshairEnabled;
+
+            // ── Health Bar ─────────────────────────────────────
+            DrawFoldout(ref _foldHealthBar, "Health Bar", () =>
+            {
+                EditorGUILayout.LabelField("Layout", EditorStyles.miniLabel);
+                DevCheats.HBarWidth          = EditorGUILayout.Slider("Width", DevCheats.HBarWidth, 0.2f, 3f);
+                DevCheats.HBarHeight         = EditorGUILayout.Slider("Height", DevCheats.HBarHeight, 0.02f, 0.5f);
+                DevCheats.HBarOffsetY        = EditorGUILayout.Slider("Offset Y", DevCheats.HBarOffsetY, 0f, 5f);
+                DevCheats.HBarBorderSize     = EditorGUILayout.Slider("Border Size", DevCheats.HBarBorderSize, 0f, 0.15f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Animation", EditorStyles.miniLabel);
+                DevCheats.HBarTrailDelay     = EditorGUILayout.Slider("Trail Delay", DevCheats.HBarTrailDelay, 0f, 1f);
+                DevCheats.HBarTrailSpeed     = EditorGUILayout.Slider("Trail Speed", DevCheats.HBarTrailSpeed, 0.1f, 10f);
+                DevCheats.HBarFlashDuration  = EditorGUILayout.Slider("Flash Duration", DevCheats.HBarFlashDuration, 0.1f, 2f);
+                DevCheats.HBarFlashExpandX   = EditorGUILayout.Slider("Flash Expand X", DevCheats.HBarFlashExpandX, 0f, 10f);
+                DevCheats.HBarFlashExpandY   = EditorGUILayout.Slider("Flash Expand Y", DevCheats.HBarFlashExpandY, 0f, 10f);
+                DevCheats.HBarFlashPower     = EditorGUILayout.Slider("Flash Power", DevCheats.HBarFlashPower, 0.5f, 10f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Segments", EditorStyles.miniLabel);
+                DevCheats.HBarHpPerSegment      = EditorGUILayout.Slider("HP per Segment", DevCheats.HBarHpPerSegment, 5f, 100f);
+                DevCheats.HBarSegmentLineWidth  = EditorGUILayout.Slider("Segment Line Width", DevCheats.HBarSegmentLineWidth, 0.001f, 0.05f);
+                DevCheats.HBarSegmentLineColor  = EditorGUILayout.ColorField("Segment Line Color", DevCheats.HBarSegmentLineColor);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Colors", EditorStyles.miniLabel);
+                DevCheats.HBarTrailColor     = EditorGUILayout.ColorField("Trail Color", DevCheats.HBarTrailColor);
+                DevCheats.HBarFlashColor     = EditorGUILayout.ColorField("Flash Color", DevCheats.HBarFlashColor);
+                DevCheats.HBarBgColor        = EditorGUILayout.ColorField("Background Color", DevCheats.HBarBgColor);
+            });
 
             EditorGUILayout.Space(8);
 

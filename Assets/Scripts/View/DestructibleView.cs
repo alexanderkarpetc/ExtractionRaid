@@ -15,7 +15,7 @@ namespace View
         public void Initialize(EId id)
         {
             EId = id;
-            _healthBar = WorldHealthBar.Create(transform);
+            _healthBar = WorldHealthBar.Create(transform, _maxHp);
         }
 
         public void OnDamaged(float currentHp, float maxHp)

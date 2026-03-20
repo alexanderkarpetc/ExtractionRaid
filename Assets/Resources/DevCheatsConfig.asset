@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DevCheatsConfig
   m_EditorClassIdentifier: Game::Dev.DevCheatsConfig
   GodMode: 0
-  InfiniteAmmo: 0
+  InfiniteAmmo: 1
   DamageMultiplier: 1
   ProjectileSpeedMultiplier: 1
   FireRateMultiplier: 1
@@ -49,4 +49,20 @@ MonoBehaviour:
   CrosshairNormalColor: {r: 0.2, g: 1, b: 0.3, a: 0.9}
   CrosshairWarningColor: {r: 1, g: 0.25, b: 0.2, a: 0.9}
   CrosshairBloomColor: {r: 1, g: 1, b: 1, a: 0.95}
+  HBarWidth: 1.4
+  HBarHeight: 0.181
+  HBarOffsetY: 2.48
+  HBarBorderSize: 0.1182
+  HBarTrailDelay: 0.25
+  HBarTrailSpeed: 2
+  HBarFlashDuration: 0.62
+  HBarFlashExpandX: 1
+  HBarFlashExpandY: 2
+  HBarFlashPower: 6.73
+  HBarHpPerSegment: 5
+  HBarSegmentLineWidth: 0.012
+  HBarSegmentLineColor: {r: 0, g: 0, b: 0, a: 0.4}
+  HBarTrailColor: {r: 1, g: 1, b: 1, a: 1}
+  HBarFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  HBarBgColor: {r: 0.12, g: 0.12, b: 0.12, a: 0.85}
   ForceBleedPlayer: 0

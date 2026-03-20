@@ -71,6 +71,29 @@ namespace Dev
         public Color CrosshairWarningColor = new(1f, 0.25f, 0.2f, 0.9f);
         public Color CrosshairBloomColor = new(1f, 1f, 1f, 0.95f);
 
+        // ── Health Bar ─────────────────────────────────────
+        [Header("Health Bar — Layout")]
+        public float HBarWidth = 1f;
+        public float HBarHeight = 0.12f;
+        public float HBarOffsetY = 2.2f;
+        public float HBarBorderSize = 0.04f;
+
+        [Header("Health Bar — Animation")]
+        public float HBarTrailDelay = 0.35f;
+        public float HBarTrailSpeed = 1.2f;
+        public float HBarFlashDuration = 0.4f;
+        public float HBarFlashExpandX = 0.015f;
+        public float HBarFlashExpandY = 0.2f;
+        public float HBarFlashPower = 2f;
+        public float HBarHpPerSegment = 25f;
+        public float HBarSegmentLineWidth = 0.012f;
+        public Color HBarSegmentLineColor = new(0f, 0f, 0f, 0.4f);
+
+        [Header("Health Bar — Colors")]
+        public Color HBarTrailColor = new(0.8f, 0.15f, 0.1f, 1f);
+        public Color HBarFlashColor = new(1f, 1f, 1f, 1f);
+        public Color HBarBgColor = new(0.12f, 0.12f, 0.12f, 0.85f);
+
         // ── Status Effects ──────────────────────────────────
         [Header("Status Effects")]
         public bool ForceBleedPlayer;

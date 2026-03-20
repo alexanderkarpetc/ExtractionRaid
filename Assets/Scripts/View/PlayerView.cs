@@ -27,11 +27,11 @@ namespace View
         public Transform MuzzlePoint => _muzzlePoint;
         public WeaponView WeaponView => _currentWeaponView;
 
-        public void Initialize(EId id, Action<Transform> onMuzzlePointChanged)
+        public void Initialize(EId id, Action<Transform> onMuzzlePointChanged, float maxHp)
         {
             EId = id;
             _onMuzzlePointChanged = onMuzzlePointChanged;
-            _healthBar = WorldHealthBar.Create(transform);
+            _healthBar = WorldHealthBar.Create(transform, maxHp);
             _progressBar = WorldProgressBar.Create(transform);
         }
 

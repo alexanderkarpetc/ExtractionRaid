@@ -63,7 +63,7 @@ namespace View
             if (view == null)
                 view = go.AddComponent<BotView>();
 
-            view.Initialize(id, typeId, config.WeaponPrefabId);
+            view.Initialize(id, typeId, config.WeaponPrefabId, config.MaxHp);
             view.GizmoVisionRange = config.VisionRange;
             view.GizmoVisionAngle = config.VisionAngle;
             _views[id] = view;
