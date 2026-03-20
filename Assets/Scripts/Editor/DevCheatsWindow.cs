@@ -183,6 +183,11 @@ namespace Editor
                 DevCheats.HBarFlashExpandY   = EditorGUILayout.Slider("Flash Expand Y", DevCheats.HBarFlashExpandY, 0f, 10f);
                 DevCheats.HBarFlashPower     = EditorGUILayout.Slider("Flash Power", DevCheats.HBarFlashPower, 0.5f, 10f);
                 EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Shake", EditorStyles.miniLabel);
+                DevCheats.HBarShakeIntensity = EditorGUILayout.Slider("Shake Intensity", DevCheats.HBarShakeIntensity, 0f, 0.3f);
+                DevCheats.HBarShakeDuration  = EditorGUILayout.Slider("Shake Duration", DevCheats.HBarShakeDuration, 0.05f, 1f);
+                DevCheats.HBarShakeFrequency = EditorGUILayout.Slider("Shake Frequency", DevCheats.HBarShakeFrequency, 5f, 60f);
+                EditorGUILayout.Space(4);
                 EditorGUILayout.LabelField("Segments", EditorStyles.miniLabel);
                 DevCheats.HBarHpPerSegment      = EditorGUILayout.Slider("HP per Segment", DevCheats.HBarHpPerSegment, 5f, 100f);
                 DevCheats.HBarSegmentLineWidth  = EditorGUILayout.Slider("Segment Line Width", DevCheats.HBarSegmentLineWidth, 0.001f, 0.05f);

@@ -85,6 +85,9 @@ namespace Dev
         public float HBarFlashExpandX = 0.015f;
         public float HBarFlashExpandY = 0.2f;
         public float HBarFlashPower = 2f;
+        public float HBarShakeIntensity = 0.05f;
+        public float HBarShakeDuration = 0.3f;
+        public float HBarShakeFrequency = 30f;
         public float HBarHpPerSegment = 25f;
         public float HBarSegmentLineWidth = 0.012f;
         public Color HBarSegmentLineColor = new(0f, 0f, 0f, 0.4f);

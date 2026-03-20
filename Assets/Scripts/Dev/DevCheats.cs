@@ -320,6 +320,24 @@ namespace Dev
             set => Config.HBarFlashPower = value;
         }
 
+        public static float HBarShakeIntensity
+        {
+            get => Config.HBarShakeIntensity;
+            set => Config.HBarShakeIntensity = value;
+        }
+
+        public static float HBarShakeDuration
+        {
+            get => Config.HBarShakeDuration;
+            set => Config.HBarShakeDuration = value;
+        }
+
+        public static float HBarShakeFrequency
+        {
+            get => Config.HBarShakeFrequency;
+            set => Config.HBarShakeFrequency = value;
+        }
+
         public static float HBarHpPerSegment
         {
             get => Config.HBarHpPerSegment;

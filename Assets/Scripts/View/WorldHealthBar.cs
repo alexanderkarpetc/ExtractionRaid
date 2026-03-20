@@ -54,6 +54,10 @@ namespace View
         float _trailDelayClock;
         float _maxHp;
 
+        // Shake state
+        float _shakeTimer;      // counts up from 0; shake active while < duration
+        float _shakeMagnitude;  // base magnitude for current shake (proportional to damage)
+
         public static WorldHealthBar Create(Transform parent, float maxHp)
         {
             float w = DevCheats.HBarWidth;
@@ -127,6 +131,11 @@ namespace View
                 _trailFill = Mathf.Max(_trailFill, _fill);
                 _flashTimer = 0f;
                 _trailDelayClock = 0f;
+
+                // Shake proportional to damage ratio
+                float damageRatio = _fill - newFill; // 0..1
+                _shakeMagnitude = Mathf.Clamp01(damageRatio * 4f); // 25% HP hit = full shake
+                _shakeTimer = 0f;
             }
 
             // Detect heal: snap trail forward
@@ -162,7 +171,23 @@ namespace View
             // Dynamic layout from DevCheats (real-time tweaking in editor)
             float w = DevCheats.HBarWidth;
             float h = DevCheats.HBarHeight;
-            transform.localPosition = new Vector3(0f, DevCheats.HBarOffsetY, 0f);
+            float baseY = DevCheats.HBarOffsetY;
+
+            // Shake offset
+            float shakeX = 0f, shakeY = 0f;
+            float shakeDur = DevCheats.HBarShakeDuration;
+            if (_shakeTimer < shakeDur)
+            {
+                _shakeTimer += Time.deltaTime;
+                float decay = 1f - Mathf.Clamp01(_shakeTimer / shakeDur);
+                float amplitude = _shakeMagnitude * DevCheats.HBarShakeIntensity * decay;
+                float freq = DevCheats.HBarShakeFrequency;
+                float t = _shakeTimer * freq;
+                shakeX = Mathf.Sin(t * 6.2831853f) * amplitude;
+                shakeY = Mathf.Cos(t * 4.1887902f) * amplitude; // different freq for Y
+            }
+
+            transform.localPosition = new Vector3(shakeX, baseY + shakeY, 0f);
             _canvasRect.sizeDelta = new Vector2(w, h);
 
             float extraX = w * PaddingX / (1f - 2f * PaddingX);
