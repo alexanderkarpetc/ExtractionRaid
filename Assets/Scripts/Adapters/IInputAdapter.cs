@@ -17,6 +17,7 @@ namespace Adapters
         bool GrenadePressed { get; }
         int QuickSlotPressed { get; }
         int QuickSlotHeld { get; }
+        bool AdsPressed { get; }
         bool AttackJustReleased { get; }
         Vector3 CameraWorldPosition { get; }
     }

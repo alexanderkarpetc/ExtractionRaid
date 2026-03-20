@@ -150,6 +150,8 @@ namespace Adapters
             }
         }
 
+        public bool AdsPressed => Mouse.current?.rightButton.isPressed ?? false;
+
         public bool AttackJustReleased => _actions.Player.Attack.WasReleasedThisFrame();
 
         public void SetCamera(Camera camera)

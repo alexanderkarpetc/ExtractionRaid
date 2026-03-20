@@ -43,6 +43,7 @@ namespace Systems
                     aimFollowSharpness = 1000f;
                 else
                     aimFollowSharpness *= DevCheats.AimFollowMultiplier;
+                    aimFollowSharpness *= Mathf.Lerp(1f, DevCheats.AdsAimFollowMultiplier, player.AdsBlend);
 
                 // Strip recoil to get clean base position
                 var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
@@ -55,7 +56,8 @@ namespace Systems
                 // Decay recoil independently
                 if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
                 {
-                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * DevCheats.RecoilRecoveryMultiplier * context.DeltaTime);
+                    float adsRecovery = Mathf.Lerp(1f, DevCheats.AdsRecoilRecoveryMultiplier, player.AdsBlend);
+                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * DevCheats.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
                     weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
                 }
 

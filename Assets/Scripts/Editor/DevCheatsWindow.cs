@@ -14,6 +14,7 @@ namespace Editor
         static bool _foldFoW;
         static bool _foldAim;
         static bool _foldCrosshair;
+        static bool _foldADS;
         static bool _foldHealthBar;
 
         Vector2 _scroll;
@@ -35,6 +36,7 @@ namespace Editor
             _foldFoW    = EditorPrefs.GetBool("DevCheats_foldFoW", false);
             _foldAim    = EditorPrefs.GetBool("DevCheats_foldAim", false);
             _foldCrosshair = EditorPrefs.GetBool("DevCheats_foldCrosshair", false);
+            _foldADS       = EditorPrefs.GetBool("DevCheats_foldADS", false);
             _foldHealthBar = EditorPrefs.GetBool("DevCheats_foldHealthBar", false);
 
             BindConfig();
@@ -56,6 +58,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldFoW", _foldFoW);
             EditorPrefs.SetBool("DevCheats_foldAim", _foldAim);
             EditorPrefs.SetBool("DevCheats_foldCrosshair", _foldCrosshair);
+            EditorPrefs.SetBool("DevCheats_foldADS", _foldADS);
             EditorPrefs.SetBool("DevCheats_foldHealthBar", _foldHealthBar);
         }
 
@@ -165,6 +168,28 @@ namespace Editor
                 DevCheats.CrosshairBloomColor    = EditorGUILayout.ColorField("Bloom Color", DevCheats.CrosshairBloomColor);
             });
             DevCheats.CrosshairEnabled = crosshairEnabled;
+
+            // ── ADS ──────────────────────────────────────────
+            DrawFoldout(ref _foldADS, "ADS (Aim Down Sights)", () =>
+            {
+                EditorGUILayout.LabelField("Transition", EditorStyles.miniLabel);
+                DevCheats.AdsTransitionTime             = EditorGUILayout.Slider("Transition Time", DevCheats.AdsTransitionTime, 0.05f, 1f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Gameplay", EditorStyles.miniLabel);
+                DevCheats.AdsMoveSpeedMultiplier        = EditorGUILayout.Slider("Move Speed ×", DevCheats.AdsMoveSpeedMultiplier, 0.1f, 1f);
+                DevCheats.AdsAimFollowMultiplier        = EditorGUILayout.Slider("Aim Follow ×", DevCheats.AdsAimFollowMultiplier, 0.5f, 5f);
+                DevCheats.AdsRecoilMultiplier           = EditorGUILayout.Slider("Recoil Kick ×", DevCheats.AdsRecoilMultiplier, 0f, 2f);
+                DevCheats.AdsRecoilRecoveryMultiplier   = EditorGUILayout.Slider("Recoil Recovery ×", DevCheats.AdsRecoilRecoveryMultiplier, 0.5f, 5f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Camera", EditorStyles.miniLabel);
+                DevCheats.AdsZoomFactor                 = EditorGUILayout.Slider("Zoom Factor", DevCheats.AdsZoomFactor, 0.5f, 1f);
+                DevCheats.AdsCursorInfluenceMultiplier  = EditorGUILayout.Slider("Cursor Influence ×", DevCheats.AdsCursorInfluenceMultiplier, 0.5f, 3f);
+                DevCheats.AdsVignetteIntensity          = EditorGUILayout.Slider("Vignette Intensity", DevCheats.AdsVignetteIntensity, 0f, 1f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Crosshair", EditorStyles.miniLabel);
+                DevCheats.AdsBaseGap                    = EditorGUILayout.Slider("Base Gap", DevCheats.AdsBaseGap, 0f, 30f);
+                DevCheats.AdsBloomExtraGap              = EditorGUILayout.Slider("Bloom Extra Gap", DevCheats.AdsBloomExtraGap, 0f, 50f);
+            });
 
             // ── Health Bar ─────────────────────────────────────
             DrawFoldout(ref _foldHealthBar, "Health Bar", () =>

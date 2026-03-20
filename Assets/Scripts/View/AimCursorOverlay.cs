@@ -53,6 +53,9 @@ namespace View
         const float HitGapStart = 8f;
         const float HitGapExpand = 14f;
 
+        // ADS visual interpolant
+        float _adsAmount;
+
         // Colors (non-configurable)
         static readonly Color RawDotColor = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
@@ -105,6 +108,11 @@ namespace View
             var cam = Camera.main;
             if (cam == null) return;
 
+            // ADS crosshair blend
+            float adsTarget = player.IsADS ? 1f : 0f;
+            float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
+            _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.deltaTime * adsSpeed);
+
             if (WorldToGUI(cam, player.RawAimPoint, out var rawPos))
                 DrawRawCursor(rawPos);
 
@@ -139,25 +147,29 @@ namespace View
 
             float elapsed = state.ElapsedTime - weapon.PhaseStartTime;
 
+            // ADS-interpolated crosshair params
+            float adsGap = Mathf.Lerp(BaseGap, DevCheats.AdsBaseGap, _adsAmount);
+            float adsBloomExtra = Mathf.Lerp(BloomExtraGap, DevCheats.AdsBloomExtraGap, _adsAmount);
+
             switch (weapon.Phase)
             {
                 case WeaponPhase.Ready:
                     var readyColor = HasAmmo(weapon, state) ? NormalColor : WarningColor;
-                    DrawCrosshairLines(pos, BaseGap, readyColor, alphaMul);
+                    DrawCrosshairLines(pos, adsGap, readyColor, alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Firing:
                     // Max bloom — Firing lasts 1 tick before becoming Cooldown
-                    DrawCrosshairLines(pos, BaseGap + BloomExtraGap, BloomColor, alphaMul);
+                    DrawCrosshairLines(pos, adsGap + adsBloomExtra, BloomColor, alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Cooldown:
                     float cooldownT = weapon.FireInterval > 0f
                         ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.FireInterval))
                         : 1f;
-                    float bloomGap = BaseGap + BloomExtraGap * (1f - cooldownT);
+                    float bloomGap = adsGap + adsBloomExtra * (1f - cooldownT);
                     var bloomLerp = Color.Lerp(BloomColor, NormalColor, cooldownT);
-                    DrawCrosshairLines(pos, bloomGap, bloomLerp, alphaMul);
+                    DrawCrosshairLines(pos, bloomGap, bloomLerp, alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Reloading:
@@ -171,30 +183,37 @@ namespace View
                     float equipAlpha = weapon.EquipTime > 0f
                         ? Mathf.Clamp01(elapsed / weapon.EquipTime)
                         : 1f;
-                    DrawCrosshairLines(pos, BaseGap, NormalColor, equipAlpha * alphaMul);
+                    DrawCrosshairLines(pos, adsGap, NormalColor, equipAlpha * alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Unequipping:
                     float unequipAlpha = weapon.UnequipTime > 0f
                         ? 1f - Mathf.Clamp01(elapsed / weapon.UnequipTime)
                         : 0f;
-                    DrawCrosshairLines(pos, BaseGap, NormalColor, unequipAlpha * alphaMul);
+                    DrawCrosshairLines(pos, adsGap, NormalColor, unequipAlpha * alphaMul, _adsAmount);
                     break;
             }
         }
 
         // ── Drawing primitives ───────────────────────────────────
 
-        void DrawCrosshairLines(Vector2 center, float gap, Color color, float alpha)
+        void DrawCrosshairLines(Vector2 center, float gap, Color color, float alpha, float adsBlend = 0f)
         {
             GUI.color = new Color(color.r, color.g, color.b, color.a * alpha);
 
             float halfThick = LineThickness * 0.5f;
 
-            // Top
-            GUI.DrawTexture(
-                new Rect(center.x - halfThick, center.y - gap - LineLength, LineThickness, LineLength),
-                _pixelTex);
+            // Top — fades out during ADS
+            float topAlpha = 1f - adsBlend;
+            if (topAlpha > 0.01f)
+            {
+                GUI.color = new Color(color.r, color.g, color.b, color.a * alpha * topAlpha);
+                GUI.DrawTexture(
+                    new Rect(center.x - halfThick, center.y - gap - LineLength, LineThickness, LineLength),
+                    _pixelTex);
+                GUI.color = new Color(color.r, color.g, color.b, color.a * alpha);
+            }
+
             // Bottom
             GUI.DrawTexture(
                 new Rect(center.x - halfThick, center.y + gap, LineThickness, LineLength),

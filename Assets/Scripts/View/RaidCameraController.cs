@@ -1,5 +1,8 @@
+using Dev;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace View
 {
@@ -20,6 +23,11 @@ namespace View
         Transform _target;
         Vector3 _cursorOffset;
 
+        // ADS visual interpolant (view-layer only)
+        float _adsAmount;
+        Vignette _vignette;
+        float _baseVignetteIntensity;
+
         public void SetTarget(Transform target)
         {
             _target = target;
@@ -28,9 +36,30 @@ namespace View
                 transform.position = _target.position + _offset;
         }
 
+        void Start()
+        {
+            // Cache vignette from global Volume for ADS effect
+            var volume = FindFirstObjectByType<Volume>();
+            if (volume != null && volume.profile.TryGet(out Vignette v))
+            {
+                _vignette = v;
+                _baseVignetteIntensity = v.intensity.value;
+            }
+        }
+
         void LateUpdate()
         {
             if (_target == null) return;
+
+            // Update ADS visual blend
+            var player = App.App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            float adsTarget = (player != null && player.IsADS) ? 1f : 0f;
+            float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
+            _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.deltaTime * adsSpeed);
+
+            // ADS-scaled cursor influence
+            float effectiveInfluence = _cursorInfluence
+                * Mathf.Lerp(1f, DevCheats.AdsCursorInfluenceMultiplier, _adsAmount);
 
             var desiredCursorOffset = Vector3.zero;
 
@@ -55,18 +84,29 @@ namespace View
                         ? (normalizedDist - _deadZone) / (1f - _deadZone)
                         : 0f;
 
-                    desiredCursorOffset = dir.normalized * remapped * _cursorInfluence;
+                    desiredCursorOffset = dir.normalized * remapped * effectiveInfluence;
                 }
             }
 
             _cursorOffset = Vector3.Lerp(_cursorOffset, desiredCursorOffset,
                 Time.deltaTime * _cursorSmoothing);
 
-            var desiredPos = _target.position + _cursorOffset + _offset;
+            // ADS zoom — scale offset to bring camera closer
+            float zoomFactor = Mathf.Lerp(1f, DevCheats.AdsZoomFactor, _adsAmount);
+            var effectiveOffset = _offset * zoomFactor;
+
+            var desiredPos = _target.position + _cursorOffset + effectiveOffset;
             transform.position = Vector3.Lerp(transform.position, desiredPos,
                 Time.deltaTime * _followSpeed);
 
             transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
+
+            // ADS vignette
+            if (_vignette != null)
+            {
+                _vignette.intensity.value = Mathf.Lerp(
+                    _baseVignetteIntensity, DevCheats.AdsVignetteIntensity, _adsAmount);
+            }
         }
     }
 }

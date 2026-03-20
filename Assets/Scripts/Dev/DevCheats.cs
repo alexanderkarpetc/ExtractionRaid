@@ -259,6 +259,67 @@ namespace Dev
             set => Config.CrosshairBloomColor = value;
         }
 
+        // ── ADS ───────────────────────────────────────────
+        public static float AdsTransitionTime
+        {
+            get => Config.AdsTransitionTime;
+            set => Config.AdsTransitionTime = value;
+        }
+
+        public static float AdsMoveSpeedMultiplier
+        {
+            get => Config.AdsMoveSpeedMultiplier;
+            set => Config.AdsMoveSpeedMultiplier = value;
+        }
+
+        public static float AdsAimFollowMultiplier
+        {
+            get => Config.AdsAimFollowMultiplier;
+            set => Config.AdsAimFollowMultiplier = value;
+        }
+
+        public static float AdsRecoilMultiplier
+        {
+            get => Config.AdsRecoilMultiplier;
+            set => Config.AdsRecoilMultiplier = value;
+        }
+
+        public static float AdsRecoilRecoveryMultiplier
+        {
+            get => Config.AdsRecoilRecoveryMultiplier;
+            set => Config.AdsRecoilRecoveryMultiplier = value;
+        }
+
+        public static float AdsZoomFactor
+        {
+            get => Config.AdsZoomFactor;
+            set => Config.AdsZoomFactor = value;
+        }
+
+        public static float AdsCursorInfluenceMultiplier
+        {
+            get => Config.AdsCursorInfluenceMultiplier;
+            set => Config.AdsCursorInfluenceMultiplier = value;
+        }
+
+        public static float AdsBaseGap
+        {
+            get => Config.AdsBaseGap;
+            set => Config.AdsBaseGap = value;
+        }
+
+        public static float AdsBloomExtraGap
+        {
+            get => Config.AdsBloomExtraGap;
+            set => Config.AdsBloomExtraGap = value;
+        }
+
+        public static float AdsVignetteIntensity
+        {
+            get => Config.AdsVignetteIntensity;
+            set => Config.AdsVignetteIntensity = value;
+        }
+
         // ── Health Bar ─────────────────────────────────────
         public static float HBarWidth
         {

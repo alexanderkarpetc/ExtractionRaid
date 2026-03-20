@@ -91,7 +91,8 @@ namespace Systems
             if (!DevCheats.NoRecoil
                 && (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f))
             {
-                float recoilMul = DevCheats.RecoilMultiplier;
+                float adsRecoilScale = Mathf.Lerp(1f, DevCheats.AdsRecoilMultiplier, player.AdsBlend);
+                float recoilMul = DevCheats.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward kick through RecoilOffset

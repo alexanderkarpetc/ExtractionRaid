@@ -43,6 +43,9 @@ namespace State
         public int ActiveQuickSlot = -1;
         public bool QuickSlotHeld;
 
+        public bool IsADS;
+        public float AdsBlend; // 0 = hip, 1 = fully ADS — lerped each tick
+
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)

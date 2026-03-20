@@ -40,7 +40,7 @@ MonoBehaviour:
   FoWRTScale: 256
   FOVRayStep: 2
   FogTemporalBlend: 0.2
-  CrosshairEnabled: 0
+  CrosshairEnabled: 1
   CrosshairLineLength: 24
   CrosshairLineThickness: 6
   CrosshairBaseGap: 15
@@ -49,6 +49,16 @@ MonoBehaviour:
   CrosshairNormalColor: {r: 0.2, g: 1, b: 0.3, a: 0.9}
   CrosshairWarningColor: {r: 1, g: 0.25, b: 0.2, a: 0.9}
   CrosshairBloomColor: {r: 1, g: 1, b: 1, a: 0.95}
+  AdsTransitionTime: 0.18
+  AdsMoveSpeedMultiplier: 0.7
+  AdsAimFollowMultiplier: 1.5
+  AdsRecoilMultiplier: 0.6
+  AdsRecoilRecoveryMultiplier: 1.5
+  AdsZoomFactor: 0.891
+  AdsCursorInfluenceMultiplier: 2.78
+  AdsBaseGap: 10.4
+  AdsBloomExtraGap: 7.8
+  AdsVignetteIntensity: 0.471
   HBarWidth: 1.4
   HBarHeight: 0.181
   HBarOffsetY: 2.48

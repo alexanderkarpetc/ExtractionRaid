@@ -18,6 +18,7 @@ namespace Tests.EditMode.Fakes
         public bool GrenadePressed { get; set; }
         public int QuickSlotPressed { get; set; } = -1;
         public int QuickSlotHeld { get; set; } = -1;
+        public bool AdsPressed { get; set; }
         public bool AttackJustReleased { get; set; }
         public Vector3 CameraWorldPosition { get; set; }
     }

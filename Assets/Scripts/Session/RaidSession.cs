@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Adapters;
 using Constants;
+using Dev;
 using Systems;
 using Systems.Bot;
 using State;
@@ -179,6 +180,21 @@ namespace Session
                 physics: _physicsAdapter,
                 grenadePositions: _grenadePositionAdapter
             );
+
+            // ADS state + blend (before Movement so speed is affected this frame)
+            {
+                var player = RaidState.PlayerEntity;
+                if (player != null)
+                {
+                    player.IsADS = context.Input.AdsPressed
+                                   && !player.IsRolling
+                                   && !player.AreHandsBusy;
+                    float adsTarget = player.IsADS ? 1f : 0f;
+                    float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
+                    player.AdsBlend = Mathf.MoveTowards(player.AdsBlend, adsTarget,
+                        context.DeltaTime * adsSpeed);
+                }
+            }
 
             RollSystem.Tick(RaidState, in context);
             MovementSystem.Tick(RaidState, in context);

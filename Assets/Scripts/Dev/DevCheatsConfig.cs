@@ -71,6 +71,19 @@ namespace Dev
         public Color CrosshairWarningColor = new(1f, 0.25f, 0.2f, 0.9f);
         public Color CrosshairBloomColor = new(1f, 1f, 1f, 0.95f);
 
+        // ── ADS ───────────────────────────────────────────
+        [Header("ADS")]
+        public float AdsTransitionTime = 0.18f;
+        public float AdsMoveSpeedMultiplier = 0.7f;
+        public float AdsAimFollowMultiplier = 1.5f;
+        public float AdsRecoilMultiplier = 0.6f;
+        public float AdsRecoilRecoveryMultiplier = 1.5f;
+        public float AdsZoomFactor = 0.85f;
+        public float AdsCursorInfluenceMultiplier = 1.4f;
+        public float AdsBaseGap = 8f;
+        public float AdsBloomExtraGap = 15f;
+        public float AdsVignetteIntensity = 0.55f;
+
         // ── Health Bar ─────────────────────────────────────
         [Header("Health Bar — Layout")]
         public float HBarWidth = 1f;
