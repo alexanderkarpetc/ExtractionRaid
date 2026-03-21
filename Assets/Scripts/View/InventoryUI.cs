@@ -87,10 +87,18 @@ namespace View
                 else
                 {
                     _isOpen = true;
+                    if (player != null)
+                        player.CraftTargetId = EId.None;
                 }
             }
 
             if (player == null) return;
+
+            if (player.CraftTargetId != EId.None && _isOpen)
+            {
+                _isOpen = false;
+                _openedByLoot = false;
+            }
 
             if (player.LootTargetId != EId.None && !_isOpen)
             {
@@ -103,6 +111,8 @@ namespace View
                 _isOpen = false;
                 _openedByLoot = false;
             }
+
+            player.IsInventoryOpen = _isOpen;
         }
 
         void OnGUI()
@@ -585,6 +595,7 @@ namespace View
 
             var nearest = LootSystem.FindNearestInteractable(state, player.Position, player.FacingDirection);
             if (!nearest.IsValid) return;
+            if (nearest.Type == InteractableType.Workbench) return;
 
             EnsureStyles();
 

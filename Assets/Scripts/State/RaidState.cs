@@ -13,6 +13,7 @@ namespace State
         public List<GroundItemState> GroundItems;
         public List<BotEntityState> Bots;
         public List<LootableContainerState> Lootables;
+        public List<WorkbenchState> Workbenches;
         public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
 
@@ -37,6 +38,7 @@ namespace State
                 GroundItems = new List<GroundItemState>(),
                 Bots = new List<BotEntityState>(),
                 Lootables = new List<LootableContainerState>(),
+                Workbenches = new List<WorkbenchState>(),
                 Inventory = new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
             };

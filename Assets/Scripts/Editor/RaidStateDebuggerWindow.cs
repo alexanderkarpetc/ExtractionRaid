@@ -22,6 +22,7 @@ namespace Editor
         bool _foldHealthMap;
         bool _foldStatusEffects;
         bool _foldLootables;
+        bool _foldWorkbenches;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
@@ -84,6 +85,7 @@ namespace Editor
             DrawHealthMap(state);
             DrawStatusEffects(state);
             DrawLootables(state);
+            DrawWorkbenches(state);
 
             EditorGUILayout.EndScrollView();
         }
@@ -162,6 +164,8 @@ namespace Editor
             Field("Bandage Count", CountBandages(state.Inventory));
             Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
+            Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
+            Field("IsInMenu", p.IsInMenu);
             Field("Active QuickSlot", p.ActiveQuickSlot >= 0
                 ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {state.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
                 : "None");
@@ -494,6 +498,24 @@ namespace Editor
                 }
             }
 
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4);
+        }
+
+        // ── Workbenches ─────────────────────────────────────────
+
+        void DrawWorkbenches(RaidState state)
+        {
+            _foldWorkbenches = EditorGUILayout.Foldout(_foldWorkbenches,
+                $"Workbenches [{state.Workbenches.Count}]");
+            if (!_foldWorkbenches) return;
+
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < state.Workbenches.Count; i++)
+            {
+                var wb = state.Workbenches[i];
+                Field($"[{i}] Id={wb.Id}", wb.Position);
+            }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4);
         }

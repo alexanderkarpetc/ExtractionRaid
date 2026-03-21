@@ -39,6 +39,7 @@ namespace State
         public float MedkitHealFraction;
 
         public EId LootTargetId;
+        public EId CraftTargetId;
 
         public int ActiveQuickSlot = -1;
         public bool QuickSlotHeld;
@@ -46,7 +47,10 @@ namespace State
         public bool IsADS;
         public float AdsBlend; // 0 = hip, 1 = fully ADS — lerped each tick
 
+        public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
+
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
+        public bool IsInMenu => IsInventoryOpen || LootTargetId != EId.None || CraftTargetId != EId.None;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

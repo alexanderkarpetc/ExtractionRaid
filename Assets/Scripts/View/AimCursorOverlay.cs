@@ -71,12 +71,11 @@ namespace View
 
         void Update()
         {
-            // Force-hide system cursor every frame during active gameplay.
-            // Unity resets Cursor.visible when editor regains focus.
-            // When crosshair is disabled, show normal system cursor instead.
             var session = App.App.Instance?.RaidSession;
-            bool inGameplay = session?.RaidState?.PlayerEntity != null;
-            Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled;
+            var player = session?.RaidState?.PlayerEntity;
+            bool inGameplay = player != null;
+            bool inMenu = player != null && player.IsInMenu;
+            Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled || inMenu;
         }
 
         void LateUpdate()
@@ -104,6 +103,7 @@ namespace View
             var state = session.RaidState;
             var player = state?.PlayerEntity;
             if (player == null) return;
+            if (player.IsInMenu) return;
 
             var cam = Camera.main;
             if (cam == null) return;

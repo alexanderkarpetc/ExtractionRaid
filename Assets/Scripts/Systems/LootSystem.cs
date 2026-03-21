@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Systems
 {
-    public enum InteractableType : byte { None, Lootable, GroundItem }
+    public enum InteractableType : byte { None, Lootable, GroundItem, Workbench }
 
     public struct InteractableResult
     {
@@ -135,6 +135,19 @@ namespace Systems
                     bestScore = score;
                     result.Id = state.GroundItems[i].Id;
                     result.Type = InteractableType.GroundItem;
+                }
+            }
+
+            for (int i = 0; i < state.Workbenches.Count; i++)
+            {
+                float dist = Vector3.Distance(playerPosition, state.Workbenches[i].Position);
+                if (dist > LootRange) continue;
+                float score = ScoreInteractable(playerPosition, facingDirection, state.Workbenches[i].Position, dist);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    result.Id = state.Workbenches[i].Id;
+                    result.Type = InteractableType.Workbench;
                 }
             }
 

@@ -88,6 +88,14 @@ namespace Session
                 if (ContainerConstants.TryGetConfig(sp.containerType, out var config))
                     LootSystem.CreateContainer(RaidState, in config, sp.transform.position, _eventBuffer);
             }
+
+            var workbenchPoints = Object.FindObjectsByType<WorkbenchSpawnPoint>(FindObjectsSortMode.None);
+            foreach (var sp in workbenchPoints)
+            {
+                var id = RaidState.AllocateEId();
+                var wb = WorkbenchState.Create(id, sp.transform.position);
+                RaidState.Workbenches.Add(wb);
+            }
         }
 
         void SpawnTestGroundItems()
@@ -188,7 +196,8 @@ namespace Session
                 {
                     player.IsADS = context.Input.AdsPressed
                                    && !player.IsRolling
-                                   && !player.AreHandsBusy;
+                                   && !player.AreHandsBusy
+                                   && !player.IsInMenu;
                     float adsTarget = player.IsADS ? 1f : 0f;
                     float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
                     player.AdsBlend = Mathf.MoveTowards(player.AdsBlend, adsTarget,
@@ -227,7 +236,11 @@ namespace Session
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
             {
                 var player = RaidState.PlayerEntity;
-                if (player.LootTargetId != EId.None)
+                if (player.CraftTargetId != EId.None)
+                {
+                    player.CraftTargetId = EId.None;
+                }
+                else if (player.LootTargetId != EId.None)
                 {
                     player.LootTargetId = EId.None;
                 }
@@ -237,6 +250,8 @@ namespace Session
                         RaidState, player.Position, player.FacingDirection);
                     if (nearest.Type == InteractableType.Lootable)
                         player.LootTargetId = nearest.Id;
+                    else if (nearest.Type == InteractableType.Workbench)
+                        player.CraftTargetId = nearest.Id;
                     else if (nearest.Type == InteractableType.GroundItem)
                         InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
                 }
@@ -328,6 +343,11 @@ namespace Session
         public bool RequestDrop(InventorySlotRef slot, UnityEngine.Vector3 dropPosition)
         {
             return InventorySystem.TryDrop(RaidState, slot, dropPosition, _eventBuffer);
+        }
+
+        public bool RequestCraft(string recipeId)
+        {
+            return CraftingSystem.TryCraft(RaidState, recipeId);
         }
 
         public void End()

@@ -35,6 +35,7 @@ namespace View
 
             var player = session.RaidState?.PlayerEntity;
             if (player == null) return;
+            if (player.IsInMenu) return;
 
             var inventory = session.RaidState.Inventory;
 

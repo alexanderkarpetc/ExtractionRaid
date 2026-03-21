@@ -17,6 +17,7 @@ namespace App
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
+            gameObject.AddComponent<CraftingUI>();
         }
 
         void Start()
