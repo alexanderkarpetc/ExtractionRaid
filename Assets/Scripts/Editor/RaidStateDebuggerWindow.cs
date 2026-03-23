@@ -166,6 +166,8 @@ namespace Editor
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
             Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
             Field("IsInMenu", p.IsInMenu);
+            Field("Sprinting", p.IsSprinting);
+            Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");
             Field("Active QuickSlot", p.ActiveQuickSlot >= 0
                 ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {state.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
                 : "None");

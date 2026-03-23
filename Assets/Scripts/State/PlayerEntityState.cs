@@ -1,3 +1,4 @@
+using Constants;
 using UnityEngine;
 
 namespace State
@@ -49,6 +50,11 @@ namespace State
 
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
 
+        public float Stamina;
+        public float MaxStamina;
+        public bool IsSprinting;
+        public float LastSprintStopTime;
+
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
         public bool IsInMenu => IsInventoryOpen || LootTargetId != EId.None || CraftTargetId != EId.None;
 
@@ -63,6 +69,8 @@ namespace State
                 AimDirection = Vector3.forward,
                 RawAimPoint = spawnPosition + Vector3.forward,
                 WeaponAimPoint = spawnPosition + Vector3.forward,
+                Stamina = StaminaConstants.MaxStamina,
+                MaxStamina = StaminaConstants.MaxStamina,
             };
         }
     }

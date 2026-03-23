@@ -18,6 +18,7 @@ namespace App
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftingUI>();
+            gameObject.AddComponent<StaminaBarOverlay>();
         }
 
         void Start()

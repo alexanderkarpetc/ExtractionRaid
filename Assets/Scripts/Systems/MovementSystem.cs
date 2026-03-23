@@ -30,8 +30,9 @@ namespace Systems
                 if (moveDirection.sqrMagnitude > 1f)
                     moveDirection.Normalize();
 
+                float sprintScale = player.IsSprinting ? StaminaConstants.SprintSpeedMultiplier : 1f;
                 float adsMoveScale = Mathf.Lerp(1f, DevCheats.AdsMoveSpeedMultiplier, player.AdsBlend);
-                player.Velocity = moveDirection * (MoveSpeed * DevCheats.MoveSpeedMultiplier * adsMoveScale);
+                player.Velocity = moveDirection * (MoveSpeed * DevCheats.MoveSpeedMultiplier * adsMoveScale * sprintScale);
             }
 
             var candidatePos = player.Position + player.Velocity * context.DeltaTime;

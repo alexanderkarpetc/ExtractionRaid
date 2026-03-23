@@ -205,6 +205,7 @@ namespace Session
                 }
             }
 
+            StaminaSystem.Tick(RaidState, in context);
             RollSystem.Tick(RaidState, in context);
             MovementSystem.Tick(RaidState, in context);
             WeaponSyncSystem.Tick(RaidState, in context);
