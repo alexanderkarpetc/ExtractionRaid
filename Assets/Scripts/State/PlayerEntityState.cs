@@ -41,6 +41,7 @@ namespace State
 
         public EId LootTargetId;
         public EId CraftTargetId;
+        public EId DeployTargetId;
 
         public int ActiveQuickSlot = -1;
         public bool QuickSlotHeld;
@@ -56,7 +57,8 @@ namespace State
         public float LastSprintStopTime;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
-        public bool IsInMenu => IsInventoryOpen || LootTargetId != EId.None || CraftTargetId != EId.None;
+        public bool IsInMenu => IsInventoryOpen || LootTargetId != EId.None || CraftTargetId != EId.None
+            || DeployTargetId != EId.None;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

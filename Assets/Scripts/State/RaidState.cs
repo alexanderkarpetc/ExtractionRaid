@@ -14,6 +14,7 @@ namespace State
         public List<BotEntityState> Bots;
         public List<LootableContainerState> Lootables;
         public List<WorkbenchState> Workbenches;
+        public List<DeployPointState> DeployPoints;
         public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
 
@@ -25,7 +26,7 @@ namespace State
             return new EId(_nextEIdValue);
         }
 
-        public static RaidState Create()
+        public static RaidState Create(InventoryState inventory = null)
         {
             return new RaidState
             {
@@ -39,7 +40,8 @@ namespace State
                 Bots = new List<BotEntityState>(),
                 Lootables = new List<LootableContainerState>(),
                 Workbenches = new List<WorkbenchState>(),
-                Inventory = new InventoryState(),
+                DeployPoints = new List<DeployPointState>(),
+                Inventory = inventory ?? new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
             };
         }

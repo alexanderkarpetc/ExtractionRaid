@@ -43,7 +43,10 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
 4. Emit domain events for VFX/SFX/UI via `IRaidEvents`.
 5. Update presenter/view only for visualization and callback routing.
 6. Add or update tests.
-7. If new fields were added to any state class, update the Raid State Debugger
+7. If new fields were added to `RaidState` or its child state classes (`PlayerEntityState`,
+   `BotEntityState`, etc.), update the Raid State Debugger
    (`Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`) to display them.
+   The debugger only shows per-raid data — do NOT add persistent player data
+   (`Player.Inventory`, `Player.Stash`, profile) to it.
 8. Show a file-level plan before editing.
 9. Keep the change incremental.

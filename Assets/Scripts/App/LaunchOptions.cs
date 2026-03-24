@@ -5,6 +5,7 @@ namespace App
         Menu,
         Raid,
         TestScenario,
+        Hideout,
     }
 
     public struct LaunchOptions
@@ -26,6 +27,15 @@ namespace App
             return new LaunchOptions
             {
                 Mode = LaunchMode.Menu,
+                LevelId = null,
+            };
+        }
+
+        public static LaunchOptions Hideout()
+        {
+            return new LaunchOptions
+            {
+                Mode = LaunchMode.Hideout,
                 LevelId = null,
             };
         }

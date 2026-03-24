@@ -6,7 +6,7 @@ namespace App
     [DefaultExecutionOrder(1000)]
     public class AppBootstrap : MonoBehaviour
     {
-        [SerializeField] bool _autoLaunchRaid = true;
+        [SerializeField] LaunchMode _launchMode = LaunchMode.Raid;
         [SerializeField] string _defaultLevelId = "test_level";
 
         void Awake()
@@ -19,15 +19,28 @@ namespace App
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftingUI>();
             gameObject.AddComponent<StaminaBarOverlay>();
+            gameObject.AddComponent<DeployUI>();
         }
 
         void Start()
         {
-            if (_autoLaunchRaid)
+            LaunchOptions options;
+            switch (_launchMode)
             {
-                var options = LaunchOptions.DefaultRaid(_defaultLevelId);
-                GameLauncher.Launch(options).Forget();
+                case LaunchMode.Hideout:
+                    options = LaunchOptions.Hideout();
+                    break;
+                case LaunchMode.Raid:
+                    options = LaunchOptions.DefaultRaid(_defaultLevelId);
+                    break;
+                case LaunchMode.TestScenario:
+                    options = LaunchOptions.DefaultRaid(_defaultLevelId);
+                    break;
+                default:
+                    options = LaunchOptions.Menu();
+                    break;
             }
+            GameLauncher.Launch(options).Forget();
         }
 
         void Update()

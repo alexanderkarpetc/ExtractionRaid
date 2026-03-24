@@ -94,6 +94,12 @@ namespace View
 
             if (player == null) return;
 
+            if (App.App.Instance.IsInHideout)
+            {
+                player.IsInventoryOpen = _isOpen;
+                return;
+            }
+
             if (player.CraftTargetId != EId.None && _isOpen)
             {
                 _isOpen = false;
@@ -118,7 +124,15 @@ namespace View
         void OnGUI()
         {
             var session = App.App.Instance?.RaidSession;
+
             if (session == null) return;
+
+            if (App.App.Instance.IsInHideout)
+            {
+                OnGUIHideout();
+                return;
+            }
+
             var state = session.RaidState;
             if (state == null) return;
             var player = state.PlayerEntity;
@@ -189,6 +203,39 @@ namespace View
 
             HandleDrag(session, state, lootTarget);
             DrawContextMenu(session, state, lootTarget);
+        }
+
+        void OnGUIHideout()
+        {
+            if (!_isOpen) return;
+
+            var appPlayer = App.App.Instance?.Player;
+            if (appPlayer == null) return;
+
+            var inventory = appPlayer.Inventory;
+            var stash = appPlayer.Stash;
+
+            EnsureStyles();
+            _isFloorMode = false;
+
+            float totalH = Screen.height - ScreenMargin * 2f;
+            float panelW = (Screen.width - ScreenMargin * 2f - PanelGap) * 0.5f;
+            float panelX = ScreenMargin;
+            float panelY = ScreenMargin;
+
+            _playerPanelRect = new Rect(panelX, panelY, panelW, totalH);
+            GUI.DrawTexture(_playerPanelRect, _panelBg);
+            DrawInventoryPanel(_playerPanelRect, "INVENTORY", inventory, false, null, null,
+                ref _playerScrollPos);
+
+            float stashX = panelX + panelW + PanelGap;
+            _lootPanelRect = new Rect(stashX, panelY, panelW, totalH);
+            GUI.DrawTexture(_lootPanelRect, _panelBg);
+            DrawContainerPanel(_lootPanelRect, "STASH", stash, null, null,
+                ref _lootScrollPos);
+
+            HandleDrag(null, null, null);
+            DrawContextMenu(null, null, null);
         }
 
         void DrawInventoryPanel(Rect panelRect, string title, InventoryState inventory,
@@ -354,36 +401,53 @@ namespace View
             {
                 if (_dragSource.HasValue && !(_dragSource.Value.Equals(slotRef) && _dragFromLoot == isLoot))
                 {
-                    var session = App.App.Instance?.RaidSession;
-                    if (session != null)
+                    if (App.App.Instance.IsInHideout)
                     {
-                        var state = session.RaidState;
-                        var playerInv = state.Inventory;
-
-                        if (_isFloorMode)
+                        var appPlayer = App.App.Instance?.Player;
+                        if (appPlayer != null)
                         {
-                            if (_dragFromLoot && !isLoot)
-                                TryPickUpFloorItem(state, session, _dragSource.Value.Index, slotRef);
-                            else if (!_dragFromLoot && isLoot)
-                                DropToFloor(state, session, _dragSource.Value);
-                            else if (!_dragFromLoot && !isLoot)
-                                InventorySystem.TryMove(playerInv, _dragSource.Value, slotRef);
-                        }
-                        else
-                        {
-                            LootableContainerState lootTarget = null;
-                            if (state.PlayerEntity.LootTargetId != EId.None)
-                                lootTarget = LootSystem.GetLootable(state, state.PlayerEntity.LootTargetId);
-
-                            var fromInv = _dragFromLoot && lootTarget != null
-                                ? lootTarget.Inventory
-                                : playerInv;
-                            var toInv = isLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
+                            var fromInv = _dragFromLoot ? appPlayer.Stash : appPlayer.Inventory;
+                            var toInv = isLoot ? appPlayer.Stash : appPlayer.Inventory;
 
                             if (fromInv == toInv)
                                 InventorySystem.TryMove(fromInv, _dragSource.Value, slotRef);
                             else
                                 LootSystem.TryTransfer(fromInv, _dragSource.Value, toInv, slotRef);
+                        }
+                    }
+                    else
+                    {
+                        var session = App.App.Instance?.RaidSession;
+                        if (session != null)
+                        {
+                            var state = session.RaidState;
+                            var playerInv = state.Inventory;
+
+                            if (_isFloorMode)
+                            {
+                                if (_dragFromLoot && !isLoot)
+                                    TryPickUpFloorItem(state, session, _dragSource.Value.Index, slotRef);
+                                else if (!_dragFromLoot && isLoot)
+                                    DropToFloor(state, session, _dragSource.Value);
+                                else if (!_dragFromLoot && !isLoot)
+                                    InventorySystem.TryMove(playerInv, _dragSource.Value, slotRef);
+                            }
+                            else
+                            {
+                                LootableContainerState lootTarget = null;
+                                if (state.PlayerEntity.LootTargetId != EId.None)
+                                    lootTarget = LootSystem.GetLootable(state, state.PlayerEntity.LootTargetId);
+
+                                var fromInv = _dragFromLoot && lootTarget != null
+                                    ? lootTarget.Inventory
+                                    : playerInv;
+                                var toInv = isLoot && lootTarget != null ? lootTarget.Inventory : playerInv;
+
+                                if (fromInv == toInv)
+                                    InventorySystem.TryMove(fromInv, _dragSource.Value, slotRef);
+                                else
+                                    LootSystem.TryTransfer(fromInv, _dragSource.Value, toInv, slotRef);
+                            }
                         }
                     }
                     _dragSource = null;
@@ -487,7 +551,7 @@ namespace View
                 bool insideAnyPanel = _playerPanelRect.Contains(Event.current.mousePosition)
                     || (_lootPanelRect.width > 0 && _lootPanelRect.Contains(Event.current.mousePosition));
 
-                if (!insideAnyPanel)
+                if (!insideAnyPanel && state != null && !App.App.Instance.IsInHideout)
                 {
                     if (_isFloorMode && _dragFromLoot)
                     {
@@ -528,6 +592,12 @@ namespace View
             LootableContainerState lootTarget)
         {
             if (!_showContextMenu) return;
+
+            if (state == null || App.App.Instance.IsInHideout)
+            {
+                _showContextMenu = false;
+                return;
+            }
 
             float menuW = 140f;
             float menuItemH = 40f;

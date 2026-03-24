@@ -22,6 +22,10 @@ namespace App
                 case LaunchMode.TestScenario:
                     App.Instance.StartRaid(options.LevelId);
                     break;
+
+                case LaunchMode.Hideout:
+                    App.Instance.EnterHideout();
+                    break;
             }
 
             await UniTask.CompletedTask;

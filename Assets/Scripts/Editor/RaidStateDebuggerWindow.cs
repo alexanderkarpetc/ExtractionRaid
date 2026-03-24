@@ -23,6 +23,7 @@ namespace Editor
         bool _foldStatusEffects;
         bool _foldLootables;
         bool _foldWorkbenches;
+        bool _foldDeployPoints;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
@@ -86,6 +87,7 @@ namespace Editor
             DrawStatusEffects(state);
             DrawLootables(state);
             DrawWorkbenches(state);
+            DrawDeployPoints(state);
 
             EditorGUILayout.EndScrollView();
         }
@@ -165,6 +167,7 @@ namespace Editor
             Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
             Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
+            Field("DeployTargetId", p.DeployTargetId != EId.None ? p.DeployTargetId.ToString() : "None");
             Field("IsInMenu", p.IsInMenu);
             Field("Sprinting", p.IsSprinting);
             Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");
@@ -517,6 +520,24 @@ namespace Editor
             {
                 var wb = state.Workbenches[i];
                 Field($"[{i}] Id={wb.Id}", wb.Position);
+            }
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4);
+        }
+
+        // ── Deploy Points ───────────────────────────────────────
+
+        void DrawDeployPoints(RaidState state)
+        {
+            _foldDeployPoints = EditorGUILayout.Foldout(_foldDeployPoints,
+                $"Deploy Points [{state.DeployPoints.Count}]");
+            if (!_foldDeployPoints) return;
+
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < state.DeployPoints.Count; i++)
+            {
+                var dp = state.DeployPoints[i];
+                Field($"[{i}] Id={dp.Id}", dp.Position);
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4);

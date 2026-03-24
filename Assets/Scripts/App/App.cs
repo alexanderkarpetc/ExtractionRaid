@@ -1,6 +1,8 @@
 using Adapters;
+using Cysharp.Threading.Tasks;
 using Session;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using View;
 
 namespace App
@@ -15,6 +17,7 @@ namespace App
 
         public Player Player { get; private set; }
         public RaidSession RaidSession { get; private set; }
+        public bool IsInHideout { get; private set; }
 
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
@@ -66,8 +69,8 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, _timeAdapter, _inputAdapter, _navMeshAdapter,
-                _physicsAdapter, _grenadePositionAdapter);
+            RaidSession = new RaidSession(levelId, Player.Inventory, _timeAdapter, _inputAdapter,
+                _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter);
             RaidSession.Start();
 
             var cam = Camera.main;
@@ -77,11 +80,43 @@ namespace App
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
 
+        public void EnterHideout()
+        {
+            StartRaid("hideout");
+            IsInHideout = true;
+            Debug.Log("[App] Entered hideout.");
+        }
+
+        public async UniTask DeployToRaid(string sceneName, string levelId)
+        {
+            EndRaid();
+            DisposePresenters();
+            await SceneManager.LoadSceneAsync(sceneName);
+
+            var cam = Camera.main;
+            if (cam != null)
+                _inputAdapter.SetCamera(cam);
+
+            StartRaid(levelId);
+        }
+
+        void DisposePresenters()
+        {
+            _playerPresenter.Dispose();
+            _projectilePresenter.Dispose();
+            _destructiblePresenter.Dispose();
+            _groundItemPresenter.Dispose();
+            _botPresenter.Dispose();
+            _grenadePresenter.Dispose();
+            _corpsePresenter.Dispose();
+        }
+
         public void EndRaid()
         {
             if (RaidSession == null) return;
 
             RaidSession.End();
+            IsInHideout = false;
             Debug.Log("[App] Raid ended.");
             RaidSession = null;
         }
@@ -107,13 +142,7 @@ namespace App
         {
             if (_instance == null) return;
 
-            _instance._playerPresenter?.Dispose();
-            _instance._projectilePresenter?.Dispose();
-            _instance._destructiblePresenter?.Dispose();
-            _instance._groundItemPresenter?.Dispose();
-            _instance._botPresenter?.Dispose();
-            _instance._grenadePresenter?.Dispose();
-            _instance._corpsePresenter?.Dispose();
+            _instance.DisposePresenters();
             _instance.EndRaid();
             _instance._inputAdapter?.Dispose();
             _instance = null;

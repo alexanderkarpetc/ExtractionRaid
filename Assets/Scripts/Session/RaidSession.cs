@@ -25,8 +25,9 @@ namespace Session
         readonly List<HitSignal> _hitInbox = new();
         readonly List<CollisionSignal> _collisionInbox = new();
 
-        public RaidSession(string levelId, ITimeAdapter timeAdapter, IInputAdapter inputAdapter,
-            INavMeshAdapter navMeshAdapter, IPhysicsAdapter physicsAdapter = null,
+        public RaidSession(string levelId, InventoryState inventory, ITimeAdapter timeAdapter,
+            IInputAdapter inputAdapter, INavMeshAdapter navMeshAdapter,
+            IPhysicsAdapter physicsAdapter = null,
             IGrenadePositionAdapter grenadePositionAdapter = null)
         {
             _timeAdapter = timeAdapter;
@@ -35,7 +36,7 @@ namespace Session
             _physicsAdapter = physicsAdapter;
             _grenadePositionAdapter = grenadePositionAdapter;
             _eventBuffer = new RaidEventBuffer();
-            RaidState = RaidState.Create();
+            RaidState = RaidState.Create(inventory);
             LevelState = LevelState.Create(levelId);
         }
 
@@ -95,6 +96,14 @@ namespace Session
                 var id = RaidState.AllocateEId();
                 var wb = WorkbenchState.Create(id, sp.transform.position);
                 RaidState.Workbenches.Add(wb);
+            }
+
+            var deployPoints = Object.FindObjectsByType<DeploySpawnPoint>(FindObjectsSortMode.None);
+            foreach (var sp in deployPoints)
+            {
+                var id = RaidState.AllocateEId();
+                var dp = DeployPointState.Create(id, sp.transform.position);
+                RaidState.DeployPoints.Add(dp);
             }
         }
 
@@ -291,7 +300,11 @@ namespace Session
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
             {
                 var player = RaidState.PlayerEntity;
-                if (player.CraftTargetId != EId.None)
+                if (player.DeployTargetId != EId.None)
+                {
+                    player.DeployTargetId = EId.None;
+                }
+                else if (player.CraftTargetId != EId.None)
                 {
                     player.CraftTargetId = EId.None;
                 }
@@ -307,6 +320,8 @@ namespace Session
                         player.LootTargetId = nearest.Id;
                     else if (nearest.Type == InteractableType.Workbench)
                         player.CraftTargetId = nearest.Id;
+                    else if (nearest.Type == InteractableType.DeployPoint)
+                        player.DeployTargetId = nearest.Id;
                     else if (nearest.Type == InteractableType.GroundItem)
                         InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
                 }
