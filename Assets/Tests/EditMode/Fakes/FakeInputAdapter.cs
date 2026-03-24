@@ -21,5 +21,7 @@ namespace Tests.EditMode.Fakes
         public bool AdsPressed { get; set; }
         public bool AttackJustReleased { get; set; }
         public Vector3 CameraWorldPosition { get; set; }
+        public Vector3? ConvergencePoint { get; set; }
+        public Collider ConvergenceCollider { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using View;
 
 namespace Adapters
 {
@@ -21,6 +22,11 @@ namespace Adapters
         Camera _camera;
         Transform _muzzlePoint;
 
+        // Per-frame convergence cache (single Physics.Raycast, reused by both properties)
+        int _convergenceFrame = -1;
+        Vector3? _cachedConvergence;
+        Collider _cachedConvergenceCollider;
+
         public UnityInputAdapter()
         {
             _actions = new InputSystem_Actions();
@@ -31,12 +37,42 @@ namespace Adapters
         public bool SprintPressed => _actions.Player.Sprint.IsPressed();
         public bool AttackPressed => _actions.Player.Attack.IsPressed();
 
+        void UpdateConvergence()
+        {
+            int frame = Time.frameCount;
+            if (frame == _convergenceFrame) return;
+            _convergenceFrame = frame;
+            _cachedConvergence = null;
+            _cachedConvergenceCollider = null;
+
+            if (_camera == null) return;
+
+            var mousePos = Mouse.current?.position.ReadValue() ?? Vector2.zero;
+            var ray = _camera.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y, 0f));
+
+            if (!Physics.Raycast(ray, out var hit, 200f,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
+                return;
+
+            // Skip player's own collider
+            if (_muzzlePoint != null && hit.transform.root == _muzzlePoint.root)
+                return;
+
+            // Skip other projectiles
+            if (hit.collider.GetComponent<ProjectileView>() != null)
+                return;
+
+            _cachedConvergence = hit.point;
+            _cachedConvergenceCollider = hit.collider;
+        }
+
         public Vector3 AimWorldPoint
         {
             get
             {
                 if (_camera == null) return Vector3.zero;
 
+                // Always use ground plane for smooth crosshair tracking (no snapping)
                 var mousePos = Mouse.current?.position.ReadValue() ?? Vector2.zero;
                 var ray = _camera.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y, 0f));
                 var plane = new Plane(Vector3.up, Vector3.zero);
@@ -53,6 +89,24 @@ namespace Adapters
 
         public Vector3 CameraWorldPosition =>
             _camera != null ? _camera.transform.position : Vector3.zero;
+
+        public Vector3? ConvergencePoint
+        {
+            get
+            {
+                UpdateConvergence();
+                return _cachedConvergence;
+            }
+        }
+
+        public Collider ConvergenceCollider
+        {
+            get
+            {
+                UpdateConvergence();
+                return _cachedConvergenceCollider;
+            }
+        }
 
         public int HotbarSlotPressed
         {

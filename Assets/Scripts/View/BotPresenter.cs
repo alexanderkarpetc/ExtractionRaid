@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Adapters;
 using Constants;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -35,6 +36,9 @@ namespace View
                 }
             }
 
+            var w = DevCheats.CharacterScaleWidth;
+            var h = DevCheats.CharacterScaleHeight;
+            var charScale = new Vector3(w, h, w);
             foreach (var bot in session.RaidState.Bots)
             {
                 if (_views.TryGetValue(bot.Id, out var view))
@@ -46,6 +50,7 @@ namespace View
                         maxHp = health.MaxHp;
                     }
                     view.SyncFromState(bot, hp, maxHp);
+                    view.transform.localScale = charScale;
                 }
             }
         }

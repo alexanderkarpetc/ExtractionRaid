@@ -16,6 +16,7 @@ namespace Editor
         static bool _foldCrosshair;
         static bool _foldADS;
         static bool _foldHealthBar;
+        static bool _foldParallax;
 
         Vector2 _scroll;
         SerializedObject _so;
@@ -38,6 +39,7 @@ namespace Editor
             _foldCrosshair = EditorPrefs.GetBool("DevCheats_foldCrosshair", false);
             _foldADS       = EditorPrefs.GetBool("DevCheats_foldADS", false);
             _foldHealthBar = EditorPrefs.GetBool("DevCheats_foldHealthBar", false);
+            _foldParallax  = EditorPrefs.GetBool("DevCheats_foldParallax", false);
 
             BindConfig();
         }
@@ -60,6 +62,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldCrosshair", _foldCrosshair);
             EditorPrefs.SetBool("DevCheats_foldADS", _foldADS);
             EditorPrefs.SetBool("DevCheats_foldHealthBar", _foldHealthBar);
+            EditorPrefs.SetBool("DevCheats_foldParallax", _foldParallax);
         }
 
         void MarkDirty()
@@ -222,6 +225,57 @@ namespace Editor
                 DevCheats.HBarTrailColor     = EditorGUILayout.ColorField("Trail Color", DevCheats.HBarTrailColor);
                 DevCheats.HBarFlashColor     = EditorGUILayout.ColorField("Flash Color", DevCheats.HBarFlashColor);
                 DevCheats.HBarBgColor        = EditorGUILayout.ColorField("Background Color", DevCheats.HBarBgColor);
+            });
+
+            // ── Parallax / Projectile ─────────────────────────
+            DrawFoldout(ref _foldParallax, "Parallax / Projectile", () =>
+            {
+                EditorGUILayout.HelpBox(
+                    "Spawn Height: Y position where bullet spawns (0=ground, 1.5=gun barrel).\n" +
+                    "Lower = less visual offset from crosshair, but trail starts from feet area.",
+                    MessageType.None);
+                DevCheats.ProjectileSpawnHeight = EditorGUILayout.Slider("Spawn Height", DevCheats.ProjectileSpawnHeight, 0f, 2f);
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.HelpBox(
+                    "Parallax Correction: rotates bullet XZ direction so the screen-space trail\n" +
+                    "passes through the crosshair. Small correction at low Spawn Height (~2%).\n" +
+                    "Used as base direction, blended with Convergence independently.",
+                    MessageType.None);
+                DevCheats.ParallaxCorrection = EditorGUILayout.Toggle("Parallax Correction", DevCheats.ParallaxCorrection);
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.HelpBox(
+                    "Convergence Blend: blends between parallax direction (visual) and\n" +
+                    "convergence direction (accuracy toward 3D collider under cursor).\n" +
+                    "0 = full parallax (trail through crosshair).\n" +
+                    "1 = full convergence (bullet exactly toward target).",
+                    MessageType.None);
+                DevCheats.ConvergenceBlend = EditorGUILayout.Slider("Convergence Blend", DevCheats.ConvergenceBlend, 0f, 1f);
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.HelpBox(
+                    "Aim Up on Hit: when cursor hits a character, angles bullet upward toward\n" +
+                    "their upper body. Height Ratio: 0=feet, 0.5=center, 1=head.",
+                    MessageType.None);
+                DevCheats.ConvergenceAimUp = EditorGUILayout.Toggle("Aim Up on Hit", DevCheats.ConvergenceAimUp);
+                DevCheats.AimUpHeightRatio = EditorGUILayout.Slider("  Height Ratio", DevCheats.AimUpHeightRatio, 0f, 1f);
+
+                EditorGUILayout.Space(4);
+                EditorGUILayout.HelpBox(
+                    "Hit Radius: SphereCast radius for bullet collision. Wider = more forgiving\n" +
+                    "hits, compensates for remaining parallax error.",
+                    MessageType.None);
+                DevCheats.ProjectileHitRadius = EditorGUILayout.Slider("Hit Radius", DevCheats.ProjectileHitRadius, 0f, 0.5f);
+
+                EditorGUILayout.Space(8);
+                EditorGUILayout.LabelField("Character Scale", EditorStyles.miniLabel);
+                EditorGUILayout.HelpBox(
+                    "Scales all characters. Lower height = less parallax overall.\n" +
+                    "Width affects hitbox size.",
+                    MessageType.None);
+                DevCheats.CharacterScaleWidth  = EditorGUILayout.Slider("Width", DevCheats.CharacterScaleWidth, 0.3f, 2f);
+                DevCheats.CharacterScaleHeight = EditorGUILayout.Slider("Height", DevCheats.CharacterScaleHeight, 0.3f, 2f);
             });
 
             EditorGUILayout.Space(8);

@@ -48,9 +48,10 @@ namespace Systems
 
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)
                 {
-                    if (state.Projectiles[i].Id == hit.ProjectileId)
+                    var proj = state.Projectiles[i];
+                    if (proj.Id == hit.ProjectileId)
                     {
-                        context.Events.ProjectileHit(hit.ProjectileId, state.Projectiles[i].Position);
+                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
                         break;

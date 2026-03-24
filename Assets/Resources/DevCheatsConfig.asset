@@ -15,7 +15,7 @@ MonoBehaviour:
   GodMode: 0
   InfiniteAmmo: 1
   DamageMultiplier: 1
-  ProjectileSpeedMultiplier: 1
+  ProjectileSpeedMultiplier: 5.5
   FireRateMultiplier: 1
   NoRecoil: 0
   RecoilMultiplier: 0.5
@@ -54,8 +54,8 @@ MonoBehaviour:
   AdsAimFollowMultiplier: 1.5
   AdsRecoilMultiplier: 0.6
   AdsRecoilRecoveryMultiplier: 1.5
-  AdsZoomFactor: 0.891
-  AdsCursorInfluenceMultiplier: 2.78
+  AdsZoomFactor: 0.947
+  AdsCursorInfluenceMultiplier: 2.36
   AdsBaseGap: 10.4
   AdsBloomExtraGap: 7.8
   AdsVignetteIntensity: 0.471
@@ -78,4 +78,12 @@ MonoBehaviour:
   HBarTrailColor: {r: 1, g: 1, b: 1, a: 1}
   HBarFlashColor: {r: 1, g: 1, b: 1, a: 1}
   HBarBgColor: {r: 0.12, g: 0.12, b: 0.12, a: 0.85}
+  ProjectileSpawnHeight: 0.606
+  ParallaxCorrection: 1
+  ConvergenceBlend: 0.317
+  ConvergenceAimUp: 1
+  AimUpHeightRatio: 0.833
+  ProjectileHitRadius: 0
+  CharacterScaleWidth: 1
+  CharacterScaleHeight: 0.669
   ForceBleedPlayer: 0

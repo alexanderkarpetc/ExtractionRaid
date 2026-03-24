@@ -198,6 +198,30 @@ namespace Constants
             behaviors: BotBehaviorFlags.None
         );
 
+        public static readonly BotTypeConfig TargetPatrol = new(
+            typeId: "TargetPatrol", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 10000f, patrolSpeed: 3f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.Patrol
+        );
+
+        public static readonly BotTypeConfig TargetFast = new(
+            typeId: "TargetFast", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 10000f, patrolSpeed: 6f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.Patrol
+        );
+
+        public static readonly BotTypeConfig TargetDodge = new(
+            typeId: "TargetDodge", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 10000f, dodgeCooldown: 2f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.Dodge
+        );
+
         static readonly Dictionary<string, BotTypeConfig> Registry = new()
         {
             { Scav.TypeId, Scav },
@@ -205,6 +229,9 @@ namespace Constants
             { Boss.TypeId, Boss },
             { Target.TypeId, Target },
             { TargetWeak.TypeId, TargetWeak },
+            { TargetPatrol.TypeId, TargetPatrol },
+            { TargetFast.TypeId, TargetFast },
+            { TargetDodge.TypeId, TargetDodge },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

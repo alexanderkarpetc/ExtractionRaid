@@ -26,8 +26,10 @@ namespace View
 
             if (dist > 0.001f)
             {
-                // Raycast along movement path — frame-rate independent, no FixedUpdate dependency
-                if (Physics.Raycast(oldPos, delta / dist, out var hit, dist,
+                // SphereCast along movement path — small radius compensates for
+                // camera-angle parallax between crosshair and bullet trajectory
+                float hitRadius = Dev.DevCheats.ProjectileHitRadius;
+                if (Physics.SphereCast(oldPos, hitRadius, delta / dist, out var hit, dist,
                         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
                 {
                     // Skip other projectiles
@@ -56,6 +58,7 @@ namespace View
                     ProjectileId = EId,
                     TargetId = damageable.EId,
                     Damage = _damage,
+                    HitPoint = hitPoint,
                 });
             }
             else

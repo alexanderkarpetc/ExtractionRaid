@@ -20,5 +20,16 @@ namespace Adapters
         bool AdsPressed { get; }
         bool AttackJustReleased { get; }
         Vector3 CameraWorldPosition { get; }
+        /// <summary>
+        /// 3D convergence point: where camera ray through cursor hits a physics collider.
+        /// Null when cursor is over empty space (no collider hit).
+        /// </summary>
+        Vector3? ConvergencePoint { get; }
+
+        /// <summary>
+        /// The collider hit by the convergence raycast (if any).
+        /// Used to determine target bounds for aim-up adjustment.
+        /// </summary>
+        Collider ConvergenceCollider { get; }
     }
 }

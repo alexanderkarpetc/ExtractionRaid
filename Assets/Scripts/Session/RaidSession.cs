@@ -158,19 +158,73 @@ namespace Session
 
         void SpawnShootingRangeTargets()
         {
-            // Left group: 5 immortal targets (10000 HP)
+            // ── Row 1: Static close (z=8) ─────────────────────
             for (int i = 0; i < 5; i++)
             {
                 float x = -8f + i * 4f;
-                var pos = new UnityEngine.Vector3(x, 0f, 15f);
+                var pos = new UnityEngine.Vector3(x, 0f, 8f);
                 BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
             }
 
-            // Right group: 5 weak targets (50 HP) for kill testing
+            // ── Row 2: Static medium (z=16) ───────────────────
             for (int i = 0; i < 5; i++)
             {
-                float x = 16f + i * 4f;
-                var pos = new UnityEngine.Vector3(x, 0f, 15f);
+                float x = -8f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 16f);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 3: Static far (z=24) ──────────────────────
+            for (int i = 0; i < 5; i++)
+            {
+                float x = -8f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 24f);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 4: Horizontal patrol (z=20) ───────────────
+            for (int i = 0; i < 3; i++)
+            {
+                float cx = 14f + i * 6f;
+                var pos = new UnityEngine.Vector3(cx, 0f, 20f);
+                var wpA = new UnityEngine.Vector3(cx - 4f, 0f, 20f);
+                var wpB = new UnityEngine.Vector3(cx + 4f, 0f, 20f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+            }
+
+            // ── Row 5: Vertical patrol (x=-16, various z) ────
+            for (int i = 0; i < 3; i++)
+            {
+                float z = 10f + i * 6f;
+                var pos = new UnityEngine.Vector3(-16f, 0f, z);
+                var wpA = new UnityEngine.Vector3(-16f, 0f, 6f);
+                var wpB = new UnityEngine.Vector3(-16f, 0f, 26f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+            }
+
+            // ── Row 6: Fast targets (z=12) ────────────────────
+            for (int i = 0; i < 2; i++)
+            {
+                float cx = 20f + i * 8f;
+                var pos = new UnityEngine.Vector3(cx, 0f, 12f);
+                var wpA = new UnityEngine.Vector3(cx - 6f, 0f, 12f);
+                var wpB = new UnityEngine.Vector3(cx + 6f, 0f, 12f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetFast", pos, new[] { wpA, wpB }, _eventBuffer);
+            }
+
+            // ── Row 7: Dodge targets (x=-12) ──────────────────
+            for (int i = 0; i < 2; i++)
+            {
+                float z = 12f + i * 4f;
+                var pos = new UnityEngine.Vector3(-12f, 0f, z);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetDodge", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 8: Weak/killable (x=36, z=16) ────────────
+            for (int i = 0; i < 5; i++)
+            {
+                float x = 36f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 16f);
                 BotSpawnSystem.SpawnBot(RaidState, "TargetWeak", pos, new[] { pos }, _eventBuffer);
             }
         }

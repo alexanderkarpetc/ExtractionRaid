@@ -110,6 +110,17 @@ namespace Dev
         public Color HBarFlashColor = new(1f, 1f, 1f, 1f);
         public Color HBarBgColor = new(0.12f, 0.12f, 0.12f, 0.85f);
 
+        // ── Parallax / Projectile ──────────────────────────
+        [Header("Parallax / Projectile")]
+        public float ProjectileSpawnHeight = 0.3f;
+        public bool ParallaxCorrection = true;
+        public float ConvergenceBlend = 0.3f;
+        public bool ConvergenceAimUp = true;
+        public float AimUpHeightRatio = 0.85f;
+        public float ProjectileHitRadius = 0.15f;
+        public float CharacterScaleWidth = 1f;
+        public float CharacterScaleHeight = 1f;
+
         // ── Status Effects ──────────────────────────────────
         [Header("Status Effects")]
         public bool ForceBleedPlayer;

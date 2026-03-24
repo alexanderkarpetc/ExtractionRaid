@@ -435,6 +435,55 @@ namespace Dev
             set => Config.HBarBgColor = value;
         }
 
+        // ── Parallax / Projectile ──────────────────────────
+        public static float ProjectileSpawnHeight
+        {
+            get => Config.ProjectileSpawnHeight;
+            set => Config.ProjectileSpawnHeight = value;
+        }
+
+        public static bool ParallaxCorrection
+        {
+            get => Config.ParallaxCorrection;
+            set => Config.ParallaxCorrection = value;
+        }
+
+        public static float ConvergenceBlend
+        {
+            get => Config.ConvergenceBlend;
+            set => Config.ConvergenceBlend = value;
+        }
+
+        public static bool ConvergenceAimUp
+        {
+            get => Config.ConvergenceAimUp;
+            set => Config.ConvergenceAimUp = value;
+        }
+
+        public static float AimUpHeightRatio
+        {
+            get => Config.AimUpHeightRatio;
+            set => Config.AimUpHeightRatio = value;
+        }
+
+        public static float ProjectileHitRadius
+        {
+            get => Config.ProjectileHitRadius;
+            set => Config.ProjectileHitRadius = value;
+        }
+
+        public static float CharacterScaleWidth
+        {
+            get => Config.CharacterScaleWidth;
+            set => Config.CharacterScaleWidth = value;
+        }
+
+        public static float CharacterScaleHeight
+        {
+            get => Config.CharacterScaleHeight;
+            set => Config.CharacterScaleHeight = value;
+        }
+
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {

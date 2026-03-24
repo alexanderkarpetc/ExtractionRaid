@@ -39,27 +39,58 @@ namespace Systems
             }
 
             var spawnPos = input.MuzzleWorldPoint;
+            // Lower projectile to near-ground level — drastically reduces camera parallax
+            spawnPos.y = DevCheats.ProjectileSpawnHeight;
 
-            // Parallax correction: find where camera ray through crosshair
-            // intersects the muzzle-height plane (so bullets visually pass through crosshair)
-            var camPos = input.CameraWorldPosition;
+            // --- Compute two independent directions, then blend ---
             var groundAim = player.WeaponAimPoint;
-            Vector3 correctedAim;
-            if (camPos.y > 0.01f && spawnPos.y > 0.01f)
+            var convergence = input.ConvergencePoint;
+
+            // 1. Parallax-corrected direction (visual: trail through crosshair)
+            var toAimParallax = new Vector3(groundAim.x - spawnPos.x, 0f, groundAim.z - spawnPos.z);
+            if (DevCheats.ParallaxCorrection && spawnPos.y > 0.01f)
             {
-                float ratio = spawnPos.y / camPos.y;
-                correctedAim = Vector3.Lerp(groundAim, camPos, ratio);
-            }
-            else
-            {
-                correctedAim = groundAim;
+                var camPos = input.CameraWorldPosition;
+                if (camPos.y > 0.1f)
+                {
+                    float ratio = spawnPos.y / camPos.y;
+                    var corrected = Vector3.Lerp(groundAim, camPos, ratio);
+                    toAimParallax = new Vector3(corrected.x - spawnPos.x, 0f, corrected.z - spawnPos.z);
+                }
             }
 
-            var toAim = correctedAim - spawnPos;
-            toAim.y = 0f;
+            // 2. Convergence direction (accuracy: toward actual 3D target)
+            var toAimConv = toAimParallax; // fallback = parallax
+            float blend = 0f;
+            if (convergence.HasValue && DevCheats.ConvergenceBlend > 0f)
+            {
+                var convXZ = new Vector3(convergence.Value.x, 0f, convergence.Value.z);
+                toAimConv = new Vector3(convXZ.x - spawnPos.x, 0f, convXZ.z - spawnPos.z);
+                blend = DevCheats.ConvergenceBlend;
+            }
+
+            // 3. Blend: 0 = full parallax (visual), 1 = full convergence (accuracy)
+            var toAim = Vector3.Lerp(toAimParallax, toAimConv, blend);
+
             var dir = toAim.sqrMagnitude > 0.001f
                 ? toAim.normalized
                 : player.AimDirection;
+
+            // When convergence hit a CHARACTER (IDamageableView) and AimUp is enabled,
+            // angle the bullet slightly upward so it intersects the upper body of the target.
+            // Ground/wall hits → bullet stays horizontal (direction shooting).
+            if (DevCheats.ConvergenceAimUp && convergence.HasValue)
+            {
+                var hitCollider = input.ConvergenceCollider;
+                if (hitCollider != null
+                    && hitCollider.GetComponentInParent<View.IDamageableView>() != null)
+                {
+                    var bounds = hitCollider.bounds;
+                    float aimY = Mathf.Lerp(bounds.min.y, bounds.max.y, DevCheats.AimUpHeightRatio);
+                    float dy = aimY - spawnPos.y;
+                    dir = new Vector3(dir.x, dy / toAim.magnitude, dir.z).normalized;
+                }
+            }
 
             if (dir.sqrMagnitude < 0.001f) return;
             var count = Mathf.Max(1, weapon.ProjectilesPerShot);
