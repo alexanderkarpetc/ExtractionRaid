@@ -43,15 +43,8 @@ namespace View
         const float RollingAlpha = 0.3f;
 
         // Hit markers
-        struct HitMarker { public float time; public bool isKill; }
+        struct HitMarker { public float time; public bool isKill; public bool isHeadshot; }
         readonly List<HitMarker> _markers = new();
-        const float HitDuration = 0.3f;
-        const float KillDuration = 0.5f;
-        const float HitMarkerThickness = 4f;
-        const float HitLineLength = 14f;
-        const float KillLineLength = 18f;
-        const float HitGapStart = 8f;
-        const float HitGapExpand = 14f;
 
         // ADS visual interpolant
         float _adsAmount;
@@ -61,8 +54,6 @@ namespace View
         static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
         static readonly Color ReloadEmptyColor = new Color(0.4f, 0.4f, 0.4f, 0.4f);
         static readonly Color UnarmedColor = new Color(0.7f, 0.7f, 0.7f, 0.6f);
-        static readonly Color HitColor = Color.white;
-        static readonly Color KillColor = new Color(1f, 0.15f, 0.15f, 1f);
 
         void Awake()
         {
@@ -89,7 +80,12 @@ namespace View
             foreach (var e in events.All)
             {
                 if (e.Type == RaidEventType.HitConfirmed)
-                    _markers.Add(new HitMarker { time = Time.time, isKill = e.Damage > 0f });
+                    _markers.Add(new HitMarker
+                    {
+                        time = Time.time,
+                        isKill = e.Damage > 0f,
+                        isHeadshot = e.Direction.x > 0.5f,
+                    });
             }
         }
 
@@ -274,10 +270,14 @@ namespace View
 
         void DrawHitMarkers(Vector2 center)
         {
+            float scale = DevCheats.HitMarkerScale;
+
             for (int i = _markers.Count - 1; i >= 0; i--)
             {
                 var m = _markers[i];
-                float duration = m.isKill ? KillDuration : HitDuration;
+                float duration = m.isHeadshot ? DevCheats.HeadshotDuration
+                    : m.isKill ? DevCheats.KillDuration
+                    : DevCheats.HitDuration;
                 float age = Time.time - m.time;
 
                 if (age >= duration)
@@ -288,16 +288,38 @@ namespace View
 
                 float t = age / duration;
                 float alpha = 1f - t;
-                float lineLen = m.isKill ? KillLineLength : HitLineLength;
-                float gap = HitGapStart + HitGapExpand * t;
-                var color = m.isKill ? KillColor : HitColor;
+                float lineLen = (m.isKill || m.isHeadshot ? DevCheats.KillLineLength : DevCheats.HitLineLength) * scale;
+                float gap = DevCheats.HitGapStart * scale + DevCheats.HitGapExpand * scale * t;
+                float thick = DevCheats.HitMarkerThickness * scale;
+                var color = m.isHeadshot ? DevCheats.HeadshotColor
+                    : m.isKill ? DevCheats.KillColor
+                    : DevCheats.HitColor;
                 color.a = alpha;
 
+                // Inner X
                 GUI.color = color;
-                DrawXLine(center, gap, lineLen, 1f, 1f);   // ↘
-                DrawXLine(center, gap, lineLen, -1f, 1f);  // ↙
-                DrawXLine(center, gap, lineLen, 1f, -1f);  // ↗
-                DrawXLine(center, gap, lineLen, -1f, -1f); // ↖
+                DrawXLine(center, gap, lineLen, thick, 1f, 1f);
+                DrawXLine(center, gap, lineLen, thick, -1f, 1f);
+                DrawXLine(center, gap, lineLen, thick, 1f, -1f);
+                DrawXLine(center, gap, lineLen, thick, -1f, -1f);
+
+                // Outer X (headshot only)
+                if (m.isHeadshot)
+                {
+                    float outerScale = DevCheats.HeadshotOuterScale;
+                    float outerGap = DevCheats.HitGapStart * scale * outerScale
+                        + DevCheats.HitGapExpand * scale * outerScale * t * DevCheats.HeadshotOuterExpandMul;
+                    float outerLen = lineLen * outerScale;
+                    float outerAlpha = alpha * 0.7f; // slightly more transparent
+                    var outerColor = color;
+                    outerColor.a = outerAlpha;
+
+                    GUI.color = outerColor;
+                    DrawXLine(center, outerGap, outerLen, thick, 1f, 1f);
+                    DrawXLine(center, outerGap, outerLen, thick, -1f, 1f);
+                    DrawXLine(center, outerGap, outerLen, thick, 1f, -1f);
+                    DrawXLine(center, outerGap, outerLen, thick, -1f, -1f);
+                }
             }
 
             GUI.color = Color.white;
@@ -307,32 +329,26 @@ namespace View
         /// Draws one arm of the X-marker at 45° diagonal.
         /// dirX/dirY: +1 or -1 to pick the quadrant.
         /// </summary>
-        void DrawXLine(Vector2 center, float gap, float length, float dirX, float dirY)
+        void DrawXLine(Vector2 center, float gap, float length, float thickness, float dirX, float dirY)
         {
-            // Diagonal direction (normalized 45°)
             const float inv = 0.7071068f; // 1/sqrt(2)
             float dx = inv * dirX;
             float dy = inv * dirY;
 
-            float startDist = gap;
-            float endDist = gap + length;
+            float x1 = center.x + dx * gap;
+            float y1 = center.y + dy * gap;
+            float x2 = center.x + dx * (gap + length);
+            float y2 = center.y + dy * (gap + length);
 
-            float x1 = center.x + dx * startDist;
-            float y1 = center.y + dy * startDist;
-            float x2 = center.x + dx * endDist;
-            float y2 = center.y + dy * endDist;
-
-            // Approximate diagonal line with a thin rotated rect
             float midX = (x1 + x2) * 0.5f;
             float midY = (y1 + y2) * 0.5f;
             float halfLen = length * 0.5f;
-            float halfThick = HitMarkerThickness * 0.5f;
+            float halfThick = thickness * 0.5f;
 
-            // Use GUIUtility.RotateAroundPivot for diagonal drawing
             var savedMatrix = GUI.matrix;
             GUIUtility.RotateAroundPivot(45f * dirX * dirY, new Vector2(midX, midY));
             GUI.DrawTexture(
-                new Rect(midX - halfThick, midY - halfLen, HitMarkerThickness, length),
+                new Rect(midX - halfThick, midY - halfLen, thickness, length),
                 _pixelTex);
             GUI.matrix = savedMatrix;
         }

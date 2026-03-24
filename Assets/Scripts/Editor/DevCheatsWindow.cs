@@ -169,6 +169,36 @@ namespace Editor
                 DevCheats.CrosshairNormalColor   = EditorGUILayout.ColorField("Normal Color", DevCheats.CrosshairNormalColor);
                 DevCheats.CrosshairWarningColor  = EditorGUILayout.ColorField("Warning Color", DevCheats.CrosshairWarningColor);
                 DevCheats.CrosshairBloomColor    = EditorGUILayout.ColorField("Bloom Color", DevCheats.CrosshairBloomColor);
+
+                EditorGUILayout.Space(8);
+                EditorGUILayout.LabelField("Hit Markers", EditorStyles.miniLabel);
+                EditorGUILayout.HelpBox(
+                    "Scale: global size multiplier for all hit markers.\n" +
+                    "Duration: how long hit/kill markers stay visible.\n" +
+                    "Line Length / Gap / Expand: X-shape geometry.",
+                    MessageType.None);
+                DevCheats.HitMarkerScale      = EditorGUILayout.Slider("Scale ×", DevCheats.HitMarkerScale, 0.5f, 3f);
+                DevCheats.HitDuration         = EditorGUILayout.Slider("Hit Duration", DevCheats.HitDuration, 0.1f, 1f);
+                DevCheats.KillDuration        = EditorGUILayout.Slider("Kill Duration", DevCheats.KillDuration, 0.1f, 2f);
+                DevCheats.HitLineLength       = EditorGUILayout.Slider("Hit Line Length", DevCheats.HitLineLength, 4f, 40f);
+                DevCheats.KillLineLength      = EditorGUILayout.Slider("Kill Line Length", DevCheats.KillLineLength, 4f, 40f);
+                DevCheats.HitGapStart         = EditorGUILayout.Slider("Gap Start", DevCheats.HitGapStart, 0f, 30f);
+                DevCheats.HitGapExpand        = EditorGUILayout.Slider("Gap Expand", DevCheats.HitGapExpand, 0f, 40f);
+                DevCheats.HitMarkerThickness  = EditorGUILayout.Slider("Thickness", DevCheats.HitMarkerThickness, 1f, 10f);
+                DevCheats.HitColor            = EditorGUILayout.ColorField("Hit Color", DevCheats.HitColor);
+                DevCheats.KillColor           = EditorGUILayout.ColorField("Kill Color", DevCheats.KillColor);
+
+                EditorGUILayout.Space(8);
+                EditorGUILayout.LabelField("Headshot (Targeted Hit)", EditorStyles.miniLabel);
+                EditorGUILayout.HelpBox(
+                    "When player aims cursor directly at a target and hits it.\n" +
+                    "Shows double X-marker: inner (normal) + outer (expanding faster).\n" +
+                    "Outer Scale: size multiplier vs inner. Expand Mul: speed of outer X.",
+                    MessageType.None);
+                DevCheats.HeadshotDuration       = EditorGUILayout.Slider("Duration", DevCheats.HeadshotDuration, 0.1f, 2f);
+                DevCheats.HeadshotOuterScale     = EditorGUILayout.Slider("Outer Scale ×", DevCheats.HeadshotOuterScale, 1f, 4f);
+                DevCheats.HeadshotOuterExpandMul = EditorGUILayout.Slider("Outer Expand ×", DevCheats.HeadshotOuterExpandMul, 1f, 5f);
+                DevCheats.HeadshotColor          = EditorGUILayout.ColorField("Color", DevCheats.HeadshotColor);
             });
             DevCheats.CrosshairEnabled = crosshairEnabled;
 

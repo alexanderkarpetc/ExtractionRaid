@@ -144,7 +144,7 @@ namespace Tests.EditMode.Fakes
 
         public bool HitConfirmedCalled;
         public bool HitConfirmedIsKill;
-        public void HitConfirmed(bool isKill)
+        public void HitConfirmed(bool isKill, bool isHeadshot = false)
         {
             HitConfirmedCalled = true;
             HitConfirmedIsKill = isKill;

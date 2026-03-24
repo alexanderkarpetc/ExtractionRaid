@@ -259,6 +259,78 @@ namespace Dev
             set => Config.CrosshairBloomColor = value;
         }
 
+        // ── Hit Markers ──────────────────────────────────
+        public static float HitMarkerScale
+        {
+            get => Config.HitMarkerScale;
+            set => Config.HitMarkerScale = value;
+        }
+        public static float HitDuration
+        {
+            get => Config.HitDuration;
+            set => Config.HitDuration = value;
+        }
+        public static float KillDuration
+        {
+            get => Config.KillDuration;
+            set => Config.KillDuration = value;
+        }
+        public static float HitLineLength
+        {
+            get => Config.HitLineLength;
+            set => Config.HitLineLength = value;
+        }
+        public static float KillLineLength
+        {
+            get => Config.KillLineLength;
+            set => Config.KillLineLength = value;
+        }
+        public static float HitGapStart
+        {
+            get => Config.HitGapStart;
+            set => Config.HitGapStart = value;
+        }
+        public static float HitGapExpand
+        {
+            get => Config.HitGapExpand;
+            set => Config.HitGapExpand = value;
+        }
+        public static float HitMarkerThickness
+        {
+            get => Config.HitMarkerThickness;
+            set => Config.HitMarkerThickness = value;
+        }
+        public static Color HitColor
+        {
+            get => Config.HitColor;
+            set => Config.HitColor = value;
+        }
+        public static Color KillColor
+        {
+            get => Config.KillColor;
+            set => Config.KillColor = value;
+        }
+        public static float HeadshotOuterScale
+        {
+            get => Config.HeadshotOuterScale;
+            set => Config.HeadshotOuterScale = value;
+        }
+        public static float HeadshotOuterExpandMul
+        {
+            get => Config.HeadshotOuterExpandMul;
+            set => Config.HeadshotOuterExpandMul = value;
+        }
+        public static float HeadshotDuration
+        {
+            get => Config.HeadshotDuration;
+            set => Config.HeadshotDuration = value;
+        }
+        public static Color HeadshotColor
+        {
+            get => Config.HeadshotColor;
+            set => Config.HeadshotColor = value;
+        }
+
         // ── ADS ───────────────────────────────────────────
         public static float AdsTransitionTime
         {

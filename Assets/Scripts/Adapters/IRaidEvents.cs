@@ -33,7 +33,7 @@ namespace Adapters
         void MedkitUseStarted();
         void MedkitUseStopped();
 
-        void HitConfirmed(bool isKill);
+        void HitConfirmed(bool isKill, bool isHeadshot = false);
         void StatusEffectApplied(EId entityId, string effectType);
         void StatusEffectRemoved(EId entityId, string effectType);
 

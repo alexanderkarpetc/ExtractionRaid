@@ -43,7 +43,9 @@ namespace Systems
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
-                    context.Events.HitConfirmed(isKill: !health.IsAlive);
+                    bool isHeadshot = hit.TargetedEntityId == hit.TargetId
+                                     && hit.TargetedEntityId.Value != 0;
+                    context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot);
                 }
 
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)

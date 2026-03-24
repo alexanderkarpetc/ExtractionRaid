@@ -246,12 +246,13 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.MedkitUseStopped });
         }
 
-        public void HitConfirmed(bool isKill)
+        public void HitConfirmed(bool isKill, bool isHeadshot = false)
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.HitConfirmed,
                 Damage = isKill ? 1f : 0f,
+                Direction = new Vector3(isHeadshot ? 1f : 0f, 0f, 0f),
             });
         }
 
