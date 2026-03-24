@@ -12,11 +12,12 @@ namespace State
         public float SpawnTime;
         public float Lifetime;
         public float Damage;
+        public EId TargetedEntityId; // EId of the character the player aimed at (convergence), default = not targeted
 
         public static ProjectileEntityState Create(
             EId id, EId ownerId, Vector3 position, Vector3 direction,
             float speed, float spawnTime, float lifetime,
-            float damage)
+            float damage, EId targetedEntityId = default)
         {
             return new ProjectileEntityState
             {
@@ -28,6 +29,7 @@ namespace State
                 SpawnTime = spawnTime,
                 Lifetime = lifetime,
                 Damage = damage,
+                TargetedEntityId = targetedEntityId,
             };
         }
     }

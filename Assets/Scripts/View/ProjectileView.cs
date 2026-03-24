@@ -8,11 +8,13 @@ namespace View
         public EId EId { get; private set; }
         float _damage;
         bool _hit;
+        EId _targetedEntityId;
 
-        public void Initialize(EId id, float damage)
+        public void Initialize(EId id, float damage, EId targetedEntityId = default)
         {
             EId = id;
             _damage = damage;
+            _targetedEntityId = targetedEntityId;
         }
 
         public void SyncFromState(ProjectileEntityState state)
@@ -59,6 +61,7 @@ namespace View
                     TargetId = damageable.EId,
                     Damage = _damage,
                     HitPoint = hitPoint,
+                    TargetedEntityId = _targetedEntityId,
                 });
             }
             else

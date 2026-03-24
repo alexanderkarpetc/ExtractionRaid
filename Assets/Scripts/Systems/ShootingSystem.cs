@@ -76,20 +76,24 @@ namespace Systems
                 ? toAim.normalized
                 : player.AimDirection;
 
-            // When convergence hit a CHARACTER (IDamageableView) and AimUp is enabled,
+            // Determine if convergence hit a character (for targeted shots + AimUp)
+            var targetedEntityId = default(EId);
+            var hitCollider = convergence.HasValue ? input.ConvergenceCollider : null;
+            var targetDamageable = hitCollider != null
+                ? hitCollider.GetComponentInParent<View.IDamageableView>()
+                : null;
+
+            if (targetDamageable != null)
+                targetedEntityId = targetDamageable.EId;
+
+            // When convergence hit a CHARACTER and AimUp is enabled,
             // angle the bullet slightly upward so it intersects the upper body of the target.
-            // Ground/wall hits → bullet stays horizontal (direction shooting).
-            if (DevCheats.ConvergenceAimUp && convergence.HasValue)
+            if (DevCheats.ConvergenceAimUp && targetDamageable != null && hitCollider != null)
             {
-                var hitCollider = input.ConvergenceCollider;
-                if (hitCollider != null
-                    && hitCollider.GetComponentInParent<View.IDamageableView>() != null)
-                {
-                    var bounds = hitCollider.bounds;
-                    float aimY = Mathf.Lerp(bounds.min.y, bounds.max.y, DevCheats.AimUpHeightRatio);
-                    float dy = aimY - spawnPos.y;
-                    dir = new Vector3(dir.x, dy / toAim.magnitude, dir.z).normalized;
-                }
+                var bounds = hitCollider.bounds;
+                float aimY = Mathf.Lerp(bounds.min.y, bounds.max.y, DevCheats.AimUpHeightRatio);
+                float dy = aimY - spawnPos.y;
+                dir = new Vector3(dir.x, dy / toAim.magnitude, dir.z).normalized;
             }
 
             if (dir.sqrMagnitude < 0.001f) return;
@@ -107,7 +111,8 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.ProjectileSpeed * DevCheats.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.ProjectileLifetime,
-                    weapon.ProjectileDamage * DevCheats.DamageMultiplier);
+                    weapon.ProjectileDamage * DevCheats.DamageMultiplier,
+                    targetedEntityId);
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);

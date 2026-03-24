@@ -9,13 +9,21 @@ namespace View
     public class ProjectilePresenter
     {
         readonly GameObject _projectilePrefab;
-        readonly GameObject _impactVfxPrefab;
+        readonly GameObject _surfaceImpactPrefab;
+        readonly GameObject _bodyImpactPrefab;
+        readonly GameObject _headImpactPrefab;
         readonly Dictionary<EId, ProjectileView> _views = new();
 
         public ProjectilePresenter()
         {
             _projectilePrefab = Resources.Load<GameObject>("Prefabs/Projectile");
-            _impactVfxPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BulletImpact");
+            _surfaceImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BulletImpact");
+            _bodyImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BodyImpact");
+            _headImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/HeadImpact");
+
+            // Fallback: if body/head not found, reuse surface
+            if (_bodyImpactPrefab == null) _bodyImpactPrefab = _surfaceImpactPrefab;
+            if (_headImpactPrefab == null) _headImpactPrefab = _surfaceImpactPrefab;
 
             if (_projectilePrefab == null)
                 Debug.LogWarning("[ProjectilePresenter] Prefab not found at Resources/Prefabs/Projectile");
@@ -32,10 +40,18 @@ namespace View
                 switch (e.Type)
                 {
                     case RaidEventType.ProjectileSpawned:
-                        SpawnView(e.Id, e.Position, e.Direction, e.Damage);
+                    {
+                        // Find targeted entity from state
+                        EId targeted = default;
+                        foreach (var p in session.RaidState.Projectiles)
+                        {
+                            if (p.Id == e.Id) { targeted = p.TargetedEntityId; break; }
+                        }
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted);
                         break;
+                    }
                     case RaidEventType.ProjectileHit:
-                        SpawnImpactVfx(e.Position);
+                        SpawnImpactVfx(e.Position, e.StringPayload);
                         break;
                     case RaidEventType.ProjectileDespawned:
                         DespawnView(e.Id);
@@ -47,12 +63,17 @@ namespace View
             {
                 if (_views.TryGetValue(proj.Id, out var view))
                 {
+                    // Pass targetedEntityId on first sync (Initialize only sets basics)
                     view.SyncFromState(proj);
+                }
+                else
+                {
+                    // View not yet created — will be created on next ProjectileSpawned event
                 }
             }
         }
 
-        void SpawnView(EId id, Vector3 position, Vector3 direction, float damage)
+        void SpawnView(EId id, Vector3 position, Vector3 direction, float damage, EId targetedEntityId = default)
         {
             if (_projectilePrefab == null) return;
 
@@ -62,14 +83,20 @@ namespace View
 
             var go = Object.Instantiate(_projectilePrefab, position, rotation);
             var view = go.GetComponent<ProjectileView>();
-            view.Initialize(id, damage);
+            view.Initialize(id, damage, targetedEntityId);
             _views[id] = view;
         }
 
-        void SpawnImpactVfx(Vector3 position)
+        void SpawnImpactVfx(Vector3 position, string hitType)
         {
-            if (_impactVfxPrefab == null) return;
-            var go = Object.Instantiate(_impactVfxPrefab, position, Quaternion.identity);
+            var prefab = hitType switch
+            {
+                "head" => _headImpactPrefab,
+                "body" => _bodyImpactPrefab,
+                _ => _surfaceImpactPrefab,
+            };
+            if (prefab == null) return;
+            var go = Object.Instantiate(prefab, position, Quaternion.identity);
             Object.Destroy(go, 2f);
         }
 
