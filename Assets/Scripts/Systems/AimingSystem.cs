@@ -63,6 +63,10 @@ namespace Systems
 
                 // Final aim = base + decayed recoil
                 player.WeaponAimPoint = cleanAim + (weapon != null ? weapon.RecoilOffset : Vector3.zero);
+
+                // Feed weapon aim screen position to input adapter for convergence raycast
+                // (so convergence accounts for recoil — affects headshot detection)
+                input.SetWeaponAimScreenPos(input.WorldToScreen(player.WeaponAimPoint));
             }
 
             // 3. AimDirection derived from weapon aim

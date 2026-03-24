@@ -23,5 +23,7 @@ namespace Tests.EditMode.Fakes
         public Vector3 CameraWorldPosition { get; set; }
         public Vector3? ConvergencePoint { get; set; }
         public Collider ConvergenceCollider { get; set; }
+        public Vector2 WorldToScreen(Vector3 worldPoint) => Vector2.zero;
+        public void SetWeaponAimScreenPos(Vector2 screenPos) { }
     }
 }

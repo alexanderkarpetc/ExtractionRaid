@@ -31,5 +31,17 @@ namespace Adapters
         /// Used to determine target bounds for aim-up adjustment.
         /// </summary>
         Collider ConvergenceCollider { get; }
+
+        /// <summary>
+        /// Convert a world position to screen coordinates using the active camera.
+        /// </summary>
+        Vector2 WorldToScreen(Vector3 worldPoint);
+
+        /// <summary>
+        /// Set the screen position of the weapon aim point (with recoil applied).
+        /// Convergence raycast will use this instead of raw mouse position,
+        /// so that recoil affects headshot detection.
+        /// </summary>
+        void SetWeaponAimScreenPos(Vector2 screenPos);
     }
 }

@@ -27,6 +27,9 @@ namespace Adapters
         Vector3? _cachedConvergence;
         Collider _cachedConvergenceCollider;
 
+        // Weapon aim screen pos (set by AimingSystem, includes recoil)
+        Vector2 _weaponAimScreenPos;
+
         public UnityInputAdapter()
         {
             _actions = new InputSystem_Actions();
@@ -47,8 +50,9 @@ namespace Adapters
 
             if (_camera == null) return;
 
-            var mousePos = Mouse.current?.position.ReadValue() ?? Vector2.zero;
-            var ray = _camera.ScreenPointToRay(new Vector3(mousePos.x, mousePos.y, 0f));
+            // Use weapon aim screen position (includes recoil) instead of raw mouse
+            var aimPos = _weaponAimScreenPos;
+            var ray = _camera.ScreenPointToRay(new Vector3(aimPos.x, aimPos.y, 0f));
 
             if (!Physics.Raycast(ray, out var hit, 200f,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
@@ -216,6 +220,20 @@ namespace Adapters
         public void SetMuzzlePoint(Transform muzzlePoint)
         {
             _muzzlePoint = muzzlePoint;
+        }
+
+        public Vector2 WorldToScreen(Vector3 worldPoint)
+        {
+            if (_camera == null) return Vector2.zero;
+            var sp = _camera.WorldToScreenPoint(worldPoint);
+            return new Vector2(sp.x, sp.y);
+        }
+
+        public void SetWeaponAimScreenPos(Vector2 screenPos)
+        {
+            _weaponAimScreenPos = screenPos;
+            // Invalidate convergence cache so next query recalculates with new aim pos
+            _convergenceFrame = -1;
         }
 
         public void Dispose()
