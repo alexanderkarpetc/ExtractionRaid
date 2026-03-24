@@ -11,6 +11,8 @@ namespace App
     {
         static App _instance;
 
+        public static bool IsInitialized => _instance != null;
+
         public static App Instance =>
             _instance ?? throw new System.InvalidOperationException(
                 "App not initialized. Ensure AppBootstrap runs first.");

@@ -9,8 +9,17 @@ namespace App
         [SerializeField] LaunchMode _launchMode = LaunchMode.Raid;
         [SerializeField] string _defaultLevelId = "test_level";
 
+        bool _isOwner;
+
         void Awake()
         {
+            if (App.IsInitialized)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            _isOwner = true;
             App.Initialize();
             DontDestroyOnLoad(gameObject);
             gameObject.AddComponent<HotbarDebugOverlay>();
@@ -55,7 +64,8 @@ namespace App
 
         void OnDestroy()
         {
-            App.Shutdown();
+            if (_isOwner)
+                App.Shutdown();
         }
     }
 }
