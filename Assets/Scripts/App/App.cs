@@ -1,5 +1,6 @@
 using Adapters;
 using Cysharp.Threading.Tasks;
+using Quests;
 using Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,6 +21,7 @@ namespace App
         public Player Player { get; private set; }
         public RaidSession RaidSession { get; private set; }
         public bool IsInHideout { get; private set; }
+        public QuestDatabase QuestDatabase { get; private set; }
 
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
@@ -49,6 +51,10 @@ namespace App
             _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
             _corpsePresenter = new CorpsePresenter();
             Player = new Player();
+
+            QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
+            if (QuestDatabase == null)
+                Debug.LogError("[App] QuestDatabase not found in Resources. Create a quest graph at Resources/QuestDatabase.questgraph.");
         }
 
         internal static void Initialize()
