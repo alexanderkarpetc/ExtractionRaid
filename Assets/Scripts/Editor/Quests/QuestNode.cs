@@ -1,4 +1,5 @@
 using System;
+using Quests;
 using Unity.GraphToolkit.Editor;
 
 namespace Editor.Quests
@@ -8,23 +9,9 @@ namespace Editor.Quests
     {
         protected override void OnDefineOptions(IOptionDefinitionContext context)
         {
-            context.AddOption<string>("Id")
-                .WithDisplayName("Quest ID")
-                .WithTooltip("Unique identifier used by game systems at runtime.");
-
-            context.AddOption<string>("DisplayName")
-                .WithDisplayName("Display Name")
-                .WithTooltip("Human-readable quest name shown to the player.");
-
-            context.AddOption<string>("Description")
-                .WithDisplayName("Description")
-                .WithTooltip("Quest description text.")
-                .ShowInInspectorOnly();
-
-            context.AddOption<int>("RequiredLevel")
-                .WithDisplayName("Required Level")
-                .WithDefaultValue(0)
-                .WithTooltip("Minimum player level to accept this quest.");
+            context.AddOption<QuestDefinition>("Quest")
+                .WithDisplayName("Quest Asset")
+                .WithTooltip("Reference to the QuestDefinition ScriptableObject.");
         }
 
         protected override void OnDefinePorts(IPortDefinitionContext context)
