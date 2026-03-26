@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Quests
@@ -11,5 +12,8 @@ namespace Quests
 
         [Header("Requirements")]
         public int RequiredLevel;
+
+        [Header("Tasks")]
+        [SerializeReference] public List<QuestTask> Tasks = new();
     }
 }

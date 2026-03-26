@@ -16,3 +16,32 @@ MonoBehaviour:
   DisplayName: Quest1
   Description: 
   RequiredLevel: 0
+  Tasks:
+  - rid: 2541323820743786570
+  - rid: 2541323820743786571
+  - rid: 2541323820743786572
+  references:
+    version: 2
+    RefIds:
+    - rid: 2541323820743786570
+      type: {class: KillEnemyTask, ns: Quests, asm: Game}
+      data:
+        Description: AAAA KILLL EM
+        RequiredCount: 1
+        InOneRaid: 0
+        EnemyTypeId: 
+        HeadshotsOnly: 0
+    - rid: 2541323820743786571
+      type: {class: FindPlaceTask, ns: Quests, asm: Game}
+      data:
+        Description: FIND PLACE
+        RequiredCount: 1
+        InOneRaid: 0
+        PlaceId: 
+    - rid: 2541323820743786572
+      type: {class: ExtractTask, ns: Quests, asm: Game}
+      data:
+        Description: EXTRACT
+        RequiredCount: 1
+        InOneRaid: 0
+        LevelId: 
