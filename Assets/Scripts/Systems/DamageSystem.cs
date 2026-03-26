@@ -33,7 +33,14 @@ namespace Systems
                     && hit.TargetId == state.PlayerEntity.Id)
                     continue;
 
-                ApplyDamage(health, hit.Damage);
+                bool isHeadshot = hit.TargetedEntityId == hit.TargetId
+                                 && hit.TargetedEntityId.Value != 0;
+
+                float damage = hit.Damage;
+                if (isHeadshot && projectile != null)
+                    damage *= projectile.HeadshotDamageMultiplier;
+
+                ApplyDamage(health, damage);
 
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
@@ -43,8 +50,6 @@ namespace Systems
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
-                    bool isHeadshot = hit.TargetedEntityId == hit.TargetId
-                                     && hit.TargetedEntityId.Value != 0;
                     context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot);
                 }
 

@@ -112,6 +112,7 @@ namespace Systems
                     weapon.ProjectileSpeed * DevCheats.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.ProjectileLifetime,
                     weapon.ProjectileDamage * DevCheats.DamageMultiplier,
+                    weapon.HeadshotDamageMultiplier,
                     targetedEntityId);
 
                 state.Projectiles.Add(projectile);

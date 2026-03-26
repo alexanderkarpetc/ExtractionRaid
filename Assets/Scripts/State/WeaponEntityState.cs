@@ -22,6 +22,7 @@ namespace State
         public float ProjectileSpeed;
         public float ProjectileLifetime;
         public float ProjectileDamage;
+        public float HeadshotDamageMultiplier;
         public int ProjectilesPerShot;
         public float SpreadAngle;
 
@@ -61,6 +62,7 @@ namespace State
                 ProjectileSpeed = 20f,
                 ProjectileLifetime = 3f,
                 ProjectileDamage = 10f,
+                HeadshotDamageMultiplier = 2f,
                 ProjectilesPerShot = 1,
                 SpreadAngle = 0f,
                 ConeHalfAngle = 45f,
@@ -91,6 +93,7 @@ namespace State
                 ProjectileSpeed = 30f,
                 ProjectileLifetime = 2f,
                 ProjectileDamage = 8f,
+                HeadshotDamageMultiplier = 1.5f,
                 ProjectilesPerShot = 7,
                 SpreadAngle = 30f,
                 ConeHalfAngle = 20f,
@@ -121,6 +124,7 @@ namespace State
                 ProjectileSpeed = 25f,
                 ProjectileLifetime = 2.5f,
                 ProjectileDamage = 15f,
+                HeadshotDamageMultiplier = 2.5f,
                 ProjectilesPerShot = 1,
                 SpreadAngle = 0f,
                 ConeHalfAngle = 35f,
