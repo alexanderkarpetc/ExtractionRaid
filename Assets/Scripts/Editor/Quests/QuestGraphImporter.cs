@@ -21,26 +21,20 @@ namespace Editor
             }
 
             var questNodes = graph.GetNodes().OfType<QuestNode>().ToList();
-            var nodeToId = new Dictionary<QuestNode, string>(questNodes.Count);
+            var nodeToQuest = new Dictionary<QuestNode, QuestDefinition>(questNodes.Count);
 
             foreach (var node in questNodes)
             {
-                node.GetNodeOptionByName("Id").TryGetValue<string>(out var id);
-                if (!string.IsNullOrEmpty(id))
-                    nodeToId[node] = id;
+                node.GetNodeOptionByName("Quest").TryGetValue<QuestDefinition>(out var quest);
+                if (quest != null && !string.IsNullOrEmpty(quest.Id))
+                    nodeToQuest[node] = quest;
             }
 
-            var entries = new List<QuestDefinition>(questNodes.Count);
+            var entries = new List<QuestDatabaseEntry>(nodeToQuest.Count);
             var connectedPorts = new List<IPort>();
 
-            foreach (var node in questNodes)
+            foreach (var (node, quest) in nodeToQuest)
             {
-                if (!nodeToId.TryGetValue(node, out var id)) continue;
-
-                node.GetNodeOptionByName("DisplayName").TryGetValue<string>(out var displayName);
-                node.GetNodeOptionByName("Description").TryGetValue<string>(out var description);
-                node.GetNodeOptionByName("RequiredLevel").TryGetValue<int>(out var requiredLevel);
-
                 var requiresPort = node.GetInputPortByName("Requires");
                 requiresPort.GetConnectedPorts(connectedPorts);
 
@@ -48,22 +42,19 @@ namespace Editor
                 foreach (var connectedPort in connectedPorts)
                 {
                     var sourceNode = connectedPort.GetNode();
-                    if (sourceNode is QuestNode srcQuest && nodeToId.TryGetValue(srcQuest, out var srcId))
-                        reqIds.Add(srcId);
+                    if (sourceNode is QuestNode srcQuest && nodeToQuest.TryGetValue(srcQuest, out var srcDef))
+                        reqIds.Add(srcDef.Id);
                 }
 
-                entries.Add(new QuestDefinition
+                entries.Add(new QuestDatabaseEntry
                 {
-                    Id = id,
-                    DisplayName = displayName ?? id,
-                    Description = description ?? "",
-                    RequiredLevel = requiredLevel,
+                    Quest = quest,
                     RequiredQuestIds = reqIds.Count > 0 ? reqIds.ToArray() : null
                 });
             }
 
             var db = ScriptableObject.CreateInstance<QuestDatabase>();
-            db.SetQuests(entries);
+            db.SetEntries(entries);
 
             ctx.AddObjectToAsset("QuestDatabase", db);
             ctx.SetMainObject(db);

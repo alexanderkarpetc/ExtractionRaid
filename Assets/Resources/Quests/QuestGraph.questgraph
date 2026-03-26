@@ -47,10 +47,10 @@ MonoBehaviour:
         m_LocalSubgraphs: []
         m_LastKnownBounds:
           serializedVersion: 2
-          x: 72
+          x: -62
           y: 184
-          width: 650
-          height: 324
+          width: 1065
+          height: 303
         m_GraphElementMetaData:
         - m_Guid:
             m_Value0: 14000493271236467496
@@ -137,7 +137,7 @@ MonoBehaviour:
           serializedVersion: 2
           Hash: 28db4bd073be4bc2f4968be4b98000e0
         m_Version: 2
-        m_Position: {x: 45.57392, y: 249.6587}
+        m_Position: {x: -61.54857, y: 252.3037}
         m_Title: 
         m_Tooltip: 
         m_NodePreviewModel:
@@ -145,15 +145,9 @@ MonoBehaviour:
         m_State: 0
         m_InputConstantsById:
           m_KeyList:
-          - __option_Id
-          - __option_DisplayName
-          - __option_Description
-          - __option_RequiredLevel
+          - __option_Quest
           m_ValueList:
-          - rid: 2541323798265200836
-          - rid: 2541323798265200837
-          - rid: 2541323798265200838
-          - rid: 2541323798265200839
+          - rid: 2541323820743786563
         m_InputPortInfos:
           expandedPortsById:
             m_KeyList: []
@@ -169,22 +163,6 @@ MonoBehaviour:
           m_HasUserColor: 0
         m_Node:
           rid: 2541323798265200840
-    - rid: 2541323798265200836
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Starting
-    - rid: 2541323798265200837
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Starting
-    - rid: 2541323798265200838
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 
-    - rid: 2541323798265200839
-      type: {class: 'Constant`1[[System.Int32, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 0
     - rid: 2541323798265200840
       type: {class: QuestNode, ns: Editor.Quests, asm: Game.Editor}
       data: 
@@ -206,15 +184,9 @@ MonoBehaviour:
         m_State: 0
         m_InputConstantsById:
           m_KeyList:
-          - __option_Id
-          - __option_DisplayName
-          - __option_Description
-          - __option_RequiredLevel
+          - __option_Quest
           m_ValueList:
-          - rid: 2541323798265200844
-          - rid: 2541323798265200845
-          - rid: 2541323798265200846
-          - rid: 2541323798265200847
+          - rid: 2541323820743786564
         m_InputPortInfos:
           expandedPortsById:
             m_KeyList: []
@@ -230,22 +202,6 @@ MonoBehaviour:
           m_HasUserColor: 0
         m_Node:
           rid: 2541323798265200848
-    - rid: 2541323798265200844
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest2
-    - rid: 2541323798265200845
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest2
-    - rid: 2541323798265200846
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 
-    - rid: 2541323798265200847
-      type: {class: 'Constant`1[[System.Int32, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 0
     - rid: 2541323798265200848
       type: {class: QuestNode, ns: Editor.Quests, asm: Game.Editor}
       data: 
@@ -299,15 +255,9 @@ MonoBehaviour:
         m_State: 0
         m_InputConstantsById:
           m_KeyList:
-          - __option_Id
-          - __option_DisplayName
-          - __option_Description
-          - __option_RequiredLevel
+          - __option_Quest
           m_ValueList:
-          - rid: 2541323798265200856
-          - rid: 2541323798265200857
-          - rid: 2541323798265200858
-          - rid: 2541323798265200859
+          - rid: 2541323820743786565
         m_InputPortInfos:
           expandedPortsById:
             m_KeyList: []
@@ -323,22 +273,6 @@ MonoBehaviour:
           m_HasUserColor: 0
         m_Node:
           rid: 2541323798265200860
-    - rid: 2541323798265200856
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest3
-    - rid: 2541323798265200857
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest3
-    - rid: 2541323798265200858
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 
-    - rid: 2541323798265200859
-      type: {class: 'Constant`1[[System.Int32, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 0
     - rid: 2541323798265200860
       type: {class: QuestNode, ns: Editor.Quests, asm: Game.Editor}
       data: 
@@ -384,7 +318,7 @@ MonoBehaviour:
           serializedVersion: 2
           Hash: cf6dbdefbeecf35d8101b3ef1e7526a8
         m_Version: 2
-        m_Position: {x: 563.35, y: 201.2}
+        m_Position: {x: 712.7925, y: 203.845}
         m_Title: QuestNode
         m_Tooltip: 
         m_NodePreviewModel:
@@ -392,15 +326,9 @@ MonoBehaviour:
         m_State: 0
         m_InputConstantsById:
           m_KeyList:
-          - __option_Id
-          - __option_DisplayName
-          - __option_Description
-          - __option_RequiredLevel
+          - __option_Quest
           m_ValueList:
-          - rid: 2541323798265200868
-          - rid: 2541323798265200869
-          - rid: 2541323798265200870
-          - rid: 2541323798265200871
+          - rid: 2541323820743786566
         m_InputPortInfos:
           expandedPortsById:
             m_KeyList: []
@@ -416,22 +344,6 @@ MonoBehaviour:
           m_HasUserColor: 0
         m_Node:
           rid: 2541323798265200872
-    - rid: 2541323798265200868
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest4
-    - rid: 2541323798265200869
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: Quest4
-    - rid: 2541323798265200870
-      type: {class: 'Constant`1[[System.String, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 
-    - rid: 2541323798265200871
-      type: {class: 'Constant`1[[System.Int32, mscorlib]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
-      data:
-        m_Value: 0
     - rid: 2541323798265200872
       type: {class: QuestNode, ns: Editor.Quests, asm: Game.Editor}
       data: 
@@ -467,3 +379,19 @@ MonoBehaviour:
           m_PortDirection: 1
           m_PortOrientation: 0
           m_Title: Requires
+    - rid: 2541323820743786563
+      type: {class: 'Constant`1[[Quests.QuestDefinition, Game]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Value: {fileID: 11400000, guid: 9f3fef6da2ebb3f409bbffdc1fd5c58e, type: 2}
+    - rid: 2541323820743786564
+      type: {class: 'Constant`1[[Quests.QuestDefinition, Game]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Value: {fileID: 11400000, guid: 1579dfb62939acf42b67dadc9786f39e, type: 2}
+    - rid: 2541323820743786565
+      type: {class: 'Constant`1[[Quests.QuestDefinition, Game]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Value: {fileID: 11400000, guid: 43da5a6f2196f834491fc7daf3d1a4cb, type: 2}
+    - rid: 2541323820743786566
+      type: {class: 'Constant`1[[Quests.QuestDefinition, Game]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Value: {fileID: 11400000, guid: d25587919e7db98438697dd20cf70f6b, type: 2}
