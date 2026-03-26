@@ -544,18 +544,6 @@ namespace Dev
             set => Config.ProjectileHitRadius = value;
         }
 
-        public static float CharacterScaleWidth
-        {
-            get => Config.CharacterScaleWidth;
-            set => Config.CharacterScaleWidth = value;
-        }
-
-        public static float CharacterScaleHeight
-        {
-            get => Config.CharacterScaleHeight;
-            set => Config.CharacterScaleHeight = value;
-        }
-
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {

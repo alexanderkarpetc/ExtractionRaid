@@ -18,14 +18,14 @@ MonoBehaviour:
   ProjectileSpeedMultiplier: 5.5
   FireRateMultiplier: 1
   NoRecoil: 0
-  RecoilMultiplier: 0.5
+  RecoilMultiplier: 3
   RecoilForwardMultiplier: 1
   RecoilSideMultiplier: 1
-  RecoilRecoveryMultiplier: 1
-  AimSplitEnabled: 0
+  RecoilRecoveryMultiplier: 3
+  AimSplitEnabled: 1
   AimFollowMultiplier: 1
   MoveSpeedMultiplier: 1
-  FOVEnabled: 1
+  FOVEnabled: 0
   FOVNearRadius: 3.5
   FOVFarRadius: 33.1
   FOVAngle: 95
@@ -49,6 +49,20 @@ MonoBehaviour:
   CrosshairNormalColor: {r: 0.2, g: 1, b: 0.3, a: 0.9}
   CrosshairWarningColor: {r: 1, g: 0.25, b: 0.2, a: 0.9}
   CrosshairBloomColor: {r: 1, g: 1, b: 1, a: 0.95}
+  HitMarkerScale: 1.49
+  HitDuration: 0.3
+  KillDuration: 0.5
+  HitLineLength: 14
+  KillLineLength: 18
+  HitGapStart: 8
+  HitGapExpand: 14
+  HitMarkerThickness: 4
+  HitColor: {r: 1, g: 1, b: 1, a: 1}
+  KillColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  HeadshotOuterScale: 1.25
+  HeadshotOuterExpandMul: 1.62
+  HeadshotDuration: 0.5
+  HeadshotColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   AdsTransitionTime: 0.18
   AdsMoveSpeedMultiplier: 0.7
   AdsAimFollowMultiplier: 1.5
@@ -85,5 +99,5 @@ MonoBehaviour:
   AimUpHeightRatio: 0.833
   ProjectileHitRadius: 0
   CharacterScaleWidth: 1
-  CharacterScaleHeight: 0.669
+  CharacterScaleHeight: 1
   ForceBleedPlayer: 0

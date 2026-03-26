@@ -136,8 +136,6 @@ namespace Dev
         public bool ConvergenceAimUp = true;
         public float AimUpHeightRatio = 0.85f;
         public float ProjectileHitRadius = 0.15f;
-        public float CharacterScaleWidth = 1f;
-        public float CharacterScaleHeight = 1f;
 
         // ── Status Effects ──────────────────────────────────
         [Header("Status Effects")]

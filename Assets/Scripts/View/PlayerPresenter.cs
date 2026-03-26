@@ -92,9 +92,6 @@ namespace View
             if (_playerView != null && session.RaidState.PlayerEntity != null)
             {
                 _playerView.SyncFromState(session.RaidState.PlayerEntity, session.RaidState.ElapsedTime);
-                var cw = Dev.DevCheats.CharacterScaleWidth;
-                var ch = Dev.DevCheats.CharacterScaleHeight;
-                _playerView.transform.localScale = new Vector3(cw, ch, cw);
                 _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
             }
         }

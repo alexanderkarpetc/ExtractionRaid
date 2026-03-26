@@ -297,15 +297,6 @@ namespace Editor
                     "hits, compensates for remaining parallax error.",
                     MessageType.None);
                 DevCheats.ProjectileHitRadius = EditorGUILayout.Slider("Hit Radius", DevCheats.ProjectileHitRadius, 0f, 0.5f);
-
-                EditorGUILayout.Space(8);
-                EditorGUILayout.LabelField("Character Scale", EditorStyles.miniLabel);
-                EditorGUILayout.HelpBox(
-                    "Scales all characters. Lower height = less parallax overall.\n" +
-                    "Width affects hitbox size.",
-                    MessageType.None);
-                DevCheats.CharacterScaleWidth  = EditorGUILayout.Slider("Width", DevCheats.CharacterScaleWidth, 0.3f, 2f);
-                DevCheats.CharacterScaleHeight = EditorGUILayout.Slider("Height", DevCheats.CharacterScaleHeight, 0.3f, 2f);
             });
 
             EditorGUILayout.Space(8);
