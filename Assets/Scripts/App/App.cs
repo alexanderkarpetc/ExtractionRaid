@@ -1,6 +1,7 @@
 using Adapters;
 using Cysharp.Threading.Tasks;
 using Quests;
+using Save;
 using Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -66,6 +67,11 @@ namespace App
             }
 
             _instance = new App();
+
+            var save = SaveManager.Load();
+            if (save != null)
+                _instance.Player.LoadFrom(save);
+
             Debug.Log("[App] Initialized.");
         }
 
@@ -85,6 +91,7 @@ namespace App
             if (cam != null)
                 _inputAdapter.SetCamera(cam);
 
+            SavePlayer();
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
 
@@ -125,6 +132,7 @@ namespace App
 
             RaidSession.End();
             IsInHideout = false;
+            SavePlayer();
             Debug.Log("[App] Raid ended.");
             RaidSession = null;
         }
@@ -144,6 +152,11 @@ namespace App
             _groundItemPresenter.LateTick(RaidSession);
             _corpsePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
+        }
+
+        void SavePlayer()
+        {
+            SaveManager.Save(Player.ToSaveData());
         }
 
         internal static void Shutdown()

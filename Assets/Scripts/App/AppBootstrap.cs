@@ -63,6 +63,12 @@ namespace App
             App.Instance.LateTick();
         }
 
+        void OnApplicationQuit()
+        {
+            if (_isOwner)
+                App.Shutdown();
+        }
+
         void OnDestroy()
         {
             if (_isOwner)
