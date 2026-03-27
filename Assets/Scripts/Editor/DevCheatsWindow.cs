@@ -17,6 +17,7 @@ namespace Editor
         static bool _foldADS;
         static bool _foldHealthBar;
         static bool _foldParallax;
+        static bool _foldDamageNumbers;
 
         Vector2 _scroll;
         SerializedObject _so;
@@ -40,6 +41,7 @@ namespace Editor
             _foldADS       = EditorPrefs.GetBool("DevCheats_foldADS", false);
             _foldHealthBar = EditorPrefs.GetBool("DevCheats_foldHealthBar", false);
             _foldParallax  = EditorPrefs.GetBool("DevCheats_foldParallax", false);
+            _foldDamageNumbers = EditorPrefs.GetBool("DevCheats_foldDamageNumbers", false);
 
             BindConfig();
         }
@@ -63,6 +65,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldADS", _foldADS);
             EditorPrefs.SetBool("DevCheats_foldHealthBar", _foldHealthBar);
             EditorPrefs.SetBool("DevCheats_foldParallax", _foldParallax);
+            EditorPrefs.SetBool("DevCheats_foldDamageNumbers", _foldDamageNumbers);
         }
 
         void MarkDirty()
@@ -312,6 +315,41 @@ namespace Editor
                 DevCheats.ProjectileHitRadius = EditorGUILayout.Slider("Hit Radius", DevCheats.ProjectileHitRadius, 0f, 0.5f);
             });
 
+            // ── Damage Numbers ─────────────────────────────────
+            bool dmgEnabled = DevCheats.DmgNumEnabled;
+            DrawToggleFoldout(ref _foldDamageNumbers, ref dmgEnabled, "Damage Numbers", () =>
+            {
+                EditorGUILayout.HelpBox(
+                    "Floating numbers on hit. Pop animation + selectable trajectory.\n" +
+                    "0=FloatUp (straight up), 1=Knockback (opposite to bullet),\n" +
+                    "2=ArcGravity (knockback + gravity), 3=Scatter (random directions).",
+                    MessageType.None);
+                DevCheats.DmgNumTrajectoryMode = EditorGUILayout.IntSlider("Trajectory Mode", DevCheats.DmgNumTrajectoryMode, 0, 3);
+                string[] modeNames = { "Float Up", "Knockback", "Arc + Gravity", "Scatter" };
+                int m = Mathf.Clamp(DevCheats.DmgNumTrajectoryMode, 0, 3);
+                EditorGUILayout.LabelField("  → " + modeNames[m], EditorStyles.miniLabel);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Timing", EditorStyles.miniLabel);
+                DevCheats.DmgNumDuration        = EditorGUILayout.Slider("Duration (sec)", DevCheats.DmgNumDuration, 0.3f, 3f);
+                DevCheats.DmgNumFlySpeed        = EditorGUILayout.Slider("Fly Speed (px/s)", DevCheats.DmgNumFlySpeed, 10f, 300f);
+                DevCheats.DmgNumGravityAccel    = EditorGUILayout.Slider("Gravity (Arc mode)", DevCheats.DmgNumGravityAccel, 0f, 500f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Pop Animation", EditorStyles.miniLabel);
+                DevCheats.DmgNumPopDuration     = EditorGUILayout.Slider("Pop Duration", DevCheats.DmgNumPopDuration, 0.05f, 0.5f);
+                DevCheats.DmgNumPopOvershoot    = EditorGUILayout.Slider("Pop Overshoot", DevCheats.DmgNumPopOvershoot, 1f, 2f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Size", EditorStyles.miniLabel);
+                DevCheats.DmgNumBaseFontSize    = EditorGUILayout.Slider("Base Font Size", DevCheats.DmgNumBaseFontSize, 8f, 40f);
+                DevCheats.DmgNumDamageScaleFactor = EditorGUILayout.Slider("Damage Scale Factor", DevCheats.DmgNumDamageScaleFactor, 1f, 50f);
+                DevCheats.DmgNumRandomSpread    = EditorGUILayout.Slider("Random Spread (deg)", DevCheats.DmgNumRandomSpread, 0f, 90f);
+                EditorGUILayout.Space(4);
+                EditorGUILayout.LabelField("Colors", EditorStyles.miniLabel);
+                DevCheats.DmgNumNormalColor     = EditorGUILayout.ColorField("Normal", DevCheats.DmgNumNormalColor);
+                DevCheats.DmgNumHeadshotColor   = EditorGUILayout.ColorField("Headshot", DevCheats.DmgNumHeadshotColor);
+                DevCheats.DmgNumKillColor       = EditorGUILayout.ColorField("Kill", DevCheats.DmgNumKillColor);
+            });
+            DevCheats.DmgNumEnabled = dmgEnabled;
+
             EditorGUILayout.Space(8);
 
             // ── Status Effects ───────────────────────────────
@@ -517,6 +555,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsADSSection>(so, "_ads", folder, "ADS");
             CreateSectionIfMissing<DevCheatsHealthBarSection>(so, "_healthBar", folder, "HealthBar");
             CreateSectionIfMissing<DevCheatsParallaxSection>(so, "_parallax", folder, "Parallax");
+            CreateSectionIfMissing<DevCheatsDamageNumberSection>(so, "_damageNumbers", folder, "DamageNumbers");
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
 
             so.ApplyModifiedPropertiesWithoutUndo();

@@ -183,5 +183,7 @@ namespace Tests.EditMode.Fakes
             LootableDespawnedCalled = true;
             LootableDespawnedId = id;
         }
+
+        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir) { }
     }
 }

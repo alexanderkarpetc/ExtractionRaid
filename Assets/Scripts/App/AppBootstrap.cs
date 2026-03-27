@@ -25,6 +25,7 @@ namespace App
             gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<AimCursorOverlay>();
+            gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftingUI>();
             gameObject.AddComponent<StaminaBarOverlay>();

@@ -39,5 +39,7 @@ namespace Adapters
 
         void LootableSpawned(EId id, Vector3 position, string typeId);
         void LootableDespawned(EId id);
+
+        void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir);
     }
 }

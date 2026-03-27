@@ -51,6 +51,8 @@ namespace Systems
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
                     context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot);
+                    context.Events.DamageNumberSpawned(hit.HitPoint, damage, isHeadshot, !health.IsAlive,
+                        projectile != null ? projectile.Direction : Vector3.forward);
                 }
 
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)

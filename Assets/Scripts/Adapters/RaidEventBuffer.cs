@@ -35,6 +35,7 @@ namespace Adapters
         StatusEffectRemoved,
         LootableSpawned,
         LootableDespawned,
+        DamageNumber,
     }
 
     public struct RaidEvent
@@ -290,6 +291,20 @@ namespace Adapters
         public void LootableDespawned(EId id)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.LootableDespawned, Id = id });
+        }
+
+        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.DamageNumber,
+                Position = worldPos,
+                Damage = damage,
+                // Pack flags into CurrentHp/MaxHp to free Direction for bullet dir
+                CurrentHp = isHeadshot ? 1f : 0f,
+                MaxHp = isKill ? 1f : 0f,
+                Direction = bulletDir,
+            });
         }
 
         public void Clear()
