@@ -67,8 +67,21 @@ namespace Editor
 
         void MarkDirty()
         {
-            if (_config != null)
-                EditorUtility.SetDirty(_config);
+            if (_config == null) return;
+            // Mark all section assets dirty so changes persist independently
+            EditorUtility.SetDirty(_config);
+            if (_config.Cheats) EditorUtility.SetDirty(_config.Cheats);
+            if (_config.Weapon) EditorUtility.SetDirty(_config.Weapon);
+            if (_config.Recoil) EditorUtility.SetDirty(_config.Recoil);
+            if (_config.Aim) EditorUtility.SetDirty(_config.Aim);
+            if (_config.Player) EditorUtility.SetDirty(_config.Player);
+            if (_config.FOV) EditorUtility.SetDirty(_config.FOV);
+            if (_config.Fog) EditorUtility.SetDirty(_config.Fog);
+            if (_config.Crosshair) EditorUtility.SetDirty(_config.Crosshair);
+            if (_config.ADS) EditorUtility.SetDirty(_config.ADS);
+            if (_config.HealthBar) EditorUtility.SetDirty(_config.HealthBar);
+            if (_config.Parallax) EditorUtility.SetDirty(_config.Parallax);
+            if (_config.StatusEffects) EditorUtility.SetDirty(_config.StatusEffects);
         }
 
         void OnGUI()
@@ -319,18 +332,216 @@ namespace Editor
 
         void CreateConfigAsset()
         {
-            const string folder = "Assets/Resources";
-            if (!AssetDatabase.IsValidFolder(folder))
+            const string folder = "Assets/Resources/Configs";
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
                 AssetDatabase.CreateFolder("Assets", "Resources");
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder("Assets/Resources", "Configs");
 
             var asset = ScriptableObject.CreateInstance<DevCheatsConfig>();
             AssetDatabase.CreateAsset(asset, folder + "/DevCheatsConfig.asset");
+            CreateSectionAssets(asset);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            // Re-bind to the newly created asset
             BindConfig();
-            Debug.Log("[DevCheats] Created config asset at " + folder + "/DevCheatsConfig.asset");
+            Debug.Log("[DevCheats] Created config + section assets");
+        }
+
+        [MenuItem("Window/Dev Cheats — Create Section Assets")]
+        static void CreateSectionAssetsMenu()
+        {
+            var config = DevCheats.Config;
+            if (config == null)
+            {
+                Debug.LogError("[DevCheats] No DevCheatsConfig found. Create it first.");
+                return;
+            }
+            CreateSectionAssets(config);
+            ApplyMigratedValues(config);
+            EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[DevCheats] Section assets created with migrated values.");
+        }
+
+        /// <summary>Apply values from the old monolithic DevCheatsConfig.asset (pre-refactor).</summary>
+        static void ApplyMigratedValues(DevCheatsConfig config)
+        {
+            // Cheats
+            config.Cheats.GodMode = false;
+            config.Cheats.InfiniteAmmo = true;
+            EditorUtility.SetDirty(config.Cheats);
+
+            // Weapon
+            config.Weapon.DamageMultiplier = 1f;
+            config.Weapon.ProjectileSpeedMultiplier = 5.5f;
+            config.Weapon.FireRateMultiplier = 1f;
+            EditorUtility.SetDirty(config.Weapon);
+
+            // Recoil
+            config.Recoil.NoRecoil = false;
+            config.Recoil.RecoilMultiplier = 3f;
+            config.Recoil.RecoilForwardMultiplier = 1f;
+            config.Recoil.RecoilSideMultiplier = 1f;
+            config.Recoil.RecoilRecoveryMultiplier = 3f;
+            EditorUtility.SetDirty(config.Recoil);
+
+            // Aim
+            config.Aim.AimSplitEnabled = true;
+            config.Aim.AimFollowMultiplier = 1f;
+            EditorUtility.SetDirty(config.Aim);
+
+            // Player
+            config.Player.MoveSpeedMultiplier = 1f;
+            EditorUtility.SetDirty(config.Player);
+
+            // FOV
+            config.FOV.FOVEnabled = true;
+            config.FOV.FOVNearRadius = 3.5f;
+            config.FOV.FOVFarRadius = 33.1f;
+            config.FOV.FOVAngle = 95f;
+            config.FOV.ForceShowAllBots = false;
+            config.FOV.FOVOcclusionEnabled = true;
+            EditorUtility.SetDirty(config.FOV);
+
+            // Fog
+            config.Fog.FogOfWarEnabled = true;
+            config.Fog.FogBlurRadius = 3.31f;
+            config.Fog.FogBlurIterations = 3;
+            config.Fog.FogIntensity = 0.6f;
+            config.Fog.FogDesaturation = 0f;
+            config.Fog.FogColor = new Color(0.02f, 0.02f, 0.05f, 1f);
+            config.Fog.FoWRTScale = 256;
+            config.Fog.FOVRayStep = 2f;
+            config.Fog.FogTemporalBlend = 0.2f;
+            EditorUtility.SetDirty(config.Fog);
+
+            // Crosshair
+            config.Crosshair.CrosshairEnabled = true;
+            config.Crosshair.CrosshairLineLength = 24f;
+            config.Crosshair.CrosshairLineThickness = 6f;
+            config.Crosshair.CrosshairBaseGap = 15f;
+            config.Crosshair.CrosshairCenterDotSize = 9f;
+            config.Crosshair.CrosshairBloomExtraGap = 30f;
+            config.Crosshair.CrosshairNormalColor = new Color(0.2f, 1f, 0.3f, 0.9f);
+            config.Crosshair.CrosshairWarningColor = new Color(1f, 0.25f, 0.2f, 0.9f);
+            config.Crosshair.CrosshairBloomColor = new Color(1f, 1f, 1f, 0.95f);
+            config.Crosshair.HitMarkerScale = 1.49f;
+            config.Crosshair.HitDuration = 0.3f;
+            config.Crosshair.KillDuration = 0.5f;
+            config.Crosshair.HitLineLength = 14f;
+            config.Crosshair.KillLineLength = 18f;
+            config.Crosshair.HitGapStart = 8f;
+            config.Crosshair.HitGapExpand = 14f;
+            config.Crosshair.HitMarkerThickness = 4f;
+            config.Crosshair.HitColor = Color.white;
+            config.Crosshair.KillColor = new Color(1f, 0.15f, 0.15f, 1f);
+            config.Crosshair.HeadshotOuterScale = 1.25f;
+            config.Crosshair.HeadshotOuterExpandMul = 1.62f;
+            config.Crosshair.HeadshotDuration = 0.5f;
+            config.Crosshair.HeadshotColor = new Color(1f, 0.85f, 0.2f, 1f);
+            EditorUtility.SetDirty(config.Crosshair);
+
+            // ADS
+            config.ADS.AdsTransitionTime = 0.18f;
+            config.ADS.AdsMoveSpeedMultiplier = 0.7f;
+            config.ADS.AdsAimFollowMultiplier = 1.5f;
+            config.ADS.AdsRecoilMultiplier = 0.6f;
+            config.ADS.AdsRecoilRecoveryMultiplier = 1.5f;
+            config.ADS.AdsZoomFactor = 0.947f;
+            config.ADS.AdsCursorInfluenceMultiplier = 2.36f;
+            config.ADS.AdsBaseGap = 10.4f;
+            config.ADS.AdsBloomExtraGap = 7.8f;
+            config.ADS.AdsVignetteIntensity = 0.471f;
+            EditorUtility.SetDirty(config.ADS);
+
+            // Health Bar
+            config.HealthBar.HBarWidth = 1.4f;
+            config.HealthBar.HBarHeight = 0.181f;
+            config.HealthBar.HBarOffsetY = 2.48f;
+            config.HealthBar.HBarBorderSize = 0.1182f;
+            config.HealthBar.HBarTrailDelay = 0.25f;
+            config.HealthBar.HBarTrailSpeed = 2f;
+            config.HealthBar.HBarFlashDuration = 0.62f;
+            config.HealthBar.HBarFlashExpandX = 1f;
+            config.HealthBar.HBarFlashExpandY = 2f;
+            config.HealthBar.HBarFlashPower = 6.73f;
+            config.HealthBar.HBarShakeIntensity = 0.1f;
+            config.HealthBar.HBarShakeDuration = 0.25f;
+            config.HealthBar.HBarShakeFrequency = 19.5f;
+            config.HealthBar.HBarHpPerSegment = 5f;
+            config.HealthBar.HBarSegmentLineWidth = 0.012f;
+            config.HealthBar.HBarSegmentLineColor = new Color(0f, 0f, 0f, 0.4f);
+            config.HealthBar.HBarTrailColor = Color.white;
+            config.HealthBar.HBarFlashColor = Color.white;
+            config.HealthBar.HBarBgColor = new Color(0.12f, 0.12f, 0.12f, 0.85f);
+            EditorUtility.SetDirty(config.HealthBar);
+
+            // Parallax
+            config.Parallax.ProjectileSpawnHeight = 0.606f;
+            config.Parallax.ParallaxCorrection = true;
+            config.Parallax.ConvergenceBlend = 0.317f;
+            config.Parallax.ConvergenceAimUp = true;
+            config.Parallax.AimUpHeightRatio = 0.833f;
+            config.Parallax.ProjectileHitRadius = 0f;
+            EditorUtility.SetDirty(config.Parallax);
+
+            // Status Effects
+            config.StatusEffects.ForceBleedPlayer = false;
+            EditorUtility.SetDirty(config.StatusEffects);
+        }
+
+        static void CreateSectionAssets(DevCheatsConfig config)
+        {
+            const string folder = "Assets/Resources/Configs/DevCheats";
+            if (!AssetDatabase.IsValidFolder(folder))
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                    AssetDatabase.CreateFolder("Assets", "Resources");
+                if (!AssetDatabase.IsValidFolder("Assets/Resources/Configs"))
+                    AssetDatabase.CreateFolder("Assets/Resources", "Configs");
+                AssetDatabase.CreateFolder("Assets/Resources/Configs", "DevCheats");
+            }
+
+            // Use SerializedObject to set references on config
+            var so = new SerializedObject(config);
+
+            CreateSectionIfMissing<DevCheatsCheatsSection>(so, "_cheats", folder, "Cheats");
+            CreateSectionIfMissing<DevCheatsWeaponSection>(so, "_weapon", folder, "Weapon");
+            CreateSectionIfMissing<DevCheatsRecoilSection>(so, "_recoil", folder, "Recoil");
+            CreateSectionIfMissing<DevCheatsAimSection>(so, "_aim", folder, "Aim");
+            CreateSectionIfMissing<DevCheatsPlayerSection>(so, "_player", folder, "Player");
+            CreateSectionIfMissing<DevCheatsFOVSection>(so, "_fov", folder, "FOV");
+            CreateSectionIfMissing<DevCheatsFogSection>(so, "_fog", folder, "Fog");
+            CreateSectionIfMissing<DevCheatsCrosshairSection>(so, "_crosshair", folder, "Crosshair");
+            CreateSectionIfMissing<DevCheatsADSSection>(so, "_ads", folder, "ADS");
+            CreateSectionIfMissing<DevCheatsHealthBarSection>(so, "_healthBar", folder, "HealthBar");
+            CreateSectionIfMissing<DevCheatsParallaxSection>(so, "_parallax", folder, "Parallax");
+            CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
+
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void CreateSectionIfMissing<T>(SerializedObject so, string propName, string folder, string assetName) where T : ScriptableObject
+        {
+            var prop = so.FindProperty(propName);
+            var path = $"{folder}/{assetName}.asset";
+
+            // Check if a persisted asset already exists on disk
+            var existing = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (existing != null)
+            {
+                // Always re-assign (in case the reference was lost or replaced by in-memory fallback)
+                prop.objectReferenceValue = existing;
+                Debug.Log($"[DevCheats] Linked existing {path}");
+                return;
+            }
+
+            // Create new asset
+            var instance = ScriptableObject.CreateInstance<T>();
+            AssetDatabase.CreateAsset(instance, path);
+            prop.objectReferenceValue = instance;
+            Debug.Log($"[DevCheats] Created {path}");
         }
 
         /// <summary>Collapsible foldout group.</summary>

@@ -4,7 +4,7 @@ namespace Dev
 {
     /// <summary>
     /// Thin static accessor over <see cref="DevCheatsConfig"/> ScriptableObject.
-    /// All 16 call-sites keep using DevCheats.X — zero refactor needed.
+    /// All call-sites keep using DevCheats.X — zero refactor needed.
     /// The SO asset lives at Resources/DevCheatsConfig.
     /// </summary>
     public static class DevCheats
@@ -16,7 +16,7 @@ namespace Dev
             get
             {
                 if (_cfg == null)
-                    _cfg = Resources.Load<DevCheatsConfig>("DevCheatsConfig");
+                    _cfg = Resources.Load<DevCheatsConfig>("Configs/DevCheatsConfig");
 #if UNITY_EDITOR
                 // Fallback: create in-memory instance so editor never NPEs
                 if (_cfg == null)
@@ -32,523 +32,429 @@ namespace Dev
         // ── Cheats ──────────────────────────────────────────
         public static bool GodMode
         {
-            get => Config.GodMode;
-            set => Config.GodMode = value;
+            get => Config.Cheats.GodMode;
+            set => Config.Cheats.GodMode = value;
         }
 
         public static bool InfiniteAmmo
         {
-            get => Config.InfiniteAmmo;
-            set => Config.InfiniteAmmo = value;
+            get => Config.Cheats.InfiniteAmmo;
+            set => Config.Cheats.InfiniteAmmo = value;
         }
 
         // ── Weapon ──────────────────────────────────────────
         public static float DamageMultiplier
         {
-            get => Config.DamageMultiplier;
-            set => Config.DamageMultiplier = value;
+            get => Config.Weapon.DamageMultiplier;
+            set => Config.Weapon.DamageMultiplier = value;
         }
 
         public static float ProjectileSpeedMultiplier
         {
-            get => Config.ProjectileSpeedMultiplier;
-            set => Config.ProjectileSpeedMultiplier = value;
+            get => Config.Weapon.ProjectileSpeedMultiplier;
+            set => Config.Weapon.ProjectileSpeedMultiplier = value;
         }
 
         public static float FireRateMultiplier
         {
-            get => Config.FireRateMultiplier;
-            set => Config.FireRateMultiplier = value;
+            get => Config.Weapon.FireRateMultiplier;
+            set => Config.Weapon.FireRateMultiplier = value;
         }
 
         // ── Recoil ──────────────────────────────────────────
         public static bool NoRecoil
         {
-            get => Config.NoRecoil;
-            set => Config.NoRecoil = value;
+            get => Config.Recoil.NoRecoil;
+            set => Config.Recoil.NoRecoil = value;
         }
 
         public static float RecoilMultiplier
         {
-            get => Config.RecoilMultiplier;
-            set => Config.RecoilMultiplier = value;
+            get => Config.Recoil.RecoilMultiplier;
+            set => Config.Recoil.RecoilMultiplier = value;
         }
 
         public static float RecoilForwardMultiplier
         {
-            get => Config.RecoilForwardMultiplier;
-            set => Config.RecoilForwardMultiplier = value;
+            get => Config.Recoil.RecoilForwardMultiplier;
+            set => Config.Recoil.RecoilForwardMultiplier = value;
         }
 
         public static float RecoilSideMultiplier
         {
-            get => Config.RecoilSideMultiplier;
-            set => Config.RecoilSideMultiplier = value;
+            get => Config.Recoil.RecoilSideMultiplier;
+            set => Config.Recoil.RecoilSideMultiplier = value;
         }
 
         public static float RecoilRecoveryMultiplier
         {
-            get => Config.RecoilRecoveryMultiplier;
-            set => Config.RecoilRecoveryMultiplier = value;
+            get => Config.Recoil.RecoilRecoveryMultiplier;
+            set => Config.Recoil.RecoilRecoveryMultiplier = value;
         }
 
         // ── Aim Split ───────────────────────────────────────
         public static bool AimSplitEnabled
         {
-            get => Config.AimSplitEnabled;
-            set => Config.AimSplitEnabled = value;
+            get => Config.Aim.AimSplitEnabled;
+            set => Config.Aim.AimSplitEnabled = value;
         }
 
         public static float AimFollowMultiplier
         {
-            get => Config.AimFollowMultiplier;
-            set => Config.AimFollowMultiplier = value;
+            get => Config.Aim.AimFollowMultiplier;
+            set => Config.Aim.AimFollowMultiplier = value;
         }
 
         // ── Player ──────────────────────────────────────────
         public static float MoveSpeedMultiplier
         {
-            get => Config.MoveSpeedMultiplier;
-            set => Config.MoveSpeedMultiplier = value;
+            get => Config.Player.MoveSpeedMultiplier;
+            set => Config.Player.MoveSpeedMultiplier = value;
         }
 
         // ── FOV ─────────────────────────────────────────────
         public static bool FOVEnabled
         {
-            get => Config.FOVEnabled;
-            set => Config.FOVEnabled = value;
+            get => Config.FOV.FOVEnabled;
+            set => Config.FOV.FOVEnabled = value;
         }
 
         public static float FOVNearRadius
         {
-            get => Config.FOVNearRadius;
-            set => Config.FOVNearRadius = value;
+            get => Config.FOV.FOVNearRadius;
+            set => Config.FOV.FOVNearRadius = value;
         }
 
         public static float FOVFarRadius
         {
-            get => Config.FOVFarRadius;
-            set => Config.FOVFarRadius = value;
+            get => Config.FOV.FOVFarRadius;
+            set => Config.FOV.FOVFarRadius = value;
         }
 
         public static float FOVAngle
         {
-            get => Config.FOVAngle;
-            set => Config.FOVAngle = value;
+            get => Config.FOV.FOVAngle;
+            set => Config.FOV.FOVAngle = value;
         }
 
         public static bool ForceShowAllBots
         {
-            get => Config.ForceShowAllBots;
-            set => Config.ForceShowAllBots = value;
+            get => Config.FOV.ForceShowAllBots;
+            set => Config.FOV.ForceShowAllBots = value;
         }
 
         public static bool FOVOcclusionEnabled
         {
-            get => Config.FOVOcclusionEnabled;
-            set => Config.FOVOcclusionEnabled = value;
+            get => Config.FOV.FOVOcclusionEnabled;
+            set => Config.FOV.FOVOcclusionEnabled = value;
         }
 
         // ── Fog of War ──────────────────────────────────────
         public static bool FogOfWarEnabled
         {
-            get => Config.FogOfWarEnabled;
-            set => Config.FogOfWarEnabled = value;
+            get => Config.Fog.FogOfWarEnabled;
+            set => Config.Fog.FogOfWarEnabled = value;
         }
 
         public static float FogBlurRadius
         {
-            get => Config.FogBlurRadius;
-            set => Config.FogBlurRadius = value;
+            get => Config.Fog.FogBlurRadius;
+            set => Config.Fog.FogBlurRadius = value;
         }
 
         public static int FogBlurIterations
         {
-            get => Config.FogBlurIterations;
-            set => Config.FogBlurIterations = value;
+            get => Config.Fog.FogBlurIterations;
+            set => Config.Fog.FogBlurIterations = value;
         }
 
         public static float FogIntensity
         {
-            get => Config.FogIntensity;
-            set => Config.FogIntensity = value;
+            get => Config.Fog.FogIntensity;
+            set => Config.Fog.FogIntensity = value;
         }
 
         public static float FogDesaturation
         {
-            get => Config.FogDesaturation;
-            set => Config.FogDesaturation = value;
+            get => Config.Fog.FogDesaturation;
+            set => Config.Fog.FogDesaturation = value;
         }
 
         public static Color FogColor
         {
-            get => Config.FogColor;
-            set => Config.FogColor = value;
+            get => Config.Fog.FogColor;
+            set => Config.Fog.FogColor = value;
         }
 
         public static int FoWRTScale
         {
-            get => Config.FoWRTScale;
-            set => Config.FoWRTScale = value;
+            get => Config.Fog.FoWRTScale;
+            set => Config.Fog.FoWRTScale = value;
         }
 
         public static float FOVRayStep
         {
-            get => Config.FOVRayStep;
-            set => Config.FOVRayStep = value;
+            get => Config.Fog.FOVRayStep;
+            set => Config.Fog.FOVRayStep = value;
         }
 
         public static float FogTemporalBlend
         {
-            get => Config.FogTemporalBlend;
-            set => Config.FogTemporalBlend = value;
+            get => Config.Fog.FogTemporalBlend;
+            set => Config.Fog.FogTemporalBlend = value;
         }
 
         // ── Crosshair ─────────────────────────────────────
         public static bool CrosshairEnabled
         {
-            get => Config.CrosshairEnabled;
-            set => Config.CrosshairEnabled = value;
+            get => Config.Crosshair.CrosshairEnabled;
+            set => Config.Crosshair.CrosshairEnabled = value;
         }
 
         public static float CrosshairLineLength
         {
-            get => Config.CrosshairLineLength;
-            set => Config.CrosshairLineLength = value;
+            get => Config.Crosshair.CrosshairLineLength;
+            set => Config.Crosshair.CrosshairLineLength = value;
         }
 
         public static float CrosshairLineThickness
         {
-            get => Config.CrosshairLineThickness;
-            set => Config.CrosshairLineThickness = value;
+            get => Config.Crosshair.CrosshairLineThickness;
+            set => Config.Crosshair.CrosshairLineThickness = value;
         }
 
         public static float CrosshairBaseGap
         {
-            get => Config.CrosshairBaseGap;
-            set => Config.CrosshairBaseGap = value;
+            get => Config.Crosshair.CrosshairBaseGap;
+            set => Config.Crosshair.CrosshairBaseGap = value;
         }
 
         public static float CrosshairCenterDotSize
         {
-            get => Config.CrosshairCenterDotSize;
-            set => Config.CrosshairCenterDotSize = value;
+            get => Config.Crosshair.CrosshairCenterDotSize;
+            set => Config.Crosshair.CrosshairCenterDotSize = value;
         }
 
         public static float CrosshairBloomExtraGap
         {
-            get => Config.CrosshairBloomExtraGap;
-            set => Config.CrosshairBloomExtraGap = value;
+            get => Config.Crosshair.CrosshairBloomExtraGap;
+            set => Config.Crosshair.CrosshairBloomExtraGap = value;
         }
 
         public static Color CrosshairNormalColor
         {
-            get => Config.CrosshairNormalColor;
-            set => Config.CrosshairNormalColor = value;
+            get => Config.Crosshair.CrosshairNormalColor;
+            set => Config.Crosshair.CrosshairNormalColor = value;
         }
 
         public static Color CrosshairWarningColor
         {
-            get => Config.CrosshairWarningColor;
-            set => Config.CrosshairWarningColor = value;
+            get => Config.Crosshair.CrosshairWarningColor;
+            set => Config.Crosshair.CrosshairWarningColor = value;
         }
 
         public static Color CrosshairBloomColor
         {
-            get => Config.CrosshairBloomColor;
-            set => Config.CrosshairBloomColor = value;
+            get => Config.Crosshair.CrosshairBloomColor;
+            set => Config.Crosshair.CrosshairBloomColor = value;
         }
 
         // ── Hit Markers ──────────────────────────────────
         public static float HitMarkerScale
         {
-            get => Config.HitMarkerScale;
-            set => Config.HitMarkerScale = value;
+            get => Config.Crosshair.HitMarkerScale;
+            set => Config.Crosshair.HitMarkerScale = value;
         }
         public static float HitDuration
         {
-            get => Config.HitDuration;
-            set => Config.HitDuration = value;
+            get => Config.Crosshair.HitDuration;
+            set => Config.Crosshair.HitDuration = value;
         }
         public static float KillDuration
         {
-            get => Config.KillDuration;
-            set => Config.KillDuration = value;
+            get => Config.Crosshair.KillDuration;
+            set => Config.Crosshair.KillDuration = value;
         }
         public static float HitLineLength
         {
-            get => Config.HitLineLength;
-            set => Config.HitLineLength = value;
+            get => Config.Crosshair.HitLineLength;
+            set => Config.Crosshair.HitLineLength = value;
         }
         public static float KillLineLength
         {
-            get => Config.KillLineLength;
-            set => Config.KillLineLength = value;
+            get => Config.Crosshair.KillLineLength;
+            set => Config.Crosshair.KillLineLength = value;
         }
         public static float HitGapStart
         {
-            get => Config.HitGapStart;
-            set => Config.HitGapStart = value;
+            get => Config.Crosshair.HitGapStart;
+            set => Config.Crosshair.HitGapStart = value;
         }
         public static float HitGapExpand
         {
-            get => Config.HitGapExpand;
-            set => Config.HitGapExpand = value;
+            get => Config.Crosshair.HitGapExpand;
+            set => Config.Crosshair.HitGapExpand = value;
         }
         public static float HitMarkerThickness
         {
-            get => Config.HitMarkerThickness;
-            set => Config.HitMarkerThickness = value;
+            get => Config.Crosshair.HitMarkerThickness;
+            set => Config.Crosshair.HitMarkerThickness = value;
         }
         public static Color HitColor
         {
-            get => Config.HitColor;
-            set => Config.HitColor = value;
+            get => Config.Crosshair.HitColor;
+            set => Config.Crosshair.HitColor = value;
         }
         public static Color KillColor
         {
-            get => Config.KillColor;
-            set => Config.KillColor = value;
+            get => Config.Crosshair.KillColor;
+            set => Config.Crosshair.KillColor = value;
         }
         public static float HeadshotOuterScale
         {
-            get => Config.HeadshotOuterScale;
-            set => Config.HeadshotOuterScale = value;
+            get => Config.Crosshair.HeadshotOuterScale;
+            set => Config.Crosshair.HeadshotOuterScale = value;
         }
         public static float HeadshotOuterExpandMul
         {
-            get => Config.HeadshotOuterExpandMul;
-            set => Config.HeadshotOuterExpandMul = value;
+            get => Config.Crosshair.HeadshotOuterExpandMul;
+            set => Config.Crosshair.HeadshotOuterExpandMul = value;
         }
         public static float HeadshotDuration
         {
-            get => Config.HeadshotDuration;
-            set => Config.HeadshotDuration = value;
+            get => Config.Crosshair.HeadshotDuration;
+            set => Config.Crosshair.HeadshotDuration = value;
         }
         public static Color HeadshotColor
         {
-            get => Config.HeadshotColor;
-            set => Config.HeadshotColor = value;
+            get => Config.Crosshair.HeadshotColor;
+            set => Config.Crosshair.HeadshotColor = value;
         }
 
         // ── ADS ───────────────────────────────────────────
         public static float AdsTransitionTime
         {
-            get => Config.AdsTransitionTime;
-            set => Config.AdsTransitionTime = value;
+            get => Config.ADS.AdsTransitionTime;
+            set => Config.ADS.AdsTransitionTime = value;
         }
 
         public static float AdsMoveSpeedMultiplier
         {
-            get => Config.AdsMoveSpeedMultiplier;
-            set => Config.AdsMoveSpeedMultiplier = value;
+            get => Config.ADS.AdsMoveSpeedMultiplier;
+            set => Config.ADS.AdsMoveSpeedMultiplier = value;
         }
 
         public static float AdsAimFollowMultiplier
         {
-            get => Config.AdsAimFollowMultiplier;
-            set => Config.AdsAimFollowMultiplier = value;
+            get => Config.ADS.AdsAimFollowMultiplier;
+            set => Config.ADS.AdsAimFollowMultiplier = value;
         }
 
         public static float AdsRecoilMultiplier
         {
-            get => Config.AdsRecoilMultiplier;
-            set => Config.AdsRecoilMultiplier = value;
+            get => Config.ADS.AdsRecoilMultiplier;
+            set => Config.ADS.AdsRecoilMultiplier = value;
         }
 
         public static float AdsRecoilRecoveryMultiplier
         {
-            get => Config.AdsRecoilRecoveryMultiplier;
-            set => Config.AdsRecoilRecoveryMultiplier = value;
+            get => Config.ADS.AdsRecoilRecoveryMultiplier;
+            set => Config.ADS.AdsRecoilRecoveryMultiplier = value;
         }
 
         public static float AdsZoomFactor
         {
-            get => Config.AdsZoomFactor;
-            set => Config.AdsZoomFactor = value;
+            get => Config.ADS.AdsZoomFactor;
+            set => Config.ADS.AdsZoomFactor = value;
         }
 
         public static float AdsCursorInfluenceMultiplier
         {
-            get => Config.AdsCursorInfluenceMultiplier;
-            set => Config.AdsCursorInfluenceMultiplier = value;
+            get => Config.ADS.AdsCursorInfluenceMultiplier;
+            set => Config.ADS.AdsCursorInfluenceMultiplier = value;
         }
 
         public static float AdsBaseGap
         {
-            get => Config.AdsBaseGap;
-            set => Config.AdsBaseGap = value;
+            get => Config.ADS.AdsBaseGap;
+            set => Config.ADS.AdsBaseGap = value;
         }
 
         public static float AdsBloomExtraGap
         {
-            get => Config.AdsBloomExtraGap;
-            set => Config.AdsBloomExtraGap = value;
+            get => Config.ADS.AdsBloomExtraGap;
+            set => Config.ADS.AdsBloomExtraGap = value;
         }
 
         public static float AdsVignetteIntensity
         {
-            get => Config.AdsVignetteIntensity;
-            set => Config.AdsVignetteIntensity = value;
+            get => Config.ADS.AdsVignetteIntensity;
+            set => Config.ADS.AdsVignetteIntensity = value;
         }
 
         // ── Health Bar ─────────────────────────────────────
-        public static float HBarWidth
-        {
-            get => Config.HBarWidth;
-            set => Config.HBarWidth = value;
-        }
-
-        public static float HBarHeight
-        {
-            get => Config.HBarHeight;
-            set => Config.HBarHeight = value;
-        }
-
-        public static float HBarOffsetY
-        {
-            get => Config.HBarOffsetY;
-            set => Config.HBarOffsetY = value;
-        }
-
-        public static float HBarBorderSize
-        {
-            get => Config.HBarBorderSize;
-            set => Config.HBarBorderSize = value;
-        }
-
-        public static float HBarTrailDelay
-        {
-            get => Config.HBarTrailDelay;
-            set => Config.HBarTrailDelay = value;
-        }
-
-        public static float HBarTrailSpeed
-        {
-            get => Config.HBarTrailSpeed;
-            set => Config.HBarTrailSpeed = value;
-        }
-
-        public static float HBarFlashDuration
-        {
-            get => Config.HBarFlashDuration;
-            set => Config.HBarFlashDuration = value;
-        }
-
-        public static float HBarFlashExpandX
-        {
-            get => Config.HBarFlashExpandX;
-            set => Config.HBarFlashExpandX = value;
-        }
-
-        public static float HBarFlashExpandY
-        {
-            get => Config.HBarFlashExpandY;
-            set => Config.HBarFlashExpandY = value;
-        }
-
-        public static float HBarFlashPower
-        {
-            get => Config.HBarFlashPower;
-            set => Config.HBarFlashPower = value;
-        }
-
-        public static float HBarShakeIntensity
-        {
-            get => Config.HBarShakeIntensity;
-            set => Config.HBarShakeIntensity = value;
-        }
-
-        public static float HBarShakeDuration
-        {
-            get => Config.HBarShakeDuration;
-            set => Config.HBarShakeDuration = value;
-        }
-
-        public static float HBarShakeFrequency
-        {
-            get => Config.HBarShakeFrequency;
-            set => Config.HBarShakeFrequency = value;
-        }
-
-        public static float HBarHpPerSegment
-        {
-            get => Config.HBarHpPerSegment;
-            set => Config.HBarHpPerSegment = value;
-        }
-
-        public static float HBarSegmentLineWidth
-        {
-            get => Config.HBarSegmentLineWidth;
-            set => Config.HBarSegmentLineWidth = value;
-        }
-
-        public static Color HBarSegmentLineColor
-        {
-            get => Config.HBarSegmentLineColor;
-            set => Config.HBarSegmentLineColor = value;
-        }
-
-        public static Color HBarTrailColor
-        {
-            get => Config.HBarTrailColor;
-            set => Config.HBarTrailColor = value;
-        }
-
-        public static Color HBarFlashColor
-        {
-            get => Config.HBarFlashColor;
-            set => Config.HBarFlashColor = value;
-        }
-
-        public static Color HBarBgColor
-        {
-            get => Config.HBarBgColor;
-            set => Config.HBarBgColor = value;
-        }
+        public static float HBarWidth { get => Config.HealthBar.HBarWidth; set => Config.HealthBar.HBarWidth = value; }
+        public static float HBarHeight { get => Config.HealthBar.HBarHeight; set => Config.HealthBar.HBarHeight = value; }
+        public static float HBarOffsetY { get => Config.HealthBar.HBarOffsetY; set => Config.HealthBar.HBarOffsetY = value; }
+        public static float HBarBorderSize { get => Config.HealthBar.HBarBorderSize; set => Config.HealthBar.HBarBorderSize = value; }
+        public static float HBarTrailDelay { get => Config.HealthBar.HBarTrailDelay; set => Config.HealthBar.HBarTrailDelay = value; }
+        public static float HBarTrailSpeed { get => Config.HealthBar.HBarTrailSpeed; set => Config.HealthBar.HBarTrailSpeed = value; }
+        public static float HBarFlashDuration { get => Config.HealthBar.HBarFlashDuration; set => Config.HealthBar.HBarFlashDuration = value; }
+        public static float HBarFlashExpandX { get => Config.HealthBar.HBarFlashExpandX; set => Config.HealthBar.HBarFlashExpandX = value; }
+        public static float HBarFlashExpandY { get => Config.HealthBar.HBarFlashExpandY; set => Config.HealthBar.HBarFlashExpandY = value; }
+        public static float HBarFlashPower { get => Config.HealthBar.HBarFlashPower; set => Config.HealthBar.HBarFlashPower = value; }
+        public static float HBarShakeIntensity { get => Config.HealthBar.HBarShakeIntensity; set => Config.HealthBar.HBarShakeIntensity = value; }
+        public static float HBarShakeDuration { get => Config.HealthBar.HBarShakeDuration; set => Config.HealthBar.HBarShakeDuration = value; }
+        public static float HBarShakeFrequency { get => Config.HealthBar.HBarShakeFrequency; set => Config.HealthBar.HBarShakeFrequency = value; }
+        public static float HBarHpPerSegment { get => Config.HealthBar.HBarHpPerSegment; set => Config.HealthBar.HBarHpPerSegment = value; }
+        public static float HBarSegmentLineWidth { get => Config.HealthBar.HBarSegmentLineWidth; set => Config.HealthBar.HBarSegmentLineWidth = value; }
+        public static Color HBarSegmentLineColor { get => Config.HealthBar.HBarSegmentLineColor; set => Config.HealthBar.HBarSegmentLineColor = value; }
+        public static Color HBarTrailColor { get => Config.HealthBar.HBarTrailColor; set => Config.HealthBar.HBarTrailColor = value; }
+        public static Color HBarFlashColor { get => Config.HealthBar.HBarFlashColor; set => Config.HealthBar.HBarFlashColor = value; }
+        public static Color HBarBgColor { get => Config.HealthBar.HBarBgColor; set => Config.HealthBar.HBarBgColor = value; }
 
         // ── Parallax / Projectile ──────────────────────────
         public static float ProjectileSpawnHeight
         {
-            get => Config.ProjectileSpawnHeight;
-            set => Config.ProjectileSpawnHeight = value;
+            get => Config.Parallax.ProjectileSpawnHeight;
+            set => Config.Parallax.ProjectileSpawnHeight = value;
         }
 
         public static bool ParallaxCorrection
         {
-            get => Config.ParallaxCorrection;
-            set => Config.ParallaxCorrection = value;
+            get => Config.Parallax.ParallaxCorrection;
+            set => Config.Parallax.ParallaxCorrection = value;
         }
 
         public static float ConvergenceBlend
         {
-            get => Config.ConvergenceBlend;
-            set => Config.ConvergenceBlend = value;
+            get => Config.Parallax.ConvergenceBlend;
+            set => Config.Parallax.ConvergenceBlend = value;
         }
 
         public static bool ConvergenceAimUp
         {
-            get => Config.ConvergenceAimUp;
-            set => Config.ConvergenceAimUp = value;
+            get => Config.Parallax.ConvergenceAimUp;
+            set => Config.Parallax.ConvergenceAimUp = value;
         }
 
         public static float AimUpHeightRatio
         {
-            get => Config.AimUpHeightRatio;
-            set => Config.AimUpHeightRatio = value;
+            get => Config.Parallax.AimUpHeightRatio;
+            set => Config.Parallax.AimUpHeightRatio = value;
         }
 
         public static float ProjectileHitRadius
         {
-            get => Config.ProjectileHitRadius;
-            set => Config.ProjectileHitRadius = value;
+            get => Config.Parallax.ProjectileHitRadius;
+            set => Config.Parallax.ProjectileHitRadius = value;
         }
 
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {
-            get => Config.ForceBleedPlayer;
-            set => Config.ForceBleedPlayer = value;
+            get => Config.StatusEffects.ForceBleedPlayer;
+            set => Config.StatusEffects.ForceBleedPlayer = value;
         }
 
         /// <summary>Mark asset dirty so editor saves it. Call after batch changes.</summary>

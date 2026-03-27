@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db85c92c76d2a444095d30bd1cc61484, type: 3}
+  m_Name: DevCheatsConfig
+  m_EditorClassIdentifier: Game::Dev.DevCheatsConfig
+  _cheats: {fileID: 11400000, guid: 687cdb9fdebe648c0ad6aefa304fca02, type: 2}
+  _weapon: {fileID: 11400000, guid: 4d123e52023dd4ad18e4c761aac68db9, type: 2}
+  _recoil: {fileID: 11400000, guid: 6f91e63c041fd4866840f9c16643fa7e, type: 2}
+  _aim: {fileID: 11400000, guid: 5d04dec6298e04421843a25cbf0ff013, type: 2}
+  _player: {fileID: 11400000, guid: c8e47521bd1b3499e8810264f7fac7e8, type: 2}
+  _fov: {fileID: 11400000, guid: 79c4c62799bef48eaa71e069f0d25e4a, type: 2}
+  _fog: {fileID: 11400000, guid: 77a4e1aff981a446f9bfb2d08df942be, type: 2}
+  _crosshair: {fileID: 11400000, guid: dd79d044956f643f898fb46164729576, type: 2}
+  _ads: {fileID: 11400000, guid: 18fc9a31924cd4517b82c90a393c09b0, type: 2}
+  _healthBar: {fileID: 11400000, guid: 3864ccf648d00404e93d36200bc66e17, type: 2}
+  _parallax: {fileID: 11400000, guid: 23d07ef54f3864f18b307a5b0c07ed1b, type: 2}
+  _statusEffects: {fileID: 11400000, guid: 2c9e67d163099472081bb8f1ca822fb4, type: 2}
