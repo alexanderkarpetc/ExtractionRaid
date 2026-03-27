@@ -1,4 +1,5 @@
 using Dev;
+using Systems;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,10 +19,12 @@ namespace Editor
         static bool _foldHealthBar;
         static bool _foldParallax;
         static bool _foldDamageNumbers;
+        static bool _foldQuests;
 
         Vector2 _scroll;
         SerializedObject _so;
         DevCheatsConfig _config;
+        string _questIdInput = "";
 
         [MenuItem("Window/Dev Cheats")]
         static void Open()
@@ -42,6 +45,7 @@ namespace Editor
             _foldHealthBar = EditorPrefs.GetBool("DevCheats_foldHealthBar", false);
             _foldParallax  = EditorPrefs.GetBool("DevCheats_foldParallax", false);
             _foldDamageNumbers = EditorPrefs.GetBool("DevCheats_foldDamageNumbers", false);
+            _foldQuests = EditorPrefs.GetBool("DevCheats_foldQuests", false);
 
             BindConfig();
         }
@@ -66,6 +70,7 @@ namespace Editor
             EditorPrefs.SetBool("DevCheats_foldHealthBar", _foldHealthBar);
             EditorPrefs.SetBool("DevCheats_foldParallax", _foldParallax);
             EditorPrefs.SetBool("DevCheats_foldDamageNumbers", _foldDamageNumbers);
+            EditorPrefs.SetBool("DevCheats_foldQuests", _foldQuests);
         }
 
         void MarkDirty()
@@ -349,6 +354,55 @@ namespace Editor
                 DevCheats.DmgNumKillColor       = EditorGUILayout.ColorField("Kill", DevCheats.DmgNumKillColor);
             });
             DevCheats.DmgNumEnabled = dmgEnabled;
+
+            // ── Quests ──────────────────────────────────────
+            DrawFoldout(ref _foldQuests, "Quests", () =>
+            {
+                bool appReady = Application.isPlaying && App.App.IsInitialized;
+
+                using (new EditorGUI.DisabledScope(!appReady))
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    _questIdInput = EditorGUILayout.TextField("Quest ID", _questIdInput);
+
+                    if (GUILayout.Button("Complete", GUILayout.Width(80)))
+                    {
+                        if (appReady && !string.IsNullOrEmpty(_questIdInput))
+                        {
+                            var player = App.App.Instance.Player;
+                            if (QuestSystem.TryComplete(player.QuestProgress, _questIdInput))
+                            {
+                                QuestSystem.AssignAvailableQuests(
+                                    player.QuestProgress,
+                                    App.App.Instance.QuestDatabase,
+                                    player.ProfileState.Level);
+                                Debug.Log($"[DevCheats] Completed quest '{_questIdInput}'. New quests assigned.");
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"[DevCheats] Quest '{_questIdInput}' is not active.");
+                            }
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    if (appReady)
+                    {
+                        var progress = App.App.Instance.Player.QuestProgress;
+                        int active = 0, completed = 0;
+                        foreach (var kvp in progress.All)
+                        {
+                            if (kvp.Value.Status == State.QuestStatus.Active) active++;
+                            else if (kvp.Value.Status == State.QuestStatus.Completed) completed++;
+                        }
+                        EditorGUILayout.LabelField($"Active: {active}  |  Completed: {completed}",
+                            EditorStyles.miniLabel);
+                    }
+                }
+
+                if (!appReady)
+                    EditorGUILayout.HelpBox("Enter Play Mode to use quest cheats.", MessageType.Info);
+            });
 
             EditorGUILayout.Space(8);
 

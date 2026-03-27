@@ -50,6 +50,7 @@ namespace State
         public float AdsBlend; // 0 = hip, 1 = fully ADS — lerped each tick
 
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
+        public bool IsQuestLogOpen; // set by QuestUI (I key)
 
         public float Stamina;
         public float MaxStamina;
@@ -57,8 +58,8 @@ namespace State
         public float LastSprintStopTime;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
-        public bool IsInMenu => IsInventoryOpen || LootTargetId != EId.None || CraftTargetId != EId.None
-            || DeployTargetId != EId.None;
+        public bool IsInMenu => IsInventoryOpen || IsQuestLogOpen || LootTargetId != EId.None
+            || CraftTargetId != EId.None || DeployTargetId != EId.None;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

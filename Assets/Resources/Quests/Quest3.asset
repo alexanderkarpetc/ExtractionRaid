@@ -16,3 +16,15 @@ MonoBehaviour:
   DisplayName: Quest3
   Description: 
   RequiredLevel: 0
+  Tasks:
+  - rid: 2541323848873148505
+  references:
+    version: 2
+    RefIds:
+    - rid: 2541323848873148505
+      type: {class: ProvideSupplyTask, ns: Quests, asm: Game}
+      data:
+        Description: Provide smth
+        RequiredCount: 1
+        InOneRaid: 0
+        ItemId: 

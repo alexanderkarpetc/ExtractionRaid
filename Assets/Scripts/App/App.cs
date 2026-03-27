@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Quests;
 using Save;
 using Session;
+using Systems;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using View;
@@ -72,6 +73,7 @@ namespace App
             if (save != null)
                 _instance.Player.LoadFrom(save);
 
+            _instance.AssignNewQuests();
             Debug.Log("[App] Initialized.");
         }
 
@@ -152,6 +154,15 @@ namespace App
             _groundItemPresenter.LateTick(RaidSession);
             _corpsePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
+        }
+
+        void AssignNewQuests()
+        {
+            if (QuestDatabase == null) return;
+            int count = QuestSystem.AssignAvailableQuests(
+                Player.QuestProgress, QuestDatabase, Player.ProfileState.Level);
+            if (count > 0)
+                Debug.Log($"[App] Assigned {count} new quest(s).");
         }
 
         void SavePlayer()

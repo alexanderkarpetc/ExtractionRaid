@@ -168,6 +168,7 @@ namespace Editor
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
             Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
             Field("DeployTargetId", p.DeployTargetId != EId.None ? p.DeployTargetId.ToString() : "None");
+            Field("IsQuestLogOpen", p.IsQuestLogOpen);
             Field("IsInMenu", p.IsInMenu);
             Field("Sprinting", p.IsSprinting);
             Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");

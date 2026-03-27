@@ -16,3 +16,15 @@ MonoBehaviour:
   DisplayName: Quest4
   Description: 
   RequiredLevel: 0
+  Tasks:
+  - rid: 2541323848873148506
+  references:
+    version: 2
+    RefIds:
+    - rid: 2541323848873148506
+      type: {class: ExtractTask, ns: Quests, asm: Game}
+      data:
+        Description: Extract from ass
+        RequiredCount: 1
+        InOneRaid: 0
+        LevelId: 

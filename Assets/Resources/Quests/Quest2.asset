@@ -16,3 +16,15 @@ MonoBehaviour:
   DisplayName: Quest2
   Description: 
   RequiredLevel: 0
+  Tasks:
+  - rid: 2541323848873148504
+  references:
+    version: 2
+    RefIds:
+    - rid: 2541323848873148504
+      type: {class: FindPlaceTask, ns: Quests, asm: Game}
+      data:
+        Description: Find my ass
+        RequiredCount: 1
+        InOneRaid: 0
+        PlaceId: 
