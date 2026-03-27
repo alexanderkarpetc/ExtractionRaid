@@ -8,17 +8,29 @@ namespace Save
     [Serializable]
     public class ItemSaveData
     {
+        public int SlotIndex;
         public string DefinitionId;
         public int StackCount;
 
-        public static ItemSaveData FromState(ItemState item)
+        public static ItemSaveData FromSlot(ItemState item, int slotIndex)
         {
             if (item == null) return null;
-            return new ItemSaveData { DefinitionId = item.DefinitionId, StackCount = item.StackCount };
+            return new ItemSaveData
+            {
+                SlotIndex = slotIndex,
+                DefinitionId = item.DefinitionId,
+                StackCount = item.StackCount
+            };
+        }
+
+        public static ItemSaveData FromState(ItemState item)
+        {
+            return FromSlot(item, 0);
         }
 
         public ItemState ToState()
         {
+            if (string.IsNullOrEmpty(DefinitionId)) return null;
             return new ItemState { Id = EId.None, DefinitionId = DefinitionId, StackCount = StackCount };
         }
     }
@@ -26,27 +38,33 @@ namespace Save
     [Serializable]
     public class InventorySaveData
     {
-        public ItemSaveData[] WeaponSlots;
+        public List<ItemSaveData> WeaponSlots;
         public ItemSaveData Helmet;
         public ItemSaveData BodyArmor;
-        public ItemSaveData[] Backpack;
+        public List<ItemSaveData> Backpack;
         public int[] QuickSlotBindings;
 
         public static InventorySaveData FromState(InventoryState inv)
         {
             var data = new InventorySaveData
             {
-                WeaponSlots = new ItemSaveData[InventoryState.WeaponSlotCount],
-                Backpack = new ItemSaveData[InventoryState.BackpackSize],
+                WeaponSlots = new List<ItemSaveData>(),
+                Backpack = new List<ItemSaveData>(),
                 QuickSlotBindings = new int[InventoryState.QuickSlotCount],
                 Helmet = ItemSaveData.FromState(inv.HelmetSlot),
                 BodyArmor = ItemSaveData.FromState(inv.BodyArmorSlot),
             };
 
             for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
-                data.WeaponSlots[i] = ItemSaveData.FromState(inv.WeaponSlots[i]);
+            {
+                var saved = ItemSaveData.FromSlot(inv.WeaponSlots[i], i);
+                if (saved != null) data.WeaponSlots.Add(saved);
+            }
             for (int i = 0; i < InventoryState.BackpackSize; i++)
-                data.Backpack[i] = ItemSaveData.FromState(inv.Backpack[i]);
+            {
+                var saved = ItemSaveData.FromSlot(inv.Backpack[i], i);
+                if (saved != null) data.Backpack.Add(saved);
+            }
             Array.Copy(inv.QuickSlotBindings, data.QuickSlotBindings, InventoryState.QuickSlotCount);
 
             return data;
@@ -58,12 +76,18 @@ namespace Save
             inv.BodyArmorSlot = BodyArmor?.ToState();
 
             for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
-                inv.WeaponSlots[i] = WeaponSlots != null && i < WeaponSlots.Length
-                    ? WeaponSlots[i]?.ToState() : null;
+                inv.WeaponSlots[i] = null;
+            if (WeaponSlots != null)
+                foreach (var ws in WeaponSlots)
+                    if (ws.SlotIndex >= 0 && ws.SlotIndex < InventoryState.WeaponSlotCount)
+                        inv.WeaponSlots[ws.SlotIndex] = ws.ToState();
 
             for (int i = 0; i < InventoryState.BackpackSize; i++)
-                inv.Backpack[i] = Backpack != null && i < Backpack.Length
-                    ? Backpack[i]?.ToState() : null;
+                inv.Backpack[i] = null;
+            if (Backpack != null)
+                foreach (var bs in Backpack)
+                    if (bs.SlotIndex >= 0 && bs.SlotIndex < InventoryState.BackpackSize)
+                        inv.Backpack[bs.SlotIndex] = bs.ToState();
 
             if (QuickSlotBindings != null)
                 Array.Copy(QuickSlotBindings, inv.QuickSlotBindings,
