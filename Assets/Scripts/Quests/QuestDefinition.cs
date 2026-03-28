@@ -1,8 +1,16 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Quests
 {
+    [Serializable]
+    public struct QuestReward
+    {
+        public string ItemId;
+        public int Count;
+    }
+
     [CreateAssetMenu(fileName = "NewQuest", menuName = "Quests/Quest Definition")]
     public class QuestDefinition : ScriptableObject
     {
@@ -16,5 +24,8 @@ namespace Quests
 
         [Header("Tasks")]
         [SerializeReference] public List<QuestTask> Tasks = new();
+
+        [Header("Rewards")]
+        public List<QuestReward> Rewards = new();
     }
 }

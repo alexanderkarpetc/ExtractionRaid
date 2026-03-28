@@ -365,14 +365,15 @@ namespace Editor
                     EditorGUILayout.BeginHorizontal();
                     _questIdInput = EditorGUILayout.TextField("Quest ID", _questIdInput);
 
-                    if (GUILayout.Button("Complete", GUILayout.Width(80)))
+                    if (GUILayout.Button("Fulfill", GUILayout.Width(80)))
                     {
                         if (appReady && !string.IsNullOrEmpty(_questIdInput))
                         {
                             var player = App.App.Instance.Player;
-                            if (QuestSystem.TryComplete(player.QuestProgress, _questIdInput))
+                            var db = App.App.Instance.QuestDatabase;
+                            if (QuestSystem.TryFulfillTasks(player.QuestProgress, db, _questIdInput))
                             {
-                                Debug.Log($"[DevCheats] Completed quest '{_questIdInput}'.");
+                                Debug.Log($"[DevCheats] Fulfilled all tasks for quest '{_questIdInput}'. Claim reward at NPC.");
                             }
                             else
                             {

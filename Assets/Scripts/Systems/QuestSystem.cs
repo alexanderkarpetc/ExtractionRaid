@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Quests;
 using State;
+using UnityEngine;
 
 namespace Systems
 {
@@ -31,29 +32,7 @@ namespace Systems
         }
 
         /// <summary>
-        /// Returns quests that are active and belong to the given NPC (for turn-in).
-        /// </summary>
-        public static List<QuestDefinition> GetCompletableQuests(
-            QuestProgressState progress, QuestDatabase db, string npcId)
-        {
-            if (db == null) return new List<QuestDefinition>();
-
-            var result = new List<QuestDefinition>();
-
-            foreach (var entry in db.Entries)
-            {
-                if (entry.Quest == null || string.IsNullOrEmpty(entry.Quest.Id)) continue;
-                if (entry.Quest.NpcId != npcId) continue;
-                if (progress.GetStatus(entry.Quest.Id) != QuestStatus.Active) continue;
-
-                result.Add(entry.Quest);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Returns active quests owned by this NPC (to show progress while talking).
+        /// Returns active quests owned by this NPC.
         /// </summary>
         public static List<QuestDefinition> GetActiveQuestsForNpc(
             QuestProgressState progress, QuestDatabase db, string npcId)
@@ -89,6 +68,120 @@ namespace Systems
             if (p == null || p.Status != QuestStatus.Active) return false;
             progress.CompleteQuest(questId);
             return true;
+        }
+
+        /// <summary>
+        /// Maxes out all task progress so the quest becomes ready to claim at the NPC.
+        /// Quest stays Active — the player must still visit the NPC to claim the reward.
+        /// </summary>
+        public static bool TryFulfillTasks(QuestProgressState progress, QuestDatabase db, string questId)
+        {
+            var p = progress.GetProgress(questId);
+            if (p == null || p.Status != QuestStatus.Active) return false;
+
+            if (!db.TryGet(questId, out var entry) || entry.Quest == null) return false;
+            var tasks = entry.Quest.Tasks;
+            if (tasks == null) return true;
+
+            for (int i = 0; i < tasks.Count && i < p.Tasks.Count; i++)
+                p.Tasks[i].CurrentCount = tasks[i].RequiredCount;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Completes a quest and grants reward items to the inventory.
+        /// Returns false if the quest can't be completed or there's no room for rewards.
+        /// </summary>
+        public static bool TryCompleteAndGrantRewards(
+            QuestProgressState progress, QuestDefinition quest,
+            RaidState raidState, InventoryState inventory)
+        {
+            if (quest == null || string.IsNullOrEmpty(quest.Id)) return false;
+            var p = progress.GetProgress(quest.Id);
+            if (p == null || p.Status != QuestStatus.Active) return false;
+
+            if (!CanFitRewards(quest.Rewards, inventory)) return false;
+
+            GrantRewards(quest.Rewards, raidState, inventory);
+            progress.CompleteQuest(quest.Id);
+            return true;
+        }
+
+        public static bool CanFitRewards(List<QuestReward> rewards, InventoryState inventory)
+        {
+            if (rewards == null || rewards.Count == 0) return true;
+
+            int slotsNeeded = 0;
+            foreach (var reward in rewards)
+            {
+                var def = ItemDefinition.Get(reward.ItemId);
+                if (def == null) continue;
+
+                int remaining = reward.Count;
+
+                if (def.IsStackable)
+                {
+                    for (int i = 0; i < InventoryState.BackpackSize && remaining > 0; i++)
+                    {
+                        var slot = inventory.Backpack[i];
+                        if (slot != null && slot.DefinitionId == reward.ItemId)
+                            remaining -= (def.MaxStackSize - slot.StackCount);
+                    }
+                }
+
+                if (remaining > 0)
+                {
+                    if (def.IsStackable)
+                        slotsNeeded += Mathf.CeilToInt((float)remaining / def.MaxStackSize);
+                    else
+                        slotsNeeded += remaining;
+                }
+            }
+
+            int freeSlots = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i] == null) freeSlots++;
+
+            return freeSlots >= slotsNeeded;
+        }
+
+        static void GrantRewards(List<QuestReward> rewards, RaidState raidState, InventoryState inventory)
+        {
+            if (rewards == null) return;
+
+            foreach (var reward in rewards)
+            {
+                var def = ItemDefinition.Get(reward.ItemId);
+                if (def == null) continue;
+
+                int remaining = reward.Count;
+
+                if (def.IsStackable)
+                {
+                    for (int i = 0; i < InventoryState.BackpackSize && remaining > 0; i++)
+                    {
+                        var slot = inventory.Backpack[i];
+                        if (slot == null || slot.DefinitionId != reward.ItemId) continue;
+                        int canAdd = def.MaxStackSize - slot.StackCount;
+                        if (canAdd <= 0) continue;
+                        int add = remaining < canAdd ? remaining : canAdd;
+                        slot.StackCount += add;
+                        remaining -= add;
+                    }
+                }
+
+                while (remaining > 0)
+                {
+                    int free = inventory.FindFreeBackpackSlot();
+                    if (free < 0) break;
+                    int count = def.IsStackable
+                        ? (remaining < def.MaxStackSize ? remaining : def.MaxStackSize)
+                        : 1;
+                    inventory.Backpack[free] = ItemState.Create(raidState.AllocateEId(), reward.ItemId, count);
+                    remaining -= count;
+                }
+            }
         }
 
         static HashSet<string> BuildCompletedSet(QuestProgressState progress)

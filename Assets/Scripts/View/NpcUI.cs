@@ -23,6 +23,7 @@ namespace View
         Texture2D _acceptBtnBg;
         Texture2D _completeBtnBg;
         Texture2D _completeBtnDisabled;
+        Texture2D _rewardBg;
 
         GUIStyle _headerStyle;
         GUIStyle _promptStyle;
@@ -34,6 +35,9 @@ namespace View
         GUIStyle _emptyStyle;
         GUIStyle _acceptBtnStyle;
         GUIStyle _completeBtnStyle;
+        GUIStyle _rewardLabelStyle;
+        GUIStyle _rewardItemStyle;
+        GUIStyle _noSpaceStyle;
 
         void Awake()
         {
@@ -48,6 +52,7 @@ namespace View
             _acceptBtnBg = MakeTex(new Color(0.2f, 0.5f, 0.7f, 0.9f));
             _completeBtnBg = MakeTex(new Color(0.25f, 0.6f, 0.25f, 0.9f));
             _completeBtnDisabled = MakeTex(new Color(0.3f, 0.3f, 0.3f, 0.7f));
+            _rewardBg = MakeTex(new Color(0.18f, 0.2f, 0.15f, 0.9f));
         }
 
         void Update()
@@ -110,7 +115,7 @@ namespace View
             GUI.Label(new Rect(panelX + padding, curY, panelW - padding * 2, 50f), title, _headerStyle);
             curY += 58f;
 
-            float tabW = (panelW - padding * 2 - 8f) / 3f;
+            float tabW = (panelW - padding * 2 - 4f) * 0.5f;
             float tabH = 48f;
 
             if (GUI.Button(new Rect(panelX + padding, curY, tabW, tabH), "Available",
@@ -119,16 +124,10 @@ namespace View
                 _selectedTab = 0;
                 _scrollPos = Vector2.zero;
             }
-            if (GUI.Button(new Rect(panelX + padding + tabW + 4f, curY, tabW, tabH), "In Progress",
+            if (GUI.Button(new Rect(panelX + padding + tabW + 4f, curY, tabW, tabH), "Active",
                     _selectedTab == 1 ? _tabActiveStyle : _tabInactiveStyle))
             {
                 _selectedTab = 1;
-                _scrollPos = Vector2.zero;
-            }
-            if (GUI.Button(new Rect(panelX + padding + (tabW + 4f) * 2f, curY, tabW, tabH), "Turn In",
-                    _selectedTab == 2 ? _tabActiveStyle : _tabInactiveStyle))
-            {
-                _selectedTab = 2;
                 _scrollPos = Vector2.zero;
             }
 
@@ -143,10 +142,7 @@ namespace View
                     DrawAvailableQuests(viewRect, db, progress, playerLevel, npcId, padding);
                     break;
                 case 1:
-                    DrawActiveQuests(viewRect, db, progress, npcId, padding);
-                    break;
-                case 2:
-                    DrawCompletableQuests(viewRect, db, progress, npcId, padding);
+                    DrawActiveQuests(viewRect, db, progress, npcId, padding, state);
                     break;
             }
         }
@@ -186,6 +182,9 @@ namespace View
             float h = 90f;
             if (quest.Tasks != null)
                 h += quest.Tasks.Count * 30f;
+            int rewardCount = quest.Rewards != null ? quest.Rewards.Count : 0;
+            if (rewardCount > 0)
+                h += 34f + rewardCount * 30f + 8f;
             h += 50f;
             return h;
         }
@@ -204,15 +203,36 @@ namespace View
             GUI.Label(new Rect(questRect.x + innerPad, questRect.y + 46f,
                 questRect.width - innerPad * 2, 32f), quest.Description, _questDescStyle);
 
-            float taskY = questRect.y + 86f;
+            float curY = questRect.y + 86f;
             if (quest.Tasks != null)
             {
                 foreach (var task in quest.Tasks)
                 {
-                    GUI.Label(new Rect(questRect.x + innerPad, taskY,
+                    GUI.Label(new Rect(questRect.x + innerPad, curY,
                         questRect.width - innerPad * 2, 28f),
                         $"  - {task.Description} (0/{task.RequiredCount})", _taskStyle);
-                    taskY += 30f;
+                    curY += 30f;
+                }
+            }
+
+            if (quest.Rewards != null && quest.Rewards.Count > 0)
+            {
+                curY += 4f;
+                GUI.Label(new Rect(questRect.x + innerPad, curY,
+                    questRect.width - innerPad * 2, 30f), "Rewards:", _rewardLabelStyle);
+                curY += 34f;
+
+                foreach (var reward in quest.Rewards)
+                {
+                    var def = ItemDefinition.Get(reward.ItemId);
+                    string itemName = def != null ? def.DisplayName : reward.ItemId;
+                    string rewardText = reward.Count > 1 ? $"  {itemName}  x{reward.Count}" : $"  {itemName}";
+
+                    var rewardRect = new Rect(questRect.x + innerPad, curY,
+                        questRect.width - innerPad * 2, 28f);
+                    GUI.DrawTexture(rewardRect, _rewardBg);
+                    GUI.Label(rewardRect, rewardText, _rewardItemStyle);
+                    curY += 30f;
                 }
             }
 
@@ -230,12 +250,12 @@ namespace View
         }
 
         void DrawActiveQuests(Rect viewRect, QuestDatabase db, QuestProgressState progress,
-            string npcId, float padding)
+            string npcId, float padding, RaidState raidState)
         {
             var quests = QuestSystem.GetActiveQuestsForNpc(progress, db, npcId);
             float totalH = 0f;
             foreach (var q in quests)
-                totalH += MeasureActiveBlock(q) + 8f;
+                totalH += MeasureActiveBlock(q, progress) + 8f;
             totalH = Mathf.Max(totalH, viewRect.height);
 
             var contentRect = new Rect(0f, 0f, viewRect.width - 16f, totalH);
@@ -244,7 +264,7 @@ namespace View
             if (quests.Count == 0)
             {
                 GUI.Label(new Rect(padding, 20f, contentRect.width - padding * 2, 50f),
-                    "No quests in progress from this NPC.", _emptyStyle);
+                    "No active quests from this NPC.", _emptyStyle);
                 GUI.EndScrollView();
                 return;
             }
@@ -254,25 +274,36 @@ namespace View
             {
                 var p = progress.GetProgress(quest.Id);
                 if (p == null) continue;
-                float blockH = DrawActiveBlock(quest, p, padding, y, contentRect.width);
+                float blockH = DrawActiveBlock(quest, p, progress, padding, y, contentRect.width, raidState);
                 y += blockH + 8f;
             }
 
             GUI.EndScrollView();
         }
 
-        float MeasureActiveBlock(QuestDefinition quest)
+        float MeasureActiveBlock(QuestDefinition quest, QuestProgressState progress)
         {
             float h = 90f;
             if (quest.Tasks != null)
                 h += quest.Tasks.Count * 40f + 8f;
+
+            var p = progress.GetProgress(quest.Id);
+            bool allDone = AreAllTasksDone(quest, p);
+            if (allDone)
+            {
+                int rewardCount = quest.Rewards != null ? quest.Rewards.Count : 0;
+                if (rewardCount > 0)
+                    h += 34f + rewardCount * 30f + 8f;
+                h += 50f;
+            }
+
             return h;
         }
 
         float DrawActiveBlock(QuestDefinition quest, QuestProgress p,
-            float padding, float y, float totalW)
+            QuestProgressState progress, float padding, float y, float totalW, RaidState raidState)
         {
-            float blockH = MeasureActiveBlock(quest);
+            float blockH = MeasureActiveBlock(quest, progress);
             var questRect = new Rect(padding, y, totalW - padding * 2, blockH);
             GUI.DrawTexture(questRect, _questBg);
 
@@ -283,9 +314,10 @@ namespace View
             GUI.Label(new Rect(questRect.x + innerPad, questRect.y + 46f,
                 questRect.width - innerPad * 2, 32f), quest.Description, _questDescStyle);
 
+            float curY = questRect.y + 90f;
+
             if (quest.Tasks != null)
             {
-                float taskY = questRect.y + 90f;
                 for (int i = 0; i < quest.Tasks.Count; i++)
                 {
                     var task = quest.Tasks[i];
@@ -295,7 +327,7 @@ namespace View
                     bool done = current >= required;
 
                     float barW = questRect.width - innerPad * 2;
-                    var barRect = new Rect(questRect.x + innerPad, taskY, barW, 32f);
+                    var barRect = new Rect(questRect.x + innerPad, curY, barW, 32f);
                     GUI.DrawTexture(barRect, _progressBg);
 
                     float ratio = required > 0 ? Mathf.Clamp01((float)current / required) : 0f;
@@ -310,113 +342,57 @@ namespace View
                     if (done) label += "  \u2713";
                     GUI.Label(barRect, label, _taskStyle);
 
-                    taskY += 40f;
+                    curY += 40f;
                 }
-            }
-
-            return blockH;
-        }
-
-        void DrawCompletableQuests(Rect viewRect, QuestDatabase db, QuestProgressState progress,
-            string npcId, float padding)
-        {
-            var quests = QuestSystem.GetCompletableQuests(progress, db, npcId);
-            float totalH = 0f;
-            foreach (var q in quests)
-                totalH += MeasureCompletableBlock(q, progress) + 8f;
-            totalH = Mathf.Max(totalH, viewRect.height);
-
-            var contentRect = new Rect(0f, 0f, viewRect.width - 16f, totalH);
-            _scrollPos = GUI.BeginScrollView(viewRect, _scrollPos, contentRect);
-
-            if (quests.Count == 0)
-            {
-                GUI.Label(new Rect(padding, 20f, contentRect.width - padding * 2, 50f),
-                    "No quests to turn in.", _emptyStyle);
-                GUI.EndScrollView();
-                return;
-            }
-
-            float y = 0f;
-            foreach (var quest in quests)
-            {
-                var p = progress.GetProgress(quest.Id);
-                if (p == null) continue;
-                float blockH = DrawCompletableBlock(quest, p, progress, padding, y, contentRect.width);
-                y += blockH + 8f;
-            }
-
-            GUI.EndScrollView();
-        }
-
-        float MeasureCompletableBlock(QuestDefinition quest, QuestProgressState progress)
-        {
-            float h = 90f;
-            if (quest.Tasks != null)
-                h += quest.Tasks.Count * 40f + 8f;
-            h += 50f;
-            return h;
-        }
-
-        float DrawCompletableBlock(QuestDefinition quest, QuestProgress p,
-            QuestProgressState progress, float padding, float y, float totalW)
-        {
-            float blockH = MeasureCompletableBlock(quest, progress);
-            var questRect = new Rect(padding, y, totalW - padding * 2, blockH);
-            GUI.DrawTexture(questRect, _questBg);
-
-            float innerPad = 14f;
-            GUI.Label(new Rect(questRect.x + innerPad, questRect.y + 8f,
-                questRect.width - innerPad * 2, 36f), quest.DisplayName, _questNameStyle);
-
-            GUI.Label(new Rect(questRect.x + innerPad, questRect.y + 46f,
-                questRect.width - innerPad * 2, 32f), quest.Description, _questDescStyle);
-
-            if (quest.Tasks != null)
-            {
-                float taskY = questRect.y + 90f;
-                for (int i = 0; i < quest.Tasks.Count; i++)
-                {
-                    var task = quest.Tasks[i];
-                    var tp = i < p.Tasks.Count ? p.Tasks[i] : null;
-                    int current = tp?.CurrentCount ?? 0;
-                    int required = task.RequiredCount;
-                    bool done = current >= required;
-
-                    float barW = questRect.width - innerPad * 2;
-                    var barRect = new Rect(questRect.x + innerPad, taskY, barW, 32f);
-                    GUI.DrawTexture(barRect, _progressBg);
-
-                    float ratio = required > 0 ? Mathf.Clamp01((float)current / required) : 0f;
-                    if (ratio > 0f)
-                    {
-                        var fillRect = new Rect(barRect.x, barRect.y,
-                            barRect.width * ratio, barRect.height);
-                        GUI.DrawTexture(fillRect, done ? _progressDoneFill : _progressFill);
-                    }
-
-                    string label = $"  {task.Description}: {current}/{required}";
-                    if (done) label += "  \u2713";
-                    GUI.Label(barRect, label, _taskStyle);
-
-                    taskY += 40f;
-                }
+                curY += 8f;
             }
 
             bool allTasksDone = AreAllTasksDone(quest, p);
 
-            float btnW = 180f;
-            float btnH = 40f;
-            var btnRect = new Rect(questRect.x + questRect.width - innerPad - btnW,
-                questRect.y + blockH - btnH - 8f, btnW, btnH);
-
-            GUI.enabled = allTasksDone;
-            _completeBtnStyle.normal.background = allTasksDone ? _completeBtnBg : _completeBtnDisabled;
-            if (GUI.Button(btnRect, "COMPLETE", _completeBtnStyle))
+            if (allTasksDone)
             {
-                QuestSystem.TryComplete(progress, quest.Id);
+                if (quest.Rewards != null && quest.Rewards.Count > 0)
+                {
+                    GUI.Label(new Rect(questRect.x + innerPad, curY,
+                        questRect.width - innerPad * 2, 30f), "Rewards:", _rewardLabelStyle);
+                    curY += 34f;
+
+                    foreach (var reward in quest.Rewards)
+                    {
+                        var def = ItemDefinition.Get(reward.ItemId);
+                        string itemName = def != null ? def.DisplayName : reward.ItemId;
+                        string rewardText = reward.Count > 1 ? $"  {itemName}  x{reward.Count}" : $"  {itemName}";
+
+                        var rewardRect = new Rect(questRect.x + innerPad, curY,
+                            questRect.width - innerPad * 2, 28f);
+                        GUI.DrawTexture(rewardRect, _rewardBg);
+                        GUI.Label(rewardRect, rewardText, _rewardItemStyle);
+                        curY += 30f;
+                    }
+                }
+
+                bool hasSpace = QuestSystem.CanFitRewards(quest.Rewards, raidState.Inventory);
+
+                float btnW = 220f;
+                float btnH = 40f;
+                var btnRect = new Rect(questRect.x + questRect.width - innerPad - btnW,
+                    questRect.y + blockH - btnH - 8f, btnW, btnH);
+
+                GUI.enabled = hasSpace;
+                _completeBtnStyle.normal.background = hasSpace ? _completeBtnBg : _completeBtnDisabled;
+                if (GUI.Button(btnRect, "CLAIM REWARD", _completeBtnStyle))
+                {
+                    QuestSystem.TryCompleteAndGrantRewards(progress, quest, raidState, raidState.Inventory);
+                }
+                GUI.enabled = true;
+
+                if (!hasSpace)
+                {
+                    var warnRect = new Rect(questRect.x + innerPad,
+                        questRect.y + blockH - btnH - 8f, btnRect.x - questRect.x - innerPad * 2, btnH);
+                    GUI.Label(warnRect, "Not enough inventory space!", _noSpaceStyle);
+                }
             }
-            GUI.enabled = true;
 
             return blockH;
         }
@@ -549,6 +525,27 @@ namespace View
             _completeBtnStyle.normal.background = _completeBtnBg;
             _completeBtnStyle.normal.textColor = Color.white;
             _completeBtnStyle.hover.background = _completeBtnBg;
+
+            _rewardLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 22,
+                fontStyle = FontStyle.Bold,
+            };
+            _rewardLabelStyle.normal.textColor = new Color(0.9f, 0.8f, 0.4f);
+
+            _rewardItemStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 20,
+            };
+            _rewardItemStyle.normal.textColor = new Color(0.85f, 0.9f, 0.75f);
+
+            _noSpaceStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 18,
+                fontStyle = FontStyle.Italic,
+                alignment = TextAnchor.MiddleLeft,
+            };
+            _noSpaceStyle.normal.textColor = new Color(0.9f, 0.3f, 0.3f);
         }
 
         static Texture2D MakeTex(Color c)
@@ -572,6 +569,7 @@ namespace View
             if (_acceptBtnBg) Destroy(_acceptBtnBg);
             if (_completeBtnBg) Destroy(_completeBtnBg);
             if (_completeBtnDisabled) Destroy(_completeBtnDisabled);
+            if (_rewardBg) Destroy(_rewardBg);
         }
     }
 }
