@@ -24,6 +24,7 @@ namespace Editor
         bool _foldLootables;
         bool _foldWorkbenches;
         bool _foldDeployPoints;
+        bool _foldNpcs;
 
         readonly Dictionary<int, bool> _botFolds = new();
         readonly Dictionary<int, bool> _projFolds = new();
@@ -88,6 +89,7 @@ namespace Editor
             DrawLootables(state);
             DrawWorkbenches(state);
             DrawDeployPoints(state);
+            DrawNpcs(state);
 
             EditorGUILayout.EndScrollView();
         }
@@ -168,6 +170,7 @@ namespace Editor
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
             Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
             Field("DeployTargetId", p.DeployTargetId != EId.None ? p.DeployTargetId.ToString() : "None");
+            Field("NpcTargetId", p.NpcTargetId != EId.None ? p.NpcTargetId.ToString() : "None");
             Field("IsQuestLogOpen", p.IsQuestLogOpen);
             Field("IsInMenu", p.IsInMenu);
             Field("Sprinting", p.IsSprinting);
@@ -539,6 +542,24 @@ namespace Editor
             {
                 var dp = state.DeployPoints[i];
                 Field($"[{i}] Id={dp.Id}", dp.Position);
+            }
+            EditorGUI.indentLevel--;
+            EditorGUILayout.Space(4);
+        }
+
+        // ── NPCs ────────────────────────────────────────────────
+
+        void DrawNpcs(RaidState state)
+        {
+            _foldNpcs = EditorGUILayout.Foldout(_foldNpcs,
+                $"NPCs [{state.Npcs.Count}]");
+            if (!_foldNpcs) return;
+
+            EditorGUI.indentLevel++;
+            for (int i = 0; i < state.Npcs.Count; i++)
+            {
+                var npc = state.Npcs[i];
+                Field($"[{i}] {npc.NpcId} (Id={npc.Id})", npc.Position);
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4);

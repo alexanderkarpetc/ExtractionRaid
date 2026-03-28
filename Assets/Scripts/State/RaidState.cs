@@ -15,6 +15,7 @@ namespace State
         public List<LootableContainerState> Lootables;
         public List<WorkbenchState> Workbenches;
         public List<DeployPointState> DeployPoints;
+        public List<NpcState> Npcs;
         public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
 
@@ -41,6 +42,7 @@ namespace State
                 Lootables = new List<LootableContainerState>(),
                 Workbenches = new List<WorkbenchState>(),
                 DeployPoints = new List<DeployPointState>(),
+                Npcs = new List<NpcState>(),
                 Inventory = inventory ?? new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
             };

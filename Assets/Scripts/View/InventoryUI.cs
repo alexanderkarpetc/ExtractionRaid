@@ -666,6 +666,7 @@ namespace View
             var nearest = LootSystem.FindNearestInteractable(state, player.Position, player.FacingDirection);
             if (!nearest.IsValid) return;
             if (nearest.Type == InteractableType.Workbench) return;
+            if (nearest.Type == InteractableType.Npc) return;
 
             EnsureStyles();
 

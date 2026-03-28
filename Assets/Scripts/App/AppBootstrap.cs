@@ -31,6 +31,7 @@ namespace App
             gameObject.AddComponent<CraftingUI>();
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DeployUI>();
+            gameObject.AddComponent<NpcUI>();
         }
 
         void Start()

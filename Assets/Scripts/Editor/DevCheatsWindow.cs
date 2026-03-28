@@ -372,11 +372,7 @@ namespace Editor
                             var player = App.App.Instance.Player;
                             if (QuestSystem.TryComplete(player.QuestProgress, _questIdInput))
                             {
-                                QuestSystem.AssignAvailableQuests(
-                                    player.QuestProgress,
-                                    App.App.Instance.QuestDatabase,
-                                    player.ProfileState.Level);
-                                Debug.Log($"[DevCheats] Completed quest '{_questIdInput}'. New quests assigned.");
+                                Debug.Log($"[DevCheats] Completed quest '{_questIdInput}'.");
                             }
                             else
                             {

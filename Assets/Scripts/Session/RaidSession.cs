@@ -105,6 +105,14 @@ namespace Session
                 var dp = DeployPointState.Create(id, sp.transform.position);
                 RaidState.DeployPoints.Add(dp);
             }
+
+            var npcPoints = Object.FindObjectsByType<NpcSpawnPoint>(FindObjectsSortMode.None);
+            foreach (var sp in npcPoints)
+            {
+                var id = RaidState.AllocateEId();
+                var npc = NpcState.Create(id, sp.transform.position, sp.npcId);
+                RaidState.Npcs.Add(npc);
+            }
         }
 
         void SpawnTestGroundItems()
@@ -300,7 +308,11 @@ namespace Session
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
             {
                 var player = RaidState.PlayerEntity;
-                if (player.DeployTargetId != EId.None)
+                if (player.NpcTargetId != EId.None)
+                {
+                    player.NpcTargetId = EId.None;
+                }
+                else if (player.DeployTargetId != EId.None)
                 {
                     player.DeployTargetId = EId.None;
                 }
@@ -322,6 +334,8 @@ namespace Session
                         player.CraftTargetId = nearest.Id;
                     else if (nearest.Type == InteractableType.DeployPoint)
                         player.DeployTargetId = nearest.Id;
+                    else if (nearest.Type == InteractableType.Npc)
+                        player.NpcTargetId = nearest.Id;
                     else if (nearest.Type == InteractableType.GroundItem)
                         InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
                 }

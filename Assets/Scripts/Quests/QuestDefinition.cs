@@ -12,6 +12,7 @@ namespace Quests
 
         [Header("Requirements")]
         public int RequiredLevel;
+        public string NpcId;
 
         [Header("Tasks")]
         [SerializeReference] public List<QuestTask> Tasks = new();
