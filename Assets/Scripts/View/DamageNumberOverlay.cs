@@ -174,15 +174,15 @@ namespace View
                 case 0: // FloatUp — straight up
                     return new Vector2(0f, t * speed);
 
-                case 1: // Knockback — opposite to bullet direction + spread
+                case 1: // Knockback — along bullet direction (away from shooter) + spread
                 {
-                    var dir = RotateDir(-flyDir, spreadAngle);
+                    var dir = RotateDir(flyDir, spreadAngle);
                     return dir * (t * speed);
                 }
 
-                case 2: // ArcGravity — launch opposite to bullet, then gravity pulls down
+                case 2: // ArcGravity — launch along bullet direction, then gravity pulls down
                 {
-                    var dir = RotateDir(-flyDir, spreadAngle);
+                    var dir = RotateDir(flyDir, spreadAngle);
                     float x = dir.x * t * speed;
                     float y = dir.y * t * speed - 0.5f * gravity * t * t;
                     return new Vector2(x, y);
