@@ -1,0 +1,137 @@
+---
+description: RPG modifier system — 3-source additive modifiers, hard caps, stat budget, UI breakdown. Use for damage/stats/modifier changes.
+alwaysApply: false
+---
+
+# RPG Modifier System — Base Architecture
+
+## Overview
+ExtractionRaid uses a **multi-source additive modifier system** where stats are composed from 3 independent sources: Character Tree, Weapon Mods, and Ammunition. All sources stack **additively** with **hard caps** per stat.
+
+---
+
+## Core Formula
+
+```
+FinalStat = BaseStat + AmmoMod + WeaponMod + CharTreeMod
+```
+
+**Always additive. Never multiplicative between sources.**
+
+### Why Additive Only?
+- Multiplicative creates exponential power creep and mandatory builds (Warframe: 10-50x base)
+- Hybrid creates "mandatory category" (Division 2: Glass Cannon near-mandatory)
+- Player can add numbers in their head: `3 + 1 + 0.5 = 4.5 Pen`
+- Balancing is linear — doubling a mod's value exactly doubles its impact
+
+---
+
+## Three Modifier Sources
+
+### Source 1: Ammunition (PRIMARY — 50-60% budget)
+- **Consumable** — spent every raid, economic risk/reward
+- **Tactical choice** — player picks ammo per-raid based on expected threats
+
+Examples:
+```
+Standard Round:  Pen +1,  DMG +0,   Bleed +0%
+AP Round:        Pen +3,  DMG -5,   Bleed +0%
+HP Round:        Pen +0,  DMG +10,  Bleed +30%
+Incendiary:      Pen +0,  DMG +5,   Burn +40%
+Shredder:        Pen +1,  DMG +0,   ArmorDmg +50%
+```
+
+### Source 2: Weapon Modifications (MEDIUM — 25-35% budget)
+- **Persistent** — mods stay on weapon across raids
+- **Trade-off based** — better pen barrel = worse accuracy (each mod has pros and cons)
+
+Examples:
+```
+Long Barrel:       Pen +1.0,  Accuracy +15%,  Handling -10%
+Hollow-Point Tip:  Pen -0.5,  DMG +8,         Bleed +10%
+Suppressor:        DMG -3,    Sound -80%,      Pen -0.5
+```
+
+**Key rule**: Weapon mods ALWAYS have trade-offs. Pure upgrades don't exist.
+
+### Source 3: Character Skill Tree (SMALLEST — 10-15% budget)
+- **Anti-veteran-gap** — new vs 100-hour player gap must be small
+- **Tarkov lesson** — EFT removed Recoil Control skill due to invisible power gap
+- **Gear > Character** — in extraction shooters, GEAR matters more than account level
+
+Examples:
+```
+Marksman I-III:   Pen +0.25 each (max +0.75)
+Butcher I-III:    Bleed +3/3/4% (max +10%)
+```
+
+**Design rule**: Max character tree bonus for any stat ≤ 15% of the hard cap.
+
+---
+
+## Hard Caps
+
+Every stat has an absolute maximum. No combination of sources can exceed it.
+
+```
+Penetration:     cap 6    (ammo ~4 + weapon ~1.5 + char ~0.75)
+Bleed Chance:    cap 70%  (ammo ~40% + weapon ~20% + char ~10%)
+Bonus Damage:    cap 30   (ammo ~20 + weapon ~8 + char ~5)
+Armor Damage:    cap 80%  (ammo ~50% + weapon ~20% + char ~10%)
+Headshot Multi:  cap TBD
+Burn Chance:     cap 60%
+```
+
+### Why Hard Caps?
+1. Prevents god-builds — even best-in-slot everything can't exceed cap
+2. Encourages diversity — if capped on Pen, invest in Bleed or DMG
+3. Predictable balance — designer knows max possible value for every stat
+4. If sum exceeds cap → clamped → encourages spreading investment across stats
+
+---
+
+## UI: Player-Facing Stat Breakdown
+
+Every stat shows its composition with source-colored breakdown:
+
+```
+Penetration ████████░░ 4.5 / 6
+  ■ Ammo (AP-M):         3.0   (yellow)
+  ■ Barrel (Long):      +1.0   (blue)
+  ■ Skill (Marksman II):+0.5   (green)
+```
+
+Color coding: Ammo=yellow, Weapon=blue, Character=green, Base=white
+
+---
+
+## Interaction with Armor System
+
+```
+Effective Penetration = AmmoPen + WeaponPenMod + CharPenMod
+Armor Protection = ArmorClass (modified by durability)
+Differential = ArmorProtection - EffectivePenetration
+
+Damage Multiplier = lookup(Differential)  // Duckov-style table
+  0 or less:  1.0x
+  +1:         0.67x
+  +2:         0.50x
+  +3:         0.40x
+  +4:         0.33x
+
+Final Damage = (WeaponBaseDMG + AmmoDmgMod + WeaponDmgMod + CharDmgMod) × DamageMultiplier
+Bleed Roll = random(0-100) < (AmmoBleed + WeaponBleed + CharBleed)  // capped at 70%
+```
+
+---
+
+## Design Principles Summary
+
+1. **Additive only** — player can do the math in their head
+2. **3 sources with clear hierarchy** — Ammo > Weapon > Character
+3. **Hard caps prevent god-builds** — encourages stat diversification
+4. **Every mod has trade-offs** — no pure upgrades on weapons
+5. **Ammo is consumable = extraction economy** — best stats require economic risk
+6. **Character tree is small** — gear > account level (anti-veteran-gap)
+7. **Everything visible in UI** — color-coded breakdown, no hidden formulas
+8. **Combat feedback per result** — crosshair, floating damage, sound, healthbar all react differently
