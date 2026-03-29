@@ -472,6 +472,61 @@ namespace Dev
             set => Config.StatusEffects.ForceBleedPlayer = value;
         }
 
+        // ── Armor ────────────────────────────────────────────
+        public static float ArmorK
+        {
+            get => Config.Armor.DamageReductionK;
+            set => Config.Armor.DamageReductionK = value;
+        }
+
+        public static float ArmorDurabilityThreshold
+        {
+            get => Config.Armor.DurabilityThreshold;
+            set => Config.Armor.DurabilityThreshold = value;
+        }
+
+        public static float ArmorDurabilityPower
+        {
+            get => Config.Armor.DurabilityParabolicPower;
+            set => Config.Armor.DurabilityParabolicPower = value;
+        }
+
+        public static float ArmorRicochetChance
+        {
+            get => Config.Armor.RicochetChance;
+            set => Config.Armor.RicochetChance = value;
+        }
+
+        public static float ArmorDamageCap
+        {
+            get => Config.Armor.ArmorDamageCap;
+            set => Config.Armor.ArmorDamageCap = value;
+        }
+
+        public static float ArmorPenetrationCap
+        {
+            get => Config.Armor.PenetrationCap;
+            set => Config.Armor.PenetrationCap = value;
+        }
+
+        public static float ArmorPointsCap
+        {
+            get => Config.Armor.ArmorPointsCap;
+            set => Config.Armor.ArmorPointsCap = value;
+        }
+
+        public static bool ForceNoArmor
+        {
+            get => Config.Armor.ForceNoArmor;
+            set => Config.Armor.ForceNoArmor = value;
+        }
+
+        public static bool ForceMaxArmor
+        {
+            get => Config.Armor.ForceMaxArmor;
+            set => Config.Armor.ForceMaxArmor = value;
+        }
+
         /// <summary>Mark asset dirty so editor saves it. Call after batch changes.</summary>
         public static void SetDirty()
         {

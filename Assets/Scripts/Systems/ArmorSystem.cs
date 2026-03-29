@@ -1,4 +1,5 @@
 using Constants;
+using Dev;
 using State;
 using UnityEngine;
 
@@ -59,6 +60,18 @@ namespace Systems
         public static DamageResult Calculate(float rawDamage, float penetration, float armorDamage,
             ArmorSlotState armorSlots, bool isHeadshot)
         {
+            // Debug cheats
+            if (DevCheats.ForceNoArmor)
+            {
+                return new DamageResult
+                {
+                    HpDamage = rawDamage,
+                    ArmorDurDamage = 0f,
+                    AbsorptionRatio = 0f,
+                    ArmorHit = false,
+                };
+            }
+
             var armor = GetArmorForHit(armorSlots, isHeadshot);
 
             if (armor == null || armor.IsBroken)
@@ -72,8 +85,10 @@ namespace Systems
                 };
             }
 
-            float effectiveArmor = EffectiveArmorPoints(armor);
-            float multiplier = CalcDamageMultiplier(effectiveArmor, penetration);
+            float effectiveArmor = DevCheats.ForceMaxArmor
+                ? armor.ArmorPoints  // ignore durability degradation
+                : EffectiveArmorPoints(armor);
+            float multiplier = CalcDamageMultiplier(effectiveArmor, penetration, DevCheats.ArmorK);
             float absorptionRatio = 1f - multiplier;
 
             return new DamageResult

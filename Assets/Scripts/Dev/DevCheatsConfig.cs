@@ -23,6 +23,7 @@ namespace Dev
         [SerializeField] DevCheatsParallaxSection _parallax;
         [SerializeField] DevCheatsDamageNumberSection _damageNumbers;
         [SerializeField] DevCheatsStatusEffectsSection _statusEffects;
+        [SerializeField] DevCheatsArmorSection _armor;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public DevCheatsCheatsSection Cheats => _cheats ? _cheats : (_cheats = CreateInstance<DevCheatsCheatsSection>());
@@ -38,5 +39,6 @@ namespace Dev
         public DevCheatsParallaxSection Parallax => _parallax ? _parallax : (_parallax = CreateInstance<DevCheatsParallaxSection>());
         public DevCheatsDamageNumberSection DamageNumbers => _damageNumbers ? _damageNumbers : (_damageNumbers = CreateInstance<DevCheatsDamageNumberSection>());
         public DevCheatsStatusEffectsSection StatusEffects => _statusEffects ? _statusEffects : (_statusEffects = CreateInstance<DevCheatsStatusEffectsSection>());
+        public DevCheatsArmorSection Armor => _armor ? _armor : (_armor = CreateInstance<DevCheatsArmorSection>());
     }
 }
