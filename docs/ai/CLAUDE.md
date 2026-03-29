@@ -69,7 +69,25 @@ When implementing a change:
 8. Show a file-level plan before editing.
 9. Keep the change incremental.
 
-## 6) Documentation sync
+## 6) DevCheats (runtime tuning)
+
+DevCheats provides runtime-tunable parameters via ScriptableObject assets.
+
+**Architecture:**
+- `DevCheats.cs` — static accessor (thin wrapper, no state)
+- `DevCheatsConfig.cs` — root SO at `Resources/Configs/DevCheatsConfig.asset`, holds `[SerializeField]` references to section SOs
+- `Assets/Scripts/Dev/Sections/` — one file per section SO (14 sections)
+- `DevCheatsWindow.cs` — Editor UI (`Window → Dev Cheats`)
+
+**Rules:**
+1. Each section is a separate ScriptableObject class in its own file (Unity requirement — one SO class per file, filename = classname).
+2. Section files live in `Assets/Scripts/Dev/Sections/`.
+3. Section assets live in `Assets/Resources/Configs/DevCheats/`.
+4. When adding a new section: create the SO class file, add `[SerializeField]` + property in `DevCheatsConfig.cs`, add accessors in `DevCheats.cs`, add `CreateSectionIfMissing` call in `DevCheatsWindow.CreateSectionAssets()`, add UI in `DevCheatsWindow.OnGUI()`.
+5. After adding/renaming sections, run `Window → Dev Cheats — Create Section Assets` to generate assets and apply migrated values.
+6. All gameplay-tunable parameters should go through DevCheats, not hardcoded constants.
+
+## 7) Documentation sync
 
 AI docs exist in two places that must stay in sync:
 - `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`, `fog-of-war.md`)
@@ -86,6 +104,7 @@ Read extra docs depending on the task:
 - Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
+- DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
 
 Do not load all docs unless the task spans multiple areas.
 Prefer the smallest relevant context.

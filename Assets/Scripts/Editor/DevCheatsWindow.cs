@@ -608,6 +608,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsParallaxSection>(so, "_parallax", folder, "Parallax");
             CreateSectionIfMissing<DevCheatsDamageNumberSection>(so, "_damageNumbers", folder, "DamageNumbers");
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
+            CreateSectionIfMissing<DevCheatsArmorSection>(so, "_armor", folder, "Armor");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

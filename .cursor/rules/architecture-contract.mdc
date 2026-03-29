@@ -50,3 +50,12 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
    (`Player.Inventory`, `Player.Stash`, profile) to it.
 8. Show a file-level plan before editing.
 9. Keep the change incremental.
+
+## DevCheats (runtime tuning)
+
+- `DevCheats.cs` — static accessor. `DevCheatsConfig.cs` — root SO at `Resources/Configs/DevCheatsConfig.asset`.
+- Each section is a **separate ScriptableObject class in its own file** (`Assets/Scripts/Dev/Sections/`). Unity requires one SO per file, filename = classname.
+- Section assets live in `Assets/Resources/Configs/DevCheats/`.
+- Adding a new section: create SO class file → add `[SerializeField]` + property in `DevCheatsConfig` → add accessors in `DevCheats` → add `CreateSectionIfMissing` in `DevCheatsWindow.CreateSectionAssets()` → add UI in `DevCheatsWindow.OnGUI()`.
+- After adding sections, run `Window → Dev Cheats — Create Section Assets`.
+- All gameplay-tunable parameters go through DevCheats, not hardcoded constants.
