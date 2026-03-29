@@ -185,5 +185,23 @@ namespace Tests.EditMode.Fakes
         }
 
         public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir) { }
+
+        public bool ArmorBrokenCalled;
+        public EId ArmorBrokenEntityId;
+        public bool ArmorBrokenIsHelmet;
+        public void ArmorBroken(EId entityId, bool isHelmet)
+        {
+            ArmorBrokenCalled = true;
+            ArmorBrokenEntityId = entityId;
+            ArmorBrokenIsHelmet = isHelmet;
+        }
+
+        public bool RicochetCalled;
+        public EId RicochetProjectileId;
+        public void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction)
+        {
+            RicochetCalled = true;
+            RicochetProjectileId = projectileId;
+        }
     }
 }

@@ -41,5 +41,8 @@ namespace Adapters
         void LootableDespawned(EId id);
 
         void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir);
+
+        void ArmorBroken(EId entityId, bool isHelmet);
+        void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction);
     }
 }

@@ -10,6 +10,12 @@ namespace Systems
     {
         public static void Tick(RaidState state, List<HitSignal> hits, in RaidContext context)
         {
+            Tick(state, hits, in context, null);
+        }
+
+        public static void Tick(RaidState state, List<HitSignal> hits, in RaidContext context,
+            System.Func<float> randomProvider)
+        {
             foreach (var hit in hits)
             {
                 ProjectileEntityState projectile = null;
@@ -40,6 +46,37 @@ namespace Systems
                 if (isHeadshot && projectile != null)
                     damage *= projectile.HeadshotDamageMultiplier;
 
+                // Helmet ricochet check (before armor damage reduction)
+                if (isHeadshot && state.ArmorMap.TryGetValue(hit.TargetId, out var ricoSlots))
+                {
+                    var helmet = ricoSlots.Helmet;
+                    float ricochetRoll = randomProvider != null ? randomProvider() : Random.value;
+                    if (ArmorSystem.ShouldRicochet(helmet, hit.Penetration, ricochetRoll))
+                    {
+                        // Ricochet: 0 HP damage, full durability damage (absorptionRatio = 1)
+                        float armorDurDmg = ArmorSystem.CalcArmorDurabilityDamage(hit.ArmorDamage, 1f);
+                        ArmorSystem.ApplyDurabilityDamage(helmet, armorDurDmg);
+
+                        if (helmet.IsBroken)
+                            context.Events.ArmorBroken(hit.TargetId, isHelmet: true);
+
+                        context.Events.ProjectileRicochet(hit.ProjectileId, hit.HitPoint,
+                            projectile != null ? projectile.Direction : Vector3.forward);
+
+                        // Remove projectile
+                        for (int i = state.Projectiles.Count - 1; i >= 0; i--)
+                        {
+                            if (state.Projectiles[i].Id == hit.ProjectileId)
+                            {
+                                context.Events.ProjectileDespawned(hit.ProjectileId);
+                                state.Projectiles.RemoveAt(i);
+                                break;
+                            }
+                        }
+                        continue; // Skip HP damage entirely
+                    }
+                }
+
                 // Armor damage reduction
                 float finalDamage = damage;
                 if (state.ArmorMap.TryGetValue(hit.TargetId, out var armorSlots))
@@ -50,7 +87,12 @@ namespace Systems
 
                     var armor = ArmorSystem.GetArmorForHit(armorSlots, isHeadshot);
                     if (armor != null && !armor.IsBroken)
+                    {
                         ArmorSystem.ApplyDurabilityDamage(armor, result.ArmorDurDamage);
+
+                        if (armor.IsBroken)
+                            context.Events.ArmorBroken(hit.TargetId, isHelmet: isHeadshot);
+                    }
                 }
 
                 ApplyDamage(health, finalDamage);

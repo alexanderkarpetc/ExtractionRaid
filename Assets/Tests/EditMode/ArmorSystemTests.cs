@@ -248,5 +248,53 @@ namespace Tests.EditMode
         {
             Assert.DoesNotThrow(() => ArmorSystem.ApplyDurabilityDamage(null, 10f));
         }
+
+        // ── ShouldRicochet ────────────────────────────────────
+
+        [Test]
+        public void ShouldRicochet_PenBelowArmor_RollBelowChance_ReturnsTrue()
+        {
+            var helmet = ArmorState.Create(60f, 100f); // 60 armor
+            // pen 30 < armor 60, roll 0.1 < chance 0.4
+            Assert.IsTrue(ArmorSystem.ShouldRicochet(helmet, 30f, 0.1f));
+        }
+
+        [Test]
+        public void ShouldRicochet_PenBelowArmor_RollAboveChance_ReturnsFalse()
+        {
+            var helmet = ArmorState.Create(60f, 100f);
+            // pen 30 < armor 60, but roll 0.5 > chance 0.4
+            Assert.IsFalse(ArmorSystem.ShouldRicochet(helmet, 30f, 0.5f));
+        }
+
+        [Test]
+        public void ShouldRicochet_PenAboveArmor_ReturnsFalse()
+        {
+            var helmet = ArmorState.Create(30f, 100f);
+            // pen 50 > armor 30 → never ricochet regardless of roll
+            Assert.IsFalse(ArmorSystem.ShouldRicochet(helmet, 50f, 0.1f));
+        }
+
+        [Test]
+        public void ShouldRicochet_PenEqualsArmor_ReturnsFalse()
+        {
+            var helmet = ArmorState.Create(40f, 100f);
+            // pen 40 == armor 40 → penetration >= armor → no ricochet
+            Assert.IsFalse(ArmorSystem.ShouldRicochet(helmet, 40f, 0.1f));
+        }
+
+        [Test]
+        public void ShouldRicochet_BrokenHelmet_ReturnsFalse()
+        {
+            var helmet = ArmorState.Create(60f, 100f);
+            helmet.CurrentDurability = 0f;
+            Assert.IsFalse(ArmorSystem.ShouldRicochet(helmet, 30f, 0.1f));
+        }
+
+        [Test]
+        public void ShouldRicochet_NullHelmet_ReturnsFalse()
+        {
+            Assert.IsFalse(ArmorSystem.ShouldRicochet(null, 30f, 0.1f));
+        }
     }
 }

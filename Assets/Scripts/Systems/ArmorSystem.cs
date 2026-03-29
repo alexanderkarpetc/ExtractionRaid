@@ -85,6 +85,19 @@ namespace Systems
             };
         }
 
+        public static bool ShouldRicochet(ArmorState helmet, float penetration, float ricochetRoll,
+            float ricochetChance = ArmorConstants.RicochetChance)
+        {
+            if (helmet == null || helmet.IsBroken)
+                return false;
+
+            float effectiveArmor = EffectiveArmorPoints(helmet);
+            if (penetration >= effectiveArmor)
+                return false;
+
+            return ricochetRoll < ricochetChance;
+        }
+
         public static void ApplyDurabilityDamage(ArmorState armor, float durDamage)
         {
             if (armor == null) return;

@@ -180,7 +180,7 @@ namespace Tests.EditMode
             };
 
             var context = CreateContext();
-            DamageSystem.Tick(state, hits, in context);
+            DamageSystem.Tick(state, hits, in context, () => 1f); // roll=1 → no ricochet
 
             // Headshot: 25*2=50 raw → helmet 80pts, pen 30 → diff=50, multi=30/80=0.375 → 50*0.375=18.75
             Assert.AreEqual(81.25f, state.HealthMap[targetId].CurrentHp, 1f);
@@ -343,6 +343,280 @@ namespace Tests.EditMode
 
             Assert.AreEqual(75f, state.HealthMap[targetId].CurrentHp, 0.001f,
                 "Broken armor should provide no protection");
+        }
+
+        // ── Armor Break Events ────────────────────────────────
+
+        [Test]
+        public void Tick_ArmorBreaksDuringHit_EventFired()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            var bodyArmor = ArmorState.Create(60f, 200f);
+            bodyArmor.CurrentDurability = 1f; // about to break
+            state.ArmorMap[targetId] = new ArmorSlotState { BodyArmor = bodyArmor };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, penetration: 30f, armorDamage: 10f);
+            state.Projectiles.Add(projectile);
+
+            var events = new FakeRaidEvents();
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 30f, ArmorDamage = 10f,
+                }
+            };
+
+            var context = CreateContext(events);
+            DamageSystem.Tick(state, hits, in context);
+
+            Assert.IsTrue(events.ArmorBrokenCalled, "ArmorBroken event should fire");
+            Assert.AreEqual(targetId, events.ArmorBrokenEntityId);
+            Assert.IsFalse(events.ArmorBrokenIsHelmet, "Should be body armor, not helmet");
+        }
+
+        [Test]
+        public void Tick_BodyshotNeverRicochets()
+        {
+            // Even with very strong body armor, bodyshots should never ricochet
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            state.ArmorMap[targetId] = new ArmorSlotState
+            {
+                BodyArmor = ArmorState.Create(90f, 200f), // very strong vest
+            };
+
+            var events = new FakeRaidEvents();
+
+            // Fire 20 shots — none should ricochet (bodyshots)
+            for (int i = 0; i < 20; i++)
+            {
+                var projId = state.AllocateEId();
+                var projectile = ProjectileEntityState.Create(
+                    projId, ownerId, Vector3.zero, Vector3.forward,
+                    20f, 0f, 3f, 5f, penetration: 10f, armorDamage: 2f);
+                state.Projectiles.Add(projectile);
+
+                var hits = new List<HitSignal>
+                {
+                    new HitSignal
+                    {
+                        ProjectileId = projId, TargetId = targetId,
+                        Damage = 5f, Penetration = 10f, ArmorDamage = 2f,
+                        // No TargetedEntityId = bodyshot
+                    }
+                };
+
+                var context = CreateContext(events);
+                DamageSystem.Tick(state, hits, in context);
+            }
+
+            Assert.IsFalse(events.RicochetCalled, "Bodyshots should never ricochet");
+            Assert.Less(state.HealthMap[targetId].CurrentHp, 100f, "Should still deal some damage");
+        }
+
+        [Test]
+        public void Tick_HeadshotHelmetBreakEvent_IsHelmetTrue()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            var helmet = ArmorState.Create(30f, 200f);
+            helmet.CurrentDurability = 1f; // about to break
+            state.ArmorMap[targetId] = new ArmorSlotState { Helmet = helmet };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, headshotDamageMultiplier: 2f,
+                penetration: 50f, armorDamage: 10f);
+            state.Projectiles.Add(projectile);
+
+            var events = new FakeRaidEvents();
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 50f, ArmorDamage = 10f,
+                    TargetedEntityId = targetId, // headshot
+                }
+            };
+
+            var context = CreateContext(events);
+            DamageSystem.Tick(state, hits, in context);
+
+            Assert.IsTrue(events.ArmorBrokenCalled, "ArmorBroken should fire for helmet");
+            Assert.IsTrue(events.ArmorBrokenIsHelmet, "Should be helmet");
+        }
+
+        // ── Ricochet Integration (deterministic) ──────────────
+
+        [Test]
+        public void Tick_HeadshotRicochet_ZeroHpDamage()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            state.ArmorMap[targetId] = new ArmorSlotState
+            {
+                Helmet = ArmorState.Create(60f, 200f), // strong helmet
+            };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, headshotDamageMultiplier: 2f,
+                penetration: 20f, armorDamage: 10f); // pen 20 < armor 60 → ricochet eligible
+            state.Projectiles.Add(projectile);
+
+            var events = new FakeRaidEvents();
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 20f, ArmorDamage = 10f,
+                    TargetedEntityId = targetId, // headshot
+                }
+            };
+
+            // Force ricochet: roll 0.1 < chance 0.4
+            var context = CreateContext(events);
+            DamageSystem.Tick(state, hits, in context, () => 0.1f);
+
+            Assert.AreEqual(100f, state.HealthMap[targetId].CurrentHp, 0.001f,
+                "Ricochet should deal 0 HP damage");
+            Assert.IsTrue(events.RicochetCalled, "Ricochet event should fire");
+        }
+
+        [Test]
+        public void Tick_HeadshotRicochet_DurabilityDamageApplied()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            var helmet = ArmorState.Create(60f, 200f);
+            state.ArmorMap[targetId] = new ArmorSlotState { Helmet = helmet };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, headshotDamageMultiplier: 2f,
+                penetration: 20f, armorDamage: 10f);
+            state.Projectiles.Add(projectile);
+
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 20f, ArmorDamage = 10f,
+                    TargetedEntityId = targetId,
+                }
+            };
+
+            var context = CreateContext();
+            DamageSystem.Tick(state, hits, in context, () => 0.1f); // force ricochet
+
+            // ArmorDmg = 10 × (1 + 1.0) = 20 durability damage
+            Assert.AreEqual(180f, helmet.CurrentDurability, 0.5f,
+                "Ricochet should apply full durability damage (2x base)");
+        }
+
+        [Test]
+        public void Tick_HeadshotRicochet_ProjectileRemoved()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            state.ArmorMap[targetId] = new ArmorSlotState
+            {
+                Helmet = ArmorState.Create(60f, 200f),
+            };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, headshotDamageMultiplier: 2f,
+                penetration: 20f, armorDamage: 10f);
+            state.Projectiles.Add(projectile);
+
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 20f, ArmorDamage = 10f,
+                    TargetedEntityId = targetId,
+                }
+            };
+
+            var context = CreateContext();
+            DamageSystem.Tick(state, hits, in context, () => 0.1f);
+
+            Assert.AreEqual(0, state.Projectiles.Count, "Projectile should be removed after ricochet");
+        }
+
+        [Test]
+        public void Tick_RicochetBreaksHelmet_BothEventsFired()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+            // Helmet in safe zone (dur 83%) so effective armor = full 60 pts
+            // But low enough durability that ArmorDmg (15 × 2 = 30) will break it (25 - 30 → 0)
+            var helmet = ArmorState.Create(60f, 30f);
+            helmet.CurrentDurability = 25f; // 83% = safe zone, effective armor = 60
+            state.ArmorMap[targetId] = new ArmorSlotState { Helmet = helmet };
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, headshotDamageMultiplier: 2f,
+                penetration: 5f, armorDamage: 15f); // pen 5 < armor 60 → ricochet eligible
+            state.Projectiles.Add(projectile);
+
+            var events = new FakeRaidEvents();
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, Penetration = 5f, ArmorDamage = 15f,
+                    TargetedEntityId = targetId,
+                }
+            };
+
+            var context = CreateContext(events);
+            DamageSystem.Tick(state, hits, in context, () => 0.1f);
+
+            Assert.AreEqual(100f, state.HealthMap[targetId].CurrentHp, 0.001f,
+                "Still 0 HP damage on ricochet even when helmet breaks");
+            Assert.IsTrue(events.ArmorBrokenCalled, "ArmorBroken should fire");
+            Assert.IsTrue(events.RicochetCalled, "Ricochet should fire");
+            Assert.IsTrue(helmet.IsBroken, "Helmet should be broken");
         }
     }
 }

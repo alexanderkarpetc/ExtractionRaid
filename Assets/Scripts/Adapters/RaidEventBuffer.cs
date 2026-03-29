@@ -36,6 +36,8 @@ namespace Adapters
         LootableSpawned,
         LootableDespawned,
         DamageNumber,
+        ArmorBroken,
+        ProjectileRicochet,
     }
 
     public struct RaidEvent
@@ -304,6 +306,27 @@ namespace Adapters
                 CurrentHp = isHeadshot ? 1f : 0f,
                 MaxHp = isKill ? 1f : 0f,
                 Direction = bulletDir,
+            });
+        }
+
+        public void ArmorBroken(EId entityId, bool isHelmet)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.ArmorBroken,
+                Id = entityId,
+                Damage = isHelmet ? 1f : 0f,
+            });
+        }
+
+        public void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.ProjectileRicochet,
+                Id = projectileId,
+                Position = position,
+                Direction = direction,
             });
         }
 
