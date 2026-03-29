@@ -618,5 +618,100 @@ namespace Tests.EditMode
             Assert.IsTrue(events.RicochetCalled, "Ricochet should fire");
             Assert.IsTrue(helmet.IsBroken, "Helmet should be broken");
         }
+
+        // ── Bleed Roll ────────────────────────────────────────
+
+        [Test]
+        public void Tick_WithBleedChance_RollBelow_AppliesBleeding()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, bleedChance: 0.3f);
+            state.Projectiles.Add(projectile);
+
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, BleedChance = 0.3f,
+                }
+            };
+
+            var context = CreateContext();
+            DamageSystem.Tick(state, hits, in context, () => 0.1f); // roll 0.1 < 0.3
+
+            Assert.IsTrue(StatusEffectSystem.HasEffect(state, targetId, StatusEffectType.Bleeding),
+                "Should apply bleeding when roll < bleedChance");
+        }
+
+        [Test]
+        public void Tick_WithBleedChance_RollAbove_NoBleeding()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f, bleedChance: 0.3f);
+            state.Projectiles.Add(projectile);
+
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, BleedChance = 0.3f,
+                }
+            };
+
+            var context = CreateContext();
+            DamageSystem.Tick(state, hits, in context, () => 0.5f); // roll 0.5 > 0.3
+
+            Assert.IsFalse(StatusEffectSystem.HasEffect(state, targetId, StatusEffectType.Bleeding),
+                "Should NOT apply bleeding when roll > bleedChance");
+        }
+
+        [Test]
+        public void Tick_ZeroBleedChance_NoBleeding()
+        {
+            var state = RaidState.Create();
+            var ownerId = state.AllocateEId();
+            var targetId = state.AllocateEId();
+
+            state.HealthMap[targetId] = HealthState.Create(100f);
+
+            var projId = state.AllocateEId();
+            var projectile = ProjectileEntityState.Create(
+                projId, ownerId, Vector3.zero, Vector3.forward,
+                20f, 0f, 3f, 25f); // bleedChance defaults to 0
+            state.Projectiles.Add(projectile);
+
+            var hits = new List<HitSignal>
+            {
+                new HitSignal
+                {
+                    ProjectileId = projId, TargetId = targetId,
+                    Damage = 25f, // BleedChance defaults to 0
+                }
+            };
+
+            var context = CreateContext();
+            DamageSystem.Tick(state, hits, in context, () => 0.01f); // very low roll
+
+            Assert.IsFalse(StatusEffectSystem.HasEffect(state, targetId, StatusEffectType.Bleeding),
+                "Zero bleedChance should never cause bleeding");
+        }
     }
 }

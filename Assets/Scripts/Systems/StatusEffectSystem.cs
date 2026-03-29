@@ -42,7 +42,10 @@ namespace Systems
                 return;
 
             effect.LastTickTime = state.ElapsedTime;
-            DamageSystem.ApplyDamage(health, StatusEffectConstants.BleedDamagePerTick);
+            float dmg = effect.Level >= 2
+                ? StatusEffectConstants.BleedL2DamagePerTick
+                : StatusEffectConstants.BleedL1DamagePerTick;
+            DamageSystem.ApplyDamage(health, dmg);
 
             if (health.IsAlive)
                 context.Events.EntityDamaged(entityId, health.CurrentHp, health.MaxHp);
@@ -70,12 +73,18 @@ namespace Systems
             for (int i = 0; i < effects.Count; i++)
             {
                 if (effects[i].Type == type)
+                {
+                    // Upgrade: L1 → L2 (max level = 2)
+                    if (effects[i].Level < 2)
+                        effects[i].Level = 2;
                     return;
+                }
             }
 
             effects.Add(new StatusEffectInstance
             {
                 Type = type,
+                Level = 1,
                 AppliedTime = state.ElapsedTime,
                 LastTickTime = state.ElapsedTime,
             });
@@ -92,6 +101,38 @@ namespace Systems
                 {
                     effects.RemoveAt(i);
                     break;
+                }
+            }
+        }
+
+        public static int GetBleedLevel(RaidState state, EId entityId)
+        {
+            if (!state.StatusEffects.TryGetValue(entityId, out var effects))
+                return 0;
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i].Type == StatusEffectType.Bleeding)
+                    return effects[i].Level;
+            }
+
+            return 0;
+        }
+
+        public static void DowngradeBleed(RaidState state, EId entityId)
+        {
+            if (!state.StatusEffects.TryGetValue(entityId, out var effects))
+                return;
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i].Type == StatusEffectType.Bleeding)
+                {
+                    if (effects[i].Level >= 2)
+                        effects[i].Level = 1;
+                    else
+                        effects.RemoveAt(i);
+                    return;
                 }
             }
         }

@@ -45,6 +45,7 @@ namespace View
                         EId targeted = default;
                         float penetration = 0f;
                         float armorDamage = 0f;
+                        float bleedChance = 0f;
                         foreach (var p in session.RaidState.Projectiles)
                         {
                             if (p.Id == e.Id)
@@ -52,10 +53,11 @@ namespace View
                                 targeted = p.TargetedEntityId;
                                 penetration = p.Penetration;
                                 armorDamage = p.ArmorDamage;
+                                bleedChance = p.BleedChance;
                                 break;
                             }
                         }
-                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage);
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage, bleedChance);
                         break;
                     }
                     case RaidEventType.ProjectileHit:
@@ -82,7 +84,8 @@ namespace View
         }
 
         void SpawnView(EId id, Vector3 position, Vector3 direction, float damage,
-            EId targetedEntityId = default, float penetration = 0f, float armorDamage = 0f)
+            EId targetedEntityId = default, float penetration = 0f, float armorDamage = 0f,
+            float bleedChance = 0f)
         {
             if (_projectilePrefab == null) return;
 
@@ -92,7 +95,7 @@ namespace View
 
             var go = Object.Instantiate(_projectilePrefab, position, rotation);
             var view = go.GetComponent<ProjectileView>();
-            view.Initialize(id, damage, targetedEntityId, penetration, armorDamage);
+            view.Initialize(id, damage, targetedEntityId, penetration, armorDamage, bleedChance);
             _views[id] = view;
         }
 

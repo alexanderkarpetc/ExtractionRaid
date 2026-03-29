@@ -9,16 +9,18 @@ namespace View
         float _damage;
         float _penetration;
         float _armorDamage;
+        float _bleedChance;
         bool _hit;
         EId _targetedEntityId;
 
         public void Initialize(EId id, float damage, EId targetedEntityId = default,
-            float penetration = 0f, float armorDamage = 0f)
+            float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f)
         {
             EId = id;
             _damage = damage;
             _penetration = penetration;
             _armorDamage = armorDamage;
+            _bleedChance = bleedChance;
             _targetedEntityId = targetedEntityId;
         }
 
@@ -67,6 +69,7 @@ namespace View
                     Damage = _damage,
                     Penetration = _penetration,
                     ArmorDamage = _armorDamage,
+                    BleedChance = _bleedChance,
                     HitPoint = hitPoint,
                     TargetedEntityId = _targetedEntityId,
                 });

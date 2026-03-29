@@ -30,8 +30,13 @@ namespace Systems
                 float elapsed = state.ElapsedTime - player.BandageUseStartTime;
                 if (elapsed >= StatusEffectConstants.BandageUseTime)
                 {
-                    StatusEffectSystem.RemoveEffect(state, player.Id, StatusEffectType.Bleeding);
-                    context.Events.StatusEffectRemoved(player.Id, "Bleeding");
+                    StatusEffectSystem.DowngradeBleed(state, player.Id);
+                    int levelAfter = StatusEffectSystem.GetBleedLevel(state, player.Id);
+
+                    if (levelAfter == 0)
+                        context.Events.StatusEffectRemoved(player.Id, "Bleeding");
+                    else
+                        context.Events.StatusEffectApplied(player.Id, "BleedingL1");
 
                     if (player.ActiveBandageSlot >= 0)
                         state.Inventory.Backpack[player.ActiveBandageSlot] = null;

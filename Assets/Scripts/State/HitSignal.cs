@@ -9,6 +9,7 @@ namespace State
         public float Damage;
         public float Penetration;
         public float ArmorDamage;
+        public float BleedChance;
         public Vector3 HitPoint;
         public EId TargetedEntityId; // who was aimed at (may differ from TargetId)
     }

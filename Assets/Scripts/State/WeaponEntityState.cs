@@ -25,6 +25,7 @@ namespace State
         public float HeadshotDamageMultiplier;
         public float BasePenetration;
         public float BaseArmorDamage;
+        public float BaseBleedChance;
         public int ProjectilesPerShot;
         public float SpreadAngle;
 

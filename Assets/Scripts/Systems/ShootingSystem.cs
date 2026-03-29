@@ -116,7 +116,8 @@ namespace Systems
                     weapon.HeadshotDamageMultiplier,
                     targetedEntityId,
                     penetration: weapon.BasePenetration,
-                    armorDamage: weapon.BaseArmorDamage);
+                    armorDamage: weapon.BaseArmorDamage,
+                    bleedChance: weapon.BaseBleedChance);
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);

@@ -97,6 +97,17 @@ namespace Systems
 
                 ApplyDamage(health, finalDamage);
 
+                // Bleed roll (ignores armor, per hit signal = per pellet for shotgun)
+                if (health.IsAlive && hit.BleedChance > 0f)
+                {
+                    float bleedRoll = randomProvider != null ? randomProvider() : Random.value;
+                    if (bleedRoll < hit.BleedChance)
+                    {
+                        StatusEffectSystem.ApplyEffect(state, hit.TargetId, StatusEffectType.Bleeding);
+                        context.Events.StatusEffectApplied(hit.TargetId, "Bleeding");
+                    }
+                }
+
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
                 else
