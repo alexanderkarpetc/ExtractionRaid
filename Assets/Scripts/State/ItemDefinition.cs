@@ -28,6 +28,7 @@ namespace State
         // Combat stats (ammo items)
         public float Penetration;
         public float ArmorDamage;
+        public float BleedChance;
 
         public bool IsStackable => MaxStackSize > 1;
 
@@ -259,6 +260,41 @@ namespace State
                     AmmoType = "Ammo_Rifle_AP",
                     Penetration = 35f,
                     ArmorDamage = 8f,
+                },
+
+                // --- HP Ammo (Hollow Point — high bleed, no pen) ---
+                ["Ammo_Rifle_HP"] = new()
+                {
+                    Id = "Ammo_Rifle_HP",
+                    DisplayName = "Rifle HP Ammo",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 60,
+                    AmmoType = "Ammo_Rifle_HP",
+                    Penetration = 0f,
+                    ArmorDamage = 0f,
+                    BleedChance = 0.30f,
+                },
+                ["Ammo_Shotgun_HP"] = new()
+                {
+                    Id = "Ammo_Shotgun_HP",
+                    DisplayName = "Shotgun HP Ammo",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                    AmmoType = "Ammo_Shotgun_HP",
+                    Penetration = 0f,
+                    ArmorDamage = 0f,
+                    BleedChance = 0.08f, // per pellet, 7 pellets → ~44% per shot
+                },
+                ["Ammo_Pistol_HP"] = new()
+                {
+                    Id = "Ammo_Pistol_HP",
+                    DisplayName = "Pistol HP Ammo",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 36,
+                    AmmoType = "Ammo_Pistol_HP",
+                    Penetration = 0f,
+                    ArmorDamage = 0f,
+                    BleedChance = 0.25f,
                 },
 
                 // --- Weapon Mods ---

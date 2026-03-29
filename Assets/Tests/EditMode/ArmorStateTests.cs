@@ -171,6 +171,31 @@ namespace Tests.EditMode
                 "AP ammo should have higher penetration than standard");
         }
 
+        [Test]
+        public void ItemDefinition_AmmoRifleHP_HasBleedChance()
+        {
+            var def = ItemDefinition.Get("Ammo_Rifle_HP");
+            Assert.IsNotNull(def);
+            Assert.Greater(def.BleedChance, 0f, "HP ammo should have bleed chance");
+            Assert.AreEqual(0f, def.Penetration, 0.001f, "HP ammo should have zero penetration");
+        }
+
+        [Test]
+        public void ItemDefinition_AmmoShotgunHP_HasLowPerPelletBleed()
+        {
+            var def = ItemDefinition.Get("Ammo_Shotgun_HP");
+            Assert.IsNotNull(def);
+            Assert.Greater(def.BleedChance, 0f);
+            Assert.Less(def.BleedChance, 0.15f, "Shotgun HP per-pellet bleed should be low");
+        }
+
+        [Test]
+        public void ItemDefinition_StandardAmmo_NoBleedChance()
+        {
+            var def = ItemDefinition.Get("Ammo_Rifle");
+            Assert.AreEqual(0f, def.BleedChance, 0.001f, "Standard ammo should have no bleed");
+        }
+
         // ── RaidState.ArmorMap ────────────────────────────────
 
         [Test]

@@ -98,6 +98,23 @@ namespace Systems
             }
 
             if (dir.sqrMagnitude < 0.001f) return;
+
+            // Compose combat stats: WeaponBase + Ammo (+ WeaponMod + CharTree placeholders)
+            float ammoPen = 0f, ammoArmorDmg = 0f, ammoBleedChance = 0f;
+            if (!string.IsNullOrEmpty(weapon.AmmoType))
+            {
+                var ammoDef = ItemDefinition.Get(weapon.AmmoType);
+                if (ammoDef != null)
+                {
+                    ammoPen = ammoDef.Penetration;
+                    ammoArmorDmg = ammoDef.ArmorDamage;
+                    ammoBleedChance = ammoDef.BleedChance;
+                }
+            }
+            float totalPen = weapon.BasePenetration + ammoPen; // + weaponMod + charTree (future)
+            float totalArmorDmg = weapon.BaseArmorDamage + ammoArmorDmg;
+            float totalBleedChance = weapon.BaseBleedChance + ammoBleedChance;
+
             var count = Mathf.Max(1, weapon.ProjectilesPerShot);
             var halfSpread = weapon.SpreadAngle * 0.5f;
 
@@ -115,9 +132,9 @@ namespace Systems
                     weapon.ProjectileDamage * cfg.DamageMultiplier,
                     weapon.HeadshotDamageMultiplier,
                     targetedEntityId,
-                    penetration: weapon.BasePenetration,
-                    armorDamage: weapon.BaseArmorDamage,
-                    bleedChance: weapon.BaseBleedChance);
+                    penetration: totalPen,
+                    armorDamage: totalArmorDmg,
+                    bleedChance: totalBleedChance);
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);
