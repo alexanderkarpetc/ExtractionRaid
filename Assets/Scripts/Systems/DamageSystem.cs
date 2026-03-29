@@ -40,7 +40,20 @@ namespace Systems
                 if (isHeadshot && projectile != null)
                     damage *= projectile.HeadshotDamageMultiplier;
 
-                ApplyDamage(health, damage);
+                // Armor damage reduction
+                float finalDamage = damage;
+                if (state.ArmorMap.TryGetValue(hit.TargetId, out var armorSlots))
+                {
+                    var result = ArmorSystem.Calculate(damage, hit.Penetration, hit.ArmorDamage,
+                        armorSlots, isHeadshot);
+                    finalDamage = result.HpDamage;
+
+                    var armor = ArmorSystem.GetArmorForHit(armorSlots, isHeadshot);
+                    if (armor != null && !armor.IsBroken)
+                        ArmorSystem.ApplyDurabilityDamage(armor, result.ArmorDurDamage);
+                }
+
+                ApplyDamage(health, finalDamage);
 
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
@@ -51,7 +64,7 @@ namespace Systems
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
                     context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot);
-                    context.Events.DamageNumberSpawned(hit.HitPoint, damage, isHeadshot, !health.IsAlive,
+                    context.Events.DamageNumberSpawned(hit.HitPoint, finalDamage, isHeadshot, !health.IsAlive,
                         projectile != null ? projectile.Direction : Vector3.forward);
                 }
 
