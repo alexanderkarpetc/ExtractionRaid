@@ -10,6 +10,8 @@ alwaysApply: false
 ### Unit tests (EditMode)
 Test systems with synthetic state, fake adapters/ports, deterministic RNG, event buffers. Systems must be testable without scenes.
 
+**MUST: no DevCheats in systems under test.** Systems read tuning values from `RaidContext` config structs (`AimConfig`, `ShootingConfig`, etc.), never from `DevCheats.*` directly. Tests use `XxxConfig.Default`; production code (`RaidSession`) populates structs from `DevCheats`. New DevCheats-dependent logic → add field to config struct → wire in `RaidSession.Tick()`.
+
 ### Integration tests (PlayMode)
 Only for Unity integration: navmesh validation, bullet collisions, spawn/extraction triggers, launch flow wiring.
 

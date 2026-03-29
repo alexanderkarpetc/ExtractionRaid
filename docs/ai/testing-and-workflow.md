@@ -13,6 +13,9 @@ Prefer testing systems with:
 
 Systems should be testable without scenes.
 
+**MUST: no DevCheats in systems under test.**
+Systems must read tuning values from `RaidContext` config structs (`AimConfig`, `ShootingConfig`, etc.), never from `DevCheats.*` static accessors directly. This makes tests deterministic — they use `XxxConfig.Default` without depending on ScriptableObject state. Production code (`RaidSession`) populates these structs from `DevCheats` when creating the context. When adding new DevCheats-dependent logic to a system, add the field to the appropriate config struct (or create a new one) and wire it in `RaidSession.Tick()`.
+
 ### Integration tests (PlayMode)
 Use PlayMode tests only for Unity integration, such as:
 - navmesh validation
