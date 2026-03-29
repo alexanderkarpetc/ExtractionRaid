@@ -21,6 +21,14 @@ namespace State
         public int MaxStackSize = 1;
         public string AmmoType;
 
+        // Armor stats (helmet/vest items)
+        public float ArmorPoints;
+        public float MaxDurability;
+
+        // Combat stats (ammo items)
+        public float Penetration;
+        public float ArmorDamage;
+
         public bool IsStackable => MaxStackSize > 1;
 
         static Dictionary<string, ItemDefinition> _registry;
@@ -66,12 +74,16 @@ namespace State
                     Id = "Helmet_Basic",
                     DisplayName = "Basic Helmet",
                     AllowedSlots = ItemSlotType.Helmet | ItemSlotType.Backpack,
+                    ArmorPoints = 30f,
+                    MaxDurability = 100f,
                 },
                 ["Armor_Basic"] = new()
                 {
                     Id = "Armor_Basic",
                     DisplayName = "Basic Armor",
                     AllowedSlots = ItemSlotType.BodyArmor | ItemSlotType.Backpack,
+                    ArmorPoints = 40f,
+                    MaxDurability = 120f,
                 },
                 ["Medkit"] = new()
                 {
@@ -87,6 +99,8 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle",
+                    Penetration = 10f,
+                    ArmorDamage = 5f,
                 },
                 ["Ammo_Shotgun"] = new()
                 {
@@ -95,6 +109,8 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                     AmmoType = "Ammo_Shotgun",
+                    Penetration = 8f,
+                    ArmorDamage = 4f,
                 },
                 ["Ammo_Pistol"] = new()
                 {
@@ -103,6 +119,8 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol",
+                    Penetration = 12f,
+                    ArmorDamage = 6f,
                 },
                 ["Grenade"] = new()
                 {
@@ -229,6 +247,8 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol_AP",
+                    Penetration = 30f,
+                    ArmorDamage = 7f,
                 },
                 ["Ammo_Rifle_AP"] = new()
                 {
@@ -237,6 +257,8 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle_AP",
+                    Penetration = 35f,
+                    ArmorDamage = 8f,
                 },
 
                 // --- Weapon Mods ---

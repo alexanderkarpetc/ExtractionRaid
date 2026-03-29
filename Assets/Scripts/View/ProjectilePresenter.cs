@@ -41,13 +41,21 @@ namespace View
                 {
                     case RaidEventType.ProjectileSpawned:
                     {
-                        // Find targeted entity from state
+                        // Find targeted entity and combat stats from state
                         EId targeted = default;
+                        float penetration = 0f;
+                        float armorDamage = 0f;
                         foreach (var p in session.RaidState.Projectiles)
                         {
-                            if (p.Id == e.Id) { targeted = p.TargetedEntityId; break; }
+                            if (p.Id == e.Id)
+                            {
+                                targeted = p.TargetedEntityId;
+                                penetration = p.Penetration;
+                                armorDamage = p.ArmorDamage;
+                                break;
+                            }
                         }
-                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted);
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage);
                         break;
                     }
                     case RaidEventType.ProjectileHit:
@@ -73,7 +81,8 @@ namespace View
             }
         }
 
-        void SpawnView(EId id, Vector3 position, Vector3 direction, float damage, EId targetedEntityId = default)
+        void SpawnView(EId id, Vector3 position, Vector3 direction, float damage,
+            EId targetedEntityId = default, float penetration = 0f, float armorDamage = 0f)
         {
             if (_projectilePrefab == null) return;
 
@@ -83,7 +92,7 @@ namespace View
 
             var go = Object.Instantiate(_projectilePrefab, position, rotation);
             var view = go.GetComponent<ProjectileView>();
-            view.Initialize(id, damage, targetedEntityId);
+            view.Initialize(id, damage, targetedEntityId, penetration, armorDamage);
             _views[id] = view;
         }
 

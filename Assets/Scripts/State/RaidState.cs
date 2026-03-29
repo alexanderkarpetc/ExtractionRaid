@@ -18,6 +18,7 @@ namespace State
         public List<NpcState> Npcs;
         public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
+        public Dictionary<EId, ArmorSlotState> ArmorMap;
 
         int _nextEIdValue;
 
@@ -45,6 +46,7 @@ namespace State
                 Npcs = new List<NpcState>(),
                 Inventory = inventory ?? new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
+                ArmorMap = new Dictionary<EId, ArmorSlotState>(),
             };
         }
     }

@@ -114,7 +114,9 @@ namespace Systems
                     state.ElapsedTime, weapon.ProjectileLifetime,
                     weapon.ProjectileDamage * cfg.DamageMultiplier,
                     weapon.HeadshotDamageMultiplier,
-                    targetedEntityId);
+                    targetedEntityId,
+                    penetration: weapon.BasePenetration,
+                    armorDamage: weapon.BaseArmorDamage);
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);

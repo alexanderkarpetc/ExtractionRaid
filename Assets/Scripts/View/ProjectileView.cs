@@ -7,13 +7,18 @@ namespace View
     {
         public EId EId { get; private set; }
         float _damage;
+        float _penetration;
+        float _armorDamage;
         bool _hit;
         EId _targetedEntityId;
 
-        public void Initialize(EId id, float damage, EId targetedEntityId = default)
+        public void Initialize(EId id, float damage, EId targetedEntityId = default,
+            float penetration = 0f, float armorDamage = 0f)
         {
             EId = id;
             _damage = damage;
+            _penetration = penetration;
+            _armorDamage = armorDamage;
             _targetedEntityId = targetedEntityId;
         }
 
@@ -60,6 +65,8 @@ namespace View
                     ProjectileId = EId,
                     TargetId = damageable.EId,
                     Damage = _damage,
+                    Penetration = _penetration,
+                    ArmorDamage = _armorDamage,
                     HitPoint = hitPoint,
                     TargetedEntityId = _targetedEntityId,
                 });
