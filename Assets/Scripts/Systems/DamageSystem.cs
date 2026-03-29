@@ -63,6 +63,14 @@ namespace Systems
                         context.Events.ProjectileRicochet(hit.ProjectileId, hit.HitPoint,
                             projectile != null ? projectile.Direction : Vector3.forward);
 
+                        // Ricochet feedback (player shots only)
+                        if (projectile != null && state.PlayerEntity != null
+                            && projectile.OwnerId == state.PlayerEntity.Id)
+                        {
+                            context.Events.HitConfirmed(isKill: false, isHeadshot: true,
+                                absorptionRatio: 1f, isRicochet: true);
+                        }
+
                         // Remove projectile
                         for (int i = state.Projectiles.Count - 1; i >= 0; i--)
                         {
@@ -79,11 +87,13 @@ namespace Systems
 
                 // Armor damage reduction
                 float finalDamage = damage;
+                float absorptionRatio = 0f;
                 if (state.ArmorMap.TryGetValue(hit.TargetId, out var armorSlots))
                 {
                     var result = ArmorSystem.Calculate(damage, hit.Penetration, hit.ArmorDamage,
                         armorSlots, isHeadshot);
                     finalDamage = result.HpDamage;
+                    absorptionRatio = result.AbsorptionRatio;
 
                     var armor = ArmorSystem.GetArmorForHit(armorSlots, isHeadshot);
                     if (armor != null && !armor.IsBroken)
@@ -116,9 +126,11 @@ namespace Systems
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
-                    context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot);
+                    context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot,
+                        absorptionRatio: absorptionRatio);
                     context.Events.DamageNumberSpawned(hit.HitPoint, finalDamage, isHeadshot, !health.IsAlive,
-                        projectile != null ? projectile.Direction : Vector3.forward);
+                        projectile != null ? projectile.Direction : Vector3.forward,
+                        absorptionRatio: absorptionRatio);
                 }
 
                 for (int i = state.Projectiles.Count - 1; i >= 0; i--)

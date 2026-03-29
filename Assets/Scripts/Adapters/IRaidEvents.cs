@@ -33,14 +33,16 @@ namespace Adapters
         void MedkitUseStarted();
         void MedkitUseStopped();
 
-        void HitConfirmed(bool isKill, bool isHeadshot = false);
+        void HitConfirmed(bool isKill, bool isHeadshot = false,
+            float absorptionRatio = 0f, bool isRicochet = false);
         void StatusEffectApplied(EId entityId, string effectType);
         void StatusEffectRemoved(EId entityId, string effectType);
 
         void LootableSpawned(EId id, Vector3 position, string typeId);
         void LootableDespawned(EId id);
 
-        void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir);
+        void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
+            float absorptionRatio = 0f);
 
         void ArmorBroken(EId entityId, bool isHelmet);
         void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction);

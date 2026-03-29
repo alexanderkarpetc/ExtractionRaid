@@ -18,6 +18,7 @@ namespace View
             public float Damage;
             public bool IsHeadshot;
             public bool IsKill;
+            public float AbsorptionRatio; // 0 = full pen, 1 = full absorption
             public Vector2 FlyDir; // screen-space direction (normalized)
             public float FlyAngle; // for scatter: random angle
         }
@@ -61,6 +62,7 @@ namespace View
                     Damage = e.Damage,
                     IsHeadshot = e.CurrentHp > 0.5f,
                     IsKill = e.MaxHp > 0.5f,
+                    AbsorptionRatio = e.Id.Value / 1000f, // unpacked from RaidEvent.Id
                     FlyDir = flyDir,
                     FlyAngle = spreadDeg,
                 });
@@ -140,7 +142,11 @@ namespace View
                 Color color;
                 if (p.IsKill) color = DevCheats.DmgNumKillColor;
                 else if (p.IsHeadshot) color = DevCheats.DmgNumHeadshotColor;
-                else color = DevCheats.DmgNumNormalColor;
+                else
+                {
+                    // Blend normal → armor gray by absorption ratio
+                    color = Color.Lerp(DevCheats.DmgNumNormalColor, DevCheats.DmgNumArmorAbsorbColor, p.AbsorptionRatio);
+                }
                 color.a *= alpha;
 
                 // Font size

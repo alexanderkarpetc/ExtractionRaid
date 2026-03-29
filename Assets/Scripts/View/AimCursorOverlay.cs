@@ -43,7 +43,7 @@ namespace View
         const float RollingAlpha = 0.3f;
 
         // Hit markers
-        struct HitMarker { public float time; public bool isKill; public bool isHeadshot; }
+        struct HitMarker { public float time; public bool isKill; public bool isHeadshot; public float absorptionRatio; public bool isRicochet; }
         readonly List<HitMarker> _markers = new();
 
         // ADS visual interpolant
@@ -85,6 +85,8 @@ namespace View
                         time = Time.time,
                         isKill = e.Damage > 0f,
                         isHeadshot = e.Direction.x > 0.5f,
+                        absorptionRatio = e.CurrentHp,
+                        isRicochet = e.MaxHp > 0.5f,
                     });
             }
         }
@@ -275,7 +277,8 @@ namespace View
             for (int i = _markers.Count - 1; i >= 0; i--)
             {
                 var m = _markers[i];
-                float duration = m.isHeadshot ? DevCheats.HeadshotDuration
+                float duration = m.isRicochet ? DevCheats.RicochetDuration
+                    : m.isHeadshot ? DevCheats.HeadshotDuration
                     : m.isKill ? DevCheats.KillDuration
                     : DevCheats.HitDuration;
                 float age = Time.time - m.time;
@@ -288,12 +291,37 @@ namespace View
 
                 float t = age / duration;
                 float alpha = 1f - t;
-                float lineLen = (m.isKill || m.isHeadshot ? DevCheats.KillLineLength : DevCheats.HitLineLength) * scale;
+
+                // Ricochet: distinct short-lived spark marker
+                if (m.isRicochet)
+                {
+                    float ricoLen = DevCheats.HitLineLength * scale * 0.5f;
+                    float ricoGap = DevCheats.HitGapStart * scale * 0.6f;
+                    float ricoThick = DevCheats.HitMarkerThickness * scale * 0.8f;
+                    var ricoColor = DevCheats.RicochetColor;
+                    ricoColor.a = alpha;
+                    GUI.color = ricoColor;
+                    DrawXLine(center, ricoGap, ricoLen, ricoThick, 1f, 1f);
+                    DrawXLine(center, ricoGap, ricoLen, ricoThick, -1f, 1f);
+                    DrawXLine(center, ricoGap, ricoLen, ricoThick, 1f, -1f);
+                    DrawXLine(center, ricoGap, ricoLen, ricoThick, -1f, -1f);
+                    continue;
+                }
+
+                // Proportional sizing: more absorption = smaller marker
+                float absScale = 1f - m.absorptionRatio * 0.5f; // 1.0 at full pen, 0.5 at full absorption
+                float lineLen = (m.isKill || m.isHeadshot ? DevCheats.KillLineLength : DevCheats.HitLineLength) * scale * absScale;
                 float gap = DevCheats.HitGapStart * scale + DevCheats.HitGapExpand * scale * t;
                 float thick = DevCheats.HitMarkerThickness * scale;
-                var color = m.isHeadshot ? DevCheats.HeadshotColor
+
+                // Color: lerp toward gray-blue for armored hits
+                var baseColor = m.isHeadshot ? DevCheats.HeadshotColor
                     : m.isKill ? DevCheats.KillColor
                     : DevCheats.HitColor;
+                var armorColor = DevCheats.ArmorHitColor;
+                var color = (m.isKill || m.isHeadshot)
+                    ? baseColor  // kill/headshot colors are never blended
+                    : Color.Lerp(baseColor, armorColor, m.absorptionRatio);
                 color.a = alpha;
 
                 // Inner X

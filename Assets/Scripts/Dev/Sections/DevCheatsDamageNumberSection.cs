@@ -18,5 +18,6 @@ namespace Dev
         public Color NormalColor = Color.white;
         public Color HeadshotColor = new(1f, 0.85f, 0.2f, 1f);
         public Color KillColor = new(1f, 0.15f, 0.15f, 1f);
+        public Color ArmorAbsorbColor = new(0.55f, 0.55f, 0.6f, 1f);
     }
 }

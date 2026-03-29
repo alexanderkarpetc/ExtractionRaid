@@ -249,13 +249,16 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.MedkitUseStopped });
         }
 
-        public void HitConfirmed(bool isKill, bool isHeadshot = false)
+        public void HitConfirmed(bool isKill, bool isHeadshot = false,
+            float absorptionRatio = 0f, bool isRicochet = false)
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.HitConfirmed,
                 Damage = isKill ? 1f : 0f,
                 Direction = new Vector3(isHeadshot ? 1f : 0f, 0f, 0f),
+                CurrentHp = absorptionRatio,
+                MaxHp = isRicochet ? 1f : 0f,
             });
         }
 
@@ -295,7 +298,8 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.LootableDespawned, Id = id });
         }
 
-        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir)
+        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
+            float absorptionRatio = 0f)
         {
             _events.Add(new RaidEvent
             {
@@ -305,7 +309,9 @@ namespace Adapters
                 // Pack flags into CurrentHp/MaxHp to free Direction for bullet dir
                 CurrentHp = isHeadshot ? 1f : 0f,
                 MaxHp = isKill ? 1f : 0f,
-                Direction = bulletDir,
+                Direction = new Vector3(bulletDir.x, bulletDir.y, bulletDir.z),
+                // Pack absorptionRatio into Id.Value (reuse unused field for DamageNumber events)
+                Id = new EId(Mathf.RoundToInt(absorptionRatio * 1000f)),
             });
         }
 

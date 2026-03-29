@@ -331,6 +331,23 @@ namespace Dev
             set => Config.Crosshair.HeadshotColor = value;
         }
 
+        // Armor feedback
+        public static Color ArmorHitColor
+        {
+            get => Config.Crosshair.ArmorHitColor;
+            set => Config.Crosshair.ArmorHitColor = value;
+        }
+        public static Color RicochetColor
+        {
+            get => Config.Crosshair.RicochetColor;
+            set => Config.Crosshair.RicochetColor = value;
+        }
+        public static float RicochetDuration
+        {
+            get => Config.Crosshair.RicochetDuration;
+            set => Config.Crosshair.RicochetDuration = value;
+        }
+
         // ── ADS ───────────────────────────────────────────
         public static float AdsTransitionTime
         {
@@ -464,6 +481,7 @@ namespace Dev
         public static Color DmgNumNormalColor { get => Config.DamageNumbers.NormalColor; set => Config.DamageNumbers.NormalColor = value; }
         public static Color DmgNumHeadshotColor { get => Config.DamageNumbers.HeadshotColor; set => Config.DamageNumbers.HeadshotColor = value; }
         public static Color DmgNumKillColor { get => Config.DamageNumbers.KillColor; set => Config.DamageNumbers.KillColor = value; }
+        public static Color DmgNumArmorAbsorbColor { get => Config.DamageNumbers.ArmorAbsorbColor; set => Config.DamageNumbers.ArmorAbsorbColor = value; }
 
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer

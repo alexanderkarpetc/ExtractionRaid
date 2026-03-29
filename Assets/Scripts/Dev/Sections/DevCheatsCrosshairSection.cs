@@ -32,5 +32,10 @@ namespace Dev
         public float HeadshotOuterExpandMul = 2f;
         public float HeadshotDuration = 0.5f;
         public Color HeadshotColor = new(1f, 0.85f, 0.2f, 1f);
+
+        // Armor feedback
+        public Color ArmorHitColor = new(0.6f, 0.65f, 0.7f, 1f);
+        public Color RicochetColor = new(0.5f, 0.7f, 1f, 1f);
+        public float RicochetDuration = 0.2f;
     }
 }

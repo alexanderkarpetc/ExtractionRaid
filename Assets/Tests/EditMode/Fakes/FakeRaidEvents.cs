@@ -144,10 +144,15 @@ namespace Tests.EditMode.Fakes
 
         public bool HitConfirmedCalled;
         public bool HitConfirmedIsKill;
-        public void HitConfirmed(bool isKill, bool isHeadshot = false)
+        public float HitConfirmedAbsorptionRatio;
+        public bool HitConfirmedIsRicochet;
+        public void HitConfirmed(bool isKill, bool isHeadshot = false,
+            float absorptionRatio = 0f, bool isRicochet = false)
         {
             HitConfirmedCalled = true;
             HitConfirmedIsKill = isKill;
+            HitConfirmedAbsorptionRatio = absorptionRatio;
+            HitConfirmedIsRicochet = isRicochet;
         }
 
         public bool StatusEffectAppliedCalled;
@@ -184,7 +189,8 @@ namespace Tests.EditMode.Fakes
             LootableDespawnedId = id;
         }
 
-        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir) { }
+        public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
+            float absorptionRatio = 0f) { }
 
         public bool ArmorBrokenCalled;
         public EId ArmorBrokenEntityId;
