@@ -109,12 +109,21 @@ Steady Hand II: Recoil -3% (total -6%)
 Every stat has an absolute maximum. No combination of sources can exceed it.
 
 ```
-Penetration:     cap 6    (ammo max ~4 + weapon max ~1.5 + char max ~0.75)
-Bleed Chance:    cap 70%  (ammo max ~40% + weapon max ~20% + char max ~10%)
-Bonus Damage:    cap 30   (ammo max ~20 + weapon max ~8 + char max ~5)
-Armor Damage:    cap 80%  (ammo max ~50% + weapon max ~20% + char max ~10%)
-Headshot Multi:  cap TBD  (ammo + weapon + char — same 3-source budget)
-Burn Chance:     cap 60%  (same distribution)
+Penetration:     cap 100   (ammo max ~60 + weapon max ~30 + char max ~15)
+Bleed Chance:    cap 70%   (ammo max ~40% + weapon max ~20% + char max ~10%)
+Bonus Damage:    cap TBD   (ammo + weapon + char — same budget split)
+Armor Damage:    cap 30 flat pts (ammo max ~18 + weapon max ~8 + char max ~4)
+Headshot Multi:  cap TBD   (ammo + weapon + char — same 3-source budget)
+Burn Chance:     cap 60%   (same distribution)
+
+NOTE: Armor and Penetration both use 0-100 continuous point scale.
+No tiers. Armor pieces have a Protection Points value (e.g., 45, 65, 80).
+Penetration formula: diff > 0 → multiplier = K/(K+diff), K=30 tunable.
+
+PENETRATION has 4 sources (exception to 3-source rule):
+  EffectivePen = WeaponBasePen + AmmoPen + WeaponMod + CharTreeMod
+  WeaponBasePen is inherent to weapon type (sniper > rifle > SMG > pistol).
+  This is NOT a modifier — it's the weapon's identity stat.
 ```
 
 ### Why Hard Caps?

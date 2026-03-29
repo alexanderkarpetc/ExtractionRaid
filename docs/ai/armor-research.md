@@ -272,3 +272,92 @@ Focus: helmet + vest, penetration system, durability, blunt damage, visual clari
 - **STALKER 2's color-coding** — 4 colors instantly readable
 - **Duckov's stacking** — simple 1/2/3 HP/s, easy to understand
 - **ABI's "can't kill"** — bleed alone won't deliver final blow (prevents feel-bad deaths)
+
+---
+
+## Continuous vs Discrete Armor/Penetration Research
+
+### Games using continuous armor values (0-100+):
+- **Warframe**: 15-1500+ armor, `DR = Armor / (Armor + 300)`, cap 90%
+- **League of Legends**: 0-400+ armor, `DmgMulti = 100 / (100 + Armor)`
+- **Dark and Darker**: piecewise linear AR → DR% (2%/pt low, 1%/pt mid, 0.5%/pt high), cap 80%
+- **The Cycle: Frontier**: 10-33 armor points, scaled differential with diminishing returns
+- **Remnant 2, Diablo 4, WoW, ARK**: all continuous with hyperbolic curves
+
+### Games using discrete tiers + continuous penetration (hybrid):
+- **Tarkov**: discrete armor class 1-10, continuous pen 0-79
+- **Arena Breakout**: discrete 1-6, continuous pen stat within tier
+- **Delta Force**: discrete 1-6 armor, discrete 1-7 pen
+
+### Three formula types for continuous systems:
+
+**Hyperbolic** `DR = Armor / (Armor + K)`:
+- Naturally diminishing returns, elegant, each +1 armor = same EHP gain
+- Used by: Warframe (K=300), LoL (K=100), Remnant (K=200)
+
+**Piecewise linear** (Dark and Darker):
+- Hand-tuned slopes per range (2%→1%→0.5% per point)
+- Full designer control but "very difficult to predict" — player feedback
+
+**Scaled differential** (The Cycle):
+- `diff = Pen - Armor`, apply scale factor → multiplier
+- 5pt diff = 13%, 10pt = 23%, 20pt = 37%
+- Players found it confusing, armor felt too weak
+
+### Readability problem with continuous:
+- Dark and Darker: players say "very difficult to predict" DR from armor number
+- The Cycle: confusing even with range 10-33
+- **Diablo 4 solution**: show DR% directly, not just armor number
+- **Tarkov advantage**: "Class 4 armor" is instantly understood
+
+---
+
+## Top-Down Shooter Combat Feedback Research
+
+### Helldivers 2 (best armor feedback reference)
+- **3-tier hitmarker**: Red X = full pen (100%), White X = partial (65%), Ricochet icon = blocked (0%)
+- **Blue spark on deflection** — instant "your weapon can't penetrate" signal
+- **Projectile physically ricochets** — observable physics event, not just UI
+- No floating damage numbers — hitmarker color carries entire communication load
+
+### Synthetik (best gun feel in top-down)
+- Floating damage: **size = magnitude**, **color = type** (yellow headshot, orange crit, white normal)
+- Hitstop (micro slow-motion) on critical hits
+- Metallic ping/ding on every hit (enemies are robots)
+- Dynamic crosshair bloom reflecting accuracy/recoil
+- Screen shake proportional to weapon weight
+
+### Foxhole (binary armor audio)
+- **Deflect**: "pssht" + spark at impact
+- **Penetrate**: different sound + shrapnel effect
+- Two completely distinct audio-visual pairs for binary outcome
+- Vehicle armor shows visual wear/damage on model
+
+### Hotline Miami / Crimsonland (persistent environment)
+- Blood accumulates as PERMANENT decals on floor
+- From top-down camera this is uniquely powerful — battlefield tells the story
+- Corpses remain entire level
+
+### Nuclear Throne (screen shake philosophy)
+- Directional screen shake opposite to firing direction (camera recoil)
+- Larger weapons = more shake
+- Corpse physics: bodies fling across room, bounce off walls
+- No damage numbers — all feedback is kinetic/spatial
+
+### Enter the Gungeon (minimal approach)
+- White sprite flash on hit (~50-150ms) — bare minimum feedback
+- NO floating damage by default (deliberate choice)
+- Scouter item enables damage numbers (info as gameplay reward)
+
+### ZERO Sievert (closest genre: top-down extraction)
+- Functional/realistic feedback over arcade juice
+- Emphasis on tactical decision-making feedback
+- Recent updates focused on sharper recoil/NPC behavior feel
+
+### Key patterns for ExtractionRaid:
+1. **Material-based particles**: sparks for armor, blood for flesh (spatial, instant)
+2. **Binary audio pairs**: distinct sounds for penetrate vs deflect (Foxhole)
+3. **Size-coded damage numbers**: magnitude through size, type through color (Synthetik)
+4. **Persistent blood decals**: different patterns for armor vs flesh hits
+5. **Ricochet physics**: bullet visibly bouncing off (Helldivers 2)
+6. **Hitmarker color = effectiveness**: 3 states minimum (Helldivers 2)

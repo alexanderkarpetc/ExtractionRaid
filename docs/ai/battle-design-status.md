@@ -1,7 +1,7 @@
 # Battle Design — Current Status
 
 > Living document. Updated as decisions are made.
-> Last updated: 2026-03-28
+> Last updated: 2026-03-29
 
 ## Reference Documents
 - `docs/ai/rpg-modifier-system.md` — base modifier architecture (3-source additive, caps, UI)
@@ -20,104 +20,253 @@ FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
 - Budget: Ammo (50-60%) > Weapon Mods (25-35%) > Char Tree (10-15%)
 - Weapon mods always have trade-offs (no pure upgrades)
 - UI: color-coded breakdown per source (🟡Ammo / 🔵Weapon / 🟢Character / ⬜Base)
+- **All shot-related stats** use full modifier pipeline: `WeaponBase + Ammo + WeaponMod + CharTree`
+  - This applies to: Penetration, Damage, ArmorDmg, BleedChance, HeadshotMulti, BurnChance
+  - WeaponBase = weapon identity stat (sniper base pen > pistol base pen)
 
 **Why additive**: multiplicative creates mandatory builds (Warframe, Division 2 evidence)
 **Why ammo largest**: consumable = extraction economy risk/reward
 **Why char tree smallest**: Tarkov removed Recoil Control skill due to veteran gap
 
-### 2. Armor — 2 Slots
+### 2. Armor — 2 Slots, 2 Hitboxes ONLY
 - **Helmet** — head hitbox protection
 - **Body Armor (vest)** — torso hitbox protection
 - Hit resolution: purely hitbox-based (bullet hits head → helmet stats, bullet hits body → vest stats)
-- Each piece has: **Protection Level** (tier) + **Durability** (current/max)
+- **Only 2 hitboxes**: head and body. No arms, legs, or other zones. EVER.
+- Each piece has: **Protection Points** + **Durability** (current/max)
 - No plate carrier system, no face shields, no side plates — just 2 modules
+- No armor materials — Protection Points value is the only differentiator
+- **No tiers** — continuous points scale (0-100), no T1/T2/T3 labels
+- **At 0 durability**: armor BREAKS and DISAPPEARS from character
+  - Helmet: flies off physically with impulse from bullet direction (like PUBG)
+  - Body armor: shatter/crack VFX + disappears
 
 ### 3. Durability
 - Format: `current / max` (e.g., 75/100)
 - Repair: restores current, permanently reduces max
 - Armor is intentionally temporary — limited repair cycles before replacement
-- Armor Damage stat on ammo/weapons determines durability loss per hit
-- **Step-function degradation**:
-  - 100%-51% durability → **full Protection** (nominal tier)
-  - 50%-26% durability → **Protection -1 tier** (T5 performs as T4)
-  - 25%-1% durability → **Protection -2 tiers** (T5 performs as T3)
-  - 0% durability → **no protection** (armor destroyed)
-- UI must show current breakpoint zone (e.g., colored durability bar segments)
+- **Durability damage per hit = FLAT POINTS** (not % of max)
+  - Each ammo/weapon has an ArmorDmg stat = flat durability points removed per hit
+  - This means: high-MaxDur armor takes MORE hits to degrade (3x max = 3x hits)
+  - "Sturdy but weak" armor (low ArmorPts, high MaxDur) = viable build
+  - "Fragile but strong" armor (high ArmorPts, low MaxDur) = glass cannon
+- **ArmorDmg follows full modifier system** (like all shot-related stats):
+  `TotalArmorDmg = WeaponBaseArmorDmg + AmmoArmorDmg + WeaponModArmorDmg + CharArmorDmg`
+- **Then scales with absorption**: `FinalArmorDmg = TotalArmorDmg × (1 + absorptionRatio)`
+  - absorptionRatio = 1.0 - DamageMultiplier (from pen curve)
+  - Full pen (multi=1.0): ArmorDmg × 1.0 (base damage to durability)
+  - Half absorbed (multi=0.5): ArmorDmg × 1.5 (armor works harder = wears faster)
+  - Near-block (multi=0.27): ArmorDmg × 1.73 (armor tanks the hit = heavy wear)
+  - Ricochet: ArmorDmg × 2.0 (max — armor fully deflected the bullet)
+  - Design: armor that PROTECTS you degrades faster. Extraction tension.
+- Each repair cycle reduces MaxDur → buffer before degradation shrinks over armor's lifetime
+- **Parabolic degradation curve**:
+  ```
+  if durability% >= 70%:
+      EffectiveArmor = BaseArmor                 // safe zone
+  else:
+      t = durability% / 70%                      // normalize 0..1
+      EffectiveArmor = BaseArmor × t^p           // p=2, tunable via DevCheats
+  ```
+  - 70-100% → **safe zone**, full Armor Points
+  - Below 70% → parabolic decay (gentle at first, steep near 0%)
+  - 0% → armor BREAKS and disappears
+- Example (65 pts helmet): 70%→65, 60%→48, 50%→33, 30%→12, 10%→1, 0%→💥
+- UI: durability bar with 3 colored zones:
+  - 🟢 Green (70-100%) — safe zone, full protection
+  - 🟡 Yellow (40-70%) — degradation started
+  - 🔴 Red (0-40%) — critical, armor nearly useless
 
-### 4. Penetration — Differential Table (Duckov-inspired)
+### 4. Penetration — Continuous Hyperbolic Curve
 ```
-EffectivePen = AmmoPen + WeaponPenMod + CharPenMod    (hard cap: 6)
-ArmorProt    = ArmorTier (degraded by durability below 50%)
+EffectivePen  = WeaponBasePen + AmmoPen + WeaponMod + CharTreeMod    (hard cap: 100)
+EffectiveArmor = ArmorPoints (degraded by durability curve)
 
-Differential = ArmorProt - EffectivePen
+diff = EffectiveArmor - EffectivePen
 ```
 
-| Differential | Damage Multiplier | Meaning |
-|-------------|-------------------|---------|
-| ≤ 0 | **1.0x** | Full penetration — armor does nothing |
-| +1 | **0.67x** | Partial — 33% absorbed |
-| +2 | **0.50x** | Half damage gets through |
-| +3 | **0.40x** | Strong protection — 60% absorbed |
-| +4 | **0.33x** | Near-full block — only 33% gets through |
+```
+if diff ≤ 0:  DamageMultiplier = 1.0            (full damage)
+if diff > 0:  DamageMultiplier = K / (K + diff)  (armor absorbs)
+```
 
-**Why this model**: transparent (player sees Pen and Armor tier → knows result), no hidden RNG, built-in blunt damage (even +4 still hurts), easy to show in UI.
+With K=30 (tunable via DevCheats):
+
+| Armor advantage | Multiplier | Absorbed | Feel |
+|----------------|-----------|----------|------|
+| 0 | 1.00x | 0% | Armor useless against this ammo |
+| 5 | 0.86x | 14% | Slight protection |
+| 10 | 0.75x | 25% | Noticeable |
+| 20 | 0.60x | 40% | Serious protection |
+| 30 | 0.50x | 50% | Half absorbed |
+| 50 | 0.375x | 63% | Very strong |
+| 80 | 0.273x | 73% | Near-full block |
+
+**Why hyperbolic curve**:
+- Smooth, no cliff effects (unlike Duckov's step table)
+- Natural diminishing returns (first 20 pts = 40%, next 20 = +23%)
+- Every +1 point matters (good for 3-source modifiers)
+- K parameter tunable at runtime
+- Player sees their Pen and enemy Armor → can estimate result
+- Built-in blunt damage (multiplier never reaches 0)
+- **No over-penetration bonus**: Pen 100 vs Armor 10 = same 1.0x as Pen 11 vs Armor 10
+  - This is intentional: AP ammo vs unarmored target = 1.0x but with -5 DMG penalty
+  - Standard ammo is BETTER vs unarmored (same 1.0x, higher base DMG)
+  - Forces carrying mixed ammo types — AP is not universally best
 
 ### 5. Damage Formula
 ```
-RawDMG   = WeaponBaseDMG + AmmoDmgMod + WeaponDmgMod + CharDmgMod
-FinalDMG = RawDMG × PenMultiplier × HeadshotMultiplier
+EffectivePen = WeaponBasePen + AmmoPen + WeaponPenMod + CharPenMod
+RawDMG       = WeaponBaseDMG + AmmoDmgMod + WeaponDmgMod + CharDmgMod
+FinalDMG     = RawDMG × PenMultiplier × HeadshotMultiplier
 ```
 
-### 6. Ammo Archetypes (per caliber)
+**Penetration sources (4 now, not 3):**
+- WeaponBasePen — inherent to weapon (sniper > rifle > pistol)
+- AmmoPen — ammo type (AP > Standard > HP)
+- WeaponPenMod — from weapon attachments (barrel, etc.)
+- CharPenMod — from character skill tree
+
+**Headshot order of operations**: HeadshotMultiplier applies AFTER PenMultiplier.
+This means elite helmets CAN make headshots weaker than bodyshots — this is a FEATURE.
+It changes meta: elite helmet = "aim for the body instead" — tactical depth.
+
+### 6. Ammo Archetypes (per caliber, 0-100 scale)
 
 Each caliber (Rifle, Shotgun, Pistol, future...) has ammo variants:
 
-| Type | Pen | DMG | Bleed | ArmorDmg | Role |
-|------|-----|-----|-------|----------|------|
-| Standard | +1 | +0 | 0% | 0% | Cheap, baseline |
-| AP | +3 | -5 | 0% | +10% | Anti-armor, less flesh |
-| HP (Hollow Point) | +0 | +10 | +30% | 0% | Flesh shredder, useless vs armor |
-| Shredder | +1 | +0 | 0% | +50% | Destroys armor durability |
-| Incendiary | +0 | +5 | 0% | 0% | Burn status (+40%) |
+| Type | Pen | DMG | Bleed | ArmorDmg (flat pts) | Role |
+|------|-----|-----|-------|---------------------|------|
+| Standard | +10 | +0 | 0% | +0 | Cheap, baseline |
+| AP | +35 | -5 | 0% | +5 | Anti-armor, less flesh |
+| HP (Hollow Point) | +0 | +10 | +30% | +0 | Flesh shredder, useless vs armor |
+| Shredder | +10 | +0 | 0% | +25 | Destroys armor durability |
+| Incendiary | +0 | +5 | 0% | +0 | Burn status (+40%) |
 
 **Design intent**: every ammo type has a clear tactical niche. No "best ammo" — only "best ammo for this situation."
+*Note: concrete values are placeholder, will be tuned via DevCheats.*
 
-### 7. Combat Visual Feedback
+### 7. Combat Visual Feedback — Continuous Proportional System
 
-| Shot Result | Crosshair Reaction | Floating Damage | Sound | Healthbar |
-|-------------|-------------------|-----------------|-------|-----------|
-| Full penetration | Normal hit marker | White number (flesh dmg) | Metal crack + flesh | Normal red drain |
-| Partial pen (blunt) | Dimmed/small marker | Gray number (reduced) | Dull thud | Slower drain |
-| Blocked (armor holds) | Spark ✕ icon | "0" or shield icon | Metal clang / ricochet | No drain, armor flash |
-| Bleed applied | Hit marker + 💧 drop | Red number + bleed icon | Wet/slash sound | Tick marks appear |
-| Armor broken | Crack icon burst | "ARMOR BROKEN" text | Glass shatter sound | Armor segment shatters |
-| Headshot | Gold ✕✕ double marker | Large gold number | Distinct headshot ping | Large chunk drain |
+Feedback is NOT discrete states — it's a **continuous mix proportional to damage result**.
 
-**Principle**: player should ALWAYS understand what happened from feedback alone, without checking numbers.
+```
+absorptionRatio = 1.0 - DamageMultiplier    // 0.0 = full pen, 1.0 = full block
+fleshRatio      = DamageMultiplier           // 0.0 = no flesh dmg, 1.0 = full flesh dmg
+```
 
-### 8. Bleeding
+**Particles** — proportional mix:
+- `fleshRatio` controls **blood** amount (splatter size, decal count, intensity)
+- `absorptionRatio` controls **sparks** amount (spark count, brightness, size)
+- At multiplier 1.0 (full pen): 100% blood, 0% sparks
+- At multiplier 0.5: 50% blood, 50% sparks (mixed impact)
+- At multiplier 0.27 (near-block): 27% blood, 73% sparks (mostly metal)
+
+**Floating damage** — size = magnitude:
+- Number size scales with FinalDMG (bigger hit = bigger number)
+- Color blends: white (full pen) → gray (heavy absorption)
+- Small hits produce small subtle numbers, big hits produce large prominent numbers
+
+**Sound** — proportional blend:
+- `fleshRatio` controls flesh hit sound volume
+- `absorptionRatio` controls metal/impact sound volume
+- Full pen = loud flesh hit, quiet metal
+- Heavy armor = loud clang, quiet flesh thud
+
+**Persistent blood decals**:
+- Decal size/count proportional to `fleshRatio`
+- Full pen = large blood splatter on ground (stays permanently)
+- Heavy armor absorption = small or no blood, spark scorch marks instead
+
+**Special feedback states (discrete, not proportional):**
+
+| State | Trigger | Crosshair | Floating | Sound | Particles |
+|-------|---------|-----------|----------|-------|-----------|
+| **Ricochet** | Helmet only, 40% when Pen < Armor | Spark ✕ + direction | No number | Ricochet ping | Bright spark + bullet deflects physically |
+| **Bleed applied** | Bleed roll success | Marker + 💧 | Red + bleed icon | Wet/slash | Extra blood burst |
+| **Armor broken** | Durability → 0 | Crack burst | "ARMOR BROKEN" | Glass shatter | Helmet flies off / vest shatters |
+| **Headshot** | Head hitbox hit | Gold ✕✕ | Large gold number | Headshot ping | Blood burst (large) |
+| **Kill** | HP → 0 | Red ✕ | — | Kill confirm | — |
+
+**"Blocked" state**: does NOT exist as separate feedback. No shot is ever fully blocked
+(multiplier never reaches 0). Instead, very high armor advantage naturally produces
+mostly sparks + tiny damage number + loud metal sound = player understands "my weapon
+is ineffective." Only helmet ricochet = true 0-damage block.
+
+**MUST HAVE feedback principles:**
+1. **Proportional particles**: blood/sparks ratio = damage/absorption ratio (continuous, not binary)
+2. **Ricochet physics**: bullet visibly deflects off helmet (MUST HAVE)
+3. **Persistent blood decals**: stay permanently, size proportional to flesh damage dealt
+4. **Damage number size = magnitude**: bigger hit = bigger number (Synthetik pattern)
+5. **Sound blend**: flesh vs metal sound volumes proportional to pen result
+6. **No "blocked" state for body armor**: every shot does some damage + proportional feedback
+
+**Principle**: player should ALWAYS understand what happened from feedback alone.
+The continuous feedback system means every shot tells a story through its unique
+mix of blood, sparks, sound, and number size.
+
+### 8. Helmet Ricochet
+- **Condition**: fires ONLY when bullet PenPoints < helmet ArmorPoints (diff > 0)
+- **Chance**: 40% (fixed, parameterizable via DevCheats)
+- **On ricochet**: 0 HP damage to player, helmet takes **full durability damage** (same ArmorDmg as normal hit)
+  - Shredder ammo ricochet = still applies its +25 flat ArmorDmg bonus to helmet durability
+  - This means ricochet is NOT free — helmet still degrades, eventually breaks
+- **Visual**: bright spark VFX + bullet physically deflects off helmet + distinct ricochet ping
+- **Attacker feedback**: spark ✕ icon on crosshair with deflection direction
+- **Design intent**: makes helmets feel special vs body armor, rewards investing in headgear
+
+### 9. Bleeding
 - **Trigger**: per-shot roll, `BleedChance = AmmoBleed + WeaponBleed + CharBleed` (cap: 70%)
+- **Bleed ignores armor**: roll happens regardless of pen result. Blunt hit through armor can still cause bleed
+  - Design intent: HP ammo vs heavy armor = low direct damage but bleed still works = "death by bleeding"
+  - Gives HP ammo a niche even vs armored targets (attrition warfare)
+- **Shotgun**: each pellet = separate bleed roll. 7 pellets × low bleed% = shotgun is bleed machine
+  - Balance via per-caliber ammo stats: Shotgun_HP might have 8% bleed per pellet (not 30%)
+  - `1 - (0.92)^7 = 44%` chance per shot — strong but not guaranteed
 - **2 severity levels**: Level 1 (light) and Level 2 (heavy)
 - Level 2 activates same way as Level 1 — new bleed roll while already bleeding upgrades to Level 2
 - Level 2: different icon, more blood decals, more DPS (concrete values TBD)
 - **Treatment**: bandage per level (1 bandage = remove 1 level, Level 2 → Level 1 → clear)
-- HP ammo = primary bleed source (30%), weapon mods and char tree add smaller amounts
+- HP ammo = primary bleed source, weapon mods and char tree add smaller amounts
 
-### 9. Headshot Multiplier
+### 10. Headshot Multiplier
 - Headshot multiplier is a **stat in the modifier system** (like Pen, DMG, Bleed)
-- `HeadshotMulti = BaseMulti + AmmoMod + WeaponMod + CharTreeMod`
+- `HeadshotMulti = WeaponBaseHSMulti + AmmoMod + WeaponMod + CharTreeMod`
+- **WeaponBaseHSMulti is per-weapon**: sniper has higher base HS multi than pistol
 - Follows same additive rules, same 3-source budget, has hard cap
 - Concrete values TBD
 
-### 10. Weight / Mobility
+### 11. Weight / Mobility
 - Heavier armor = **movement speed penalty** (%)
-- Higher tier armor = heavier = slower
-- Concrete values TBD
+- Weight = f(ArmorPoints + MaxDurability) — both protection and sturdiness add weight
+  - Can be overridden per armor piece if needed (e.g., special lightweight elite armor)
+- Concrete formula and values TBD
 
-### 11. Armor Visibility on Enemies
-- Helmet and body armor are **visually rendered on character sprites/models**
-- Different tiers have distinct visual appearance
-- Top-down proportions designed to make armor readable at game camera distance
+### 12. Defender Feedback (own armor status)
+- **HUD armor scheme**: visual diagram of helmet + vest on character silhouette (WoW-style)
+- **Color-coded by durability zone**:
+  - 🟢 Green (70-100%) — safe zone
+  - 🟡 Yellow (40-70%) — degradation started, caution
+  - 🔴 Red (0-40%) — critical, armor nearly useless
+- Shows ArmorPoints value next to each piece (current effective, not base)
+- **On-hit pulse**: armor piece flashes briefly when hit (visual confirmation)
+- **Zone transition alert**: distinct sound + flash when armor drops from green→yellow or yellow→red
+  - Helps player decide: keep fighting or retreat?
+
+### 13. Looted Armor
+- Killed enemy drops armor with **current durability preserved**
+  - Enemy had 80pt helmet at 30% dur → lootable as 80pt helmet at 30% dur
+- Player can equip looted armor immediately or stash in inventory
+- Repair after raid restores current dur (but reduces max dur as usual)
+- **Design intent**: looting armor from enemies = core extraction loop. High-value armor on a kill = reward
+
+### 14. Armor Visibility on Enemies
+- Helmet and body armor are **visually rendered on character models**
+- **3-4 visual classes** of mesh/appearance (light / medium / heavy / elite look)
+  - Each visual class covers a range of Armor Points (e.g., light=10-30, heavy=60-80)
+  - Player sees "heavy helmet" → estimates ~60-80 pts
+- **On-hit feedback confirms**: first shot reveals effectiveness through blood/sparks ratio
+- Combination: visual estimate BEFORE combat + feedback confirmation DURING combat
 
 ---
 
@@ -135,6 +284,8 @@ No open questions at this time. See DEFERRED section for topics pending design.
 | Character Skill Tree structure | Will exist, details TBD | Budget confirmed: 10-15% of stat caps |
 | Concrete stat values | TBD | Base DMG, Protection tiers, cap numbers, bleed DPS, headshot multi values |
 | Armor crafting/repair economy | TBD | Materials, costs, repair stations |
+| ~~Armor damage formula~~ | ✅ Resolved | ArmorDmg = flat pts × (1 + absorptionRatio) |
+| Economy feel | TBD | Early=swap often, mid=rare armor, late=mid is base, high is precious |
 
 ---
 
@@ -145,7 +296,7 @@ No open questions at this time. See DEFERRED section for topics pending design.
 | 2026-03-28 | Additive-only modifiers, no multiplicative | Prevents mandatory builds (Warframe/Div2 evidence) |
 | 2026-03-28 | 3 sources: Ammo > Weapon > CharTree | Extraction economy + anti-veteran-gap |
 | 2026-03-28 | Hard caps per stat | Prevents god-builds, encourages diversification |
-| 2026-03-28 | Duckov-style pen table (differential lookup) | Most transparent for player, no hidden RNG |
+| 2026-03-28 | ~~Duckov-style pen table~~ → replaced by hyperbolic curve | Superseded 2026-03-29 |
 | 2026-03-28 | 2 armor slots only (helmet + vest) | Simplicity, no plate management |
 | 2026-03-28 | Durability with permanent max loss on repair | Creates gear lifecycle for extraction economy |
 | 2026-03-28 | Full visual feedback per shot result | MUST HAVE: player always understands what happened |
@@ -156,4 +307,35 @@ No open questions at this time. See DEFERRED section for topics pending design.
 | 2026-03-28 | Armor visually rendered on characters | Readable at top-down camera distance |
 | 2026-03-28 | Weapon builder = separate system | Deferred, own design doc later |
 | 2026-03-28 | Char skill tree will exist, details later | Budget: 10-15% of stat caps confirmed |
-| 2026-03-28 | Durability: step-function (50%→-1, 25%→-2) | Clear breakpoints, readable in UI, 0%=destroyed |
+| 2026-03-28 | ~~Durability: step-function~~ → replaced by parabolic curve | Superseded 2026-03-29 |
+| 2026-03-29 | No armor materials — only tier/quality matters | Simplicity, no hidden stats |
+| 2026-03-29 | Only 2 hitboxes EVER (head + body) | No limbs, no complexity creep |
+| 2026-03-29 | 0 durability = armor breaks + disappears | Helmet flies off (PUBG-style), vest shatters |
+| 2026-03-29 | Helmet ricochet: 40% when bullet Pen < helmet Prot | Makes helmets special, no HP dmg, durability dmg only |
+| 2026-03-29 | Armor damage formula → deferred to next iteration | Focus on core pen/damage first |
+| 2026-03-29 | Continuous points (0-100), NO tiers | Granular modifiers work naturally, smooth curve, no cliff effects |
+| 2026-03-29 | Durability: parabolic curve (safe zone 70%+, t^p decay below) | Smooth, no cliff, aggressive near 0%, p tunable via DevCheats |
+| 2026-03-29 | Hyperbolic pen curve: K/(K+diff), K=30 tunable | Smooth diminishing returns, every +1 point matters, DevCheats tunable |
+| 2026-03-29 | Material-based particles: sparks for armor, blood for flesh | MUST HAVE — Helldivers 2 / Foxhole pattern |
+| 2026-03-29 | Ricochet: bullet physically deflects off helmet | MUST HAVE — not just UI icon, actual physics visual |
+| 2026-03-29 | Persistent blood decals on ground | Stay permanently, different patterns per hit type |
+| 2026-03-29 | Floating damage size = magnitude | Bigger hit = bigger number (Synthetik pattern) |
+| 2026-03-29 | No "blocked" state for body — only ricochet (helmet) | Continuous curve never reaches 0, feedback is proportional |
+| 2026-03-29 | Continuous proportional feedback (blood/sparks ratio) | fleshRatio + absorptionRatio blend particles, sound, numbers |
+| 2026-03-29 | Pen has 4 sources: WeaponBasePen + Ammo + Mod + Char | Sniper inherently pens more than pistol |
+| 2026-03-29 | Headshot after armor = FEATURE that elite helmet changes meta | "Aim for body" vs elite helmet is tactical depth |
+| 2026-03-29 | Enemy armor: visual mesh classes + on-hit feedback | 3-4 visual appearances + blood/sparks ratio confirms |
+| 2026-03-29 | Bleed ignores armor (roll independent of pen result) | HP ammo niche vs armor = attrition via bleeding |
+| 2026-03-29 | Shotgun: per-pellet bleed roll | Balanced via lower per-pellet bleed% on shotgun ammo |
+| 2026-03-29 | Ricochet = full durability damage (same ArmorDmg) | Ricochet not free — helmet still degrades |
+| 2026-03-29 | No over-penetration bonus (diff ≤ 0 = always 1.0x) | AP ammo worse vs unarmored — forces mixed ammo loadouts |
+| 2026-03-29 | HeadshotMulti base is per-weapon (not global) | Sniper HS multi > Rifle > Pistol |
+| 2026-03-29 | Durability damage = FLAT points per hit (not %) | High MaxDur = more hits to degrade. Enables "sturdy but weak" builds |
+| 2026-03-29 | Bleed L2 re-trigger = ignored (already at max) | Simple, no stacking beyond 2 |
+| 2026-03-29 | Bandage has cast time (value TBD) | Architectural: yes. Tuning: later |
+| 2026-03-29 | ArmorDmg in ammo table = flat points (not %) | Consistent with flat durability damage system |
+| 2026-03-29 | ArmorDmg scales with absorptionRatio: ×(1+absRatio) | Armor that protects = degrades faster. Max 2x on ricochet |
+| 2026-03-29 | Weight = f(ArmorPts + MaxDur), overridable per item | Both protection and sturdiness contribute to weight |
+| 2026-03-29 | Defender HUD: armor silhouette with color zones (WoW-style) | Green/yellow/red + pulse on hit + zone transition alert sound |
+| 2026-03-29 | ALL shot stats use full modifier pipeline (WeaponBase+Ammo+Mod+Char) | Pen, DMG, ArmorDmg, Bleed, HSMulti, Burn — all consistent |
+| 2026-03-29 | Looted armor keeps current durability | Core extraction loop: kill → loot armor → repair |
