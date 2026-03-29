@@ -189,15 +189,16 @@ namespace Tests.EditMode
             weapon.PhaseStartTime = 0f;
             weapon.UnequipTime = 0.2f;
             state.ElapsedTime = 0.3f;
-            // Switch to empty slot 5
+            // Switch to empty slot 1 (clear it first)
+            state.PlayerEntity.Hotbar[1] = null;
             state.PlayerEntity.SelectedHotbarSlot = 0;
-            state.PlayerEntity.PendingHotbarSlot = 5;
+            state.PlayerEntity.PendingHotbarSlot = 1;
             var context = CreateContext();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
             Assert.IsNull(state.PlayerEntity.EquippedWeapon);
-            Assert.AreEqual(5, state.PlayerEntity.SelectedHotbarSlot);
+            Assert.AreEqual(1, state.PlayerEntity.SelectedHotbarSlot);
         }
 
         // ── Swap intent triggers ──────────────────────────────────

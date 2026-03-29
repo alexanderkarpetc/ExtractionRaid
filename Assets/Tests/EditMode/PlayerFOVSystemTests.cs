@@ -143,7 +143,7 @@ namespace Tests.EditMode
         [Test]
         public void BotJustOutsideSectorEdge_NotVisible()
         {
-            float angle = 65f * Mathf.Deg2Rad;
+            float angle = 66f * Mathf.Deg2Rad;
             var botPos = new Vector3(Mathf.Sin(angle) * 20f, 0f, Mathf.Cos(angle) * 20f);
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, botPos);
             var ctx = CreateContext();

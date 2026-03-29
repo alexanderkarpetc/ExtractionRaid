@@ -257,7 +257,31 @@ namespace Session
                 input: _inputAdapter,
                 navMesh: _navMeshAdapter,
                 physics: _physicsAdapter,
-                grenadePositions: _grenadePositionAdapter
+                grenadePositions: _grenadePositionAdapter,
+                aimConfig: new AimConfig
+                {
+                    AimSplitEnabled = DevCheats.AimSplitEnabled,
+                    AimFollowMultiplier = DevCheats.AimFollowMultiplier,
+                    AdsAimFollowMultiplier = DevCheats.AdsAimFollowMultiplier,
+                    RecoilRecoveryMultiplier = DevCheats.RecoilRecoveryMultiplier,
+                    AdsRecoilRecoveryMultiplier = DevCheats.AdsRecoilRecoveryMultiplier,
+                },
+                shootingConfig: new ShootingConfig
+                {
+                    ProjectileSpawnHeight = DevCheats.ProjectileSpawnHeight,
+                    ParallaxCorrection = DevCheats.ParallaxCorrection,
+                    ConvergenceBlend = DevCheats.ConvergenceBlend,
+                    ConvergenceAimUp = DevCheats.ConvergenceAimUp,
+                    AimUpHeightRatio = DevCheats.AimUpHeightRatio,
+                    ProjectileSpeedMultiplier = DevCheats.ProjectileSpeedMultiplier,
+                    DamageMultiplier = DevCheats.DamageMultiplier,
+                    NoRecoil = DevCheats.NoRecoil,
+                    RecoilMultiplier = DevCheats.RecoilMultiplier,
+                    AdsRecoilMultiplier = DevCheats.AdsRecoilMultiplier,
+                    RecoilForwardMultiplier = DevCheats.RecoilForwardMultiplier,
+                    RecoilSideMultiplier = DevCheats.RecoilSideMultiplier,
+                    InfiniteAmmo = DevCheats.InfiniteAmmo,
+                }
             );
 
             // ADS state + blend (before Movement so speed is affected this frame)

@@ -1,4 +1,3 @@
-using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -38,9 +37,11 @@ namespace Systems
                 return;
             }
 
+            var cfg = context.ShootingConfig;
+
             var spawnPos = input.MuzzleWorldPoint;
             // Lower projectile to near-ground level — drastically reduces camera parallax
-            spawnPos.y = DevCheats.ProjectileSpawnHeight;
+            spawnPos.y = cfg.ProjectileSpawnHeight;
 
             // --- Compute two independent directions, then blend ---
             var groundAim = player.WeaponAimPoint;
@@ -48,7 +49,7 @@ namespace Systems
 
             // 1. Parallax-corrected direction (visual: trail through crosshair)
             var toAimParallax = new Vector3(groundAim.x - spawnPos.x, 0f, groundAim.z - spawnPos.z);
-            if (DevCheats.ParallaxCorrection && spawnPos.y > 0.01f)
+            if (cfg.ParallaxCorrection && spawnPos.y > 0.01f)
             {
                 var camPos = input.CameraWorldPosition;
                 if (camPos.y > 0.1f)
@@ -62,11 +63,11 @@ namespace Systems
             // 2. Convergence direction (accuracy: toward actual 3D target)
             var toAimConv = toAimParallax; // fallback = parallax
             float blend = 0f;
-            if (convergence.HasValue && DevCheats.ConvergenceBlend > 0f)
+            if (convergence.HasValue && cfg.ConvergenceBlend > 0f)
             {
                 var convXZ = new Vector3(convergence.Value.x, 0f, convergence.Value.z);
                 toAimConv = new Vector3(convXZ.x - spawnPos.x, 0f, convXZ.z - spawnPos.z);
-                blend = DevCheats.ConvergenceBlend;
+                blend = cfg.ConvergenceBlend;
             }
 
             // 3. Blend: 0 = full parallax (visual), 1 = full convergence (accuracy)
@@ -88,10 +89,10 @@ namespace Systems
 
             // When convergence hit a CHARACTER and AimUp is enabled,
             // angle the bullet slightly upward so it intersects the upper body of the target.
-            if (DevCheats.ConvergenceAimUp && targetDamageable != null && hitCollider != null)
+            if (cfg.ConvergenceAimUp && targetDamageable != null && hitCollider != null)
             {
                 var bounds = hitCollider.bounds;
-                float aimY = Mathf.Lerp(bounds.min.y, bounds.max.y, DevCheats.AimUpHeightRatio);
+                float aimY = Mathf.Lerp(bounds.min.y, bounds.max.y, cfg.AimUpHeightRatio);
                 float dy = aimY - spawnPos.y;
                 dir = new Vector3(dir.x, dy / toAim.magnitude, dir.z).normalized;
             }
@@ -109,9 +110,9 @@ namespace Systems
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
                     projectileId, player.Id, spawnPos, pelletDir,
-                    weapon.ProjectileSpeed * DevCheats.ProjectileSpeedMultiplier,
+                    weapon.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.ProjectileLifetime,
-                    weapon.ProjectileDamage * DevCheats.DamageMultiplier,
+                    weapon.ProjectileDamage * cfg.DamageMultiplier,
                     weapon.HeadshotDamageMultiplier,
                     targetedEntityId);
 
@@ -126,24 +127,24 @@ namespace Systems
 
             // Apply recoil — forward kick + sideways scatter
             // Both go through RecoilOffset so they survive smoothing and decay via RecoilRecoverySpeed
-            if (!DevCheats.NoRecoil
+            if (!cfg.NoRecoil
                 && (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f))
             {
-                float adsRecoilScale = Mathf.Lerp(1f, DevCheats.AdsRecoilMultiplier, player.AdsBlend);
-                float recoilMul = DevCheats.RecoilMultiplier * adsRecoilScale;
+                float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
+                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward kick through RecoilOffset
-                weapon.RecoilOffset += aimDir * (weapon.RecoilKickForward * recoilMul * DevCheats.RecoilForwardMultiplier);
+                weapon.RecoilOffset += aimDir * (weapon.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);
 
                 // Sideways scatter through RecoilOffset
                 var right = new Vector3(aimDir.z, 0f, -aimDir.x);
                 float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
-                weapon.RecoilOffset += right * (sideAmount * recoilMul * DevCheats.RecoilSideMultiplier);
+                weapon.RecoilOffset += right * (sideAmount * recoilMul * cfg.RecoilSideMultiplier);
             }
 
             // Consume one round (shotgun: 1 shell = multiple pellets)
-            if (usesAmmo && !DevCheats.InfiniteAmmo)
+            if (usesAmmo && !cfg.InfiniteAmmo)
             {
                 weapon.AmmoInMagazine -= 1;
             }

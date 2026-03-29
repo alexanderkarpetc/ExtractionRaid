@@ -1,4 +1,3 @@
-using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -36,14 +35,17 @@ namespace Systems
             var weapon = player.EquippedWeapon;
 
             {
+                var aimCfg = context.AimConfig;
                 float aimFollowSharpness = weapon != null ? weapon.AimFollowSharpness : UnarmedAimFollowSharpness;
 
                 // When aim split disabled — skip smoothing (instant follow)
-                if (!DevCheats.AimSplitEnabled)
+                if (!aimCfg.AimSplitEnabled)
                     aimFollowSharpness = 1000f;
                 else
-                    aimFollowSharpness *= DevCheats.AimFollowMultiplier;
-                    aimFollowSharpness *= Mathf.Lerp(1f, DevCheats.AdsAimFollowMultiplier, player.AdsBlend);
+                {
+                    aimFollowSharpness *= aimCfg.AimFollowMultiplier;
+                    aimFollowSharpness *= Mathf.Lerp(1f, aimCfg.AdsAimFollowMultiplier, player.AdsBlend);
+                }
 
                 // Strip recoil to get clean base position
                 var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
@@ -56,8 +58,8 @@ namespace Systems
                 // Decay recoil independently
                 if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
                 {
-                    float adsRecovery = Mathf.Lerp(1f, DevCheats.AdsRecoilRecoveryMultiplier, player.AdsBlend);
-                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * DevCheats.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
+                    float adsRecovery = Mathf.Lerp(1f, aimCfg.AdsRecoilRecoveryMultiplier, player.AdsBlend);
+                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * aimCfg.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
                     weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
                 }
 

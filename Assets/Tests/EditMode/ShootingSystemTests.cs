@@ -155,7 +155,7 @@ namespace Tests.EditMode
 
             var proj = state.Projectiles[0];
             Assert.AreEqual(muzzlePos.x, proj.Position.x, 0.001f);
-            Assert.AreEqual(muzzlePos.y, proj.Position.y, 0.001f);
+            Assert.AreEqual(ShootingConfig.Default.ProjectileSpawnHeight, proj.Position.y, 0.001f);
             Assert.AreEqual(muzzlePos.z, proj.Position.z, 0.001f);
         }
 

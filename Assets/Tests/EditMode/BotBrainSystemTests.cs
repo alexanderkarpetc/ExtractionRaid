@@ -65,11 +65,11 @@ namespace Tests.EditMode
         [Test]
         public void Tick_WithTarget_BotChases()
         {
-            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 20f));
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 40f));
             var bot = state.Bots[0];
             bot.Blackboard.HasTarget = true;
             bot.Blackboard.CanSeeTarget = true;
-            bot.Blackboard.DistanceToTarget = 20f;
+            bot.Blackboard.DistanceToTarget = 40f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             bot.Blackboard.ReactionTimer = 0f;
             var ctx = CreateContext();

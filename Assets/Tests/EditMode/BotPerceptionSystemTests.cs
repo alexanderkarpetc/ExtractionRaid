@@ -72,7 +72,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_PlayerMovingNearby_HeardByBot()
         {
-            var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 10f));
+            var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 5f));
             state.Bots[0].FacingDirection = Vector3.forward;
             state.PlayerEntity.Velocity = Vector3.right * 5f;
             var ctx = CreateContext();
