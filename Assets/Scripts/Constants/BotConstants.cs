@@ -66,6 +66,10 @@ namespace Constants
         public readonly int ProjectilesPerShot;
         public readonly float SpreadAngle;
 
+        // Armor
+        public readonly string HelmetDefinitionId;
+        public readonly string BodyArmorDefinitionId;
+
         // Behavior
         public readonly BotBehaviorFlags Behaviors;
 
@@ -86,6 +90,7 @@ namespace Constants
             float fireInterval = 0.3f, float projectileSpeed = 20f, float projectileDamage = 10f,
             float projectileLifetime = 3f, int projectilesPerShot = 1, float spreadAngle = 5f,
             int grenadeCount = 0, float grenadeCooldown = 0f, float grenadeMinThrowDist = 5f,
+            string helmetDefinitionId = null, string bodyArmorDefinitionId = null,
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot)
         {
             TypeId = typeId;
@@ -121,6 +126,8 @@ namespace Constants
             ProjectileLifetime = projectileLifetime;
             ProjectilesPerShot = projectilesPerShot;
             SpreadAngle = spreadAngle;
+            HelmetDefinitionId = helmetDefinitionId;
+            BodyArmorDefinitionId = bodyArmorDefinitionId;
             Behaviors = behaviors;
         }
     }
@@ -151,7 +158,8 @@ namespace Constants
             visionRange: 25f, visionAngle: 110f,
             targetMemoryDuration: 5f, reactionTime: 0.8f, accuracy: 0.5f,
             fireInterval: 0.4f, projectileSpeed: 18f, projectileDamage: 8f,
-            spreadAngle: 8f
+            spreadAngle: 8f,
+            helmetDefinitionId: "Helmet_Basic"
         );
 
         public static readonly BotTypeConfig PMC = new(
@@ -164,6 +172,7 @@ namespace Constants
             fireInterval: 0.25f, projectileSpeed: 22f, projectileDamage: 12f,
             spreadAngle: 4f,
             grenadeCount: 2, grenadeCooldown: 20f, grenadeMinThrowDist: 5f,
+            helmetDefinitionId: "Helmet_Basic", bodyArmorDefinitionId: "Armor_Basic",
             medkitCount: 2,
             behaviors: BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.Heal | BotBehaviorFlags.Dodge
@@ -178,6 +187,7 @@ namespace Constants
             engageRange: 15f, dodgeCooldown: 3f,
             fireInterval: 0.5f, projectileSpeed: 28f, projectileDamage: 7f,
             projectileLifetime: 2f, projectilesPerShot: 7, spreadAngle: 25f,
+            bodyArmorDefinitionId: "Armor_Basic",
             behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.Dodge
         );

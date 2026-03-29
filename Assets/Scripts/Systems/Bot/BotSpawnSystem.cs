@@ -35,6 +35,26 @@ namespace Systems.Bot
 
             state.Bots.Add(bot);
             state.HealthMap[id] = HealthState.Create(config.MaxHp);
+
+            if (config.HelmetDefinitionId != null || config.BodyArmorDefinitionId != null)
+            {
+                var armorSlots = new ArmorSlotState();
+                if (config.HelmetDefinitionId != null)
+                {
+                    var def = ItemDefinition.Get(config.HelmetDefinitionId);
+                    if (def != null)
+                        armorSlots.Helmet = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                }
+                if (config.BodyArmorDefinitionId != null)
+                {
+                    var def = ItemDefinition.Get(config.BodyArmorDefinitionId);
+                    if (def != null)
+                        armorSlots.BodyArmor = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                }
+                if (armorSlots.Helmet != null || armorSlots.BodyArmor != null)
+                    state.ArmorMap[id] = armorSlots;
+            }
+
             events.BotSpawned(id, position, typeId);
         }
     }

@@ -74,5 +74,61 @@ namespace Tests.EditMode
 
             Assert.AreEqual(3, state.Bots[0].Blackboard.PatrolWaypoints.Length);
         }
+
+        // ── Armor ─────────────────────────────────────────────
+
+        [Test]
+        public void SpawnScav_HasHelmetInArmorMap()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            BotSpawnSystem.SpawnBot(state, "Scav", Vector3.zero, new[] { Vector3.zero }, events);
+
+            var botId = state.Bots[0].Id;
+            Assert.IsTrue(state.ArmorMap.ContainsKey(botId));
+            Assert.IsNotNull(state.ArmorMap[botId].Helmet);
+            Assert.IsNull(state.ArmorMap[botId].BodyArmor);
+        }
+
+        [Test]
+        public void SpawnPMC_HasBothArmorPieces()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            BotSpawnSystem.SpawnBot(state, "PMC", Vector3.zero, new[] { Vector3.zero }, events);
+
+            var botId = state.Bots[0].Id;
+            Assert.IsTrue(state.ArmorMap.ContainsKey(botId));
+            Assert.IsNotNull(state.ArmorMap[botId].Helmet);
+            Assert.IsNotNull(state.ArmorMap[botId].BodyArmor);
+        }
+
+        [Test]
+        public void SpawnBoss_HasOnlyVest()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            BotSpawnSystem.SpawnBot(state, "Boss", Vector3.zero, new[] { Vector3.zero }, events);
+
+            var botId = state.Bots[0].Id;
+            Assert.IsTrue(state.ArmorMap.ContainsKey(botId));
+            Assert.IsNull(state.ArmorMap[botId].Helmet);
+            Assert.IsNotNull(state.ArmorMap[botId].BodyArmor);
+        }
+
+        [Test]
+        public void SpawnTarget_NoArmorMap()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            BotSpawnSystem.SpawnBot(state, "Target", Vector3.zero, new[] { Vector3.zero }, events);
+
+            var botId = state.Bots[0].Id;
+            Assert.IsFalse(state.ArmorMap.ContainsKey(botId));
+        }
     }
 }

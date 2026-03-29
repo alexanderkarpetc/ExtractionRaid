@@ -83,6 +83,27 @@ namespace Systems
                 inventory.Backpack[backpackSlot++] = ItemState.Create(grenadeId, "Grenade");
             }
 
+            // Armor loot — preserve durability from combat
+            if (state.ArmorMap.TryGetValue(bot.Id, out var armorSlots))
+            {
+                if (armorSlots.Helmet != null && !armorSlots.Helmet.IsBroken
+                    && config.HelmetDefinitionId != null)
+                {
+                    var helmetItem = ItemState.Create(state.AllocateEId(), config.HelmetDefinitionId);
+                    helmetItem.CurrentDurability = armorSlots.Helmet.CurrentDurability;
+                    helmetItem.MaxDurability = armorSlots.Helmet.MaxDurability;
+                    inventory.HelmetSlot = helmetItem;
+                }
+                if (armorSlots.BodyArmor != null && !armorSlots.BodyArmor.IsBroken
+                    && config.BodyArmorDefinitionId != null)
+                {
+                    var armorItem = ItemState.Create(state.AllocateEId(), config.BodyArmorDefinitionId);
+                    armorItem.CurrentDurability = armorSlots.BodyArmor.CurrentDurability;
+                    armorItem.MaxDurability = armorSlots.BodyArmor.MaxDurability;
+                    inventory.BodyArmorSlot = armorItem;
+                }
+            }
+
             var lootable = LootableContainerState.Create(id, bot.Position, config.TypeId, inventory);
             state.Lootables.Add(lootable);
             events.LootableSpawned(id, bot.Position, config.TypeId);

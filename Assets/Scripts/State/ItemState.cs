@@ -6,6 +6,13 @@ namespace State
         public string DefinitionId;
         public int StackCount = 1;
 
+        // Armor durability (persisted on item for loot transfer)
+        // -1 = use ItemDefinition defaults on first equip
+        public float CurrentDurability = -1f;
+        public float MaxDurability = -1f;
+
+        public bool HasCustomDurability => CurrentDurability >= 0f;
+
         public ItemDefinition Definition => ItemDefinition.Get(DefinitionId);
         public string DisplayName => Definition?.DisplayName ?? DefinitionId;
 

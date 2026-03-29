@@ -39,6 +39,8 @@ namespace Systems
                 }
             }
 
+            EquipmentSystem.SyncArmorFromInventory(state, playerId, state.Inventory);
+
             events.PlayerSpawned(playerId);
         }
 
@@ -72,6 +74,9 @@ namespace Systems
             state.Inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
             state.Inventory.Backpack[8] = ItemState.Create(state.AllocateEId(), "Bandage");
             state.Inventory.Backpack[9] = ItemState.Create(state.AllocateEId(), "Pistol");
+
+            state.Inventory.HelmetSlot = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
+            state.Inventory.BodyArmorSlot = ItemState.Create(state.AllocateEId(), "Armor_Basic");
         }
     }
 }

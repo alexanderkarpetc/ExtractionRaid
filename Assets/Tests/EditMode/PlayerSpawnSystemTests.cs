@@ -87,5 +87,35 @@ namespace Tests.EditMode
             Assert.AreEqual(firstId, state.PlayerEntity.Id);
             Assert.IsFalse(events.PlayerSpawnedCalled);
         }
+
+        // ── Armor ─────────────────────────────────────────────
+
+        [Test]
+        public void SpawnPlayer_EmptyInventory_GetsStartingArmor()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
+
+            Assert.IsNotNull(state.Inventory.HelmetSlot, "Should get starting helmet");
+            Assert.IsNotNull(state.Inventory.BodyArmorSlot, "Should get starting body armor");
+            Assert.AreEqual("Helmet_Basic", state.Inventory.HelmetSlot.DefinitionId);
+            Assert.AreEqual("Armor_Basic", state.Inventory.BodyArmorSlot.DefinitionId);
+        }
+
+        [Test]
+        public void SpawnPlayer_ArmorPopulatesArmorMap()
+        {
+            var state = RaidState.Create();
+            var events = new FakeRaidEvents();
+
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
+
+            var playerId = state.PlayerEntity.Id;
+            Assert.IsTrue(state.ArmorMap.ContainsKey(playerId), "ArmorMap should have player entry");
+            Assert.IsNotNull(state.ArmorMap[playerId].Helmet);
+            Assert.IsNotNull(state.ArmorMap[playerId].BodyArmor);
+        }
     }
 }

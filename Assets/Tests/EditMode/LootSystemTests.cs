@@ -162,5 +162,61 @@ namespace Tests.EditMode
 
             Assert.IsFalse(result.IsValid);
         }
+
+        // ── Armor Loot ────────────────────────────────────────
+
+        [Test]
+        public void CreateLootable_BotWithArmor_LootContainsArmor()
+        {
+            BotConstants.TryGetConfig("PMC", out var config);
+            var bot = CreateBot("PMC", Vector3.zero);
+
+            // Simulate armor in ArmorMap (as BotSpawnSystem would do)
+            _state.ArmorMap[bot.Id] = new ArmorSlotState
+            {
+                Helmet = ArmorState.Create(30f, 100f),
+                BodyArmor = ArmorState.Create(40f, 120f),
+            };
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            var loot = _state.Lootables[0];
+            Assert.IsNotNull(loot.Inventory.HelmetSlot, "Loot should contain helmet");
+            Assert.IsNotNull(loot.Inventory.BodyArmorSlot, "Loot should contain body armor");
+        }
+
+        [Test]
+        public void CreateLootable_BotArmorDamaged_LootPreservesDurability()
+        {
+            BotConstants.TryGetConfig("Scav", out var config);
+            var bot = CreateBot("Scav", Vector3.zero);
+
+            var helmet = ArmorState.Create(30f, 100f);
+            helmet.CurrentDurability = 45f; // combat damaged
+            _state.ArmorMap[bot.Id] = new ArmorSlotState { Helmet = helmet };
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            var lootedHelmet = _state.Lootables[0].Inventory.HelmetSlot;
+            Assert.IsNotNull(lootedHelmet);
+            Assert.AreEqual(45f, lootedHelmet.CurrentDurability, 0.001f);
+            Assert.AreEqual(100f, lootedHelmet.MaxDurability, 0.001f);
+        }
+
+        [Test]
+        public void CreateLootable_BotBrokenArmor_NotInLoot()
+        {
+            BotConstants.TryGetConfig("Scav", out var config);
+            var bot = CreateBot("Scav", Vector3.zero);
+
+            var helmet = ArmorState.Create(30f, 100f);
+            helmet.CurrentDurability = 0f; // broken!
+            _state.ArmorMap[bot.Id] = new ArmorSlotState { Helmet = helmet };
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            Assert.IsNull(_state.Lootables[0].Inventory.HelmetSlot,
+                "Broken armor should not appear in loot");
+        }
     }
 }
