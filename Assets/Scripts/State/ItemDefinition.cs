@@ -24,6 +24,7 @@ namespace State
         // Armor stats (helmet/vest items)
         public float ArmorPoints;
         public float MaxDurability;
+        public string ArmorPrefabId; // visual mesh in Resources/Prefabs/Armor/{ArmorPrefabId}
 
         // Combat stats (ammo items)
         public float Penetration;
@@ -77,6 +78,7 @@ namespace State
                     AllowedSlots = ItemSlotType.Helmet | ItemSlotType.Backpack,
                     ArmorPoints = 30f,
                     MaxDurability = 100f,
+                    ArmorPrefabId = "Helmet_Basic",
                 },
                 ["Armor_Basic"] = new()
                 {
@@ -85,6 +87,7 @@ namespace State
                     AllowedSlots = ItemSlotType.BodyArmor | ItemSlotType.Backpack,
                     ArmorPoints = 40f,
                     MaxDurability = 120f,
+                    ArmorPrefabId = "Armor_Basic",
                 },
                 ["Medkit"] = new()
                 {

@@ -190,6 +190,20 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void ItemDefinition_HelmetBasic_HasArmorPrefabId()
+        {
+            var def = ItemDefinition.Get("Helmet_Basic");
+            Assert.IsNotNull(def.ArmorPrefabId, "Helmet should have ArmorPrefabId for visual");
+        }
+
+        [Test]
+        public void ItemDefinition_ArmorBasic_HasArmorPrefabId()
+        {
+            var def = ItemDefinition.Get("Armor_Basic");
+            Assert.IsNotNull(def.ArmorPrefabId, "Body armor should have ArmorPrefabId for visual");
+        }
+
+        [Test]
         public void ItemDefinition_StandardAmmo_NoBleedChance()
         {
             var def = ItemDefinition.Get("Ammo_Rifle");
