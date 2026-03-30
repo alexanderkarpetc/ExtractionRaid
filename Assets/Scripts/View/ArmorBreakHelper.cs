@@ -25,8 +25,8 @@ namespace View
                 rb = helmet.AddComponent<Rigidbody>();
 
             rb.mass = 0.5f;
-            rb.drag = 0.5f;
-            rb.angularDrag = 0.3f;
+            rb.linearDamping = 0.5f;
+            rb.angularDamping = 0.3f;
 
             // Impulse: upward + random horizontal
             float force = DevCheats.Config.Armor != null ? 4f : 4f; // future: DevCheats.HelmetFlyForce

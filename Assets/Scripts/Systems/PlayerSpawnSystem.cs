@@ -7,7 +7,8 @@ namespace Systems
 {
     public static class PlayerSpawnSystem
     {
-        public static void SpawnPlayer(RaidState state, Vector3 spawnPosition, IRaidEvents events)
+        public static void SpawnPlayer(RaidState state, Vector3 spawnPosition, IRaidEvents events,
+            string levelId = null)
         {
             if (state.PlayerEntity != null) return;
 
@@ -15,8 +16,11 @@ namespace Systems
             state.PlayerEntity = PlayerEntityState.Create(playerId, spawnPosition);
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
-            if (IsInventoryEmpty(state.Inventory))
+            if (levelId == "shooting_range" || IsInventoryEmpty(state.Inventory))
+            {
+                ClearInventory(state.Inventory);
                 GiveStartingLoadout(state);
+            }
 
             for (int i = 0; i < PlayerEntityState.HotbarSize; i++)
             {
@@ -42,6 +46,16 @@ namespace Systems
             EquipmentSystem.SyncArmorFromInventory(state, playerId, state.Inventory);
 
             events.PlayerSpawned(playerId);
+        }
+
+        static void ClearInventory(InventoryState inv)
+        {
+            for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
+                inv.WeaponSlots[i] = null;
+            inv.HelmetSlot = null;
+            inv.BodyArmorSlot = null;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                inv.Backpack[i] = null;
         }
 
         static bool IsInventoryEmpty(InventoryState inv)

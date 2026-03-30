@@ -49,7 +49,7 @@ namespace Session
                                  $"Player will spawn at world origin. Please add exactly one PlayerSpawnPoint to the scene.");
             }
             var spawnPos = spawnPoints.Length > 0 ? spawnPoints[0].transform.position : Vector3.zero;
-            PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer);
+            PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer, LevelState.LevelId);
             SpawnFromScenePoints();
             // SpawnTestGroundItems();
             // SpawnTestBots();

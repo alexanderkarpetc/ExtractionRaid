@@ -497,6 +497,9 @@ namespace View
                             }
                         }
                     }
+                    // Sync armor visuals if armor slots were involved
+                    SyncArmorAfterTransfer();
+
                     _dragSource = null;
                     _dragLabel = null;
                     Event.current.Use();
@@ -869,6 +872,38 @@ namespace View
             if (_panelBg != null) Destroy(_panelBg);
             if (_promptBg != null) Destroy(_promptBg);
             if (_quickSlotBadgeBg != null) Destroy(_quickSlotBadgeBg);
+        }
+
+        /// <summary>
+        /// After any inventory transfer, sync armor state + visuals from equipment slots.
+        /// Called on every transfer (cheap — EquipmentSystem checks for actual changes).
+        /// </summary>
+        void SyncArmorAfterTransfer()
+        {
+            var session = App.App.Instance?.RaidSession;
+            if (session == null) return;
+
+            var state = session.RaidState;
+            if (state.PlayerEntity == null) return;
+
+            // Sync state: inventory slots → ArmorMap
+            Systems.EquipmentSystem.SyncArmorFromInventory(state, state.PlayerEntity.Id, state.Inventory);
+
+            // Sync visuals: find PlayerView and swap models
+            var playerView = FindObjectOfType<PlayerView>();
+            if (playerView == null) return;
+
+            var helmetDef = state.Inventory.HelmetSlot?.Definition;
+            if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))
+                playerView.SwapHelmetModel(helmetDef.ArmorPrefabId);
+            else
+                playerView.ClearHelmetModel();
+
+            var armorDef = state.Inventory.BodyArmorSlot?.Definition;
+            if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
+                playerView.SwapArmorModel(armorDef.ArmorPrefabId);
+            else
+                playerView.ClearArmorModel();
         }
     }
 }
