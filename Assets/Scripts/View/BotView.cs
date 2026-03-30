@@ -8,10 +8,16 @@ namespace View
     public class BotView : MonoBehaviour, IDamageableView
     {
         [SerializeField] Transform _weaponPivot;
+        [SerializeField] Transform _helmetSlot;  // assign Helmet01 bone in prefab
+        [SerializeField] Transform _armorSlot;   // assign Spine02 bone in prefab
         [SerializeField] Transform _capsuleVisual;
 
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
+        string _currentHelmetPrefabId;
+        GameObject _currentHelmetModel;
+        string _currentArmorPrefabId;
+        GameObject _currentArmorModel;
         WorldHealthBar _healthBar;
         BotDebugLabel _debugLabel;
         float _rollVisualAngle;
@@ -133,6 +139,62 @@ namespace View
             }
         }
 #endif
+
+        // ── Armor visual attachment ─────────────────────────
+
+        public void SwapHelmetModel(string prefabId)
+        {
+            if (prefabId == _currentHelmetPrefabId) return;
+            ClearHelmetModel();
+            _currentHelmetPrefabId = prefabId;
+            if (string.IsNullOrEmpty(prefabId) || _helmetSlot == null) return;
+
+            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
+            if (prefab == null) return;
+
+            _currentHelmetModel = Instantiate(prefab, _helmetSlot);
+            _currentHelmetModel.transform.localPosition = Vector3.zero;
+            _currentHelmetModel.transform.localRotation = Quaternion.identity;
+        }
+
+        public void SwapArmorModel(string prefabId)
+        {
+            if (prefabId == _currentArmorPrefabId) return;
+            ClearArmorModel();
+            _currentArmorPrefabId = prefabId;
+            if (string.IsNullOrEmpty(prefabId) || _armorSlot == null) return;
+
+            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
+            if (prefab == null) return;
+
+            _currentArmorModel = Instantiate(prefab, _armorSlot);
+            _currentArmorModel.transform.localPosition = Vector3.zero;
+            _currentArmorModel.transform.localRotation = Quaternion.identity;
+        }
+
+        public void ClearHelmetModel()
+        {
+            if (_currentHelmetModel != null)
+                Destroy(_currentHelmetModel);
+            _currentHelmetPrefabId = null;
+            _currentHelmetModel = null;
+        }
+
+        public void ClearArmorModel()
+        {
+            if (_currentArmorModel != null)
+                Destroy(_currentArmorModel);
+            _currentArmorPrefabId = null;
+            _currentArmorModel = null;
+        }
+
+        public GameObject DetachHelmetModel()
+        {
+            var model = _currentHelmetModel;
+            _currentHelmetPrefabId = null;
+            _currentHelmetModel = null;
+            return model;
+        }
 
         void SyncRollVisual(BotEntityState state)
         {
