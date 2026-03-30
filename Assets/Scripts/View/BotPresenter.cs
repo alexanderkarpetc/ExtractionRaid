@@ -33,6 +33,16 @@ namespace View
                         if (_views.TryGetValue(e.Id, out var damagedView))
                             damagedView.OnDamaged(e.CurrentHp, e.MaxHp);
                         break;
+                    case RaidEventType.ArmorBroken:
+                        if (_views.TryGetValue(e.Id, out var armorView))
+                        {
+                            bool isHelmet = e.Damage > 0.5f;
+                            if (isHelmet)
+                                armorView.ClearHelmetModel();
+                            else
+                                armorView.ClearArmorModel();
+                        }
+                        break;
                 }
             }
 
@@ -67,6 +77,21 @@ namespace View
             view.Initialize(id, typeId, config.WeaponPrefabId, config.MaxHp);
             view.GizmoVisionRange = config.VisionRange;
             view.GizmoVisionAngle = config.VisionAngle;
+
+            // Equip armor visuals from bot config
+            if (!string.IsNullOrEmpty(config.HelmetDefinitionId))
+            {
+                var helmetDef = ItemDefinition.Get(config.HelmetDefinitionId);
+                if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))
+                    view.SwapHelmetModel(helmetDef.ArmorPrefabId);
+            }
+            if (!string.IsNullOrEmpty(config.BodyArmorDefinitionId))
+            {
+                var armorDef = ItemDefinition.Get(config.BodyArmorDefinitionId);
+                if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
+                    view.SwapArmorModel(armorDef.ArmorPrefabId);
+            }
+
             _views[id] = view;
         }
 

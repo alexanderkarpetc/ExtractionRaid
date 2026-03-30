@@ -42,7 +42,7 @@ namespace View
                 {
                     case RaidEventType.PlayerSpawned when _playerView == null:
                         _trackedId = e.Id;
-                        SpawnView(session.RaidState.PlayerEntity);
+                        SpawnView(session.RaidState.PlayerEntity, session);
                         break;
                     case RaidEventType.WeaponFired:
                     {
@@ -81,6 +81,15 @@ namespace View
                     case RaidEventType.WeaponDryFired:
                         _playerView?.WeaponView?.PlayDryFire();
                         break;
+                    case RaidEventType.ArmorBroken when e.Id == _trackedId && _playerView != null:
+                    {
+                        bool isHelmet = e.Damage > 0.5f; // packed in RaidEventBuffer
+                        if (isHelmet)
+                            _playerView.ClearHelmetModel();
+                        else
+                            _playerView.ClearArmorModel();
+                        break;
+                    }
                 }
 
                 if (e.Type == RaidEventType.EntityDamaged && e.Id == _trackedId && _playerView != null)
@@ -96,7 +105,7 @@ namespace View
             }
         }
 
-        void SpawnView(PlayerEntityState playerState)
+        void SpawnView(PlayerEntityState playerState, RaidSession session)
         {
             if (_playerPrefab == null) return;
 
@@ -123,7 +132,24 @@ namespace View
             _fogOfWarController = fowGo.AddComponent<FogOfWarController>();
             _fogOfWarController.Initialize(_playerView.transform);
 
+            // Equip armor visuals from inventory
+            EquipArmorVisuals(session);
+
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
+        }
+
+        void EquipArmorVisuals(RaidSession session)
+        {
+            if (_playerView == null || session == null) return;
+            var inventory = session.RaidState.Inventory;
+
+            var helmetDef = inventory.HelmetSlot?.Definition;
+            if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))
+                _playerView.SwapHelmetModel(helmetDef.ArmorPrefabId);
+
+            var armorDef = inventory.BodyArmorSlot?.Definition;
+            if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
+                _playerView.SwapArmorModel(armorDef.ArmorPrefabId);
         }
 
         public void Dispose()
