@@ -85,7 +85,7 @@ namespace View
                     {
                         bool isHelmet = e.Damage > 0.5f; // packed in RaidEventBuffer
                         if (isHelmet)
-                            _playerView.ClearHelmetModel();
+                            ArmorBreakHelmetFlyOff(_playerView);
                         else
                             _playerView.ClearArmorModel();
                         break;
@@ -150,6 +150,13 @@ namespace View
             var armorDef = inventory.BodyArmorSlot?.Definition;
             if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
                 _playerView.SwapArmorModel(armorDef.ArmorPrefabId);
+        }
+
+        static void ArmorBreakHelmetFlyOff(PlayerView view)
+        {
+            var helmet = view.DetachHelmetModel();
+            if (helmet == null) return;
+            ArmorBreakHelper.FlyOffHelmet(helmet);
         }
 
         public void Dispose()

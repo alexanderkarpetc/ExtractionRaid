@@ -38,9 +38,15 @@ namespace View
                         {
                             bool isHelmet = e.Damage > 0.5f;
                             if (isHelmet)
-                                armorView.ClearHelmetModel();
+                            {
+                                var helmet = armorView.DetachHelmetModel();
+                                if (helmet != null)
+                                    ArmorBreakHelper.FlyOffHelmet(helmet);
+                            }
                             else
+                            {
                                 armorView.ClearArmorModel();
+                            }
                         }
                         break;
                 }
