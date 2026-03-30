@@ -362,6 +362,53 @@ namespace View
 
             _slotStyle.normal.background = _equipBg;
             DrawSlot(rect, slotRef, item, inventory, isLoot);
+
+            // Armor durability bar
+            if (item != null && item.Definition != null && item.Definition.ArmorPoints > 0f)
+                DrawArmorDurabilityBar(rect, item);
+        }
+
+        void DrawArmorDurabilityBar(Rect slotRect, ItemState item)
+        {
+            var def = item.Definition;
+            float maxDur = item.HasCustomDurability ? item.MaxDurability : def.MaxDurability;
+            float curDur = item.HasCustomDurability ? item.CurrentDurability : maxDur;
+            if (maxDur <= 0f) return;
+
+            float durPercent = curDur / maxDur;
+
+            // Bar position: bottom of slot
+            float barH = 4f;
+            float barY = slotRect.yMax - barH - 2f;
+            float barX = slotRect.x + 2f;
+            float barW = slotRect.width - 4f;
+
+            // Background
+            GUI.DrawTexture(new Rect(barX, barY, barW, barH), _slotBg);
+
+            // Fill color by zone: green 70-100%, yellow 40-70%, red 0-40%
+            Color barColor;
+            if (durPercent >= 0.7f)
+                barColor = new Color(0.2f, 0.8f, 0.2f, 0.9f);
+            else if (durPercent >= 0.4f)
+                barColor = new Color(0.9f, 0.75f, 0.1f, 0.9f);
+            else
+                barColor = new Color(0.9f, 0.2f, 0.15f, 0.9f);
+
+            var prevColor = GUI.color;
+            GUI.color = barColor;
+            GUI.DrawTexture(new Rect(barX, barY, barW * durPercent, barH), _slotHighlight);
+            GUI.color = prevColor;
+
+            // Armor points label
+            string armorText = $"{def.ArmorPoints:0}pts";
+            var smallStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 9,
+                alignment = TextAnchor.LowerRight,
+                normal = { textColor = new Color(0.9f, 0.9f, 0.9f, 0.7f) },
+            };
+            GUI.Label(new Rect(slotRect.x, slotRect.y, slotRect.width - 3f, slotRect.height - barH - 4f), armorText, smallStyle);
         }
 
         void DrawSlot(Rect rect, InventorySlotRef slotRef, ItemState item,
