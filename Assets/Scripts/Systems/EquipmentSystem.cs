@@ -4,6 +4,27 @@ namespace Systems
 {
     public static class EquipmentSystem
     {
+        /// <summary>
+        /// Write current ArmorMap durability back to inventory ItemState.
+        /// Call BEFORE SyncArmorFromInventory to preserve combat damage.
+        /// </summary>
+        public static void WriteBackDurability(RaidState state, EId entityId, InventoryState inventory)
+        {
+            if (!state.ArmorMap.TryGetValue(entityId, out var slots)) return;
+
+            if (slots.Helmet != null && inventory.HelmetSlot != null)
+            {
+                inventory.HelmetSlot.CurrentDurability = slots.Helmet.CurrentDurability;
+                inventory.HelmetSlot.MaxDurability = slots.Helmet.MaxDurability;
+            }
+
+            if (slots.BodyArmor != null && inventory.BodyArmorSlot != null)
+            {
+                inventory.BodyArmorSlot.CurrentDurability = slots.BodyArmor.CurrentDurability;
+                inventory.BodyArmorSlot.MaxDurability = slots.BodyArmor.MaxDurability;
+            }
+        }
+
         public static void SyncArmorFromInventory(RaidState state, EId entityId, InventoryState inventory)
         {
             var helmet = CreateArmorFromItem(inventory.HelmetSlot);

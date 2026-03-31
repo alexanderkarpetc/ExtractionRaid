@@ -29,7 +29,7 @@ namespace View
             rb.angularDamping = 0.3f;
 
             // Impulse: upward + random horizontal
-            float force = DevCheats.Config.Armor != null ? 4f : 4f; // future: DevCheats.HelmetFlyForce
+            float force = 4f;
             var flyDir = Vector3.up + new Vector3(
                 Random.Range(-0.5f, 0.5f),
                 0f,
