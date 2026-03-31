@@ -19,6 +19,13 @@ namespace Dev
         [Header("Armor Damage")]
         public float ArmorDamageCap = 30f;
 
+        [Header("Armor HUD")]
+        public bool ArmorHUDEnabled = true;
+        public float ArmorHUDMarginX = 16f;
+        public float ArmorHUDMarginY = 40f; // top-left, below stamina bar
+        public float ArmorHUDBarWidth = 220f;
+        public float ArmorHUDBarHeight = 30f;
+
         [Header("Debug")]
         public bool ForceNoArmor;
         public bool ForceMaxArmor;

@@ -30,6 +30,7 @@ namespace App
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftingUI>();
             gameObject.AddComponent<StaminaBarOverlay>();
+            gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
             gameObject.AddComponent<NpcUI>();
         }

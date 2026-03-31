@@ -545,6 +545,33 @@ namespace Dev
             set => Config.Armor.ForceMaxArmor = value;
         }
 
+        // Armor HUD
+        public static bool ArmorHUDEnabled
+        {
+            get => Config.Armor.ArmorHUDEnabled;
+            set => Config.Armor.ArmorHUDEnabled = value;
+        }
+        public static float ArmorHUDMarginX
+        {
+            get => Config.Armor.ArmorHUDMarginX;
+            set => Config.Armor.ArmorHUDMarginX = value;
+        }
+        public static float ArmorHUDMarginY
+        {
+            get => Config.Armor.ArmorHUDMarginY;
+            set => Config.Armor.ArmorHUDMarginY = value;
+        }
+        public static float ArmorHUDBarWidth
+        {
+            get => Config.Armor.ArmorHUDBarWidth;
+            set => Config.Armor.ArmorHUDBarWidth = value;
+        }
+        public static float ArmorHUDBarHeight
+        {
+            get => Config.Armor.ArmorHUDBarHeight;
+            set => Config.Armor.ArmorHUDBarHeight = value;
+        }
+
         /// <summary>Mark asset dirty so editor saves it. Call after batch changes.</summary>
         public static void SetDirty()
         {
