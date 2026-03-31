@@ -138,9 +138,10 @@ namespace Systems
                     var proj = state.Projectiles[i];
                     if (proj.Id == hit.ProjectileId)
                     {
-                        string hitType = hit.TargetedEntityId == hit.TargetId
+                        string hitBase = hit.TargetedEntityId == hit.TargetId
                             && hit.TargetedEntityId.Value != 0
                                 ? "head" : "body";
+                        string hitType = $"{hitBase}:{absorptionRatio:F2}";
                         context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, hitType);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
