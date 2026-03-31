@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &360924359889319875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4962412633293968250}
+  m_Layer: 7
+  m_Name: HelmetSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4962412633293968250
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360924359889319875}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.775, z: 0}
+  m_LocalScale: {x: 200, y: 200, z: 200}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4084878002986218607}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &1586231625041742174
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,8 +168,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game::View.BotView
   _weaponPivot: {fileID: 3428297064249539707}
-  _helmetSlot: {fileID: 4002638072521676608}
-  _armorSlot: {fileID: 4232257677065406155}
+  _helmetSlot: {fileID: 4962412633293968250}
+  _armorSlot: {fileID: 9171754982796766456}
   _capsuleVisual: {fileID: 4232257677065406155}
 --- !u!136 &8487660030283068989
 CapsuleCollider:
@@ -163,6 +194,37 @@ CapsuleCollider:
   m_Height: 2.1126935
   m_Direction: 1
   m_Center: {x: 0, y: 0.9080969, z: 0}
+--- !u!1 &4796844370915299656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9171754982796766456}
+  m_Layer: 7
+  m_Name: ArmorSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9171754982796766456
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4796844370915299656}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 300, y: 300, z: 300}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4084878002986218607}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &5206494078358267632
 GameObject:
   m_ObjectHideFlags: 0
@@ -316,5 +378,7 @@ Transform:
   - {fileID: 3428297064249539707}
   - {fileID: 4232257677065406155}
   - {fileID: 4002638072521676608}
+  - {fileID: 4962412633293968250}
+  - {fileID: 9171754982796766456}
   m_Father: {fileID: 5299550506066674712}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
