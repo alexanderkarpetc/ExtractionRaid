@@ -63,6 +63,14 @@ namespace View
                         maxHp = health.MaxHp;
                     }
                     view.SyncFromState(bot, hp, maxHp);
+
+                    // Sync armor bar
+                    if (session.RaidState.ArmorMap.TryGetValue(bot.Id, out var armorSlots))
+                    {
+                        float helmetDur = armorSlots.Helmet?.DurabilityPercent ?? 0f;
+                        float vestDur = armorSlots.BodyArmor?.DurabilityPercent ?? 0f;
+                        view.UpdateArmor(helmetDur, vestDur);
+                    }
                 }
             }
         }

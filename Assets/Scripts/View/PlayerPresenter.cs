@@ -102,6 +102,14 @@ namespace View
             {
                 _playerView.SyncFromState(session.RaidState.PlayerEntity, session.RaidState.ElapsedTime);
                 _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
+
+                // Sync armor bar on player healthbar
+                if (session.RaidState.ArmorMap.TryGetValue(_trackedId, out var armorSlots))
+                {
+                    float helmetDur = armorSlots.Helmet?.DurabilityPercent ?? 0f;
+                    float vestDur = armorSlots.BodyArmor?.DurabilityPercent ?? 0f;
+                    _playerView.UpdateArmor(helmetDur, vestDur);
+                }
             }
         }
 

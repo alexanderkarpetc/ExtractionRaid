@@ -47,6 +47,12 @@ namespace View
                 _healthBar.UpdateHealth(currentHp, maxHp);
         }
 
+        public void UpdateArmor(float helmetDurPercent, float vestDurPercent)
+        {
+            if (_healthBar != null)
+                _healthBar.UpdateArmor(helmetDurPercent, vestDurPercent);
+        }
+
         public void SyncFromState(PlayerEntityState state, float elapsedTime)
         {
             transform.position = state.Position;
