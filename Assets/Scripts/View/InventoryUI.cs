@@ -54,6 +54,10 @@ namespace View
         Vector2 _playerScrollPos;
         Vector2 _lootScrollPos;
 
+        // Tooltip
+        ItemState _hoveredItem;
+        Vector2 _hoveredMousePos;
+
         bool _isFloorMode;
         InventoryState _floorInventory;
         EId[] _floorItemEIds;
@@ -123,6 +127,8 @@ namespace View
 
         void OnGUI()
         {
+            _hoveredItem = null; // reset each frame
+
             var session = App.App.Instance?.RaidSession;
 
             if (session == null) return;
@@ -203,6 +209,7 @@ namespace View
 
             HandleDrag(session, state, lootTarget);
             DrawContextMenu(session, state, lootTarget);
+            DrawItemTooltip();
         }
 
         void OnGUIHideout()
@@ -236,6 +243,7 @@ namespace View
 
             HandleDrag(null, null, null);
             DrawContextMenu(null, null, null);
+            DrawItemTooltip();
         }
 
         void DrawInventoryPanel(Rect panelRect, string title, InventoryState inventory,
@@ -428,6 +436,13 @@ namespace View
                 ? (item.StackCount > 1 ? $"{item.DisplayName}\nx{item.StackCount}" : item.DisplayName)
                 : "";
             GUI.Box(rect, text, _slotStyle);
+
+            // Tooltip hover detection
+            if (item != null && !_dragSource.HasValue && rect.Contains(Event.current.mousePosition))
+            {
+                _hoveredItem = item;
+                _hoveredMousePos = Event.current.mousePosition;
+            }
 
             if (_showContextMenu) return;
 
@@ -872,6 +887,70 @@ namespace View
             if (_panelBg != null) Destroy(_panelBg);
             if (_promptBg != null) Destroy(_promptBg);
             if (_quickSlotBadgeBg != null) Destroy(_quickSlotBadgeBg);
+        }
+
+        void DrawItemTooltip()
+        {
+            if (_hoveredItem == null) return;
+
+            var def = _hoveredItem.Definition;
+            if (def == null) return;
+
+            // Build tooltip lines
+            var lines = new System.Collections.Generic.List<string>();
+            lines.Add(def.DisplayName);
+
+            // Armor stats
+            if (def.ArmorPoints > 0f)
+            {
+                lines.Add($"Armor: {def.ArmorPoints:0} pts");
+                float maxDur = _hoveredItem.HasCustomDurability ? _hoveredItem.MaxDurability : def.MaxDurability;
+                float curDur = _hoveredItem.HasCustomDurability ? _hoveredItem.CurrentDurability : maxDur;
+                if (maxDur > 0f)
+                    lines.Add($"Durability: {curDur:0}/{maxDur:0} ({curDur / maxDur * 100f:0}%)");
+            }
+
+            // Ammo stats
+            if (def.Penetration > 0f)
+                lines.Add($"Penetration: +{def.Penetration:0}");
+            if (def.ArmorDamage > 0f)
+                lines.Add($"Armor Damage: +{def.ArmorDamage:0}");
+            if (def.BleedChance > 0f)
+                lines.Add($"Bleed Chance: +{def.BleedChance * 100f:0}%");
+
+            // Stack info
+            if (_hoveredItem.StackCount > 1)
+                lines.Add($"Count: {_hoveredItem.StackCount}");
+
+            if (lines.Count <= 1) return; // only name, no stats to show
+
+            // Measure and draw
+            var tooltipStyle = new GUIStyle(GUI.skin.box)
+            {
+                fontSize = 14,
+                alignment = TextAnchor.UpperLeft,
+                wordWrap = false,
+                padding = new RectOffset(8, 8, 6, 6),
+            };
+            tooltipStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            string text = string.Join("\n", lines);
+            var content = new GUIContent(text);
+            var size = tooltipStyle.CalcSize(content);
+
+            // Position: right of cursor, clamped to screen
+            float tx = _hoveredMousePos.x + 16f;
+            float ty = _hoveredMousePos.y;
+            if (tx + size.x > Screen.width) tx = _hoveredMousePos.x - size.x - 8f;
+            if (ty + size.y > Screen.height) ty = Screen.height - size.y;
+
+            var tooltipRect = new Rect(tx, ty, size.x, size.y);
+
+            // Dark background
+            var prevBg = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+            GUI.Box(tooltipRect, text, tooltipStyle);
+            GUI.backgroundColor = prevBg;
         }
 
         /// <summary>
