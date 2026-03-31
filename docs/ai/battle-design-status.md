@@ -1,7 +1,7 @@
 # Battle Design — Current Status
 
 > Living document. Updated as decisions are made.
-> Last updated: 2026-03-29
+> Last updated: 2026-04-01
 
 ## Reference Documents
 - `docs/ai/rpg-modifier-system.md` — base modifier architecture (3-source additive, caps, UI)
