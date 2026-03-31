@@ -244,6 +244,30 @@ namespace Session
                 var pos = new UnityEngine.Vector3(x, 0f, 16f);
                 BotSpawnSystem.SpawnBot(RaidState, "TargetWeak", pos, new[] { pos }, _eventBuffer);
             }
+
+            // ── Row 9: Armored targets (z=28) ────────────────
+            {
+                // Helmet only — test ricochet
+                var p1 = new UnityEngine.Vector3(-8f, 0f, 28f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetLightArmor", p1, new[] { p1 }, _eventBuffer);
+
+                // Full armor — test pen vs protection
+                var p2 = new UnityEngine.Vector3(-4f, 0f, 28f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p2, new[] { p2 }, _eventBuffer);
+
+                // Glass cannon — armor breaks fast, then dies
+                var p3 = new UnityEngine.Vector3(0f, 0f, 28f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetGlassCannon", p3, new[] { p3 }, _eventBuffer);
+
+                // Tank — no helmet, body armor only, 200 HP
+                var p4 = new UnityEngine.Vector3(4f, 0f, 28f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetTank", p4, new[] { p4 }, _eventBuffer);
+
+                // Heavy armor + patrol — moving armored target
+                var p5 = new UnityEngine.Vector3(8f, 0f, 28f);
+                var wp5 = new[] { new UnityEngine.Vector3(4f, 0f, 28f), new UnityEngine.Vector3(12f, 0f, 28f) };
+                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p5, wp5, _eventBuffer);
+            }
         }
 
         public void Tick()
