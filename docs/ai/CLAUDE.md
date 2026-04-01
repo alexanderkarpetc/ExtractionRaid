@@ -104,6 +104,10 @@ Read extra docs depending on the task:
 - Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
+- Armor system, penetration, durability, bleeding, feedback -> `docs/ai/battle-design-status.md`
+- RPG modifier system (stat composition) -> `docs/ai/rpg-modifier-system.md`
+- Armor research (competitor analysis) -> `docs/ai/armor-research.md`
+- Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`
 - DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
 
 Do not load all docs unless the task spans multiple areas.

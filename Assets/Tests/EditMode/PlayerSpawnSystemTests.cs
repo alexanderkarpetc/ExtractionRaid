@@ -91,31 +91,37 @@ namespace Tests.EditMode
         // ── Armor ─────────────────────────────────────────────
 
         [Test]
-        public void SpawnPlayer_EmptyInventory_GetsStartingArmor()
+        public void SpawnPlayer_EmptyInventory_GetsStartingArmorInBackpack()
         {
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            Assert.IsNotNull(state.Inventory.HelmetSlot, "Should get starting helmet");
-            Assert.IsNotNull(state.Inventory.BodyArmorSlot, "Should get starting body armor");
-            Assert.AreEqual("Helmet_Basic", state.Inventory.HelmetSlot.DefinitionId);
-            Assert.AreEqual("Armor_Basic", state.Inventory.BodyArmorSlot.DefinitionId);
+            // Armor starts in backpack (not equipped) — player must equip manually
+            bool hasHelmet = false, hasArmor = false;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var item = state.Inventory.Backpack[i];
+                if (item?.DefinitionId == "Helmet_Basic") hasHelmet = true;
+                if (item?.DefinitionId == "Armor_Basic") hasArmor = true;
+            }
+            Assert.IsTrue(hasHelmet, "Backpack should contain Helmet_Basic");
+            Assert.IsTrue(hasArmor, "Backpack should contain Armor_Basic");
         }
 
         [Test]
-        public void SpawnPlayer_ArmorPopulatesArmorMap()
+        public void SpawnPlayer_ArmorInBackpack_NotInArmorMap()
         {
             var state = RaidState.Create();
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
+            // Armor is in backpack, not equipped — ArmorMap should be empty
             var playerId = state.PlayerEntity.Id;
-            Assert.IsTrue(state.ArmorMap.ContainsKey(playerId), "ArmorMap should have player entry");
-            Assert.IsNotNull(state.ArmorMap[playerId].Helmet);
-            Assert.IsNotNull(state.ArmorMap[playerId].BodyArmor);
+            Assert.IsFalse(state.ArmorMap.ContainsKey(playerId),
+                "ArmorMap should be empty when armor is in backpack, not equipped");
         }
     }
 }

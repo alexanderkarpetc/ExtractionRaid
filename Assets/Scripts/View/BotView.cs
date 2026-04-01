@@ -42,6 +42,12 @@ namespace View
                 _healthBar.UpdateHealth(currentHp, maxHp);
         }
 
+        public void UpdateArmor(float helmetDurPercent, float vestDurPercent)
+        {
+            if (_healthBar != null)
+                _healthBar.UpdateArmor(helmetDurPercent, vestDurPercent);
+        }
+
         // Gizmo data cached from state
         internal float GizmoVisionRange;
         internal float GizmoVisionAngle;

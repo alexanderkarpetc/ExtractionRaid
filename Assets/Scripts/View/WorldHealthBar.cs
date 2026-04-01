@@ -58,6 +58,14 @@ namespace View
         float _shakeTimer;      // counts up from 0; shake active while < duration
         float _shakeMagnitude;  // base magnitude for current shake (proportional to damage)
 
+        // Armor bar (thin stripe above health bar)
+        GameObject _armorBarGo;
+        RectTransform _helmetFillRect;
+        RectTransform _vestFillRect;
+        Image _helmetFillImage;
+        Image _vestFillImage;
+        Image _armorBgImage;
+
         public static WorldHealthBar Create(Transform parent, float maxHp)
         {
             float w = DevCheats.HBarWidth;
@@ -117,7 +125,95 @@ namespace View
             mat.SetFloat(PropTrailFill, 1f);
             mat.SetFloat(PropFlashT, 1f);
 
+            // Armor bar — thin stripe above health bar (hidden by default)
+            bar.CreateArmorBar(go.transform, w, h);
+
             return bar;
+        }
+
+        void CreateArmorBar(Transform parent, float barWidth, float barHeight)
+        {
+            float armorH = barHeight * 0.35f;
+            float gap = barHeight * 0.12f;
+
+            _armorBarGo = new GameObject("ArmorBar");
+            _armorBarGo.transform.SetParent(parent, false);
+            var armorRect = _armorBarGo.AddComponent<RectTransform>();
+            armorRect.anchorMin = new Vector2(0f, 1f);
+            armorRect.anchorMax = new Vector2(1f, 1f);
+            armorRect.pivot = new Vector2(0.5f, 0f);
+            armorRect.anchoredPosition = new Vector2(0f, gap);
+            armorRect.sizeDelta = new Vector2(0f, armorH);
+
+            // Background
+            var bgGo = new GameObject("ArmorBg");
+            bgGo.transform.SetParent(_armorBarGo.transform, false);
+            var bgRect = bgGo.AddComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            _armorBgImage = bgGo.AddComponent<Image>();
+            _armorBgImage.color = new Color(0.12f, 0.12f, 0.15f, 0.7f);
+
+            // Helmet fill (left half) — uses anchor stretching for fill
+            var helmetGo = new GameObject("HelmetFill");
+            helmetGo.transform.SetParent(_armorBarGo.transform, false);
+            _helmetFillRect = helmetGo.AddComponent<RectTransform>();
+            _helmetFillRect.anchorMin = new Vector2(0f, 0f);
+            _helmetFillRect.anchorMax = new Vector2(0f, 1f); // width = 0 initially
+            _helmetFillRect.offsetMin = Vector2.zero;
+            _helmetFillRect.offsetMax = Vector2.zero;
+            _helmetFillImage = helmetGo.AddComponent<Image>();
+            _helmetFillImage.color = new Color(0.3f, 0.7f, 1f, 0.9f);
+
+            // 1px gap divider
+            var divGo = new GameObject("Divider");
+            divGo.transform.SetParent(_armorBarGo.transform, false);
+            var divRect = divGo.AddComponent<RectTransform>();
+            divRect.anchorMin = new Vector2(0.498f, 0f);
+            divRect.anchorMax = new Vector2(0.502f, 1f);
+            divRect.offsetMin = Vector2.zero;
+            divRect.offsetMax = Vector2.zero;
+            var divImg = divGo.AddComponent<Image>();
+            divImg.color = new Color(0.2f, 0.2f, 0.25f, 0.8f);
+
+            // Vest fill (right half)
+            var vestGo = new GameObject("VestFill");
+            vestGo.transform.SetParent(_armorBarGo.transform, false);
+            _vestFillRect = vestGo.AddComponent<RectTransform>();
+            _vestFillRect.anchorMin = new Vector2(0.5f, 0f);
+            _vestFillRect.anchorMax = new Vector2(0.5f, 1f); // width = 0 initially
+            _vestFillRect.offsetMin = Vector2.zero;
+            _vestFillRect.offsetMax = Vector2.zero;
+            _vestFillImage = vestGo.AddComponent<Image>();
+            _vestFillImage.color = new Color(0.3f, 0.7f, 1f, 0.9f);
+
+            _armorBarGo.SetActive(false);
+        }
+
+        public void UpdateArmor(float helmetDurPercent, float vestDurPercent)
+        {
+            if (_armorBarGo == null) return;
+
+            bool hasArmor = helmetDurPercent > 0f || vestDurPercent > 0f;
+            _armorBarGo.SetActive(hasArmor);
+
+            if (!hasArmor) return;
+
+            // Helmet: stretch from left (anchor 0) to fill% of left half (0.5)
+            if (_helmetFillRect != null)
+            {
+                _helmetFillRect.anchorMin = new Vector2(0f, 0f);
+                _helmetFillRect.anchorMax = new Vector2(0.5f * helmetDurPercent, 1f);
+            }
+
+            // Vest: stretch from center (0.5) to fill% of right half
+            if (_vestFillRect != null)
+            {
+                _vestFillRect.anchorMin = new Vector2(0.5f, 0f);
+                _vestFillRect.anchorMax = new Vector2(0.5f + 0.5f * vestDurPercent, 1f);
+            }
         }
 
         public void UpdateHealth(float current, float max)

@@ -54,6 +54,14 @@ namespace View
         Vector2 _playerScrollPos;
         Vector2 _lootScrollPos;
 
+        // Tooltip
+        ItemState _hoveredItem;
+        Vector2 _hoveredMousePos;
+
+        // Cached GUIStyles (avoid per-frame allocation)
+        GUIStyle _armorPtsStyle;
+        GUIStyle _tooltipStyle;
+
         bool _isFloorMode;
         InventoryState _floorInventory;
         EId[] _floorItemEIds;
@@ -123,6 +131,8 @@ namespace View
 
         void OnGUI()
         {
+            _hoveredItem = null; // reset each frame
+
             var session = App.App.Instance?.RaidSession;
 
             if (session == null) return;
@@ -203,6 +213,7 @@ namespace View
 
             HandleDrag(session, state, lootTarget);
             DrawContextMenu(session, state, lootTarget);
+            DrawItemTooltip();
         }
 
         void OnGUIHideout()
@@ -236,6 +247,7 @@ namespace View
 
             HandleDrag(null, null, null);
             DrawContextMenu(null, null, null);
+            DrawItemTooltip();
         }
 
         void DrawInventoryPanel(Rect panelRect, string title, InventoryState inventory,
@@ -402,13 +414,16 @@ namespace View
 
             // Armor points label
             string armorText = $"{def.ArmorPoints:0}pts";
-            var smallStyle = new GUIStyle(GUI.skin.label)
+            if (_armorPtsStyle == null)
             {
-                fontSize = 9,
-                alignment = TextAnchor.LowerRight,
-                normal = { textColor = new Color(0.9f, 0.9f, 0.9f, 0.7f) },
-            };
-            GUI.Label(new Rect(slotRect.x, slotRect.y, slotRect.width - 3f, slotRect.height - barH - 4f), armorText, smallStyle);
+                _armorPtsStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 9,
+                    alignment = TextAnchor.LowerRight,
+                };
+                _armorPtsStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f, 0.7f);
+            }
+            GUI.Label(new Rect(slotRect.x, slotRect.y, slotRect.width - 3f, slotRect.height - barH - 4f), armorText, _armorPtsStyle);
         }
 
         void DrawSlot(Rect rect, InventorySlotRef slotRef, ItemState item,
@@ -428,6 +443,13 @@ namespace View
                 ? (item.StackCount > 1 ? $"{item.DisplayName}\nx{item.StackCount}" : item.DisplayName)
                 : "";
             GUI.Box(rect, text, _slotStyle);
+
+            // Tooltip hover detection
+            if (item != null && !_dragSource.HasValue && rect.Contains(Event.current.mousePosition))
+            {
+                _hoveredItem = item;
+                _hoveredMousePos = Event.current.mousePosition;
+            }
 
             if (_showContextMenu) return;
 
@@ -874,6 +896,73 @@ namespace View
             if (_quickSlotBadgeBg != null) Destroy(_quickSlotBadgeBg);
         }
 
+        void DrawItemTooltip()
+        {
+            if (_hoveredItem == null) return;
+
+            var def = _hoveredItem.Definition;
+            if (def == null) return;
+
+            // Build tooltip lines
+            var lines = new System.Collections.Generic.List<string>();
+            lines.Add(def.DisplayName);
+
+            // Armor stats
+            if (def.ArmorPoints > 0f)
+            {
+                lines.Add($"Armor: {def.ArmorPoints:0} pts");
+                float maxDur = _hoveredItem.HasCustomDurability ? _hoveredItem.MaxDurability : def.MaxDurability;
+                float curDur = _hoveredItem.HasCustomDurability ? _hoveredItem.CurrentDurability : maxDur;
+                if (maxDur > 0f)
+                    lines.Add($"Durability: {curDur:0}/{maxDur:0} ({curDur / maxDur * 100f:0}%)");
+            }
+
+            // Ammo stats
+            if (def.Penetration > 0f)
+                lines.Add($"Penetration: +{def.Penetration:0}");
+            if (def.ArmorDamage > 0f)
+                lines.Add($"Armor Damage: +{def.ArmorDamage:0}");
+            if (def.BleedChance > 0f)
+                lines.Add($"Bleed Chance: +{def.BleedChance * 100f:0}%");
+
+            // Stack info
+            if (_hoveredItem.StackCount > 1)
+                lines.Add($"Count: {_hoveredItem.StackCount}");
+
+            if (lines.Count <= 1) return; // only name, no stats to show
+
+            // Measure and draw
+            if (_tooltipStyle == null)
+            {
+                _tooltipStyle = new GUIStyle(GUI.skin.box)
+                {
+                    fontSize = 14,
+                    alignment = TextAnchor.UpperLeft,
+                    wordWrap = false,
+                    padding = new RectOffset(8, 8, 6, 6),
+                };
+                _tooltipStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+            }
+
+            string text = string.Join("\n", lines);
+            var content = new GUIContent(text);
+            var size = _tooltipStyle.CalcSize(content);
+
+            // Position: right of cursor, clamped to screen
+            float tx = _hoveredMousePos.x + 16f;
+            float ty = _hoveredMousePos.y;
+            if (tx + size.x > Screen.width) tx = _hoveredMousePos.x - size.x - 8f;
+            if (ty + size.y > Screen.height) ty = Screen.height - size.y;
+
+            var tooltipRect = new Rect(tx, ty, size.x, size.y);
+
+            // Dark background
+            var prevBg = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.1f, 0.1f, 0.12f, 0.95f);
+            GUI.Box(tooltipRect, text, _tooltipStyle);
+            GUI.backgroundColor = prevBg;
+        }
+
         /// <summary>
         /// After any inventory transfer, sync armor state + visuals from equipment slots.
         /// Called on every transfer (cheap — EquipmentSystem checks for actual changes).
@@ -887,6 +976,7 @@ namespace View
             if (state.PlayerEntity == null) return;
 
             // Sync state: inventory slots → ArmorMap
+            Systems.EquipmentSystem.WriteBackDurability(state, state.PlayerEntity.Id, state.Inventory);
             Systems.EquipmentSystem.SyncArmorFromInventory(state, state.PlayerEntity.Id, state.Inventory);
 
             // Sync visuals: find PlayerView and swap models
