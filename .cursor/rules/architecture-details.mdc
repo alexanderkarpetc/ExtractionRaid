@@ -8,12 +8,20 @@ alwaysApply: false
 ## Layers
 
 ### Composition Root (App)
-- Read launch options, init global services/configs/save/dev tools, create player, start/stop `RaidSession`, handle scene transitions.
+- Read launch options, init global services/configs/save/dev tools, create player, start/stop `RaidSession`, handle scene transitions, attach IMGUI overlays and presenters.
 - `App.Instance` allowed only here.
+
+**Bootstrap flow** (`AppBootstrap.cs`, `[DefaultExecutionOrder(1000)]`):
+1. `Awake`: guard against double-init, `App.Initialize()`, `DontDestroyOnLoad`, attach overlays (HotbarDebugOverlay, InventoryUI, QuestUI, AimCursorOverlay, DamageNumberOverlay, StatusEffectOverlay, CraftingUI, StaminaBarOverlay, DefenderArmorHUD, DeployUI, NpcUI)
+2. `Start`: build `LaunchOptions` from inspector `_launchMode`, call `GameLauncher.Launch(options)`
+3. `Update` → `App.Instance.Tick()`, `LateUpdate` → `App.Instance.LateTick()`
+
+**App singleton**: owns adapters (5), presenters (7), `Player`, `RaidSession`, `QuestDatabase`.
+**Presenters** (ticked in `LateTick`): Destructible, Player, Bot, Projectile, Grenade, GroundItem, Corpse.
 
 ### Session Layer
 - `Player`: persistent profile, meta progression, save/load entry point.
-- `RaidSession`: owns `RaidState`/`LevelState`, constructs `RaidContext`, orchestrates system execution in stable order.
+- `RaidSession`: owns `RaidState`/`LevelState`, constructs `RaidContext`, orchestrates system execution in stable order, manages hit/collision inboxes, handles interaction dispatch, processes damage alerts and death events.
 
 ### Domain Logic (Systems)
 - Stateless static functions operating on explicit state and context.
@@ -21,7 +29,13 @@ alwaysApply: false
 - Must not depend on hidden globals.
 
 ### Adapters (Ports)
-- All Unity subsystem access (navmesh, physics, time) through interfaces passed via context.
+All Unity subsystem access through interfaces passed via context:
+- `ITimeAdapter` → `UnityTimeAdapter` (DeltaTime, FixedDeltaTime, Time)
+- `IInputAdapter` → `UnityInputAdapter` (move, aim, hotbar, ADS, convergence, muzzle)
+- `INavMeshAdapter` → `UnityNavMeshAdapter` (SamplePosition)
+- `IPhysicsAdapter` → `UnityPhysicsAdapter` (Linecast)
+- `IGrenadePositionAdapter` → `GrenadePositionAdapter` (grenade world position by EId)
+- `IRaidEvents` → `RaidEventBuffer` (31 event types)
 
 ### View / Presenter
 - Translates state and domain events into transforms, animation, VFX, SFX, UI.
@@ -33,13 +47,19 @@ alwaysApply: false
 - `PlayerProfileState` (persistent), `RaidState` (per run), `LevelState` (per level/run).
 - Values and IDs only. No Unity object references.
 
+**RaidState fields**: ElapsedTime, IsRunning, PlayerEntity, Projectiles, Grenades, HealthMap, GroundItems, Bots, Lootables, Workbenches, DeployPoints, Npcs, Inventory, StatusEffects, ArmorMap.
+
 ### Context (`RaidContext`)
-- Read-only, passed as `in`. Contains: ports/adapters, config refs, event sink/buffer, constants (`dt`, masks, tuning).
+- Readonly struct passed as `in`.
+- Contains: DeltaTime, Events (IRaidEvents), Time, Input, NavMesh, Physics, GrenadePositions, AimConfig, ShootingConfig.
+- `AimConfig`: aim split, follow multipliers, recoil recovery (from DevCheats).
+- `ShootingConfig`: parallax, convergence, speed/damage multipliers, recoil, infinite ammo (from DevCheats).
 
 ### Events
 - Systems emit domain-to-view intents through `IRaidEvents`.
 - `RaidEventBuffer` stores events as `List<RaidEvent>` (struct with enum + flat payload). Zero-alloc after warm-up.
 - Presenter iterates `buffer.All`, filters by `RaidEventType`.
+- **31 event types**: RaidStarted/Ended, PlayerSpawned, Projectile(Spawned/Despawned/Hit), Entity(Damaged/Died), GroundItem(Spawned/Despawned), Bot(Spawned/Despawned), Weapon(Fired/EquipStarted/UnequipStarted/EquipFinished/ReloadStarted/ReloadFinished/DryFired), Grenade(Spawned/Exploded/Despawned), Medkit(UseStarted/UseStopped), HitConfirmed, StatusEffect(Applied/Removed), Lootable(Spawned/Despawned), DamageNumber, ArmorBroken, ProjectileRicochet.
 
 ## Tick model
 1. Gather input and external signals.
@@ -49,28 +69,47 @@ alwaysApply: false
 
 Actual system tick order in `RaidSession.Tick()`:
 ```
-RollSystem                 // dodge roll state machine
-MovementSystem
-WeaponEquipSystem          // writes PendingHotbarSlot (intent only)
-WeaponStateMachineSystem   // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
-AimingSystem               // dual-layer: RawAimPoint (instant) → WeaponAimPoint (smoothed) → AimDirection
-GrenadeSystem              // grenade throw + trajectory
-MedkitSystem               // healing consumable
-StatusEffectSystem         // bleed, buffs, etc.
-BandageSystem              // bandage healing
-ShootingSystem             // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
-PlayerFOVSystem            // visibility cone queries
+// Pre-movement
+ADS state + blend (inline)       // before movement so speed is affected this frame
+StaminaSystem                    // sprint drain/regen, stamina gate
+RollSystem                       // dodge roll state machine
+MovementSystem                   // player locomotion
+
+// Weapon pipeline
+WeaponSyncSystem                 // syncs weapon state from inventory/equipment
+WeaponEquipSystem                // writes PendingHotbarSlot (intent only)
+WeaponStateMachineSystem         // FSM: Ready/Firing/Cooldown/Equipping/Unequipping/Reloading
+AimingSystem                     // dual-layer: RawAimPoint → WeaponAimPoint → AimDirection
+
+// Consumables + status effects
+QuickSlotSystem                  // quick slot usage
+GrenadeSystem                    // grenade throw + trajectory
+MedkitSystem                     // healing consumable
+StatusEffectSystem               // bleed L1/L2, buffs
+BandageSystem                    // bandage healing
+
+// Combat
+ShootingSystem                   // fires only when Phase == Ready; ammo gate + dry fire + auto-reload
+
+// AI
+PlayerFOVSystem                  // visibility cone queries
 BotPerceptionSystem
 BotBrainSystem
 BotMovementSystem
-BotCombatSystem            // bots use LastFireTime, no FSM
+BotCombatSystem                  // bots use LastFireTime, no FSM
+
+// Resolution
 ProjectileSystem
-GrenadeSystem.TickExplosions  // grenade detonation + area damage
-DamageSystem               // consumes hit inbox, applies damage, emits death events
+GrenadeSystem.TickExplosions     // grenade detonation + area damage
+DamageSystem                     // consumes hit inbox, armor calc, applies damage, emits death events
+ProcessCollisions / ProcessDamageAlerts / ProcessDeathEvents
+Interaction dispatch (inline)    // NPC / Deploy / Craft / Loot / GroundItem pickup
+ElapsedTime += dt
 ```
 
 ## Entry points
-All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
+Supported via `LaunchMode` enum: Menu, Raid, TestScenario, Hideout.
+All go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loading arbitrary scenes.
 
 ## Debug tools
 
@@ -78,13 +117,28 @@ All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLaunc
 - `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
 - Opens via **Window → Raid State Debugger**
 - Readonly view of entire `RaidState` updated every frame during Play Mode
-- Shows: Player (position, aim, health, weapon, hotbar), Bots (with blackboard + intents), Projectiles (with owner + age), Ground Items, Inventory, Health Map
+- Shows: Player, Bots, Projectiles, Ground Items, Inventory, Health Map, Status Effects, Armor Map, Workbenches, Deploy Points, NPCs, Lootables
 - **Rule**: when adding new fields to any state class, add corresponding display in the debugger window
 
+### Dev Cheats (EditorWindow + ScriptableObject)
+- `Assets/Scripts/Editor/DevCheatsWindow.cs` — **Window → Dev Cheats**
+- SO-based: `DevCheats.cs` (static accessor) → `DevCheatsConfig.cs` (root SO) → 14 section SOs
+- Sections: Cheats, Weapon, Recoil, Aim, Player, FOV, Fog, Crosshair, ADS, HealthBar, Parallax, DamageNumbers, StatusEffects, Armor
+
+### Bot BT Debugger
+- `Assets/Scripts/Editor/BotBTDebuggerWindow.cs` — behavior tree visualization
+
+### Quest Editor Tools
+- `Assets/Scripts/Editor/Quests/` — QuestDefinitionEditor, QuestGraphImporter, QuestPrerequisiteGraph, QuestNode
+
+### Raid Tools Menu
+- **Raid → Delete Save** — clears save file
+
 ### Other debug tools
-- `HotbarDebugOverlay` (`View/HotbarDebugOverlay.cs`) — IMGUI overlay showing 9 hotbar slots at bottom of game view (includes mag/reserve ammo display)
-- `BotDebugLabel` (`View/BotDebugLabel.cs`) — 3D TextMesh above bots showing TypeId, AI status, HP, distance
-- `InventoryUI` (`View/InventoryUI.cs`) — IMGUI inventory screen (Tab key) with drag/drop, context menu, stack counts
+- `HotbarDebugOverlay` — IMGUI: 9 hotbar slots with mag/reserve ammo
+- `BotDebugLabel` — 3D TextMesh: TypeId, AI status, HP, distance
+- `InventoryUI` — IMGUI: inventory screen with drag/drop, context menu, stack counts, item tooltip
+- `GrenadeTrajectoryOverlay` — grenade throw preview arc
 
 ## Data Flow Reference
 
@@ -94,32 +148,34 @@ All entry points (Menu, direct Level/Raid, test scenarios) go through `GameLaunc
 Update
   └─ App.Tick()
        └─ RaidSession.Tick()
-            ├─ build RaidContext (readonly struct, passed as in)
-            ├─ System_A.Tick(state, in context)   // e.g. MovementSystem
-            ├─ System_B.Tick(state, in context)   // deterministic order
+            ├─ build RaidContext (readonly struct, AimConfig + ShootingConfig from DevCheats)
+            ├─ ADS state + blend (inline)
+            ├─ StaminaSystem → RollSystem → MovementSystem → ...
+            ├─ ... (all systems in deterministic order, see tick model)
+            ├─ DamageSystem → ProcessCollisions → ProcessDamageAlerts → ProcessDeathEvents
+            ├─ Interaction dispatch (inline)
             └─ state.ElapsedTime += dt
 
 LateUpdate
   └─ App.LateTick()
-       ├─ Presenter.LateTick(session)              // consume events + sync views
-       └─ RaidSession.ClearEvents()                // reset event buffer
+       ├─ DestructiblePresenter → PlayerPresenter → BotPresenter → ProjectilePresenter
+       ├─ GrenadePresenter → GroundItemPresenter → CorpsePresenter
+       └─ RaidSession.ClearEvents()
 ```
-
-Systems read adapters from context, write into state.
-Presenters read state + events, write into Unity transforms.
-Events are cleared after all presenters have consumed them.
 
 ### Object ownership
 
 ```
 App (singleton, composition root)
-  ├─ Adapters (ITimeAdapter, IInputAdapter, ...)   → passed into RaidSession
-  ├─ Presenters (plain C# classes)                 → ticked + disposed by App
-  ├─ Player (persistent profile)
+  ├─ Adapters (5 interfaces, 5 implementations)
+  ├─ Presenters (7 plain C# classes, ticked + disposed by App)
+  ├─ Player (persistent profile + inventory)
+  ├─ QuestDatabase (SO from Resources)
   └─ RaidSession (created per raid)
-       ├─ RaidEventBuffer
-       ├─ RaidState        → entity states, EIds, elapsed time
-       └─ LevelState       → level metadata
+       ├─ RaidEventBuffer (IRaidEvents)
+       ├─ HitInbox / CollisionInbox
+       ├─ RaidState (entities, health, armor, status effects, inventory, etc.)
+       └─ LevelState (level metadata)
 ```
 
 ### Data direction

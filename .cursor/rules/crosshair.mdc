@@ -23,80 +23,72 @@ Raw cursor is always a dot and never changes. Weapon cursor shape/color/animatio
 | `Ready` | `AmmoInMagazine > 0` | 4-line crosshair + center dot | Green `(0.2, 1, 0.3, 0.9)` |
 | `Ready` | Empty mag + no reserve | 4-line crosshair + center dot | Red `(1, 0.25, 0.2, 0.9)` |
 | `Firing` | Just shot (1 tick) | Crosshair with max bloom gap | White `(1, 1, 1, 0.95)` |
-| `Cooldown` | Post-shot delay | Bloom gap contracting back | White→Green lerp |
+| `Cooldown` | Post-shot delay | Bloom gap contracting back | White->Green lerp |
 | `Reloading` | Reload in progress | Ring of 12 dots (no crosshair) | Orange filled / gray empty |
-| `Equipping` | Drawing weapon | Crosshair fading in | Green, alpha 0→1 |
-| `Unequipping` | Holstering weapon | Crosshair fading out | Green, alpha 1→0 |
-| Unarmed | `EquippedWeapon == null` | Single gray dot (5px) | Gray `(0.7, 0.7, 0.7, 0.6)` |
+| `Equipping` | Drawing weapon | Crosshair fading in | Green, alpha 0->1 |
+| `Unequipping` | Holstering weapon | Crosshair fading out | Green, alpha 1->0 |
+| Unarmed | `EquippedWeapon == null` | Single gray dot (15px) | Gray `(0.7, 0.7, 0.7, 0.6)` |
 
 Rolling (`IsRolling == true`) applies 0.3 alpha multiplier to any state above.
 
 ## Crosshair Geometry
 
-- Line thickness: 2px, length: 8px
-- Base gap (center to inner edge): 5px
-- Center dot: 3x3 px
-- Bloom extra gap: +10px (total 15px at max bloom)
+All configurable via DevCheats Crosshair section. Top line fades out during ADS.
+
+## ADS Crosshair
+
+Gap/bloom lerp toward ADS values (`AdsBaseGap`, `AdsBloomExtraGap`). Top line fades (`alpha *= 1 - adsBlend`).
 
 ## Bloom Animation
 
-Triggered by Firing→Cooldown. Gap starts expanded (15px), contracts to base (5px).
-
-```
-progress = SmoothStep(0, 1, elapsed / weapon.FireInterval)
-currentGap = BaseGap + BloomExtra * (1 - progress)
-color = Lerp(white, green, progress)
-```
+Triggered by Firing->Cooldown. Gap starts expanded, contracts to base via SmoothStep.
 
 ## Reload Ring
 
-12 dots in circle (radius 14px), from 12 o'clock clockwise. Filled = orange, empty = gray.
+12 dots in circle (radius 42px), from 12 o'clock clockwise. Filled = orange, empty = gray.
 
 ## Recoil
 
-Firing displaces the crosshair (WeaponAimPoint) away from the player. The gap between raw dot and crosshair = recoil magnitude.
+Subtract-apply pattern in AimingSystem. ADS reduces recoil kick and boosts recovery.
+See `docs/ai/weapons.md` for recoil details and per-weapon stats.
 
-**Two components per shot:**
-1. **Forward kick** (`RecoilKickForward`) — pushes aim away from player along `+AimDirection` (main recoil)
-2. **Sideways scatter** (`RecoilKickSide`) — random perpendicular displacement (spread)
+## Hit Marker System
 
-**Subtract-apply pattern** in AimingSystem prevents double-recovery:
-```
-cleanAim = WeaponAimPoint - RecoilOffset       // strip recoil
-cleanAim = Lerp(cleanAim, mouse, smoothFactor)  // base tracking (AimFollowSharpness)
-RecoilOffset = Lerp(RecoilOffset, zero, decay)  // recoil decay (RecoilRecoverySpeed)
-WeaponAimPoint = cleanAim + RecoilOffset         // combine
-```
+COD-style X-markers driven by `HitConfirmed` events from `DamageSystem`.
 
-ShootingSystem applies kick after firing (both components go through `RecoilOffset`):
+### HitMarker Struct
+
 ```
-aimDir = normalize(WeaponAimPoint - PlayerPosition)
-RecoilOffset += aimDir * RecoilKickForward * RecoilMultiplier * RecoilForwardMultiplier
-right = perpendicular(aimDir)  // 90° CW on XZ
-RecoilOffset += right * Random(-RecoilKickSide, +RecoilKickSide) * RecoilMultiplier * RecoilSideMultiplier
+struct HitMarker {
+    float time;              // Time.time when created
+    bool isKill;             // target died
+    bool isHeadshot;         // headshot
+    float absorptionRatio;   // 0=full pen, 1=full absorption
+    bool isRicochet;         // helmet ricochet
+}
 ```
 
-DevCheats multipliers (all stack):
-- `RecoilMultiplier` — global kick scale
-- `RecoilForwardMultiplier` — forward channel only
-- `RecoilSideMultiplier` — side channel only
-- `RecoilRecoveryMultiplier` — decay speed
+### Marker Types
 
-| Weapon | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed | Behavior |
-|--------|------------------|----------------|---------------------|----------|
-| Rifle | 2 | 1.5 | 2 | Moderate forward, slight scatter. Full-auto accumulates. |
-| Shotgun | 3 | 6 | 3 | Heavy forward kick, noticeable scatter. Mostly recovers between shots. |
-| Pistol | 1.5 | 1 | 4 | Light kick, minimal scatter. Fast recovery between semi-auto shots. |
+- **Regular hit**: white X, `HitDuration` (0.3s), `HitLineLength` (14px)
+- **Kill**: red X, `KillDuration` (0.5s), `KillLineLength` (18px), color `(1, 0.15, 0.15)`
+- **Headshot**: gold double-X (inner + outer at `HeadshotOuterScale` 1.25x), `HeadshotDuration` (0.5s), color `(1, 0.85, 0.2)`
+- **Ricochet**: blue spark X at 50% length, 60% gap, 80% thickness, `RicochetDuration` (0.2s), color `(0.5, 0.7, 1)`
 
-## Technical Notes
+### Proportional Sizing (Armor Absorption)
 
-- Single `Texture2D(1,1)` white pixel; all colors via `GUI.color`
-- `AmmoSystem.CountReserve()` for no-reserve detection (read-only query)
-- Progress: `elapsed = RaidState.ElapsedTime - weapon.PhaseStartTime`
-- World-to-GUI: `cam.WorldToScreenPoint()` + Y-flip
+- Size: `absScale = 1 - absorptionRatio * 0.5` (1.0 at full pen, 0.5 at full absorption)
+- Color: regular hits lerp `HitColor -> ArmorHitColor` by `absorptionRatio`. Kill/headshot colors never blended.
+- `ArmorHitColor` default: gray-blue `(0.6, 0.65, 0.7)`
+
+### DevCheats Params
+
+`DevCheatsCrosshairSection`: `HitMarkerScale`, `HitDuration`, `KillDuration`, `HeadshotDuration`, `RicochetDuration`, `HitLineLength`, `KillLineLength`, `HitGapStart`, `HitGapExpand`, `HitMarkerThickness`, `HitColor`, `KillColor`, `HeadshotColor`, `ArmorHitColor`, `RicochetColor`, `HeadshotOuterScale`, `HeadshotOuterExpandMul`.
 
 ## Key Files
 
 - `Assets/Scripts/View/AimCursorOverlay.cs` — crosshair rendering
-- `Assets/Scripts/Systems/AimingSystem.cs` — recoil decay (subtract-apply pattern)
-- `Assets/Scripts/Systems/ShootingSystem.cs` — recoil kick application
+- `Assets/Scripts/Systems/AimingSystem.cs` — recoil decay
+- `Assets/Scripts/Systems/ShootingSystem.cs` — recoil kick
+- `Assets/Scripts/Dev/Sections/DevCheatsCrosshairSection.cs` — hit marker params
+- `Assets/Scripts/Dev/Sections/DevCheatsADSSection.cs` — ADS crosshair params

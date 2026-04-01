@@ -47,6 +47,56 @@ Transition rules:
 
 1 trigger pull = 1 ammo consumed (shotgun: 1 shell = 7 pellets).
 
+## Ammo Types
+
+Three calibers, three variants each (Standard, AP, HP). Defined in `ItemDefinition.BuildRegistry()`.
+
+### Standard Ammo
+
+| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
+|---------|---------|----------|-------------|-------------|-------------|
+| Ammo_Rifle | Rifle | 60 | 10 | 5 | 0 |
+| Ammo_Shotgun | Shotgun | 20 | 8 | 4 | 0 |
+| Ammo_Pistol | Pistol | 36 | 12 | 6 | 0 |
+
+### AP Ammo (Armor-Piercing)
+
+| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
+|---------|---------|----------|-------------|-------------|-------------|
+| Ammo_Rifle_AP | Rifle | 60 | 35 | 8 | 0 |
+| Ammo_Pistol_AP | Pistol | 36 | 30 | 7 | 0 |
+
+### HP Ammo (Hollow Point — zero pen, high bleed)
+
+| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
+|---------|---------|----------|-------------|-------------|-------------|
+| Ammo_Rifle_HP | Rifle | 60 | 0 | 0 | 0.30 |
+| Ammo_Shotgun_HP | Shotgun | 20 | 0 | 0 | 0.08/pellet |
+| Ammo_Pistol_HP | Pistol | 36 | 0 | 0 | 0.25 |
+
+## Projectile Stat Composition
+
+```
+totalPenetration = weapon.BasePenetration + ammoDef.Penetration   // + weaponMod + charTree (future)
+totalArmorDamage = weapon.BaseArmorDamage + ammoDef.ArmorDamage
+totalBleedChance = weapon.BaseBleedChance + ammoDef.BleedChance
+```
+
+Composed in `ShootingSystem`, written to `ProjectileEntityState` fields.
+
+## Convergence & Parallax Correction
+
+Two-direction blend: parallax-corrected (visual trail through crosshair) + convergence (toward 3D hit point). `ConvergenceBlend` controls the mix. AimUp angles bullet toward upper body when convergence hits a character.
+
+## ADS (Aim Down Sights)
+
+Continuous blend `player.AdsBlend` (0=hip, 1=ADS). Effects:
+- Aim tracking: `AimFollowSharpness *= Lerp(1, AdsAimFollowMultiplier, AdsBlend)` (default 1.5x)
+- Recoil kick: `recoilMul *= Lerp(1, AdsRecoilMultiplier, AdsBlend)` (default 0.6x)
+- Recoil recovery: `decay *= Lerp(1, AdsRecoilRecoveryMultiplier, AdsBlend)` (default 1.5x)
+- Move speed: `speed *= Lerp(1, AdsMoveSpeedMultiplier, AdsBlend)` (default 0.7x)
+- Crosshair: gap/bloom lerp to ADS values, top line fades out
+
 ## Dual-Layer Aiming
 
 Player aiming has two layers:
@@ -54,37 +104,34 @@ Player aiming has two layers:
 2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon exponential smoothing + recoil
 
 Key fields on `PlayerEntityState`:
-- `RawAimPoint` — instant mouse world position (player intent)
-- `WeaponAimPoint` — smoothed world position + recoil offset (weapon tracking)
-- `AimDirection` — derived from WeaponAimPoint (normalized, used by ShootingSystem)
-- `FacingDirection` — body rotation, follows raw aim (unchanged behavior)
+- `RawAimPoint`, `WeaponAimPoint`, `AimDirection`, `FacingDirection`, `IsADS`, `AdsBlend`
 
 Key fields on `WeaponEntityState`:
-- `AimFollowSharpness` — exponential smoothing rate (higher = faster tracking)
-- `RecoilKickForward` — world units forward displacement per shot (away from player)
-- `RecoilKickSide` — world units max sideways displacement per shot (perpendicular scatter)
-- `RecoilRecoverySpeed` — independent recoil decay rate
-- `RecoilOffset` — runtime accumulated recoil displacement (Vector3)
+- `AimFollowSharpness`, `RecoilKickForward`, `RecoilKickSide`, `RecoilRecoverySpeed`, `RecoilOffset`
 
-Smoothing method: position-based exponential (`Vector3.Lerp(current, target, 1 - exp(-sharpness * dt))`).
-
-Recoil: forward kick + sideways scatter. Both go through `RecoilOffset` (not directly into `WeaponAimPoint`). Subtract-apply pattern in AimingSystem separates base tracking (AimFollowSharpness) from recoil decay (RecoilRecoverySpeed). See `docs/ai/crosshair.md` for details.
-
-DevCheats controls:
-- `AimSplitEnabled` (bool) — when false, weapon aim follows mouse instantly (sharpness=1000), recoil still works
-- `AimFollowMultiplier` (float) — scales `AimFollowSharpness` when aim split is enabled
-- `RecoilMultiplier`, `RecoilForwardMultiplier`, `RecoilSideMultiplier` — kick strength
-- `RecoilRecoveryMultiplier` — decay speed
+Smoothing: position-based exponential. Recoil: subtract-apply pattern in AimingSystem.
 
 Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
 
 ## Weapon Stats
 
-| Weapon | PrefabId | FireInterval | Damage | ProjPerShot | SpreadAngle | ProjSpeed | ProjLifetime |
-|--------|----------|-------------|--------|-------------|-------------|-----------|-------------|
-| Rifle | Weapon_Rifle | 0.2 | 10 | 1 | 0 | 20 | 3.0 |
-| Shotgun | Weapon_Shotgun | 0.6 | 8 | 7 | 30 | 30 | 2.0 |
-| Pistol | Weapon_Pistol | 0.4 | 15 | 1 | 0 | 25 | 2.5 |
+### Combat Stats
+
+| Weapon | PrefabId | FireInterval | Damage | HeadshotMul | ProjPerShot | SpreadAngle | ProjSpeed | ProjLifetime |
+|--------|----------|-------------|--------|-------------|-------------|-------------|-----------|-------------|
+| Rifle | Weapon_Rifle | 0.2 | 10 | 2.0x | 1 | 0 | 20 | 3.0 |
+| Shotgun | Weapon_Shotgun | 0.6 | 8 | 1.5x | 7 | 30 | 30 | 2.0 |
+| Pistol | Weapon_Pistol | 0.4 | 15 | 2.5x | 1 | 0 | 25 | 2.5 |
+
+### Armor Penetration Stats (weapon base)
+
+| Weapon | BasePenetration | BaseArmorDamage | BaseBleedChance |
+|--------|-----------------|-----------------|-----------------|
+| Rifle | 20 | 5 | 0 |
+| Shotgun | 10 | 4 | 0 |
+| Pistol | 15 | 6 | 0 |
+
+### Ammo & Equip
 
 | Weapon | AmmoType | MagSize | ReloadTime | EquipTime | UnequipTime |
 |--------|----------|---------|------------|-----------|-------------|
@@ -92,11 +139,13 @@ Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
 | Shotgun | Ammo_Shotgun | 5 | 2.5s | 0.4s | 0.25s |
 | Pistol | Ammo_Pistol | 12 | 1.5s | 0.2s | 0.15s |
 
+### Aiming & Recoil
+
 | Weapon | AimFollowSharpness | ConeHalfAngle | BodyRotationSpeed | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed |
 |--------|--------------------|---------------|--------------------|--------------------|----------------|---------------------|
 | Rifle | 10 | 45 | 270 | 2 | 1.5 | 2 |
 | Shotgun | 5 | 20 | 180 | 3 | 6 | 3 |
 | Pistol | 15 | 35 | 300 | 1.5 | 1 | 4 |
-| Unarmed | 30 (const) | — | — | — | — | — |
+| Unarmed | 30 (const) | 60 (const) | 360 (const) | — | — | — |
 
 Factory methods: `WeaponEntityState.CreateRifle(id)`, `CreateShotgun(id)`, `CreatePistol(id)`.

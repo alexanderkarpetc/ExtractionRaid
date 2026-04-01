@@ -1,0 +1,318 @@
+# Bot AI System
+
+## 1. Overview
+
+The bot AI uses a **behavior tree (BT)** architecture with an intent-based execution model.
+Each frame the pipeline runs in order:
+
+1. **BotPerceptionSystem** -- updates target detection (vision, hearing, damage alerts)
+2. **BotBrainSystem** -- ticks the behavior tree, which writes *intents* to `BotEntityState`
+3. **BotMovementSystem** -- reads `DesiredVelocity`, applies NavMesh clamping
+4. **BotCombatSystem** -- reads `WantsToFire`, `WantsToHeal`, `WantsToThrowGrenade` and spawns projectiles/grenades/heals
+
+Behavior trees are composed per bot type in `BotTreeBuilder`, cached after first build.
+Bot type configs live in `BotConstants` as `readonly BotTypeConfig` structs with default values overridden per type.
+
+All systems are static, stateless, and iterate `RaidState.Bots`.
+
+---
+
+## 2. Behavior Tree Framework
+
+### BTStatus
+
+```
+Success   -- node completed its goal
+Failure   -- node cannot run / precondition unmet
+Running   -- node is still executing (multi-frame)
+```
+
+### IBTNode
+
+```csharp
+interface IBTNode {
+    string Name { get; }
+    BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config);
+}
+```
+
+Every `Tick` return goes through the `Traced()` extension method, which records the status in `BotBlackboard.Trace` for debug visualization.
+
+### BTSelector (priority fallback)
+
+Ticks children left-to-right. Returns the status of the **first child that does not return Failure**. If all children fail, returns Failure.
+
+### BTSequence (all-must-succeed)
+
+Ticks children left-to-right. Returns the status of the **first child that does not return Success**. If all children succeed, returns Success.
+
+### BTCondition (gate)
+
+Wraps a `Func<BotEntityState, RaidState, BotTypeConfig, bool>` predicate. Returns Success if true, Failure if false. Used as the first child in a Sequence to guard combat/dodge branches.
+
+### BTCooldown (rate limiter)
+
+Wraps a child node. While the cooldown timer > 0, returns Failure and decrements the timer. When ready, ticks the child; on Success, resets the timer to `duration`. Timer state is stored in the blackboard via getter/setter lambdas (e.g. `bb.DodgeCooldownTimer`).
+
+---
+
+## 3. Tree Builder
+
+`BotTreeBuilder.GetOrBuild(config)` returns a cached `IBTNode` tree per `TypeId`.
+
+Tree structure is driven by `BotBehaviorFlags` on the config:
+
+```
+Root (Selector)
+ +-- [if Heal]       HealNode
+ +-- [if Dodge]      Sequence "Dodge"
+ |                     Condition "Damaged?" -> WasDamaged || IsRolling
+ |                     Cooldown (DodgeCooldown)
+ |                       DodgeNode
+ +-- [if Shoot|Chase] Sequence "Combat"
+ |                     Condition "HasTarget?"
+ |                     Selector "Tactics"
+ |                       [if ThrowGrenade] Cooldown (GrenadeCooldown)
+ |                                           ThrowGrenadeNode
+ |                       Selector "Engage"
+ |                         [if Shoot] ShootNode
+ |                         [if Chase] ChaseNode
+ +-- [if Patrol]     PatrolNode
+```
+
+**BotBehaviorFlags** (bitmask):
+
+| Flag          | Bit |
+|---------------|-----|
+| Patrol        | 0   |
+| Chase         | 1   |
+| Shoot         | 2   |
+| Heal          | 4   |
+| Dodge         | 5   |
+| ThrowGrenade  | 6   |
+
+Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
+
+---
+
+## 4. Action Nodes
+
+### PatrolNode
+
+- **Purpose**: Walk between waypoints in a loop.
+- **Conditions**: `PatrolWaypoints` array must be non-empty.
+- **Behavior**: Moves toward current waypoint at `PatrolSpeed`. On arrival (< 1 m), advances index and waits `PatrolWaitTime` (2 s). Always returns Running.
+- **Intents**: Sets `DesiredVelocity`.
+
+### ChaseNode
+
+- **Purpose**: Move toward the last known target position.
+- **Conditions**: `HasTarget` must be true; returns Failure otherwise.
+- **Behavior**: Moves at `ChaseSpeed` toward `LastKnownTargetPos`. Returns Success when within 1 m, Running while moving.
+- **Intents**: Sets `DesiredVelocity`.
+
+### ShootNode
+
+- **Purpose**: Fire weapon at visible target.
+- **Conditions**: `HasTarget && CanSeeTarget && DistanceToTarget <= EngageRange`. Fails otherwise.
+- **Behavior**: First waits `ReactionTime` seconds (returns Running). Then sets fire intent. Returns Success.
+- **Intents**: Sets `DesiredAimPoint` to `LastKnownTargetPos`, sets `WantsToFire = true`.
+
+### DodgeNode
+
+- **Purpose**: Perform a dodge roll perpendicular to the player direction.
+- **Conditions**: Guarded by BTCondition (`WasDamaged || IsRolling`) and BTCooldown.
+- **Behavior**: If already rolling, returns Running. Otherwise picks a random lateral direction (left or right relative to player) and calls `RollSystem.StartBotRoll`. Returns Running on success, Failure if roll could not start.
+- **Intents**: Triggers roll state on `BotEntityState`.
+
+### HealNode
+
+- **Purpose**: Use a medkit to restore HP.
+- **Conditions**: Must be alive, have medkits remaining, and heal cooldown expired.
+- **Two modes**:
+  - **Emergency heal**: HP ratio < `EmergencyHealThreshold` (0.3) AND time since last damage > `EmergencyHealDelay` (1.5 s). Cooldown = `EmergencyHealCooldown` (8 s).
+  - **Safe heal**: HP ratio < `HealThreshold` AND time since damage > `HealSafeDelay` (3 s) AND cannot see target AND distance > `HealSafeEnemyDistance` (10 m) AND not reloading. Cooldown = `HealCooldown` (15 s).
+- **Intents**: Sets `WantsToHeal = true`. CombatSystem restores HP to max and decrements `MedkitsRemaining`.
+
+### ThrowGrenadeNode
+
+- **Purpose**: Throw a grenade at the target's last known position when they are behind cover.
+- **Conditions**: `HasTarget && !CanSeeTarget && GrenadesRemaining > 0`. Distance must be between `GrenadeMinThrowDist` and `GrenadeConstants.MaxThrowRange`. Guarded by BTCooldown.
+- **Behavior**: On first valid tick, starts a random delay (1-2 s). Returns Failure while waiting (so other branches can still run). When delay expires, sets throw intent.
+- **Intents**: Sets `WantsToThrowGrenade = true`, `GrenadeThrowTarget`.
+- **Note**: `CanSeeTarget` becoming true resets the delay timer (via PerceptionSystem setting `GrenadeThrowDelayTimer = -1`).
+
+---
+
+## 5. Perception System
+
+Runs on a **fixed interval** of `PerceptionTickInterval` (0.2 s) per bot, not every frame.
+
+### Detection Sources
+
+| Source        | Condition                                                  |
+|---------------|------------------------------------------------------------|
+| Vision        | Distance <= `VisionRange` AND angle <= `VisionAngle/2` AND linecast clear (eye at +1.5 y, target at +1.0 y) |
+| Hearing       | Distance <= `HearingRange` AND player velocity > 0.1       |
+| Damage alert  | `WasDamaged` flag (set externally when bot takes damage)   |
+
+Detection = vision OR hearing OR damage alert.
+
+### Target Memory
+
+When detected, blackboard is updated: `TargetEId`, `LastKnownTargetPos`, `HasTarget`, `CanSeeTarget`, `DistanceToTarget`, `TimeSinceTargetSeen = 0`.
+
+When not detected, `TimeSinceTargetSeen` increments each perception tick. After `TargetMemoryDuration` seconds the target is fully cleared (all tracking fields reset, `ReactionTimer` reset).
+
+### Vision Blocking
+
+`VisionBlockingMask` defaults to layer 0 (Default). Linecast uses `ctx.Physics.Linecast`.
+
+---
+
+## 6. Movement System
+
+Runs every frame after the brain tick.
+
+- Reads `DesiredVelocity` written by BT nodes.
+- Clamps speed to `ChaseSpeed` maximum.
+- **Roll override**: If `IsRolling`, uses `RollDirection * DodgeConstants.Speed` instead.
+- Applies NavMesh clamping via `ctx.NavMesh.SamplePosition(candidatePos, 1f)`.
+- Updates `FacingDirection` from velocity when moving.
+
+---
+
+## 7. Combat System
+
+Runs every frame, processes three intent flags:
+
+### Fire
+
+- Checks `WantsToFire` and weapon fire interval cooldown.
+- Computes aim direction from bot position to `DesiredAimPoint`.
+- Spawns `ProjectilesPerShot` projectiles with:
+  - **Weapon spread**: `SpreadAngle * 0.5` random yaw per pellet.
+  - **Accuracy spread**: `(1 - Accuracy) * 10` degrees random rotation on both axes.
+- Projectile spawn position: bot position + 0.5 m forward + 1.2 m up.
+
+### Heal
+
+- Instantly sets `CurrentHp = MaxHp`.
+- Decrements `MedkitsRemaining`.
+
+### Grenade
+
+- Clamps throw distance to `[GrenadeConstants.MinThrowRange, MaxThrowRange]`.
+- Uses `GrenadeSystem.ComputeThrowVelocity` for ballistic arc.
+- Spawns `GrenadeEntityState` with standard fuse time, damage, and explosion radius.
+- Decrements `GrenadesRemaining`.
+
+---
+
+## 8. Spawn System
+
+`BotSpawnSystem.SpawnBot(state, typeId, position, patrolWaypoints, events)`:
+
+1. Looks up `BotTypeConfig` from `BotConstants`.
+2. Creates `BotEntityState` with id, position, patrol waypoints.
+3. Creates `WeaponEntityState` from config (fire interval, damage, speed, spread, pellets).
+4. Sets `MedkitsRemaining` and `GrenadesRemaining` from config.
+5. Adds to `state.Bots` and `state.HealthMap`.
+6. If config has `HelmetDefinitionId` or `BodyArmorDefinitionId`, looks up `ItemDefinition` and creates `ArmorSlotState` in `state.ArmorMap`.
+7. Fires `BotSpawned` event.
+
+---
+
+## 9. Bot Types
+
+### Combat Bots
+
+| Type | Prefab       | Weapon          | HP  | Vision (range/angle) | Hearing | Memory | Reaction | Accuracy | Engage | Chase | Behaviors                                      | Armor            | Medkits | Grenades |
+|------|-------------|-----------------|-----|----------------------|---------|--------|----------|----------|--------|-------|-------------------------------------------------|------------------|---------|----------|
+| Scav | BotView     | Weapon_Rifle    | 80  | 25 / 110             | 6       | 5 s    | 0.8 s    | 0.50     | 20     | 4     | Patrol, Chase, Shoot                            | Helmet_Basic     | 0       | 0        |
+| PMC  | BotBossView | Weapon_Rifle    | 100 | 35 / 120             | 6       | 8 s    | 0.4 s    | 0.75     | 28     | 5     | Patrol, Chase, Shoot, Heal, Dodge, ThrowGrenade | Helmet + Body    | 2       | 2        |
+| Boss | BotPmcView  | Weapon_Shotgun  | 200 | 40 / 140             | 6       | 12 s   | 0.3 s    | 0.65     | 15     | 5.5   | Chase, Shoot, Dodge                             | Armor_Basic body | 0       | 0        |
+
+**PMC** details: Dodge cooldown 5 s, grenade cooldown 20 s, grenade min throw 5 m, heal threshold 0.5, heal cooldown 15 s.
+
+**Boss** details: Shotgun (7 pellets, 25 deg spread, 7 dmg each), dodge cooldown 3 s, no patrol.
+
+### Shooting Range Targets
+
+| Type             | HP     | Patrol | Dodge (CD) | Armor                    |
+|------------------|--------|--------|------------|--------------------------|
+| Target           | 10000  | --     | --         | --                       |
+| TargetWeak       | 50     | --     | --         | Helmet_Basic             |
+| TargetPatrol     | 10000  | 3 m/s  | --         | --                       |
+| TargetFast       | 10000  | 6 m/s  | --         | --                       |
+| TargetDodge      | 10000  | --     | 2 s        | --                       |
+| TargetLightArmor | 10000  | --     | --         | Helmet_Basic             |
+| TargetHeavyArmor | 10000  | --     | --         | Helmet_Basic + Armor_Basic |
+| TargetGlassCannon| 50     | --     | --         | Helmet_Basic + Armor_Basic |
+| TargetTank       | 200    | --     | --         | Armor_Basic (body only)  |
+
+All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never fight back.
+
+---
+
+## 10. Blackboard
+
+`BotBlackboard` is the per-bot working memory. Reset on spawn.
+
+| Field                   | Type      | Purpose                                                    |
+|-------------------------|-----------|------------------------------------------------------------|
+| `TargetEId`             | EId       | Entity id of current target (player)                       |
+| `LastKnownTargetPos`    | Vector3   | Last position where target was detected                    |
+| `HasTarget`             | bool      | Whether bot is tracking any target                         |
+| `CanSeeTarget`          | bool      | Whether bot currently has line-of-sight to target          |
+| `DistanceToTarget`      | float     | Distance to target (updated each perception tick)          |
+| `TimeSinceTargetSeen`   | float     | Seconds since target was last detected; triggers memory clear |
+| `PatrolWaypoints`       | Vector3[] | Waypoint loop for patrol behavior                          |
+| `PatrolWaypointIndex`   | int       | Current waypoint index                                     |
+| `PatrolWaitTimer`       | float     | Countdown at each waypoint (2 s)                           |
+| `ReactionTimer`         | float     | Accumulates toward `ReactionTime` before shooting          |
+| `DodgeCooldownTimer`    | float     | Countdown for dodge availability                           |
+| `HealCooldownTimer`     | float     | Countdown for heal availability                            |
+| `PerceptionTimer`       | float     | Countdown to next perception tick (0.2 s interval)         |
+| `IsDodging`             | bool      | Legacy dodge state flag                                    |
+| `DodgeDirection`        | Vector3   | Legacy dodge direction                                     |
+| `DodgeTimer`            | float     | Legacy dodge timer                                         |
+| `MedkitsRemaining`      | int       | Medkits available for heal actions                         |
+| `GrenadesRemaining`     | int       | Grenades available for throw actions                       |
+| `GrenadeCooldownTimer`  | float     | Countdown for grenade availability (BTCooldown)            |
+| `GrenadeThrowDelayTimer`| float     | -1 = idle; positive = counting down before throw           |
+| `WasDamaged`            | bool      | Set externally on damage, cleared each perception tick     |
+| `LastDamageTime`        | float     | Elapsed time of last damage (for heal delay logic)         |
+| `RunningNodeId`         | int       | Reserved for BT re-entry (not currently used)              |
+| `DebugStatus`           | string    | Human-readable label for current behavior (debug overlay)  |
+| `Trace`                 | BTTrace   | Records each node's BTStatus per tick for debug viz        |
+
+---
+
+## 11. Key Files
+
+| File | Purpose |
+|------|---------|
+| `Assets/Scripts/Systems/Bot/BotBrainSystem.cs` | Main tick: iterates bots, clears intents, ticks BT |
+| `Assets/Scripts/Systems/Bot/BotPerceptionSystem.cs` | Vision + hearing + damage alert detection |
+| `Assets/Scripts/Systems/Bot/BotMovementSystem.cs` | Velocity application + NavMesh clamping |
+| `Assets/Scripts/Systems/Bot/BotCombatSystem.cs` | Fire / heal / grenade execution |
+| `Assets/Scripts/Systems/Bot/BotSpawnSystem.cs` | Bot creation with weapon, HP, armor, blackboard |
+| `Assets/Scripts/Systems/Bot/BotTreeBuilder.cs` | BT composition per type with caching |
+| `Assets/Scripts/Systems/Bot/BT/IBTNode.cs` | Node interface + BTStatus enum |
+| `Assets/Scripts/Systems/Bot/BT/BTSelector.cs` | Priority fallback composite |
+| `Assets/Scripts/Systems/Bot/BT/BTSequence.cs` | All-must-succeed composite |
+| `Assets/Scripts/Systems/Bot/BT/BTCondition.cs` | Predicate gate node |
+| `Assets/Scripts/Systems/Bot/BT/BTCooldown.cs` | Rate-limiting decorator |
+| `Assets/Scripts/Systems/Bot/BT/BTStatus.cs` | Success / Failure / Running enum |
+| `Assets/Scripts/Systems/Bot/BT/BTTraceExtensions.cs` | Debug trace recording extension |
+| `Assets/Scripts/Systems/Bot/Nodes/PatrolNode.cs` | Waypoint patrol loop |
+| `Assets/Scripts/Systems/Bot/Nodes/ChaseNode.cs` | Move to last known target position |
+| `Assets/Scripts/Systems/Bot/Nodes/ShootNode.cs` | Aim and fire at visible target |
+| `Assets/Scripts/Systems/Bot/Nodes/DodgeNode.cs` | Lateral dodge roll |
+| `Assets/Scripts/Systems/Bot/Nodes/HealNode.cs` | Emergency / safe heal logic |
+| `Assets/Scripts/Systems/Bot/Nodes/ThrowGrenadeNode.cs` | Delayed grenade throw at cover targets |
+| `Assets/Scripts/Constants/BotConstants.cs` | All bot type configs + global tuning |
+| `Assets/Scripts/State/BotEntityState.cs` | Bot entity: position, weapon, intents, roll state |
+| `Assets/Scripts/State/BotBlackboard.cs` | Per-bot AI working memory |
+| `Assets/Scripts/State/BTTrace.cs` | Trace recording for debug visualization |
