@@ -24,6 +24,7 @@ namespace View.UI
         public InventoryState BoundInventory => _inventory;
 
         public event Action<SlotViewBase> SlotDragStarted;
+        public event Action<SlotViewBase> SlotDragEnded;
         public event Action<SlotViewBase> SlotDropReceived;
         public event Action<SlotViewBase, PointerEventData> SlotRightClicked;
 
@@ -101,6 +102,7 @@ namespace View.UI
         {
             if (slot == null) return;
             slot.DragStarted += s => SlotDragStarted?.Invoke(s);
+            slot.DragEnded += s => SlotDragEnded?.Invoke(s);
             slot.DroppedOnSlot += s => SlotDropReceived?.Invoke(s);
             slot.RightClicked += (s, e) => SlotRightClicked?.Invoke(s, e);
         }

@@ -53,6 +53,7 @@ namespace View.UI
             _playerPanel.Init();
 
             _playerPanel.SlotDragStarted += OnPlayerSlotDragStarted;
+            _playerPanel.SlotDragEnded += OnSlotDragEnded;
             _playerPanel.SlotDropReceived += OnPlayerSlotDropReceived;
             _playerPanel.SlotRightClicked += OnPlayerSlotRightClicked;
         }
@@ -131,9 +132,10 @@ namespace View.UI
             {
                 c = Instantiate(_containerPrefab, _lootContainerParent);
                 c.Init();
-                c.SlotDragStarted += OnLootSlotDragStarted;
-                c.SlotDropReceived += OnLootSlotDropReceived;
-                c.SlotRightClicked += OnLootSlotRightClicked;
+            c.SlotDragStarted += OnLootSlotDragStarted;
+            c.SlotDragEnded += (_, s) => OnSlotDragEnded(s);
+            c.SlotDropReceived += OnLootSlotDropReceived;
+            c.SlotRightClicked += OnLootSlotRightClicked;
             }
 
             c.gameObject.SetActive(true);
@@ -162,7 +164,6 @@ namespace View.UI
                 MoveDragGhost();
 
             HandleQuickSlotKeys();
-            HandleDragCancel();
             HandleContextMenuDismiss();
         }
 
@@ -198,15 +199,7 @@ namespace View.UI
             return null;
         }
 
-        void HandleDragCancel()
-        {
-            if (_dragSource == null) return;
-            var mouse = Mouse.current;
-            if (mouse == null) return;
-            if (!mouse.leftButton.wasReleasedThisFrame) return;
-
-            HandleDropOutside();
-        }
+        // HandleDragCancel removed — OnEndDrag on the source slot drives this now.
 
         void HandleContextMenuDismiss()
         {
@@ -307,13 +300,29 @@ namespace View.UI
         }
 
         // ------------------------------------------------------------------
-        // Drop outside any panel
+        // Called by OnEndDrag on the source slot — fires AFTER OnDrop on the target slot.
+        // If _dragSource is already null here, a valid drop was handled; do nothing.
         // ------------------------------------------------------------------
 
-        void HandleDropOutside()
+        void OnSlotDragEnded(SlotViewBase source)
         {
-            if (_dragSource == null) return;
+            if (_dragSource == null) return; // OnDrop already handled and called CancelDrag
 
+            var mousePos = Mouse.current != null
+                ? (Vector2)Mouse.current.position.ReadValue()
+                : Vector2.zero;
+
+            bool insidePopup = IsInsidePanel((RectTransform)_playerPanel.transform, mousePos)
+                || IsInsidePanel((RectTransform)_lootContainerParent, mousePos);
+
+            if (insidePopup)
+            {
+                // Released inside popup but on no slot — just cancel, keep item
+                CancelDrag();
+                return;
+            }
+
+            // Released outside popup — drop item to floor
             var session = App.App.Instance?.RaidSession;
             var state = session?.RaidState;
             if (state == null) { CancelDrag(); return; }
@@ -324,11 +333,9 @@ namespace View.UI
                 return;
             }
 
-            InventoryState fromInv;
-            if (_dragSourceContainer != null)
-                fromInv = _dragSourceContainer.BoundInventory;
-            else
-                fromInv = state.Inventory;
+            InventoryState fromInv = _dragSourceContainer != null
+                ? _dragSourceContainer.BoundInventory
+                : state.Inventory;
 
             var dropPos = state.PlayerEntity != null
                 ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
@@ -367,29 +374,32 @@ namespace View.UI
 
             _dragGhost.Bind(source.SlotRef, source.CurrentItem, source.IsLoot, -1);
 
-            // Match ghost size to source slot
             var ghostRect = (RectTransform)_dragGhost.transform;
-            var sourceRect = (RectTransform)source.transform;
-            ghostRect.sizeDelta = sourceRect.rect.size;
-
-            // Compute canvas-local position of the source slot
             var canvasRect = (RectTransform)_rootCanvas.transform;
-            var slotScreenPos = RectTransformUtility.WorldToScreenPoint(
-                _rootCanvas.worldCamera, sourceRect.position);
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRect, slotScreenPos, _rootCanvas.worldCamera, out var slotCanvasPos);
 
-            // Compute canvas-local position of the cursor
             var mousePos = Mouse.current != null
                 ? (Vector2)Mouse.current.position.ReadValue()
                 : Vector2.zero;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 canvasRect, mousePos, _rootCanvas.worldCamera, out var mouseCanvasPos);
 
-            // Offset = how far the slot is from the cursor — kept constant during drag
-            _dragOffset = slotCanvasPos - mouseCanvasPos;
+            if (source is EquipmentSlotView)
+            {
+                // Equipment slots are large — center ghost on cursor instead
+                _dragOffset = -ghostRect.rect.size * 0.5f;
+            }
+            else
+            {
+                // Preserve pickup position: ghost appears exactly where the slot was
+                var sourceRect = (RectTransform)source.transform;
+                var slotScreenPos = RectTransformUtility.WorldToScreenPoint(
+                    _rootCanvas.worldCamera, sourceRect.position);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRect, slotScreenPos, _rootCanvas.worldCamera, out var slotCanvasPos);
+                _dragOffset = slotCanvasPos - mouseCanvasPos;
+            }
 
-            ghostRect.localPosition = slotCanvasPos;
+            ghostRect.localPosition = mouseCanvasPos + _dragOffset;
 
             _dragGhostGroup.alpha = 1f;
             _dragGhostGroup.blocksRaycasts = false;
@@ -575,6 +585,13 @@ namespace View.UI
         // ------------------------------------------------------------------
         // Armor sync
         // ------------------------------------------------------------------
+
+        bool IsInsidePanel(RectTransform panel, Vector2 screenPos)
+        {
+            if (panel == null) return false;
+            return RectTransformUtility.RectangleContainsScreenPoint(
+                panel, screenPos, _rootCanvas?.worldCamera);
+        }
 
         void SyncArmorAfterTransfer()
         {

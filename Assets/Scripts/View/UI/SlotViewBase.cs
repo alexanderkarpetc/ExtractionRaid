@@ -23,6 +23,7 @@ namespace View.UI
         public bool IsHovered { get; private set; }
 
         public event Action<SlotViewBase> DragStarted;
+        public event Action<SlotViewBase> DragEnded;
         public event Action<SlotViewBase> DroppedOnSlot;
         public event Action<SlotViewBase, PointerEventData> RightClicked;
 
@@ -47,7 +48,10 @@ namespace View.UI
 
         public void OnDrag(PointerEventData eventData) { }
 
-        public void OnEndDrag(PointerEventData eventData) { }
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            DragEnded?.Invoke(this);
+        }
 
         public void OnDrop(PointerEventData eventData)
         {

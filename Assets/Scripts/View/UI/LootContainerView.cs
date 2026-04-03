@@ -34,6 +34,7 @@ namespace View.UI
         public EId[] FloorItemEIds { get; private set; }
 
         public event Action<LootContainerView, SlotViewBase> SlotDragStarted;
+        public event Action<LootContainerView, SlotViewBase> SlotDragEnded;
         public event Action<LootContainerView, SlotViewBase> SlotDropReceived;
         public event Action<LootContainerView, SlotViewBase, PointerEventData> SlotRightClicked;
 
@@ -123,6 +124,7 @@ namespace View.UI
         void WireSlot(InventorySlotView slot)
         {
             slot.DragStarted += s => SlotDragStarted?.Invoke(this, s);
+            slot.DragEnded += s => SlotDragEnded?.Invoke(this, s);
             slot.DroppedOnSlot += s => SlotDropReceived?.Invoke(this, s);
             slot.RightClicked += (s, e) => SlotRightClicked?.Invoke(this, s, e);
         }
