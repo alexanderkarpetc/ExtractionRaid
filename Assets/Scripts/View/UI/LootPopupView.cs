@@ -24,8 +24,11 @@ namespace View.UI
         [SerializeField] Transform _lootContainerParent;
         [SerializeField] LootContainerView _containerPrefab;
 
-        [Header("Overlays")]
-        [SerializeField] DragOverlayView _dragOverlay;
+        [Header("Drag ghost (InventorySlotView inside LootPopup)")]
+        [SerializeField] InventorySlotView _dragGhost;
+        [SerializeField] CanvasGroup _dragGhostGroup;
+
+        [Header("Overlays (inside LootPopup)")]
         [SerializeField] ContextMenuView _contextMenu;
 
         readonly List<LootContainerView> _activeContainers = new();
@@ -34,14 +37,19 @@ namespace View.UI
         // drag state
         SlotViewBase _dragSource;
         LootContainerView _dragSourceContainer;
+        Vector2 _dragOffset;
 
         // floor state
         InventoryState _floorInventory;
         EId[] _floorItemEIds;
 
+        Canvas _rootCanvas;
+
         protected override void Awake()
         {
             base.Awake();
+            _rootCanvas = GetComponentInParent<Canvas>(includeInactive: true)?.rootCanvas;
+            HideDragGhost();
             _playerPanel.Init();
 
             _playerPanel.SlotDragStarted += OnPlayerSlotDragStarted;
@@ -150,8 +158,8 @@ namespace View.UI
         {
             if (!IsOpen) return;
 
-            if (_dragSource != null && _dragOverlay != null)
-                _dragOverlay.FollowCursor();
+            if (_dragSource != null)
+                MoveDragGhost();
 
             HandleQuickSlotKeys();
             HandleDragCancel();
@@ -218,8 +226,7 @@ namespace View.UI
             _dragSource = source;
             _dragSourceContainer = null;
             source.SetHighlight(true);
-            if (_dragOverlay != null)
-                _dragOverlay.Show(source.CurrentItem?.DisplayName ?? "");
+            ShowDragGhost(source);
         }
 
         void OnPlayerSlotDropReceived(SlotViewBase target)
@@ -263,8 +270,7 @@ namespace View.UI
             _dragSource = source;
             _dragSourceContainer = container;
             source.SetHighlight(true);
-            if (_dragOverlay != null)
-                _dragOverlay.Show(source.CurrentItem?.DisplayName ?? "");
+            ShowDragGhost(source);
         }
 
         void OnLootSlotDropReceived(LootContainerView targetContainer, SlotViewBase target)
@@ -348,8 +354,70 @@ namespace View.UI
                 _dragSource.SetHighlight(false);
             _dragSource = null;
             _dragSourceContainer = null;
-            if (_dragOverlay != null)
-                _dragOverlay.Hide();
+            HideDragGhost();
+        }
+
+        // ------------------------------------------------------------------
+        // Drag ghost
+        // ------------------------------------------------------------------
+
+        void ShowDragGhost(SlotViewBase source)
+        {
+            if (_dragGhost == null || _dragGhostGroup == null || _rootCanvas == null) return;
+
+            _dragGhost.Bind(source.SlotRef, source.CurrentItem, source.IsLoot, -1);
+
+            // Match ghost size to source slot
+            var ghostRect = (RectTransform)_dragGhost.transform;
+            var sourceRect = (RectTransform)source.transform;
+            ghostRect.sizeDelta = sourceRect.rect.size;
+
+            // Compute canvas-local position of the source slot
+            var canvasRect = (RectTransform)_rootCanvas.transform;
+            var slotScreenPos = RectTransformUtility.WorldToScreenPoint(
+                _rootCanvas.worldCamera, sourceRect.position);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRect, slotScreenPos, _rootCanvas.worldCamera, out var slotCanvasPos);
+
+            // Compute canvas-local position of the cursor
+            var mousePos = Mouse.current != null
+                ? (Vector2)Mouse.current.position.ReadValue()
+                : Vector2.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRect, mousePos, _rootCanvas.worldCamera, out var mouseCanvasPos);
+
+            // Offset = how far the slot is from the cursor — kept constant during drag
+            _dragOffset = slotCanvasPos - mouseCanvasPos;
+
+            ghostRect.localPosition = slotCanvasPos;
+
+            _dragGhostGroup.alpha = 1f;
+            _dragGhostGroup.blocksRaycasts = false;
+            _dragGhostGroup.interactable = false;
+        }
+
+        void HideDragGhost()
+        {
+            if (_dragGhostGroup == null) return;
+            _dragGhostGroup.alpha = 0f;
+            _dragGhostGroup.blocksRaycasts = false;
+        }
+
+        void MoveDragGhost()
+        {
+            if (_dragGhost == null || _rootCanvas == null) return;
+
+            var mousePos = Mouse.current != null
+                ? (Vector2)Mouse.current.position.ReadValue()
+                : Vector2.zero;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                (RectTransform)_rootCanvas.transform,
+                mousePos,
+                _rootCanvas.worldCamera,
+                out var mouseCanvasPos);
+
+            ((RectTransform)_dragGhost.transform).localPosition = mouseCanvasPos + _dragOffset;
         }
 
         // ------------------------------------------------------------------
