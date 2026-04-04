@@ -352,6 +352,7 @@ namespace View.UI
 
             SyncArmorAfterTransfer();
             CancelDrag();
+            RefreshFloorContainer(state);
             Refresh();
         }
 
@@ -500,6 +501,7 @@ namespace View.UI
                         }
                     }
                     SyncArmorAfterTransfer();
+                    RefreshFloorContainer(state);
                     Refresh();
                 });
             }
@@ -588,12 +590,19 @@ namespace View.UI
         {
             RebuildFloorInventory(state, state.PlayerEntity.Position);
 
+            LootContainerView floorContainer = null;
             foreach (var c in _activeContainers)
             {
-                if (!c.IsFloorContainer) continue;
-                c.BindFloor(_floorInventory, _floorItemEIds);
-                break;
+                if (c.IsFloorContainer) { floorContainer = c; break; }
             }
+
+            if (floorContainer == null)
+            {
+                floorContainer = GetContainer();
+                _activeContainers.Add(floorContainer);
+            }
+
+            floorContainer.BindFloor(_floorInventory, _floorItemEIds);
         }
 
         // ------------------------------------------------------------------
