@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ApplicationCore;
 using State;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ namespace Save
         public ItemState ToState()
         {
             if (string.IsNullOrEmpty(DefinitionId)) return null;
-            return new ItemState { Id = EId.None, DefinitionId = DefinitionId, StackCount = StackCount };
+            return new ItemState { Id = App.Instance.AllocateEId(), DefinitionId = DefinitionId, StackCount = StackCount };
         }
     }
 
