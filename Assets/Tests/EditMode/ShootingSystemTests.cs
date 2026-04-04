@@ -1,5 +1,6 @@
 using System.Linq;
 using Adapters;
+using ApplicationCore;
 using Systems;
 using NUnit.Framework;
 using Session;
@@ -394,7 +395,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             // Clear all reserve ammo
             for (int i = 0; i < InventoryState.BackpackSize; i++)
-                App.App.Instance.Player.Inventory.Backpack[i] = null;
+                App.Instance.Player.Inventory.Backpack[i] = null;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 

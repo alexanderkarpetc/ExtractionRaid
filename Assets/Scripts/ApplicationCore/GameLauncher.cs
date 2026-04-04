@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace App
+namespace ApplicationCore
 {
     public static class GameLauncher
     {

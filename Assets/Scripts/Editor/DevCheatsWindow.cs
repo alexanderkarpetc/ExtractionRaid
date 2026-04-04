@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Dev;
 using Systems;
 using UnityEditor;
@@ -156,7 +157,7 @@ namespace Editor
             if (!newFold) return;
 
             EditorGUI.indentLevel++;
-            bool appReady = Application.isPlaying && App.App.IsInitialized;
+            bool appReady = Application.isPlaying && App.IsInitialized;
 
             using (new EditorGUI.DisabledScope(!appReady))
             {
@@ -167,8 +168,8 @@ namespace Editor
                 {
                     if (appReady && !string.IsNullOrEmpty(_questIdInput))
                     {
-                        var player = App.App.Instance.Player;
-                        var db = App.App.Instance.QuestDatabase;
+                        var player = App.Instance.Player;
+                        var db = App.Instance.QuestDatabase;
                         if (QuestSystem.TryFulfillTasks(player.QuestProgress, db, _questIdInput))
                             Debug.Log($"[DevCheats] Fulfilled all tasks for quest '{_questIdInput}'. Claim reward at NPC.");
                         else
@@ -179,7 +180,7 @@ namespace Editor
 
                 if (appReady)
                 {
-                    var progress = App.App.Instance.Player.QuestProgress;
+                    var progress = App.Instance.Player.QuestProgress;
                     int active = 0, completed = 0;
                     foreach (var kvp in progress.All)
                     {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using ApplicationCore;
 using Constants;
 using Dev;
 using Systems;
@@ -476,7 +477,7 @@ namespace Session
 
         public bool RequestCraft(string recipeId)
         {
-            return CraftingSystem.TryCraft(RaidState, App.App.Instance.Player.Inventory, recipeId);
+            return CraftingSystem.TryCraft(RaidState, App.Instance.Player.Inventory, recipeId);
         }
 
         public void End()

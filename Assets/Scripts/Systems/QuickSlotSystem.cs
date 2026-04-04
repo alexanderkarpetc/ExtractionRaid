@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Session;
 using State;
 
@@ -13,7 +14,7 @@ namespace Systems
             var input = context.Input;
             if (input == null) return;
 
-            var inventory = App.App.Instance.Player.Inventory;
+            var inventory = App.Instance.Player.Inventory;
 
             ClearStaleBindings(inventory);
 

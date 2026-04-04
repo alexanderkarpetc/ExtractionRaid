@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.Serialization;
+using ApplicationCore;
 using Session;
 using State;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace Tests.EditMode
         /// </summary>
         public static void EnsureAppForTests()
         {
-            var appType = typeof(App.App);
+            var appType = typeof(App);
             var instanceField = appType.GetField("_instance",
                 BindingFlags.NonPublic | BindingFlags.Static);
 
@@ -34,7 +35,7 @@ namespace Tests.EditMode
         /// </summary>
         public static void ResetApp()
         {
-            var instanceField = typeof(App.App).GetField("_instance",
+            var instanceField = typeof(App).GetField("_instance",
                 BindingFlags.NonPublic | BindingFlags.Static);
             instanceField.SetValue(null, null);
         }
@@ -62,9 +63,9 @@ namespace Tests.EditMode
 
             // Starting reserve ammo for tests
             var rifleAmmoId = state.AllocateEId();
-            App.App.Instance.Player.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
+            App.Instance.Player.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
             var shotgunAmmoId = state.AllocateEId();
-            App.App.Instance.Player.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
+            App.Instance.Player.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
 
             return state;
         }

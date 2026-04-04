@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using ApplicationCore;
 using Dev;
 using State;
 using Systems;
@@ -62,7 +63,7 @@ namespace View
 
         void Update()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
             bool inGameplay = player != null;
             bool inMenu = player != null && player.IsInMenu;
@@ -73,7 +74,7 @@ namespace View
         {
             // Read events before AppBootstrap (order 1000) clears them.
             // AimCursorOverlay has default order (0) so LateUpdate runs first.
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var events = session.ConsumeEvents();
@@ -95,7 +96,7 @@ namespace View
         {
             if (!DevCheats.CrosshairEnabled) return;
 
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var state = session.RaidState;
@@ -402,8 +403,8 @@ namespace View
             // Has rounds in magazine
             if (weapon.AmmoInMagazine > 0) return true;
             // Has reserve ammo in inventory
-            return App.App.Instance?.Player?.Inventory != null
-                && AmmoSystem.CountReserve(App.App.Instance.Player.Inventory, weapon.AmmoType) > 0;
+            return App.Instance?.Player?.Inventory != null
+                && AmmoSystem.CountReserve(App.Instance.Player.Inventory, weapon.AmmoType) > 0;
         }
 
         static Texture2D MakeTex(Color color)

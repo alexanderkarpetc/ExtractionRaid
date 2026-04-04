@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Dev;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -52,7 +53,7 @@ namespace View
             if (_target == null) return;
 
             // Update ADS visual blend
-            var player = App.App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             float adsTarget = (player != null && player.IsADS) ? 1f : 0f;
             float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
             _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.deltaTime * adsSpeed);

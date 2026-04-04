@@ -1,4 +1,5 @@
 using Adapters;
+using ApplicationCore;
 using Dev;
 using State;
 using UnityEngine;
@@ -37,7 +38,7 @@ namespace View
 
         void LateUpdate()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             // Detect ArmorBroken events
@@ -68,7 +69,7 @@ namespace View
         {
             if (!DevCheats.ArmorHUDEnabled) return;
 
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var player = session.RaidState?.PlayerEntity;

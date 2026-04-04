@@ -9,6 +9,7 @@ namespace State
         public string TypeId;
         public InventoryState Inventory;
         public bool IsContainer;
+        public bool IsOpened;
 
         public static LootableContainerState Create(EId id, Vector3 position, string typeId,
             InventoryState inventory, bool isContainer = false)

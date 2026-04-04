@@ -1,3 +1,4 @@
+using ApplicationCore;
 using State;
 using UnityEngine;
 
@@ -56,7 +57,7 @@ namespace View
 
         void ReportHit(Collider other, Vector3 hitPoint)
         {
-            var session = App.App.Instance.RaidSession;
+            var session = App.Instance.RaidSession;
             if (session == null) return;
 
             var damageable = other.GetComponent<IDamageableView>();

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Constants;
 using State;
 using Systems;
@@ -71,7 +72,7 @@ namespace View
 
         void Update()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
@@ -91,7 +92,7 @@ namespace View
 
         void OnGUI()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
             var state = session.RaidState;
             if (state?.PlayerEntity == null) return;
@@ -174,7 +175,7 @@ namespace View
                 var rowRect = new Rect(0f, ry, contentRect.width, rowH);
 
                 var style = selected ? _recipeSelectedStyle : _recipeStyle;
-                int owned = CountOwned(App.App.Instance.Player.Inventory, recipe.ResultItemId);
+                int owned = CountOwned(App.Instance.Player.Inventory, recipe.ResultItemId);
                 string label = owned > 0
                     ? $"  {recipe.DisplayName}    Owned: {owned}"
                     : $"  {recipe.DisplayName}";
@@ -223,7 +224,7 @@ namespace View
 
             cy = panel.y + panel.height - pad - 60f;
 
-            bool canCraft = CraftingSystem.CanCraft(App.App.Instance.Player.Inventory, in recipe);
+            bool canCraft = CraftingSystem.CanCraft(App.Instance.Player.Inventory, in recipe);
             var btnRect = new Rect(cx, cy, availW, 54f);
 
             var prevBg = GUI.backgroundColor;
@@ -261,7 +262,7 @@ namespace View
             for (int i = 0; i < recipe.Ingredients.Length; i++)
             {
                 var ingredient = recipe.Ingredients[i];
-                int have = CraftingSystem.CountIngredient(App.App.Instance.Player.Inventory, ingredient.DefinitionId);
+                int have = CraftingSystem.CountIngredient(App.Instance.Player.Inventory, ingredient.DefinitionId);
                 bool met = have >= ingredient.Count;
 
                 var rowRect = new Rect(cx, cy, availW, rowH);

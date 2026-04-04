@@ -1,8 +1,7 @@
 using UnityEngine;
 using View;
-using View.UI;
 
-namespace App
+namespace ApplicationCore
 {
     [DefaultExecutionOrder(1000)]
     public class AppBootstrap : MonoBehaviour

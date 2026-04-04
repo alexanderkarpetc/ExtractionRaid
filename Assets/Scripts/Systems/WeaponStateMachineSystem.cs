@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Dev;
 using Session;
 using State;
@@ -27,7 +28,7 @@ namespace Systems
             {
                 case WeaponPhase.Ready:
                     if (context.Input != null && context.Input.ReloadPressed
-                        && AmmoSystem.CanReload(weapon, App.App.Instance.Player.Inventory))
+                        && AmmoSystem.CanReload(weapon, App.Instance.Player.Inventory))
                     {
                         weapon.Phase = WeaponPhase.Reloading;
                         weapon.PhaseStartTime = elapsed;
@@ -54,7 +55,7 @@ namespace Systems
 
                     if (weapon.Phase == WeaponPhase.Ready && context.Input != null
                         && context.Input.ReloadPressed
-                        && AmmoSystem.CanReload(weapon, App.App.Instance.Player.Inventory))
+                        && AmmoSystem.CanReload(weapon, App.Instance.Player.Inventory))
                     {
                         weapon.Phase = WeaponPhase.Reloading;
                         weapon.PhaseStartTime = elapsed;
@@ -90,7 +91,7 @@ namespace Systems
                 case WeaponPhase.Reloading:
                     if (phaseDuration >= weapon.ReloadTime)
                     {
-                        AmmoSystem.CompleteReload(weapon, App.App.Instance.Player.Inventory);
+                        AmmoSystem.CompleteReload(weapon, App.Instance.Player.Inventory);
                         weapon.Phase = WeaponPhase.Ready;
                         weapon.PhaseStartTime = elapsed;
                         context.Events.WeaponReloadFinished(weapon.PrefabId);

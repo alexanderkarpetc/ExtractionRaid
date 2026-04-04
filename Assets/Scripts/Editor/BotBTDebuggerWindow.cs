@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Constants;
 using State;
 using Systems.Bot;
@@ -57,7 +58,7 @@ namespace Editor
             RaidState state;
             try
             {
-                var session = App.App.Instance?.RaidSession;
+                var session = App.Instance?.RaidSession;
                 if (session == null)
                 {
                     EditorGUILayout.HelpBox("No active raid session.", MessageType.Warning);

@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Cysharp.Threading.Tasks;
 using State;
 using Systems;
@@ -29,7 +30,7 @@ namespace View
 
         void Update()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
@@ -43,7 +44,7 @@ namespace View
 
         void OnGUI()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
             var state = session.RaidState;
             if (state?.PlayerEntity == null) return;
@@ -80,7 +81,7 @@ namespace View
                 var btnRect = new Rect(panelX + padding, curY, panelW - padding * 2f, mapBtnH);
                 if (GUI.Button(btnRect, map.DisplayName, _buttonStyle))
                 {
-                    App.App.Instance.DeployToRaid(map.SceneName, map.LevelId).Forget();
+                    App.Instance.DeployToRaid(map.SceneName, map.LevelId).Forget();
                 }
                 curY += mapBtnH + gap;
             }

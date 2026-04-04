@@ -1,4 +1,5 @@
 using Adapters;
+using ApplicationCore;
 using State;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace Systems
 
             var def = ItemDefinition.Get(groundItem.DefinitionId);
             int pickupCount = groundItem.StackCount;
-            var inventory = App.App.Instance.Player.Inventory;
+            var inventory = App.Instance.Player.Inventory;
 
             // Stackable item: merge into existing stacks, then overflow to free slots
             if (def != null && def.IsStackable && pickupCount > 0)

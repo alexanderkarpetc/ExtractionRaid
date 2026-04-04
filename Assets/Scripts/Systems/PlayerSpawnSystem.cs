@@ -1,4 +1,5 @@
 using Adapters;
+using ApplicationCore;
 using Constants;
 using State;
 using UnityEngine;
@@ -15,8 +16,8 @@ namespace Systems
             state.PlayerEntity = PlayerEntityState.Create(playerId, spawnPosition);
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
-            var inventory = App.App.Instance.Player.Inventory;
-            if (levelId == "shooting_range" || IsInventoryEmpty(App.App.Instance.Player.Inventory))
+            var inventory = App.Instance.Player.Inventory;
+            if (levelId == "shooting_range" || IsInventoryEmpty(App.Instance.Player.Inventory))
             {
                 ClearInventory(inventory);
                 GiveStartingLoadout(state, inventory);

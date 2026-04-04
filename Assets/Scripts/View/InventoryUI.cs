@@ -1,3 +1,4 @@
+using ApplicationCore;
 using State;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,7 +17,7 @@ namespace View
 
         void Update()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
 
             var kb = Keyboard.current;
@@ -39,7 +40,7 @@ namespace View
 
             if (player == null) return;
 
-            if (App.App.Instance.IsInHideout)
+            if (App.Instance.IsInHideout)
             {
                 player.IsInventoryOpen = _isOpen;
                 return;

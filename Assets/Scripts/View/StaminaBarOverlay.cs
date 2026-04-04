@@ -1,3 +1,4 @@
+using ApplicationCore;
 using UnityEngine;
 
 namespace View
@@ -27,7 +28,7 @@ namespace View
 
         void OnGUI()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var player = session.RaidState?.PlayerEntity;

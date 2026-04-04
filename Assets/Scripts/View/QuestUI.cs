@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Quests;
 using State;
 using UnityEngine;
@@ -45,7 +46,7 @@ namespace View
             if (kb != null && kb[Key.I].wasPressedThisFrame)
                 _isOpen = !_isOpen;
 
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
             if (player != null)
                 player.IsQuestLogOpen = _isOpen;
@@ -55,8 +56,8 @@ namespace View
         {
             if (!_isOpen) return;
 
-            if (!App.App.IsInitialized) return;
-            var app = App.App.Instance;
+            if (!App.IsInitialized) return;
+            var app = App.Instance;
             var db = app.QuestDatabase;
             var progress = app.Player.QuestProgress;
             if (db == null || progress == null) return;

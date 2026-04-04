@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Quests;
 using State;
 using Systems;
@@ -57,7 +58,7 @@ namespace View
 
         void Update()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
@@ -77,7 +78,7 @@ namespace View
 
         void OnGUI()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
             var state = session.RaidState;
             if (state?.PlayerEntity == null) return;
@@ -94,7 +95,7 @@ namespace View
             if (npcState == null) return;
 
             string npcId = npcState.NpcId;
-            var app = App.App.Instance;
+            var app = App.Instance;
             var db = app.QuestDatabase;
             var progress = app.Player.QuestProgress;
             int playerLevel = app.Player.ProfileState.Level;
@@ -371,7 +372,7 @@ namespace View
                     }
                 }
 
-                bool hasSpace = QuestSystem.CanFitRewards(quest.Rewards, App.App.Instance.Player.Inventory);
+                bool hasSpace = QuestSystem.CanFitRewards(quest.Rewards, App.Instance.Player.Inventory);
 
                 float btnW = 220f;
                 float btnH = 40f;
@@ -382,7 +383,7 @@ namespace View
                 _completeBtnStyle.normal.background = hasSpace ? _completeBtnBg : _completeBtnDisabled;
                 if (GUI.Button(btnRect, "CLAIM REWARD", _completeBtnStyle))
                 {
-                    QuestSystem.TryCompleteAndGrantRewards(progress, quest, raidState, App.App.Instance.Player.Inventory);
+                    QuestSystem.TryCompleteAndGrantRewards(progress, quest, raidState, App.Instance.Player.Inventory);
                 }
                 GUI.enabled = true;
 

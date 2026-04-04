@@ -1,5 +1,6 @@
 using System;
 using Adapters;
+using ApplicationCore;
 using Constants;
 using Session;
 using State;
@@ -149,7 +150,7 @@ namespace View
         void EquipArmorVisuals(RaidSession session)
         {
             if (_playerView == null || session == null) return;
-            var inventory = App.App.Instance?.Player?.Inventory;
+            var inventory = App.Instance?.Player?.Inventory;
 
             var helmetDef = inventory.HelmetSlot?.Definition;
             if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))

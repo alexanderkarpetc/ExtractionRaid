@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Constants;
 using Session;
 using State;
@@ -14,12 +15,12 @@ namespace Systems
 
             if (!state.HealthMap.TryGetValue(player.Id, out var health)) return;
 
-            bool wantsHeal = QuickSlotSystem.GetActiveDefinitionId(player, App.App.Instance.Player.Inventory) == "Medkit"
+            bool wantsHeal = QuickSlotSystem.GetActiveDefinitionId(player, App.Instance.Player.Inventory) == "Medkit"
                 && player.QuickSlotHeld;
 
             if (player.IsUsingMedkit)
             {
-                var medkit = GetActiveMedkit(state, player, App.App.Instance.Player.Inventory);
+                var medkit = GetActiveMedkit(state, player, App.Instance.Player.Inventory);
                 if (!wantsHeal || !health.IsAlive || medkit == null)
                 {
                     StopMedkit(state, player, context);
@@ -49,7 +50,7 @@ namespace Systems
 
                 if (medkit.StackCount <= 0)
                 {
-                    App.App.Instance.Player.Inventory.Backpack[player.ActiveMedkitSlot] = null;
+                    App.Instance.Player.Inventory.Backpack[player.ActiveMedkitSlot] = null;
                     player.ActiveMedkitSlot = -1;
                     StopMedkit(state, player, context);
                     return;
@@ -65,9 +66,9 @@ namespace Systems
             if (player.IsRolling || player.AreHandsBusy) return;
             if (health.CurrentHp >= health.MaxHp) return;
 
-            int slot = QuickSlotSystem.GetActiveBoundSlot(player, App.App.Instance.Player.Inventory);
+            int slot = QuickSlotSystem.GetActiveBoundSlot(player, App.Instance.Player.Inventory);
             if (slot < 0) return;
-            if (App.App.Instance.Player.Inventory.Backpack[slot]?.DefinitionId != "Medkit") return;
+            if (App.Instance.Player.Inventory.Backpack[slot]?.DefinitionId != "Medkit") return;
 
             player.IsUsingMedkit = true;
             player.ActiveMedkitSlot = slot;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ApplicationCore;
 using Constants;
 using State;
 using Systems;
@@ -54,7 +55,7 @@ namespace Editor
             RaidState state;
             try
             {
-                var session = App.App.Instance?.RaidSession;
+                var session = App.Instance?.RaidSession;
                 if (session == null)
                 {
                     EditorGUILayout.HelpBox("No active raid session.", MessageType.Warning);
@@ -145,7 +146,7 @@ namespace Editor
             Field("Grenade Mode", p.IsInGrenadeMode);
             Field("Grenade Charging", p.GrenadeThrowCharging);
             Field("Grenade Target Dist", p.GrenadeTargetDistance);
-            Field("Grenade Count", InventorySystem.CountGrenades(App.App.Instance.Player.Inventory));
+            Field("Grenade Count", InventorySystem.CountGrenades(App.Instance.Player.Inventory));
             Field("Using Medkit", p.IsUsingMedkit);
             if (p.IsUsingMedkit)
             {
@@ -156,7 +157,7 @@ namespace Editor
                     Field("Medkit Delay", $"{delayRemaining:F2}s");
                 Field("Active Slot", p.ActiveMedkitSlot);
             }
-            Field("Medkit Count", CountMedkits(App.App.Instance.Player.Inventory));
+            Field("Medkit Count", CountMedkits(App.Instance.Player.Inventory));
             Field("Using Bandage", p.IsUsingBandage);
             if (p.IsUsingBandage)
             {
@@ -165,7 +166,7 @@ namespace Editor
                 Field("Bandage Remaining", $"{remaining:F2}s");
                 Field("Active Bandage Slot", p.ActiveBandageSlot);
             }
-            Field("Bandage Count", CountBandages(App.App.Instance.Player.Inventory));
+            Field("Bandage Count", CountBandages(App.Instance.Player.Inventory));
             Field("Bleeding", StatusEffectActive(state, p.Id, State.StatusEffectType.Bleeding));
             Field("LootTargetId", p.LootTargetId != EId.None ? p.LootTargetId.ToString() : "None");
             Field("CraftTargetId", p.CraftTargetId != EId.None ? p.CraftTargetId.ToString() : "None");
@@ -176,7 +177,7 @@ namespace Editor
             Field("Sprinting", p.IsSprinting);
             Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");
             Field("Active QuickSlot", p.ActiveQuickSlot >= 0
-                ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {App.App.Instance.Player.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
+                ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {App.Instance.Player.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
                 : "None");
             Field("QuickSlot Held", p.QuickSlotHeld);
 
@@ -396,7 +397,7 @@ namespace Editor
 
         void DrawInventory(RaidState state)
         {
-            var inv = App.App.Instance?.Player?.Inventory;
+            var inv = App.Instance?.Player?.Inventory;
             _foldInventory = EditorGUILayout.Foldout(_foldInventory, "Inventory", true, EditorStyles.foldoutHeader);
             if (!_foldInventory || inv == null) return;
 
@@ -695,13 +696,14 @@ namespace Editor
                 int key = loot.Id.GetHashCode();
                 if (!_lootableFolds.ContainsKey(key)) _lootableFolds[key] = false;
 
-                string containerTag = loot.IsContainer ? " [Container]" : " [Corpse]";
+                string containerTag = loot.IsContainer ? (loot.IsOpened ? " [Opened]" : " [Container]") : " [Corpse]";
                 _lootableFolds[key] = EditorGUILayout.Foldout(_lootableFolds[key],
                     $"[{i}] {loot.TypeId}{containerTag} (Id={loot.Id})");
                 if (!_lootableFolds[key]) continue;
 
                 EditorGUI.indentLevel++;
                 Field("IsContainer", loot.IsContainer);
+                if (loot.IsContainer) Field("IsOpened", loot.IsOpened);
                 Field("Position", loot.Position.ToString("F1"));
                 if (loot.Inventory != null)
                 {

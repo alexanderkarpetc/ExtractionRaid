@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Systems;
 using NUnit.Framework;
 using State;
@@ -102,7 +103,7 @@ namespace Tests.EditMode
             bool hasHelmet = false, hasArmor = false;
             for (int i = 0; i < InventoryState.BackpackSize; i++)
             {
-                var item = App.App.Instance.Player.Inventory.Backpack[i];
+                var item = App.Instance.Player.Inventory.Backpack[i];
                 if (item?.DefinitionId == "Helmet_Basic") hasHelmet = true;
                 if (item?.DefinitionId == "Armor_Basic") hasArmor = true;
             }

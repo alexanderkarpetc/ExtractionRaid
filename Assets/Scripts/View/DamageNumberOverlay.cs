@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using ApplicationCore;
 using Dev;
 using UnityEngine;
 
@@ -30,7 +31,7 @@ namespace View
         {
             if (!DevCheats.DmgNumEnabled) return;
 
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var cam = Camera.main;

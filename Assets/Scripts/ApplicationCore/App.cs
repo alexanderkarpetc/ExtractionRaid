@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using View;
 
-namespace App
+namespace ApplicationCore
 {
     public class App
     {

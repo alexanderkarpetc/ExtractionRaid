@@ -1,3 +1,4 @@
+using ApplicationCore;
 using State;
 using Systems;
 using UnityEngine;
@@ -30,14 +31,14 @@ namespace View
 
         void OnGUI()
         {
-            var session = App.App.Instance?.RaidSession;
+            var session = App.Instance?.RaidSession;
             if (session == null) return;
 
             var player = session.RaidState?.PlayerEntity;
             if (player == null) return;
             if (player.IsInMenu) return;
 
-            var inventory = App.App.Instance?.Player?.Inventory;
+            var inventory = App.Instance?.Player?.Inventory;
 
             if (_slotStyle == null)
             {
@@ -94,7 +95,7 @@ namespace View
                 if (!string.IsNullOrEmpty(weapon.AmmoType))
                 {
                     int reserve = AmmoSystem.CountReserve(
-                        App.App.Instance.Player.Inventory, weapon.AmmoType);
+                        App.Instance.Player.Inventory, weapon.AmmoType);
                     ammoInfo = $"\n{weapon.AmmoInMagazine}/{reserve}";
                 }
                 label = $"[{i + 1}]\n{weapon.PrefabId}{ammoInfo}";

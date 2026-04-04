@@ -54,7 +54,7 @@ namespace View.UI
             _inventory = lootable.Inventory;
 
             _containerName = lootable.TypeId;
-            SetOpened(!lootable.IsContainer);
+            SetOpened(!lootable.IsContainer || lootable.IsOpened);
             EnsureSlots();
             Refresh();
         }
@@ -128,6 +128,8 @@ namespace View.UI
 
         void OnOpenClicked()
         {
+            if (Lootable != null)
+                Lootable.IsOpened = true;
             SetOpened(true);
             Refresh();
         }
