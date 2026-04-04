@@ -1,5 +1,6 @@
 using UnityEngine;
 using View;
+using View.UI;
 
 namespace ApplicationCore
 {
@@ -8,6 +9,7 @@ namespace ApplicationCore
     {
         [SerializeField] LaunchMode _launchMode = LaunchMode.Raid;
         [SerializeField] string _defaultLevelId = "test_level";
+        [SerializeField] PopupManager _popupManagerPrefab;
 
         bool _isOwner;
 
@@ -22,6 +24,11 @@ namespace ApplicationCore
             _isOwner = true;
             App.Initialize();
             DontDestroyOnLoad(gameObject);
+            if (_popupManagerPrefab != null)
+            {
+                var pm = Instantiate(_popupManagerPrefab);
+                DontDestroyOnLoad(pm.gameObject);
+            }
             gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<QuestUI>();
