@@ -11,5 +11,11 @@ namespace Tests.EditMode.Fakes
         {
             return Blocked;
         }
+
+        public bool LinecastIgnoring(Vector3 from, Vector3 to, int layerMask,
+            Transform ignoreRootA, Transform ignoreRootB)
+        {
+            return Blocked;
+        }
     }
 }

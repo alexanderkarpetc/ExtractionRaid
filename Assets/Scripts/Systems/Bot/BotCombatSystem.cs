@@ -70,8 +70,10 @@ namespace Systems.Bot
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
                     projectileId, bot.Id, spawnPos, pelletDir.normalized,
-                    weapon.ProjectileSpeed, state.ElapsedTime,
-                    weapon.ProjectileLifetime, weapon.ProjectileDamage);
+                    weapon.ProjectileSpeed * ctx.ShootingConfig.ProjectileSpeedMultiplier,
+                    state.ElapsedTime,
+                    weapon.ProjectileLifetime,
+                    weapon.ProjectileDamage * ctx.ShootingConfig.DamageMultiplier);
 
                 state.Projectiles.Add(projectile);
                 ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized, weapon.ProjectileDamage);

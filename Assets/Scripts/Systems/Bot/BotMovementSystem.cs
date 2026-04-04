@@ -48,6 +48,14 @@ namespace Systems.Bot
                 {
                     bot.FacingDirection = velocity.normalized;
                 }
+                else if (bot.Blackboard.HasTarget)
+                {
+                    // When stationary with a target, face toward target so vision cone covers them
+                    var toTarget = bot.Blackboard.LastKnownTargetPos - bot.Position;
+                    toTarget.y = 0f;
+                    if (toTarget.sqrMagnitude > 0.001f)
+                        bot.FacingDirection = toTarget.normalized;
+                }
             }
         }
     }
