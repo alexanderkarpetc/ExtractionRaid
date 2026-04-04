@@ -12,7 +12,8 @@ namespace View
 {
     public class PlayerPresenter
     {
-        readonly GameObject _playerPrefab;
+        readonly GameObject _shellPrefab;
+        readonly GameObject _bodyPrefab;
         readonly Action<Transform> _onMuzzlePointReady;
 
         PlayerView _playerView;
@@ -20,15 +21,19 @@ namespace View
         FogOfWarController _fogOfWarController;
         EId _trackedId;
 
+        const string ShellPrefabPath = "Prefabs/PlayerShell";
+        const string BodyPrefabPath = "Prefabs/Bodies/CharacterBody";
+
         public PlayerPresenter(Action<Transform> onMuzzlePointReady)
         {
             _onMuzzlePointReady = onMuzzlePointReady;
-            _playerPrefab = Resources.Load<GameObject>("Prefabs/PlayerCapsule");
+            _shellPrefab = Resources.Load<GameObject>(ShellPrefabPath);
+            _bodyPrefab = Resources.Load<GameObject>(BodyPrefabPath);
 
-            if (_playerPrefab == null)
-            {
-                Debug.LogError("[PlayerPresenter] Failed to load prefab at Resources/Prefabs/PlayerCapsule.");
-            }
+            if (_shellPrefab == null)
+                Debug.LogError($"[PlayerPresenter] Shell prefab not found: {ShellPrefabPath}");
+            if (_bodyPrefab == null)
+                Debug.LogError($"[PlayerPresenter] Body prefab not found: {BodyPrefabPath}");
         }
 
         public void LateTick(RaidSession session)
@@ -116,14 +121,28 @@ namespace View
 
         void SpawnView(PlayerEntityState playerState, RaidSession session)
         {
-            if (_playerPrefab == null) return;
+            if (_shellPrefab == null) return;
 
             var initialRotation = playerState.FacingDirection.sqrMagnitude > 0.001f
                 ? Quaternion.LookRotation(playerState.FacingDirection, Vector3.up)
                 : Quaternion.identity;
 
-            var go = Object.Instantiate(_playerPrefab, playerState.Position, initialRotation);
+            // 1. Shell (View + Collider)
+            var go = Object.Instantiate(_shellPrefab, playerState.Position, initialRotation);
             _playerView = go.GetComponent<PlayerView>();
+
+            // 2. Body as child (CharacterBody + visual)
+            if (_bodyPrefab != null)
+            {
+                var bodyGo = Object.Instantiate(_bodyPrefab, go.transform);
+                bodyGo.transform.localPosition = Vector3.zero;
+                bodyGo.transform.localRotation = Quaternion.identity;
+
+                var body = bodyGo.GetComponent<CharacterBody>();
+                if (body != null)
+                    _playerView.BindBody(body);
+            }
+
             _playerView.Initialize(_trackedId, _onMuzzlePointReady, BotConstants.PlayerMaxHp);
 
             var cam = Camera.main;

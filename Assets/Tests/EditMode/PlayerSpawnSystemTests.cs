@@ -10,6 +10,12 @@ namespace Tests.EditMode
     [TestFixture]
     public class PlayerSpawnSystemTests
     {
+        [SetUp]
+        public void SetUp() => EditModeTestsUtils.EnsureAppForTests();
+
+        [TearDown]
+        public void TearDown() => EditModeTestsUtils.ResetApp();
+
         [Test]
         public void SpawnPlayer_CreatesPlayerEntity()
         {

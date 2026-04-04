@@ -80,13 +80,30 @@ namespace View
             if (!BotConstants.TryGetConfig(typeId, out var config))
                 return;
 
-            var prefab = GetPrefab(config.PrefabId);
-            if (prefab == null) return;
+            // 1. Shell (View + Collider)
+            var shellPrefab = GetPrefab(config.PrefabId);
+            if (shellPrefab == null) return;
 
-            var go = Object.Instantiate(prefab, position, Quaternion.identity);
-            var view = go.GetComponent<BotView>();
+            var shellGo = Object.Instantiate(shellPrefab, position, Quaternion.identity);
+            var view = shellGo.GetComponent<BotView>();
             if (view == null)
-                view = go.AddComponent<BotView>();
+                view = shellGo.AddComponent<BotView>();
+
+            // 2. Body as child (CharacterBody + visual mesh)
+            if (!string.IsNullOrEmpty(config.BodyPrefabId))
+            {
+                var bodyPrefab = GetPrefab("Bodies/" + config.BodyPrefabId);
+                if (bodyPrefab != null)
+                {
+                    var bodyGo = Object.Instantiate(bodyPrefab, shellGo.transform);
+                    bodyGo.transform.localPosition = Vector3.zero;
+                    bodyGo.transform.localRotation = Quaternion.identity;
+
+                    var body = bodyGo.GetComponent<CharacterBody>();
+                    if (body != null)
+                        view.BindBody(body);
+                }
+            }
 
             view.Initialize(id, typeId, config.WeaponPrefabId, config.MaxHp);
             view.GizmoVisionRange = config.VisionRange;

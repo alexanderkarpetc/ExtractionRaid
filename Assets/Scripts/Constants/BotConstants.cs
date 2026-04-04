@@ -19,7 +19,8 @@ namespace Constants
     public readonly struct BotTypeConfig
     {
         public readonly string TypeId;
-        public readonly string PrefabId;
+        public readonly string PrefabId;       // shell prefab (View + Collider)
+        public readonly string BodyPrefabId;   // visual body prefab (CharacterBody + mesh)
         public readonly string WeaponPrefabId;
 
         // Health
@@ -77,6 +78,7 @@ namespace Constants
 
         public BotTypeConfig(
             string typeId, string prefabId, string weaponPrefabId,
+            string bodyPrefabId = "CharacterBody",
             float maxHp = 100f,
             float healAmount = 0f, float healThreshold = 0f, float healCooldown = 0f,
             float emergencyHealThreshold = 0.3f, float emergencyHealDelay = 1.5f,
@@ -95,6 +97,7 @@ namespace Constants
         {
             TypeId = typeId;
             PrefabId = prefabId;
+            BodyPrefabId = bodyPrefabId;
             WeaponPrefabId = weaponPrefabId;
             MaxHp = maxHp;
             HealAmount = healAmount;
@@ -153,7 +156,7 @@ namespace Constants
         // --- Bot type definitions ---
 
         public static readonly BotTypeConfig Scav = new(
-            typeId: "Scav", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "Scav", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 80f, moveSpeed: 3.5f, chaseSpeed: 4f,
             visionRange: 25f, visionAngle: 110f,
             targetMemoryDuration: 5f, reactionTime: 0.8f, accuracy: 0.5f,
@@ -163,7 +166,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig PMC = new(
-            typeId: "PMC", prefabId: "BotBossView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "PMC", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             healAmount: 30f, healThreshold: 0.5f, healCooldown: 15f,
             moveSpeed: 4.5f, patrolSpeed: 2.5f,
             visionRange: 35f,
@@ -180,7 +183,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig Boss = new(
-            typeId: "Boss", prefabId: "BotPmcView", weaponPrefabId: "Weapon_Shotgun",
+            typeId: "Boss", prefabId: "BotShell", weaponPrefabId: "Weapon_Shotgun",
             maxHp: 200f, chaseSpeed: 5.5f,
             visionRange: 40f, visionAngle: 140f,
             targetMemoryDuration: 12f, reactionTime: 0.3f, accuracy: 0.65f,
@@ -193,7 +196,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig Target = new(
-            typeId: "Target", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "Target", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -201,7 +204,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetWeak = new(
-            typeId: "TargetWeak", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetWeak", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -210,7 +213,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetPatrol = new(
-            typeId: "TargetPatrol", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetPatrol", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f, patrolSpeed: 3f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -218,7 +221,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetFast = new(
-            typeId: "TargetFast", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetFast", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f, patrolSpeed: 6f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -226,7 +229,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetDodge = new(
-            typeId: "TargetDodge", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetDodge", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f, dodgeCooldown: 2f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -236,7 +239,7 @@ namespace Constants
         // --- Armored target types (shooting range) ---
 
         public static readonly BotTypeConfig TargetLightArmor = new(
-            typeId: "TargetLightArmor", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetLightArmor", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -245,7 +248,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetHeavyArmor = new(
-            typeId: "TargetHeavyArmor", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetHeavyArmor", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -254,7 +257,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetGlassCannon = new(
-            typeId: "TargetGlassCannon", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetGlassCannon", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -263,7 +266,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetTank = new(
-            typeId: "TargetTank", prefabId: "BotView", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetTank", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 200f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,

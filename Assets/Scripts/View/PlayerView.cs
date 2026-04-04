@@ -2,7 +2,6 @@ using System;
 using Constants;
 using Dev;
 using State;
-using Systems;
 using UnityEngine;
 using View.FogOfWar;
 
@@ -10,28 +9,22 @@ namespace View
 {
     public class PlayerView : MonoBehaviour, IDamageableView
     {
-        [SerializeField] Transform _weaponPivot;
-        [SerializeField] Transform _helmetSlot;  // assign Helmet01 bone in prefab
-        [SerializeField] Transform _armorSlot;   // assign Spine02 bone in prefab
-        [SerializeField] Transform _capsuleVisual;
-        [SerializeField] Animator _animator;
+        CharacterBody _body; // bound at runtime via BindBody()
 
-        Transform _muzzlePoint;
         Action<Transform> _onMuzzlePointChanged;
-        string _currentWeaponPrefabId;
-        GameObject _currentWeaponModel;
-        string _currentHelmetPrefabId;
-        GameObject _currentHelmetModel;
-        string _currentArmorPrefabId;
-        GameObject _currentArmorModel;
         WorldHealthBar _healthBar;
         WorldProgressBar _progressBar;
-        WeaponView _currentWeaponView;
-        float _rollVisualAngle;
 
         public EId EId { get; private set; }
-        public Transform MuzzlePoint => _muzzlePoint;
-        public WeaponView WeaponView => _currentWeaponView;
+        public Transform MuzzlePoint => _body != null ? _body.MuzzlePoint : null;
+        public WeaponView WeaponView => _body != null ? _body.WeaponView : null;
+        public CharacterBody Body => _body;
+
+        /// <summary>Bind a CharacterBody at runtime (shell+body composition).</summary>
+        public void BindBody(CharacterBody body)
+        {
+            _body = body;
+        }
 
         public void Initialize(EId id, Action<Transform> onMuzzlePointChanged, float maxHp)
         {
@@ -72,87 +65,47 @@ namespace View
             }
 
             if (state.FacingDirection.sqrMagnitude > 0.001f)
-            {
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
-            }
 
-            SyncRollVisual(state);
+            if (_body != null)
+                _body.SyncRollVisual(state.IsRolling, state.RollDirection, transform);
 
-            if (_animator != null)
-                _animator.SetBool("Run", state.Velocity.sqrMagnitude > 0.01f);
+            if (_body != null && _body.Animator != null)
+                _body.Animator.SetBool("Run", state.Velocity.sqrMagnitude > 0.01f);
 
-            if (_weaponPivot != null)
+            if (_body != null && _body.WeaponPivot != null)
             {
                 bool hasWeapon = state.EquippedWeapon != null;
-                _weaponPivot.gameObject.SetActive(hasWeapon);
+                _body.WeaponPivot.gameObject.SetActive(hasWeapon);
 
                 if (hasWeapon)
                 {
-                    if (state.EquippedWeapon.PrefabId != _currentWeaponPrefabId)
-                        SwapWeaponModel(state.EquippedWeapon.PrefabId);
+                    if (state.EquippedWeapon.PrefabId != _body.CurrentWeaponPrefabId)
+                    {
+                        _body.SwapWeaponModel(state.EquippedWeapon.PrefabId);
+                        _onMuzzlePointChanged?.Invoke(_body.MuzzlePoint);
+                    }
 
-                    // Rotate weapon toward aim point (not just AimDirection from center)
-                    var toAim = state.WeaponAimPoint - _weaponPivot.position;
+                    var toAim = state.WeaponAimPoint - _body.WeaponPivot.position;
                     toAim.y = 0f;
                     if (toAim.sqrMagnitude > 0.001f)
-                    {
-                        _weaponPivot.rotation = Quaternion.LookRotation(toAim.normalized, Vector3.up);
-                    }
+                        _body.WeaponPivot.rotation = Quaternion.LookRotation(toAim.normalized, Vector3.up);
                 }
-                else if (_currentWeaponPrefabId != null)
+                else if (_body.CurrentWeaponPrefabId != null)
                 {
-                    ClearWeaponModel();
+                    _body.ClearWeaponModel();
+                    _onMuzzlePointChanged?.Invoke(null);
                 }
             }
         }
 
-        void SyncRollVisual(PlayerEntityState state)
-        {
-            if (_capsuleVisual == null) return;
+        // ── Armor delegation ────────────────────────────────
 
-            if (state.IsRolling)
-            {
-                _rollVisualAngle += (360f / DodgeConstants.Duration) * Time.deltaTime;
-
-                var rollAxis = Vector3.Cross(Vector3.up, state.RollDirection);
-                if (rollAxis.sqrMagnitude < 0.001f)
-                    rollAxis = Vector3.right;
-
-                _capsuleVisual.localRotation = Quaternion.AngleAxis(
-                    _rollVisualAngle,
-                    transform.InverseTransformDirection(rollAxis.normalized));
-            }
-            else if (_rollVisualAngle != 0f)
-            {
-                _rollVisualAngle = 0f;
-                _capsuleVisual.localRotation = Quaternion.identity;
-            }
-        }
-
-        void SwapWeaponModel(string prefabId)
-        {
-            if (_currentWeaponModel != null)
-                Destroy(_currentWeaponModel);
-
-            _currentWeaponPrefabId = prefabId;
-
-            if (string.IsNullOrEmpty(prefabId)) return;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Weapons/" + prefabId);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[PlayerView] Weapon prefab not found: Prefabs/Weapons/{prefabId}");
-                return;
-            }
-
-            _currentWeaponModel = Instantiate(prefab, _weaponPivot);
-            _currentWeaponModel.transform.localPosition = Vector3.zero;
-            _currentWeaponModel.transform.localRotation = Quaternion.identity;
-
-            _currentWeaponView = _currentWeaponModel.GetComponent<WeaponView>();
-            _muzzlePoint = _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
-            _onMuzzlePointChanged?.Invoke(_muzzlePoint);
-        }
+        public void SwapHelmetModel(string prefabId) => _body?.SwapHelmetModel(prefabId);
+        public void SwapArmorModel(string prefabId) => _body?.SwapArmorModel(prefabId);
+        public void ClearHelmetModel() => _body?.ClearHelmetModel();
+        public void ClearArmorModel() => _body?.ClearArmorModel();
+        public GameObject DetachHelmetModel() => _body?.DetachHelmetModel();
 
 #if UNITY_EDITOR
         void OnDrawGizmos()
@@ -165,7 +118,6 @@ namespace View
 
             if (!DevCheats.FOVOcclusionEnabled)
             {
-                // Simple wireframe (no raycasts)
                 Gizmos.color = new Color(1f, 1f, 0f, 0.4f);
                 Gizmos.DrawWireSphere(drawPos, DevCheats.FOVNearRadius);
 
@@ -189,7 +141,6 @@ namespace View
                 return;
             }
 
-            // Draw from cached FOVRaySweep data (exact same rays the FoW system uses)
             var rays = FOVRaySweep.LastRawRays;
             if (rays.Count == 0) return;
 
@@ -211,7 +162,6 @@ namespace View
                 bool isInFOV = Mathf.Abs(ray.Angle) <= halfAngle;
                 var clearColor = isInFOV ? clearGreen : clearYellow;
 
-                // Draw ray line from center
                 if (ray.Hit)
                 {
                     var hitPoint = drawPos + dir * ray.Dist;
@@ -227,13 +177,11 @@ namespace View
                     Gizmos.DrawLine(drawPos, point);
                 }
 
-                // Perimeter line connecting consecutive endpoints
                 if (!first)
                 {
                     Gizmos.color = (ray.Hit || prevBlocked) ? blockedColor : clearColor;
                     Gizmos.DrawLine(prevPoint2, point);
 
-                    // Edge-finding marker: cyan lines between rays with large distance jump
                     if (Mathf.Abs(ray.Dist - rays[i - 1].Dist) > edgeThreshold)
                     {
                         Gizmos.color = edgeColor;
@@ -247,82 +195,5 @@ namespace View
             }
         }
 #endif
-
-        // ── Armor visual attachment ─────────────────────────
-
-        public void SwapHelmetModel(string prefabId)
-        {
-            if (prefabId == _currentHelmetPrefabId) return;
-            ClearHelmetModel();
-            _currentHelmetPrefabId = prefabId;
-            if (string.IsNullOrEmpty(prefabId) || _helmetSlot == null) return;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[PlayerView] Helmet prefab not found: Prefabs/Armor/{prefabId}");
-                return;
-            }
-
-            _currentHelmetModel = Instantiate(prefab, _helmetSlot);
-            _currentHelmetModel.transform.localPosition = Vector3.zero;
-            _currentHelmetModel.transform.localRotation = Quaternion.identity;
-        }
-
-        public void SwapArmorModel(string prefabId)
-        {
-            if (prefabId == _currentArmorPrefabId) return;
-            ClearArmorModel();
-            _currentArmorPrefabId = prefabId;
-            if (string.IsNullOrEmpty(prefabId) || _armorSlot == null) return;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[PlayerView] Armor prefab not found: Prefabs/Armor/{prefabId}");
-                return;
-            }
-
-            _currentArmorModel = Instantiate(prefab, _armorSlot);
-            _currentArmorModel.transform.localPosition = Vector3.zero;
-            _currentArmorModel.transform.localRotation = Quaternion.identity;
-        }
-
-        public void ClearHelmetModel()
-        {
-            if (_currentHelmetModel != null)
-                Destroy(_currentHelmetModel);
-            _currentHelmetPrefabId = null;
-            _currentHelmetModel = null;
-        }
-
-        public void ClearArmorModel()
-        {
-            if (_currentArmorModel != null)
-                Destroy(_currentArmorModel);
-            _currentArmorPrefabId = null;
-            _currentArmorModel = null;
-        }
-
-        /// <summary>Returns the current helmet GameObject (for fly-off on break). Nulls the reference without Destroy.</summary>
-        public GameObject DetachHelmetModel()
-        {
-            var model = _currentHelmetModel;
-            _currentHelmetPrefabId = null;
-            _currentHelmetModel = null;
-            return model;
-        }
-
-        void ClearWeaponModel()
-        {
-            if (_currentWeaponModel != null)
-                Destroy(_currentWeaponModel);
-
-            _currentWeaponPrefabId = null;
-            _currentWeaponModel = null;
-            _currentWeaponView = null;
-            _muzzlePoint = null;
-            _onMuzzlePointChanged?.Invoke(null);
-        }
     }
 }

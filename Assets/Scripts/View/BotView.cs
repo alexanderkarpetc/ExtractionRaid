@@ -1,4 +1,3 @@
-using Constants;
 using Dev;
 using State;
 using UnityEngine;
@@ -7,23 +6,20 @@ namespace View
 {
     public class BotView : MonoBehaviour, IDamageableView
     {
-        [SerializeField] Transform _weaponPivot;
-        [SerializeField] Transform _helmetSlot;  // assign Helmet01 bone in prefab
-        [SerializeField] Transform _armorSlot;   // assign Spine02 bone in prefab
-        [SerializeField] Transform _capsuleVisual;
+        CharacterBody _body; // bound at runtime via BindBody()
 
-        string _currentWeaponPrefabId;
-        GameObject _currentWeaponModel;
-        string _currentHelmetPrefabId;
-        GameObject _currentHelmetModel;
-        string _currentArmorPrefabId;
-        GameObject _currentArmorModel;
         WorldHealthBar _healthBar;
         BotDebugLabel _debugLabel;
-        float _rollVisualAngle;
 
         public EId EId { get; private set; }
         public string TypeId { get; private set; }
+        public CharacterBody Body => _body;
+
+        /// <summary>Bind a CharacterBody at runtime (shell+body composition).</summary>
+        public void BindBody(CharacterBody body)
+        {
+            _body = body;
+        }
 
         public void Initialize(EId id, string typeId, string weaponPrefabId, float maxHp)
         {
@@ -32,8 +28,8 @@ namespace View
             _healthBar = WorldHealthBar.Create(transform, maxHp);
             _debugLabel = BotDebugLabel.Create(transform);
 
-            if (!string.IsNullOrEmpty(weaponPrefabId))
-                SwapWeaponModel(weaponPrefabId);
+            if (!string.IsNullOrEmpty(weaponPrefabId) && _body != null)
+                _body.SwapWeaponModel(weaponPrefabId);
         }
 
         public void OnDamaged(float currentHp, float maxHp)
@@ -68,10 +64,16 @@ namespace View
             if (state.FacingDirection.sqrMagnitude > 0.001f)
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
 
-            if (_weaponPivot != null && state.AimDirection.sqrMagnitude > 0.001f)
-                _weaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
+            if (_body != null)
+            {
+                if (_body.WeaponPivot != null && state.AimDirection.sqrMagnitude > 0.001f)
+                    _body.WeaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
 
-            SyncRollVisual(state);
+                if (_body.Animator != null)
+                    _body.Animator.SetBool("Run", state.Velocity.sqrMagnitude > 0.01f);
+
+                _body.SyncRollVisual(state.IsRolling, state.RollDirection, transform);
+            }
 
             if (_debugLabel != null)
                 _debugLabel.UpdateLabel(state, currentHp, maxHp);
@@ -82,6 +84,14 @@ namespace View
             GizmoPatrolWaypoints = bb.PatrolWaypoints;
             GizmoPatrolIndex = bb.PatrolWaypointIndex;
         }
+
+        // ── Armor delegation ────────────────────────────────
+
+        public void SwapHelmetModel(string prefabId) => _body?.SwapHelmetModel(prefabId);
+        public void SwapArmorModel(string prefabId) => _body?.SwapArmorModel(prefabId);
+        public void ClearHelmetModel() => _body?.ClearHelmetModel();
+        public void ClearArmorModel() => _body?.ClearArmorModel();
+        public GameObject DetachHelmetModel() => _body?.DetachHelmetModel();
 
 #if UNITY_EDITOR
         void OnDrawGizmos()
@@ -145,101 +155,5 @@ namespace View
             }
         }
 #endif
-
-        // ── Armor visual attachment ─────────────────────────
-
-        public void SwapHelmetModel(string prefabId)
-        {
-            if (prefabId == _currentHelmetPrefabId) return;
-            ClearHelmetModel();
-            _currentHelmetPrefabId = prefabId;
-            if (string.IsNullOrEmpty(prefabId) || _helmetSlot == null) return;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
-            if (prefab == null) return;
-
-            _currentHelmetModel = Instantiate(prefab, _helmetSlot);
-            _currentHelmetModel.transform.localPosition = Vector3.zero;
-            _currentHelmetModel.transform.localRotation = Quaternion.identity;
-        }
-
-        public void SwapArmorModel(string prefabId)
-        {
-            if (prefabId == _currentArmorPrefabId) return;
-            ClearArmorModel();
-            _currentArmorPrefabId = prefabId;
-            if (string.IsNullOrEmpty(prefabId) || _armorSlot == null) return;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Armor/" + prefabId);
-            if (prefab == null) return;
-
-            _currentArmorModel = Instantiate(prefab, _armorSlot);
-            _currentArmorModel.transform.localPosition = Vector3.zero;
-            _currentArmorModel.transform.localRotation = Quaternion.identity;
-        }
-
-        public void ClearHelmetModel()
-        {
-            if (_currentHelmetModel != null)
-                Destroy(_currentHelmetModel);
-            _currentHelmetPrefabId = null;
-            _currentHelmetModel = null;
-        }
-
-        public void ClearArmorModel()
-        {
-            if (_currentArmorModel != null)
-                Destroy(_currentArmorModel);
-            _currentArmorPrefabId = null;
-            _currentArmorModel = null;
-        }
-
-        public GameObject DetachHelmetModel()
-        {
-            var model = _currentHelmetModel;
-            _currentHelmetPrefabId = null;
-            _currentHelmetModel = null;
-            return model;
-        }
-
-        void SyncRollVisual(BotEntityState state)
-        {
-            if (_capsuleVisual == null) return;
-
-            if (state.IsRolling)
-            {
-                _rollVisualAngle += (360f / DodgeConstants.Duration) * Time.deltaTime;
-
-                var rollAxis = Vector3.Cross(Vector3.up, state.RollDirection);
-                if (rollAxis.sqrMagnitude < 0.001f)
-                    rollAxis = Vector3.right;
-
-                _capsuleVisual.localRotation = Quaternion.AngleAxis(
-                    _rollVisualAngle,
-                    transform.InverseTransformDirection(rollAxis.normalized));
-            }
-            else if (_rollVisualAngle != 0f)
-            {
-                _rollVisualAngle = 0f;
-                _capsuleVisual.localRotation = Quaternion.identity;
-            }
-        }
-
-        void SwapWeaponModel(string prefabId)
-        {
-            if (_currentWeaponModel != null)
-                Destroy(_currentWeaponModel);
-
-            _currentWeaponPrefabId = prefabId;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Weapons/" + prefabId);
-            if (prefab == null) return;
-
-            if (_weaponPivot == null) return;
-
-            _currentWeaponModel = Instantiate(prefab, _weaponPivot);
-            _currentWeaponModel.transform.localPosition = Vector3.zero;
-            _currentWeaponModel.transform.localRotation = Quaternion.identity;
-        }
     }
 }
