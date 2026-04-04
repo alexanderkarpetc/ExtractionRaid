@@ -44,6 +44,7 @@ namespace Constants
 
     public static class ContainerConstants
     {
+        public const int LootSlots = 8;
         public static readonly ContainerTypeConfig MedContainer = new(
             typeId: "MedContainer",
             displayName: "Medical Supplies",

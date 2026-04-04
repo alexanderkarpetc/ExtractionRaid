@@ -1,3 +1,4 @@
+using Constants;
 using System;
 using System.Collections.Generic;
 using State;
@@ -12,8 +13,9 @@ namespace View.UI
     {
         [Header("Header")]
         [SerializeField] TMP_Text _headerText;
-        [SerializeField] TMP_Text _itemCountText;
         [SerializeField] Button _sortButton;
+
+        string _containerName;
 
         [Header("Items")]
         [SerializeField] Transform _itemGrid;
@@ -23,9 +25,10 @@ namespace View.UI
         [SerializeField] GameObject _gridRoot;
         [SerializeField] Button _openButton;
 
+        public static int ContainerSlots => ContainerConstants.LootSlots;
+
         readonly List<InventorySlotView> _slots = new();
         InventoryState _inventory;
-        int _usedSlotCount;
 
         public LootableContainerState Lootable { get; private set; }
         public bool IsFloorContainer { get; private set; }
@@ -40,8 +43,7 @@ namespace View.UI
 
         public void Init()
         {
-            if (_openButton != null)
-                _openButton.onClick.AddListener(OnOpenClicked);
+            _openButton.onClick.AddListener(OnOpenClicked);
         }
 
         public void BindLootable(LootableContainerState lootable)
@@ -50,9 +52,7 @@ namespace View.UI
             IsFloorContainer = false;
             _inventory = lootable.Inventory;
 
-            if (_headerText != null)
-                _headerText.text = lootable.TypeId;
-
+            _containerName = lootable.TypeId;
             SetOpened(!lootable.IsContainer);
             EnsureSlots();
             Refresh();
@@ -65,9 +65,7 @@ namespace View.UI
             _inventory = floorInventory;
             FloorItemEIds = floorEIds;
 
-            if (_headerText != null)
-                _headerText.text = "On the Floor";
-
+            _containerName = "On the Floor";
             SetOpened(true);
             EnsureSlots();
             Refresh();
@@ -78,19 +76,19 @@ namespace View.UI
             if (_inventory == null) return;
 
             int itemCount = 0;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            for (int i = 0; i < ContainerSlots; i++)
             {
-                var item = _inventory.Backpack[i];
+                var item = i < InventoryState.BackpackSize ? _inventory.Backpack[i] : null;
                 if (i < _slots.Count)
                 {
                     _slots[i].Bind(InventorySlotRef.BackpackSlot(i), item, true, -1);
-                    _slots[i].gameObject.SetActive(item != null);
+                    _slots[i].gameObject.SetActive(true);
                 }
                 if (item != null) itemCount++;
             }
 
-            if (_itemCountText != null)
-                _itemCountText.text = $"({itemCount}/{InventoryState.BackpackSize})";
+            if (_headerText != null)
+                _headerText.text = $"{_containerName} ({itemCount}/{ContainerSlots})";
         }
 
         void SetOpened(bool opened)
@@ -109,10 +107,10 @@ namespace View.UI
 
         void EnsureSlots()
         {
-            if (_slots.Count >= InventoryState.BackpackSize) return;
+            if (_slots.Count >= ContainerSlots) return;
             if (_slotPrefab == null || _itemGrid == null) return;
 
-            for (int i = _slots.Count; i < InventoryState.BackpackSize; i++)
+            for (int i = _slots.Count; i < ContainerSlots; i++)
             {
                 var slot = Instantiate(_slotPrefab, _itemGrid);
                 slot.gameObject.SetActive(false);

@@ -580,6 +580,20 @@ namespace View.UI
             var ground = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
             state.GroundItems.Add(ground);
             session.ConsumeEvents().GroundItemSpawned(ground.Id, ground.Position, ground.DefinitionId);
+
+            RefreshFloorContainer(state);
+        }
+
+        void RefreshFloorContainer(RaidState state)
+        {
+            RebuildFloorInventory(state, state.PlayerEntity.Position);
+
+            foreach (var c in _activeContainers)
+            {
+                if (!c.IsFloorContainer) continue;
+                c.BindFloor(_floorInventory, _floorItemEIds);
+                break;
+            }
         }
 
         // ------------------------------------------------------------------
