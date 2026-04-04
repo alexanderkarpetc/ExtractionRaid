@@ -7,7 +7,7 @@ namespace Tests.EditMode
     {
         public static RaidState CreateStateWithPlayer(Vector3 startPos)
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var playerId = state.AllocateEId();
             state.PlayerEntity = PlayerEntityState.Create(playerId, startPos);
 
@@ -26,11 +26,17 @@ namespace Tests.EditMode
 
             // Starting reserve ammo for tests
             var rifleAmmoId = state.AllocateEId();
-            state.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
+            App.App.Instance.Player.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
             var shotgunAmmoId = state.AllocateEId();
-            state.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
+            App.App.Instance.Player.Inventory.Backpack[1] = ItemState.Create(shotgunAmmoId, "Ammo_Shotgun", 15);
 
             return state;
+        }
+
+        public static System.Func<EId> NewAllocator()
+        {
+            int counter = 0;
+            return () => new EId(++counter);
         }
     }
 }

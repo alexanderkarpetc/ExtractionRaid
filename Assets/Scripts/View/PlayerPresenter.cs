@@ -149,7 +149,7 @@ namespace View
         void EquipArmorVisuals(RaidSession session)
         {
             if (_playerView == null || session == null) return;
-            var inventory = session.RaidState.Inventory;
+            var inventory = App.App.Instance?.Player?.Inventory;
 
             var helmetDef = inventory.HelmetSlot?.Definition;
             if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))

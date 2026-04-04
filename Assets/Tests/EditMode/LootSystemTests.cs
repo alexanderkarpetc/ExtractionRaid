@@ -16,7 +16,7 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _state = RaidState.Create();
+            _state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             _events = new FakeRaidEvents();
         }
 

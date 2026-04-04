@@ -38,7 +38,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_MovesProjectileAlongDirection()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             var context = CreateContext(deltaTime: 1f);
 
@@ -50,7 +50,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_RespectsSpeed()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 5f);
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 15f);
             var context = CreateContext(deltaTime: 1f);
@@ -64,7 +64,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_RespectsDeltaTime()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             var context = CreateContext(deltaTime: 0.5f);
 
@@ -76,7 +76,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_RemovesProjectileAfterLifetime()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             state.ElapsedTime = 4f;
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var context = CreateContext();
@@ -89,7 +89,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EmitsDespawnEventForExpiredProjectile()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             state.ElapsedTime = 4f;
             var proj = CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var eventBuffer = new RaidEventBuffer();
@@ -105,7 +105,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_MultipleProjectiles_AllMove()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             CreateProjectile(state, Vector3.zero, Vector3.right, speed: 10f);
             CreateProjectile(state, Vector3.zero, Vector3.left, speed: 10f);
@@ -122,7 +122,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EmptyList_DoesNotThrow()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var context = CreateContext();
 
             Assert.DoesNotThrow(() => ProjectileSystem.Tick(state, in context));
@@ -131,7 +131,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_OnlyRemovesExpiredProjectiles()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             state.ElapsedTime = 4f;
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var alive = CreateProjectile(state, Vector3.zero, Vector3.right, spawnTime: 3f, lifetime: 3f);
@@ -146,7 +146,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReverseIterationDoesNotSkipProjectiles()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             state.ElapsedTime = 5f;
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 1f);
             var alive = CreateProjectile(state, Vector3.zero, Vector3.right, spawnTime: 4f, lifetime: 3f);

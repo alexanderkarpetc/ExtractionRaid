@@ -91,7 +91,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_NullPlayerEntity_DoesNotThrow()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
             var context = CreateContext(input);
 

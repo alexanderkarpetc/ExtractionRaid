@@ -13,7 +13,7 @@ namespace Systems
 
             if (!state.HealthMap.TryGetValue(player.Id, out var health)) return;
 
-            bool wantsBandage = QuickSlotSystem.GetActiveDefinitionId(player, state.Inventory) == "Bandage"
+            bool wantsBandage = QuickSlotSystem.GetActiveDefinitionId(player, App.App.Instance.Player.Inventory) == "Bandage"
                 && player.QuickSlotHeld;
 
             if (player.IsUsingBandage)
@@ -39,7 +39,7 @@ namespace Systems
                         context.Events.StatusEffectApplied(player.Id, "BleedingL1");
 
                     if (player.ActiveBandageSlot >= 0)
-                        state.Inventory.Backpack[player.ActiveBandageSlot] = null;
+                        App.App.Instance.Player.Inventory.Backpack[player.ActiveBandageSlot] = null;
 
                     StopBandage(player, context);
                 }
@@ -51,9 +51,9 @@ namespace Systems
             if (player.IsRolling || player.AreHandsBusy) return;
             if (!StatusEffectSystem.HasEffect(state, player.Id, StatusEffectType.Bleeding)) return;
 
-            int slot = QuickSlotSystem.GetActiveBoundSlot(player, state.Inventory);
+            int slot = QuickSlotSystem.GetActiveBoundSlot(player, App.App.Instance.Player.Inventory);
             if (slot < 0) return;
-            if (state.Inventory.Backpack[slot]?.DefinitionId != "Bandage") return;
+            if (App.App.Instance.Player.Inventory.Backpack[slot]?.DefinitionId != "Bandage") return;
 
             player.IsUsingBandage = true;
             player.BandageUseStartTime = state.ElapsedTime;

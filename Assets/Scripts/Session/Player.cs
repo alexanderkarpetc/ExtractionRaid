@@ -8,14 +8,14 @@ namespace Session
     {
         public PlayerProfileState ProfileState { get; private set; }
         public InventoryState Inventory { get; private set; }
-        public InventoryState Stash { get; private set; }
+        public List<ItemState> Stash { get; private set; }
         public QuestProgressState QuestProgress { get; private set; }
 
         public Player()
         {
             ProfileState = new PlayerProfileState();
             Inventory = new InventoryState();
-            Stash = new InventoryState();
+            Stash = new List<ItemState>();
             QuestProgress = new QuestProgressState();
         }
 
@@ -25,11 +25,15 @@ namespace Session
             foreach (var p in QuestProgress.All.Values)
                 questList.Add(QuestProgressSaveData.FromState(p));
 
+            var stashData = new List<ItemSaveData>(Stash.Count);
+            foreach (var item in Stash)
+                stashData.Add(ItemSaveData.FromState(item));
+
             return new SaveData
             {
                 PlayerName = ProfileState.PlayerName,
                 Inventory = InventorySaveData.FromState(Inventory),
-                Stash = InventorySaveData.FromState(Stash),
+                Stash = stashData,
                 Quests = questList
             };
         }
@@ -40,7 +44,14 @@ namespace Session
 
             ProfileState.PlayerName = data.PlayerName;
             data.Inventory?.ApplyTo(Inventory);
-            data.Stash?.ApplyTo(Stash);
+
+            Stash.Clear();
+            if (data.Stash != null)
+                foreach (var s in data.Stash)
+                {
+                    var item = s?.ToState();
+                    if (item != null) Stash.Add(item);
+                }
 
             var questStates = new List<QuestProgress>();
             if (data.Quests != null)

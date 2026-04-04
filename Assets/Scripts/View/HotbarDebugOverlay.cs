@@ -37,7 +37,7 @@ namespace View
             if (player == null) return;
             if (player.IsInMenu) return;
 
-            var inventory = session.RaidState.Inventory;
+            var inventory = App.App.Instance?.Player?.Inventory;
 
             if (_slotStyle == null)
             {
@@ -94,7 +94,7 @@ namespace View
                 if (!string.IsNullOrEmpty(weapon.AmmoType))
                 {
                     int reserve = AmmoSystem.CountReserve(
-                        session.RaidState.Inventory, weapon.AmmoType);
+                        App.App.Instance.Player.Inventory, weapon.AmmoType);
                     ammoInfo = $"\n{weapon.AmmoInMagazine}/{reserve}";
                 }
                 label = $"[{i + 1}]\n{weapon.PrefabId}{ammoInfo}";

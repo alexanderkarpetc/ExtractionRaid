@@ -174,7 +174,7 @@ namespace View
                 var rowRect = new Rect(0f, ry, contentRect.width, rowH);
 
                 var style = selected ? _recipeSelectedStyle : _recipeStyle;
-                int owned = CountOwned(state.Inventory, recipe.ResultItemId);
+                int owned = CountOwned(App.App.Instance.Player.Inventory, recipe.ResultItemId);
                 string label = owned > 0
                     ? $"  {recipe.DisplayName}    Owned: {owned}"
                     : $"  {recipe.DisplayName}";
@@ -223,7 +223,7 @@ namespace View
 
             cy = panel.y + panel.height - pad - 60f;
 
-            bool canCraft = CraftingSystem.CanCraft(state.Inventory, in recipe);
+            bool canCraft = CraftingSystem.CanCraft(App.App.Instance.Player.Inventory, in recipe);
             var btnRect = new Rect(cx, cy, availW, 54f);
 
             var prevBg = GUI.backgroundColor;
@@ -261,7 +261,7 @@ namespace View
             for (int i = 0; i < recipe.Ingredients.Length; i++)
             {
                 var ingredient = recipe.Ingredients[i];
-                int have = CraftingSystem.CountIngredient(state.Inventory, ingredient.DefinitionId);
+                int have = CraftingSystem.CountIngredient(App.App.Instance.Player.Inventory, ingredient.DefinitionId);
                 bool met = have >= ingredient.Count;
 
                 var rowRect = new Rect(cx, cy, availW, rowH);

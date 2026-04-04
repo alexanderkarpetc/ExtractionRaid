@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Quests;
 using Save;
 using Session;
+using State;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using View;
@@ -23,6 +24,14 @@ namespace App
         public RaidSession RaidSession { get; private set; }
         public bool IsInHideout { get; private set; }
         public QuestDatabase QuestDatabase { get; private set; }
+
+        int _nextEIdValue;
+
+        public EId AllocateEId()
+        {
+            _nextEIdValue++;
+            return new EId(_nextEIdValue);
+        }
 
         readonly ITimeAdapter _timeAdapter;
         readonly UnityInputAdapter _inputAdapter;
@@ -83,7 +92,7 @@ namespace App
                 EndRaid();
             }
 
-            RaidSession = new RaidSession(levelId, Player.Inventory, _timeAdapter, _inputAdapter,
+            RaidSession = new RaidSession(levelId, AllocateEId, _timeAdapter, _inputAdapter,
                 _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter);
             RaidSession.Start();
 

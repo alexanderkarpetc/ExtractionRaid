@@ -103,7 +103,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_NullPlayerEntity_DoesNotThrow()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
             var context = CreateContext(input, deltaTime: 1f);
 

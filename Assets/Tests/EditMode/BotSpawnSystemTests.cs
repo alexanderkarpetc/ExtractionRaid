@@ -12,7 +12,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_CreatesBotInState()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
             var waypoints = new[] { Vector3.zero, Vector3.one };
 
@@ -26,7 +26,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_RegistersHealthInHealthMap()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Scav", Vector3.zero, new[] { Vector3.zero }, events);
@@ -39,7 +39,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_EmitsBotSpawnedEvent()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "PMC", new Vector3(5f, 0f, 5f), new[] { Vector3.zero }, events);
@@ -52,7 +52,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_CreatesWeaponFromConfig()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Boss", Vector3.zero, new[] { Vector3.zero }, events);
@@ -66,7 +66,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_SetsPatrolWaypoints()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
             var waypoints = new[] { new Vector3(1, 0, 0), new Vector3(2, 0, 0), new Vector3(3, 0, 0) };
 
@@ -80,7 +80,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnScav_HasHelmetInArmorMap()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Scav", Vector3.zero, new[] { Vector3.zero }, events);
@@ -94,7 +94,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnPMC_HasBothArmorPieces()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "PMC", Vector3.zero, new[] { Vector3.zero }, events);
@@ -108,7 +108,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBoss_HasOnlyVest()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Boss", Vector3.zero, new[] { Vector3.zero }, events);
@@ -122,7 +122,7 @@ namespace Tests.EditMode
         [Test]
         public void SpawnTarget_NoArmorMap()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Target", Vector3.zero, new[] { Vector3.zero }, events);

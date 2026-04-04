@@ -402,8 +402,8 @@ namespace View
             // Has rounds in magazine
             if (weapon.AmmoInMagazine > 0) return true;
             // Has reserve ammo in inventory
-            return state.Inventory != null
-                && AmmoSystem.CountReserve(state.Inventory, weapon.AmmoType) > 0;
+            return App.App.Instance?.Player?.Inventory != null
+                && AmmoSystem.CountReserve(App.App.Instance.Player.Inventory, weapon.AmmoType) > 0;
         }
 
         static Texture2D MakeTex(Color color)

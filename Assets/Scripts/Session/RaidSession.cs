@@ -22,11 +22,12 @@ namespace Session
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
         readonly IGrenadePositionAdapter _grenadePositionAdapter;
+        readonly System.Func<EId> _allocateEId;
         readonly List<HitSignal> _hitInbox = new();
         readonly List<CollisionSignal> _collisionInbox = new();
 
-        public RaidSession(string levelId, InventoryState inventory, ITimeAdapter timeAdapter,
-            IInputAdapter inputAdapter, INavMeshAdapter navMeshAdapter,
+        public RaidSession(string levelId, System.Func<EId> allocateEId,
+            ITimeAdapter timeAdapter, IInputAdapter inputAdapter, INavMeshAdapter navMeshAdapter,
             IPhysicsAdapter physicsAdapter = null,
             IGrenadePositionAdapter grenadePositionAdapter = null)
         {
@@ -35,8 +36,9 @@ namespace Session
             _navMeshAdapter = navMeshAdapter;
             _physicsAdapter = physicsAdapter;
             _grenadePositionAdapter = grenadePositionAdapter;
+            _allocateEId = allocateEId;
             _eventBuffer = new RaidEventBuffer();
-            RaidState = RaidState.Create(inventory);
+            RaidState = RaidState.Create(allocateEId);
             LevelState = LevelState.Create(levelId);
         }
 
@@ -372,21 +374,21 @@ namespace Session
                 {
                     player.LootTargetId = EId.None;
                 }
-                else
-                {
-                    var nearest = LootSystem.FindNearestInteractable(
-                        RaidState, player.Position, player.FacingDirection);
-                    if (nearest.Type == InteractableType.Lootable)
-                        player.LootTargetId = nearest.Id;
-                    else if (nearest.Type == InteractableType.Workbench)
-                        player.CraftTargetId = nearest.Id;
-                    else if (nearest.Type == InteractableType.DeployPoint)
-                        player.DeployTargetId = nearest.Id;
-                    else if (nearest.Type == InteractableType.Npc)
-                        player.NpcTargetId = nearest.Id;
-                    else if (nearest.Type == InteractableType.GroundItem)
-                        InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
-                }
+                    else
+                    {
+                        var nearest = LootSystem.FindNearestInteractable(
+                            RaidState, player.Position, player.FacingDirection);
+                        if (nearest.Type == InteractableType.Lootable)
+                            player.LootTargetId = nearest.Id;
+                        else if (nearest.Type == InteractableType.Workbench)
+                            player.CraftTargetId = nearest.Id;
+                        else if (nearest.Type == InteractableType.DeployPoint)
+                            player.DeployTargetId = nearest.Id;
+                        else if (nearest.Type == InteractableType.Npc)
+                            player.NpcTargetId = nearest.Id;
+                        else if (nearest.Type == InteractableType.GroundItem)
+                            InventorySystem.TryPickUp(RaidState, nearest.Id, _eventBuffer);
+                    }
             }
 
             RaidState.ElapsedTime += context.DeltaTime;
@@ -472,14 +474,9 @@ namespace Session
             _collisionInbox.Add(signal);
         }
 
-        public bool RequestDrop(InventorySlotRef slot, UnityEngine.Vector3 dropPosition)
-        {
-            return InventorySystem.TryDrop(RaidState, slot, dropPosition, _eventBuffer);
-        }
-
         public bool RequestCraft(string recipeId)
         {
-            return CraftingSystem.TryCraft(RaidState, recipeId);
+            return CraftingSystem.TryCraft(RaidState, App.App.Instance.Player.Inventory, recipeId);
         }
 
         public void End()

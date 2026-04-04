@@ -16,25 +16,20 @@ namespace State
         public List<WorkbenchState> Workbenches;
         public List<DeployPointState> DeployPoints;
         public List<NpcState> Npcs;
-        public InventoryState Inventory;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
         public Dictionary<EId, ArmorSlotState> ArmorMap;
 
-        int _nextEIdValue;
+        System.Func<EId> _allocateEId;
 
-        public EId AllocateEId()
-        {
-            _nextEIdValue++;
-            return new EId(_nextEIdValue);
-        }
+        public EId AllocateEId() => _allocateEId();
 
-        public static RaidState Create(InventoryState inventory = null)
+        public static RaidState Create(System.Func<EId> allocateEId)
         {
             return new RaidState
             {
                 ElapsedTime = 0f,
                 IsRunning = true,
-                _nextEIdValue = 0,
+                _allocateEId = allocateEId,
                 Projectiles = new List<ProjectileEntityState>(),
                 Grenades = new List<GrenadeEntityState>(),
                 HealthMap = new Dictionary<EId, HealthState>(),
@@ -44,7 +39,6 @@ namespace State
                 Workbenches = new List<WorkbenchState>(),
                 DeployPoints = new List<DeployPointState>(),
                 Npcs = new List<NpcState>(),
-                Inventory = inventory ?? new InventoryState(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
                 ArmorMap = new Dictionary<EId, ArmorSlotState>(),
             };

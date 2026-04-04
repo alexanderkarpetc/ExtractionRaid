@@ -28,7 +28,7 @@ namespace Systems
             if (usesAmmo && weapon.AmmoInMagazine <= 0)
             {
                 context.Events.WeaponDryFired(weapon.PrefabId);
-                if (AmmoSystem.CanReload(weapon, state.Inventory))
+                if (AmmoSystem.CanReload(weapon, App.App.Instance.Player.Inventory))
                 {
                     weapon.Phase = WeaponPhase.Reloading;
                     weapon.PhaseStartTime = state.ElapsedTime;

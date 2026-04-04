@@ -61,7 +61,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_NullPlayer_DoesNotThrow()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { HotbarSlotPressed = 0 };
             var context = CreateContext(input);
 

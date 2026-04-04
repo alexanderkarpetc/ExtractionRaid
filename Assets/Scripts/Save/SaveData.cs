@@ -142,7 +142,7 @@ namespace Save
     {
         public string PlayerName;
         public InventorySaveData Inventory;
-        public InventorySaveData Stash;
+        public List<ItemSaveData> Stash;
         public List<QuestProgressSaveData> Quests;
     }
 }

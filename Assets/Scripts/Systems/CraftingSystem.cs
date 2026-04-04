@@ -27,25 +27,24 @@ namespace Systems
             return inv.FindFreeBackpackSlot() >= 0;
         }
 
-        public static bool TryCraft(RaidState state, string recipeId)
+        public static bool TryCraft(RaidState state, InventoryState inventory, string recipeId)
         {
             if (!CraftConstants.TryGet(recipeId, out var recipe))
                 return false;
 
-            var inv = state.Inventory;
-            if (!CanCraft(inv, in recipe))
+            if (!CanCraft(inventory, in recipe))
                 return false;
 
             for (int i = 0; i < recipe.Ingredients.Length; i++)
             {
-                ConsumeIngredient(inv, recipe.Ingredients[i].DefinitionId, recipe.Ingredients[i].Count);
+                ConsumeIngredient(inventory, recipe.Ingredients[i].DefinitionId, recipe.Ingredients[i].Count);
             }
 
-            int freeSlot = inv.FindFreeBackpackSlot();
+            int freeSlot = inventory.FindFreeBackpackSlot();
             if (freeSlot < 0) return false;
 
             var resultId = state.AllocateEId();
-            inv.Backpack[freeSlot] = ItemState.Create(resultId, recipe.ResultItemId, recipe.ResultCount);
+            inventory.Backpack[freeSlot] = ItemState.Create(resultId, recipe.ResultItemId, recipe.ResultCount);
             return true;
         }
 

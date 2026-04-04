@@ -10,7 +10,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_HelmetEquipped_PopulatesArmorMap()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
             inventory.HelmetSlot = ItemState.Create(new EId(100), "Helmet_Basic");
@@ -26,7 +26,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_BothSlots_PopulatesBoth()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
             inventory.HelmetSlot = ItemState.Create(new EId(100), "Helmet_Basic");
@@ -43,7 +43,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_NoEquipment_NoArmorMapEntry()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
 
@@ -55,7 +55,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_RemovesPreviousEntry_WhenUnequipped()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
             inventory.HelmetSlot = ItemState.Create(new EId(100), "Helmet_Basic");
@@ -72,7 +72,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_ItemWithCustomDurability_PreservesDurability()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
 
@@ -91,7 +91,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_ItemWithDefaultDurability_UsesDefinition()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
             inventory.HelmetSlot = ItemState.Create(new EId(100), "Helmet_Basic");
@@ -107,7 +107,7 @@ namespace Tests.EditMode
         [Test]
         public void SyncArmor_NonArmorItem_Ignored()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             var inventory = new InventoryState();
             // Put a non-armor item in helmet slot (shouldn't happen, but edge case)

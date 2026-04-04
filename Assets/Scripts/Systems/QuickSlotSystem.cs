@@ -13,7 +13,7 @@ namespace Systems
             var input = context.Input;
             if (input == null) return;
 
-            var inventory = state.Inventory;
+            var inventory = App.App.Instance.Player.Inventory;
 
             ClearStaleBindings(inventory);
 

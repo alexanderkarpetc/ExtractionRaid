@@ -10,7 +10,7 @@ namespace Systems
             var player = state.PlayerEntity;
             if (player == null) return;
 
-            var inventory = state.Inventory;
+            var inventory = App.App.Instance.Player.Inventory;
             int slotCount = PlayerEntityState.HotbarSize;
 
             for (int i = 0; i < slotCount; i++)

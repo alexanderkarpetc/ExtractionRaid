@@ -28,7 +28,7 @@ namespace Tests.EditMode
         [Test]
         public void TickBleed_L1_Applies3DmgPerTick()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             state.HealthMap[entityId] = HealthState.Create(100f);
 
@@ -46,7 +46,7 @@ namespace Tests.EditMode
         [Test]
         public void TickBleed_L2_Applies6DmgPerTick()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
             state.HealthMap[entityId] = HealthState.Create(100f);
 
@@ -67,7 +67,7 @@ namespace Tests.EditMode
         [Test]
         public void ApplyEffect_AlreadyL1_UpgradesToL2()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
@@ -80,7 +80,7 @@ namespace Tests.EditMode
         [Test]
         public void ApplyEffect_AlreadyL2_StaysL2()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
@@ -97,7 +97,7 @@ namespace Tests.EditMode
         [Test]
         public void GetBleedLevel_NoBleeding_ReturnsZero()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             Assert.AreEqual(0, StatusEffectSystem.GetBleedLevel(state, entityId));
@@ -106,7 +106,7 @@ namespace Tests.EditMode
         [Test]
         public void GetBleedLevel_L1_ReturnsOne()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
@@ -118,7 +118,7 @@ namespace Tests.EditMode
         [Test]
         public void DowngradeBleed_L2_BecomesL1()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
@@ -132,7 +132,7 @@ namespace Tests.EditMode
         [Test]
         public void DowngradeBleed_L1_RemovesFully()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
@@ -145,7 +145,7 @@ namespace Tests.EditMode
         [Test]
         public void DowngradeBleed_L2ThenL1_TwoDowngrades_FullCure()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var entityId = state.AllocateEId();
 
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);

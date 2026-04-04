@@ -162,7 +162,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_NullPlayer_DoesNotThrow()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -394,7 +394,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             // Clear all reserve ammo
             for (int i = 0; i < InventoryState.BackpackSize; i++)
-                state.Inventory.Backpack[i] = null;
+                App.App.Instance.Player.Inventory.Backpack[i] = null;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 

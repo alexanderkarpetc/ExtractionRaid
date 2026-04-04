@@ -371,7 +371,7 @@ namespace View
                     }
                 }
 
-                bool hasSpace = QuestSystem.CanFitRewards(quest.Rewards, raidState.Inventory);
+                bool hasSpace = QuestSystem.CanFitRewards(quest.Rewards, App.App.Instance.Player.Inventory);
 
                 float btnW = 220f;
                 float btnH = 40f;
@@ -382,7 +382,7 @@ namespace View
                 _completeBtnStyle.normal.background = hasSpace ? _completeBtnBg : _completeBtnDisabled;
                 if (GUI.Button(btnRect, "CLAIM REWARD", _completeBtnStyle))
                 {
-                    QuestSystem.TryCompleteAndGrantRewards(progress, quest, raidState, raidState.Inventory);
+                    QuestSystem.TryCompleteAndGrantRewards(progress, quest, raidState, App.App.Instance.Player.Inventory);
                 }
                 GUI.enabled = true;
 

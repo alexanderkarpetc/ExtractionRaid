@@ -26,7 +26,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_SelfHit_IgnoresDamage()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
 
             state.HealthMap[ownerId] = HealthState.Create(100f);
@@ -52,7 +52,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EnemyHit_AppliesDamage()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -81,7 +81,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_TargetWithArmor_DamageReduced()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -118,7 +118,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_TargetWithArmor_DurabilityDecreased()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -150,7 +150,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotWithHelmet_UsesHelmetArmor()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -189,7 +189,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_BodyshotWithVest_UsesVestArmor()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -226,7 +226,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotNoHelmet_FullHeadshotDamage()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -265,7 +265,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_MultiHit_ArmorDegradesMakesSubsequentHitsStronger()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -314,7 +314,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_BrokenArmor_FullDamage()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -350,7 +350,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ArmorBreaksDuringHit_EventFired()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -387,7 +387,7 @@ namespace Tests.EditMode
         public void Tick_BodyshotNeverRicochets()
         {
             // Even with very strong body armor, bodyshots should never ricochet
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -429,7 +429,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotHelmetBreakEvent_IsHelmetTrue()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -468,7 +468,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotRicochet_ZeroHpDamage()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -508,7 +508,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotRicochet_DurabilityDamageApplied()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -544,7 +544,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_HeadshotRicochet_ProjectileRemoved()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -580,7 +580,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_RicochetBreaksHelmet_BothEventsFired()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -624,7 +624,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_WithBleedChance_RollBelow_AppliesBleeding()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -655,7 +655,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_WithBleedChance_RollAbove_NoBleeding()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 
@@ -686,7 +686,7 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ZeroBleedChance_NoBleeding()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var ownerId = state.AllocateEId();
             var targetId = state.AllocateEId();
 

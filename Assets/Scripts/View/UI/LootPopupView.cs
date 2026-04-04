@@ -71,7 +71,7 @@ namespace View.UI
 
         public void Open(RaidState state)
         {
-            _playerPanel.Bind(state.Inventory);
+            _playerPanel.Bind(App.App.Instance.Player.Inventory);
 
             RebuildLootContainers(state);
             Refresh();
@@ -225,7 +225,7 @@ namespace View.UI
             var session = App.App.Instance?.RaidSession;
             if (session == null) { CancelDrag(); return; }
             var state = session.RaidState;
-            var playerInv = state.Inventory;
+            var playerInv = App.App.Instance.Player.Inventory;
 
             if (_dragSourceContainer == null)
             {
@@ -269,7 +269,7 @@ namespace View.UI
             var session = App.App.Instance?.RaidSession;
             if (session == null) { CancelDrag(); return; }
             var state = session.RaidState;
-            var playerInv = state.Inventory;
+            var playerInv = App.App.Instance.Player.Inventory;
 
             if (_dragSourceContainer == null)
             {
@@ -332,7 +332,7 @@ namespace View.UI
 
             InventoryState fromInv = _dragSourceContainer != null
                 ? _dragSourceContainer.BoundInventory
-                : state.Inventory;
+                : App.App.Instance.Player.Inventory;
 
             var dropPos = state.PlayerEntity != null
                 ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
@@ -463,7 +463,7 @@ namespace View.UI
             {
                 _contextMenu.Show(eventData.position, new[] { "Pick up" }, _ =>
                 {
-                    int free = state.Inventory.FindFreeBackpackSlot();
+                    int free = App.App.Instance.Player.Inventory.FindFreeBackpackSlot();
                     if (free >= 0)
                         TryPickUpFloorItem(state, session, container,
                             slot.SlotRef.Index, InventorySlotRef.BackpackSlot(free));
@@ -476,10 +476,10 @@ namespace View.UI
                 {
                     if (idx == 0)
                     {
-                        int free = state.Inventory.FindFreeBackpackSlot();
+                        int free = App.App.Instance.Player.Inventory.FindFreeBackpackSlot();
                         if (free >= 0)
                             LootSystem.TryTransfer(container.BoundInventory, slot.SlotRef,
-                                state.Inventory, InventorySlotRef.BackpackSlot(free));
+                                App.App.Instance.Player.Inventory, InventorySlotRef.BackpackSlot(free));
                     }
                     else
                     {
@@ -540,9 +540,9 @@ namespace View.UI
                 var def = ItemDefinition.Get(gi.DefinitionId);
                 var slotType = targetSlot.ToItemSlotType();
                 if (def != null && (def.AllowedSlots & slotType) == 0) return;
-                if (state.Inventory.GetSlot(targetSlot) != null) return;
+                if (App.App.Instance.Player.Inventory.GetSlot(targetSlot) != null) return;
 
-                state.Inventory.SetSlot(targetSlot,
+                App.App.Instance.Player.Inventory.SetSlot(targetSlot,
                     ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
                 state.GroundItems.RemoveAt(i);
                 session.ConsumeEvents().GroundItemDespawned(gi.Id);
@@ -555,10 +555,10 @@ namespace View.UI
 
         void DropToFloor(RaidState state, Session.RaidSession session, InventorySlotRef sourceSlot)
         {
-            var item = state.Inventory.GetSlot(sourceSlot);
+            var item = App.App.Instance.Player.Inventory.GetSlot(sourceSlot);
             if (item == null) return;
 
-            state.Inventory.SetSlot(sourceSlot, null);
+            App.App.Instance.Player.Inventory.SetSlot(sourceSlot, null);
 
             var dropPos = state.PlayerEntity != null
                 ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
@@ -609,18 +609,18 @@ namespace View.UI
             var state = session.RaidState;
             if (state.PlayerEntity == null) return;
 
-            EquipmentSystem.SyncArmorFromInventory(state, state.PlayerEntity.Id, state.Inventory);
+            EquipmentSystem.SyncArmorFromInventory(state, state.PlayerEntity.Id, App.App.Instance.Player.Inventory);
 
             var playerView = FindObjectOfType<PlayerView>();
             if (playerView == null) return;
 
-            var helmetDef = state.Inventory.HelmetSlot?.Definition;
+            var helmetDef = App.App.Instance.Player.Inventory.HelmetSlot?.Definition;
             if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))
                 playerView.SwapHelmetModel(helmetDef.ArmorPrefabId);
             else
                 playerView.ClearHelmetModel();
 
-            var armorDef = state.Inventory.BodyArmorSlot?.Definition;
+            var armorDef = App.App.Instance.Player.Inventory.BodyArmorSlot?.Definition;
             if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
                 playerView.SwapArmorModel(armorDef.ArmorPrefabId);
             else

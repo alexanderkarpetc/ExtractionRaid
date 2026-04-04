@@ -10,7 +10,6 @@ namespace Systems
 
         public static bool TryPickUp(RaidState state, EId groundItemId, IRaidEvents events)
         {
-            var inventory = state.Inventory;
 
             GroundItemState groundItem = null;
             int groundIndex = -1;
@@ -27,6 +26,7 @@ namespace Systems
 
             var def = ItemDefinition.Get(groundItem.DefinitionId);
             int pickupCount = groundItem.StackCount;
+            var inventory = App.App.Instance.Player.Inventory;
 
             // Stackable item: merge into existing stacks, then overflow to free slots
             if (def != null && def.IsStackable && pickupCount > 0)
@@ -73,9 +73,8 @@ namespace Systems
             return true;
         }
 
-        public static bool TryDrop(RaidState state, InventorySlotRef slot, Vector3 dropPosition, IRaidEvents events)
+        public static bool TryDrop(RaidState state, InventoryState inventory, InventorySlotRef slot, Vector3 dropPosition, IRaidEvents events)
         {
-            var inventory = state.Inventory;
             var item = inventory.GetSlot(slot);
             if (item == null) return false;
 

@@ -16,7 +16,7 @@ namespace Systems
             if (input == null) return;
 
             bool grenadeViaQuickSlot = input.QuickSlotPressed >= 0
-                && QuickSlotSystem.GetActiveDefinitionId(player, state.Inventory) == "Grenade";
+                && QuickSlotSystem.GetActiveDefinitionId(player, App.App.Instance.Player.Inventory) == "Grenade";
 
             if (input.GrenadePressed || grenadeViaQuickSlot)
             {
@@ -26,7 +26,7 @@ namespace Systems
                     return;
                 }
 
-                if (InventorySystem.CountGrenades(state.Inventory) > 0 && !player.IsRolling && !player.AreHandsBusy)
+                if (InventorySystem.CountGrenades(App.App.Instance.Player.Inventory) > 0 && !player.IsRolling && !player.AreHandsBusy)
                 {
                     player.IsInGrenadeMode = true;
                     player.GrenadeThrowCharging = false;
@@ -89,7 +89,7 @@ namespace Systems
                 GrenadeConstants.ExplosionRadius);
 
             state.Grenades.Add(grenade);
-            InventorySystem.ConsumeOneGrenade(state.Inventory);
+            InventorySystem.ConsumeOneGrenade(App.App.Instance.Player.Inventory);
 
             context.Events.GrenadeSpawned(id, spawnPos, velocity);
         }

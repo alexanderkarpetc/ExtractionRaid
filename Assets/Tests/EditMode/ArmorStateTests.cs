@@ -215,7 +215,7 @@ namespace Tests.EditMode
         [Test]
         public void RaidState_Create_HasArmorMap()
         {
-            var state = RaidState.Create();
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             Assert.IsNotNull(state.ArmorMap);
             Assert.AreEqual(0, state.ArmorMap.Count);
         }
