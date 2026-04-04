@@ -28,12 +28,14 @@ namespace View.UI
 
         readonly List<InventorySlotView> _slots = new();
         InventoryState _inventory;
+        List<ItemState> _floorItems;
+        List<EId> _floorEIds;
 
         public LootableContainerState Lootable { get; private set; }
         public bool IsFloorContainer { get; private set; }
         public InventoryState BoundInventory => _inventory;
-
-        public EId[] FloorItemEIds { get; private set; }
+        public List<ItemState> FloorItems => _floorItems;
+        public List<EId> FloorItemEIds => _floorEIds;
 
         public event Action<LootContainerView, SlotViewBase> SlotDragStarted;
         public event Action<LootContainerView, SlotViewBase> SlotDragEnded;
@@ -57,12 +59,13 @@ namespace View.UI
             Refresh();
         }
 
-        public void BindFloor(InventoryState floorInventory, EId[] floorEIds)
+        public void BindFloor(List<ItemState> floorItems, List<EId> floorEIds)
         {
             Lootable = null;
             IsFloorContainer = true;
-            _inventory = floorInventory;
-            FloorItemEIds = floorEIds;
+            _inventory = null;
+            _floorItems = floorItems;
+            _floorEIds = floorEIds;
 
             _containerName = "On the Floor";
             SetOpened(true);
@@ -72,7 +75,7 @@ namespace View.UI
 
         public void Refresh()
         {
-            if (_inventory == null) return;
+            if (!IsFloorContainer && _inventory == null) return;
 
             if (IsFloorContainer)
                 RefreshFloor();
@@ -101,18 +104,13 @@ namespace View.UI
 
         void RefreshFloor()
         {
-            int itemCount = 0;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-            {
-                if (_inventory.Backpack[i] != null) itemCount++;
-            }
-
+            int itemCount = _floorItems?.Count ?? 0;
             EnsureSlots(itemCount);
 
             for (int i = 0; i < _slots.Count; i++)
             {
-                bool hasItem = i < InventoryState.BackpackSize && _inventory.Backpack[i] != null;
-                _slots[i].Bind(InventorySlotRef.BackpackSlot(i), hasItem ? _inventory.Backpack[i] : null, true, -1);
+                bool hasItem = _floorItems != null && i < _floorItems.Count;
+                _slots[i].Bind(InventorySlotRef.BackpackSlot(i), hasItem ? _floorItems[i] : null, true, -1);
                 _slots[i].gameObject.SetActive(hasItem);
             }
 

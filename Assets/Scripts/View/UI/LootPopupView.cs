@@ -40,8 +40,8 @@ namespace View.UI
         Vector2 _dragOffset;
 
         // floor state
-        InventoryState _floorInventory;
-        EId[] _floorItemEIds;
+        readonly List<ItemState> _floorItems = new();
+        readonly List<EId> _floorItemEIds = new();
 
         Canvas _rootCanvas;
 
@@ -106,16 +106,11 @@ namespace View.UI
             }
 
             RebuildFloorInventory(state, playerPos);
-            bool hasFloorItems = false;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-            {
-                if (_floorInventory.Backpack[i] != null) { hasFloorItems = true; break; }
-            }
 
-            if (hasFloorItems)
+            if (_floorItems.Count > 0)
             {
                 var floorContainer = GetContainer();
-                floorContainer.BindFloor(_floorInventory, _floorItemEIds);
+                floorContainer.BindFloor(_floorItems, _floorItemEIds);
                 _activeContainers.Add(floorContainer);
             }
         }
@@ -286,6 +281,8 @@ namespace View.UI
             }
             else
             {
+                if (_dragSourceContainer.IsFloorContainer) { CancelDrag(); return; }
+
                 var srcInv = _dragSourceContainer.BoundInventory;
                 var dstInv = targetContainer.BoundInventory;
                 if (srcInv == dstInv)
@@ -513,36 +510,25 @@ namespace View.UI
 
         void RebuildFloorInventory(RaidState state, Vector3 playerPos)
         {
-            if (_floorInventory == null)
-            {
-                _floorInventory = new InventoryState();
-                _floorItemEIds = new EId[InventoryState.BackpackSize];
-            }
+            _floorItems.Clear();
+            _floorItemEIds.Clear();
 
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            for (int i = 0; i < state.GroundItems.Count; i++)
             {
-                _floorInventory.Backpack[i] = null;
-                _floorItemEIds[i] = EId.None;
-            }
-
-            int slot = 0;
-            for (int i = 0; i < state.GroundItems.Count && slot < InventoryState.BackpackSize; i++)
-            {
-                if (Vector3.Distance(playerPos, state.GroundItems[i].Position) > LootSystem.LootRange)
-                    continue;
                 var gi = state.GroundItems[i];
-                _floorInventory.Backpack[slot] = ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount);
-                _floorItemEIds[slot] = gi.Id;
-                slot++;
+                if (Vector3.Distance(playerPos, gi.Position) > LootSystem.LootRange)
+                    continue;
+                _floorItems.Add(ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
+                _floorItemEIds.Add(gi.Id);
             }
         }
 
         void TryPickUpFloorItem(RaidState state, Session.RaidSession session,
             LootContainerView floorContainer, int floorSlotIndex, InventorySlotRef targetSlot)
         {
-            if (floorSlotIndex < 0 || floorSlotIndex >= InventoryState.BackpackSize) return;
             var eids = floorContainer.FloorItemEIds;
-            if (eids == null) return;
+            var items = floorContainer.FloorItems;
+            if (eids == null || floorSlotIndex < 0 || floorSlotIndex >= eids.Count) return;
             var floorItemEId = eids[floorSlotIndex];
             if (!floorItemEId.IsValid) return;
 
@@ -561,9 +547,8 @@ namespace View.UI
                 state.GroundItems.RemoveAt(i);
                 session.ConsumeEvents().GroundItemDespawned(gi.Id);
 
-                var floorInv = floorContainer.BoundInventory;
-                floorInv.Backpack[floorSlotIndex] = null;
-                eids[floorSlotIndex] = EId.None;
+                items?.RemoveAt(floorSlotIndex);
+                eids.RemoveAt(floorSlotIndex);
                 break;
             }
         }
@@ -602,7 +587,7 @@ namespace View.UI
                 _activeContainers.Add(floorContainer);
             }
 
-            floorContainer.BindFloor(_floorInventory, _floorItemEIds);
+            floorContainer.BindFloor(_floorItems, _floorItemEIds);
         }
 
         // ------------------------------------------------------------------
