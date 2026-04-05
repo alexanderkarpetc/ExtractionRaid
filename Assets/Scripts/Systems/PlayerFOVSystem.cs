@@ -42,7 +42,7 @@ namespace Systems
                 if (dist <= nearR)
                 {
                     bot.IsVisibleToPlayer = !checkOcclusion
-                        || !IsOccluded(ctx.Physics, eyePos, bot.Position);
+                        || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
                     continue;
                 }
 
@@ -66,16 +66,32 @@ namespace Systems
 
                 // Passed distance+angle — check occlusion
                 bot.IsVisibleToPlayer = !checkOcclusion
-                    || !IsOccluded(ctx.Physics, eyePos, bot.Position);
+                    || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
             }
         }
 
-        static bool IsOccluded(IPhysicsAdapter physics, Vector3 eyePos, Vector3 botPos)
+        static bool IsOccluded(IPhysicsAdapter physics, Vector3 eyePos, Vector3 botPos, Vector3 playerPos)
         {
             if (physics == null) return false;
 
             var targetPos = botPos + Vector3.up * BotConstants.PlayerEyeHeight;
-            return physics.Linecast(eyePos, targetPos, BotConstants.VisionBlockingMask);
+
+            // RaycastAll + filter out character colliders (by proximity to player/bot positions)
+            // to prevent CapsuleColliders on Default layer from blocking FOV vision.
+            var dir = targetPos - eyePos;
+            float maxDist = dir.magnitude;
+            if (maxDist < 0.001f) return false;
+
+            var hits = Physics.RaycastAll(eyePos, dir / maxDist, maxDist, BotConstants.VisionBlockingMask);
+            for (int h = 0; h < hits.Length; h++)
+            {
+                var hitPos = hits[h].collider.transform.position;
+                if ((hitPos - playerPos).sqrMagnitude < 4f) continue;
+                if ((hitPos - botPos).sqrMagnitude < 4f) continue;
+                return true; // blocked by real obstacle
+            }
+
+            return false;
         }
     }
 }
