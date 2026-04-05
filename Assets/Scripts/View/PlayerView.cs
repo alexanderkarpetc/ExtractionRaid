@@ -68,10 +68,10 @@ namespace View
                 transform.rotation = Quaternion.LookRotation(state.FacingDirection, Vector3.up);
 
             if (_body != null)
+            {
+                _body.SyncAnimatorState(state.IsRolling, state.Velocity.sqrMagnitude > 0.01f);
                 _body.SyncRollVisual(state.IsRolling, state.RollDirection, transform);
-
-            if (_body != null && _body.Animator != null)
-                _body.Animator.SetBool("Run", state.Velocity.sqrMagnitude > 0.01f);
+            }
 
             if (_body != null && _body.WeaponPivot != null)
             {

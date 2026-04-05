@@ -1,4 +1,3 @@
-using Constants;
 using UnityEngine;
 
 namespace View
@@ -26,7 +25,8 @@ namespace View
         string _currentArmorPrefabId;
         GameObject _currentArmorModel;
 
-        float _rollVisualAngle;
+        bool _wasRollingLastFrame;
+        bool _wasMovingLastFrame;
 
         // ── Public access ──────────────────────────────────
 
@@ -34,6 +34,37 @@ namespace View
         public WeaponView WeaponView => _currentWeaponView;
         public Transform MuzzlePoint => _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
         public Animator Animator => _animator;
+
+        public void SyncAnimatorState(bool isRolling, bool isMoving)
+        {
+            if (_animator == null)
+            {
+                _wasRollingLastFrame = isRolling;
+                _wasMovingLastFrame = isMoving;
+                return;
+            }
+
+            _animator.SetBool("Run", !isRolling && isMoving);
+
+            if (isRolling && !_wasRollingLastFrame)
+            {
+                _animator.ResetTrigger("Roll");
+                _animator.SetTrigger("Roll");
+            }
+            else if (!isRolling && _wasRollingLastFrame)
+            {
+                _animator.ResetTrigger("Roll");
+            }
+
+            if (!isRolling && !isMoving && (_wasRollingLastFrame || _wasMovingLastFrame))
+            {
+                _animator.ResetTrigger("Idle");
+                _animator.SetTrigger("Idle");
+            }
+
+            _wasRollingLastFrame = isRolling;
+            _wasMovingLastFrame = isMoving;
+        }
 
         // ── Weapon ─────────────────────────────────────────
 
@@ -148,25 +179,8 @@ namespace View
         /// <summary>Drive roll visual. Call every frame from SyncFromState.</summary>
         public void SyncRollVisual(bool isRolling, Vector3 rollDirection, Transform characterTransform)
         {
-            if (_capsuleVisual == null) return;
-
-            if (isRolling)
-            {
-                _rollVisualAngle += (360f / DodgeConstants.Duration) * Time.deltaTime;
-
-                var rollAxis = Vector3.Cross(Vector3.up, rollDirection);
-                if (rollAxis.sqrMagnitude < 0.001f)
-                    rollAxis = Vector3.right;
-
-                _capsuleVisual.localRotation = Quaternion.AngleAxis(
-                    _rollVisualAngle,
-                    characterTransform.InverseTransformDirection(rollAxis.normalized));
-            }
-            else if (_rollVisualAngle != 0f)
-            {
-                _rollVisualAngle = 0f;
+            if (_capsuleVisual != null)
                 _capsuleVisual.localRotation = Quaternion.identity;
-            }
         }
     }
 }
