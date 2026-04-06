@@ -23,6 +23,7 @@ namespace View.UI
         GameObject _gridRoot;
 
         [SerializeField] Button _openButton;
+        [SerializeField] GameObject _openButtonContainer;
 
         public static int ContainerSlots => ContainerConstants.LootSlots;
 
@@ -120,10 +121,8 @@ namespace View.UI
 
         void SetOpened(bool opened)
         {
-            if (_gridRoot != null)
-                _gridRoot.SetActive(opened);
-            if (_openButton != null)
-                _openButton.gameObject.SetActive(!opened);
+            _gridRoot.SetActive(opened);
+            _openButtonContainer.SetActive(!opened);
         }
 
         void OnOpenClicked()
