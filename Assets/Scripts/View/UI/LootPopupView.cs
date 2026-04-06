@@ -201,8 +201,11 @@ namespace View.UI
         {
             if (_contextMenu == null || !_contextMenu.IsVisible) return;
             var mouse = Mouse.current;
-            if (mouse != null && mouse.leftButton.wasPressedThisFrame)
-                _contextMenu.Hide();
+            if (mouse == null || !mouse.leftButton.wasPressedThisFrame) return;
+            var menuRect = _contextMenu.transform as RectTransform;
+            if (RectTransformUtility.RectangleContainsScreenPoint(menuRect, mouse.position.ReadValue()))
+                return;
+            _contextMenu.Hide();
         }
 
         // ------------------------------------------------------------------
