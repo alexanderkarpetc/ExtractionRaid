@@ -65,6 +65,7 @@ namespace View
             }
 
             player.IsInventoryOpen = _isOpen;
+            App.Instance.SetGameplayInputBlocked(_isOpen);
 
             if (HasLootPopup())
                 SyncLootPopup(session.RaidState, player);

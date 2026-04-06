@@ -30,15 +30,17 @@ namespace Adapters
         // Weapon aim screen pos (set by AimingSystem, includes recoil)
         Vector2 _weaponAimScreenPos;
 
+        public bool BlockGameplayInput { get; set; }
+
         public UnityInputAdapter()
         {
             _actions = new InputSystem_Actions();
             _actions.Player.Enable();
         }
 
-        public Vector2 MoveInput => _actions.Player.Move.ReadValue<Vector2>();
-        public bool SprintPressed => _actions.Player.Sprint.IsPressed();
-        public bool AttackPressed => _actions.Player.Attack.IsPressed();
+        public Vector2 MoveInput => BlockGameplayInput ? Vector2.zero : _actions.Player.Move.ReadValue<Vector2>();
+        public bool SprintPressed => !BlockGameplayInput && _actions.Player.Sprint.IsPressed();
+        public bool AttackPressed => !BlockGameplayInput && _actions.Player.Attack.IsPressed();
 
         void UpdateConvergence()
         {
@@ -116,6 +118,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return -1;
                 var kb = Keyboard.current;
                 if (kb == null) return -1;
 
@@ -142,6 +145,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return false;
                 var kb = Keyboard.current;
                 return kb != null && kb[Key.F].wasPressedThisFrame;
             }
@@ -151,6 +155,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return false;
                 var kb = Keyboard.current;
                 return kb != null && kb[Key.R].wasPressedThisFrame;
             }
@@ -160,6 +165,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return false;
                 var kb = Keyboard.current;
                 return kb != null && kb[Key.Space].wasPressedThisFrame;
             }
@@ -169,6 +175,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return false;
                 var kb = Keyboard.current;
                 return kb != null && kb[Key.G].wasPressedThisFrame;
             }
@@ -178,6 +185,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return -1;
                 var kb = Keyboard.current;
                 if (kb == null) return -1;
 
@@ -195,6 +203,7 @@ namespace Adapters
         {
             get
             {
+                if (BlockGameplayInput) return -1;
                 var kb = Keyboard.current;
                 if (kb == null) return -1;
 
@@ -208,9 +217,9 @@ namespace Adapters
             }
         }
 
-        public bool AdsPressed => Mouse.current?.rightButton.isPressed ?? false;
+        public bool AdsPressed => !BlockGameplayInput && (Mouse.current?.rightButton.isPressed ?? false);
 
-        public bool AttackJustReleased => _actions.Player.Attack.WasReleasedThisFrame();
+        public bool AttackJustReleased => !BlockGameplayInput && _actions.Player.Attack.WasReleasedThisFrame();
 
         public void SetCamera(Camera camera)
         {

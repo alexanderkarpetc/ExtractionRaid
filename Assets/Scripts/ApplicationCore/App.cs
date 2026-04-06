@@ -146,6 +146,11 @@ namespace ApplicationCore
             RaidSession = null;
         }
 
+        public void SetGameplayInputBlocked(bool blocked)
+        {
+            _inputAdapter.BlockGameplayInput = blocked;
+        }
+
         public void Tick()
         {
             RaidSession?.Tick();
