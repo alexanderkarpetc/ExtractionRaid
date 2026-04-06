@@ -160,6 +160,7 @@ namespace View.UI
                 MoveDragGhost();
 
             HandleQuickSlotKeys();
+            HandleHotkeyActions();
             HandleContextMenuDismiss();
         }
 
@@ -185,6 +186,16 @@ namespace View.UI
             }
         }
 
+        InventorySlotView FindHoveredPlayerSlot()
+        {
+            foreach (var slot in _playerPanel.GetComponentsInChildren<InventorySlotView>())
+            {
+                if (slot.IsHovered && !slot.IsLoot && slot.CurrentItem != null)
+                    return slot;
+            }
+            return null;
+        }
+
         InventorySlotView FindHoveredPlayerBackpackSlot()
         {
             foreach (var slot in _playerPanel.GetComponentsInChildren<InventorySlotView>())
@@ -206,6 +217,56 @@ namespace View.UI
             if (RectTransformUtility.RectangleContainsScreenPoint(menuRect, mouse.position.ReadValue()))
                 return;
             _contextMenu.Hide();
+        }
+
+        void HandleHotkeyActions()
+        {
+            if (_contextMenu != null && _contextMenu.IsVisible) return;
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            var session = App.Instance?.RaidSession;
+            var state = session?.RaidState;
+            if (state == null) return;
+
+            if (kb[Key.Delete].wasPressedThisFrame)
+            {
+                var slot = FindHoveredPlayerSlot();
+                if (slot != null)
+                {
+                    DropToFloor(state, session, slot.SlotRef);
+                    SyncArmorAfterTransfer();
+                    Refresh();
+                }
+            }
+
+            if (kb[Key.F].wasPressedThisFrame)
+            {
+                LootContainerView hitContainer = null;
+                InventorySlotView hitSlot = null;
+                foreach (var c in _activeContainers)
+                {
+                    foreach (var s in c.GetComponentsInChildren<InventorySlotView>())
+                    {
+                        if (s.IsHovered && s.CurrentItem != null) { hitContainer = c; hitSlot = s; break; }
+                    }
+                    if (hitContainer != null) break;
+                }
+
+                if (hitContainer != null && hitSlot != null)
+                {
+                    int free = App.Instance.Player.Inventory.FindFreeBackpackSlot();
+                    if (free >= 0)
+                    {
+                        if (hitContainer.IsFloorContainer)
+                            TryPickUpFloorItem(state, session, hitContainer, hitSlot.SlotRef.Index,
+                                InventorySlotRef.BackpackSlot(free));
+                        else
+                            LootSystem.TryTransfer(hitContainer.BoundInventory, hitSlot.SlotRef,
+                                App.Instance.Player.Inventory, InventorySlotRef.BackpackSlot(free));
+                    }
+                    Refresh();
+                }
+            }
         }
 
         // ------------------------------------------------------------------
@@ -443,7 +504,7 @@ namespace View.UI
             var state = session?.RaidState;
             if (state == null) return;
 
-            _contextMenu.Show(eventData.position, new[] { "Drop" }, _ =>
+            _contextMenu.Show(eventData.position, new[] { "Drop" }, new[] { "Del" }, _ =>
             {
                 DropToFloor(state, session, slot.SlotRef);
                 SyncArmorAfterTransfer();
@@ -465,7 +526,7 @@ namespace View.UI
 
             if (container.IsFloorContainer)
             {
-                _contextMenu.Show(eventData.position, new[] { "Pick up" }, _ =>
+                _contextMenu.Show(eventData.position, new[] { "Pick up" }, new[] { "F" }, _ =>
                 {
                     int free = App.Instance.Player.Inventory.FindFreeBackpackSlot();
                     if (free >= 0)
@@ -476,7 +537,7 @@ namespace View.UI
             }
             else
             {
-                _contextMenu.Show(eventData.position, new[] { "Pick up", "Drop" }, idx =>
+                _contextMenu.Show(eventData.position, new[] { "Pick up", "Drop" }, new[] { "F", "Del" }, idx =>
                 {
                     if (idx == 0)
                     {

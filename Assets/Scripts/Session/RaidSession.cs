@@ -356,7 +356,7 @@ namespace Session
             ProcessDamageAlerts();
             ProcessDeathEvents();
 
-            if (context.Input.PickUpPressed && RaidState.PlayerEntity != null)
+            if (context.Input.PickUpPressed && RaidState.PlayerEntity != null && !RaidState.PlayerEntity.IsInventoryOpen)
             {
                 var player = RaidState.PlayerEntity;
                 if (player.NpcTargetId != EId.None)

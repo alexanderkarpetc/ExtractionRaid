@@ -14,8 +14,10 @@ namespace View.UI
 
         [Header("Row Colors")]
         [SerializeField] Color _normalLabelColor = new Color(1f, 1f, 1f, 0.75f);
+        [SerializeField] Color _normalHintColor = new Color(1f, 1f, 1f, 0.28f);
         [SerializeField] Color _hoverBackgroundColor = new Color(0.878f, 0.314f, 0.251f, 0.10f);
         [SerializeField] Color _hoverLabelColor = new Color(0.878f, 0.314f, 0.251f, 1f);
+        [SerializeField] Color _hoverHintColor = new Color(0.878f, 0.314f, 0.251f, 0.7f);
 
         CanvasGroup _canvasGroup;
         Canvas _rootCanvas;
@@ -24,7 +26,8 @@ namespace View.UI
         {
             public readonly Button Button;
             public readonly TMP_Text Label;
-            public Entry(Button b, TMP_Text l) { Button = b; Label = l; }
+            public readonly TMP_Text Hint;
+            public Entry(Button b, TMP_Text l, TMP_Text h) { Button = b; Label = l; Hint = h; }
         }
 
         Entry[] _entries;
@@ -41,8 +44,9 @@ namespace View.UI
 
         /// <param name="position">Screen-space position where the menu should appear.</param>
         /// <param name="options">Button labels to show.</param>
+        /// <param name="hints">Keyboard shortcut labels shown beside each option.</param>
         /// <param name="onSelect">Callback with the chosen option index.</param>
-        public void Show(Vector2 position, string[] options, Action<int> onSelect)
+        public void Show(Vector2 position, string[] options, string[] hints, Action<int> onSelect)
         {
             _callback = onSelect;
             EnsureEntries(options.Length);
@@ -52,6 +56,11 @@ namespace View.UI
                 var e = _entries[i];
                 e.Label.text = options[i];
                 e.Label.color = _normalLabelColor;
+                if (e.Hint != null)
+                {
+                    e.Hint.text = i < hints.Length ? hints[i] : string.Empty;
+                    e.Hint.color = _normalHintColor;
+                }
                 e.Button.gameObject.SetActive(true);
                 int idx = i;
                 e.Button.onClick.RemoveAllListeners();
@@ -110,13 +119,15 @@ namespace View.UI
                 var go = Instantiate(_contextButton.gameObject, _container);
                 go.SetActive(false);
                 var btn = go.GetComponent<Button>();
-                var lbl = go.GetComponentInChildren<TMP_Text>();
-                SetupButtonColors(btn, lbl);
-                _entries[i] = new Entry(btn, lbl);
+                var labels = go.GetComponentsInChildren<TMP_Text>();
+                var lbl = labels.Length > 0 ? labels[0] : null;
+                var hint = labels.Length > 1 ? labels[1] : null;
+                SetupButtonColors(btn, lbl, hint);
+                _entries[i] = new Entry(btn, lbl, hint);
             }
         }
 
-        void SetupButtonColors(Button btn, TMP_Text lbl)
+        void SetupButtonColors(Button btn, TMP_Text lbl, TMP_Text hint)
         {
             var colors = btn.colors;
             colors.highlightedColor = _hoverBackgroundColor;
@@ -130,11 +141,19 @@ namespace View.UI
             trigger.triggers.Clear();
 
             var onEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            onEnter.callback.AddListener(_ => lbl.color = _hoverLabelColor);
+            onEnter.callback.AddListener(_ =>
+            {
+                if (lbl != null) lbl.color = _hoverLabelColor;
+                if (hint != null) hint.color = _hoverHintColor;
+            });
             trigger.triggers.Add(onEnter);
 
             var onExit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-            onExit.callback.AddListener(_ => lbl.color = _normalLabelColor);
+            onExit.callback.AddListener(_ =>
+            {
+                if (lbl != null) lbl.color = _normalLabelColor;
+                if (hint != null) hint.color = _normalHintColor;
+            });
             trigger.triggers.Add(onExit);
         }
 
