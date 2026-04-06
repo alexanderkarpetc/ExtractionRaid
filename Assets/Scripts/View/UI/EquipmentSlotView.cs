@@ -8,10 +8,18 @@ namespace View.UI
     public class EquipmentSlotView : SlotViewBase
     {
         [Header("Equipment visuals")]
+        [SerializeField] Transform _mainContent;
+        [SerializeField] Transform _disabledContent;
         [SerializeField] TMP_Text _itemName;
         [SerializeField] Slider _durabilitySlider;
         [SerializeField] Image _durabilityFill;
         [SerializeField] TMP_Text _durabilityText;
+
+        public void SetDisabled(bool disabled)
+        {
+            _mainContent.gameObject.SetActive(!disabled);
+            _disabledContent.gameObject.SetActive(disabled);
+        }
 
         public void Bind(InventorySlotRef slotRef, ItemState item, bool isLoot)
         {

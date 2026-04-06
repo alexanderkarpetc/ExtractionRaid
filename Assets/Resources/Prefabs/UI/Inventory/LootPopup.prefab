@@ -133,7 +133,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.31755748, y: 0.12677778}
   m_AnchorMax: {x: 0.53729314, y: 0.98458505}
-  m_AnchoredPosition: {x: 0.000030517578, y: -0.000030517578}
+  m_AnchoredPosition: {x: 0.000030517578, y: -0.000061035156}
   m_SizeDelta: {x: 0.000030517578, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &7056255801925235641
@@ -353,7 +353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.30588236}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.57254905}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1765,6 +1765,10 @@ PrefabInstance:
       propertyPath: m_text
       value: Primary
       objectReference: {fileID: 0}
+    - target: {fileID: 8301049267498283296, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 4e896e536ae3e8741be21478aa9984a9, type: 3}
     - target: {fileID: 9219528324621498074, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
       propertyPath: m_Name
       value: Weapon1
@@ -2039,6 +2043,10 @@ PrefabInstance:
       propertyPath: m_text
       value: Sidearm
       objectReference: {fileID: 0}
+    - target: {fileID: 8301049267498283296, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 62ea3a37489eb1a469e22834cdeb624c, type: 3}
     - target: {fileID: 9219528324621498074, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
       propertyPath: m_Name
       value: Weapon2
@@ -2152,6 +2160,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3415419712172400957, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4914452140401125595, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -2160,9 +2172,17 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8301049267498283296, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 1ba3a6f680b443042bfac0821ec6609e, type: 3}
     - target: {fileID: 9219528324621498074, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
       propertyPath: m_Name
       value: Helmet
+      objectReference: {fileID: 0}
+    - target: {fileID: 9219528324621498074, guid: 74f3c3ba7a7b6f64e967f18e899fb2a2, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

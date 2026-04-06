@@ -59,8 +59,9 @@ namespace View.UI
 
         void BindEquip(EquipmentSlotView view, InventorySlotRef slotRef, ItemState item)
         {
-            if (view != null)
-                view.Bind(slotRef, item, false);
+            if (view == null) return;
+            view.Bind(slotRef, item, false);
+            view.SetDisabled(item == null);
         }
 
         void RefreshBackpack()
