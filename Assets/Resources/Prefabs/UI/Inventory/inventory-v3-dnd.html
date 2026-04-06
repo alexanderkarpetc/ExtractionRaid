@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extraction Shooter - Inventory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-0: #080a10;
+    --bg-1: #0c0f17;
+    --bg-2: #111520;
+    --bg-3: #161b28;
+    --bg-4: #1c2235;
+    --border-0: #1a2030;
+    --border-1: #242e42;
+    --border-2: #2e3a52;
+    --text-0: #ffffff;
+    --text-1: #e0e4ec;
+    --text-2: #b0b8c8;
+    --text-3: #8892a6;
+    --accent: #4a7cff;
+    --accent-dim: rgba(74,124,255,0.15);
+    --green: #2ecc71;
+    --green-dim: rgba(46,204,113,0.12);
+    --yellow: #d4a017;
+    --yellow-dim: rgba(212,160,23,0.15);
+    --red: #e05040;
+    --blue-glow: rgba(74,124,255,0.25);
+    --r-common: #556078;
+    --r-uncommon: #3a9a55;
+    --r-rare: #4a7cff;
+    --r-epic: #8850d8;
+    --r-legendary: #cc8a2e;
+    --r-mythic: #cc3535;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-0);
+    background-image: url('bg.jpg');
+    background-size: cover;
+    background-position: center;
+    color: var(--text-0);
+    height: 100vh;
+    display: flex; flex-direction: column;
+    user-select: none; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; opacity:0.02; pointer-events:none; z-index:999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── MAIN 2-COL LAYOUT ── */
+  .main {
+    flex:1; display:flex;
+    gap: 12px;
+    padding: 16px 16px 96px;
+    overflow: hidden;
+    align-items: stretch;
+    position: relative;
+    min-height: 0;
+  }
+  .main > .panel:first-child {
+    width: calc((83px * 6) + (8px * 5) + 44px);
+    flex-shrink: 0;
+    align-self: stretch;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .main > .panel:first-child .panel-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .main > .panel:last-child {
+    flex-shrink: 0;
+    width: fit-content;
+    align-self: stretch;
+    max-height: 100%;
+    min-height: 0;
+  }
+  .loot-panel {
+    display: none;
+    flex-direction: column;
+    align-self: stretch;
+    width: fit-content;
+    max-height: 100%;
+    min-height: 0;
+  }
+  body.loot-panel-open .loot-panel {
+    display: flex;
+  }
+  .world-bot-trigger {
+    position: absolute;
+    left: 72%;
+    top: 56%;
+    width: 120px;
+    height: 120px;
+    transform: translate(-50%, -50%);
+    border: 0;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), rgba(255,255,255,0.02) 48%, transparent 70%);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 0 30px rgba(0,0,0,0.18);
+    cursor: pointer;
+    z-index: 3;
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  }
+  .world-bot-trigger:hover {
+    transform: translate(-50%, -50%) scale(1.04);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 0 36px rgba(74,124,255,0.18);
+    background: radial-gradient(circle, rgba(255,255,255,0.12), rgba(74,124,255,0.06) 48%, transparent 72%);
+  }
+  .world-bot-trigger::after {
+    content: 'Loot';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 10px);
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.72);
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(8,10,16,0.5);
+    border: 1px solid rgba(255,255,255,0.06);
+    pointer-events: none;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: rgba(12,15,23,0.68);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .panel-hdr {
+    display: flex; flex-direction: column;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .panel-hdr-row {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: #fff;
+  }
+  .panel-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: var(--text-1);
+  }
+  .panel-subtitle {
+    display: flex; gap: 16px; margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-2);
+  }
+  .panel-body { flex:1; overflow-y:auto; padding:16px 20px; }
+  .main > .panel:first-child .panel-body {
+    padding-top: 12px;
+  }
+
+  .sort-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-0); cursor: pointer;
+    padding: 5px 14px;
+    border: 1px solid var(--border-1);
+    border-radius: 6px; background: var(--bg-3);
+  }
+  .sort-btn:hover { border-color: var(--border-2); }
+
+  /* ── SECTION LABEL ── */
+  .sec-label {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--text-0); margin-bottom: 14px;
+  }
+
+  /* ── EQUIPMENT LAYOUT ── */
+  .equip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .equip-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    padding: 12px 16px 14px;
+    cursor: pointer;
+    transition: border-color 0.12s;
+    display: flex; flex-direction: column;
+    min-height: 110px;
+    position: relative;
+  }
+  .equip-card:hover { border-color: var(--border-2); }
+  .equip-card .ec-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-1); margin-bottom: 10px;
+  }
+  .equip-card .ec-shape-wrap {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 8px;
+  }
+  .equip-card .ec-name {
+    font-size: 14px; font-weight: 600; margin-bottom: 3px; color: #fff;
+  }
+  .equip-card .ec-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-2);
+    margin-bottom: 6px;
+  }
+  .equip-card .ec-bar-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ec-bar-track {
+    flex:1; height: 3px;
+    background: var(--bg-0); border-radius: 2px; overflow: hidden;
+  }
+  .ec-bar-fill { height:100%; border-radius: 2px; }
+  .ec-bar-fill.green { background: var(--green); }
+  .ec-bar-fill.yellow { background: var(--yellow); }
+  .ec-bar-fill.red { background: var(--red); }
+  .ec-bar-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-2); min-width: 40px; text-align: right;
+  }
+  .equip-card .ec-ammo {
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .ec-ammo .dot { width:5px; height:5px; border-radius:50%; }
+  .equip-card .ec-slots {
+    display: flex; gap: 3px;
+  }
+  .ec-slots .sq {
+    width: 10px; height: 10px;
+    background: var(--text-3); border-radius: 1px;
+  }
+
+  /* ── EQUIPMENT SHAPES ── */
+  .esh { opacity: 0.4; }
+  .esh-headwear {
+    width: 36px; height: 28px;
+    border: 2px solid var(--text-2);
+    border-radius: 50% 50% 8px 8px;
+    position: relative;
+  }
+  .esh-headwear::after {
+    content:''; position: absolute; bottom: -4px; left: -4px; right: -4px;
+    height: 6px; border: 2px solid var(--text-2); border-top: 0;
+    border-radius: 0 0 4px 4px;
+  }
+  .esh-helmet {
+    width: 36px; height: 32px;
+    background: var(--text-2);
+    border-radius: 50% 50% 15% 15%;
+    position: relative;
+  }
+  .esh-helmet::after {
+    content:''; position: absolute; bottom: 0; left: 5px; right: 5px;
+    height: 8px; background: var(--bg-2); border-radius: 2px 2px 0 0;
+  }
+  .esh-primary {
+    width: 72px; height: 18px;
+    background: var(--text-2); border-radius: 1px;
+    position: relative;
+  }
+  .esh-primary::before {
+    content:''; position: absolute; right: 8px; top: -8px;
+    width: 8px; height: 28px; background: var(--text-2); border-radius: 1px;
+    transform: rotate(-15deg);
+  }
+  .esh-primary::after {
+    content:''; position: absolute; left: 0; top: 0;
+    width: 22px; height: 100%; background: var(--text-1); border-radius: 1px;
+    opacity: 0.3;
+  }
+  .esh-sidearm {
+    width: 32px; height: 22px;
+    background: var(--text-2); border-radius: 2px;
+    position: relative;
+  }
+  .esh-sidearm::after {
+    content:''; position: absolute; bottom: -10px; right: 4px;
+    width: 14px; height: 14px; background: var(--text-2); border-radius: 1px;
+    transform: rotate(-8deg);
+  }
+  .esh-armor {
+    width: 34px; height: 38px;
+    background: var(--text-2);
+    border-radius: 4px 4px 2px 2px;
+    position: relative;
+  }
+  .esh-armor::before {
+    content:''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 10px; background: var(--bg-2);
+    border-radius: 0 0 50% 50%;
+  }
+  .esh-armor::after {
+    content:''; position: absolute; top: 12px; left: 6px; right: 6px;
+    height: 3px; background: var(--bg-2); border-radius: 1px;
+  }
+  .esh-backpack {
+    width: 30px; height: 36px;
+    background: var(--text-2);
+    border-radius: 6px 6px 3px 3px;
+    position: relative;
+  }
+  .esh-backpack::before {
+    content:''; position: absolute; top: 4px; left: 5px; right: 5px;
+    height: 8px; background: var(--bg-2); border-radius: 2px;
+  }
+  .esh-backpack::after {
+    content:''; position: absolute; top: -4px; left: 8px; right: 8px;
+    height: 6px; border: 2px solid var(--text-2); border-bottom: 0;
+    border-radius: 4px 4px 0 0; background: transparent;
+  }
+  .esh-empty {
+    width: 28px; height: 28px;
+    border: 2px dashed var(--text-3);
+    border-radius: 3px;
+  }
+
+  /* ── EMPTY EQUIPMENT SLOT ── */
+  .equip-card.ec-empty {
+    border-style: dashed;
+    border-color: rgba(255,255,255,0.10);
+    background: rgba(12,15,23,0.38);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .equip-card.ec-empty::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, rgba(74,124,255,0.055) 0%, transparent 68%);
+    pointer-events: none;
+  }
+  .equip-card.ec-empty:hover {
+    border-color: rgba(74,124,255,0.35);
+    background: rgba(74,124,255,0.04);
+  }
+  .equip-card.ec-empty:hover .ec-empty-icon {
+    opacity: 0.55;
+    transform: translateY(-1px);
+  }
+  .equip-card.ec-empty:hover .ec-equip-hint {
+    opacity: 0.7;
+    letter-spacing: 2.5px;
+  }
+  .equip-card.ec-empty .ec-label {
+    color: var(--text-3);
+  }
+  .ec-empty-icon {
+    opacity: 0.18;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    animation: ecEmptyPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes ecEmptyPulse {
+    0%, 100% { opacity: 0.18; }
+    50%       { opacity: 0.28; }
+  }
+  .equip-card.ec-empty:hover .ec-empty-icon {
+    animation: none;
+  }
+  .ec-equip-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.4;
+    margin-top: auto;
+    transition: opacity 0.18s ease, letter-spacing 0.18s ease;
+  }
+  /* corner bracket accents on empty slot */
+  .equip-card.ec-empty .ec-corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    pointer-events: none;
+    opacity: 0.22;
+    transition: opacity 0.18s ease;
+  }
+  .equip-card.ec-empty:hover .ec-corner { opacity: 0.55; }
+  .equip-card.ec-empty .ec-corner.tl {
+    top: 7px; left: 7px;
+    border-top: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+  }
+  .equip-card.ec-empty .ec-corner.tr {
+    top: 7px; right: 7px;
+    border-top: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+  }
+  .equip-card.ec-empty .ec-corner.bl {
+    bottom: 7px; left: 7px;
+    border-bottom: 1.5px solid var(--accent);
+    border-left: 1.5px solid var(--accent);
+  }
+  .equip-card.ec-empty .ec-corner.br {
+    bottom: 7px; right: 7px;
+    border-bottom: 1.5px solid var(--accent);
+    border-right: 1.5px solid var(--accent);
+  }
+
+  /* demo toggle button */
+  #equipToggleBtn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--text-2); cursor: pointer;
+    padding: 4px 12px;
+    border: 1px solid var(--border-1);
+    border-radius: 6px; background: var(--bg-3);
+    margin-bottom: 10px;
+    align-self: flex-start;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  #equipToggleBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── BACKPACK SECTION ── */
+  .bp-section {
+    border-top: 1px solid var(--border-0);
+    padding-top: 16px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bp-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .bp-grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+    width: calc((83px * 6) + (8px * 5) + 8px);
+    max-width: calc((83px * 6) + (8px * 5) + 8px);
+    align-self: flex-start;
+    position: relative;
+  }
+  .bp-grid-wrap::after {
+    content: '';
+    position: sticky;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: block;
+    height: 44px;
+    margin-top: -44px;
+    background: linear-gradient(180deg, rgba(11,15,24,0), rgba(11,15,24,0.88) 72%, rgba(11,15,24,0.98));
+    pointer-events: none;
+    z-index: 2;
+  }
+  .bp-grid-wrap .item-grid {
+    grid-template-columns: repeat(6, 83px);
+    width: max-content;
+    justify-content: flex-start;
+  }
+  .bp-label-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .bp-slot {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    padding: 6px 12px 6px 10px;
+    cursor: pointer;
+  }
+  .bp-slot:hover { border-color: var(--border-2); }
+  .bp-slot .esh { opacity: 0.5; }
+  .bp-slot-name {
+    font-size: 11px; font-weight: 500; color: var(--text-1);
+  }
+  .bp-weight {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .bp-weight .val { color: #dde2ea; }
+  .bp-weight .dim { color: var(--text-1); }
+  .bp-weight-bar {
+    width: 120px; height: 4px;
+    background: var(--bg-0); border-radius: 2px; overflow: hidden;
+  }
+  .bp-weight-fill {
+    height: 100%; border-radius: 2px; background: var(--yellow);
+  }
+  .bp-weight-icon {
+    font-size: 10px; color: var(--yellow);
+  }
+
+  /* ── ITEM GRID (shared for backpack & warehouse) ── */
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 83px);
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .item-grid.compact {
+    grid-template-columns: repeat(4, 83px);
+  }
+
+  /* ── ITEM SLOT ── */
+  .slot {
+    aspect-ratio: 1;
+    width: 83px;
+    background: var(--bg-3);
+    border: 2px solid var(--border-1);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    transition: border-color 0.12s, background 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .slot:hover { background: var(--bg-4); border-color: var(--border-2); }
+  .slot.empty { opacity: 0.25; cursor: default; padding: 0; border-color: var(--border-0); }
+  .slot.empty:hover { background: var(--bg-3); border-color: var(--border-0); }
+  .slot.selected { border-color: var(--accent); box-shadow: 0 0 12px var(--blue-glow); }
+  .slot.quick-assigned {
+    box-shadow: inset 0 0 0 1px rgba(77,163,255,0.22), 0 0 14px rgba(77,163,255,0.08);
+  }
+  .slot .slot-quick-corner {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+  }
+  .slot.quick-assigned .slot-quick-corner {
+    opacity: 1;
+  }
+  .slot .slot-quick-corner::before,
+  .slot .slot-quick-corner::after {
+    content: '';
+    position: absolute;
+    border-color: #5eea3d;
+    filter: drop-shadow(0 0 6px rgba(94,234,61,0.45));
+  }
+  .slot .slot-quick-corner::before {
+    right: -2px;
+    top: -2px;
+    width: 26px;
+    height: 26px;
+    border-right: 5px solid #5eea3d;
+    border-top: 5px solid #5eea3d;
+    border-top-right-radius: 8px;
+    filter: drop-shadow(0 0 8px rgba(94,234,61,0.55));
+  }
+  .slot .slot-quick-badge {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 42%),
+      linear-gradient(180deg, #d729b9 0%, #961f90 100%);
+    border: 2px solid rgba(255,255,255,0.78);
+    box-shadow: 0 0 0 1px rgba(88,18,88,0.55), 0 7px 18px rgba(0,0,0,0.28);
+    z-index: 2;
+  }
+
+  /* slot durability bar */
+  .slot .s-dur {
+    position: absolute; bottom: 3px; left: 6px; right: 6px;
+    height: 3px; background: rgba(0,0,0,0.3); border-radius: 2px;
+    overflow: hidden;
+  }
+  .slot .s-dur-fill {
+    height: 100%; border-radius: 2px;
+  }
+  .s-dur-fill.hp-full { background: var(--green); }
+  .s-dur-fill.hp-mid { background: var(--yellow); }
+  .s-dur-fill.hp-low { background: var(--red); }
+
+  .slot.r-common { border-color: var(--r-common); }
+  .slot.r-uncommon { border-color: var(--r-uncommon); }
+  .slot.r-rare { border-color: var(--r-rare); }
+  .slot.r-epic { border-color: var(--r-epic); }
+  .slot.r-legendary { border-color: var(--r-legendary); }
+  .slot.r-mythic { border-color: var(--r-mythic); }
+
+  .slot .shape-wrap {
+    flex: 1; display: flex;
+    align-items: center; justify-content: center;
+    width: 100%;
+    opacity: 0.45;
+    transition: opacity 0.12s;
+  }
+  .slot:hover .shape-wrap { opacity: 0.6; }
+
+  .slot .s-name {
+    font-size: 9px; font-weight: 500;
+    color: var(--text-1);
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-top: 4px;
+  }
+  .slot .s-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--text-1);
+    margin-top: 1px;
+  }
+
+  /* ── CSS SHAPES ── */
+  .sh { position: relative; }
+  .sh-rifle { width: 44px; height: 12px; background: var(--text-2); border-radius: 1px; }
+  .sh-rifle::before {
+    content:''; position: absolute; right: 4px; top: -6px;
+    width: 6px; height: 20px; background: var(--text-2); border-radius: 1px;
+    transform: rotate(-14deg);
+  }
+  .sh-pistol { width: 22px; height: 16px; background: var(--text-2); border-radius: 2px; }
+  .sh-pistol::after {
+    content:''; position: absolute; bottom: -8px; right: 3px;
+    width: 10px; height: 10px; background: var(--text-2); border-radius: 1px;
+    transform: rotate(-6deg);
+  }
+  .sh-ammo-box { width: 32px; height: 22px; background: var(--text-2); border-radius: 2px; }
+  .sh-ammo-box::before {
+    content:''; position: absolute; top: 6px; left: 4px; right: 4px;
+    height: 2px; background: var(--bg-3);
+  }
+  .sh-ammo-box::after {
+    content:''; position: absolute; top: 12px; left: 4px; right: 4px;
+    height: 2px; background: var(--bg-3);
+  }
+  .sh-bullet { width: 8px; height: 22px; background: var(--text-2); border-radius: 3px 3px 1px 1px; }
+  .sh-bullet::after {
+    content:''; position: absolute; top: -3px; left: 50%; transform: translateX(-50%);
+    width: 5px; height: 5px; background: var(--text-2); border-radius: 50%;
+  }
+  .sh-medkit {
+    width: 26px; height: 26px; position: relative;
+  }
+  .sh-medkit::before {
+    content:''; position: absolute; top: 50%; left: 0; transform: translateY(-50%);
+    width: 100%; height: 8px; background: var(--text-2); border-radius: 1px;
+  }
+  .sh-medkit::after {
+    content:''; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 8px; height: 100%; background: var(--text-2); border-radius: 1px;
+  }
+  .sh-syringe { width: 6px; height: 28px; background: var(--text-2); border-radius: 1px; }
+  .sh-syringe::before {
+    content:''; position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 5px; background: var(--text-2); border-radius: 1px;
+  }
+  .sh-syringe::after {
+    content:''; position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
+    width: 2px; height: 5px; background: var(--text-2);
+  }
+  .sh-pill { width: 28px; height: 12px; background: var(--text-2); border-radius: 10px; overflow: hidden; }
+  .sh-pill::after {
+    content:''; position: absolute; right: 0; top: 0;
+    width: 50%; height: 100%; background: var(--text-3);
+  }
+  .sh-scope { width: 34px; height: 8px; background: var(--text-2); border-radius: 1px; }
+  .sh-scope::before {
+    content:''; position: absolute; left: -6px; top: 50%; transform: translateY(-50%);
+    width: 10px; height: 16px; border: 2px solid var(--text-2); border-radius: 50%;
+  }
+  .sh-suppressor { width: 36px; height: 10px; background: var(--text-2); border-radius: 6px; }
+  .sh-suppressor::after {
+    content:''; position: absolute; right: -3px; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 7px; background: var(--text-3); border-radius: 1px;
+  }
+  .sh-armor-plate { width: 24px; height: 28px; background: var(--text-2); border-radius: 3px; }
+  .sh-armor-plate::after {
+    content:''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border: 1.5px solid var(--bg-3); border-radius: 2px;
+  }
+  .sh-grenade { width: 14px; height: 22px; background: var(--text-2); border-radius: 4px 4px 6px 6px; }
+  .sh-grenade::before {
+    content:''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 6px; background: var(--text-2); border-radius: 2px 2px 0 0;
+  }
+  .sh-gas-mask {
+    width: 24px; height: 26px; border: 2px solid var(--text-2); border-radius: 50%;
+    position: relative;
+  }
+  .sh-gas-mask::after {
+    content:''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 8px; background: var(--text-2); border-radius: 0 0 4px 4px;
+  }
+  .sh-chest-rig {
+    width: 28px; height: 24px; background: var(--text-2); border-radius: 2px;
+    position: relative;
+  }
+  .sh-chest-rig::before {
+    content:''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 6px; background: var(--bg-3); border-radius: 0 0 3px 3px;
+  }
+  .sh-backpack-item {
+    width: 22px; height: 28px; background: var(--text-2); border-radius: 5px 5px 2px 2px;
+  }
+  .sh-backpack-item::before {
+    content:''; position: absolute; top: -3px; left: 5px; right: 5px;
+    height: 5px; border: 2px solid var(--text-2); border-bottom: 0; border-radius: 3px 3px 0 0;
+  }
+  .sh-bar { width: 36px; height: 18px; background: var(--text-2); border-radius: 1px;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.15); }
+  .sh-gear {
+    width: 20px; height: 20px; border: 3px solid var(--text-2); border-radius: 50%;
+  }
+  .sh-key { width: 8px; height: 22px; background: var(--text-2); border-radius: 4px 4px 0 0; }
+  .sh-key::after {
+    content:''; position: absolute; bottom: -3px; left: -4px;
+    width: 16px; height: 4px; background: var(--text-2); border-radius: 1px;
+  }
+  .sh-tape { width: 22px; height: 22px; border: 4px solid var(--text-2); border-radius: 50%; }
+  .sh-toolbox {
+    width: 30px; height: 20px; background: var(--text-2); border-radius: 2px;
+    position: relative;
+  }
+  .sh-toolbox::before {
+    content:''; position: absolute; top: -4px; left: 8px; right: 8px;
+    height: 5px; border: 2px solid var(--text-2); border-bottom: 0; border-radius: 3px 3px 0 0;
+  }
+  .sh-water {
+    width: 16px; height: 26px; background: var(--text-2);
+    border-radius: 0 0 6px 6px;
+    position: relative;
+  }
+  .sh-water::before {
+    content:''; position: absolute; top: -4px; left: 3px; right: 3px;
+    height: 6px; background: var(--text-2); border-radius: 2px;
+  }
+  .sh-snack {
+    width: 28px; height: 16px; background: var(--text-2); border-radius: 3px;
+  }
+
+
+
+  /* ── QUICK ACCESS BAR ── */
+  .quickbar-wrap {
+    position: fixed;
+    left: 50%;
+    bottom: 56px;
+    transform: translateX(-50%);
+    z-index: 20;
+    pointer-events: none;
+  }
+  .quickbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    pointer-events: auto;
+    position: relative;
+  }
+  .quickbar::after {
+    content: none;
+  }
+  .quick-slot {
+    width: 78px;
+    height: 78px;
+    background: rgba(20,25,35,0.92);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.18s, transform 0.18s, background 0.18s, box-shadow 0.18s;
+  }
+  .quick-slot:hover {
+    border-color: rgba(100,180,255,0.6);
+    transform: translateY(-2px);
+  }
+  .quick-slot.active {
+    border-width: 2px;
+    border-color: #4da3ff;
+    box-shadow: 0 0 12px rgba(77,163,255,0.38);
+  }
+  .quick-slot .shape-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    opacity: 0.65;
+    transform: scale(1.18);
+    transform-origin: center;
+  }
+  .quick-slot .s-name {
+    font-size: 8px;
+    font-weight: 500;
+    color: var(--text-1);
+    text-align: center;
+    line-height: 1.12;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-top: 3px;
+  }
+  .quick-slot .q-key {
+    position: absolute;
+    right: 6px;
+    bottom: 5px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: rgba(8,10,16,0.72);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 14px;
+    color: rgba(255,255,255,0.65);
+    text-align: center;
+  }
+  .quick-slot .q-count-badge {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-0);
+    background: rgba(8,10,16,0.76);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  .quick-slot.r-common { border-color: var(--r-common); box-shadow: inset 0 0 0 1px rgba(85,96,120,0.25); }
+  .quick-slot.r-uncommon { border-color: var(--r-uncommon); box-shadow: inset 0 0 0 1px rgba(58,154,85,0.24), 0 0 12px rgba(58,154,85,0.08); }
+  .quick-slot.r-rare { border-color: var(--r-rare); box-shadow: inset 0 0 0 1px rgba(74,124,255,0.24), 0 0 12px rgba(74,124,255,0.1); }
+  .quick-slot.r-epic { border-color: var(--r-epic); box-shadow: inset 0 0 0 1px rgba(136,80,216,0.26), 0 0 14px rgba(136,80,216,0.1); }
+  .quick-slot.r-legendary { border-color: var(--r-legendary); box-shadow: inset 0 0 0 1px rgba(204,138,46,0.28), 0 0 14px rgba(204,138,46,0.1); }
+  .quick-slot.r-mythic { border-color: var(--r-mythic); box-shadow: inset 0 0 0 1px rgba(204,53,53,0.28), 0 0 14px rgba(204,53,53,0.1); }
+
+  /* ── HOTKEY BAR ── */
+  .hotbar {
+    display: flex; align-items: center;
+    gap: 24px; padding: 10px 24px; height: 42px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(12,15,23,0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    flex-shrink: 0;
+    justify-content: flex-end;
+  }
+  .hk { display: flex; align-items: center; gap: 6px; }
+  .hk kbd {
+    background: var(--bg-3); border: 1px solid var(--border-1);
+    padding: 3px 10px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-0); font-weight: 500;
+  }
+  .hk span {
+    font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-1);
+  }
+
+  /* ── TOOLTIP ── */
+  .tip {
+    display:none;
+    position:fixed;
+    width: 356px;
+    background:
+      linear-gradient(180deg, rgba(18,23,34,0.96), rgba(12,16,25,0.94)),
+      rgba(12,16,25,0.94);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px 18px 14px;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 18px 44px rgba(0,0,0,0.52), inset 0 0 0 1px rgba(255,255,255,0.02);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .tip.show { display:block; }
+  .tip-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .tip-title-wrap {
+    min-width: 0;
+  }
+  .tip-n {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 4px;
+  }
+  .tip-r {
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .tip-d {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .tip-visual {
+    width: 124px;
+    min-width: 124px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+  }
+  .tip-visual .item-icon {
+    width: 110px;
+    height: 54px;
+  }
+  .tip-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 0 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .tip-stat {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .tip-stat-label {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .tip-stat-track {
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.08);
+  }
+  .tip-stat-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(123,196,120,0.75), rgba(187,225,146,0.95));
+  }
+  .tip-stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #f2f4f8;
+  }
+  .tip-desc {
+    padding: 12px 0 10px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-1);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .tip-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .tip-perk {
+    font-size: 13px;
+    color: var(--text-1);
+  }
+  .tip-perk strong {
+    margin-right: 6px;
+  }
+  .tip-perk.pos strong { color: #63d98f; }
+  .tip-perk.neg strong { color: #ff7d6d; }
+  .tip-quote {
+    padding: 10px 0 12px;
+    font-size: 12px;
+    font-style: italic;
+    color: rgba(255,255,255,0.68);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .tip-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #f5f7fb;
+  }
+  .tip-meta span small {
+    color: var(--text-3);
+    letter-spacing: 1px;
+    margin-left: 4px;
+  }
+
+  ::-webkit-scrollbar { width:3px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border-1); border-radius:2px; }
+
+  /* ── ICON IMAGES / DND ── */
+  .shape-wrap { opacity: 1 !important; }
+  .item-icon {
+    width: 54px;
+    height: 54px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.35));
+  }
+  .equip-icon {
+    width: 88px;
+    height: 50px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+  }
+  .slot.dragging,
+  .quick-slot.dragging {
+    opacity: 0.45;
+  }
+  .slot.drop-target,
+  .quick-slot.drop-target {
+    border-color: rgba(255,255,255,0.28) !important;
+    background: rgba(255,255,255,0.06);
+  }
+  .drag-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 83px;
+    height: 83px;
+    z-index: 1000;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    opacity: 0.94;
+  }
+  .drag-ghost.quick-slot {
+    width: 78px;
+    height: 78px;
+  }
+  .quick-slot {
+    border-color: rgba(255,255,255,0.14) !important;
+    box-shadow: none !important;
+  }
+  .quick-slot.active {
+    border-color: rgba(255,255,255,0.3) !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 18px rgba(0,0,0,0.28) !important;
+  }
+  .quick-slot .shape-wrap {
+    opacity: 1 !important;
+  }
+  .quick-slot .item-icon {
+    width: 58px;
+    height: 58px;
+  }
+  .quick-slot.empty-slot {
+    justify-content: center;
+    align-items: center;
+  }
+  .quick-slot.empty-slot .q-key {
+    top: 7px;
+    left: 8px;
+    right: auto;
+    bottom: auto;
+    background: rgba(255,255,255,0.05);
+  }
+  .quick-slot-placeholder {
+    width: 30px;
+    height: 30px;
+    border: 1px dashed rgba(255,255,255,0.16);
+    border-radius: 8px;
+    opacity: 0.5;
+  }
+
+  .loot-panel-body {
+    flex: 1;
+    padding: 12px 8px 12px 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .loot-panel-body:focus {
+    outline: none;
+  }
+  .loot-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 8px;
+    min-height: min-content;
+  }
+  .loot-section {
+    background: rgba(10,13,20,0.62);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .loot-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .loot-section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+  .loot-title-main {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 2.8px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+  .loot-title-main.bot-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 19px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .loot-section-body {
+    padding: 12px 10px 10px 14px;
+  }
+  .loot-section-body .item-grid {
+    gap: 10px;
+  }
+  .loot-section.revealed .loot-section-body {
+    animation: lootBodyReveal 180ms ease-out;
+  }
+  .loot-closed {
+    min-height: 126px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-radius: 6px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(22,27,40,0.82), rgba(14,18,28,0.72));
+  }
+  .loot-closed-side {
+    position: relative;
+    min-height: 112px;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(74,124,255,0.08), transparent 60%),
+      rgba(18,23,35,0.76);
+  }
+  .loot-closed-side::after {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    filter: blur(10px);
+  }
+  .loot-open-btn {
+    border: 0;
+    background: rgba(20,24,37,0.94);
+    color: #f5f2ea;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 28px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .loot-open-btn:hover {
+    background: rgba(29,35,52,0.96);
+  }
+  .slot.slot-enter {
+    opacity: 0;
+    transform: translateY(12px) scale(0.92);
+    animation: slotEnter 1000ms ease-out forwards;
+  }
+
+  @keyframes slotEnter {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes lootBodyReveal {
+    from {
+      opacity: 0.7;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="main">
+  <!-- ═══ LEFT: PLAYER ═══ -->
+  <div class="panel">
+    <div class="panel-body">
+      <!-- EQUIPMENT -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="sec-label" style="margin-bottom:0">Equipment</div>
+        <button id="equipToggleBtn" type="button">Toggle Empty</button>
+      </div>
+      <div id="equipRows"></div>
+
+      <!-- BACKPACK CONTENTS -->
+      <div class="bp-section">
+        <div class="bp-header">
+          <div class="bp-label-row">
+            <div class="sec-label" style="margin-bottom:0">Backpack</div>
+            <div class="bp-slot">
+              <div class="esh esh-backpack" style="width:20px;height:24px;"></div>
+              <span class="bp-slot-name">Assault Pack</span>
+            </div>
+          </div>
+          <div class="bp-weight">
+            <span class="val">36.6</span><span class="dim">/67 kg</span>
+            <div class="bp-weight-bar"><div class="bp-weight-fill" style="width:55%"></div></div>
+          </div>
+        </div>
+        <div class="bp-grid-wrap">
+          <div class="item-grid" id="bpGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: WAREHOUSE ═══ -->
+  <div class="panel loot-panel" id="lootPanel" hidden>
+    <div class="panel-body loot-panel-body" tabindex="-1">
+      <div class="loot-stack" id="lootStack"></div>
+    </div>
+  </div>
+  <button type="button" class="world-bot-trigger" id="worldBotTrigger" aria-label="Open loot panel"></button>
+</div>
+
+
+<!-- QUICK ACCESS BAR -->
+<div class="quickbar-wrap">
+  <div class="quickbar" id="quickBar"></div>
+</div>
+
+<!-- HOTKEY BAR -->
+<div class="hotbar">
+  <div class="hk"><kbd>SHIFT</kbd><span>Quick Move</span></div>
+  <div class="hk"><kbd>CTRL</kbd><span>Split Stack</span></div>
+  <div class="hk"><kbd>ESC</kbd><span>Close</span></div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tip" id="tip">
+  <div class="tip-head">
+    <div class="tip-title-wrap">
+      <div class="tip-n" id="tipN"></div>
+      <div class="tip-r" id="tipR"></div>
+      <div class="tip-d" id="tipD"></div>
+    </div>
+    <div class="tip-visual" id="tipVisual"></div>
+  </div>
+  <div class="tip-stats" id="tipStats"></div>
+  <div class="tip-desc" id="tipDesc"></div>
+  <div class="tip-perks" id="tipPerks"></div>
+  <div class="tip-quote" id="tipQuote"></div>
+  <div class="tip-meta" id="tipMeta"></div>
+</div>
+
+
+<script>
+const ITEMDB = {
+  rifleAmmo:   { id:'rifleAmmo', n:'Rifle Ammo',   s:'sh-ammo-box', img:null, r:'common',   t:'AMMO', count:49, desc:'Standard boxed rifle rounds for mid-range engagements.', perks:[['+2%','Stable Feed'],['-1%','Weight']], quote:'Packed for reliability.', meta:{ weight:'1.1', value:'540' }, stats:[['Damage',52],['Pen',48],['Control',72]] },
+  medkit:      { id:'medkit',    n:'Medkit',       s:null, img:'ui_icons/medkit.png', r:'uncommon', t:'MED',  count:1, desc:'Field trauma kit with clotting gauze and pain suppression.', perks:[['+5%','Healing Speed'],['+3%','Limb Recovery'],['-2%','Use Time']], quote:'Keep pressure, keep moving.', meta:{ weight:'1.6', value:'1320' }, stats:[['Healing',88],['Speed',61],['Efficiency',79]] },
+  toolbox:     { id:'toolbox',   n:'Toolbox',      s:'sh-toolbox',  img:null, r:'common',   t:'MAT',  count:1, dur:58, desc:'Compact tool case for field repairs and utility tasks.', perks:[['+4%','Repair Speed'],['+2%','Utility'],['-3%','Carry Space']], quote:'A fix is faster than a replacement.', meta:{ weight:'2.4', value:'860' }, stats:[['Repair',74],['Utility',68],['Bulk',42]] },
+  bandage:     { id:'bandage',   n:'Bandage',      s:null, img:'ui_icons/bandage_strip.png', r:'common', t:'MED', count:7, desc:'Compressed sterile cloth for fast bleeding control.', perks:[['+4%','Bleed Stop'],['+1%','Stack Size'],['-1%','Durability']], quote:'Simple, fast, enough.', meta:{ weight:'0.3', value:'190' }, stats:[['Heal',34],['Speed',82],['Efficiency',46]] },
+  water:       { id:'water',     n:'Water',        s:'sh-water',    img:null, r:'common',   t:'CONS', count:2, desc:'Filtered bottle for hydration during extended raids.', perks:[['+3%','Hydration'],['+1%','Recovery'],['-1%','Space']], quote:'Hydrated operators survive longer.', meta:{ weight:'0.8', value:'120' }, stats:[['Hydrate',70],['Recovery',38],['Value',22]] },
+  apBullet:    { id:'apBullet',  n:'AP Bullet',    s:'sh-bullet',   img:null, r:'rare',     t:'AMMO', count:82, desc:'Armor-piercing rounds built to punch through reinforced protection.', perks:[['+6%','Penetration'],['+2%','Damage'],['-4%','Control']], quote:'Through cover if needed.', meta:{ weight:'1.9', value:'1480' }, stats:[['Damage',69],['Pen',91],['Control',44]] },
+  rdot:        { id:'rdot',      n:'R.DOT',        s:'sh-scope',    img:null, r:'uncommon', t:'MOD',  dur:100, desc:'Low-profile red dot for rapid target acquisition.', perks:[['+5%','ADS Speed'],['+3%','Ergo'],['-2%','Range']], quote:'Point fast, finish faster.', meta:{ weight:'0.4', value:'980' }, stats:[['Precision',62],['Handling',84],['Range',38]] },
+  laser:       { id:'laser',     n:'Laser (Mod)',  s:'sh-scope',    img:null, r:'epic',     t:'MOD',  dur:73, desc:'Visible laser module for aggressive close-quarters tracking.', perks:[['+7%','Hip Fire'],['+4%','Target Track'],['-5%','Stealth']], quote:'Seen once, felt immediately.', meta:{ weight:'0.5', value:'1760' }, stats:[['Tracking',82],['Control',71],['Stealth',23]] },
+  grenade:     { id:'grenade',   n:'Grenade',      s:'sh-grenade',  img:null, r:'rare',     t:'GEAR', count:2, desc:'Fragmentation grenade for room clearing and forced repositioning.', perks:[['+8%','Blast'],['+2%','Suppression'],['-6%','Safety']], quote:'Commit before the throw.', meta:{ weight:'0.7', value:'930' }, stats:[['Damage',87],['Radius',63],['Control',28]] },
+  firstAid:    { id:'firstAid',  n:'First Aid',    s:null, img:'ui_icons/syringe.png', r:'uncommon', t:'MED', count:3, desc:'Fast injectable support for emergency stabilization.', perks:[['+5%','Recovery'],['+2%','Use Speed'],['-3%','Duration']], quote:'Fast hands save fights.', meta:{ weight:'0.5', value:'760' }, stats:[['Heal',58],['Speed',86],['Efficiency',57]] },
+  ammo9:       { id:'ammo9',     n:'9mm',          s:'sh-bullet',   img:null, r:'common',   t:'AMMO', count:40, desc:'Light pistol rounds for sidearms and compact SMGs.', perks:[['+1%','Handling'],['+2%','Stack'],['-2%','Penetration']], quote:'Cheap, common, dependable.', meta:{ weight:'0.9', value:'300' }, stats:[['Damage',37],['Pen',22],['Control',78]] },
+  ammo45:      { id:'ammo45',    n:'.45 ACP',      s:'sh-bullet',   img:null, r:'uncommon', t:'AMMO', count:14, desc:'Heavy handgun cartridge with strong stopping power at short range.', perks:[['+4%','Impact'],['+2%','Stagger'],['-3%','Velocity']], quote:'Slow enough to matter, hard enough to count.', meta:{ weight:'0.8', value:'420' }, stats:[['Damage',55],['Pen',28],['Control',61]] },
+  shotgun:     { id:'shotgun',   n:'Pump Shotgun', s:null, img:'ui_icons/shotgun.png', r:'common',   t:'WEAP', desc:'Manual-action shotgun built for short brutal fights.', perks:[['+6%','Close Damage'],['+2%','Reliability'],['-5%','Fire Rate']], quote:'One corridor, one answer.', meta:{ weight:'4.8', value:'2100' }, stats:[['Damage',92],['Fire Rate',34],['Ergo',41]] },
+  dblShotgun:  { id:'dblShotgun',n:'Double Barrel',s:null, img:'ui_icons/doublebarrel.png', r:'common', t:'WEAP', desc:'Break-action shotgun with devastating burst potential.', perks:[['+8%','Burst'],['+1%','Handling'],['-7%','Capacity']], quote:'Two shots. No excuses.', meta:{ weight:'4.2', value:'1800' }, stats:[['Damage',95],['Fire Rate',46],['Ergo',39]] },
+  knife:       { id:'knife',     n:'Knife',        s:null, img:'ui_icons/knife.png', r:'common', t:'WEAP', desc:'Light combat blade for silent finishing and last-resort defense.', perks:[['+4%','Mobility'],['+2%','Stealth'],['-2%','Reach']], quote:'Quiet work, close work.', meta:{ weight:'0.6', value:'540' }, stats:[['Damage',41],['Speed',89],['Ergo',84]] },
+  bat:         { id:'bat',       n:'Bat',          s:null, img:'ui_icons/bat.png', r:'common', t:'WEAP', desc:'Improvised melee weapon with decent reach and impact.', perks:[['+3%','Stagger'],['+2%','Durability'],['-4%','Speed']], quote:'Crude, but convincing.', meta:{ weight:'2.1', value:'260' }, stats:[['Damage',48],['Speed',52],['Ergo',44]] },
+};
+
+const state = {
+  backpack: [
+    clone('apBullet'), clone('rdot'), clone('laser'), clone('medkit'), clone('bandage'), clone('grenade'),
+    clone('ammo9'), clone('ammo45'), clone('water'), clone('firstAid'), clone('rifleAmmo'), clone('toolbox'),
+    clone('bandage'), clone('water'), clone('medkit'), clone('grenade'), clone('ammo9'), clone('apBullet'),
+    clone('rdot'), clone('laser'), clone('firstAid'), clone('ammo45'), clone('toolbox'), clone('rifleAmmo'),
+    clone('water'), clone('bandage'), clone('medkit'), clone('grenade'), clone('ammo9'), clone('firstAid'),
+    clone('apBullet'), clone('rdot'), clone('laser'), clone('ammo45'), null, null,
+    null, null, null, null, null, null
+  ],
+  container: [
+    clone('rifleAmmo'), clone('medkit'), clone('toolbox'),
+    clone('bandage'), clone('water'), null, null, null
+  ],
+  bot01: [
+    clone('rifleAmmo'), clone('toolbox'), clone('medkit'),
+    clone('bandage'), clone('water'), null, null, null
+  ],
+  bot02: [
+    clone('ammo45'), clone('grenade'), clone('firstAid'),
+    clone('water'), null, null, null, null
+  ],
+  sealedContainer: [
+    clone('water'), clone('rdot'), clone('laser'),
+    clone('medkit'), clone('bandage'), clone('toolbox'),
+    null, null
+  ],
+  quickbar: [
+    clone('apBullet'), clone('rdot'), clone('laser'), clone('medkit'), clone('bandage'), clone('grenade')
+  ]
+};
+
+const GRID_SIZES = {
+  backpack: 42,
+  container: 8,
+  bot01: 8,
+  bot02: 8,
+  sealedContainer: 8,
+  quickbar: 6
+};
+
+const LOOT_SECTIONS = [
+  { key:'container', title:'Container', kind:'open', titleClass:'' },
+  { key:'bot01', title:'Bot01', kind:'open', titleClass:'bot-title' },
+  { key:'sealedContainer', title:'Container', kind:'closed', titleClass:'' },
+  { key:'bot02', title:'Bot02', kind:'open', titleClass:'bot-title' }
+];
+
+const dragState = {
+  active: null,
+  ghost: null,
+  hoverEl: null,
+  pointerId: null
+};
+
+const uiState = {
+  openedSections: new Set(),
+  pendingRevealSection: null,
+  lootPanelOpen: false
+};
+
+function clone(id){ return JSON.parse(JSON.stringify(ITEMDB[id])); }
+
+const RC = {
+  common:'var(--r-common)', uncommon:'var(--r-uncommon)', rare:'var(--r-rare)',
+  epic:'var(--r-epic)', legendary:'var(--r-legendary)', mythic:'var(--r-mythic)'
+};
+
+function iconMarkup(item){
+  if(item.img) return `<img class="item-icon" src="${item.img}" alt="${item.n}">`;
+  return `<div class="sh ${item.s}"></div>`;
+}
+
+function getQuickbarAssignments(){
+  const assignments = new Map();
+  state.quickbar.forEach((quickItem, quickIndex) => {
+    if(!quickItem?.id) return;
+    if(!assignments.has(quickItem.id)){
+      assignments.set(quickItem.id, quickIndex + 1);
+    }
+  });
+  return assignments;
+}
+
+function createSlot(item, opts = {}){
+  const d = document.createElement('div');
+  const { source, index } = opts;
+  if(!item){
+    const isQuick = source === 'quickbar';
+    d.className = isQuick ? 'quick-slot empty-slot' : 'slot empty';
+    d.dataset.source = source;
+    d.dataset.index = index;
+    if(isQuick){
+      d.innerHTML = `<div class="q-key">${index + 1}</div><div class="quick-slot-placeholder"></div>`;
+    }
+    wireDropTarget(d, source, index);
+    return d;
+  }
+
+  const isQuick = source === 'quickbar';
+  const quickAssignments = isQuick ? null : getQuickbarAssignments();
+  const assignedQuickIndex = isQuick ? null : quickAssignments.get(item.id);
+  d.className = isQuick ? `quick-slot r-${item.r}` : `slot r-${item.r}`;
+  if(isQuick && index === 2) d.classList.add('active');
+  if(assignedQuickIndex) d.classList.add('quick-assigned');
+  d.dataset.n = item.n;
+  d.dataset.r = item.r;
+  d.dataset.t = item.t;
+  d.dataset.source = source;
+  d.dataset.index = index;
+
+  if(isQuick){
+    d.innerHTML = `
+      <div class="q-key">${index + 1}</div>
+      <div class="shape-wrap">${iconMarkup(item)}</div>
+      <div class="s-name">${item.n}</div>
+      ${item.count ? `<div class="q-count-badge">x${item.count}</div>` : ''}
+    `;
+  } else {
+    const dur = item.dur != null ? item.dur : null;
+    const hpClass = dur != null ? (dur > 70 ? 'hp-full' : dur > 35 ? 'hp-mid' : 'hp-low') : '';
+    d.innerHTML = `
+      ${assignedQuickIndex ? `<div class="slot-quick-corner"></div><div class="slot-quick-badge">${assignedQuickIndex}</div>` : ''}
+      <div class="shape-wrap">${iconMarkup(item)}</div>
+      <div class="s-name">${item.n}</div>
+      ${item.count ? `<div class="s-count">x${item.count}</div>` : ''}
+      ${dur != null ? `<div class="s-dur"><div class="s-dur-fill ${hpClass}" style="width:${dur}%"></div></div>` : ''}
+    `;
+  }
+
+  d.addEventListener('mouseenter', tipIn);
+  d.addEventListener('mouseleave', tipOut);
+  d.addEventListener('click', () => d.classList.toggle('selected'));
+  d.addEventListener('pointerdown', onPointerDown);
+
+  wireDropTarget(d, source, index);
+  return d;
+}
+
+function wireDropTarget(el, source, index){
+  if(!GRID_SIZES[source]) return;
+}
+
+function onPointerDown(e){
+  if(e.button !== 0) return;
+  const s = e.currentTarget;
+  dragState.active = {
+    source: s.dataset.source,
+    index: Number(s.dataset.index),
+    startX: e.clientX,
+    startY: e.clientY,
+    el: s
+  };
+  dragState.pointerId = e.pointerId;
+  s.setPointerCapture?.(e.pointerId);
+}
+
+function beginDrag(clientX, clientY){
+  const active = dragState.active;
+  if(!active || dragState.ghost) return;
+  active.el.classList.add('dragging');
+  tipOut();
+  const ghost = active.el.cloneNode(true);
+  ghost.classList.remove('dragging', 'drop-target', 'selected', 'active');
+  ghost.classList.add('drag-ghost');
+  document.body.appendChild(ghost);
+  dragState.ghost = ghost;
+  updateGhostPosition(clientX, clientY);
+}
+
+function updateGhostPosition(clientX, clientY){
+  if(!dragState.ghost) return;
+  dragState.ghost.style.left = `${clientX}px`;
+  dragState.ghost.style.top = `${clientY}px`;
+}
+
+function clearHoverTarget(){
+  if(dragState.hoverEl){
+    dragState.hoverEl.classList.remove('drop-target');
+    dragState.hoverEl = null;
+  }
+}
+
+function findDropTarget(clientX, clientY){
+  const el = document.elementFromPoint(clientX, clientY);
+  if(!el) return null;
+  const slot = el.closest('.slot, .quick-slot');
+  if(!slot) return null;
+  const source = slot.dataset.source;
+  if(!GRID_SIZES[source]) return null;
+  return slot;
+}
+
+function finishDrag(clientX, clientY){
+  const active = dragState.active;
+  if(!active) return;
+
+  if(dragState.ghost){
+    const target = findDropTarget(clientX, clientY);
+    if(target){
+      moveItem(
+        active.source,
+        active.index,
+        target.dataset.source,
+        Number(target.dataset.index)
+      );
+    }
+  }
+
+  clearDrag();
+}
+
+function clearDrag(){
+  clearHoverTarget();
+  if(dragState.ghost){
+    dragState.ghost.remove();
+    dragState.ghost = null;
+  }
+  if(dragState.active?.el){
+    dragState.active.el.classList.remove('dragging');
+  }
+  dragState.active = null;
+  dragState.pointerId = null;
+}
+
+function moveItem(fromSource, fromIndex, toSource, toIndex){
+  const fromArr = state[fromSource];
+  const toArr = state[toSource];
+  if(!fromArr || !toArr) return;
+  if(fromSource === toSource && fromIndex === toIndex) return;
+  const item = fromArr[fromIndex];
+  if(!item) return;
+
+  const existing = toArr[toIndex];
+  toArr[toIndex] = item;
+  fromArr[fromIndex] = existing || null;
+  renderAll();
+}
+
+function sectionCount(key){
+  const total = GRID_SIZES[key] || 0;
+  const used = (state[key] || []).filter(Boolean).length;
+  return `(${used}/${total})`;
+}
+
+function createSortButton(){
+  const btn = document.createElement('button');
+  btn.className = 'sort-btn';
+  btn.type = 'button';
+  btn.innerHTML = '&#x2630; Sort';
+  return btn;
+}
+
+function revealSectionSlots(sectionKey){
+  const grid = document.getElementById(`${sectionKey}Grid`);
+  if(!grid) return;
+  const slots = Array.from(grid.children);
+  slots.forEach((slot, idx) => {
+    slot.classList.add('slot-enter');
+    slot.style.animationDelay = `${idx * 1000}ms`;
+  });
+  const sectionEl = grid.closest('.loot-section');
+  sectionEl?.classList.add('revealed');
+}
+
+function openLootSection(sectionKey){
+  if(uiState.openedSections.has(sectionKey)) return;
+  uiState.openedSections.add(sectionKey);
+  uiState.pendingRevealSection = sectionKey;
+  renderAll();
+}
+
+function syncLootPanelVisibility(){
+  document.body.classList.toggle('loot-panel-open', uiState.lootPanelOpen);
+  const panel = document.getElementById('lootPanel');
+  const panelBody = document.querySelector('.loot-panel-body');
+  if(panel){
+    panel.hidden = !uiState.lootPanelOpen;
+    panel.style.display = uiState.lootPanelOpen ? 'flex' : 'none';
+  }
+  if(uiState.lootPanelOpen){
+    panelBody?.focus?.();
+  } else {
+    panelBody?.blur?.();
+  }
+}
+
+function openLootPanel(){
+  if(uiState.lootPanelOpen) return;
+  uiState.lootPanelOpen = true;
+  syncLootPanelVisibility();
+}
+
+function closeLootPanel(){
+  if(!uiState.lootPanelOpen) return;
+  uiState.lootPanelOpen = false;
+  syncLootPanelVisibility();
+}
+
+function toggleLootPanel(forceOpen){
+  if(forceOpen === true) return openLootPanel();
+  if(forceOpen === false) return closeLootPanel();
+  uiState.lootPanelOpen ? closeLootPanel() : openLootPanel();
+}
+
+function renderLootStack(){
+  const stack = document.getElementById('lootStack');
+  stack.innerHTML = '';
+
+  LOOT_SECTIONS.forEach((section) => {
+    const wrapper = document.createElement('section');
+    wrapper.className = 'loot-section';
+    if(uiState.openedSections.has(section.key)) wrapper.classList.add('revealed');
+    const isOpened = section.kind === 'closed' && uiState.openedSections.has(section.key);
+
+    const header = document.createElement('div');
+    header.className = 'loot-section-header';
+
+    const titleWrap = document.createElement('div');
+    titleWrap.className = 'loot-section-title';
+    titleWrap.innerHTML = `
+      <span class="loot-title-main ${section.titleClass || ''}">${section.title}</span>
+      ${(section.kind === 'open' || isOpened) ? `<span class="panel-count">${sectionCount(section.key)}</span>` : ''}
+    `;
+
+    header.appendChild(titleWrap);
+    header.appendChild(createSortButton());
+    wrapper.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'loot-section-body';
+    if(section.kind === 'closed' && !isOpened){
+      body.innerHTML = `
+        <div class="loot-closed">
+          <div class="loot-closed-side"></div>
+          <button type="button" class="loot-open-btn">Open</button>
+          <div class="loot-closed-side"></div>
+        </div>
+      `;
+      body.querySelector('.loot-open-btn')?.addEventListener('click', () => openLootSection(section.key));
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'item-grid compact';
+      grid.id = `${section.key}Grid`;
+      body.appendChild(grid);
+    }
+
+    wrapper.appendChild(body);
+    stack.appendChild(wrapper);
+  });
+
+  LOOT_SECTIONS
+    .filter(section => section.kind === 'open' || uiState.openedSections.has(section.key))
+    .forEach(section => {
+      renderGrid(
+        document.getElementById(`${section.key}Grid`),
+        state[section.key],
+        section.key,
+        GRID_SIZES[section.key]
+      );
+    });
+
+  if(uiState.pendingRevealSection){
+    const sectionKey = uiState.pendingRevealSection;
+    uiState.pendingRevealSection = null;
+    requestAnimationFrame(() => {
+      revealSectionSlots(sectionKey);
+      document.getElementById(`${sectionKey}Grid`)?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    });
+  }
+}
+
+document.addEventListener('pointermove', (e) => {
+  const active = dragState.active;
+  if(!active) return;
+
+  const dx = e.clientX - active.startX;
+  const dy = e.clientY - active.startY;
+  if(!dragState.ghost && Math.hypot(dx, dy) < 6) return;
+
+  if(!dragState.ghost) beginDrag(e.clientX, e.clientY);
+  updateGhostPosition(e.clientX, e.clientY);
+
+  const target = findDropTarget(e.clientX, e.clientY);
+  if(target !== dragState.hoverEl){
+    clearHoverTarget();
+    if(target){
+      target.classList.add('drop-target');
+      dragState.hoverEl = target;
+    }
+  }
+});
+
+document.addEventListener('pointerup', (e) => {
+  if(!dragState.active) return;
+  finishDrag(e.clientX, e.clientY);
+});
+
+document.addEventListener('pointercancel', () => {
+  if(!dragState.active) return;
+  clearDrag();
+});
+
+function renderGrid(el, arr, source, totalSize = arr.length){
+  el.innerHTML = '';
+  for(let i = 0; i < totalSize; i++){
+    el.appendChild(createSlot(arr[i] || null, { source, index:i }));
+  }
+}
+
+function renderAll(){
+  renderGrid(document.getElementById('bpGrid'), state.backpack, 'backpack', GRID_SIZES.backpack);
+  renderLootStack();
+  renderGrid(document.getElementById('quickBar'), state.quickbar, 'quickbar', GRID_SIZES.quickbar);
+}
+
+// Tooltip
+const tip=document.getElementById('tip'),
+  tipR=document.getElementById('tipR'),
+  tipN=document.getElementById('tipN'),
+  tipD=document.getElementById('tipD'),
+  tipVisual=document.getElementById('tipVisual'),
+  tipStats=document.getElementById('tipStats'),
+  tipDesc=document.getElementById('tipDesc'),
+  tipPerks=document.getElementById('tipPerks'),
+  tipQuote=document.getElementById('tipQuote'),
+  tipMeta=document.getElementById('tipMeta');
+function tipIn(e){
+  const s=e.currentTarget;
+  if(s.classList.contains('empty') || s.classList.contains('empty-slot')) return;
+  const source = s.dataset.source;
+  const index = Number(s.dataset.index);
+  const item = state[source]?.[index];
+  if(!item) return;
+  tipN.textContent=item.n;
+  tipR.textContent=(item.r || 'common').toUpperCase();
+  tipR.style.color=RC[item.r || 'common'];
+  tipD.textContent=item.t || '';
+  tipVisual.innerHTML = iconMarkup(item);
+  tipDesc.textContent = item.desc || 'Field item with standard raid utility.';
+  tipQuote.textContent = item.quote ? `"${item.quote}"` : '';
+  tipStats.innerHTML = (item.stats || []).map(([label, value]) => `
+    <div class="tip-stat">
+      <span class="tip-stat-label">${label}</span>
+      <div class="tip-stat-track"><div class="tip-stat-fill" style="width:${Math.max(6, Math.min(100, value))}%"></div></div>
+      <span class="tip-stat-value">${value}</span>
+    </div>
+  `).join('');
+  tipPerks.innerHTML = (item.perks || []).map(([value, text]) => {
+    const cls = String(value).trim().startsWith('-') ? 'neg' : 'pos';
+    return `<div class="tip-perk ${cls}"><strong>${value}</strong>${text}</div>`;
+  }).join('');
+  const durability = item.dur != null ? `${item.dur} / 100 <small>DURABILITY</small>` : `${item.count || 1} <small>STACK</small>`;
+  const weight = item.meta?.weight ? `${item.meta.weight} <small>KG</small>` : `0.8 <small>KG</small>`;
+  const value = item.meta?.value ? `${item.meta.value} <small>VALUE</small>` : `320 <small>VALUE</small>`;
+  tipMeta.innerHTML = `
+    <span>${durability}</span>
+    <span>${weight}</span>
+    <span>${value}</span>
+  `;
+  tip.classList.add('show');
+  tipPos(e);
+}
+function tipOut(){tip.classList.remove('show');}
+function tipPos(e){tip.style.left=(e.clientX+12)+'px';tip.style.top=(e.clientY+12)+'px';}
+document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))tipPos(e);});
+
+// ── EQUIPMENT RENDER ──────────────────────────────────────────
+const EQUIP_SLOTS = [
+  [
+    {
+      label: 'Helmet', shape: 'esh-helmet',
+      filled: () => `
+        <div class="ec-shape-wrap"><div class="esh esh-helmet"></div></div>
+        <div class="ec-name">M88 Ballistic</div>
+        <div class="ec-bar-row">
+          <div class="ec-bar-track"><div class="ec-bar-fill green" style="width:72%"></div></div>
+          <div class="ec-bar-val">65/90</div>
+        </div>`
+    },
+    {
+      label: 'Armor', shape: 'esh-armor',
+      filled: () => `
+        <div class="ec-shape-wrap"><div class="esh esh-armor"></div></div>
+        <div class="ec-name">Guardian Tactical</div>
+        <div class="ec-bar-row">
+          <div class="ec-bar-track"><div class="ec-bar-fill green" style="width:100%"></div></div>
+          <div class="ec-bar-val">128/128</div>
+        </div>`
+    }
+  ],
+  [
+    {
+      label: 'Primary', shape: 'esh-primary',
+      filled: () => `
+        <div class="ec-shape-wrap"><img class="equip-icon" src="ui_icons/rifle.png" alt=""></div>
+        <div class="ec-name">DT MDR-556</div>
+        <div class="ec-sub">5.56</div>
+        <div class="ec-ammo">
+          <div class="dot" style="background:var(--green)"></div>
+          <span>51/51</span>
+        </div>`
+    },
+    {
+      label: 'Sidearm', shape: 'esh-sidearm',
+      filled: () => `
+        <div class="ec-shape-wrap"><img class="equip-icon" src="ui_icons/knife.png" alt=""></div>
+        <div class="ec-name">Combat Knife</div>
+        <div class="ec-ammo">
+          <div class="dot" style="background:var(--accent)"></div>
+          <span>17/17</span>
+        </div>`
+    }
+  ]
+];
+
+let equipShowEmpty = false;
+
+function renderEquipSlot(slot, empty) {
+  const el = document.createElement('div');
+  if (empty) {
+    el.className = 'equip-card ec-empty';
+    el.innerHTML = `
+      <div class="ec-corner tl"></div>
+      <div class="ec-corner tr"></div>
+      <div class="ec-corner bl"></div>
+      <div class="ec-corner br"></div>
+      <div class="ec-label">${slot.label}</div>
+      <div class="ec-shape-wrap">
+        <div class="esh ${slot.shape} ec-empty-icon"></div>
+      </div>
+      <div class="ec-equip-hint">+ Equip</div>
+    `;
+  } else {
+    el.className = 'equip-card';
+    el.innerHTML = `<div class="ec-label">${slot.label}</div>${slot.filled()}`;
+  }
+  return el;
+}
+
+function renderEquipRows() {
+  const container = document.getElementById('equipRows');
+  container.innerHTML = '';
+  EQUIP_SLOTS.forEach(row => {
+    const grid = document.createElement('div');
+    grid.className = 'equip-grid';
+    row.forEach(slot => grid.appendChild(renderEquipSlot(slot, equipShowEmpty)));
+    container.appendChild(grid);
+  });
+}
+
+document.getElementById('equipToggleBtn').addEventListener('click', () => {
+  equipShowEmpty = !equipShowEmpty;
+  renderEquipRows();
+});
+
+renderEquipRows();
+
+renderAll();
+syncLootPanelVisibility();
+
+document.getElementById('worldBotTrigger')?.addEventListener('click', () => openLootPanel());
+const handleLootPanelHotkeys = (e) => {
+  const isTab =
+    e.key === 'Tab' ||
+    e.code === 'Tab' ||
+    e.keyCode === 9;
+  if(!isTab) return;
+  if(uiState.lootPanelOpen){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation?.();
+    closeLootPanel();
+  }
+};
+window.addEventListener('keydown', handleLootPanelHotkeys, true);
+window.addEventListener('keyup', handleLootPanelHotkeys, true);
+document.addEventListener('keydown', handleLootPanelHotkeys, true);
+document.addEventListener('keyup', handleLootPanelHotkeys, true);
+document.body?.addEventListener('keydown', handleLootPanelHotkeys, true);
+document.body?.addEventListener('keyup', handleLootPanelHotkeys, true);
+document.body.onkeydown = handleLootPanelHotkeys;
+document.body.onkeyup = handleLootPanelHotkeys;
+document.querySelector('.loot-panel-body')?.addEventListener('keydown', handleLootPanelHotkeys);
+document.querySelector('.loot-panel-body')?.addEventListener('keyup', handleLootPanelHotkeys);
+</script>
+
+</body>
+</html>
