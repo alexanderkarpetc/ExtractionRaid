@@ -114,6 +114,8 @@ namespace View.UI
                 floorContainer.BindFloor(_floorItems, _floorItemEIds);
                 _activeContainers.Add(floorContainer);
             }
+
+            _lootContainerParent.gameObject.SetActive(_activeContainers.Count > 0);
         }
 
         LootContainerView GetContainer()
@@ -235,6 +237,7 @@ namespace View.UI
                 {
                     DropToFloor(state, session, slot.SlotRef);
                     SyncArmorAfterTransfer();
+                    RefreshFloorContainer(state);
                     Refresh();
                 }
             }
@@ -258,8 +261,11 @@ namespace View.UI
                     if (free >= 0)
                     {
                         if (hitContainer.IsFloorContainer)
+                        {
                             TryPickUpFloorItem(state, session, hitContainer, hitSlot.SlotRef.Index,
                                 InventorySlotRef.BackpackSlot(free));
+                            RefreshFloorContainer(state);
+                        }
                         else
                             LootSystem.TryTransfer(hitContainer.BoundInventory, hitSlot.SlotRef,
                                 App.Instance.Player.Inventory, InventorySlotRef.BackpackSlot(free));
@@ -292,6 +298,7 @@ namespace View.UI
             var state = session.RaidState;
             var playerInv = App.Instance.Player.Inventory;
 
+            bool floorChanged = false;
             if (_dragSourceContainer == null)
             {
                 InventorySystem.TryMove(playerInv, _dragSource.SlotRef, target.SlotRef);
@@ -300,6 +307,7 @@ namespace View.UI
             {
                 TryPickUpFloorItem(state, session, _dragSourceContainer,
                     _dragSource.SlotRef.Index, target.SlotRef);
+                floorChanged = true;
             }
             else
             {
@@ -310,6 +318,7 @@ namespace View.UI
 
             SyncArmorAfterTransfer();
             CancelDrag();
+            if (floorChanged) RefreshFloorContainer(state);
             Refresh();
         }
 
@@ -336,10 +345,14 @@ namespace View.UI
             var state = session.RaidState;
             var playerInv = App.Instance.Player.Inventory;
 
+            bool floorChanged = false;
             if (_dragSourceContainer == null)
             {
                 if (targetContainer.IsFloorContainer)
+                {
                     DropToFloor(state, session, _dragSource.SlotRef);
+                    floorChanged = true;
+                }
                 else
                     LootSystem.TryTransfer(playerInv, _dragSource.SlotRef,
                         targetContainer.BoundInventory, target.SlotRef);
@@ -358,6 +371,7 @@ namespace View.UI
 
             SyncArmorAfterTransfer();
             CancelDrag();
+            if (floorChanged) RefreshFloorContainer(state);
             Refresh();
         }
 
@@ -646,13 +660,26 @@ namespace View.UI
                 if (c.IsFloorContainer) { floorContainer = c; break; }
             }
 
-            if (floorContainer == null)
+            if (_floorItems.Count == 0)
             {
-                floorContainer = GetContainer();
-                _activeContainers.Add(floorContainer);
+                if (floorContainer != null)
+                {
+                    _activeContainers.Remove(floorContainer);
+                    floorContainer.gameObject.SetActive(false);
+                    _containerPool.Add(floorContainer);
+                }
+            }
+            else
+            {
+                if (floorContainer == null)
+                {
+                    floorContainer = GetContainer();
+                    _activeContainers.Add(floorContainer);
+                }
+                floorContainer.BindFloor(_floorItems, _floorItemEIds);
             }
 
-            floorContainer.BindFloor(_floorItems, _floorItemEIds);
+            _lootContainerParent.gameObject.SetActive(_activeContainers.Count > 0);
         }
 
         // ------------------------------------------------------------------
