@@ -182,7 +182,12 @@ namespace View.UI
                 if (hovered.CurrentItem == null) continue;
                 if (!QuickSlotAssignable.Contains(hovered.CurrentItem.DefinitionId)) continue;
 
-                inv.QuickSlotBindings[qi] = hovered.SlotRef.Index;
+                int backpackIndex = hovered.SlotRef.Index;
+                for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                    if (inv.QuickSlotBindings[i] == backpackIndex)
+                        inv.QuickSlotBindings[i] = -1;
+
+                inv.QuickSlotBindings[qi] = backpackIndex;
                 Refresh();
                 break;
             }

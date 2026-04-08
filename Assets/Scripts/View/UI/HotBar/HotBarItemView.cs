@@ -47,6 +47,11 @@ namespace View.UI.HotBar
             int qi = _quickSlotKey - InventoryState.QuickSlotKeyOffset;
             if (qi < 0 || qi >= inventory.QuickSlotBindings.Length) return;
 
+            // Clear any existing binding that already points to this backpack slot
+            for (int i = 0; i < inventory.QuickSlotBindings.Length; i++)
+                if (inventory.QuickSlotBindings[i] == source.SlotRef.Index)
+                    inventory.QuickSlotBindings[i] = -1;
+
             inventory.QuickSlotBindings[qi] = source.SlotRef.Index;
 
             var lootPopup = FindObjectOfType<LootPopupView>(includeInactive: true);
