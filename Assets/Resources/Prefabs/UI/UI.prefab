@@ -242,7 +242,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6185aff3888546b89cf44ee138a16054, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game::View.UI.HotBar.HotBarView
-  _itemViews: []
+  _itemViews:
+  - {fileID: 4931506565545304795}
+  - {fileID: 4441913507743879110}
+  - {fileID: 6056918797431792887}
+  - {fileID: 3513135490782466277}
 --- !u!114 &3569883105629983715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,6 +281,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5800623235945747831}
     m_Modifications:
+    - target: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+      propertyPath: _quickSlotKey
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 3129990212767894474, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
       propertyPath: m_text
       value: 4
@@ -370,6 +378,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+--- !u!114 &4441913507743879110 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+  m_PrefabInstance: {fileID: 3556281423696781473}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6f016968de4190899164261bb1941e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.HotBar.HotBarItemView
 --- !u!224 &5804273137233416378 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7049990176711880731, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
@@ -383,6 +402,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5800623235945747831}
     m_Modifications:
+    - target: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+      propertyPath: _quickSlotKey
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 3129990212767894474, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
       propertyPath: m_text
       value: 6
@@ -476,6 +499,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+--- !u!114 &3513135490782466277 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+  m_PrefabInstance: {fileID: 4341331281049108354}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6f016968de4190899164261bb1941e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.HotBar.HotBarItemView
 --- !u!224 &6766967930700599193 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7049990176711880731, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
@@ -587,6 +621,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7049990176711880731, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
   m_PrefabInstance: {fileID: 5228275398072372668}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4931506565545304795 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+  m_PrefabInstance: {fileID: 5228275398072372668}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6f016968de4190899164261bb1941e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.HotBar.HotBarItemView
 --- !u!1001 &6240986085739961558
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1053,6 +1098,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5800623235945747831}
     m_Modifications:
+    - target: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+      propertyPath: _quickSlotKey
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 3129990212767894474, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
       propertyPath: m_text
       value: 5
@@ -1151,3 +1200,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7049990176711880731, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
   m_PrefabInstance: {fileID: 6408855777970211728}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6056918797431792887 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 936374690783506279, guid: 06b2d1eed69559a49b1f74954552f625, type: 3}
+  m_PrefabInstance: {fileID: 6408855777970211728}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd6f016968de4190899164261bb1941e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.HotBar.HotBarItemView

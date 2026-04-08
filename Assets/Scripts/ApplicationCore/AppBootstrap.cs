@@ -29,7 +29,6 @@ namespace ApplicationCore
                 var pm = Instantiate(_popupManagerPrefab);
                 DontDestroyOnLoad(pm.gameObject);
             }
-            gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<QuestUI>();
             gameObject.AddComponent<AimCursorOverlay>();

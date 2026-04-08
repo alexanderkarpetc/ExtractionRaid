@@ -432,6 +432,14 @@ namespace View.UI
             Refresh();
         }
 
+        // Called by external drop targets (e.g. HotBarItemView) after they handle the drop,
+        // so the drag is cancelled cleanly instead of dropping the item to the floor.
+        public void OnExternalDropHandled()
+        {
+            CancelDrag();
+            Refresh();
+        }
+
         void CancelDrag()
         {
             if (_dragSource != null)
