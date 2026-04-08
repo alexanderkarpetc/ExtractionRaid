@@ -80,6 +80,10 @@ namespace View.UI
 
         public void Refresh()
         {
+            var inventory = App.Instance?.Player?.Inventory;
+            if (inventory != null)
+                InventorySystem.ClearStaleQuickSlotBindings(inventory);
+
             _playerPanel.Refresh();
             foreach (var c in _activeContainers)
                 c.Refresh();

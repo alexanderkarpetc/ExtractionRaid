@@ -2,6 +2,7 @@
 using State;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace View.UI.HotBar
 {
@@ -12,6 +13,15 @@ namespace View.UI.HotBar
         [SerializeField] int _quickSlotKey = 3;
 
         public int QuickSlotKey => _quickSlotKey;
+
+        void Awake()
+        {
+            // _slotView is display-only in the hotbar; disabling raycast targets on its
+            // graphics ensures drops always reach HotBarItemView.OnDrop, not SlotViewBase.OnDrop.
+            if (_slotView != null)
+                foreach (var g in _slotView.GetComponentsInChildren<Graphic>(true))
+                    g.raycastTarget = false;
+        }
 
         public void RefreshQuickSlot(int keyNum, InventorySlotRef slotRef, ItemState item, bool isActive)
         {

@@ -116,6 +116,18 @@ namespace Systems
             return true;
         }
 
+        // Removes bindings whose backpack slot is now empty (mirrors QuickSlotSystem.ClearStaleBindings
+        // but callable any time, not just during a raid tick).
+        public static void ClearStaleQuickSlotBindings(InventoryState inventory)
+        {
+            for (int qi = 0; qi < inventory.QuickSlotBindings.Length; qi++)
+            {
+                int slot = inventory.QuickSlotBindings[qi];
+                if (slot >= 0 && inventory.Backpack[slot] == null)
+                    inventory.QuickSlotBindings[qi] = -1;
+            }
+        }
+
         // Updates QuickSlotBindings after a swap so bindings follow their items.
         // Handles backpack↔backpack (swap both), backpack→non-backpack (clear), non-backpack→backpack (clear).
         public static void RemapQuickSlotBindings(InventoryState inventory, InventorySlotRef from, InventorySlotRef to)
