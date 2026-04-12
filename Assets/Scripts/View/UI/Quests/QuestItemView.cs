@@ -28,7 +28,7 @@ namespace View.UI.Quests
         bool _expanded;
 
         public void Setup(QuestDefinition quest, QuestProgress progress, QuestStatus status,
-            Action onAccept, Action onClaim)
+            Action onAccept, Action onClaim, bool isNpcMode, bool canClaim)
         {
             SetStateObjects(_availableStateObjects, status == QuestStatus.NotStarted);
             SetStateObjects(_activeStateObjects, status == QuestStatus.Active);
@@ -42,7 +42,7 @@ namespace View.UI.Quests
 
             SetupTasks(quest, progress, status);
             SetupRewards(quest);
-            SetupButtons(status, onAccept, onClaim);
+            SetupButtons(status, onAccept, onClaim, isNpcMode, canClaim);
             SetupExpand();
         }
 
@@ -83,14 +83,15 @@ namespace View.UI.Quests
             }
         }
 
-        void SetupButtons(QuestStatus status, Action onAccept, Action onClaim)
+        void SetupButtons(QuestStatus status, Action onAccept, Action onClaim,
+            bool isNpcMode, bool canClaim)
         {
             _acceptButton.gameObject.SetActive(status == QuestStatus.NotStarted);
             _acceptButton.onClick.RemoveAllListeners();
             if (onAccept != null)
                 _acceptButton.onClick.AddListener(() => onAccept());
 
-            _claimButton.gameObject.SetActive(status == QuestStatus.Active);
+            _claimButton.gameObject.SetActive(isNpcMode && status == QuestStatus.Active && canClaim);
             _claimButton.onClick.RemoveAllListeners();
             if (onClaim != null)
                 _claimButton.onClick.AddListener(() => onClaim());

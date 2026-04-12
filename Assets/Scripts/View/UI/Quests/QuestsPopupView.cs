@@ -126,6 +126,8 @@ namespace View.UI.Quests
             var status = p?.Status ?? QuestStatus.NotStarted;
 
             var item = Instantiate(_questItemViewPrefab, _availableContent);
+            bool canClaim = p != null && QuestSystem.AreAllTasksDone(quest, p);
+
             item.Setup(quest, p, status,
                 onAccept: () =>
                 {
@@ -134,13 +136,14 @@ namespace View.UI.Quests
                 },
                 onClaim: () =>
                 {
-                    if (!QuestSystem.AreAllTasksDone(quest, p)) return;
                     var session = App.Instance?.RaidSession;
                     if (session == null) return;
                     QuestSystem.TryCompleteAndGrantRewards(
                         progress, quest, session.RaidState, App.Instance.Player.Inventory);
                     Refresh();
-                });
+                },
+                isNpcMode: _mode == QuestPopupMode.Npc,
+                canClaim: canClaim);
         }
 
         void ClearContent()
