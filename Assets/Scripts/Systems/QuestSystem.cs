@@ -53,6 +53,64 @@ namespace Systems
             return result;
         }
 
+        public static List<QuestDefinition> GetAllActiveQuests(
+            QuestProgressState progress, QuestDatabase db)
+        {
+            if (db == null) return new List<QuestDefinition>();
+
+            var result = new List<QuestDefinition>();
+            foreach (var entry in db.Entries)
+            {
+                if (entry.Quest == null || string.IsNullOrEmpty(entry.Quest.Id)) continue;
+                if (progress.GetStatus(entry.Quest.Id) != QuestStatus.Active) continue;
+                result.Add(entry.Quest);
+            }
+            return result;
+        }
+
+        public static List<QuestDefinition> GetAllCompletedQuests(
+            QuestProgressState progress, QuestDatabase db)
+        {
+            if (db == null) return new List<QuestDefinition>();
+
+            var result = new List<QuestDefinition>();
+            foreach (var entry in db.Entries)
+            {
+                if (entry.Quest == null || string.IsNullOrEmpty(entry.Quest.Id)) continue;
+                if (progress.GetStatus(entry.Quest.Id) != QuestStatus.Completed) continue;
+                result.Add(entry.Quest);
+            }
+            return result;
+        }
+
+        public static List<QuestDefinition> GetCompletedQuestsForNpc(
+            QuestProgressState progress, QuestDatabase db, string npcId)
+        {
+            if (db == null) return new List<QuestDefinition>();
+
+            var result = new List<QuestDefinition>();
+            foreach (var entry in db.Entries)
+            {
+                if (entry.Quest == null || string.IsNullOrEmpty(entry.Quest.Id)) continue;
+                if (entry.Quest.NpcId != npcId) continue;
+                if (progress.GetStatus(entry.Quest.Id) != QuestStatus.Completed) continue;
+                result.Add(entry.Quest);
+            }
+            return result;
+        }
+
+        public static bool AreAllTasksDone(QuestDefinition quest, QuestProgress p)
+        {
+            if (quest.Tasks == null || quest.Tasks.Count == 0) return true;
+            for (int i = 0; i < quest.Tasks.Count; i++)
+            {
+                var tp = i < p.Tasks.Count ? p.Tasks[i] : null;
+                int current = tp?.CurrentCount ?? 0;
+                if (current < quest.Tasks[i].RequiredCount) return false;
+            }
+            return true;
+        }
+
         public static bool TryAccept(QuestProgressState progress, QuestDefinition quest)
         {
             if (quest == null || string.IsNullOrEmpty(quest.Id)) return false;

@@ -30,7 +30,7 @@ namespace ApplicationCore
                 DontDestroyOnLoad(pm.gameObject);
             }
             gameObject.AddComponent<InventoryUI>();
-            gameObject.AddComponent<QuestUI>();
+            gameObject.AddComponent<QuestPresenter>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
@@ -38,7 +38,6 @@ namespace ApplicationCore
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
-            gameObject.AddComponent<NpcUI>();
         }
 
         void Start()
