@@ -85,21 +85,15 @@ namespace View.UI.Quests
 
         void SetupButtons(QuestStatus status, Action onAccept, Action onClaim)
         {
-            if (_acceptButton != null)
-            {
-                _acceptButton.gameObject.SetActive(status == QuestStatus.NotStarted);
-                _acceptButton.onClick.RemoveAllListeners();
-                if (onAccept != null)
-                    _acceptButton.onClick.AddListener(() => onAccept());
-            }
+            _acceptButton.gameObject.SetActive(status == QuestStatus.NotStarted);
+            _acceptButton.onClick.RemoveAllListeners();
+            if (onAccept != null)
+                _acceptButton.onClick.AddListener(() => onAccept());
 
-            if (_claimButton != null)
-            {
-                _claimButton.gameObject.SetActive(status == QuestStatus.Active);
-                _claimButton.onClick.RemoveAllListeners();
-                if (onClaim != null)
-                    _claimButton.onClick.AddListener(() => onClaim());
-            }
+            _claimButton.gameObject.SetActive(status == QuestStatus.Active);
+            _claimButton.onClick.RemoveAllListeners();
+            if (onClaim != null)
+                _claimButton.onClick.AddListener(() => onClaim());
         }
 
         void SetupExpand()
