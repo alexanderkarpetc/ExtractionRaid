@@ -526,7 +526,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.14117648, g: 0.18039216, b: 0.25882354, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -604,7 +604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.047058824, g: 0.05882353, b: 0.08627451, a: 0.87058824}
+  m_Color: {r: 0.047058824, g: 0.05882353, b: 0.08627451, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -693,9 +693,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game::View.UI.Quests.QuestsPopupView
   _headerText: {fileID: 2956022649137801195}
-  _availableTabButton: {fileID: 1406552664074509020}
-  _activeTabButton: {fileID: 6199094138141885}
-  _completedTabButton: {fileID: 6921953293583913885}
+  _availableTabButton: {fileID: 5130615557863292116}
+  _activeTabButton: {fileID: 6098025162690173621}
+  _completedTabButton: {fileID: 3799129608702981525}
   _closeButton: {fileID: 8730032960684554698}
   _availableContent: {fileID: 5799864656587199212}
   _questItemViewPrefab: {fileID: 9023395658893492793, guid: 61a29c7d26b581147acdf13eb72aaa20, type: 3}
@@ -785,6 +785,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1180252063723533510}
+  - component: {fileID: 4963735055735603096}
   m_Layer: 5
   m_Name: Tabs
   m_TagString: Untagged
@@ -814,6 +815,32 @@ RectTransform:
   m_AnchoredPosition: {x: 409.5, y: -94.149994}
   m_SizeDelta: {x: 819, y: 39.9}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &4963735055735603096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5927150563900704874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 35
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 3
+  m_Spacing: 18.07
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1001 &3430908632650671150
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -848,7 +875,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.x
@@ -856,7 +883,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_SizeDelta.x
@@ -896,7 +923,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 187.2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -919,17 +946,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
---- !u!114 &6199094138141885 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3425848650410924179, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
-  m_PrefabInstance: {fileID: 3430908632650671150}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &86016186088976029 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3363237271669213875, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
@@ -946,6 +962,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
   m_PrefabInstance: {fileID: 3430908632650671150}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6098025162690173621 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+  m_PrefabInstance: {fileID: 3430908632650671150}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1928246b5f5d4c5a8fb3e8ff8b82a88c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.Quests.TabItemView
 --- !u!1001 &4327425980004352591
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -976,7 +1003,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.x
@@ -984,7 +1011,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_SizeDelta.x
@@ -1024,7 +1051,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 80
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -1058,17 +1085,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!114 &1406552664074509020 stripped
+--- !u!114 &5130615557863292116 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3425848650410924179, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
   m_PrefabInstance: {fileID: 4327425980004352591}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Script: {fileID: 11500000, guid: 1928246b5f5d4c5a8fb3e8ff8b82a88c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_EditorClassIdentifier: Game::View.UI.Quests.TabItemView
 --- !u!224 &6672097911729818786 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
@@ -1108,7 +1135,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.x
@@ -1116,7 +1143,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_SizeDelta.x
@@ -1156,7 +1183,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 290.7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -1184,17 +1211,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
   m_PrefabInstance: {fileID: 5729907945279621902}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6921953293583913885 stripped
+--- !u!114 &3799129608702981525 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3425848650410924179, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+  m_CorrespondingSourceObject: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
   m_PrefabInstance: {fileID: 5729907945279621902}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Script: {fileID: 11500000, guid: 1928246b5f5d4c5a8fb3e8ff8b82a88c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_EditorClassIdentifier: Game::View.UI.Quests.TabItemView
 --- !u!114 &7000888021791146429 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3363237271669213875, guid: 440854dd55aad834cabe69d9ed986660, type: 3}

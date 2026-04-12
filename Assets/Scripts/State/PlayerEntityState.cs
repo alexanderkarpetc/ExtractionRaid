@@ -51,7 +51,7 @@ namespace State
         public float AdsBlend; // 0 = hip, 1 = fully ADS — lerped each tick
 
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
-        public bool IsQuestLogOpen; // set by QuestUI (I key)
+        public bool IsQuestLogOpen;
 
         public float Stamina;
         public float MaxStamina;
