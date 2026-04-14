@@ -38,14 +38,6 @@ namespace View
                 }
             }
 
-            if (player == null) return;
-
-            if (App.Instance.IsInHideout)
-            {
-                player.IsInventoryOpen = _isOpen;
-                return;
-            }
-
             if (player.CraftTargetId != EId.None && _isOpen)
             {
                 _isOpen = false;

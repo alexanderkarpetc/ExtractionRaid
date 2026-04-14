@@ -80,6 +80,10 @@ namespace View.UI
 
         public void Refresh()
         {
+            var inventory = App.Instance?.Player?.Inventory;
+            if (inventory != null)
+                InventorySystem.ClearStaleQuickSlotBindings(inventory);
+
             _playerPanel.Refresh();
             foreach (var c in _activeContainers)
                 c.Refresh();
@@ -182,7 +186,12 @@ namespace View.UI
                 if (hovered.CurrentItem == null) continue;
                 if (!QuickSlotAssignable.Contains(hovered.CurrentItem.DefinitionId)) continue;
 
-                inv.QuickSlotBindings[qi] = hovered.SlotRef.Index;
+                int backpackIndex = hovered.SlotRef.Index;
+                for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                    if (inv.QuickSlotBindings[i] == backpackIndex)
+                        inv.QuickSlotBindings[i] = -1;
+
+                inv.QuickSlotBindings[qi] = backpackIndex;
                 Refresh();
                 break;
             }
@@ -429,6 +438,14 @@ namespace View.UI
             SyncArmorAfterTransfer();
             CancelDrag();
             RefreshFloorContainer(state);
+            Refresh();
+        }
+
+        // Called by external drop targets (e.g. HotBarItemView) after they handle the drop,
+        // so the drag is cancelled cleanly instead of dropping the item to the floor.
+        public void OnExternalDropHandled()
+        {
+            CancelDrag();
             Refresh();
         }
 

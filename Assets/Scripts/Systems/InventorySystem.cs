@@ -112,7 +112,38 @@ namespace Systems
 
             inventory.SetSlot(from, targetItem);
             inventory.SetSlot(to, sourceItem);
+            RemapQuickSlotBindings(inventory, from, to);
             return true;
+        }
+
+        // Removes bindings whose backpack slot is now empty (mirrors QuickSlotSystem.ClearStaleBindings
+        // but callable any time, not just during a raid tick).
+        public static void ClearStaleQuickSlotBindings(InventoryState inventory)
+        {
+            for (int qi = 0; qi < inventory.QuickSlotBindings.Length; qi++)
+            {
+                int slot = inventory.QuickSlotBindings[qi];
+                if (slot >= 0 && inventory.Backpack[slot] == null)
+                    inventory.QuickSlotBindings[qi] = -1;
+            }
+        }
+
+        // Updates QuickSlotBindings after a swap so bindings follow their items.
+        // Handles backpack↔backpack (swap both), backpack→non-backpack (clear), non-backpack→backpack (clear).
+        public static void RemapQuickSlotBindings(InventoryState inventory, InventorySlotRef from, InventorySlotRef to)
+        {
+            bool fromIsBackpack = from.Type == SlotType.Backpack;
+            bool toIsBackpack   = to.Type   == SlotType.Backpack;
+            if (!fromIsBackpack && !toIsBackpack) return;
+
+            for (int qi = 0; qi < inventory.QuickSlotBindings.Length; qi++)
+            {
+                int bound = inventory.QuickSlotBindings[qi];
+                if (fromIsBackpack && bound == from.Index)
+                    inventory.QuickSlotBindings[qi] = toIsBackpack ? to.Index : -1;
+                else if (toIsBackpack && bound == to.Index)
+                    inventory.QuickSlotBindings[qi] = fromIsBackpack ? from.Index : -1;
+            }
         }
 
         public static int FindFirstMedkitSlot(InventoryState inventory)

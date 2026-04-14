@@ -29,9 +29,8 @@ namespace ApplicationCore
                 var pm = Instantiate(_popupManagerPrefab);
                 DontDestroyOnLoad(pm.gameObject);
             }
-            gameObject.AddComponent<HotbarDebugOverlay>();
             gameObject.AddComponent<InventoryUI>();
-            gameObject.AddComponent<QuestUI>();
+            gameObject.AddComponent<QuestPresenter>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
@@ -39,7 +38,6 @@ namespace ApplicationCore
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
-            gameObject.AddComponent<NpcUI>();
         }
 
         void Start()

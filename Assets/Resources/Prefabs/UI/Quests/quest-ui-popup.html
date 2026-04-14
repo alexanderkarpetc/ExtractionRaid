@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest UI — Popup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-0: #080a10;
+    --bg-1: #0c0f17;
+    --bg-2: #111520;
+    --bg-3: #161b28;
+    --bg-4: #1c2235;
+    --border-0: #1a2030;
+    --border-1: #242e42;
+    --border-2: #2e3a52;
+    --text-0: #ffffff;
+    --text-1: #e0e4ec;
+    --text-2: #b0b8c8;
+    --text-3: #8892a6;
+    --accent: #4a7cff;
+    --accent-dim: rgba(74,124,255,0.15);
+    --green: #2ecc71;
+    --green-dim: rgba(46,204,113,0.12);
+    --yellow: #d4a017;
+    --red: #e05040;
+    --blue-glow: rgba(74,124,255,0.25);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0d1020;
+    color: var(--text-0);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── DEMO BUTTONS ── */
+  .demo-controls {
+    display: flex;
+    gap: 12px;
+    z-index: 1;
+  }
+  .demo-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    padding: 9px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border-2);
+    background: var(--bg-3);
+    color: var(--text-2);
+    transition: all 0.12s;
+  }
+  .demo-btn:hover { border-color: var(--accent); color: var(--text-0); }
+
+  /* ── OVERLAY ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4,6,12,0.72);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── POPUP ── */
+  .popup {
+    width: 820px;
+    max-width: calc(100vw - 40px);
+    max-height: 620px;
+    background: rgba(10,13,20,0.97);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,124,255,0.06);
+    transform: translateY(8px) scale(0.985);
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), opacity 0.18s ease;
+    opacity: 0;
+  }
+  .overlay.visible .popup {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  /* ── POPUP HEADER ── */
+  .popup-hdr {
+    padding: 18px 22px 0;
+    border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .popup-hdr-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .popup-title-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .popup-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  /* NPC portrait strip — inline in header */
+  .npc-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-1);
+    border-radius: 6px;
+    padding: 5px 10px 5px 7px;
+  }
+  .npc-avatar {
+    width: 24px; height: 24px;
+    border-radius: 5px;
+    background: var(--bg-4);
+    border: 1px solid var(--border-1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .npc-pill-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-1);
+    letter-spacing: 0.3px;
+  }
+  .npc-pill-role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-left: 2px;
+  }
+
+  .popup-close {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border-1);
+    background: var(--bg-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 13px;
+    transition: border-color 0.12s, color 0.12s;
+    flex-shrink: 0;
+  }
+  .popup-close:hover { border-color: var(--border-2); color: var(--text-1); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+  }
+  .tab {
+    padding: 9px 22px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.12s, border-color 0.12s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text-1); }
+  .tab.active {
+    color: #fff;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── POPUP BODY (scrollable) ── */
+  .popup-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-2) transparent;
+  }
+  .popup-body::-webkit-scrollbar { width: 4px; }
+  .popup-body::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+  /* tab pane */
+  .tab-pane { display: none; flex-direction: column; gap: 10px; }
+  .tab-pane.active { display: flex; }
+
+  /* ── QUEST CARD ── */
+  .quest-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.12s;
+  }
+  .quest-card:hover { border-color: var(--border-2); }
+  .quest-card.active-quest { border-color: rgba(74,124,255,0.3); }
+
+  .quest-card-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px 10px;
+    border-bottom: 1px solid var(--border-0);
+    cursor: pointer;
+  }
+  .quest-card.open .quest-card-hdr { border-bottom-color: var(--border-1); }
+  .quest-card-hdr-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .quest-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .quest-icon.available {
+    background: rgba(212,160,23,0.12);
+    border: 1px solid rgba(212,160,23,0.22);
+  }
+  .quest-icon.active-icon {
+    background: rgba(74,124,255,0.12);
+    border: 1px solid rgba(74,124,255,0.22);
+  }
+  .quest-icon.completed-icon {
+    background: rgba(46,204,113,0.10);
+    border: 1px solid rgba(46,204,113,0.2);
+  }
+  .quest-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.2px;
+  }
+  .quest-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .quest-badge.new-badge {
+    background: rgba(212,160,23,0.12);
+    color: var(--yellow);
+    border: 1px solid rgba(212,160,23,0.2);
+  }
+  .quest-badge.active-badge {
+    background: rgba(74,124,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(74,124,255,0.2);
+  }
+  .quest-badge.done-badge {
+    background: rgba(46,204,113,0.10);
+    color: var(--green);
+    border: 1px solid rgba(46,204,113,0.18);
+  }
+  .quest-chevron {
+    color: var(--text-3);
+    transition: transform 0.16s;
+    font-size: 10px;
+  }
+  .quest-card.open .quest-chevron { transform: rotate(180deg); }
+
+  .quest-body {
+    padding: 13px 14px 15px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .quest-card.open .quest-body { display: flex; }
+
+  /* NPC strip inside quest */
+  .npc-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg-3);
+    border-radius: 6px;
+    border: 1px solid var(--border-0);
+  }
+  .npc-strip .npc-avatar { width: 30px; height: 30px; }
+  .npc-info { display: flex; flex-direction: column; gap: 2px; }
+  .npc-info-name { font-size: 12px; font-weight: 600; color: #fff; }
+  .npc-info-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* objectives */
+  .obj-list { display: flex; flex-direction: column; gap: 5px; }
+  .obj-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px;
+    background: var(--bg-3);
+    border-radius: 5px;
+    border: 1px solid var(--border-0);
+  }
+  .obj-check {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid var(--border-2);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .obj-check.done {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .obj-check.done::after {
+    content: '';
+    width: 5px; height: 3px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+    display: block;
+  }
+  .obj-text {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-1);
+    line-height: 1.3;
+  }
+  .obj-text.done-text { color: var(--text-3); text-decoration: line-through; }
+  .obj-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    min-width: 28px;
+    text-align: right;
+  }
+  .obj-progress.full { color: var(--green); }
+
+  /* progress bar */
+  .quest-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .quest-progress-track {
+    flex: 1;
+    height: 3px;
+    background: var(--bg-0);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .quest-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+  .quest-progress-fill.green { background: var(--green); }
+  .quest-progress-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-3);
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* rewards */
+  .rewards-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rewards-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+  .reward-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-1);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--text-1);
+    font-weight: 500;
+  }
+  .reward-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--yellow);
+  }
+  .reward-dot.blue { background: var(--accent); }
+  .reward-dot.green { background: var(--green); }
+
+  /* action buttons */
+  .quest-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 7px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #5a8cff; border-color: #5a8cff; }
+  .btn-secondary { background: var(--bg-3); color: var(--text-2); border-color: var(--border-1); }
+  .btn-secondary:hover { border-color: var(--border-2); color: var(--text-1); }
+  .btn-danger { background: rgba(224,80,64,0.1); color: var(--red); border-color: rgba(224,80,64,0.25); }
+  .btn-danger:hover { background: rgba(224,80,64,0.18); }
+
+  /* npc tag on journal quests */
+  .quest-npc-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+  .npc-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+
+  /* empty state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 8px;
+    opacity: 0.4;
+  }
+  .empty-state-icon {
+    width: 32px; height: 32px;
+    border: 1.5px dashed var(--border-2);
+    border-radius: 6px;
+    margin-bottom: 4px;
+  }
+  .empty-state-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* hint label */
+  .hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    color: var(--text-3);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- DEMO CONTROLS -->
+<div class="demo-controls">
+  <div class="demo-btn" onclick="openNPC()">Talk to NPC</div>
+  <div class="demo-btn" onclick="openJournal()">Open Quest Journal (I)</div>
+</div>
+<div class="hint">Click a button to open the popup</div>
+
+<!-- ── OVERLAY ── -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="popup" id="popup">
+
+    <!-- HEADER -->
+    <div class="popup-hdr">
+      <div class="popup-hdr-top">
+        <div class="popup-title-area">
+          <div class="popup-title" id="popup-title">Quests</div>
+          <!-- NPC pill — only shown in NPC mode -->
+          <div class="npc-pill" id="npc-pill" style="display:none;">
+            <div class="npc-avatar">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="5" r="2.5" stroke="#4a7cff" stroke-width="1.2"/>
+                <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#4a7cff" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="npc-pill-name">MainNPC</div>
+            </div>
+            <div class="npc-pill-role">Quest Giver</div>
+          </div>
+        </div>
+        <div class="popup-close" onclick="closePopup()">✕</div>
+      </div>
+
+      <!-- TABS — rendered dynamically -->
+      <div class="tabs" id="tabs"></div>
+    </div>
+
+    <!-- BODY -->
+    <div class="popup-body" id="popup-body"></div>
+
+  </div>
+</div>
+
+<script>
+// ─── TAB CONTENT TEMPLATES ───────────────────────────────────────────────────
+
+const TEMPLATES = {
+
+  available: `
+    <div class="tab-pane active" data-tab="available">
+      <!-- quest 1 open -->
+      <div class="quest-card open">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon available">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1l1.5 3.5H12L9.5 7l1 3.5L7 8.5 3.5 10.5l1-3.5L2 4.5h3.5L7 1z" stroke="#d4a017" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">Quest1</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-badge new-badge">New</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+        <div class="quest-body">
+          <div class="npc-strip">
+            <div class="npc-avatar" style="width:30px;height:30px;">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="5" r="2.5" stroke="#4a7cff" stroke-width="1.2"/>
+                <path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#4a7cff" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="npc-info">
+              <div class="npc-info-name">MainNPC</div>
+              <div class="npc-info-sub">Quest Giver</div>
+            </div>
+          </div>
+          <div class="obj-list">
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Kill enemies in sector</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Find the location</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Extract successfully</div><div class="obj-progress">0/1</div></div>
+          </div>
+          <div class="rewards-row">
+            <div class="rewards-label">Rewards</div>
+            <div class="reward-chip"><div class="reward-dot green"></div>Medkit</div>
+            <div class="reward-chip"><div class="reward-dot"></div>2 400 ₽</div>
+          </div>
+          <div class="quest-actions">
+            <div class="btn btn-secondary">Decline</div>
+            <div class="btn btn-primary">Accept</div>
+          </div>
+        </div>
+      </div>
+      <!-- quest 2 collapsed -->
+      <div class="quest-card">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon available">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1l1.5 3.5H12L9.5 7l1 3.5L7 8.5 3.5 10.5l1-3.5L2 4.5h3.5L7 1z" stroke="#d4a017" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">Side Job</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-badge new-badge">New</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+      </div>
+    </div>`,
+
+  npc_active: `
+    <div class="tab-pane" data-tab="npc_active">
+      <div class="quest-card active-quest open">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon active-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="#4a7cff" stroke-width="1.2"/>
+                <path d="M7 4v3.5l2 1.5" stroke="#4a7cff" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">Quest1</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-badge active-badge">Active</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+        <div class="quest-body">
+          <div class="obj-list">
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Kill enemies in sector</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Find the location</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Extract successfully</div><div class="obj-progress">0/1</div></div>
+          </div>
+          <div class="quest-progress-row">
+            <div class="quest-progress-track"><div class="quest-progress-fill" style="width:0%"></div></div>
+            <div class="quest-progress-label">0/3</div>
+          </div>
+          <div class="quest-actions">
+            <div class="btn btn-danger">Abandon</div>
+          </div>
+        </div>
+      </div>
+    </div>`,
+
+  journal_active: `
+    <div class="tab-pane active" data-tab="journal_active">
+      <div class="quest-card active-quest open">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon active-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="#4a7cff" stroke-width="1.2"/>
+                <path d="M7 4v3.5l2 1.5" stroke="#4a7cff" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">Quest1</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-npc-tag"><div class="npc-dot"></div>MainNPC</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+        <div class="quest-body">
+          <div class="obj-list">
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Kill enemies in sector</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Find the location</div><div class="obj-progress">0/1</div></div>
+            <div class="obj-row"><div class="obj-check"></div><div class="obj-text">Extract successfully</div><div class="obj-progress">0/1</div></div>
+          </div>
+          <div class="quest-progress-row">
+            <div class="quest-progress-track"><div class="quest-progress-fill" style="width:0%"></div></div>
+            <div class="quest-progress-label">0/3</div>
+          </div>
+        </div>
+      </div>
+    </div>`,
+
+  completed: `
+    <div class="tab-pane" data-tab="completed">
+      <div class="quest-card">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon completed-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 7l3 3 6-6" stroke="#2ecc71" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">Tutorial Run</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-badge done-badge">Done</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+        <div class="quest-body">
+          <div class="obj-list">
+            <div class="obj-row"><div class="obj-check done"></div><div class="obj-text done-text">Reach the extraction point</div><div class="obj-progress full">1/1</div></div>
+            <div class="obj-row"><div class="obj-check done"></div><div class="obj-text done-text">Survive the first raid</div><div class="obj-progress full">1/1</div></div>
+          </div>
+          <div class="quest-progress-row">
+            <div class="quest-progress-track"><div class="quest-progress-fill green" style="width:100%"></div></div>
+            <div class="quest-progress-label" style="color:var(--green)">2/2</div>
+          </div>
+        </div>
+      </div>
+      <div class="quest-card">
+        <div class="quest-card-hdr">
+          <div class="quest-card-hdr-left">
+            <div class="quest-icon completed-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 7l3 3 6-6" stroke="#2ecc71" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="quest-name">First Contact</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="quest-badge done-badge">Done</div>
+            <div class="quest-chevron">▼</div>
+          </div>
+        </div>
+      </div>
+    </div>`
+};
+
+// ─── POPUP LOGIC ─────────────────────────────────────────────────────────────
+
+const overlay = document.getElementById('overlay');
+const popup = document.getElementById('popup');
+const tabsEl = document.getElementById('tabs');
+const bodyEl = document.getElementById('popup-body');
+const titleEl = document.getElementById('popup-title');
+const npcPill = document.getElementById('npc-pill');
+
+let currentMode = null;
+
+// Tab configs per mode
+const MODES = {
+  npc: {
+    title: 'MainNPC',
+    showNpcPill: true,
+    tabs: [
+      { id: 'available', label: 'Available' },
+      { id: 'npc_active', label: 'Active' },
+      { id: 'completed', label: 'Completed' },
+    ],
+    defaultTab: 'available'
+  },
+  journal: {
+    title: 'Quests',
+    showNpcPill: false,
+    tabs: [
+      { id: 'journal_active', label: 'Active' },
+      { id: 'completed', label: 'Completed' },
+    ],
+    defaultTab: 'journal_active'
+  }
+};
+
+function buildPopup(mode) {
+  const cfg = MODES[mode];
+  currentMode = mode;
+
+  titleEl.textContent = cfg.title;
+  npcPill.style.display = cfg.showNpcPill ? 'flex' : 'none';
+
+  // render tabs
+  tabsEl.innerHTML = '';
+  cfg.tabs.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (t.id === cfg.defaultTab ? ' active' : '');
+    el.textContent = t.label;
+    el.dataset.tab = t.id;
+    el.addEventListener('click', () => switchTab(t.id));
+    tabsEl.appendChild(el);
+  });
+
+  // render panes
+  bodyEl.innerHTML = cfg.tabs.map(t => TEMPLATES[t.id]).join('');
+
+  // show default
+  bodyEl.querySelectorAll('.tab-pane').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === cfg.defaultTab);
+  });
+
+  // wire chevron toggles
+  wireCards();
+}
+
+function switchTab(tabId) {
+  const cfg = MODES[currentMode];
+
+  // update tab pills
+  tabsEl.querySelectorAll('.tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tabId);
+  });
+
+  // show/hide panes
+  bodyEl.querySelectorAll('.tab-pane').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === tabId);
+  });
+
+  bodyEl.scrollTop = 0;
+}
+
+function wireCards() {
+  bodyEl.querySelectorAll('.quest-card-hdr').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const card = hdr.closest('.quest-card');
+      card.classList.toggle('open');
+      const ch = hdr.querySelector('.quest-chevron');
+      if (ch) ch.textContent = card.classList.contains('open') ? '▲' : '▼';
+    });
+  });
+}
+
+function openNPC() {
+  buildPopup('npc');
+  overlay.classList.add('visible');
+}
+
+function openJournal() {
+  buildPopup('journal');
+  overlay.classList.add('visible');
+}
+
+function closePopup() {
+  overlay.classList.remove('visible');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === overlay) closePopup();
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePopup();
+  if (e.key === 'i' || e.key === 'I') {
+    if (overlay.classList.contains('visible')) closePopup();
+    else openJournal();
+  }
+});
+</script>
+</body>
+</html>

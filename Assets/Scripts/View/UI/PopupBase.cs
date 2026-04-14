@@ -17,6 +17,7 @@ namespace View.UI
 
         public virtual void Show()
         {
+            gameObject.SetActive(true);
             IsOpen = true;
             SetVisible(true);
         }
@@ -25,6 +26,7 @@ namespace View.UI
         {
             IsOpen = false;
             SetVisible(false);
+            gameObject.SetActive(false);
         }
 
         void SetVisible(bool visible)
