@@ -11,6 +11,7 @@ Shader "ExtractShaders/MainBase"
 		_ColorEmission( "ColorEmission", Color ) = ( 1, 1, 1, 0 )
 		_BrightnessEmission( "BrightnessEmission", Float ) = 0
 		_Color2( "Color2", Color ) = ( 1, 1, 1, 0 )
+		[Toggle( _USEALPHA_ON )] _UseAlpha( "UseAlpha", Float ) = 0
 		_ColorStreng( "ColorStreng", Float ) = 0
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 
@@ -256,6 +257,7 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			#define ASE_NEEDS_TEXTURE_COORDINATES0
+			#pragma shader_feature_local _USEALPHA_ON
 
 
 			#if defined(ASE_EARLY_Z_DEPTH_OPTIMIZE) && (SHADER_TARGET >= 45)
@@ -552,12 +554,16 @@ Shader "ExtractShaders/MainBase"
 
 				float2 uv_Texture = input.ase_texcoord7.xy * _Texture_ST.xy + _Texture_ST.zw;
 				float4 tex2DNode1 = tex2D( _Texture, uv_Texture );
-				float dotResult20 = dot( tex2DNode1 , float4( float3( 0.2126, 0.7152, 0.0722 ) , 0.0 ) );
+				#ifdef _USEALPHA_ON
+				float staticSwitch35 = ( 1.0 - tex2DNode1.a );
+				#else
+				float staticSwitch35 = 1.0;
+				#endif
+				float dotResult20 = dot( tex2DNode1.rgb , float3( 0.2126, 0.7152, 0.0722 ) );
 				float3 appendResult26 = (float3(dotResult20 , dotResult20 , dotResult20));
-				float4 lerpResult22 = lerp( float4( appendResult26 , 0.0 ) , tex2DNode1 , _Saturate);
-				float3 temp_output_39_0 = (lerpResult22).rgb;
-				float temp_output_36_0 = ( 1.0 - tex2DNode1.a );
-				float3 lerpResult43 = lerp( ( tex2DNode1.a * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * temp_output_36_0 * _ColorStreng ) , 0.5);
+				float3 lerpResult22 = lerp( appendResult26 , tex2DNode1.rgb , _Saturate);
+				float3 temp_output_39_0 = (lerpResult22).xyz;
+				float3 lerpResult43 = lerp( ( staticSwitch35 * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * staticSwitch35 * _ColorStreng ) , 0.5);
 				
 
 				float3 BaseColor = lerpResult43;
@@ -1435,6 +1441,7 @@ Shader "ExtractShaders/MainBase"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
 			#define ASE_NEEDS_TEXTURE_COORDINATES0
+			#pragma shader_feature_local _USEALPHA_ON
 
 
 			struct Attributes
@@ -1644,12 +1651,16 @@ Shader "ExtractShaders/MainBase"
 
 				float2 uv_Texture = input.ase_texcoord3.xy * _Texture_ST.xy + _Texture_ST.zw;
 				float4 tex2DNode1 = tex2D( _Texture, uv_Texture );
-				float dotResult20 = dot( tex2DNode1 , float4( float3( 0.2126, 0.7152, 0.0722 ) , 0.0 ) );
+				#ifdef _USEALPHA_ON
+				float staticSwitch35 = ( 1.0 - tex2DNode1.a );
+				#else
+				float staticSwitch35 = 1.0;
+				#endif
+				float dotResult20 = dot( tex2DNode1.rgb , float3( 0.2126, 0.7152, 0.0722 ) );
 				float3 appendResult26 = (float3(dotResult20 , dotResult20 , dotResult20));
-				float4 lerpResult22 = lerp( float4( appendResult26 , 0.0 ) , tex2DNode1 , _Saturate);
-				float3 temp_output_39_0 = (lerpResult22).rgb;
-				float temp_output_36_0 = ( 1.0 - tex2DNode1.a );
-				float3 lerpResult43 = lerp( ( tex2DNode1.a * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * temp_output_36_0 * _ColorStreng ) , 0.5);
+				float3 lerpResult22 = lerp( appendResult26 , tex2DNode1.rgb , _Saturate);
+				float3 temp_output_39_0 = (lerpResult22).xyz;
+				float3 lerpResult43 = lerp( ( staticSwitch35 * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * staticSwitch35 * _ColorStreng ) , 0.5);
 				
 
 				float3 BaseColor = lerpResult43;
@@ -1719,6 +1730,7 @@ Shader "ExtractShaders/MainBase"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
 			#define ASE_NEEDS_TEXTURE_COORDINATES0
+			#pragma shader_feature_local _USEALPHA_ON
 
 
 			struct Attributes
@@ -1916,12 +1928,16 @@ Shader "ExtractShaders/MainBase"
 
 				float2 uv_Texture = input.ase_texcoord1.xy * _Texture_ST.xy + _Texture_ST.zw;
 				float4 tex2DNode1 = tex2D( _Texture, uv_Texture );
-				float dotResult20 = dot( tex2DNode1 , float4( float3( 0.2126, 0.7152, 0.0722 ) , 0.0 ) );
+				#ifdef _USEALPHA_ON
+				float staticSwitch35 = ( 1.0 - tex2DNode1.a );
+				#else
+				float staticSwitch35 = 1.0;
+				#endif
+				float dotResult20 = dot( tex2DNode1.rgb , float3( 0.2126, 0.7152, 0.0722 ) );
 				float3 appendResult26 = (float3(dotResult20 , dotResult20 , dotResult20));
-				float4 lerpResult22 = lerp( float4( appendResult26 , 0.0 ) , tex2DNode1 , _Saturate);
-				float3 temp_output_39_0 = (lerpResult22).rgb;
-				float temp_output_36_0 = ( 1.0 - tex2DNode1.a );
-				float3 lerpResult43 = lerp( ( tex2DNode1.a * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * temp_output_36_0 * _ColorStreng ) , 0.5);
+				float3 lerpResult22 = lerp( appendResult26 , tex2DNode1.rgb , _Saturate);
+				float3 temp_output_39_0 = (lerpResult22).xyz;
+				float3 lerpResult43 = lerp( ( staticSwitch35 * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * staticSwitch35 * _ColorStreng ) , 0.5);
 				
 
 				float3 BaseColor = lerpResult43;
@@ -2339,6 +2355,7 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			#define ASE_NEEDS_TEXTURE_COORDINATES0
+			#pragma shader_feature_local _USEALPHA_ON
 
 
 			#if defined(ASE_EARLY_Z_DEPTH_OPTIMIZE) && (SHADER_TARGET >= 45)
@@ -2634,12 +2651,16 @@ Shader "ExtractShaders/MainBase"
 
 				float2 uv_Texture = input.ase_texcoord7.xy * _Texture_ST.xy + _Texture_ST.zw;
 				float4 tex2DNode1 = tex2D( _Texture, uv_Texture );
-				float dotResult20 = dot( tex2DNode1 , float4( float3( 0.2126, 0.7152, 0.0722 ) , 0.0 ) );
+				#ifdef _USEALPHA_ON
+				float staticSwitch35 = ( 1.0 - tex2DNode1.a );
+				#else
+				float staticSwitch35 = 1.0;
+				#endif
+				float dotResult20 = dot( tex2DNode1.rgb , float3( 0.2126, 0.7152, 0.0722 ) );
 				float3 appendResult26 = (float3(dotResult20 , dotResult20 , dotResult20));
-				float4 lerpResult22 = lerp( float4( appendResult26 , 0.0 ) , tex2DNode1 , _Saturate);
-				float3 temp_output_39_0 = (lerpResult22).rgb;
-				float temp_output_36_0 = ( 1.0 - tex2DNode1.a );
-				float3 lerpResult43 = lerp( ( tex2DNode1.a * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * temp_output_36_0 * _ColorStreng ) , 0.5);
+				float3 lerpResult22 = lerp( appendResult26 , tex2DNode1.rgb , _Saturate);
+				float3 temp_output_39_0 = (lerpResult22).xyz;
+				float3 lerpResult43 = lerp( ( staticSwitch35 * temp_output_39_0 ) , ( temp_output_39_0 * _Color2.rgb * staticSwitch35 * _ColorStreng ) , 0.5);
 				
 
 				float3 BaseColor = lerpResult43;
@@ -3560,14 +3581,13 @@ Shader "ExtractShaders/MainBase"
 /*ASEBEGIN
 Version=19901
 Node;AmplifyShaderEditor.DynamicAppendNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;26;-640,-528;Inherit;False;FLOAT3;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;22;-464,-464;Inherit;False;3;0;COLOR;0,0,0,0;False;1;COLOR;0,0,0,0;False;2;FLOAT;0;False;1;COLOR;0
+Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;22;-464,-464;Inherit;False;3;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT;0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;17;-640,-336;Inherit;False;Property;_Saturate;Saturate;1;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.Vector3Node, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;21;-1008,-272;Inherit;False;Constant;_Vector0;Vector 0;4;0;Create;True;0;0;0;False;0;False;0.2126,0.7152,0.0722;0,0,0;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
-Node;AmplifyShaderEditor.DotProductOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;20;-784,-384;Inherit;False;2;0;COLOR;0,0,0,0;False;1;FLOAT3;0,0,0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.ComponentMaskNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;39;48,-480;Inherit;False;True;True;True;False;1;0;COLOR;0,0,0,0;False;1;FLOAT3;0
+Node;AmplifyShaderEditor.DotProductOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;20;-784,-384;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.ComponentMaskNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;39;48,-480;Inherit;False;True;True;True;False;1;0;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;41;400,-576;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;1;-1120,-800;Inherit;True;Property;_Texture;Texture;0;0;Create;True;0;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
-Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;35;-496,-928;Inherit;False;Property;_MaskIvert;MaskIvert;5;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.OneMinusNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;36;-576,-800;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;43;736,-544;Inherit;False;3;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT;0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;14;960,160;Inherit;False;Constant;_Metall;Metall;1;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
@@ -3579,6 +3599,8 @@ Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.
 Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;37;128,-352;Inherit;False;Property;_Color2;Color2;4;0;Create;True;0;0;0;False;0;False;1,1,1,0;1,1,1,0;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;45;624,-304;Inherit;False;Constant;_Float0;Float 0;6;0;Create;True;0;0;0;False;0;False;0.5;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;46;208,-112;Inherit;False;Property;_ColorStreng;ColorStreng;6;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;47;-384,-896;Inherit;False;Constant;_Float1;Float 1;7;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;35;-192,-816;Inherit;False;Property;_UseAlpha;UseAlpha;5;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;4;272,-192;Float;False;False;-1;3;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=ShadowCaster;False;False;0;;0;0;Standard;0;False;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;5;272,-192;Float;False;False;-1;3;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;True;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;False;False;True;1;LightMode=DepthOnly;False;False;0;;0;0;Standard;0;False;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;6;272,-192;Float;False;False;-1;3;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Meta;0;4;Meta;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Meta;False;False;0;;0;0;Standard;0;False;0
@@ -3595,15 +3617,13 @@ WireConnection;26;0;20;0
 WireConnection;26;1;20;0
 WireConnection;26;2;20;0
 WireConnection;22;0;26;0
-WireConnection;22;1;1;0
+WireConnection;22;1;1;5
 WireConnection;22;2;17;0
-WireConnection;20;0;1;0
+WireConnection;20;0;1;5
 WireConnection;20;1;21;0
 WireConnection;39;0;22;0
-WireConnection;41;0;1;4
+WireConnection;41;0;35;0
 WireConnection;41;1;39;0
-WireConnection;35;1;1;4
-WireConnection;35;0;36;0
 WireConnection;36;0;1;4
 WireConnection;43;0;41;0
 WireConnection;43;1;38;0
@@ -3612,11 +3632,13 @@ WireConnection;29;0;28;5
 WireConnection;29;1;32;0
 WireConnection;38;0;39;0
 WireConnection;38;1;37;5
-WireConnection;38;2;36;0
+WireConnection;38;2;35;0
 WireConnection;38;3;46;0
+WireConnection;35;1;47;0
+WireConnection;35;0;36;0
 WireConnection;3;0;43;0
 WireConnection;3;3;14;0
 WireConnection;3;4;15;0
 WireConnection;3;2;29;0
 ASEEND*/
-//CHKSM=1B2639FE3B510DD8F92ED38A4080DDCA3417D0F1
+//CHKSM=26A07E1461815CB749812072413E9AFE18F9352F
