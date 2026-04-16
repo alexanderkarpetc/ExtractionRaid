@@ -308,6 +308,8 @@ namespace Session
                     RecoilForwardMultiplier = DevCheats.RecoilForwardMultiplier,
                     RecoilSideMultiplier = DevCheats.RecoilSideMultiplier,
                     InfiniteAmmo = DevCheats.InfiniteAmmo,
+                    MuzzleBlockEnabled = DevCheats.MuzzleBlockEnabled,
+                    MuzzleBlockBackoff = DevCheats.MuzzleBlockBackoff,
                 }
             );
 

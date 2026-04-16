@@ -93,6 +93,9 @@ namespace Adapters
         public Vector3 MuzzleWorldPoint =>
             _muzzlePoint != null ? _muzzlePoint.position : Vector3.zero;
 
+        public Transform IgnoreCollisionRoot =>
+            _muzzlePoint != null ? _muzzlePoint.root : null;
+
         public Vector3 CameraWorldPosition =>
             _camera != null ? _camera.transform.position : Vector3.zero;
 

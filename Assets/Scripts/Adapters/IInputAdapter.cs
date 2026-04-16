@@ -9,6 +9,15 @@ namespace Adapters
         bool AttackPressed { get; }
         Vector3 AimWorldPoint { get; }
         Vector3 MuzzleWorldPoint { get; }
+
+        /// <summary>
+        /// Transform whose hierarchy should be ignored when raycasting for the player's
+        /// own shell (capsule + body + weapon + armor). Returns the player shell root,
+        /// not the weapon root — name reflects USAGE, not source. Derived from the
+        /// equipped weapon's transform (which is parented under the shell).
+        /// Null if no weapon is equipped.
+        /// </summary>
+        Transform IgnoreCollisionRoot { get; }
         int HotbarSlotPressed { get; }
         bool InventoryTogglePressed { get; }
         bool PickUpPressed { get; }

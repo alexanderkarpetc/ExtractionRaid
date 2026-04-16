@@ -10,10 +10,6 @@
 *.asmdef text eol=crlf
 *.asset text eol=crlf
 
-# ProBuilder: normalize m_VersionIndex to avoid noise in diffs
-*.prefab filter=probuilder-version
-*.unity filter=probuilder-version
-
 # Terrain data — binary even with Force Text serialization
 *Terrain*.asset binary
 *NavMesh*.asset binary

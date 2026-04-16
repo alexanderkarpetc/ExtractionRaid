@@ -7,6 +7,11 @@ namespace Tests.EditMode.Fakes
     {
         public bool Blocked;
 
+        // RaycastFirstWallHit canned result
+        public bool WallHit;
+        public Vector3 WallHitPoint;
+        public int RaycastFirstWallHitCallCount;
+
         public bool Linecast(Vector3 from, Vector3 to, int layerMask)
         {
             return Blocked;
@@ -16,6 +21,14 @@ namespace Tests.EditMode.Fakes
             Transform ignoreRootA, Transform ignoreRootB)
         {
             return Blocked;
+        }
+
+        public bool RaycastFirstWallHit(Vector3 from, Vector3 to, int layerMask,
+            Transform ignoreRoot, out Vector3 hitPoint)
+        {
+            RaycastFirstWallHitCallCount++;
+            hitPoint = WallHit ? WallHitPoint : default;
+            return WallHit;
         }
     }
 }

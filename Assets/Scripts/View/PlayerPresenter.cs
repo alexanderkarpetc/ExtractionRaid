@@ -140,7 +140,11 @@ namespace View
 
                 var body = bodyGo.GetComponent<CharacterBody>();
                 if (body != null)
+                {
                     _playerView.BindBody(body);
+                    // Mark as local player — enables every-frame pullback (bots are throttled).
+                    body.SetIsPlayerPullback(true);
+                }
             }
 
             _playerView.Initialize(_trackedId, _onMuzzlePointReady, BotConstants.PlayerMaxHp);

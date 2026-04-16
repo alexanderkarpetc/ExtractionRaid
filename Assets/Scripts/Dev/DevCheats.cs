@@ -572,6 +572,58 @@ namespace Dev
             set => Config.Armor.ArmorHUDBarHeight = value;
         }
 
+        // ── Weapon Collision (on Weapon section) ──────────
+        public static bool MuzzleBlockEnabled
+        {
+            get => Config.Weapon.MuzzleBlockEnabled;
+            set => Config.Weapon.MuzzleBlockEnabled = value;
+        }
+        public static float MuzzleBlockBackoff
+        {
+            get => Config.Weapon.MuzzleBlockBackoff;
+            set => Config.Weapon.MuzzleBlockBackoff = value;
+        }
+        public static bool WeaponPullbackEnabled
+        {
+            get => Config.Weapon.WeaponPullbackEnabled;
+            set => Config.Weapon.WeaponPullbackEnabled = value;
+        }
+        public static float WeaponLength
+        {
+            get => Config.Weapon.WeaponLength;
+            set => Config.Weapon.WeaponLength = value;
+        }
+        public static float WeaponPullbackAmount
+        {
+            get => Config.Weapon.WeaponPullbackAmount;
+            set => Config.Weapon.WeaponPullbackAmount = value;
+        }
+        public static float WeaponPullbackSpeed
+        {
+            get => Config.Weapon.WeaponPullbackSpeed;
+            set => Config.Weapon.WeaponPullbackSpeed = value;
+        }
+        public static float WeaponPullbackRadius
+        {
+            get => Config.Weapon.WeaponPullbackRadius;
+            set => Config.Weapon.WeaponPullbackRadius = value;
+        }
+        public static bool WeaponPullbackDebugGizmos
+        {
+            get => Config.Weapon.WeaponPullbackDebugGizmos;
+            set => Config.Weapon.WeaponPullbackDebugGizmos = value;
+        }
+        public static float BotPullbackCheckRateHz
+        {
+            get => Config.Weapon.BotPullbackCheckRateHz;
+            set => Config.Weapon.BotPullbackCheckRateHz = value;
+        }
+        public static float BotPullbackLodDistance
+        {
+            get => Config.Weapon.BotPullbackLodDistance;
+            set => Config.Weapon.BotPullbackLodDistance = value;
+        }
+
         /// <summary>Mark asset dirty so editor saves it. Call after batch changes.</summary>
         public static void SetDirty()
         {

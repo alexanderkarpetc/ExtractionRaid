@@ -35,6 +35,8 @@ namespace Session
         public float RecoilForwardMultiplier;
         public float RecoilSideMultiplier;
         public bool InfiniteAmmo;
+        public bool MuzzleBlockEnabled;
+        public float MuzzleBlockBackoff;
 
         public static ShootingConfig Default => new ShootingConfig
         {
@@ -51,6 +53,8 @@ namespace Session
             RecoilForwardMultiplier = 1f,
             RecoilSideMultiplier = 1f,
             InfiniteAmmo = false,
+            MuzzleBlockEnabled = true,
+            MuzzleBlockBackoff = 0.1f,
         };
     }
 

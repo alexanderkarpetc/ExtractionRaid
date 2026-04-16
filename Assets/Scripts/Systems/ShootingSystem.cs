@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Constants;
 using Session;
 using State;
 using UnityEngine;
@@ -43,6 +44,48 @@ namespace Systems
             var spawnPos = input.MuzzleWorldPoint;
             // Lower projectile to near-ground level — drastically reduces camera parallax
             spawnPos.y = cfg.ProjectileSpawnHeight;
+
+            // --- Solution 2: Pre-fire muzzle block ---
+            // Raycast from the player's XZ (at projectile flight height) to the muzzle point.
+            // If a wall blocks the line, clamp the projectile spawn to the player-side of the wall.
+            // Prevents bullets from spawning behind cover when the barrel clips through geometry.
+            //
+            // Ray endpoints are both at ProjectileSpawnHeight so the check matches the Y the
+            // bullet will actually travel — detects waist-high walls that a chest-height ray would miss.
+            // Hierarchy filter (IsChildOf) inside RaycastFirstWallHit skips the player's own colliders
+            // robustly even for tiled brick walls where proximity-based filters would misclassify bricks.
+            if (cfg.MuzzleBlockEnabled && context.Physics != null)
+            {
+                var playerAtSpawnY = new Vector3(player.Position.x, cfg.ProjectileSpawnHeight, player.Position.z);
+                if (context.Physics.RaycastFirstWallHit(
+                        playerAtSpawnY, spawnPos,
+                        BotConstants.VisionBlockingMask,
+                        input.IgnoreCollisionRoot,
+                        out var wallHitPoint))
+                {
+                    var toMuzzle = spawnPos - playerAtSpawnY;
+                    float distToMuzzle = toMuzzle.magnitude;
+                    float distToWall = Vector3.Distance(playerAtSpawnY, wallHitPoint);
+
+                    // P1-5 safety: if the wall is touching the player (no clearance for a bullet),
+                    // skip the shot silently. Prevents a projectile from being spawned at/inside
+                    // the wall for one frame before the collision system despawns it — that looks
+                    // like a misfire (bullet appears then disappears immediately).
+                    const float minClearance = 0.03f;
+                    if (distToWall < minClearance) return;
+
+                    if (distToMuzzle > 0.001f)
+                    {
+                        var rayDir = toMuzzle / distToMuzzle;
+                        // Bound backoff so clamped spawn never ends up BEHIND the player origin
+                        // (would produce bullets coming out of the player's back).
+                        float maxBackoff = Mathf.Max(0f, distToWall - 0.02f);
+                        float safeBackoff = Mathf.Min(cfg.MuzzleBlockBackoff, maxBackoff);
+                        spawnPos = wallHitPoint - rayDir * safeBackoff;
+                        spawnPos.y = cfg.ProjectileSpawnHeight;
+                    }
+                }
+            }
 
             // --- Compute two independent directions, then blend ---
             var groundAim = player.WeaponAimPoint;

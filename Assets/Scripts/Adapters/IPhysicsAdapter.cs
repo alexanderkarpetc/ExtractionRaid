@@ -12,5 +12,14 @@ namespace Adapters
         /// </summary>
         bool LinecastIgnoring(Vector3 from, Vector3 to, int layerMask,
             Transform ignoreRootA, Transform ignoreRootB);
+
+        /// <summary>
+        /// Raycast from 'from' toward 'to', returning the first hit point on a collider
+        /// whose transform is NOT a child of 'ignoreRoot' (use for ignoring caller's own
+        /// hierarchy, e.g., player colliders). Hierarchy-based filter is robust vs tiled
+        /// geometry (brick walls) where position-based filters can misclassify.
+        /// </summary>
+        bool RaycastFirstWallHit(Vector3 from, Vector3 to, int layerMask,
+            Transform ignoreRoot, out Vector3 hitPoint);
     }
 }
