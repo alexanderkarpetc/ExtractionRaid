@@ -9,6 +9,7 @@ namespace Session
         public float AdsAimFollowMultiplier;
         public float RecoilRecoveryMultiplier;
         public float AdsRecoilRecoveryMultiplier;
+        public float MinAimDistance;
 
         public static AimConfig Default => new AimConfig
         {
@@ -17,6 +18,7 @@ namespace Session
             AdsAimFollowMultiplier = 1.5f,
             RecoilRecoveryMultiplier = 1f,
             AdsRecoilRecoveryMultiplier = 1.5f,
+            MinAimDistance = 1.5f,
         };
     }
 

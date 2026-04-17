@@ -105,6 +105,12 @@ namespace Dev
             set => Config.Aim.AimFollowMultiplier = value;
         }
 
+        public static float MinAimDistance
+        {
+            get => Config.Aim.MinAimDistance;
+            set => Config.Aim.MinAimDistance = value;
+        }
+
         // ── Player ──────────────────────────────────────────
         public static float MoveSpeedMultiplier
         {

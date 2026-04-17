@@ -292,6 +292,7 @@ namespace Session
                     AdsAimFollowMultiplier = DevCheats.AdsAimFollowMultiplier,
                     RecoilRecoveryMultiplier = DevCheats.RecoilRecoveryMultiplier,
                     AdsRecoilRecoveryMultiplier = DevCheats.AdsRecoilRecoveryMultiplier,
+                    MinAimDistance = DevCheats.MinAimDistance,
                 },
                 shootingConfig: new ShootingConfig
                 {

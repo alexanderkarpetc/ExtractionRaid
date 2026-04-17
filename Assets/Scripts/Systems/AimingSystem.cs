@@ -23,6 +23,38 @@ namespace Systems
             // 1. Raw aim — instant from mouse
             player.RawAimPoint = aimPoint;
 
+            // Min-aim-distance clamp: when cursor lands too close to the player (e.g. hovering
+            // over the player's silhouette on screen), aim direction amplifies tiny mouse motion
+            // and causes the weapon/body to flip wildly.
+            //
+            // Clamp DISTANCE only, keep DIRECTION from current cursor — so cursor "slides along
+            // a circle of radius minAimDist around the player". Weapon still responds to mouse
+            // movement inside the zone (no sticky feel), but aimPoint never gets close enough to
+            // produce jitter. Fallback to previous AimDirection if cursor is exactly on player.
+            // RawAimPoint (cursor overlay) is NOT clamped — the white dot keeps following the mouse.
+            float minAimDist = context.AimConfig.MinAimDistance;
+            if (minAimDist > 0f)
+            {
+                var toAim = new Vector3(aimPoint.x - player.Position.x, 0f, aimPoint.z - player.Position.z);
+                float sqrDist = toAim.sqrMagnitude;
+                if (sqrDist < minAimDist * minAimDist)
+                {
+                    Vector3 dir;
+                    if (sqrDist > 0.0001f)
+                        dir = toAim / Mathf.Sqrt(sqrDist); // cursor-to-player direction (updates live)
+                    else
+                        dir = player.AimDirection; // cursor exactly on player: fall back to last valid
+
+                    if (dir.sqrMagnitude > 0.01f)
+                    {
+                        aimPoint = new Vector3(
+                            player.Position.x + dir.x * minAimDist,
+                            aimPoint.y,
+                            player.Position.z + dir.z * minAimDist);
+                    }
+                }
+            }
+
             var origin = player.Position;
             var toRaw = new Vector3(aimPoint.x - origin.x, 0f, aimPoint.z - origin.z);
 
