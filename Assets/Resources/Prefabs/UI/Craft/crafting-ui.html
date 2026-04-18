@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crafting UI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-0: #080a10;
+    --bg-1: #0c0f17;
+    --bg-2: #111520;
+    --bg-3: #161b28;
+    --bg-4: #1c2235;
+    --border-0: #1a2030;
+    --border-1: #242e42;
+    --border-2: #2e3a52;
+    --text-0: #ffffff;
+    --text-1: #e0e4ec;
+    --text-2: #b0b8c8;
+    --text-3: #8892a6;
+    --accent: #4a7cff;
+    --accent-dim: rgba(74,124,255,0.15);
+    --green: #2ecc71;
+    --green-dim: rgba(46,204,113,0.12);
+    --yellow: #d4a017;
+    --red: #e05040;
+    --red-dim: rgba(224,80,64,0.13);
+    --blue-glow: rgba(74,124,255,0.25);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0d1020;
+    color: var(--text-0);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── DEMO CONTROLS ── */
+  .demo-controls { display: flex; gap: 12px; }
+  .demo-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+    padding: 9px 20px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border-2); background: var(--bg-3); color: var(--text-2);
+    transition: all 0.12s;
+  }
+  .demo-btn:hover { border-color: var(--accent); color: var(--text-0); }
+  .hint { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.2px; color:var(--text-3); }
+
+  /* ── OVERLAY ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(4,6,12,0.72);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .overlay.visible { opacity: 1; pointer-events: all; }
+
+  /* ── POPUP ── */
+  .popup {
+    width: 1280px;
+    max-width: calc(100vw - 40px);
+    height: 780px;
+    max-height: calc(100vh - 40px);
+    background: rgba(10,13,20,0.97);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,124,255,0.06);
+    transform: translateY(8px) scale(0.985);
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), opacity 0.18s ease;
+    opacity: 0;
+  }
+  .overlay.visible .popup { transform: translateY(0) scale(1); opacity: 1; }
+
+  /* ── POPUP HEADER ── */
+  .popup-hdr {
+    padding: 22px 28px 0;
+    border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .popup-hdr-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .popup-title {
+    font-size: 17px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: #fff;
+  }
+  .popup-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border-1); background: var(--bg-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-3); font-size: 13px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .popup-close:hover { border-color: var(--border-2); color: var(--text-1); }
+
+  /* ── CATEGORY TABS ── */
+  .tabs { display: flex; gap: 2px; }
+  .tab {
+    padding: 9px 22px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+    color: var(--text-3); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.12s, border-color 0.12s;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text-1); }
+  .tab.active { color: #fff; border-bottom-color: var(--accent); }
+
+  /* ── THREE-COLUMN BODY ── */
+  .popup-body {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* ── COL 1: RECIPE LIST ── */
+  .col-list {
+    width: 300px; flex-shrink: 0;
+    border-right: 1px solid var(--border-0);
+    overflow-y: auto;
+    padding: 12px 0;
+    scrollbar-width: thin; scrollbar-color: var(--border-2) transparent;
+  }
+  .col-list::-webkit-scrollbar { width: 3px; }
+  .col-list::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+  .recipe-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 10px;
+  }
+  .recipe-item:hover { background: var(--bg-3); }
+  .recipe-item.selected { background: rgba(74,124,255,0.1); }
+  .recipe-item.selected .recipe-name { color: #fff; }
+
+  .recipe-item-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .recipe-icon {
+    width: 36px; height: 36px; border-radius: 6px;
+    background: var(--bg-4); border: 1px solid var(--border-1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 18px;
+  }
+  .recipe-name {
+    font-size: 14px; font-weight: 500; color: var(--text-1);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .recipe-owned {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.8px;
+    color: var(--text-3); flex-shrink: 0;
+  }
+  .recipe-owned.has-some { color: var(--green); }
+
+  /* ── COL 2: DETAIL ── */
+  .col-detail {
+    flex: 1; display: flex; flex-direction: column;
+    border-right: 1px solid var(--border-0);
+    overflow: hidden;
+  }
+  .detail-top {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .detail-item-name {
+    font-size: 22px; font-weight: 700; letter-spacing: 1px;
+    color: #fff; margin-bottom: 10px;
+  }
+  .detail-desc {
+    font-size: 14px; color: var(--text-3); line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .detail-produces {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .detail-produces-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .detail-produces-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg-3); border: 1px solid var(--border-1);
+    border-radius: 5px; padding: 4px 10px;
+    font-size: 11px; font-weight: 500; color: var(--text-1);
+  }
+  .detail-produces-qty {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; color: var(--green);
+    background: var(--green-dim); border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* craft area / visual placeholder */
+  .detail-visual {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .craft-station {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    opacity: 0.5;
+  }
+  .craft-station-box {
+    width: 54px; height: 48px; border-radius: 8px;
+    background: rgba(212,160,23,0.1); border: 1px solid rgba(212,160,23,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .craft-station-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--yellow);
+  }
+  /* animated dots while "crafting" */
+  .craft-anim {
+    display: none; position: absolute; inset: 0;
+    align-items: center; justify-content: center;
+    background: rgba(8,10,16,0.6); backdrop-filter: blur(2px);
+    flex-direction: column; gap: 12px;
+  }
+  .craft-anim.active { display: flex; }
+  .craft-progress-wrap { width: 180px; }
+  .craft-progress-track {
+    width: 100%; height: 3px; background: var(--bg-0);
+    border-radius: 2px; overflow: hidden; margin-bottom: 8px;
+  }
+  .craft-progress-fill {
+    height: 100%; background: var(--accent); border-radius: 2px;
+    width: 0%; transition: width 0.05s linear;
+  }
+  .craft-progress-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-3); text-align: center;
+  }
+
+  /* craft button */
+  .detail-footer {
+    padding: 18px 28px; border-top: 1px solid var(--border-0); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .craft-qty-row { display: flex; align-items: center; gap: 8px; }
+  .craft-qty-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-3);
+  }
+  .qty-btn {
+    width: 24px; height: 24px; border-radius: 5px;
+    border: 1px solid var(--border-1); background: var(--bg-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-2); font-size: 14px; line-height: 1;
+    transition: all 0.1s; user-select: none;
+  }
+  .qty-btn:hover { border-color: var(--border-2); color: #fff; }
+  .qty-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500; color: #fff;
+    min-width: 22px; text-align: center;
+  }
+  .btn-craft {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 9px 32px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    transition: all 0.12s;
+  }
+  .btn-craft:hover { background: #5a8cff; border-color: #5a8cff; }
+  .btn-craft:disabled,
+  .btn-craft.disabled {
+    background: var(--bg-3); border-color: var(--border-1);
+    color: var(--text-3); cursor: not-allowed;
+  }
+
+  /* ── COL 3: REQUIREMENTS ── */
+  .col-reqs {
+    width: 340px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .reqs-header {
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 12px 16px 10px; border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .reqs-col-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3);
+  }
+  .reqs-col-label:last-child { text-align: right; }
+
+  .reqs-list {
+    flex: 1; overflow-y: auto; padding: 10px 0;
+    scrollbar-width: thin; scrollbar-color: var(--border-2) transparent;
+  }
+  .reqs-list::-webkit-scrollbar { width: 3px; }
+  .reqs-list::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+  .req-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; gap: 12px;
+    border-bottom: 1px solid var(--border-0);
+    transition: background 0.1s;
+  }
+  .req-row:last-child { border-bottom: none; }
+  .req-row.missing { background: rgba(224,80,64,0.07); }
+  .req-row:hover { background: var(--bg-3); }
+
+  .req-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .req-icon {
+    width: 38px; height: 38px; border-radius: 7px;
+    background: var(--bg-3); border: 1px solid var(--border-1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 18px;
+  }
+  .req-row.missing .req-icon {
+    background: rgba(224,80,64,0.1);
+    border-color: rgba(224,80,64,0.25);
+  }
+  .req-info { min-width: 0; }
+  .req-name {
+    font-size: 14px; font-weight: 500; color: var(--text-1);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .req-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.5px; color: var(--text-3);
+    margin-top: 2px;
+  }
+  .req-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .req-count.ok { color: var(--green); }
+  .req-count.missing-count { color: var(--red); }
+
+  /* requirement fraction bar */
+  .req-bar-wrap { padding: 0 20px 10px; margin-top: -4px; }
+  .req-bar-track {
+    height: 2px; background: var(--bg-0); border-radius: 1px; overflow: hidden;
+  }
+  .req-bar-fill {
+    height: 100%; border-radius: 1px;
+    transition: width 0.3s ease;
+  }
+  .req-bar-fill.ok { background: var(--green); }
+  .req-bar-fill.partial { background: var(--yellow); }
+  .req-bar-fill.none { background: var(--red); }
+
+  /* crafting success flash */
+  .success-flash {
+    position: absolute; inset: 0;
+    background: rgba(46,204,113,0.08);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s;
+  }
+  .success-flash.show { opacity: 1; }
+
+  /* empty state for list */
+  .empty-list {
+    padding: 32px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.4;
+  }
+  .empty-list-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3);
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-controls">
+  <div class="demo-btn" onclick="openCrafting()">Open Crafting (C)</div>
+</div>
+<div class="hint">Press C to toggle</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="handleOverlay(event)">
+  <div class="popup" id="popup">
+
+    <!-- HEADER -->
+    <div class="popup-hdr">
+      <div class="popup-hdr-top">
+        <div class="popup-title">Crafting</div>
+        <div class="popup-close" onclick="closePopup()">✕</div>
+      </div>
+      <div class="tabs" id="cat-tabs"></div>
+    </div>
+
+    <!-- BODY -->
+    <div class="popup-body">
+
+      <!-- COL 1: recipe list -->
+      <div class="col-list" id="col-list"></div>
+
+      <!-- COL 2: detail -->
+      <div class="col-detail">
+        <div class="detail-top" id="detail-top"></div>
+        <div class="detail-visual" id="detail-visual">
+          <div class="craft-station">
+            <div class="craft-station-box">
+              <svg width="28" height="24" viewBox="0 0 28 24" fill="none">
+                <rect x="2" y="8" width="24" height="14" rx="3" fill="rgba(212,160,23,0.3)" stroke="#d4a017" stroke-width="1.2"/>
+                <rect x="6" y="4" width="16" height="6" rx="2" fill="rgba(212,160,23,0.2)" stroke="#d4a017" stroke-width="1"/>
+                <line x1="9" y1="12" x2="19" y2="12" stroke="#d4a017" stroke-width="1" stroke-dasharray="2 2"/>
+              </svg>
+            </div>
+            <div class="craft-station-label">Workbench</div>
+          </div>
+          <div class="craft-anim" id="craft-anim">
+            <div class="craft-progress-wrap">
+              <div class="craft-progress-track">
+                <div class="craft-progress-fill" id="craft-fill"></div>
+              </div>
+              <div class="craft-progress-text" id="craft-text">Crafting…</div>
+            </div>
+          </div>
+          <div class="success-flash" id="success-flash"></div>
+        </div>
+        <div class="detail-footer" id="detail-footer"></div>
+      </div>
+
+      <!-- COL 3: requirements -->
+      <div class="col-reqs">
+        <div class="reqs-header">
+          <div class="reqs-col-label">Requires</div>
+          <div class="reqs-col-label">You Have</div>
+        </div>
+        <div class="reqs-list" id="reqs-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const INVENTORY = {
+  'Cloth':         0,
+  'Adhesive':      0,
+  'Bandage':       2,
+  'Steel Rod':     3,
+  'Rag':           5,
+  'Antiseptic':    1,
+  'Field Bandage': 0,
+  'Med Supplies':  0,
+  'Gun Parts':     2,
+  'Lubricant':     1,
+  'Spring':        0,
+  'Scrap Metal':   4,
+  'Wire':          2,
+  'Gunpowder':     0,
+  'Casing':        3,
+  'Lead':          1,
+  'Polymer':       2,
+  'Electronics':   0,
+  'Grip Tape':     1,
+};
+
+const CATEGORIES = [
+  {
+    id: 'meds', label: 'Meds',
+    recipes: [
+      {
+        id: 'bandage', name: 'Bandage', icon: '🩹', owned: 2,
+        desc: 'Basic wound dressing to stop bleeding.',
+        produces: 'Bandage', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Cloth',    need: 2, icon: '🧵' },
+          { name: 'Adhesive', need: 1, icon: '🔧' },
+        ]
+      },
+      {
+        id: 'field_medkit', name: 'Field Medkit', icon: '💊', owned: 201,
+        desc: 'Portable medkit for field use. Restores moderate health over time.',
+        produces: 'Field Medkit', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Bandage',    need: 2, icon: '🩹' },
+          { name: 'Antiseptic', need: 1, icon: '🧴' },
+          { name: 'Rag',        need: 3, icon: '🧶' },
+        ]
+      },
+      {
+        id: 'adv_medkit', name: 'Advanced Medkit', icon: '🏥', owned: 0,
+        desc: 'Military-grade trauma kit. Fully restores health and removes debuffs.',
+        produces: 'Advanced Medkit', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Field Bandage', need: 2, icon: '💊' },
+          { name: 'Med Supplies',  need: 3, icon: '🧪' },
+          { name: 'Antiseptic',    need: 2, icon: '🧴' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'weapons', label: 'Weapons',
+    recipes: [
+      {
+        id: 'improv_knife', name: 'Improvised Knife', icon: '🔪', owned: 0,
+        desc: 'Crude but effective. Crafted from scrap metal and wrapped in grip tape.',
+        produces: 'Improvised Knife', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Scrap Metal', need: 3, icon: '⚙️' },
+          { name: 'Grip Tape',   need: 1, icon: '🎗️' },
+          { name: 'Adhesive',    need: 1, icon: '🔧' },
+        ]
+      },
+      {
+        id: 'gun_repair', name: 'Gun Repair Kit', icon: '🔫', owned: 0,
+        desc: 'Restores weapon durability. Includes cleaning patches and oil.',
+        produces: 'Gun Repair Kit', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Gun Parts',  need: 2, icon: '🔩' },
+          { name: 'Lubricant',  need: 1, icon: '🛢️' },
+          { name: 'Rag',        need: 2, icon: '🧶' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'ammo', label: 'Ammo',
+    recipes: [
+      {
+        id: 'pistol_ammo', name: '9mm Rounds ×12', icon: '🔴', owned: 0,
+        desc: 'Standard 9mm pistol ammunition. Handloaded from components.',
+        produces: '9mm Rounds', qty: 12,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Casing',    need: 4, icon: '🔶' },
+          { name: 'Gunpowder', need: 2, icon: '⚫' },
+          { name: 'Lead',      need: 4, icon: '🔘' },
+        ]
+      },
+      {
+        id: 'rifle_ammo', name: '5.56 Rounds ×10', icon: '🟡', owned: 0,
+        desc: 'Rifle-calibre rounds. Requires precision components.',
+        produces: '5.56 Rounds', qty: 10,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Casing',    need: 6, icon: '🔶' },
+          { name: 'Gunpowder', need: 3, icon: '⚫' },
+          { name: 'Lead',      need: 6, icon: '🔘' },
+          { name: 'Polymer',   need: 1, icon: '🟦' },
+        ]
+      },
+    ]
+  },
+  {
+    id: 'mods', label: 'Mods',
+    recipes: [
+      {
+        id: 'basic_scope', name: 'Basic Scope', icon: '🔭', owned: 0,
+        desc: 'Simple 2x magnification optic. Compatible with most rifles.',
+        produces: 'Basic Scope', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Electronics', need: 2, icon: '💡' },
+          { name: 'Wire',        need: 2, icon: '〰️' },
+          { name: 'Polymer',     need: 3, icon: '🟦' },
+        ]
+      },
+      {
+        id: 'suppressor', name: 'Suppressor', icon: '🔕', owned: 0,
+        desc: 'Reduces muzzle report and flash. Threaded barrel required.',
+        produces: 'Suppressor', qty: 1,
+        station: 'Workbench',
+        ingredients: [
+          { name: 'Scrap Metal', need: 4, icon: '⚙️' },
+          { name: 'Wire',        need: 1, icon: '〰️' },
+          { name: 'Adhesive',    need: 2, icon: '🔧' },
+        ]
+      },
+    ]
+  },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  catId: 'meds',
+  recipeId: 'bandage',
+  qty: 1,
+  inv: { ...INVENTORY },
+  crafting: false,
+};
+
+function getCategory() { return CATEGORIES.find(c => c.id === state.catId); }
+function getRecipe()   { return getCategory().recipes.find(r => r.id === state.recipeId); }
+function canCraft(recipe, qty=1) {
+  return recipe.ingredients.every(ing => (state.inv[ing.name]||0) >= ing.need * qty);
+}
+function maxCraftable(recipe) {
+  let max = Infinity;
+  recipe.ingredients.forEach(ing => {
+    const have = state.inv[ing.name]||0;
+    max = Math.min(max, Math.floor(have / ing.need));
+  });
+  return max === Infinity ? 0 : max;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+function renderTabs() {
+  const el = document.getElementById('cat-tabs');
+  el.innerHTML = CATEGORIES.map(c => `
+    <div class="tab ${c.id===state.catId?'active':''}" onclick="selectCat('${c.id}')">${c.label}</div>
+  `).join('');
+}
+
+function renderList() {
+  const cat = getCategory();
+  const el = document.getElementById('col-list');
+  el.innerHTML = cat.recipes.map(r => `
+    <div class="recipe-item ${r.id===state.recipeId?'selected':''}" onclick="selectRecipe('${r.id}')">
+      <div class="recipe-item-left">
+        <div class="recipe-icon">${r.icon}</div>
+        <div class="recipe-name">${r.name}</div>
+      </div>
+      <div class="recipe-owned ${(state.inv[r.produces]||r.owned)>0?'has-some':''}">
+        ${state.inv[r.name] !== undefined ? state.inv[r.name] : r.owned}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDetail() {
+  const r = getRecipe();
+  const craftable = canCraft(r, state.qty);
+  const maxQ = maxCraftable(r);
+
+  // clamp qty
+  if (state.qty > Math.max(1, maxQ)) state.qty = Math.max(1, maxQ) || 1;
+
+  document.getElementById('detail-top').innerHTML = `
+    <div class="detail-item-name">${r.name}</div>
+    <div class="detail-desc">${r.desc}</div>
+    <div class="detail-produces">
+      <div class="detail-produces-label">Produces</div>
+      <div class="detail-produces-chip">
+        ${r.icon} ${r.produces}
+        <span class="detail-produces-qty">×${r.qty * state.qty}</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detail-footer').innerHTML = `
+    <div class="craft-qty-row">
+      <div class="craft-qty-label">Qty</div>
+      <div class="qty-btn" onclick="changeQty(-1)">−</div>
+      <div class="qty-val">${state.qty}</div>
+      <div class="qty-btn" onclick="changeQty(1)">+</div>
+    </div>
+    <div class="btn-craft ${craftable?'':'disabled'}" onclick="doCraft()">Craft</div>
+  `;
+}
+
+function renderReqs() {
+  const r = getRecipe();
+  const el = document.getElementById('reqs-list');
+  el.innerHTML = r.ingredients.map(ing => {
+    const have = state.inv[ing.name] || 0;
+    const need = ing.need * state.qty;
+    const ok = have >= need;
+    const pct = need > 0 ? Math.min(100, Math.round((have/need)*100)) : 100;
+    const barClass = pct >= 100 ? 'ok' : pct > 0 ? 'partial' : 'none';
+    return `
+      <div class="req-row ${ok?'':'missing'}">
+        <div class="req-left">
+          <div class="req-icon">${ing.icon}</div>
+          <div class="req-info">
+            <div class="req-name">${ing.name}</div>
+            <div class="req-sub">need ×${need}</div>
+          </div>
+        </div>
+        <div class="req-count ${ok?'ok':'missing-count'}">${have} / ${need}</div>
+      </div>
+      <div class="req-bar-wrap">
+        <div class="req-bar-track">
+          <div class="req-bar-fill ${barClass}" style="width:${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function render() {
+  renderTabs();
+  renderList();
+  renderDetail();
+  renderReqs();
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+
+function selectCat(id) {
+  state.catId = id;
+  state.recipeId = CATEGORIES.find(c=>c.id===id).recipes[0].id;
+  state.qty = 1;
+  render();
+}
+
+function selectRecipe(id) {
+  state.recipeId = id;
+  state.qty = 1;
+  render();
+}
+
+function changeQty(delta) {
+  const r = getRecipe();
+  const max = maxCraftable(r);
+  state.qty = Math.max(1, Math.min(state.qty + delta, max || 1));
+  renderDetail();
+  renderReqs();
+}
+
+function doCraft() {
+  const r = getRecipe();
+  if (state.crafting || !canCraft(r, state.qty)) return;
+  state.crafting = true;
+
+  const anim = document.getElementById('craft-anim');
+  const fill = document.getElementById('craft-fill');
+  const text = document.getElementById('craft-text');
+  anim.classList.add('active');
+
+  let progress = 0;
+  const duration = 1200;
+  const start = Date.now();
+
+  const tick = () => {
+    const elapsed = Date.now() - start;
+    progress = Math.min(100, (elapsed / duration) * 100);
+    fill.style.width = progress + '%';
+    text.textContent = progress < 100 ? 'Crafting…' : 'Done!';
+    if (progress < 100) { requestAnimationFrame(tick); return; }
+
+    // consume ingredients
+    r.ingredients.forEach(ing => {
+      state.inv[ing.name] = Math.max(0, (state.inv[ing.name]||0) - ing.need * state.qty);
+    });
+    // add produced
+    state.inv[r.produces] = (state.inv[r.produces]||0) + r.qty * state.qty;
+
+    setTimeout(() => {
+      anim.classList.remove('active');
+      fill.style.width = '0%';
+      state.crafting = false;
+      state.qty = 1;
+
+      // success flash
+      const flash = document.getElementById('success-flash');
+      flash.classList.add('show');
+      setTimeout(() => flash.classList.remove('show'), 300);
+
+      render();
+    }, 400);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ─── POPUP ───────────────────────────────────────────────────────────────────
+
+function openCrafting() {
+  render();
+  document.getElementById('overlay').classList.add('visible');
+}
+function closePopup() {
+  document.getElementById('overlay').classList.remove('visible');
+}
+function handleOverlay(e) {
+  if (e.target === document.getElementById('overlay')) closePopup();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') closePopup();
+  if ((e.key==='c'||e.key==='C') && !state.crafting) {
+    const ov = document.getElementById('overlay');
+    ov.classList.contains('visible') ? closePopup() : openCrafting();
+  }
+});
+</script>
+</body>
+</html>
