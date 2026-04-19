@@ -16,6 +16,7 @@ namespace View.UI.Quests
         [SerializeField] private Button _expandButton;
         [SerializeField] private GameObject _expandContent;
         [SerializeField] private Transform _expandImageToFlip;
+        [SerializeField] private TMP_Text _questName;
         [SerializeField] private TMP_Text _npcName;
         [SerializeField] private TMP_Text _questDescription;
         [SerializeField] private Button _acceptButton;
@@ -34,11 +35,9 @@ namespace View.UI.Quests
             SetStateObjects(_activeStateObjects, status == QuestStatus.Active);
             SetStateObjects(_completedStateObjects, status == QuestStatus.Completed);
 
-            if (_npcName != null)
-                _npcName.text = quest.DisplayName;
-
-            if (_questDescription != null)
-                _questDescription.text = quest.Description;
+            _questName.text = quest.DisplayName;
+            _questDescription.text = quest.Description;
+            _npcName.text = quest.NpcId;
 
             SetupTasks(quest, progress, status);
             SetupRewards(quest);

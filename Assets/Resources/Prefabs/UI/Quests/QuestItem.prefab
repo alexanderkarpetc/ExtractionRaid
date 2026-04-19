@@ -38,7 +38,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 506.31985, y: -175.98999}
+  m_AnchoredPosition: {x: 506.31985, y: -202.555}
   m_SizeDelta: {x: 1006.2, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5976250530693115806
@@ -312,6 +312,7 @@ GameObject:
   - component: {fileID: 5330713911465200289}
   - component: {fileID: 6986424718810686307}
   - component: {fileID: 3510174232090601805}
+  - component: {fileID: 7818182160189359619}
   m_Layer: 5
   m_Name: NpcName
   m_TagString: Untagged
@@ -438,6 +439,26 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7818182160189359619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607954077133504572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &708060181692051519
 GameObject:
   m_ObjectHideFlags: 0
@@ -472,7 +493,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 503.1, y: -87.38}
+  m_AnchoredPosition: {x: 503.1, y: -140.51}
   m_SizeDelta: {x: 963.69, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &9023322126034442761
@@ -2167,6 +2188,7 @@ GameObject:
   - component: {fileID: 7627795320951158952}
   - component: {fileID: 5303983720484988555}
   - component: {fileID: 1228635434056400254}
+  - component: {fileID: 3580213059451221610}
   m_Layer: 5
   m_Name: Border
   m_TagString: Untagged
@@ -2231,6 +2253,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3580213059451221610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3516988734024743600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &3555932013382964326
 GameObject:
   m_ObjectHideFlags: 0
@@ -2657,6 +2699,8 @@ GameObject:
   - component: {fileID: 7371647569796210952}
   - component: {fileID: 6649047307146073026}
   - component: {fileID: 742697602523508045}
+  - component: {fileID: 6635303465628140588}
+  - component: {fileID: 6052954920389035520}
   m_Layer: 5
   m_Name: QuestDescription
   m_TagString: Untagged
@@ -2678,10 +2722,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 462964656775574390}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: -214.4, y: 0}
-  m_SizeDelta: {x: 1168.02, y: 31.5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 243, y: -63.565}
+  m_SizeDelta: {x: 683.24, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &6649047307146073026
 CanvasRenderer:
@@ -2711,7 +2755,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Some description of task that we need to go somewhere do something important
+  m_text: Some description of task that we need to go somewhere do something importantSome
+    description of task that we need to go somewhere do something importantSome description
+    of task that we need to go somewhere do something importantSome description of
+    task that we need to go somewhere do something importantSome description of task
+    that we need to go somewhere do something importantSome description of task that
+    we need to go somewhere do something important
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2783,6 +2832,40 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6635303465628140588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4504941155316734577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
+--- !u!114 &6052954920389035520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4504941155316734577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &5208318088799829588
 GameObject:
   m_ObjectHideFlags: 0
@@ -3202,6 +3285,7 @@ GameObject:
   - component: {fileID: 6795078806621847298}
   - component: {fileID: 1054586079561825640}
   - component: {fileID: 7565179204059542159}
+  - component: {fileID: 2692426224972786175}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -3266,6 +3350,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2692426224972786175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5591270954115807119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &6069931896258221366
 GameObject:
   m_ObjectHideFlags: 0
@@ -3276,6 +3380,8 @@ GameObject:
   m_Component:
   - component: {fileID: 462964656775574390}
   - component: {fileID: 5820692486357661451}
+  - component: {fileID: 3953866507168001369}
+  - component: {fileID: 4936110041593396319}
   m_Layer: 5
   m_Name: NpcArea
   m_TagString: Untagged
@@ -3302,9 +3408,9 @@ RectTransform:
   - {fileID: 7371647569796210952}
   m_Father: {fileID: 7630325496321273610}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 503.1, y: -70.065}
   m_SizeDelta: {x: 963.69, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5820692486357661451
@@ -3327,6 +3433,46 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3953866507168001369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069931896258221366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 243
+    m_Right: 0
+    m_Top: 10
+    m_Bottom: 1
+  m_ChildAlignment: 3
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
+--- !u!114 &4936110041593396319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6069931896258221366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
 --- !u!1 &6259442884217638049
 GameObject:
   m_ObjectHideFlags: 0
@@ -3413,6 +3559,7 @@ GameObject:
   - component: {fileID: 7420413964192186419}
   - component: {fileID: 2542943819356330039}
   - component: {fileID: 4429881724779020308}
+  - component: {fileID: 4757361321804873284}
   m_Layer: 5
   m_Name: NpcImage
   m_TagString: Untagged
@@ -3477,6 +3624,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4757361321804873284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6491827338633943998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 1
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &7955974294754138502
 GameObject:
   m_ObjectHideFlags: 0
@@ -3545,6 +3712,7 @@ MonoBehaviour:
   _expandButton: {fileID: 3950391644764790477}
   _expandContent: {fileID: 270999536267606060}
   _expandImageToFlip: {fileID: 729261098901085531}
+  _questName: {fileID: 3244239232420566899}
   _npcName: {fileID: 3510174232090601805}
   _questDescription: {fileID: 742697602523508045}
   _acceptButton: {fileID: 3225551021252139380}
