@@ -1,4 +1,5 @@
 using System;
+using Constants;
 using UnityEngine;
 
 namespace Quests
@@ -10,7 +11,8 @@ namespace Quests
         FindPlace,
         ProvideSupply,
         Extract,
-        Craft
+        Craft,
+        FindItem
     }
 
     [Serializable]
@@ -63,5 +65,14 @@ namespace Quests
     {
         public override QuestTaskType TaskType => QuestTaskType.Craft;
         public string ItemId;
+    }
+
+    [Serializable]
+    public class FindItemTask : QuestTask
+    {
+        public override QuestTaskType TaskType => QuestTaskType.FindItem;
+        public string ItemId;
+        public Vector3 Coordinates;
+        public MapId Map;
     }
 }

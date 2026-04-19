@@ -124,6 +124,23 @@ namespace ApplicationCore
             StartRaid(levelId);
         }
 
+        /// <summary>
+        /// Ends the current raid and returns the player to the hideout scene.
+        /// Used by both cheat-extract and real extraction flows.
+        /// </summary>
+        public async UniTask ExtractToHideout()
+        {
+            EndRaid();
+            DisposePresenters();
+            await SceneManager.LoadSceneAsync("HideoutScene");
+
+            var cam = Camera.main;
+            if (cam != null)
+                _inputAdapter.SetCamera(cam);
+
+            EnterHideout();
+        }
+
         void DisposePresenters()
         {
             _playerPresenter.Dispose();

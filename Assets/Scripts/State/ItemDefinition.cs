@@ -373,6 +373,15 @@ namespace State
                     DisplayName = "Overclock Receiver",
                     AllowedSlots = ItemSlotType.Backpack,
                 },
+
+                // --- Quest Items ---
+                ["Worn_Warehouse_Key"] = new()
+                {
+                    Id = "Worn_Warehouse_Key",
+                    DisplayName = "Worn Warehouse Key",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
             };
         }
     }

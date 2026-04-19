@@ -19,6 +19,7 @@ namespace View
         {
             var session = App.Instance?.RaidSession;
             var player = session?.RaidState?.PlayerEntity;
+            if (player == null) return;
 
             var kb = Keyboard.current;
             if (kb != null && kb[Key.Tab].wasPressedThisFrame)

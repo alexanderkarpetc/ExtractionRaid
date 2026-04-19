@@ -3,6 +3,7 @@ using Adapters;
 using ApplicationCore;
 using Constants;
 using Dev;
+using Quests;
 using Systems;
 using Systems.Bot;
 using State;
@@ -54,6 +55,7 @@ namespace Session
             var spawnPos = spawnPoints.Length > 0 ? spawnPoints[0].transform.position : Vector3.zero;
             PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer, LevelState.LevelId);
             SpawnFromScenePoints();
+            SpawnActiveQuestItems();
             // SpawnTestGroundItems();
             // SpawnTestBots();
             if (LevelState.LevelId == "shooting_range")
@@ -115,6 +117,34 @@ namespace Session
                 var id = RaidState.AllocateEId();
                 var npc = NpcState.Create(id, sp.transform.position, sp.npcId);
                 RaidState.Npcs.Add(npc);
+            }
+        }
+
+        void SpawnActiveQuestItems()
+        {
+            if (!App.IsInitialized) return;
+            var db = App.Instance.QuestDatabase;
+            var progress = App.Instance.Player?.QuestProgress;
+            if (db == null || progress == null) return;
+
+            var currentMap = MapIds.FromLevelId(LevelState.LevelId);
+            if (currentMap == MapId.None) return;
+
+            var activeQuests = QuestSystem.GetAllActiveQuests(progress, db);
+            foreach (var quest in activeQuests)
+            {
+                if (quest?.Tasks == null) continue;
+                foreach (var task in quest.Tasks)
+                {
+                    if (task is not FindItemTask findItem) continue;
+                    if (findItem.Map != currentMap) continue;
+                    if (string.IsNullOrEmpty(findItem.ItemId)) continue;
+
+                    var id = RaidState.AllocateEId();
+                    var groundItem = GroundItemState.Create(id, findItem.ItemId, findItem.Coordinates, 1);
+                    RaidState.GroundItems.Add(groundItem);
+                    _eventBuffer.GroundItemSpawned(id, findItem.Coordinates, findItem.ItemId);
+                }
             }
         }
 

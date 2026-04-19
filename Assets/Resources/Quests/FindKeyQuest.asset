@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01f7b830b6b19b348a074d28ea82e4c4, type: 3}
+  m_Name: FindKeyQuest
+  m_EditorClassIdentifier: Game::Quests.QuestDefinition
+  Id: dropped_access
+  DisplayName: Dropped Access
+  Description: "\u201CHey. Got a problem. Dropped a warehouse key somewhere outside
+    the perimeter when things went loud. Can\u2019t go myself \u2014 too many eyes.\nYou
+    look capable enough. Go out, find it, and bring it back. Fast. That place holds
+    supplies I\u2019m not ready to lose.\u201D"
+  RequiredLevel: 0
+  NpcId: AL
+  Tasks:
+  - rid: 2541323820743786570
+  Rewards:
+  - ItemId: Medkit
+    Count: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 2541323820743786570
+      type: {class: FindItemTask, ns: Quests, asm: Game}
+      data:
+        Description: Locate the Worn Warehouse Key in the outskirts area
+        RequiredCount: 1
+        InOneRaid: 0
+        ItemId: Worn_Warehouse_Key
+        Coordinates: {x: 5, y: 0, z: 5}
+        Map: 2

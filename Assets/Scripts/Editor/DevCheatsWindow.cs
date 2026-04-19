@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ApplicationCore;
+using Cysharp.Threading.Tasks;
 using Dev;
 using Systems;
 using UnityEditor;
@@ -112,6 +113,9 @@ namespace Editor
 
             EditorGUILayout.Space(8);
 
+            // ── Raid (custom — runtime actions) ───────────────
+            DrawRaidSection();
+
             // ── Quests (custom — needs runtime App access) ────
             DrawQuestsSection();
 
@@ -145,6 +149,34 @@ namespace Editor
             editor.OnInspectorGUI();
             if (EditorGUI.EndChangeCheck())
                 EditorUtility.SetDirty(section);
+            EditorGUI.indentLevel--;
+        }
+
+        void DrawRaidSection()
+        {
+            EditorGUILayout.Space(4);
+            bool fold = GetFoldout("Raid");
+            var newFold = EditorGUILayout.Foldout(fold, "Raid", true, EditorStyles.foldoutHeader);
+            if (newFold != fold) SetFoldout("Raid", newFold);
+            if (!newFold) return;
+
+            EditorGUI.indentLevel++;
+            bool appReady = Application.isPlaying && App.IsInitialized;
+
+            using (new EditorGUI.DisabledScope(!appReady || App.Instance.IsInHideout))
+            {
+                if (GUILayout.Button("Extract to Hideout"))
+                {
+                    if (appReady)
+                        App.Instance.ExtractToHideout().Forget();
+                }
+            }
+
+            if (!appReady)
+                EditorGUILayout.HelpBox("Enter Play Mode to use raid cheats.", MessageType.Info);
+            else if (App.Instance.IsInHideout)
+                EditorGUILayout.HelpBox("Already in hideout.", MessageType.Info);
+
             EditorGUI.indentLevel--;
         }
 

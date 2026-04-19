@@ -11,7 +11,7 @@ namespace View
         static readonly MapEntry[] Maps =
         {
             new("TestScene", "test_level", "Test Scene"),
-            new("MainTestScene", "main_test", "Main Test Scene"),
+            new("Test_Map", "main_map", "Main Map"),
         };
 
         bool _isOpen;
