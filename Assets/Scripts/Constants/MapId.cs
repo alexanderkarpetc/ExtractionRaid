@@ -10,7 +10,7 @@ namespace Constants
     public static class MapIds
     {
         public const string HideoutLevelId = "hideout";
-        public const string TestMapLevelId = "test_level";
+        public const string TestMapLevelId = "main_map";
 
         public static string ToLevelId(MapId map)
         {
