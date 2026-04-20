@@ -84,14 +84,25 @@ namespace View
         public Transform MuzzlePoint => _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
         public Animator Animator => _animator;
 
-        public void SyncAnimatorState(bool isRolling, bool isMoving)
+        public void SyncAnimatorState(bool isRolling, Vector3 velocity, float maxSpeed)
         {
+            bool isMoving = velocity.sqrMagnitude > 0.01f;
+
             if (_animator == null)
             {
                 _wasRollingLastFrame = isRolling;
                 _wasMovingLastFrame = isMoving;
                 return;
             }
+
+            // Locomotion blend tree expects normalized strafe/forward in character-local space.
+            // Body is rotated to FacingDirection (aim), so local X = strafe, Z = forward.
+            // Damped SetFloat smooths Idle↔Run transitions without needing separate animator states.
+            float invMax = maxSpeed > 0.001f ? 1f / maxSpeed : 0f;
+            var localVel = transform.InverseTransformDirection(velocity);
+            float damp = DevCheats.Config.Player.LocomotionBlendDampTime;
+            _animator.SetFloat("SpeedX", Mathf.Clamp(localVel.x * invMax, -1f, 1f), damp, Time.deltaTime);
+            _animator.SetFloat("SpeedY", Mathf.Clamp(localVel.z * invMax, -1f, 1f), damp, Time.deltaTime);
 
             _animator.SetBool("Run", !isRolling && isMoving);
 

@@ -2,6 +2,7 @@ using System;
 using Constants;
 using Dev;
 using State;
+using Systems;
 using UnityEngine;
 using View.FogOfWar;
 
@@ -69,7 +70,7 @@ namespace View
 
             if (_body != null)
             {
-                _body.SyncAnimatorState(state.IsRolling, state.Velocity.sqrMagnitude > 0.01f);
+                _body.SyncAnimatorState(state.IsRolling, state.Velocity, MovementSystem.MoveSpeed);
                 _body.SyncRollVisual(state.IsRolling, state.RollDirection, transform);
             }
 

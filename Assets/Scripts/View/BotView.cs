@@ -1,3 +1,4 @@
+using Constants;
 using Dev;
 using State;
 using UnityEngine;
@@ -69,7 +70,8 @@ namespace View
                 if (_body.WeaponPivot != null && state.AimDirection.sqrMagnitude > 0.001f)
                     _body.WeaponPivot.rotation = Quaternion.LookRotation(state.AimDirection, Vector3.up);
 
-                _body.SyncAnimatorState(state.IsRolling, state.Velocity.sqrMagnitude > 0.01f);
+                float maxSpeed = BotConstants.TryGetConfig(TypeId, out var botCfg) ? botCfg.ChaseSpeed : 5f;
+                _body.SyncAnimatorState(state.IsRolling, state.Velocity, maxSpeed);
                 _body.SyncRollVisual(state.IsRolling, state.RollDirection, transform);
             }
 
