@@ -53,6 +53,7 @@ MonoBehaviour:
   _capsuleVisual: {fileID: 8785479282720217872}
   _animator: {fileID: 4400004602721436305}
   _rightHandIK: {fileID: 5557728838561940099}
+  _swaySourceBone: {fileID: 8086024777637090389}
 --- !u!114 &5557728838561940099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,6 +255,11 @@ Transform:
 --- !u!4 &6640960992850506621 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8928928931500444049, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
+  m_PrefabInstance: {fileID: 2864433777807899372}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8086024777637090389 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6338772399039606457, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
   m_PrefabInstance: {fileID: 2864433777807899372}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8785479282720217872 stripped
