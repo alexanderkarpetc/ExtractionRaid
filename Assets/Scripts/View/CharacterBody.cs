@@ -21,6 +21,7 @@ namespace View
         [SerializeField] Transform _armorSlot;
         [SerializeField] Transform _capsuleVisual;
         [SerializeField] Animator _animator;
+        [SerializeField] TwoBoneIK _rightHandIK; // optional; solves right hand → weapon RightHandGrip
 
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
@@ -152,6 +153,10 @@ namespace View
             _currentWeaponModel.transform.localRotation = Quaternion.identity;
 
             _currentWeaponView = _currentWeaponModel.GetComponent<WeaponView>();
+
+            if (_rightHandIK != null)
+                _rightHandIK.SetTarget(FindDeepChild(_currentWeaponModel.transform, "RightHandGrip"));
+
             return _currentWeaponView;
         }
 
@@ -163,6 +168,20 @@ namespace View
             _currentWeaponPrefabId = null;
             _currentWeaponModel = null;
             _currentWeaponView = null;
+
+            if (_rightHandIK != null)
+                _rightHandIK.SetTarget(null);
+        }
+
+        static Transform FindDeepChild(Transform parent, string name)
+        {
+            if (parent.name == name) return parent;
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                var found = FindDeepChild(parent.GetChild(i), name);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         public string CurrentWeaponPrefabId => _currentWeaponPrefabId;
