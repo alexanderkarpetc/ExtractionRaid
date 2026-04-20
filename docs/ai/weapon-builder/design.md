@@ -11,7 +11,7 @@ _Чернетка v0.6 presentation patch_
 Додаткові шари системи:
 - **Exotic Mod** — один особливий модифікатор, який додає виразний twist
 - **Typed Attachments** — додаткові типізовані слоти для тюнінгу характеристик і feel
-- **Hidden Budget** — внутрішнє обмеження проти надто жирних комбінацій
+- **Slot structure / module compatibility** — обмеження збірки задаються самою структурою слотів і сумісністю модулів
 - **Rarity** — проста RPG-ієрархія сили на рівні core-модулів
 
 **Payload Core + Delivery Core = конкретний архетип зброї**
@@ -60,7 +60,7 @@ Weapon Builder підтримує fantasy світу, де зброя — це �
 - Кожна збірка має рівно **один Delivery Core**
 - Кожна збірка може мати не більше **одного Exotic Mod**
 - **Rarity** застосовується до **Payload Core** і **Delivery Core**
-- **Hidden Budget** повинен враховувати rarity
+- Ліміти збірки визначаються слотами і сумісністю модулів, а не окремим hidden budget
 - **Typed Attachments** не є частиною поточного active scope
 - За замовчуванням система прагне до широкої сумісності між Payload і Delivery, але окремі комбінації можуть бути явно заборонені design-рішенням
 
@@ -74,7 +74,7 @@ Weapon Builder підтримує fantasy світу, де зброя — це �
 - Delivery Core
 - Exotic Mod
 - Typed Attachments
-- Hidden Budget
+- Slot structure / module compatibility
 - Rarity
 - loot / crafting / extraction integration
 
@@ -83,12 +83,12 @@ Weapon Builder підтримує fantasy світу, де зброя — це �
 - Payload Core
 - Delivery Core
 - Exotic Mod
-- high-level Hidden Budget
+- slot structure / module compatibility
 - high-level Rarity
 
 Поки не є активним фокусом:
 - Typed Attachments у деталях
-- точна economy/formula частина Hidden Budget
+- точні правила slot compatibility
 - точна integration частина rarity у лут і крафт
 
 ### Production framing
@@ -152,14 +152,20 @@ Exotic layer навмисно не обмежений одним типом мо
 Базовий принцип:
 - слоти прив’язані не до всієї зброї загалом, а до конкретних core-модулів
 
-### 6.5. Hidden Budget
-Внутрішнє обмеження системи, яке не дає поєднувати все найкраще одразу.
+### 6.5. Slot structure / module compatibility
+У поточному дизайні **окремого hidden budget немає**.
 
-High-level принцип:
-- кожен core-модуль і Exotic Mod має внутрішню **вартість (cost)**, яка залежить від rarity і сили модуля
-- збірка має **максимальний бюджет**, який не може бути перевищений
-- гравець не бачить числа бюджету напряму — система працює як невидимий ліміт, що виражається через доступність комбінацій
-- якщо збірка перевищує бюджет, гравець не може її зібрати, поки не замінить один із модулів на дешевший
+Ліміти збірки задаються:
+- кількістю слотів
+- типом слотів
+- сумісністю модулів між собою
+
+Принцип:
+- якщо слот є і модуль сумісний, його можна встановити
+- якщо слота немає, модуль встановити не можна
+- якщо модулі несумісні, така комбінація забороняється rules-рівнем, а не бюджетом
+
+Тобто система обмежує гравця не прихованими числами, а **явною структурою збірки**.
 
 ### 6.6. Rarity
 Rarity живе на рівні core-модулів і читається як:
@@ -205,7 +211,7 @@ RPG rarity tiers:
 
 ### Approved high-level systems
 - **Rarity** — concept approved
-- **Hidden Budget** — concept approved
+- **Slot structure / module compatibility** — concept approved
 
 ### Deferred for later
 - Typed Attachments details
@@ -306,7 +312,6 @@ RPG rarity tiers:
 
 ## 11. Що поки не проробляємо
 
-- точну економіку Hidden Budget
 - формули статів
 - повний список Typed Attachments
 - UI-флоу збірки в деталях
@@ -320,4 +325,4 @@ RPG rarity tiers:
 
 ## 12. Стислий опис фічі
 
-**Weapon Builder** у нашому шутері — це система, де гравець комбінує **Payload Core** і **Delivery Core**, щоб отримати конкретний архетип зброї. Далі збірка може бути посилена через **Rarity**, модифікована одним виразним **Exotic Mod**, а в майбутньому — дотюнена через **Typed Attachments**. Модулі добуваються через лут і extraction loop, а **Hidden Budget** не дає системі розвалитися в дисбалансні комбінації.
+**Weapon Builder** у нашому шутері — це система, де гравець комбінує **Payload Core** і **Delivery Core**, щоб отримати конкретний архетип зброї. Далі збірка може бути посилена через **Rarity**, модифікована одним виразним **Exotic Mod**, а в майбутньому — дотюнена через **Typed Attachments**. Модулі добуваються через лут і extraction loop, а межі збірки задаються **структурою слотів і сумісністю модулів**.
