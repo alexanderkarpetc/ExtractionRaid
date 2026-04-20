@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d23d3df0e1be547d498e428839a4bb9e, type: 3}
+  m_Name: Auto
+  m_EditorClassIdentifier: Game::State.DeliveryCoreDefinition
+  _id: Auto
+  _pattern: 1
+  _statsByTier:
+  - FireInterval: 0.2
+    ProjectilesPerShot: 1
+    SpreadAngle: 0
+    ConeHalfAngle: 45
+    BodyRotationSpeed: 270
+    AimFollowSharpness: 10
+    RecoilKickForward: 2
+    RecoilKickSide: 1.5
+    RecoilRecoverySpeed: 2
+    EquipTime: 0.3
+    UnequipTime: 0.2
+    MagazineSize: 30
+    ReloadTime: 2
+  - FireInterval: 0
+    ProjectilesPerShot: 0
+    SpreadAngle: 0
+    ConeHalfAngle: 0
+    BodyRotationSpeed: 0
+    AimFollowSharpness: 0
+    RecoilKickForward: 0
+    RecoilKickSide: 0
+    RecoilRecoverySpeed: 0
+    EquipTime: 0
+    UnequipTime: 0
+    MagazineSize: 0
+    ReloadTime: 0
+  - FireInterval: 0
+    ProjectilesPerShot: 0
+    SpreadAngle: 0
+    ConeHalfAngle: 0
+    BodyRotationSpeed: 0
+    AimFollowSharpness: 0
+    RecoilKickForward: 0
+    RecoilKickSide: 0
+    RecoilRecoverySpeed: 0
+    EquipTime: 0
+    UnequipTime: 0
+    MagazineSize: 0
+    ReloadTime: 0
+  - FireInterval: 0
+    ProjectilesPerShot: 0
+    SpreadAngle: 0
+    ConeHalfAngle: 0
+    BodyRotationSpeed: 0
+    AimFollowSharpness: 0
+    RecoilKickForward: 0
+    RecoilKickSide: 0
+    RecoilRecoverySpeed: 0
+    EquipTime: 0
+    UnequipTime: 0
+    MagazineSize: 0
+    ReloadTime: 0
+  - FireInterval: 0
+    ProjectilesPerShot: 0
+    SpreadAngle: 0
+    ConeHalfAngle: 0
+    BodyRotationSpeed: 0
+    AimFollowSharpness: 0
+    RecoilKickForward: 0
+    RecoilKickSide: 0
+    RecoilRecoverySpeed: 0
+    EquipTime: 0
+    UnequipTime: 0
+    MagazineSize: 0
+    ReloadTime: 0
+  _spinUpTime: 0
+  _spinDownTime: 0
+  _volleyCount: 0
+  _volleyInterval: 0

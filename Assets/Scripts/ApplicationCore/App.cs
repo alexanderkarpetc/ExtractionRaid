@@ -24,6 +24,8 @@ namespace ApplicationCore
         public RaidSession RaidSession { get; private set; }
         public bool IsInHideout { get; private set; }
         public QuestDatabase QuestDatabase { get; private set; }
+        public CoreDefinitionDatabase CoreDefinitionDatabase { get; private set; }
+        public ICoreDefinitionRegistry CoreDefinitions { get; private set; }
 
         int _nextEIdValue;
 
@@ -65,6 +67,20 @@ namespace ApplicationCore
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
             if (QuestDatabase == null)
                 Debug.LogError("[App] QuestDatabase not found in Resources. Create a quest graph at Resources/QuestDatabase.questgraph.");
+
+            CoreDefinitionDatabase = Resources.Load<CoreDefinitionDatabase>("WeaponBuilder/CoreDefinitionDatabase");
+            if (CoreDefinitionDatabase != null)
+            {
+                CoreDefinitions = new DatabaseCoreDefinitionRegistry(CoreDefinitionDatabase);
+            }
+            else
+            {
+                // Database is not yet populated during Tier 0a. Registry stays null until
+                // stub assets land in Cluster D. Runtime code that depends on the registry
+                // arrives in Tier 0b; both sides tolerate null until then.
+                Debug.LogWarning("[App] CoreDefinitionDatabase not found at Resources/WeaponBuilder/CoreDefinitionDatabase. " +
+                                 "Weapon Builder registry will be null until the asset is created.");
+            }
         }
 
         internal static void Initialize()
@@ -93,7 +109,7 @@ namespace ApplicationCore
             }
 
             RaidSession = new RaidSession(levelId, AllocateEId, _timeAdapter, _inputAdapter,
-                _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter);
+                _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter, CoreDefinitions);
             RaidSession.Start();
 
             var cam = Camera.main;

@@ -69,6 +69,36 @@
 **Рішення:** Weapon Builder живе у `docs/ai/weapon-builder/` з окремими файлами під дизайн, архітектуру, план.
 **Причина:** Фіча занадто велика для одного файлу. Розділення концептуальних (живуть довго) і планових (живуть час реалізації) доків.
 
+### 2026-04-20 — Tier 0a complete ✅
+**Виконано:**
+- Всі нові types у `Assets/Scripts/State/`: enums (RarityTier, FiringPattern), stats structs (CommonPayloadStats, DeliveryStats, WeaponStats, 3 payload-specific), readonly struct instances (PayloadCoreInstance, DeliveryCoreInstance, ExoticModInstance), WeaponConfiguration
+- SO definitions: abstract `PayloadCoreDefinition` + 4 subclass'і (Ballistic/Laser/Rocket/Foam), concrete `DeliveryCoreDefinition`, `ExoticModDefinition`, central `CoreDefinitionDatabase`
+- Port `ICoreDefinitionRegistry` + реалізація `DatabaseCoreDefinitionRegistry` у `Assets/Scripts/Adapters/`
+- Інтеграція: `RaidContext.CoreDefinitions`, RaidSession ctor параметр, App завантажує Database через `Resources.Load<>`
+- Editor utility `WeaponBuilderStubAssets` (menu: `Tools → Weapon Builder → Create Stub Assets`) — idempotent authoring з чисел pre-migration factories
+- Stub assets створені: BallisticRound/SingleAction/Auto + CoreDefinitionDatabase (Common tier заповнений)
+- 24 unit tests зелені (CoreInstance equality + Registry lookup)
+
+**Нульовий runtime impact:** існуючі weapons (Rifle/Pistol/Shotgun) працюють як раніше, нова система поряд і не використовується — Tier 0b її підключить.
+
+**Next:** декомпозиція Tier 0b у конкретні task'и.
+
+### 2026-04-20 — D3 amendment: Database SO over Resources.LoadAll
+**Рішення:** Міняємо D3 loading mechanism з `Resources.LoadAll<T>` на central `CoreDefinitionDatabase` SO (за патерном `QuestDatabase`).
+
+**Чому:**
+- Explicit — явний список assets у Database Inspector, не автомагічний scan
+- No Resources build bloat для всіх assets (тільки Database у Resources)
+- Консистентно з existing project pattern (`QuestDefinition` + `QuestDatabase`)
+- Simpler hot-reload: Database rebuild індексу замість сканування filesystem
+
+**Наслідки:**
+- `ICoreDefinitionRegistry` wrap'ить Database і будує BuildIndex dictionaries
+- Cluster D (stub assets) додає `CoreDefinitionDatabase.asset` як central aggregator
+- Registry реалізація у Cluster C стає простішою (один SO → indices, замість Resources scan)
+
+**Див.:** [architecture.md §D3](../architecture.md)
+
 ### 2026-04-20 — R1 decision: Tier 0 split into 0a + 0b
 **Контекст:** Tier 0 work items зросли до ~14 після закриття D1-D4. Розмір ризикує великим diff, довгим review, конфліктами merge.
 
@@ -235,10 +265,11 @@
 - [x] ~~Закрити D1+D2~~ ✅
 - [x] ~~Закрити D3, D4~~ ✅
 - [x] ~~R1 decision — Tier 0 split~~ ✅ 0a (data model) + 0b (migration)
-- [x] ~~Декомпозувати Tier 0a у конкретні задачі~~ ✅ [tasks.md](./tasks.md) — 16 задач, 5 кластерів
-- [ ] **Старт імплементації Tier 0a** (Cluster A → B → C → D+E)
+- [x] ~~Декомпозувати Tier 0a у конкретні задачі~~ ✅
+- [x] ~~Старт імплементації Tier 0a~~ ✅ complete (2026-04-20)
+- [ ] **Merge Tier 0a** (commit + PR + review)
+- [ ] Деталізувати Tier 0b задачі (детальна декомпозиція з work items)
 - [ ] Закрити D6-D8 перед стартом Tier 1 коду (re-assembly triggers, invalid config, archetype labels)
-- [ ] Деталізувати Tier 0b задачі після merge 0a
 - [ ] Size estimation для Tier 0 — вирішити split 0a+0b чи ні
 - [ ] Закрити D6-D8 перед стартом Tier 1 коду
 

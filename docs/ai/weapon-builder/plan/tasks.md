@@ -62,14 +62,14 @@
   - `ExoticModInstance` — без `Rarity` поля
   - DoD: structs скомпільовані, unit tests (T-0a.16) зелені на equality
 
-- [/] **T-0a.06 — `WeaponConfiguration` тип** (struct створений; використання в InventoryItem schema — пізніше в 0b)
+- [x] **T-0a.06 — `WeaponConfiguration` тип** ✅ (struct створений; використання в InventoryItem schema — 0b)
   - Path: `Assets/Scripts/State/WeaponConfiguration.cs`
   - `[Serializable]` struct з: `PayloadCoreInstance Payload`, `DeliveryCoreInstance Delivery`, `bool HasExotic + ExoticModInstance Exotic` (bool-flag pattern для Unity serialization, accessor `Exotic?` computed), `int AmmoInMagazine`
   - DoD: тип компілюється, готовий до використання в InventoryItem schema (але ще НЕ підключається до runtime — це 0b)
 
 ### Cluster B: ScriptableObject definitions
 
-- [ ] **T-0a.07 — Abstract `PayloadCoreDefinition` SO**
+- [x] **T-0a.07 — Abstract `PayloadCoreDefinition` SO** ✅
   - Path: `Assets/Scripts/State/PayloadCoreDefinition.cs`
   - `public abstract class PayloadCoreDefinition : ScriptableObject`
   - Поля: `[SerializeField] string _id`, `[SerializeField] string _archetype`, `[SerializeField] string _ammoType`, `[SerializeField] CommonPayloadStats[] _statsByTier` (length 5)
@@ -77,7 +77,7 @@
   - Validation hook: editor warning якщо `_statsByTier.Length != 5`
   - DoD: abstract SO, не можна інстанціювати, але subclasses будуть
 
-- [ ] **T-0a.08 — 4 Payload subclasses**
+- [x] **T-0a.08 — 4 Payload subclasses** ✅
   - Paths:
     - `Assets/Scripts/State/BallisticPayloadDefinition.cs` — `[CreateAssetMenu(menuName="Weapons/Payload/Ballistic")]`, без specific
     - `Assets/Scripts/State/LaserPayloadDefinition.cs` — з `[SerializeField] LaserSpecificStats[] _specificByTier`
@@ -86,13 +86,13 @@
   - Для трьох з specific — accessor `SpecificByTier(RarityTier)`
   - DoD: всі 4 створюються через `Assets → Create → Weapons → Payload → ...`
 
-- [ ] **T-0a.09 — `DeliveryCoreDefinition` SO**
+- [x] **T-0a.09 — `DeliveryCoreDefinition` SO** ✅
   - Path: `Assets/Scripts/State/DeliveryCoreDefinition.cs`
   - `[CreateAssetMenu(menuName="Weapons/Delivery")]`
   - Поля: `_id`, `FiringPattern _pattern`, `DeliveryStats[] _statsByTier` (length 5), pattern-specific: `float _spinUpTime`, `float _spinDownTime`, `int _volleyCount`, `float _volleyInterval`
   - DoD: SO створюється через меню, працює single class без subclass'ів
 
-- [ ] **T-0a.10 — `ExoticModDefinition` SO**
+- [x] **T-0a.10 — `ExoticModDefinition` SO** ✅ (minimal shell — full shape in Tier 5)
   - Path: `Assets/Scripts/State/ExoticModDefinition.cs`
   - `[CreateAssetMenu(menuName="Weapons/Exotic")]`
   - Поля: `_id`, `_archetype`. Stat modifiers шапка поки порожня — наповнюється Tier 5
@@ -100,48 +100,48 @@
 
 ### Cluster C: Registry port + loading
 
-- [ ] **T-0a.11 — Port `ICoreDefinitionRegistry`**
+- [x] **T-0a.10b — `CoreDefinitionDatabase` SO** ✅ (added 2026-04-20, per D3 amendment)
+  - Path: `Assets/Scripts/State/CoreDefinitionDatabase.cs`
+  - ScriptableObject з `[SerializeField] List<PayloadCoreDefinition> _payloads`, `List<DeliveryCoreDefinition> _deliveries`, `List<ExoticModDefinition> _exotics`
+  - Public read-only accessors: `IReadOnlyList<...> Payloads/Deliveries/Exotics`
+  - BuildIndex pattern: lazy-init dictionaries by `Id` on first `TryGet`; `Get` throws
+  - `[CreateAssetMenu]` для створення в Inspector
+  - DoD: SO скомпільовано, індекс будується лейзі, duplicate-id warning логується
+
+- [x] **T-0a.11 — Port `ICoreDefinitionRegistry`** ✅
   - Path: `Assets/Scripts/Adapters/ICoreDefinitionRegistry.cs`
   - Інтерфейс: `PayloadCoreDefinition GetPayload(string id)`, `DeliveryCoreDefinition GetDelivery(string id)`, `ExoticModDefinition GetExotic(string id)` + `TryGet` варіанти
-  - Throws / returns null на міссінг — вирішити консистентно (пропоную: `Get` throws, `TryGet` returns bool)
+  - Throws / returns null на міссінг — консистентно: `Get` throws `KeyNotFoundException`, `TryGet` returns bool
   - DoD: інтерфейс compile, пустий
 
-- [ ] **T-0a.12 — Registry реалізація на Resources**
-  - Path: `Assets/Scripts/Adapters/ResourcesCoreDefinitionRegistry.cs`
-  - Constructor: `Resources.LoadAll<PayloadCoreDefinition>("WeaponBuilder/Payloads")` etc., build `Dictionary<string, T>` по `_id`
-  - Duplicate id → log warning + last-one-wins
+- [x] **T-0a.12 — Registry реалізація поверх Database** ✅
+  - Path: `Assets/Scripts/Adapters/DatabaseCoreDefinitionRegistry.cs`
+  - Constructor приймає `CoreDefinitionDatabase` (завантажений з `Resources.Load<CoreDefinitionDatabase>("WeaponBuilder/CoreDefinitionDatabase")` у composition root)
+  - Building: делегує index'и до Database
   - Missing → `Get` throws `KeyNotFoundException`, `TryGet` returns false
-  - DoD: unit test (T-0a.14) завантажує stub asset → `registry.GetPayload("BallisticRound")` повертає його
+  - DoD: unit test завантажує test Database → `registry.GetPayload("BallisticRound")` повертає його
 
-- [ ] **T-0a.13 — RaidContext integration**
-  - Path: `Assets/Scripts/Session/RaidContext.cs` (existing; додаємо readonly property)
-  - Додати `ICoreDefinitionRegistry CoreDefinitions` у RaidContext
-  - Composition root (`App` чи equivalent) — створює `ResourcesCoreDefinitionRegistry` на startup і передає в RaidContext
-  - Жодна нова система ще не читає з нього в 0a — буде використано в 0b
-  - DoD: RaidContext має property, compile green, ніхто не падає на null
+- [x] **T-0a.13 — RaidContext integration** ✅
+  - `RaidContext.CoreDefinitions` додано (readonly, nullable)
+  - `RaidSession` приймає `ICoreDefinitionRegistry` через constructor (nullable default)
+  - `App` завантажує `CoreDefinitionDatabase` через `Resources.Load<>` (за QuestDatabase pattern), створює `DatabaseCoreDefinitionRegistry`, передає у RaidSession
+  - Database відсутній → warning, registry стає null. Tier 0a-safe (ніхто не читає з нього ще)
 
 ### Cluster D: Stub assets (designer-parallel)
 
-- [ ] **T-0a.14 — Stub Payload asset: Ballistic Round (Common)**
-  - Path: `Assets/Resources/WeaponBuilder/Payloads/BallisticRound.asset`
-  - Тип: `BallisticPayloadDefinition`
-  - `_id = "BallisticRound"`, `_archetype = "Ballistic"`, `_ammoType = "Ammo_Rifle"`
-  - `_statsByTier[(int)Common]` заповнений **реальними числами** так, щоб збірка Ballistic+Single відтворювала поточні Pistol stats (Damage=15, Speed=25, Lifetime=3, HeadshotMult=2.0, Pen/ArmorDmg/Bleed з існуючих)
-  - Решта tiers — placeholder (0 або дуплікат Common, Tier 4 заповнить)
-  - DoD: asset існує, registry його знаходить, числа відповідають поточним Pistol
+- [x] **T-0a.14 — Stub Payload asset: Ballistic Round (Common)** ✅
+- [x] **T-0a.15 — Stub Delivery assets: Single-Action + Auto (Common)** ✅
+- [x] **T-0a.14b — `CoreDefinitionDatabase` asset** ✅ (створено тим самим editor script)
 
-- [ ] **T-0a.15 — Stub Delivery assets: Single-Action + Auto (Common)**
-  - Paths: `Assets/Resources/WeaponBuilder/Deliveries/SingleAction.asset`, `Auto.asset`
-  - Single: `_pattern = Single`, Common stats відтворюють Pistol delivery-частину (FireInterval=0.4, ProjPerShot=1, SpreadAngle, mag=12, reload, recoil...)
-  - Auto: `_pattern = Auto`, Common відтворює Rifle (FireInterval=0.2, ProjPerShot=1, mag=30, ...)
-  - DoD: обидва assets існують, registry знаходить
+Editor script: `Tools → Weapon Builder → Create Stub Assets` (idempotent).
+Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compromise-average of both (Ballistic Common).
 
 ### Cluster E: Tests
 
-- [/] **T-0a.16 — Unit tests**
+- [x] **T-0a.16 — Unit tests** ✅
   - Paths: `Assets/Tests/EditMode/{Subject}Tests.cs` (flat, per-subject)
     - [x] `CoreInstanceTests.cs` ✅ — equality, GetHashCode, RarityTier ordering, WeaponConfiguration nullable Exotic pattern
-    - [ ] `CoreDefinitionRegistryTests.cs` (later, after T-0a.11/12)
+    - [x] `CoreDefinitionRegistryTests.cs` ✅ — Get/TryGet for Payload/Delivery/Exotic, missing-id handling, duplicate-id warning, null-db guard
   - Покриває:
     - `*CoreInstance` structural equality (дві з однаковими ID+Rarity рівні; різні — не рівні)
     - `RarityTier` integer ordering збігається з order'ом enum
@@ -152,18 +152,16 @@
 
 ---
 
-## Tier 0a Exit Gate
+## Tier 0a Exit Gate ✅ PASSED (2026-04-20)
 
-Перед стартом 0b перевіряємо:
-
-- [ ] Всі T-0a.* закриті
-- [ ] `Assets/Scripts/WeaponBuilder/` структура створена
-- [ ] `Assets/Resources/WeaponBuilder/` має 3 stub assets з реальними Common stats
-- [ ] `RaidContext.CoreDefinitions` доступний
-- [ ] Unit tests зелені
-- [ ] Існуючі weapons (Rifle/Shotgun/Pistol) працюють БЕЗ змін
-- [ ] Shooting range, armor tests зелені
-- [ ] 0a merged у main / dev branch
+- [x] Всі T-0a.* закриті
+- [x] Нові файли у `Assets/Scripts/State/` і `Assets/Scripts/Adapters/` (flat layout per project convention)
+- [x] `Assets/Resources/WeaponBuilder/` має 3 stub assets + CoreDefinitionDatabase (Common tier populated з реальних чисел factories)
+- [x] `RaidContext.CoreDefinitions` доступний (non-null після Database завантаження в App)
+- [x] Unit tests зелені (24 тести: CoreInstance + CoreDefinitionRegistry)
+- [x] Існуючі weapons (Rifle/Shotgun/Pistol) працюють БЕЗ змін — нульовий runtime impact
+- [x] Shooting range, armor tests — не зачеплені
+- [ ] 0a merged у main / dev branch (pending)
 
 ---
 

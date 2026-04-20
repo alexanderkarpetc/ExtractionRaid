@@ -69,12 +69,15 @@ namespace Session
         public readonly INavMeshAdapter NavMesh;
         public readonly IPhysicsAdapter Physics;
         public readonly IGrenadePositionAdapter GrenadePositions;
+        public readonly ICoreDefinitionRegistry CoreDefinitions;
         public readonly AimConfig AimConfig;
         public readonly ShootingConfig ShootingConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
-            IGrenadePositionAdapter grenadePositions = null, AimConfig? aimConfig = null,
+            IGrenadePositionAdapter grenadePositions = null,
+            ICoreDefinitionRegistry coreDefinitions = null,
+            AimConfig? aimConfig = null,
             ShootingConfig? shootingConfig = null)
         {
             DeltaTime = deltaTime;
@@ -84,6 +87,7 @@ namespace Session
             NavMesh = navMesh;
             Physics = physics;
             GrenadePositions = grenadePositions;
+            CoreDefinitions = coreDefinitions;
             AimConfig = aimConfig ?? AimConfig.Default;
             ShootingConfig = shootingConfig ?? ShootingConfig.Default;
         }

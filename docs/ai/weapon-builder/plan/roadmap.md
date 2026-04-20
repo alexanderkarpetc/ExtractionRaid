@@ -12,8 +12,8 @@
 
 | Tier | Назва | Статус |
 |------|-------|--------|
-| 0a | Data model foundation (types, SO infra, registry) | 📋 ready for implementation |
-| 0b | Migration (refactor state, assembly pipeline, legacy cleanup) | ⏳ waiting on 0a |
+| 0a | Data model foundation (types, SO infra, registry) | ✅ complete (2026-04-20) |
+| 0b | Migration (refactor state, assembly pipeline, legacy cleanup) | 📋 ready for planning |
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ⏳ not started |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ⏳ not started |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ not started |

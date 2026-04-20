@@ -465,12 +465,14 @@ float GetEffectiveChargeTime(WeaponEntityState w) {
 
 **Delivery без subclass'ів:** всі 5 deliveries мають однаковий shape stats (SpinUpTime/VolleyCount зараз "delivery-common" під той самий `FiringPattern` dispatch). Якщо в майбутньому знадобиться — можна симетрично застосувати той самий патерн до Delivery.
 
-#### D3. ScriptableObject для `*CoreDefinition` ✅ RESOLVED (2026-04-20)
+#### D3. ScriptableObject для `*CoreDefinition` ✅ RESOLVED (2026-04-20, amended 2026-04-20)
 
 **Рішення:** `PayloadCoreDefinition`, `DeliveryCoreDefinition`, `ExoticModDefinition` — **ScriptableObject** (abstract base + subclass'и для Payload).
 
+**Layout amendment:** Проект не використовує feature-folders — `ItemDefinition`, `QuestDefinition`, entity states лежать плоско у `Assets/Scripts/State/`. Наш `*CoreDefinition` слідує цій конвенції.
+
 ```
-Assets/Scripts/WeaponBuilder/Definitions/
+Assets/Scripts/State/
   PayloadCoreDefinition.cs       (abstract SO base)
   BallisticPayloadDefinition.cs
   LaserPayloadDefinition.cs
@@ -479,7 +481,7 @@ Assets/Scripts/WeaponBuilder/Definitions/
   DeliveryCoreDefinition.cs
   ExoticModDefinition.cs
 
-Assets/Resources/WeaponBuilder/
+Assets/Resources/WeaponBuilder/        (feature-folder OK для asset organization)
   Payloads/
     BallisticRound.asset
     LaserCharge.asset
@@ -493,9 +495,10 @@ Assets/Resources/WeaponBuilder/
     Swarm.asset
   Exotics/
     Ricochet.asset, SplitOnImpact.asset, ...
+  CoreDefinitionDatabase.asset          (central aggregator; see Loading below)
 ```
 
-**Authoring:** дизайнер редагує `.asset` у Unity Inspector. Кожен subclass має `[CreateAssetMenu(menuName="Weapons/Payload/Laser")]`.
+**Authoring:** дизайнер редагує `.asset` у Unity Inspector. Кожен subclass має `[CreateAssetMenu(menuName="Weapon Builder/Payload/Laser")]`.
 
 **StatsByTier serialization:** Unity не серіалізує `Dictionary<>` з коробки. Зберігаємо як масив, індексований enum:
 
@@ -504,15 +507,25 @@ Assets/Resources/WeaponBuilder/
 public CommonPayloadStats StatsByTier(RarityTier t) => _statsByTier[(int)t];
 ```
 
-**Loading:** через новий port `ICoreDefinitionRegistry` (D9):
-- `Resources.LoadAll<PayloadCoreDefinition>("WeaponBuilder/Payloads")` на startup
-- Cache by `Id` → `Map<string, PayloadCoreDefinition>`
+`OnValidate` у SO тримає масив довжиною рівно 5 (resize if needed).
+
+**Loading (amended 2026-04-20):** Використовуємо **central `CoreDefinitionDatabase` SO** (як `QuestDatabase` pattern), а не `Resources.LoadAll`:
+
+- `CoreDefinitionDatabase` — одинокий SO asset з полями `List<PayloadCoreDefinition> _payloads`, `List<DeliveryCoreDefinition> _deliveries`, `List<ExoticModDefinition> _exotics`
+- Дизайнер додає references на payload/delivery/exotic assets у Database Inspector явно
+- `ICoreDefinitionRegistry` wrap'ить Database і будує lookup dictionaries (BuildIndex)
 - Systems отримують registry через `RaidContext`
 
+**Чому Database, а не `Resources.LoadAll`:**
+- Explicit — phantom SO assets у Resources не потрапляють у registry випадково
+- No Resources build bloat для всіх assets (тільки Database у Resources, решта — downstream refs)
+- Консистентно з `QuestDatabase` — existing project pattern
+- Simpler hot-reload — Database refresh'ить індекс, не скан Resources
+
 **Чому SO:**
-- Authoring workflow: 4 Payloads × 5 tiers × 8 common + specific stats — багато числових даних, Inspector природний
+- Authoring workflow: 4 Payloads × 5 tiers × 7 common + specific stats — багато числових даних, Inspector природний
 - VFX/SFX asset refs (prefabs, AudioClips) перетягуються прямо в поля
-- Консистентно з `DevCheats` і `ItemDefinition` патернами
+- Консистентно з `QuestDefinition` pattern
 - Hot-reload у Inspector — швидкий iteration time
 
 **Testing:** `ScriptableObject.CreateInstance<T>()` + helper-builder типу `TestPayloadDefinitions.MakeBallistic(damage: 10, ...)`.

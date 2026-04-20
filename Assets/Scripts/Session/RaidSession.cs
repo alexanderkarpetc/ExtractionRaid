@@ -24,6 +24,7 @@ namespace Session
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
         readonly IGrenadePositionAdapter _grenadePositionAdapter;
+        readonly ICoreDefinitionRegistry _coreDefinitions;
         readonly System.Func<EId> _allocateEId;
         readonly List<HitSignal> _hitInbox = new();
         readonly List<CollisionSignal> _collisionInbox = new();
@@ -31,13 +32,15 @@ namespace Session
         public RaidSession(string levelId, System.Func<EId> allocateEId,
             ITimeAdapter timeAdapter, IInputAdapter inputAdapter, INavMeshAdapter navMeshAdapter,
             IPhysicsAdapter physicsAdapter = null,
-            IGrenadePositionAdapter grenadePositionAdapter = null)
+            IGrenadePositionAdapter grenadePositionAdapter = null,
+            ICoreDefinitionRegistry coreDefinitions = null)
         {
             _timeAdapter = timeAdapter;
             _inputAdapter = inputAdapter;
             _navMeshAdapter = navMeshAdapter;
             _physicsAdapter = physicsAdapter;
             _grenadePositionAdapter = grenadePositionAdapter;
+            _coreDefinitions = coreDefinitions;
             _allocateEId = allocateEId;
             _eventBuffer = new RaidEventBuffer();
             RaidState = RaidState.Create(allocateEId);
@@ -315,6 +318,7 @@ namespace Session
                 navMesh: _navMeshAdapter,
                 physics: _physicsAdapter,
                 grenadePositions: _grenadePositionAdapter,
+                coreDefinitions: _coreDefinitions,
                 aimConfig: new AimConfig
                 {
                     AimSplitEnabled = DevCheats.AimSplitEnabled,
