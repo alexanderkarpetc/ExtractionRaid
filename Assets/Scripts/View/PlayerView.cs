@@ -87,8 +87,62 @@ namespace View
                         _onMuzzlePointChanged?.Invoke(_body.MuzzlePoint);
                     }
 
-                    var toAim = state.WeaponAimPoint - _body.WeaponPivot.position;
-                    toAim.y = 0f;
+                    // ── Weapon pivot rotation ─────────────────────────────────────────────
+                    // This block is load-bearing and has TWO non-obvious constraints. Read before
+                    // changing — we've regressed here multiple times.
+                    //
+                    // CONSTRAINT 1: Direction is computed from WeaponPivot (not player.Position).
+                    //   Why: when the player stands next to a wall and the barrel pokes around
+                    //   the corner, the bullet must fly OUT OF THE BARREL toward the target —
+                    //   not from the player's body through the wall. A pivot-based direction
+                    //   keeps the barrel visually aligned with the crosshair AND the muzzle-to-
+                    //   target vector matches the projectile spawn direction.
+                    //   DO NOT replace with state.AimDirection (that's what BotView uses and is
+                    //   wrong for the player — breaks the wall-peek case).
+                    //
+                    // CONSTRAINT 2: toAim.y = 0 — rifle stays horizontal in world space.
+                    //   Why: the top-down tilted camera looks weird if the rifle pitches down to
+                    //   aim at the ground. Players expect a horizontal barrel.
+                    //
+                    // PROBLEM these two create: the pivot sits at shoulder height (Y≈1.1) while
+                    //   WeaponAimPoint sits on the ground (Y=0). A horizontal barrel from Y=1.1
+                    //   does NOT visually hit a ground-plane crosshair on a tilted camera —
+                    //   on-screen, the barrel appears to point "above" or "beside" close targets,
+                    //   so the rifle visibly fails to rotate far enough toward the cursor when
+                    //   the cursor is near the player. Far cursors: angle is tiny, no visible
+                    //   mismatch. Close cursors (inside MinAimDistance clamp): angle is big,
+                    //   barrel appears to miss.
+                    //
+                    // FIX: parallax correction — lerp the aim point toward the camera position
+                    //   proportional to pivot height / camera height. This lifts the effective
+                    //   aim target up toward the camera so a horizontal barrel from Y=pivotY
+                    //   screen-projects onto the ground crosshair. Same formula ShootingSystem
+                    //   uses for projectile direction (keep them in sync — see ShootingSystem.cs
+                    //   "Parallax-corrected direction" block). Toggle via DevCheats.Parallax.
+                    //   WeaponPivotParallaxCorrection to A/B the effect.
+                    //
+                    // ALSO RELATED: AimingSystem.MinAimDistance clamps WeaponAimPoint to a min
+                    //   radius around the player to prevent jitter when cursor hovers over the
+                    //   character. Don't lower it thinking it will fix this — it'll cause flip
+                    //   jitter. The parallax correction here is the right lever.
+                    var pivotPos = _body.WeaponPivot.position;
+                    var aimPoint = state.WeaponAimPoint;
+                    if (DevCheats.WeaponPivotParallaxCorrection && pivotPos.y > 0.01f)
+                    {
+                        var cam = Camera.main;
+                        if (cam != null)
+                        {
+                            var camPos = cam.transform.position;
+                            if (camPos.y > 0.1f)
+                            {
+                                float ratio = pivotPos.y / camPos.y;
+                                aimPoint = Vector3.Lerp(aimPoint, camPos, ratio);
+                            }
+                        }
+                    }
+
+                    var toAim = aimPoint - pivotPos;
+                    toAim.y = 0f; // keep rifle horizontal — see CONSTRAINT 2 above
                     if (toAim.sqrMagnitude > 0.001f)
                         _body.WeaponPivot.rotation = Quaternion.LookRotation(toAim.normalized, Vector3.up);
                 }

@@ -449,6 +449,12 @@ namespace Dev
             set => Config.Parallax.ParallaxCorrection = value;
         }
 
+        public static bool WeaponPivotParallaxCorrection
+        {
+            get => Config.Parallax.WeaponPivotParallaxCorrection;
+            set => Config.Parallax.WeaponPivotParallaxCorrection = value;
+        }
+
         public static float ConvergenceBlend
         {
             get => Config.Parallax.ConvergenceBlend;
