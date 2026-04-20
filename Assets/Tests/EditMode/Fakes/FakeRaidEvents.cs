@@ -26,6 +26,7 @@ namespace Tests.EditMode.Fakes
         public EId EntityDamagedId;
         public bool EntityDiedCalled;
         public EId EntityDiedId;
+        public EId EntityDiedKillerId;
 
         public void EntityDamaged(EId id, float currentHp, float maxHp)
         {
@@ -33,10 +34,11 @@ namespace Tests.EditMode.Fakes
             EntityDamagedId = id;
         }
 
-        public void EntityDied(EId id)
+        public void EntityDied(EId id, EId killerId = default)
         {
             EntityDiedCalled = true;
             EntityDiedId = id;
+            EntityDiedKillerId = killerId;
         }
 
         public void GroundItemSpawned(EId id, Vector3 position, string definitionId) { }

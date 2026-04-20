@@ -12,7 +12,7 @@ namespace Adapters
         void ProjectileDespawned(EId id);
         void ProjectileHit(EId id, Vector3 position, string hitType = "surface");
         void EntityDamaged(EId id, float currentHp, float maxHp);
-        void EntityDied(EId id);
+        void EntityDied(EId id, EId killerId = default);
         void GroundItemSpawned(EId id, Vector3 position, string definitionId);
         void GroundItemDespawned(EId id);
 

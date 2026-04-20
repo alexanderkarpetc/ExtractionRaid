@@ -479,6 +479,16 @@ namespace Session
                         if (BotConstants.TryGetConfig(deadBot.TypeId, out var cfg))
                             LootSystem.CreateLootable(RaidState, deadBot, in cfg, _eventBuffer);
 
+                        if (App.IsInitialized
+                            && RaidState.PlayerEntity != null
+                            && e.KillerId == RaidState.PlayerEntity.Id)
+                        {
+                            var db = App.Instance.QuestDatabase;
+                            var progress = App.Instance.Player?.QuestProgress;
+                            if (db != null && progress != null)
+                                QuestSystem.OnEnemyKilled(progress, db, deadBot.TypeId);
+                        }
+
                         RaidState.Bots.RemoveAt(i);
                         _eventBuffer.BotDespawned(e.Id);
                         break;

@@ -99,6 +99,44 @@ namespace Systems
             return result;
         }
 
+        /// <summary>
+        /// Credits kill progress on every active quest whose <see cref="KillEnemyTask"/>
+        /// matches the given bot type. Caller is responsible for verifying the player
+        /// was the killer. Returns true if any task progressed.
+        /// </summary>
+        public static bool OnEnemyKilled(
+            QuestProgressState progress, QuestDatabase db, string killedBotTypeId,
+            bool wasHeadshot = false)
+        {
+            if (progress == null || db == null || string.IsNullOrEmpty(killedBotTypeId))
+                return false;
+
+            bool any = false;
+
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not KillEnemyTask kill) continue;
+                    if (!kill.EnemyType.Matches(killedBotTypeId)) continue;
+                    if (kill.HeadshotsOnly && !wasHeadshot) continue;
+
+                    var tp = qp.Tasks[i];
+                    if (tp.CurrentCount >= kill.RequiredCount) continue;
+
+                    tp.CurrentCount++;
+                    any = true;
+                }
+            }
+
+            return any;
+        }
+
         public static bool AreAllTasksDone(QuestDefinition quest, QuestProgress p)
         {
             if (quest.Tasks == null || quest.Tasks.Count == 0) return true;

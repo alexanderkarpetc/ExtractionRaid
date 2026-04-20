@@ -168,7 +168,7 @@ namespace Systems
             if (health.IsAlive)
                 context.Events.EntityDamaged(targetId, health.CurrentHp, health.MaxHp);
             else
-                context.Events.EntityDied(targetId);
+                context.Events.EntityDied(targetId, ownerId);
         }
     }
 }

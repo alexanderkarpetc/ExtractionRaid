@@ -44,6 +44,7 @@ namespace Adapters
     {
         public RaidEventType Type;
         public EId Id;
+        public EId KillerId;
         public Vector3 Position;
         public Vector3 Direction;
         public float CurrentHp;
@@ -112,9 +113,9 @@ namespace Adapters
             });
         }
 
-        public void EntityDied(EId id)
+        public void EntityDied(EId id, EId killerId = default)
         {
-            _events.Add(new RaidEvent { Type = RaidEventType.EntityDied, Id = id });
+            _events.Add(new RaidEvent { Type = RaidEventType.EntityDied, Id = id, KillerId = killerId });
         }
 
         public void GroundItemSpawned(EId id, Vector3 position, string definitionId)

@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01f7b830b6b19b348a074d28ea82e4c4, type: 3}
   m_Name: FirstBloodQuest
   m_EditorClassIdentifier: Game::Quests.QuestDefinition
-  Id: 2
+  Id: first_blood
   DisplayName: First Blood
   Description: "The zone is crawling with locals picking the bones of this place
     clean. Thin their numbers\u2014put down two of them and prove you can hold a
     rifle steady. Ammo's tight out here, so make every shot count: aim, breathe,
     squeeze. Come back to me once the deed is done."
   RequiredLevel: 0
-  NpcId: MainNPC
+  NpcId: AL
   Tasks:
   - rid: 2541323848873148504
   Rewards:

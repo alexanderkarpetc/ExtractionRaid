@@ -121,7 +121,8 @@ namespace Systems
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
                 else
-                    context.Events.EntityDied(hit.TargetId);
+                    context.Events.EntityDied(hit.TargetId,
+                        projectile != null ? projectile.OwnerId : default);
 
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
