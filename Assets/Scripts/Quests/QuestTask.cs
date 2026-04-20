@@ -15,6 +15,45 @@ namespace Quests
         FindItem
     }
 
+    /// <summary>
+    /// Enemy categories selectable in quest tasks. Values map to
+    /// <see cref="Constants.BotConstants"/> TypeIds via <see cref="EnemyTypeExtensions"/>.
+    /// </summary>
+    public enum EnemyType
+    {
+        Any = 0,
+        Scav = 1,   // low-tier "Scav" — civilian/local scavenger
+        PMC = 2,     // mid-tier human operator
+        BossA = 3,
+    }
+
+    public static class EnemyTypeExtensions
+    {
+        /// <summary>
+        /// Returns the BotTypeConfig TypeId string matching this enemy type,
+        /// or null for <see cref="EnemyType.Any"/>.
+        /// </summary>
+        public static string ToBotTypeId(this EnemyType type)
+        {
+            switch (type)
+            {
+                case EnemyType.Scav: return "Scav";
+                case EnemyType.PMC:   return "PMC";
+                case EnemyType.BossA:  return "Boss";
+                default:              return null;
+            }
+        }
+
+        /// <summary>
+        /// True if the given bot TypeId satisfies a kill task targeting this enemy type.
+        /// </summary>
+        public static bool Matches(this EnemyType type, string botTypeId)
+        {
+            if (type == EnemyType.Any) return true;
+            return string.Equals(type.ToBotTypeId(), botTypeId);
+        }
+    }
+
     [Serializable]
     public abstract class QuestTask
     {
@@ -35,7 +74,7 @@ namespace Quests
     public class KillEnemyTask : QuestTask
     {
         public override QuestTaskType TaskType => QuestTaskType.KillEnemy;
-        public string EnemyTypeId;
+        public EnemyType EnemyType = EnemyType.Any;
         public bool HeadshotsOnly;
     }
 

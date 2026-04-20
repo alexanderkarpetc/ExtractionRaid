@@ -432,7 +432,7 @@ Currently only `StatusEffectType.Bleeding`.
 | Type | Class | Key Fields |
 |---|---|---|
 | FindAndTransfer | `FindAndTransferTask` | `QuestItemId` |
-| KillEnemy | `KillEnemyTask` | `EnemyTypeId`, `HeadshotsOnly` |
+| KillEnemy | `KillEnemyTask` | `EnemyType` (enum: Any/Local/PMC/Boss), `HeadshotsOnly` |
 | FindPlace | `FindPlaceTask` | `PlaceId` |
 | ProvideSupply | `ProvideSupplyTask` | `ItemId` |
 | Extract | `ExtractTask` | `LevelId` |
