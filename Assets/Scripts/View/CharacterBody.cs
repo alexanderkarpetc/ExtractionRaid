@@ -22,6 +22,7 @@ namespace View
         [SerializeField] Transform _capsuleVisual;
         [SerializeField] Animator _animator;
         [SerializeField] TwoBoneIK _rightHandIK; // optional; solves right hand → weapon RightHandGrip
+        [SerializeField] Transform _swaySourceBone; // optional; spine/chest bone to drive weapon sway
 
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
@@ -45,6 +46,10 @@ namespace View
         float _pullbackCheckTimer; // accumulator for throttled physics queries
         float _lastClosestDistance = float.PositiveInfinity; // persisted between throttled casts
         float _lastPivotDistFromOrigin; // pivot-along-ray distance for the last cast
+
+        // Body sway: EMA-tracked baseline of bone local position (character-space)
+        Vector3 _swayBaselineLocal;
+        bool _swayBaselineInitialized;
 
         // Is this the player? Set by PlayerPresenter after instantiation. Bots = false → throttled.
         bool _isPlayerPullback;
@@ -171,6 +176,34 @@ namespace View
 
             if (_rightHandIK != null)
                 _rightHandIK.SetTarget(null);
+        }
+
+        /// <summary>
+        /// Body sway: sample a living bone (spine/chest) in character-local space, subtract an
+        /// EMA-tracked baseline. The delta IS the sway — natural oscillation that auto-recenters
+        /// when the character stops moving. Added additively to the pullback target so both
+        /// effects coexist. Character-local space means body rotation (facing aim) doesn't count
+        /// as sway — only animation-driven bone motion does.
+        /// </summary>
+        Vector3 ComputeBodySwayOffset()
+        {
+            var cfg = DevCheats.Config.Player;
+            if (!cfg.WeaponSwayEnabled || _swaySourceBone == null) return Vector3.zero;
+
+            Vector3 bonePosLocal = transform.InverseTransformPoint(_swaySourceBone.position);
+
+            if (!_swayBaselineInitialized)
+            {
+                _swayBaselineLocal = bonePosLocal;
+                _swayBaselineInitialized = true;
+                return Vector3.zero;
+            }
+
+            float tau = Mathf.Max(0.05f, cfg.WeaponSwayAvgTime);
+            float alpha = 1f - Mathf.Exp(-Time.deltaTime / tau);
+            _swayBaselineLocal = Vector3.Lerp(_swayBaselineLocal, bonePosLocal, alpha);
+
+            return (bonePosLocal - _swayBaselineLocal) * cfg.WeaponSwayWeight;
         }
 
         static Transform FindDeepChild(Transform parent, string name)
@@ -407,7 +440,8 @@ namespace View
             float retract = WeaponPullbackMath.ComputeRetract(
                 _lastClosestDistance, _lastPivotDistFromOrigin, weaponLength);
 
-            var target = _weaponPivotRestLocalPos + Vector3.back * (cfg.WeaponPullbackAmount * retract);
+            Vector3 swayOffset = ComputeBodySwayOffset();
+            var target = _weaponPivotRestLocalPos + swayOffset + Vector3.back * (cfg.WeaponPullbackAmount * retract);
             _weaponPivot.localPosition = Vector3.Lerp(
                 _weaponPivot.localPosition, target, lerpAlpha);
 
