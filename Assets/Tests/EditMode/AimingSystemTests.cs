@@ -262,7 +262,7 @@ namespace Tests.EditMode
         public void Tick_WeaponAimPoint_HighSharpness_ConvergesFast()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.EquippedWeapon.AimFollowSharpness = 50f;
+            state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =50f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
             var context = CreateContext(input, deltaTime: 1f / 60f);
@@ -280,7 +280,7 @@ namespace Tests.EditMode
         public void Tick_WeaponAimPoint_LowSharpness_ConvergesSlow()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.EquippedWeapon.AimFollowSharpness = 3f;
+            state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =3f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
             var context = CreateContext(input, deltaTime: 1f / 60f);
@@ -349,7 +349,7 @@ namespace Tests.EditMode
         public void Tick_AimDirection_NotInstant_WhenWeaponLags()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.EquippedWeapon.AimFollowSharpness = 5f;
+            state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =5f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
             var context = CreateContext(input, deltaTime: 1f / 60f);
@@ -381,7 +381,7 @@ namespace Tests.EditMode
         public void Tick_FacingDirection_FollowsRawAim_NotWeaponAim()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.EquippedWeapon.AimFollowSharpness = 1f;
+            state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =1f;
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };

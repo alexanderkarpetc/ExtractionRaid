@@ -51,7 +51,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Cooldown;
             weapon.PhaseStartTime = 0f;
-            weapon.FireInterval = 0.2f;
+            weapon.Stats.FireInterval = 0.2f;
             state.ElapsedTime = 0.3f;
             var context = CreateContext();
 
@@ -67,7 +67,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Cooldown;
             weapon.PhaseStartTime = 0f;
-            weapon.FireInterval = 0.2f;
+            weapon.Stats.FireInterval = 0.2f;
             state.ElapsedTime = 0.1f;
             var context = CreateContext();
 
@@ -85,7 +85,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Equipping;
             weapon.PhaseStartTime = 0f;
-            weapon.EquipTime = 0.3f;
+            weapon.Stats.EquipTime = 0.3f;
             state.ElapsedTime = 0.4f;
             var context = CreateContext();
 
@@ -101,7 +101,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Equipping;
             weapon.PhaseStartTime = 0f;
-            weapon.EquipTime = 0.3f;
+            weapon.Stats.EquipTime = 0.3f;
             state.ElapsedTime = 0.4f;
             var eventBuffer = new RaidEventBuffer();
             var context = CreateContext(events: eventBuffer);
@@ -121,7 +121,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Equipping;
             weapon.PhaseStartTime = 0f;
-            weapon.EquipTime = 0.3f;
+            weapon.Stats.EquipTime = 0.3f;
             state.ElapsedTime = 0.1f;
             var context = CreateContext();
 
@@ -139,7 +139,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Unequipping;
             weapon.PhaseStartTime = 0f;
-            weapon.UnequipTime = 0.2f;
+            weapon.Stats.UnequipTime = 0.2f;
             state.ElapsedTime = 0.3f;
             // PendingSlot == SelectedSlot → toggle off
             state.PlayerEntity.PendingHotbarSlot = 0;
@@ -160,7 +160,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Unequipping;
             weapon.PhaseStartTime = 0f;
-            weapon.UnequipTime = 0.2f;
+            weapon.Stats.UnequipTime = 0.2f;
             state.ElapsedTime = 0.3f;
             // Switch from slot 0 to slot 1
             state.PlayerEntity.SelectedHotbarSlot = 0;
@@ -188,7 +188,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Unequipping;
             weapon.PhaseStartTime = 0f;
-            weapon.UnequipTime = 0.2f;
+            weapon.Stats.UnequipTime = 0.2f;
             state.ElapsedTime = 0.3f;
             // Switch to empty slot 1 (clear it first)
             state.PlayerEntity.Hotbar[1] = null;
@@ -229,7 +229,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Cooldown;
             weapon.PhaseStartTime = 0f;
-            weapon.FireInterval = 0.2f;
+            weapon.Stats.FireInterval = 0.2f;
             state.ElapsedTime = 0.05f; // still in cooldown
             state.PlayerEntity.PendingHotbarSlot = 1;
             var context = CreateContext();
@@ -247,7 +247,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Equipping;
             weapon.PhaseStartTime = 0f;
-            weapon.EquipTime = 0.3f;
+            weapon.Stats.EquipTime = 0.3f;
             state.ElapsedTime = 0.1f; // still equipping
             state.PlayerEntity.PendingHotbarSlot = 1;
             var context = CreateContext();
@@ -329,7 +329,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Unequipping;
             weapon.PhaseStartTime = 0f;
-            weapon.UnequipTime = 0.2f;
+            weapon.Stats.UnequipTime = 0.2f;
             state.ElapsedTime = 0.1f;
             state.PlayerEntity.PendingHotbarSlot = 1;
             var context = CreateContext();
@@ -360,7 +360,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Reloading;
             weapon.PhaseStartTime = 0f;
-            weapon.ReloadTime = 2.0f;
+            weapon.Stats.ReloadTime = 2.0f;
             weapon.AmmoInMagazine = 0;
             state.ElapsedTime = 2.5f;
             var context = CreateContext();
@@ -377,7 +377,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Reloading;
             weapon.PhaseStartTime = 0f;
-            weapon.ReloadTime = 2.0f;
+            weapon.Stats.ReloadTime = 2.0f;
             weapon.AmmoInMagazine = 0;
             state.ElapsedTime = 2.5f;
             // Reserve ammo already in backpack from CreateStateWithPlayer (60 Ammo_Rifle)
@@ -395,7 +395,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Reloading;
             weapon.PhaseStartTime = 0f;
-            weapon.ReloadTime = 2.0f;
+            weapon.Stats.ReloadTime = 2.0f;
             weapon.AmmoInMagazine = 0;
             state.ElapsedTime = 2.5f;
             var eventBuffer = new RaidEventBuffer();
@@ -416,7 +416,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Reloading;
             weapon.PhaseStartTime = 0f;
-            weapon.ReloadTime = 2.0f;
+            weapon.Stats.ReloadTime = 2.0f;
             weapon.AmmoInMagazine = 0;
             state.ElapsedTime = 1.0f; // only halfway
             var context = CreateContext();
@@ -434,7 +434,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Phase = WeaponPhase.Reloading;
             weapon.PhaseStartTime = 0f;
-            weapon.ReloadTime = 2.0f;
+            weapon.Stats.ReloadTime = 2.0f;
             weapon.AmmoInMagazine = 0;
             state.ElapsedTime = 1.0f;
             state.PlayerEntity.PendingHotbarSlot = 1;

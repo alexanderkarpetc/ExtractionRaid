@@ -100,6 +100,22 @@
 
 **Див.:** [architecture.md §D6, D7, D8](../architecture.md)
 
+### 2026-04-22 — Bot weapons deferred to Tier 4
+**Decision:** Bot weapons (BotSpawnSystem + BotConstants) залишаються **повністю hardcoded** для Tier 0b і 1. Вони не проходять через assembly pipeline, їхні Stats populate напряму з BotConstants raw fields.
+
+**Перенесено в Tier 4** (разом з rarity):
+- Видалити всі hardcoded stat fields з `BotConstants.BotTypeConfig`
+- Додати `WeaponConfiguration WeaponConfiguration` до `BotTypeConfig`
+- `BotSpawnSystem` має отримати registry з context, викликати `WeaponAssemblySystem.TryAssemble`
+- Bot variety приходитиме з **rarity-per-bot** (Scav=Common, Boss=Epic/Legendary) + різні delivery/payload combinations
+- Balance може "попливти" — це ок, зафіксується в Tier 4 balance pass
+
+**Чому не зараз:**
+- Без rarity всі боти мали б однакові Stats (Common) → втрата variety
+- Без Rotary/Swarm heavy bots не мають адекватного delivery
+- Scope creep у Cluster C (вже breaking change)
+- Weapon Builder навмисно player-facing, bot path — окремий
+
 ### 2026-04-20 — Tier 0a complete ✅
 **Виконано:**
 - Всі нові types у `Assets/Scripts/State/`: enums (RarityTier, FiringPattern), stats structs (CommonPayloadStats, DeliveryStats, WeaponStats, 3 payload-specific), readonly struct instances (PayloadCoreInstance, DeliveryCoreInstance, ExoticModInstance), WeaponConfiguration

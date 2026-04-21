@@ -42,7 +42,7 @@ namespace Systems.Bot
             var weapon = bot.Weapon;
             if (weapon == null) return;
 
-            if (state.ElapsedTime - weapon.LastFireTime < weapon.FireInterval) return;
+            if (state.ElapsedTime - weapon.LastFireTime < weapon.Stats.FireInterval) return;
 
             var aimDir = (bot.DesiredAimPoint - bot.Position).normalized;
             if (aimDir.sqrMagnitude < 0.001f) return;
@@ -50,8 +50,8 @@ namespace Systems.Bot
             bot.AimDirection = aimDir;
 
             var spawnPos = bot.Position + aimDir * 0.5f + Vector3.up * 1.2f;
-            var count = Mathf.Max(1, weapon.ProjectilesPerShot);
-            var halfSpread = weapon.SpreadAngle * 0.5f;
+            var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
+            var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
 
             float accuracySpread = (1f - config.Accuracy) * 10f;
 
@@ -70,13 +70,13 @@ namespace Systems.Bot
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
                     projectileId, bot.Id, spawnPos, pelletDir.normalized,
-                    weapon.ProjectileSpeed * ctx.ShootingConfig.ProjectileSpeedMultiplier,
+                    weapon.Stats.ProjectileSpeed * ctx.ShootingConfig.ProjectileSpeedMultiplier,
                     state.ElapsedTime,
-                    weapon.ProjectileLifetime,
-                    weapon.ProjectileDamage * ctx.ShootingConfig.DamageMultiplier);
+                    weapon.Stats.ProjectileLifetime,
+                    weapon.Stats.Damage * ctx.ShootingConfig.DamageMultiplier);
 
                 state.Projectiles.Add(projectile);
-                ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized, weapon.ProjectileDamage);
+                ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized, weapon.Stats.Damage);
             }
 
             weapon.LastFireTime = state.ElapsedTime;

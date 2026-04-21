@@ -218,7 +218,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster C — State refactor (breaking change for read sites)
 
-- [ ] **T-0b.08 — Refactor `WeaponEntityState` structure**
+- [x] **T-0b.08 — Refactor `WeaponEntityState` structure** ✅
   - Path: `Assets/Scripts/State/WeaponEntityState.cs`
   - Нова shape:
     ```
@@ -232,7 +232,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
   - Треба шимnути factory щоб вони не падали до T-0b.11 (видалення factories)
   - DoD: компілюється; Rifle/Pistol створюються без runtime error
 
-- [ ] **T-0b.09 — Migrate read sites до `weapon.Stats.X`**
+- [x] **T-0b.09 — Migrate read sites до `weapon.Stats.X`** ✅
   - Paths (з grep):
     - `Assets/Scripts/Systems/ShootingSystem.cs`
     - `Assets/Scripts/Systems/WeaponStateMachineSystem.cs`
@@ -247,7 +247,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster D — Pipeline migration (new assembly flow)
 
-- [ ] **T-0b.10 — Compat layer `LegacyDefinitionToConfig`**
+- [x] **T-0b.10 — Compat layer `LegacyDefinitionToConfig`** ✅
   - Path: `Assets/Scripts/Systems/WeaponSyncSystem.cs` (static dictionary усередині)
   - `static readonly Dictionary<string, WeaponConfiguration> LegacyDefinitionToConfig`:
     - `"Rifle"` → Ballistic/Common + Auto/Common
@@ -255,7 +255,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
   - Позначити коментарем `// TEMPORARY — removed at end of Tier 0b`
   - DoD: dictionary існує
 
-- [ ] **T-0b.11 — Rewrite `WeaponSyncSystem` на assembly pipeline**
+- [x] **T-0b.11 — Rewrite `WeaponSyncSystem` на assembly pipeline** ✅
   - Замінити виклик `WeaponEntityState.CreateFromDefinitionId` на:
     1. Map definitionId → `WeaponConfiguration` через compat layer
     2. Викликати `WeaponAssemblySystem.TryAssemble(config, registry, out state, out reason)`
@@ -263,7 +263,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
     4. Fail → emit `WeaponAssemblyFailed` event, hotbar slot empty (ghost-weapon per D7)
   - DoD: Rifle/Pistol рейд grameplay parity (FireInterval, damage, magazine — ідентичні pre-migration)
 
-- [ ] **T-0b.12 — `ShootingSystem` dispatch по `FiringPattern`**
+- [x] **T-0b.12 — `ShootingSystem` dispatch по `FiringPattern`** ✅
   - Path: `Assets/Scripts/Systems/ShootingSystem.cs`
   - Розділити `Tick` на case по `weapon.DeliveryCore.Definition.Pattern`:
     - `Single` → повноцінна реалізація (відтворює поточну поведінку, працює для `"Pistol"`)

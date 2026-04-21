@@ -39,6 +39,30 @@ namespace Systems
                 return;
             }
 
+            // Dispatch by Delivery Core's FiringPattern.
+            // Single / Auto / Scatter — parametric siblings: shared HandleParametricFire,
+            // differ only in Stats (FireInterval, ProjectilesPerShot, SpreadAngle).
+            // Rotary / Swarm — dedicated behaviours with their own state machine phases,
+            // arriving in Tier 3.
+            // See docs/ai/weapon-builder/architecture.md §2.
+            var pattern = weapon.DeliveryDefinition != null
+                ? weapon.DeliveryDefinition.Pattern
+                : FiringPattern.Auto; // legacy/bot-path fallback — Stats drive behaviour
+            switch (pattern)
+            {
+                case FiringPattern.Single:
+                case FiringPattern.Auto:
+                case FiringPattern.Scatter:
+                    // Falls through to parametric fire logic below.
+                    break;
+                case FiringPattern.Rotary:
+                case FiringPattern.Swarm:
+                    // TODO (Tier 3): implement SpinUp/SpinDown (Rotary) and VolleyActive (Swarm).
+                    return;
+                default:
+                    return;
+            }
+
             var cfg = context.ShootingConfig;
 
             var spawnPos = input.MuzzleWorldPoint;
@@ -155,12 +179,12 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            float totalPen = weapon.BasePenetration + ammoPen; // + weaponMod + charTree (future)
-            float totalArmorDmg = weapon.BaseArmorDamage + ammoArmorDmg;
-            float totalBleedChance = weapon.BaseBleedChance + ammoBleedChance;
+            float totalPen = weapon.Stats.BasePenetration + ammoPen; // + weaponMod + charTree (future)
+            float totalArmorDmg = weapon.Stats.BaseArmorDamage + ammoArmorDmg;
+            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
-            var count = Mathf.Max(1, weapon.ProjectilesPerShot);
-            var halfSpread = weapon.SpreadAngle * 0.5f;
+            var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
+            var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
 
             for (int i = 0; i < count; i++)
             {
@@ -171,17 +195,17 @@ namespace Systems
                 var projectileId = state.AllocateEId();
                 var projectile = ProjectileEntityState.Create(
                     projectileId, player.Id, spawnPos, pelletDir,
-                    weapon.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
-                    state.ElapsedTime, weapon.ProjectileLifetime,
-                    weapon.ProjectileDamage * cfg.DamageMultiplier,
-                    weapon.HeadshotDamageMultiplier,
+                    weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
+                    state.ElapsedTime, weapon.Stats.ProjectileLifetime,
+                    weapon.Stats.Damage * cfg.DamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier,
                     targetedEntityId,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
                     bleedChance: totalBleedChance);
 
                 state.Projectiles.Add(projectile);
-                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.ProjectileDamage);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.Stats.Damage);
             }
 
             context.Events.WeaponFired(spawnPos, dir);
@@ -192,18 +216,18 @@ namespace Systems
             // Apply recoil — forward kick + sideways scatter
             // Both go through RecoilOffset so they survive smoothing and decay via RecoilRecoverySpeed
             if (!cfg.NoRecoil
-                && (weapon.RecoilKickForward > 0f || weapon.RecoilKickSide > 0f))
+                && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
             {
                 float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
                 float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward kick through RecoilOffset
-                weapon.RecoilOffset += aimDir * (weapon.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);
+                weapon.RecoilOffset += aimDir * (weapon.Stats.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);
 
                 // Sideways scatter through RecoilOffset
                 var right = new Vector3(aimDir.z, 0f, -aimDir.x);
-                float sideAmount = Random.Range(-weapon.RecoilKickSide, weapon.RecoilKickSide);
+                float sideAmount = Random.Range(-weapon.Stats.RecoilKickSide, weapon.Stats.RecoilKickSide);
                 weapon.RecoilOffset += right * (sideAmount * recoilMul * cfg.RecoilSideMultiplier);
             }
 

@@ -89,24 +89,24 @@ namespace Tests.EditMode
         public void CreateRifle_HasBasePenetration()
         {
             var weapon = WeaponEntityState.CreateRifle(new EId(1));
-            Assert.Greater(weapon.BasePenetration, 0f);
-            Assert.Greater(weapon.BaseArmorDamage, 0f);
+            Assert.Greater(weapon.Stats.BasePenetration, 0f);
+            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
         }
 
         [Test]
         public void CreateShotgun_HasBasePenetration()
         {
             var weapon = WeaponEntityState.CreateShotgun(new EId(1));
-            Assert.Greater(weapon.BasePenetration, 0f);
-            Assert.Greater(weapon.BaseArmorDamage, 0f);
+            Assert.Greater(weapon.Stats.BasePenetration, 0f);
+            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
         }
 
         [Test]
         public void CreatePistol_HasBasePenetration()
         {
             var weapon = WeaponEntityState.CreatePistol(new EId(1));
-            Assert.Greater(weapon.BasePenetration, 0f);
-            Assert.Greater(weapon.BaseArmorDamage, 0f);
+            Assert.Greater(weapon.Stats.BasePenetration, 0f);
+            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
         }
 
         // ── Projectile carries Penetration ────────────────────

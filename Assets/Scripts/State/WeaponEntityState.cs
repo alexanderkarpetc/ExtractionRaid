@@ -12,79 +12,93 @@ namespace State
         Reloading,
     }
 
+    /// <summary>
+    /// Runtime state of a weapon: composition (what was assembled), cached computed
+    /// stats, and mutable runtime fields (phase, ammo, recoil).
+    ///
+    /// Composition refs identify the modules from which the weapon was built.
+    /// They are null-equivalent for weapons created directly by legacy factories
+    /// or by <c>BotSpawnSystem</c> (those weapons still have valid <see cref="Stats"/>
+    /// and runtime fields, just no builder identity).
+    ///
+    /// <see cref="Stats"/> is the single source of truth for gameplay reads —
+    /// ShootingSystem, AimingSystem, etc. read from this cache. It is populated
+    /// either by the assembly pipeline (player weapons via WeaponSyncSystem) or
+    /// directly in factory code (legacy path, bots).
+    ///
+    /// See docs/ai/weapon-builder/architecture.md §1, §D1.
+    /// </summary>
     public class WeaponEntityState
     {
         public EId Id;
         public string PrefabId;
 
-        // Shooting parameters
-        public float FireInterval;
-        public float ProjectileSpeed;
-        public float ProjectileLifetime;
-        public float ProjectileDamage;
-        public float HeadshotDamageMultiplier;
-        public float BasePenetration;
-        public float BaseArmorDamage;
-        public float BaseBleedChance;
-        public int ProjectilesPerShot;
-        public float SpreadAngle;
+        // ── Composition (identity) ─────────────────────────
+        public PayloadCoreInstance  PayloadCore;
+        public DeliveryCoreInstance DeliveryCore;
+        public bool                 HasExotic;
+        public ExoticModInstance    ExoticMod;
 
-        // Aiming parameters
-        public float ConeHalfAngle;
-        public float BodyRotationSpeed;
-        public float AimFollowSharpness;
+        // ── Resolved definition refs (cache; null for non-builder weapons) ──
+        public PayloadCoreDefinition  PayloadDefinition;
+        public DeliveryCoreDefinition DeliveryDefinition;
+        public ExoticModDefinition    ExoticDefinition;
 
-        // Recoil parameters
-        public float RecoilKickForward;
-        public float RecoilKickSide;
-        public float RecoilRecoverySpeed;
+        // ── Cached computed stats ──────────────────────────
+        public WeaponStats Stats;
 
-        // Equip/unequip durations
-        public float EquipTime;
-        public float UnequipTime;
-
-        // Ammo parameters
+        // ── Denormalized identifiers (set by assembly OR factory) ──
+        /// <summary>
+        /// Ammo type identifier used by <c>AmmoSystem</c> / <c>ShootingSystem</c>.
+        /// For builder-assembled weapons, mirrors <see cref="PayloadDefinition"/>'s
+        /// AmmoType. For bot weapons, may be null.
+        /// </summary>
         public string AmmoType;
-        public int MagazineSize;
-        public int AmmoInMagazine;
-        public float ReloadTime;
 
-        // Runtime state
-        public float LastFireTime;
+        // ── Runtime state ──────────────────────────────────
+        public int         AmmoInMagazine;
+        public float       LastFireTime;
         public WeaponPhase Phase;
-        public float PhaseStartTime;
-        public Vector3 RecoilOffset;
+        public float       PhaseStartTime;
+        public Vector3     RecoilOffset;
+
+        // ── Legacy factories (removed in Tier 0b Cluster E) ──
 
         public static WeaponEntityState CreateRifle(EId id)
         {
             return new WeaponEntityState
             {
-                Id = id,
-                PrefabId = "Weapon_Rifle",
-                FireInterval = 0.2f,
-                ProjectileSpeed = 20f,
-                ProjectileLifetime = 3f,
-                ProjectileDamage = 10f,
-                HeadshotDamageMultiplier = 2f,
-                BasePenetration = 20f,
-                BaseArmorDamage = 5f,
-                ProjectilesPerShot = 1,
-                SpreadAngle = 0f,
-                ConeHalfAngle = 45f,
-                BodyRotationSpeed = 270,
-                AimFollowSharpness = 10f,
-                RecoilKickForward = 2f,
-                RecoilKickSide = 1.5f,
-                RecoilRecoverySpeed = 2f,
-                EquipTime = 0.3f,
-                UnequipTime = 0.2f,
-                AmmoType = "Ammo_Rifle",
-                MagazineSize = 30,
+                Id             = id,
+                PrefabId       = "Weapon_Rifle",
+                PayloadCore    = new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                DeliveryCore   = new DeliveryCoreInstance("Auto",          RarityTier.Common),
+                AmmoType       = "Ammo_Rifle",
                 AmmoInMagazine = 30,
-                ReloadTime = 2.0f,
-                LastFireTime = -999f,
-                Phase = WeaponPhase.Ready,
+                LastFireTime   = -999f,
+                Phase          = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
+                Stats = new WeaponStats
+                {
+                    Damage                   = 10f,
+                    ProjectileSpeed          = 20f,
+                    ProjectileLifetime       = 3f,
+                    HeadshotDamageMultiplier = 2f,
+                    BasePenetration          = 20f,
+                    BaseArmorDamage          = 5f,
+                    BaseBleedChance          = 0f,
+                    ProjectilesPerShot       = 1,
+                    SpreadAngle              = 0f,
+                    ConeHalfAngle            = 45f,
+                    BodyRotationSpeed        = 270f,
+                    AimFollowSharpness       = 10f,
+                    RecoilKickForward        = 2f,
+                    RecoilKickSide           = 1.5f,
+                    RecoilRecoverySpeed      = 2f,
+                    EquipTime                = 0.3f,
+                    UnequipTime              = 0.2f,
+                    MagazineSize             = 30,
+                    ReloadTime               = 2.0f,
+                },
             };
         }
 
@@ -92,32 +106,37 @@ namespace State
         {
             return new WeaponEntityState
             {
-                Id = id,
-                PrefabId = "Weapon_Shotgun",
-                FireInterval = 0.6f,
-                ProjectileSpeed = 30f,
-                ProjectileLifetime = 2f,
-                ProjectileDamage = 8f,
-                HeadshotDamageMultiplier = 1.5f,
-                BasePenetration = 10f,
-                BaseArmorDamage = 4f,
-                ProjectilesPerShot = 7,
-                SpreadAngle = 30f,
-                ConeHalfAngle = 20f,
-                BodyRotationSpeed = 180f,
-                AimFollowSharpness = 5f,
-                RecoilKickForward = 3f,
-                RecoilKickSide = 6f,
-                RecoilRecoverySpeed = 3f,
-                EquipTime = 0.4f,
-                UnequipTime = 0.25f,
-                AmmoType = "Ammo_Shotgun",
-                MagazineSize = 5,
+                Id             = id,
+                PrefabId       = "Weapon_Shotgun",
+                PayloadCore    = new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                DeliveryCore   = new DeliveryCoreInstance("Scatter",       RarityTier.Common),
+                AmmoType       = "Ammo_Shotgun",
                 AmmoInMagazine = 5,
-                ReloadTime = 2.5f,
-                LastFireTime = -999f,
-                Phase = WeaponPhase.Ready,
+                LastFireTime   = -999f,
+                Phase          = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
+                Stats = new WeaponStats
+                {
+                    Damage                   = 8f,
+                    ProjectileSpeed          = 30f,
+                    ProjectileLifetime       = 2f,
+                    HeadshotDamageMultiplier = 1.5f,
+                    BasePenetration          = 10f,
+                    BaseArmorDamage          = 4f,
+                    BaseBleedChance          = 0f,
+                    ProjectilesPerShot       = 7,
+                    SpreadAngle              = 30f,
+                    ConeHalfAngle            = 20f,
+                    BodyRotationSpeed        = 180f,
+                    AimFollowSharpness       = 5f,
+                    RecoilKickForward        = 3f,
+                    RecoilKickSide           = 6f,
+                    RecoilRecoverySpeed      = 3f,
+                    EquipTime                = 0.4f,
+                    UnequipTime              = 0.25f,
+                    MagazineSize             = 5,
+                    ReloadTime               = 2.5f,
+                },
             };
         }
 
@@ -125,32 +144,37 @@ namespace State
         {
             return new WeaponEntityState
             {
-                Id = id,
-                PrefabId = "Weapon_Pistol",
-                FireInterval = 0.4f,
-                ProjectileSpeed = 25f,
-                ProjectileLifetime = 2.5f,
-                ProjectileDamage = 15f,
-                HeadshotDamageMultiplier = 2.5f,
-                BasePenetration = 15f,
-                BaseArmorDamage = 6f,
-                ProjectilesPerShot = 1,
-                SpreadAngle = 0f,
-                ConeHalfAngle = 35f,
-                BodyRotationSpeed = 300f,
-                AimFollowSharpness = 15f,
-                RecoilKickForward = 1.5f,
-                RecoilKickSide = 1f,
-                RecoilRecoverySpeed = 4f,
-                EquipTime = 0.2f,
-                UnequipTime = 0.15f,
-                AmmoType = "Ammo_Pistol",
-                MagazineSize = 12,
+                Id             = id,
+                PrefabId       = "Weapon_Pistol",
+                PayloadCore    = new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                DeliveryCore   = new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
+                AmmoType       = "Ammo_Pistol",
                 AmmoInMagazine = 12,
-                ReloadTime = 1.5f,
-                LastFireTime = -999f,
-                Phase = WeaponPhase.Ready,
+                LastFireTime   = -999f,
+                Phase          = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
+                Stats = new WeaponStats
+                {
+                    Damage                   = 15f,
+                    ProjectileSpeed          = 25f,
+                    ProjectileLifetime       = 2.5f,
+                    HeadshotDamageMultiplier = 2.5f,
+                    BasePenetration          = 15f,
+                    BaseArmorDamage          = 6f,
+                    BaseBleedChance          = 0f,
+                    ProjectilesPerShot       = 1,
+                    SpreadAngle              = 0f,
+                    ConeHalfAngle            = 35f,
+                    BodyRotationSpeed        = 300f,
+                    AimFollowSharpness       = 15f,
+                    RecoilKickForward        = 1.5f,
+                    RecoilKickSide           = 1f,
+                    RecoilRecoverySpeed      = 4f,
+                    EquipTime                = 0.2f,
+                    UnequipTime              = 0.15f,
+                    MagazineSize             = 12,
+                    ReloadTime               = 1.5f,
+                },
             };
         }
 

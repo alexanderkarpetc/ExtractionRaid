@@ -55,14 +55,14 @@ namespace View
                         var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         _playerView?.WeaponView?.PlayMuzzleFlash();
                         if (weapon != null)
-                            _playerView?.WeaponView?.PlayFire(weapon.FireInterval);
+                            _playerView?.WeaponView?.PlayFire(weapon.Stats.FireInterval);
                         break;
                     }
                     case RaidEventType.WeaponEquipStarted:
                     {
                         var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         if (weapon != null)
-                            _playerView?.WeaponView?.PlayEquip(weapon.EquipTime);
+                            _playerView?.WeaponView?.PlayEquip(weapon.Stats.EquipTime);
                         break;
                     }
                     case RaidEventType.WeaponUnequipStarted:
@@ -70,7 +70,7 @@ namespace View
                         // Cache unequip duration — weapon may become null during unequip
                         var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         if (weapon != null)
-                            _playerView?.WeaponView?.PlayUnequip(weapon.UnequipTime);
+                            _playerView?.WeaponView?.PlayUnequip(weapon.Stats.UnequipTime);
                         break;
                     }
                     case RaidEventType.WeaponEquipFinished:
@@ -79,7 +79,7 @@ namespace View
                     {
                         var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         if (weapon != null)
-                            _playerView?.WeaponView?.PlayReload(weapon.ReloadTime);
+                            _playerView?.WeaponView?.PlayReload(weapon.Stats.ReloadTime);
                         break;
                     }
                     case RaidEventType.WeaponReloadFinished:

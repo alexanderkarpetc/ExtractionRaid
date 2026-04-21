@@ -219,8 +219,8 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -235,8 +235,8 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.AimDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -258,8 +258,8 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.AimDirection = aimDir;
             state.PlayerEntity.WeaponAimPoint = aimDir * 10f;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 1;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 0f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =1;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =0f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -275,10 +275,10 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
-            state.PlayerEntity.EquippedWeapon.ProjectileSpeed = 25f;
-            state.PlayerEntity.EquippedWeapon.ProjectileDamage = 8f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectileSpeed = 25f;
+            state.PlayerEntity.EquippedWeapon.Stats.Damage = 8f;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 
@@ -296,8 +296,8 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 5;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 20f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =5;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =20f;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input, events: eventBuffer);
@@ -328,8 +328,8 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.ProjectilesPerShot = 7;
-            state.PlayerEntity.EquippedWeapon.SpreadAngle = 30f;
+            state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
+            state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input, events: eventBuffer);
@@ -424,11 +424,11 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.ProjectilesPerShot = 7;
-            weapon.SpreadAngle = 30f;
+            weapon.Stats.ProjectilesPerShot = 7;
+            weapon.Stats.SpreadAngle = 30f;
             weapon.AmmoType = "Ammo_Shotgun";
             weapon.AmmoInMagazine = 5;
-            weapon.MagazineSize = 5;
+            weapon.Stats.MagazineSize = 5;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = CreateContext(input);
 

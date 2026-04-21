@@ -578,19 +578,19 @@ namespace Editor
             switch (w.Phase)
             {
                 case State.WeaponPhase.Cooldown:
-                    float cdRemaining = Mathf.Max(0f, w.FireInterval - (elapsedTime - w.PhaseStartTime));
+                    float cdRemaining = Mathf.Max(0f, w.Stats.FireInterval - (elapsedTime - w.PhaseStartTime));
                     phaseStatus = cdRemaining > 0.001f ? $"Cooldown ({cdRemaining:F2}s)" : "Ready";
                     break;
                 case State.WeaponPhase.Equipping:
-                    float eqRemaining = Mathf.Max(0f, w.EquipTime - (elapsedTime - w.PhaseStartTime));
+                    float eqRemaining = Mathf.Max(0f, w.Stats.EquipTime - (elapsedTime - w.PhaseStartTime));
                     phaseStatus = $"Equipping ({eqRemaining:F2}s)";
                     break;
                 case State.WeaponPhase.Unequipping:
-                    float uqRemaining = Mathf.Max(0f, w.UnequipTime - (elapsedTime - w.PhaseStartTime));
+                    float uqRemaining = Mathf.Max(0f, w.Stats.UnequipTime - (elapsedTime - w.PhaseStartTime));
                     phaseStatus = $"Unequipping ({uqRemaining:F2}s)";
                     break;
                 case State.WeaponPhase.Reloading:
-                    float rlRemaining = Mathf.Max(0f, w.ReloadTime - (elapsedTime - w.PhaseStartTime));
+                    float rlRemaining = Mathf.Max(0f, w.Stats.ReloadTime - (elapsedTime - w.PhaseStartTime));
                     phaseStatus = $"Reloading ({rlRemaining:F2}s)";
                     break;
                 default:
@@ -599,25 +599,34 @@ namespace Editor
             }
 
             Field("Phase", phaseStatus);
-            Field("EquipTime", w.EquipTime);
-            Field("UnequipTime", w.UnequipTime);
+
+            // Composition identity (null-equivalent for non-builder weapons)
+            if (!string.IsNullOrEmpty(w.PayloadCore.DefinitionId))
+                Field("Payload", $"{w.PayloadCore.DefinitionId} ({w.PayloadCore.Rarity})");
+            if (!string.IsNullOrEmpty(w.DeliveryCore.DefinitionId))
+                Field("Delivery", $"{w.DeliveryCore.DefinitionId} ({w.DeliveryCore.Rarity})");
+            if (w.HasExotic)
+                Field("Exotic", w.ExoticMod.DefinitionId);
+
+            Field("EquipTime", w.Stats.EquipTime);
+            Field("UnequipTime", w.Stats.UnequipTime);
 
             if (!string.IsNullOrEmpty(w.AmmoType))
             {
                 Field("AmmoType", w.AmmoType);
-                Field("Magazine", $"{w.AmmoInMagazine} / {w.MagazineSize}");
-                Field("ReloadTime", w.ReloadTime);
+                Field("Magazine", $"{w.AmmoInMagazine} / {w.Stats.MagazineSize}");
+                Field("ReloadTime", w.Stats.ReloadTime);
             }
 
-            Field("FireInterval", w.FireInterval);
-            Field("Projectiles/Shot", w.ProjectilesPerShot);
-            Field("SpreadAngle", $"{w.SpreadAngle}°");
-            Field("Proj Speed", w.ProjectileSpeed);
-            Field("Proj Lifetime", w.ProjectileLifetime);
-            Field("Proj Damage", w.ProjectileDamage);
-            Field("ConeHalfAngle", $"{w.ConeHalfAngle}°");
-            Field("BodyRotSpeed", w.BodyRotationSpeed);
-            Field("AimFollowSharpness", w.AimFollowSharpness);
+            Field("FireInterval", w.Stats.FireInterval);
+            Field("Projectiles/Shot", w.Stats.ProjectilesPerShot);
+            Field("SpreadAngle", $"{w.Stats.SpreadAngle}°");
+            Field("Proj Speed", w.Stats.ProjectileSpeed);
+            Field("Proj Lifetime", w.Stats.ProjectileLifetime);
+            Field("Proj Damage", w.Stats.Damage);
+            Field("ConeHalfAngle", $"{w.Stats.ConeHalfAngle}°");
+            Field("BodyRotSpeed", w.Stats.BodyRotationSpeed);
+            Field("AimFollowSharpness", w.Stats.AimFollowSharpness);
         }
 
         void DrawHealth(EId id, Dictionary<EId, HealthState> healthMap)

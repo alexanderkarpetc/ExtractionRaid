@@ -163,8 +163,8 @@ namespace View
                     break;
 
                 case WeaponPhase.Cooldown:
-                    float cooldownT = weapon.FireInterval > 0f
-                        ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.FireInterval))
+                    float cooldownT = weapon.Stats.FireInterval > 0f
+                        ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.Stats.FireInterval))
                         : 1f;
                     float bloomGap = adsGap + adsBloomExtra * (1f - cooldownT);
                     var bloomLerp = Color.Lerp(BloomColor, NormalColor, cooldownT);
@@ -172,22 +172,22 @@ namespace View
                     break;
 
                 case WeaponPhase.Reloading:
-                    float reloadProgress = weapon.ReloadTime > 0f
-                        ? Mathf.Clamp01(elapsed / weapon.ReloadTime)
+                    float reloadProgress = weapon.Stats.ReloadTime > 0f
+                        ? Mathf.Clamp01(elapsed / weapon.Stats.ReloadTime)
                         : 1f;
                     DrawReloadRing(pos, reloadProgress, alphaMul);
                     break;
 
                 case WeaponPhase.Equipping:
-                    float equipAlpha = weapon.EquipTime > 0f
-                        ? Mathf.Clamp01(elapsed / weapon.EquipTime)
+                    float equipAlpha = weapon.Stats.EquipTime > 0f
+                        ? Mathf.Clamp01(elapsed / weapon.Stats.EquipTime)
                         : 1f;
                     DrawCrosshairLines(pos, adsGap, NormalColor, equipAlpha * alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Unequipping:
-                    float unequipAlpha = weapon.UnequipTime > 0f
-                        ? 1f - Mathf.Clamp01(elapsed / weapon.UnequipTime)
+                    float unequipAlpha = weapon.Stats.UnequipTime > 0f
+                        ? 1f - Mathf.Clamp01(elapsed / weapon.Stats.UnequipTime)
                         : 0f;
                     DrawCrosshairLines(pos, adsGap, NormalColor, unequipAlpha * alphaMul, _adsAmount);
                     break;

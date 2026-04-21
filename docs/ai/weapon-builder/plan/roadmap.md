@@ -248,6 +248,7 @@ Tier 2 complete.
 - [ ] A4. Slot structure data model
 - [ ] E2. Slot Compatibility Rules engine
 - [ ] F5. UI feedback на заборонену комбінацію
+- [ ] **B1. Bot weapon migration** — видалити hardcoded stat fields з `BotConstants`, додати `WeaponConfiguration` до `BotTypeConfig`, `BotSpawnSystem` через assembly pipeline. Per-bot rarity/delivery combinations (Scav=Common, Boss=Epic, heavy=Rotary). Balance може "попливти" — це ок, буде зафіксоване у цій же tier balance pass. Див. [status.md 2026-04-22](./status.md)
 
 ### Architectural questions (deferred)
 - Q4 повністю: де живе правило сумісності (в модулі / в слоті / окремий rules engine)?

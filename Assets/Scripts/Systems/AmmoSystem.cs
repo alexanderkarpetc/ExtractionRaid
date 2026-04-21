@@ -51,7 +51,7 @@ namespace Systems
         {
             if (string.IsNullOrEmpty(weapon.AmmoType)) return;
 
-            int needed = weapon.MagazineSize - weapon.AmmoInMagazine;
+            int needed = weapon.Stats.MagazineSize - weapon.AmmoInMagazine;
             if (needed <= 0) return;
 
             int consumed = ConsumeAmmo(inventory, weapon.AmmoType, needed);
@@ -64,7 +64,7 @@ namespace Systems
         public static bool CanReload(WeaponEntityState weapon, InventoryState inventory)
         {
             if (string.IsNullOrEmpty(weapon.AmmoType)) return false;
-            if (weapon.AmmoInMagazine >= weapon.MagazineSize) return false;
+            if (weapon.AmmoInMagazine >= weapon.Stats.MagazineSize) return false;
             return CountReserve(inventory, weapon.AmmoType) > 0;
         }
     }

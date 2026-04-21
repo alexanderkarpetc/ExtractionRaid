@@ -17,17 +17,20 @@ namespace Systems.Bot
             var weaponId = state.AllocateEId();
             bot.Weapon = new WeaponEntityState
             {
-                Id = weaponId,
-                PrefabId = config.WeaponPrefabId,
-                FireInterval = config.FireInterval,
-                ProjectileSpeed = config.ProjectileSpeed,
-                ProjectileDamage = config.ProjectileDamage,
-                ProjectileLifetime = config.ProjectileLifetime,
-                ProjectilesPerShot = config.ProjectilesPerShot,
-                SpreadAngle = config.SpreadAngle,
-                ConeHalfAngle = 45f,
-                BodyRotationSpeed = 270f,
+                Id           = weaponId,
+                PrefabId     = config.WeaponPrefabId,
                 LastFireTime = -999f,
+                Stats = new WeaponStats
+                {
+                    Damage             = config.ProjectileDamage,
+                    ProjectileSpeed    = config.ProjectileSpeed,
+                    ProjectileLifetime = config.ProjectileLifetime,
+                    ProjectilesPerShot = config.ProjectilesPerShot,
+                    SpreadAngle        = config.SpreadAngle,
+                    FireInterval       = config.FireInterval,
+                    ConeHalfAngle      = 45f,
+                    BodyRotationSpeed  = 270f,
+                },
             };
 
             bot.Blackboard.MedkitsRemaining = config.MedkitCount;

@@ -60,7 +60,7 @@ namespace Tests.EditMode
             var bot = state.Bots[0];
             Assert.IsNotNull(bot.Weapon);
             Assert.AreEqual("Weapon_Shotgun", bot.Weapon.PrefabId);
-            Assert.AreEqual(7, bot.Weapon.ProjectilesPerShot);
+            Assert.AreEqual(7, bot.Weapon.Stats.ProjectilesPerShot);
         }
 
         [Test]

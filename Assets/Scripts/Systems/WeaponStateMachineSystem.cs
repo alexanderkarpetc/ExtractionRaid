@@ -46,7 +46,7 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Cooldown:
-                    float effectiveInterval = weapon.FireInterval / DevCheats.FireRateMultiplier;
+                    float effectiveInterval = weapon.Stats.FireInterval / DevCheats.FireRateMultiplier;
                     if (phaseDuration >= effectiveInterval)
                     {
                         weapon.Phase = WeaponPhase.Ready;
@@ -68,7 +68,7 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Equipping:
-                    if (phaseDuration >= weapon.EquipTime)
+                    if (phaseDuration >= weapon.Stats.EquipTime)
                     {
                         weapon.Phase = WeaponPhase.Ready;
                         weapon.PhaseStartTime = elapsed;
@@ -82,14 +82,14 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Unequipping:
-                    if (phaseDuration >= weapon.UnequipTime)
+                    if (phaseDuration >= weapon.Stats.UnequipTime)
                     {
                         CompleteUnequip(player, state, in context);
                     }
                     break;
 
                 case WeaponPhase.Reloading:
-                    if (phaseDuration >= weapon.ReloadTime)
+                    if (phaseDuration >= weapon.Stats.ReloadTime)
                     {
                         AmmoSystem.CompleteReload(weapon, App.Instance.Player.Inventory);
                         weapon.Phase = WeaponPhase.Ready;

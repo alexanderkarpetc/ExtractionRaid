@@ -68,7 +68,7 @@ namespace Systems
 
             {
                 var aimCfg = context.AimConfig;
-                float aimFollowSharpness = weapon != null ? weapon.AimFollowSharpness : UnarmedAimFollowSharpness;
+                float aimFollowSharpness = weapon != null ? weapon.Stats.AimFollowSharpness : UnarmedAimFollowSharpness;
 
                 // When aim split disabled — skip smoothing (instant follow)
                 if (!aimCfg.AimSplitEnabled)
@@ -91,7 +91,7 @@ namespace Systems
                 if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
                 {
                     float adsRecovery = Mathf.Lerp(1f, aimCfg.AdsRecoilRecoveryMultiplier, player.AdsBlend);
-                    float recoilDecay = 1f - Mathf.Exp(-weapon.RecoilRecoverySpeed * aimCfg.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
+                    float recoilDecay = 1f - Mathf.Exp(-weapon.Stats.RecoilRecoverySpeed * aimCfg.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
                     weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
                 }
 
@@ -111,8 +111,8 @@ namespace Systems
                 : rawDir;
 
             // 4. FacingDirection — follows raw aim (body faces player intent)
-            var coneHalfAngle = weapon != null ? weapon.ConeHalfAngle : UnarmedConeHalfAngle;
-            var bodyRotationSpeed = weapon != null ? weapon.BodyRotationSpeed : UnarmedBodyRotationSpeed;
+            var coneHalfAngle = weapon != null ? weapon.Stats.ConeHalfAngle : UnarmedConeHalfAngle;
+            var bodyRotationSpeed = weapon != null ? weapon.Stats.BodyRotationSpeed : UnarmedBodyRotationSpeed;
 
             var currentFacing = player.FacingDirection;
             if (currentFacing.sqrMagnitude < 0.001f)
