@@ -69,6 +69,37 @@
 **Рішення:** Weapon Builder живе у `docs/ai/weapon-builder/` з окремими файлами під дизайн, архітектуру, план.
 **Причина:** Фіча занадто велика для одного файлу. Розділення концептуальних (живуть довго) і планових (живуть час реалізації) доків.
 
+### 2026-04-20 — D6 / D7 / D8 resolved (Tier 1 blockers closed)
+
+**D6 — Re-assembly triggers:** Варіант B.
+- On equip (auto) + on explicit "Apply" button (manual, Tier 4 UI)
+- `WeaponAssemblySystem.Assemble` — окрема system, викликається з обох місць
+- Runtime state persistence: `AmmoInMagazine` у `WeaponConfiguration` (persistent), решта runtime полів — скидаються при re-assembly
+- Tier 0b/1 реалізує on-equip path only; Apply button — Tier 4
+
+**D7 — Invalid configuration handling:** Варіант C (ghost weapon), strict — без auto-repair.
+- `WeaponAssemblySystem.TryAssemble(WeaponConfiguration, out WeaponEntityState) → bool`
+- Будь-який missing definition (Payload/Delivery/Exotic) → `false`, log + `WeaponAssemblyFailed` event
+- **Без auto-repair Exotic** — strict C: broken exotic ламає всю збірку, гравець явно виправляє в Builder
+- Invalid item лишається в inventory як ghost (не видаляється), equip fails clearly, player unarmed
+- Tier 0b/1: немає broken-UI; Tier 4 — ⚠️ icon + tooltip + Salvage/Repair
+
+**D8 — Archetype labels:** Варіант A (pure template, no baseline strip).
+- `PayloadCoreDefinition.DisplayName` + `DeliveryCoreDefinition.FormFactor` — нові поля SO
+- Template: `"{payload.DisplayName} {delivery.FormFactor}"`
+- Examples: "Ballistic Pistol", "Ballistic Rifle", "Laser Pistol", "Foam Shotgun", "Rocket Launcher"
+- Legacy Rifle/Pistol після міграції → "Ballistic Rifle"/"Ballistic Pistol"
+- Exotic NOT у label (окремий UI element)
+- Override-table — deferred to Tier 5
+
+**Наслідки для Tier 0b:**
+- +2 fields на SOs (DisplayName, FormFactor) — editor stub script треба оновити
+- +1 system class `WeaponAssemblySystem` з `TryAssemble`
+- +1 helper `WeaponArchetypeLabel.Compose`
+- +1 event type `WeaponAssemblyFailed` у RaidEventBuffer
+
+**Див.:** [architecture.md §D6, D7, D8](../architecture.md)
+
 ### 2026-04-20 — Tier 0a complete ✅
 **Виконано:**
 - Всі нові types у `Assets/Scripts/State/`: enums (RarityTier, FiringPattern), stats structs (CommonPayloadStats, DeliveryStats, WeaponStats, 3 payload-specific), readonly struct instances (PayloadCoreInstance, DeliveryCoreInstance, ExoticModInstance), WeaponConfiguration
@@ -267,9 +298,10 @@
 - [x] ~~R1 decision — Tier 0 split~~ ✅ 0a (data model) + 0b (migration)
 - [x] ~~Декомпозувати Tier 0a у конкретні задачі~~ ✅
 - [x] ~~Старт імплементації Tier 0a~~ ✅ complete (2026-04-20)
-- [ ] **Merge Tier 0a** (commit + PR + review)
-- [ ] Деталізувати Tier 0b задачі (детальна декомпозиція з work items)
-- [ ] Закрити D6-D8 перед стартом Tier 1 коду (re-assembly triggers, invalid config, archetype labels)
+- [x] ~~Merge Tier 0a~~ ✅ committed `03e07b9` (2026-04-20)
+- [x] ~~Закрити D6-D8~~ ✅ (2026-04-20)
+- [x] ~~Детальна декомпозиція Tier 0b у конкретні T-0b.NN task'и~~ ✅ 18 задач, 6 кластерів ([tasks.md](./tasks.md))
+- [ ] **Старт імплементації Tier 0b** (Cluster A → B → C → D → E → F)
 - [ ] Size estimation для Tier 0 — вирішити split 0a+0b чи ні
 - [ ] Закрити D6-D8 перед стартом Tier 1 коду
 

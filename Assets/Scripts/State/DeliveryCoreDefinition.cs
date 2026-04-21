@@ -20,6 +20,7 @@ namespace State
         const int RarityTierCount = 5;
 
         [SerializeField] string _id;
+        [SerializeField] string _formFactor;
         [SerializeField] FiringPattern _pattern;
         [SerializeField] DeliveryStats[] _statsByTier = new DeliveryStats[RarityTierCount];
 
@@ -32,8 +33,10 @@ namespace State
         [SerializeField] int   _volleyCount;
         [SerializeField] float _volleyInterval;
 
-        public string        Id      => _id;
-        public FiringPattern Pattern => _pattern;
+        public string        Id         => _id;
+        /// <summary>Form-factor name used in weapon archetype labels (e.g. "Pistol", "Rifle", "Shotgun").</summary>
+        public string        FormFactor => _formFactor;
+        public FiringPattern Pattern    => _pattern;
 
         /// <summary>Delivery stats for the given rarity tier.</summary>
         public DeliveryStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

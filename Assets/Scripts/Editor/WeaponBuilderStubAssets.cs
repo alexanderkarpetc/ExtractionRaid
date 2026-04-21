@@ -91,9 +91,10 @@ namespace Game.Editor
 
         static void PopulateBallistic(BallisticPayloadDefinition def)
         {
-            SetField(def, "_id",        "BallisticRound");
-            SetField(def, "_archetype", "Ballistic");
-            SetField(def, "_ammoType",  "Ammo_Rifle");
+            SetField(def, "_id",          "BallisticRound");
+            SetField(def, "_archetype",   "Ballistic");
+            SetField(def, "_displayName", "Ballistic");
+            SetField(def, "_ammoType",    "Ammo_Rifle");
 
             var stats = new CommonPayloadStats[5];
             stats[(int)RarityTier.Common] = new CommonPayloadStats
@@ -113,8 +114,9 @@ namespace Game.Editor
 
         static void PopulateSingleAction(DeliveryCoreDefinition def)
         {
-            SetField(def, "_id",      "SingleAction");
-            SetField(def, "_pattern", FiringPattern.Single);
+            SetField(def, "_id",         "SingleAction");
+            SetField(def, "_formFactor", "Pistol");
+            SetField(def, "_pattern",    FiringPattern.Single);
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
@@ -147,8 +149,9 @@ namespace Game.Editor
 
         static void PopulateAuto(DeliveryCoreDefinition def)
         {
-            SetField(def, "_id",      "Auto");
-            SetField(def, "_pattern", FiringPattern.Auto);
+            SetField(def, "_id",         "Auto");
+            SetField(def, "_formFactor", "Rifle");
+            SetField(def, "_pattern",    FiringPattern.Auto);
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats

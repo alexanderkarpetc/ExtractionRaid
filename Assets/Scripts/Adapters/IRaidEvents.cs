@@ -46,5 +46,8 @@ namespace Adapters
 
         void ArmorBroken(EId entityId, bool isHelmet);
         void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction);
+
+        /// <summary>Emitted when a <c>WeaponConfiguration</c> fails to assemble — per D7 ghost-weapon pattern.</summary>
+        void WeaponAssemblyFailed(string weaponIdentifier, string reason);
     }
 }

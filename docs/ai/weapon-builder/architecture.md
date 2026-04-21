@@ -181,6 +181,95 @@ Handlers — static методи того ж system'у (не окремі кла
 - [ ] Чи потрібен `IPayloadBehavior` для custom projectile logic (напр. charge-up для Laser, AoE для Rocket, sticky для Foam)?
 - [ ] Чи це data-only — просто набір стат, а поведінка емерджентна?
 
+---
+
+### D6. Re-assembly triggers ✅ RESOLVED (2026-04-20)
+
+**Коли `WeaponConfiguration → WeaponEntityState` відбувається:**
+
+1. **On equip** (auto) — `WeaponSyncSystem` викликає `WeaponAssemblySystem.TryAssemble` коли зброя з'являється у hotbar
+2. **On explicit "Apply"** (manual) — коли гравець редагує *equipped* weapon через Weapon Builder UI, натискає "Apply" → re-assembly на поточному `WeaponEntityState`
+
+**Що НЕ викликає re-assembly:**
+- Зміна ammo type — це runtime-field, не частина Stats
+- Reactive hooks на будь-який edit WeaponConfiguration — немає
+
+**Runtime state persistence:** `AmmoInMagazine` живе у `WeaponConfiguration` (persistent) і продовжує з того самого значення при re-equip. `Phase`/`PhaseStartTime`/`RecoilOffset`/`LastFireTime` — скидаються при кожній assembly (вони справді runtime).
+
+**Scope:**
+- Tier 0b / 1: реалізувати лише on-equip path. "Apply" — Tier 4 UI.
+- `WeaponAssemblySystem` виносимо як окрему systemу — вона викликається з двох місць пізніше (WeaponSyncSystem і Apply button handler).
+
+---
+
+### D7. Invalid configuration handling ✅ RESOLVED (2026-04-20)
+
+**Pattern: "Ghost weapon".** Invalid config не кидає і не silent-unarmed'ить — item лишається в inventory **явно помічений як broken**, equip fails з clear signal.
+
+**Валідація на `WeaponAssemblySystem.TryAssemble(WeaponConfiguration, out WeaponEntityState)`:**
+- Payload `DefinitionId` відсутній або not found у registry → `false`
+- Delivery `DefinitionId` відсутній або not found → `false`
+- Exotic `HasExotic=true` але `DefinitionId` відсутній/not found → `false`
+  - **Немає auto-repair.** Невалідний exotic ламає всю збірку (strict C, без mild D). Гравець мусить явно виправити через builder UI
+- Все ok → `true`, out = повноцінний `WeaponEntityState`
+
+**Що robить `WeaponSyncSystem` на `TryAssemble == false`:**
+- Inventory item **лишається** (не видаляється)
+- У hotbar-слоті — empty (або null placeholder)
+- Log error з деталями чому fail
+- Event `WeaponAssemblyFailed` (`RaidEventBuffer`) для UI feedback
+- Гравець залишається unarmed (не крешиться), але explicit — weapon в інвентарі, але нефункціональний
+
+**UI scope:**
+- Tier 0b/1: немає спеціального UI. Log в консолі. Item видно в inventory, equip тихо не працює (буде подальша warning у logs). Достатньо для dev/testing — production не мусить стикатися.
+- Tier 4: broken icon ⚠️ на item, tooltip з reason ("Payload 'BallisticRound' is missing from the registry"), кнопка "Salvage" або "Repair in Builder".
+
+**Джерела invalid configs (реалістично):**
+- Save data з pre-migration era (0b compat layer мапить — за визначенням валідні)
+- Видалений SO asset (dev testing)
+- Data corruption (rare)
+
+Production гравці не можуть створити invalid config через UI — Builder enforces validity при збірці.
+
+---
+
+### D8. Archetype label system ✅ RESOLVED (2026-04-20)
+
+**Pattern: pure template `{Payload.DisplayName} {Delivery.FormFactor}`.** Без override-table у Tier 1, без baseline stripping. Consistent і explicit — extension'и приходять Tier 5 polish'ом.
+
+**Нові fields на SOs (додаємо в Tier 0b):**
+- `PayloadCoreDefinition.DisplayName : string` — "Ballistic", "Laser", "Rocket", "Foam"
+- `DeliveryCoreDefinition.FormFactor : string` — "Pistol", "Rifle", "Shotgun", "Machinegun", "Launcher"
+
+**Composer helper:**
+```csharp
+public static class WeaponArchetypeLabel
+{
+    public static string Compose(PayloadCoreDefinition payload, DeliveryCoreDefinition delivery)
+        => $"{payload.DisplayName} {delivery.FormFactor}";
+}
+```
+
+**Tier 1 matrix (Pattern → FormFactor):**
+| Delivery Pattern | FormFactor |
+|------------------|------------|
+| Single | Pistol |
+| Auto | Rifle |
+| Scatter | Shotgun |
+| Rotary | Machinegun |
+| Swarm | Launcher |
+
+**Examples after compose:**
+- Ballistic + Single → "Ballistic Pistol"
+- Ballistic + Auto → "Ballistic Rifle"
+- Laser + Single → "Laser Pistol"
+- Foam + Scatter → "Foam Shotgun"
+- Rocket + Swarm → "Rocket Launcher"
+
+**Migration impact:** legacy Rifle/Pistol після 0b міграції відображаються як "Ballistic Rifle"/"Ballistic Pistol" — трохи verbose, але consistency переважає. Override-table (Tier 5) дозволить spicy names для specific combos, якщо знадобиться.
+
+**Exotic NOT included in label:** design rule — archetype = Payload + Delivery only. Exotic — modifier, може відображатись окремо в UI (e.g. "Ballistic Rifle · Ricochet"), але не частина базової назви.
+
 ### 4. Як імплементувати slot structure / module compatibility?
 - [ ] Дата модель слотів: per-weapon чи per-core?
 - [ ] Де живе правило сумісності: у модулі, у слоті, окремий rules engine?

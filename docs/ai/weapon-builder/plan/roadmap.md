@@ -89,8 +89,13 @@
 
 ### Work items
 - [ ] A1. Refactor `WeaponEntityState`: composition refs (`PayloadCore / DeliveryCore / ExoticMod?`) + `WeaponStats Stats` cache + runtime fields окремо
-- [ ] A6. `WeaponStatComposer` — `(PayloadCoreInstance, DeliveryCoreInstance, ExoticModInstance?) → WeaponStats` (21 common поле з 8+13)
-- [ ] E1. `WeaponAssemblySystem` — `WeaponConfiguration → WeaponEntityState` (валідація existent definitionId, rarity, composition)
+- [ ] A6. `WeaponStatComposer` — `(PayloadCoreInstance, DeliveryCoreInstance, ExoticModInstance?) → WeaponStats` (20 common полів з 7+13)
+- [ ] E1. `WeaponAssemblySystem.TryAssemble(WeaponConfiguration, out WeaponEntityState) → bool` — валідація existent definitionIds + composition. Fail: missing Payload/Delivery/Exotic (strict, no auto-repair per D7)
+- [ ] E1.1. `WeaponAssemblyFailed` event у `RaidEventBuffer` (per D7)
+- [ ] E1.2. Ghost-weapon handling у `WeaponSyncSystem`: TryAssemble fail → log + event, item лишається в inventory, hotbar slot empty
+- [ ] E2. SO fields: `PayloadCoreDefinition.DisplayName`, `DeliveryCoreDefinition.FormFactor` (per D8)
+- [ ] E3. `WeaponArchetypeLabel.Compose(Payload, Delivery) → string` helper
+- [ ] E4. Update `WeaponBuilderStubAssets` editor script: додати DisplayName ("Ballistic") + FormFactor ("Pistol" для Single, "Rifle" для Auto)
 - [ ] Rewrite `WeaponSyncSystem` на assembly pipeline — `WeaponConfiguration → WeaponEntityState` замість factory dispatch
 - [ ] Compat layer `LegacyDefinitionToConfig` (static dictionary у `WeaponSyncSystem`): `"Rifle" → Ballistic/Common + Auto/Common`, `"Pistol" → Ballistic/Common + Single/Common`
 - [ ] Видалити Shotgun **повністю**: `CreateShotgun`, `Ammo_Shotgun`, Shotgun SO assets, loot tables, inventory spawners — де б не було згадки
@@ -99,6 +104,7 @@
 - [ ] Read sites: `weapon.FireInterval` → `weapon.Stats.FireInterval` тощо (механічний refactor)
 - [ ] D10. `RaidStateDebuggerWindow` — відобразити нові поля (composition refs + Stats block + runtime)
 - [ ] Integration tests: Rifle і Pistol працюють ідентично pre-migration (FireInterval, damage, mag size через новий pipeline = значення що були hardcoded)
+- [ ] Integration test: ghost-weapon path — invalid WeaponConfiguration → TryAssemble returns false, event emitted, item лишається
 
 ### Exit criteria
 - ✅ `WeaponEntityState` — composition + `Stats` cache + runtime, не monolithic
@@ -155,10 +161,10 @@ _TBD._
 Tier 0b complete.
 
 ### Unknowns / research needed
-Tier 1 блокуючі (must-do перед стартом коду):
-- **D6.** Re-assembly triggers (коли запускається composition на equipped weapon)
-- **D7.** Invalid configuration handling (fallback strategy)
-- **D8.** Archetype label system (lookup / template / hybrid)
+Tier 1 блокуючі:
+- [x] ~~**D6.** Re-assembly triggers~~ ✅ On equip + explicit Apply (2026-04-20)
+- [x] ~~**D7.** Invalid configuration handling~~ ✅ Ghost weapon pattern, strict (no auto-repair) (2026-04-20)
+- [x] ~~**D8.** Archetype label system~~ ✅ Pure template `{DisplayName} {FormFactor}` (2026-04-20)
 
 Відкрите:
 - Де саме на базі живе Weapon Builder screen? Окремий UI, частина існуючого inventory UI, чи новий екран?

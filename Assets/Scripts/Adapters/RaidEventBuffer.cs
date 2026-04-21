@@ -38,6 +38,7 @@ namespace Adapters
         DamageNumber,
         ArmorBroken,
         ProjectileRicochet,
+        WeaponAssemblyFailed,
     }
 
     public struct RaidEvent
@@ -51,6 +52,7 @@ namespace Adapters
         public float MaxHp;
         public float Damage;
         public string StringPayload;
+        public string StringPayload2;
     }
 
     public class RaidEventBuffer : IRaidEvents
@@ -334,6 +336,16 @@ namespace Adapters
                 Id = projectileId,
                 Position = position,
                 Direction = direction,
+            });
+        }
+
+        public void WeaponAssemblyFailed(string weaponIdentifier, string reason)
+        {
+            _events.Add(new RaidEvent
+            {
+                Type           = RaidEventType.WeaponAssemblyFailed,
+                StringPayload  = weaponIdentifier,
+                StringPayload2 = reason,
             });
         }
 

@@ -18,12 +18,15 @@ namespace State
 
         [SerializeField] string _id;
         [SerializeField] string _archetype;
+        [SerializeField] string _displayName;
         [SerializeField] string _ammoType;
         [SerializeField] CommonPayloadStats[] _statsByTier = new CommonPayloadStats[RarityTierCount];
 
-        public string Id        => _id;
-        public string Archetype => _archetype;
-        public string AmmoType  => _ammoType;
+        public string Id          => _id;
+        public string Archetype   => _archetype;
+        /// <summary>Human-readable name used in weapon archetype labels (e.g. "Ballistic", "Laser").</summary>
+        public string DisplayName => _displayName;
+        public string AmmoType    => _ammoType;
 
         /// <summary>Common payload stats for the given rarity tier.</summary>
         public CommonPayloadStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

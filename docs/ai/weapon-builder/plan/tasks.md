@@ -165,21 +165,185 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ---
 
-## Tier 0b — Migration (headline-level)
+## Tier 0b — Migration
 
-> Детально опрацьовується ПІСЛЯ merge 0a. Наразі — only headlines.
+**Goal:** Перевести existing weapons (Rifle/Pistol) на новий data-driven pipeline через тимчасовий compat layer. Shotgun повністю видалити. Після exit gate: нуль legacy factories, нуль compat layer, `WeaponEntityState` має нову shape.
 
-- [ ] **T-0b.01 — Refactor `WeaponEntityState`** на composition + Stats + runtime sections
-- [ ] **T-0b.02 — `WeaponStatComposer`** — (Payload, Delivery, Exotic?) → WeaponStats
-- [ ] **T-0b.03 — `WeaponAssemblySystem`** — WeaponConfiguration → WeaponEntityState
-- [ ] **T-0b.04 — Rewrite `WeaponSyncSystem`** на assembly pipeline
-- [ ] **T-0b.05 — Compat layer** `LegacyDefinitionToConfig` для Rifle/Pistol
-- [ ] **T-0b.06 — Видалити Shotgun** повністю (code, assets, ammo, loot, spawners)
-- [ ] **T-0b.07 — Видалити `CreateRifle` / `CreatePistol`** factories
-- [ ] **T-0b.08 — Rewrite `ShootingSystem`** на dispatch по `FiringPattern`
-- [ ] **T-0b.09 — Read sites refactor** — `weapon.X` → `weapon.Stats.X`
-- [ ] **T-0b.10 — `RaidStateDebuggerWindow`** update під нові поля
-- [ ] **T-0b.11 — Integration tests** — Rifle/Pistol parity pre/post migration
+**Принцип декомпозиції:** кожна задача — мінімальна одиниця, яка лишає кодбазу у робочому стані. Clusters впорядковані так, щоб після кожної попередньої cluster нічого не падало.
+
+**Рекомендоване порядкування кластерів:** A → B → C → D → E → F.
+
+### Cluster A — SO field additions (standalone, no behaviour change)
+
+- [x] **T-0b.01 — Add `DisplayName` to `PayloadCoreDefinition`** ✅
+  - Path: `Assets/Scripts/State/PayloadCoreDefinition.cs`
+  - `[SerializeField] string _displayName` + `public string DisplayName => _displayName`
+  - DoD: поле компілюється; існуючі assets не падають (default = "")
+
+- [x] **T-0b.02 — Add `FormFactor` to `DeliveryCoreDefinition`** ✅
+  - Path: `Assets/Scripts/State/DeliveryCoreDefinition.cs`
+  - `[SerializeField] string _formFactor` + `public string FormFactor => _formFactor`
+  - DoD: поле компілюється
+
+- [/] **T-0b.03 — Update `WeaponBuilderStubAssets` editor script** (script оновлено, треба re-run menu item)
+  - ✅ Script тепер заповнює: Ballistic.DisplayName="Ballistic", SingleAction.FormFactor="Pistol", Auto.FormFactor="Rifle"
+  - ⏳ **Action item:** У Unity виконати `Tools → Weapon Builder → Create Stub Assets` щоб оновити існуючі .asset файли
+  - DoD: три stub asset'и мають нові значення на диску
+
+- [x] **T-0b.04 — `WeaponArchetypeLabel.Compose` helper** ✅ (+ 9 unit tests)
+  - Path: `Assets/Scripts/State/WeaponArchetypeLabel.cs`
+  - `public static class WeaponArchetypeLabel { public static string Compose(PayloadCoreDefinition, DeliveryCoreDefinition) }` → `"{payload.DisplayName} {delivery.FormFactor}"`
+  - Null-guard: empty string якщо null на вході
+  - DoD: static helper + unit tests
+
+### Cluster B — Core systems (standalone, no behaviour change)
+
+- [x] **T-0b.05 — `WeaponStatComposer`** ✅
+  - Path: `Assets/Scripts/Systems/WeaponStatComposer.cs`
+  - `public static class WeaponStatComposer { public static WeaponStats Compose(PayloadCoreInstance, PayloadCoreDefinition, DeliveryCoreInstance, DeliveryCoreDefinition) }`
+  - Bаlансує 20 полів з 7 Payload + 13 Delivery (per architecture.md §D1)
+  - Не знає про `ICoreDefinitionRegistry` — приймає resolved definitions
+  - DoD: compose коректний + unit tests (compose з Common tier → очікувані числа)
+
+- [x] **T-0b.06 — `WeaponAssemblyFailed` event** ✅ (+ `StringPayload2` на RaidEvent)
+  - Path: `Assets/Scripts/Adapters/IRaidEvents.cs`, `RaidEventBuffer.cs`
+  - Додати event type з payload: `{ string InventoryItemId, string Reason }`
+  - DoD: event emittable, consumers можуть читати
+
+- [x] **T-0b.07 — `WeaponAssemblySystem`** ✅
+  - **Scope adjustment:** у Cluster B повертає `AssemblyResult` struct (`WeaponStats` + resolved definitions), НЕ `WeaponEntityState` — це був би race з Cluster C state refactor. `WeaponSyncSystem` (Cluster D) комбінує TryAssemble результат + runtime fields у state
+  - Fail cases закриті (per D7 strict): missing Payload/Delivery/Exotic → false + reason
+  - Null-registry guard теж закритий
+  - Unit tests: 6 — success (2), fails (3), null-registry (1)
+
+### Cluster C — State refactor (breaking change for read sites)
+
+- [ ] **T-0b.08 — Refactor `WeaponEntityState` structure**
+  - Path: `Assets/Scripts/State/WeaponEntityState.cs`
+  - Нова shape:
+    ```
+    composition: PayloadCore (instance), DeliveryCore (instance), ExoticMod (instance + hasExotic)
+    cached:      Stats (WeaponStats)
+    runtime:     Phase, PhaseStartTime, LastFireTime, AmmoInMagazine, RecoilOffset
+    identity:    Id, PrefabId
+    ```
+  - Видалити старі flat-поля (FireInterval, ProjectileDamage тощо — тепер у `Stats.X`)
+  - **Внутрішні зміни factory:** `CreateRifle/Pistol/Shotgun` тимчасово заповнюють `Stats` напряму (compat), runtime поля як раніше. AmmoType читається з `weapon.PayloadCore.Definition.AmmoType` (поки null-safe через stub).
+  - Треба шимnути factory щоб вони не падали до T-0b.11 (видалення factories)
+  - DoD: компілюється; Rifle/Pistol створюються без runtime error
+
+- [ ] **T-0b.09 — Migrate read sites до `weapon.Stats.X`**
+  - Paths (з grep):
+    - `Assets/Scripts/Systems/ShootingSystem.cs`
+    - `Assets/Scripts/Systems/WeaponStateMachineSystem.cs`
+    - `Assets/Scripts/Systems/Bot/BotCombatSystem.cs`
+    - `Assets/Scripts/Systems/Bot/BotSpawnSystem.cs` (якщо читає weapon stats)
+    - `Assets/Scripts/View/PlayerPresenter.cs`
+    - `Assets/Scripts/View/AimCursorOverlay.cs`
+    - `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs` — частково, повний refresh у T-0b.16
+  - Механічний refactor: `weapon.FireInterval` → `weapon.Stats.FireInterval` тощо
+  - `weapon.AmmoType` → `weapon.PayloadCore.Definition.AmmoType` (можливий null-check шим)
+  - DoD: все компілюється; existing tests зелені; shooting range + armor tests зелені
+
+### Cluster D — Pipeline migration (new assembly flow)
+
+- [ ] **T-0b.10 — Compat layer `LegacyDefinitionToConfig`**
+  - Path: `Assets/Scripts/Systems/WeaponSyncSystem.cs` (static dictionary усередині)
+  - `static readonly Dictionary<string, WeaponConfiguration> LegacyDefinitionToConfig`:
+    - `"Rifle"` → Ballistic/Common + Auto/Common
+    - `"Pistol"` → Ballistic/Common + Single/Common
+  - Позначити коментарем `// TEMPORARY — removed at end of Tier 0b`
+  - DoD: dictionary існує
+
+- [ ] **T-0b.11 — Rewrite `WeaponSyncSystem` на assembly pipeline**
+  - Замінити виклик `WeaponEntityState.CreateFromDefinitionId` на:
+    1. Map definitionId → `WeaponConfiguration` через compat layer
+    2. Викликати `WeaponAssemblySystem.TryAssemble(config, registry, out state, out reason)`
+    3. Success → put state into hotbar
+    4. Fail → emit `WeaponAssemblyFailed` event, hotbar slot empty (ghost-weapon per D7)
+  - DoD: Rifle/Pistol рейд grameplay parity (FireInterval, damage, magazine — ідентичні pre-migration)
+
+- [ ] **T-0b.12 — `ShootingSystem` dispatch по `FiringPattern`**
+  - Path: `Assets/Scripts/Systems/ShootingSystem.cs`
+  - Розділити `Tick` на case по `weapon.DeliveryCore.Definition.Pattern`:
+    - `Single` → повноцінна реалізація (відтворює поточну поведінку, працює для `"Pistol"`)
+    - `Auto` → виклик того самого helper з різним FireInterval/Magazine (працює для `"Rifle"` після compat)
+    - `Scatter` / `Rotary` / `Swarm` — throw `NotImplementedException` (будуть у Tier 2/3)
+  - DoD: Rifle + Pistol відчувається ідентично pre-migration на shooting range
+
+### Cluster E — Legacy cleanup
+
+- [ ] **T-0b.13 — Remove Shotgun completely**
+  - Paths (з grep):
+    - `Assets/Scripts/State/WeaponEntityState.cs` — видалити `CreateShotgun`, case `"Shotgun"` у dispatcher
+    - `Assets/Scripts/State/ItemDefinition.cs` — видалити `"Shotgun"`, `"Ammo_Shotgun"`, `"Ammo_Shotgun_HP"`
+    - `Assets/Scripts/Constants/BotConstants.cs` — weapon lists
+    - `Assets/Scripts/Constants/ItemGroups.cs`
+    - `Assets/Scripts/Constants/ContainerConstants.cs`
+    - `Assets/Scripts/Constants/CraftConstants.cs`
+    - `Assets/Scripts/Systems/LootSystem.cs`
+    - `Assets/Scripts/Systems/PlayerSpawnSystem.cs`
+    - `Assets/Scripts/Session/RaidSession.cs` — SpawnTestBots або подібне
+  - `grep -R "Shotgun\|Ammo_Shotgun\|Weapon_Shotgun" Assets/Scripts` має повертати порожньо (окрім коментарів у deleted factories історичних commit'ів)
+  - DoD: гра компілюється, тести зелені, shotgun ніде не референситься
+
+- [ ] **T-0b.14 — Remove `CreateRifle` / `CreatePistol` factories**
+  - Path: `Assets/Scripts/State/WeaponEntityState.cs`
+  - Видалити обидва factory methods + dispatcher `CreateFromDefinitionId` cases
+  - На цей момент `WeaponSyncSystem` через compat layer + assembly pipeline — factory не потрібна
+  - DoD: `grep -R "CreateRifle\|CreatePistol" Assets/Scripts` порожньо; гра працює
+
+- [ ] **T-0b.15 — Remove compat layer**
+  - Path: `Assets/Scripts/Systems/WeaponSyncSystem.cs`
+  - InventoryItems тепер мають справжні `WeaponConfiguration` (не mapping через `DefinitionId`)
+  - **Увага:** це означає що InventoryItem schema треба розширити на `WeaponConfiguration?` поле. Якщо item — weapon, config populated; інакше — null
+  - Migration path для existing save files: при load, якщо item `DefinitionId` матчить "Rifle"/"Pistol", construct WeaponConfiguration через той самий mapping (runtime one-time translation, не table)
+  - Видалити `LegacyDefinitionToConfig` dictionary
+  - DoD: compat dictionary видалений; existing saves мігруються; нові saves містять WeaponConfiguration
+
+### Cluster F — Tools & tests
+
+- [ ] **T-0b.16 — Update `RaidStateDebuggerWindow`**
+  - Path: `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
+  - Відобразити новий shape `WeaponEntityState`:
+    - Composition section (Payload ID+Rarity, Delivery ID+Rarity, Exotic ID)
+    - Stats block (expandable? just dump fields)
+    - Runtime (Phase, Ammo, Recoil, etc.)
+  - DoD: debugger показує нову shape без exceptions
+
+- [ ] **T-0b.17 — Unit tests for Cluster A+B helpers**
+  - Path: `Assets/Tests/EditMode/`
+  - `WeaponArchetypeLabelTests.cs` — compose format, null-guards
+  - `WeaponStatComposerTests.cs` — Common tier compose → очікувані значення; Rarity selection правильна
+  - `WeaponAssemblySystemTests.cs` — TryAssemble success + 3 fail cases (missing Payload, Delivery, Exotic)
+  - DoD: ~15-20 нових тестів зелені
+
+- [ ] **T-0b.18 — Integration test: Rifle / Pistol parity**
+  - Path: `Assets/Tests/EditMode/WeaponSyncSystemIntegrationTests.cs`
+  - Spawn weapon через InventoryItem("Rifle") → WeaponEntityState має FireInterval=0.2, Damage=15 (Ballistic Common), Mag=30
+  - Spawn через "Pistol" → FireInterval=0.4, Damage=15, Mag=12
+  - Ghost test: невалідна конфігурація (payload з неіснуючим ID) → TryAssemble false, event emitted, hotbar slot empty
+  - DoD: 3+ integration tests зелені
+
+---
+
+## Tier 0b Exit Gate
+
+Перед стартом Tier 1:
+
+- [ ] Всі T-0b.* закриті
+- [ ] Rifle і Pistol працюють на new pipeline (не через factories)
+- [ ] `WeaponEntityState` — composition + Stats + runtime, без flat legacy полів
+- [ ] `ShootingSystem` dispatch по FiringPattern (Single + Auto повноцінно)
+- [ ] Shotgun повністю видалений (code, assets, ammo, constants)
+- [ ] Factories (`CreateRifle`/`CreatePistol`/`CreateShotgun`) видалені
+- [ ] Compat layer видалений
+- [ ] InventoryItem schema містить `WeaponConfiguration?`
+- [ ] `WeaponAssemblyFailed` event emittable + handleable
+- [ ] Raid State Debugger актуальний
+- [ ] Unit + integration tests зелені (Tier 0a 24 + ~20 нових = ~44 total)
+- [ ] Shooting range, armor tests зелені
+- [ ] 0b merged у master
 
 ---
 

@@ -211,5 +211,10 @@ namespace Tests.EditMode.Fakes
             RicochetCalled = true;
             RicochetProjectileId = projectileId;
         }
+
+        public void WeaponAssemblyFailed(string weaponIdentifier, string reason)
+        {
+            
+        }
     }
 }
