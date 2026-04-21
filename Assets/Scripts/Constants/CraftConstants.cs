@@ -93,17 +93,6 @@ namespace Constants
                 new CraftIngredient("Adhesive", 2),
             });
 
-        public static readonly CraftRecipe PumpShotgun = new(
-            "PumpShotgun", "Pump Shotgun", "Reliable pump-action shotgun.",
-            CraftCategory.Weapons, "Shotgun", 1,
-            new[]
-            {
-                new CraftIngredient("Metal_Parts", 5),
-                new CraftIngredient("Mechanical_Parts", 4),
-                new CraftIngredient("Adhesive", 2),
-                new CraftIngredient("Springs", 2),
-            });
-
         // ── Ammo ─────────────────────────────────────────────────
 
         public static readonly CraftRecipe PistolAmmo = new(
@@ -271,7 +260,7 @@ namespace Constants
         static readonly CraftRecipe[] AllRecipes =
         {
             Bandage, FieldMedkit, AdvancedMedkit,
-            ImprovisedRifle, PumpShotgun,
+            ImprovisedRifle,
             PistolAmmo, PistolAPAmmo, RifleAmmo, RifleAPAmmo,
             BasicScope, AdvancedScope,
             LongBarrel, ShortBarrel,

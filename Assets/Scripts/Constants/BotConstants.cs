@@ -183,7 +183,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig Boss = new(
-            typeId: "Boss", prefabId: "BotShell", weaponPrefabId: "Weapon_Shotgun",
+            typeId: "Boss", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
             maxHp: 200f, chaseSpeed: 5.5f,
             visionRange: 40f, visionAngle: 140f,
             targetMemoryDuration: 12f, reactionTime: 0.3f, accuracy: 0.65f,

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Adapters;
 using ApplicationCore;
 using Session;
 using State;
@@ -8,10 +8,10 @@ namespace Systems
     /// <summary>
     /// Keeps player's hotbar slots in sync with the inventory's weapon slots.
     ///
-    /// Tier 0b pipeline: inventory items of legacy weapon types (Rifle / Pistol / Shotgun)
-    /// are mapped to a <see cref="WeaponConfiguration"/> via <see cref="LegacyDefinitionToConfig"/>
-    /// and then run through <see cref="WeaponAssemblySystem.TryAssemble"/>. The compat layer
-    /// and the fallback to <c>WeaponEntityState.CreateFromDefinitionId</c> go away in Cluster E.
+    /// Each weapon inventory item carries its own <see cref="WeaponConfiguration"/>
+    /// (attached at spawn time by <see cref="WeaponItemFactory"/>; later — by the
+    /// Builder UI). <see cref="WeaponAssemblySystem.TryAssemble"/> resolves it into a
+    /// runtime <see cref="WeaponEntityState"/>.
     ///
     /// Per D7 (ghost-weapon): assembly failure leaves the inventory item untouched,
     /// empties the hotbar slot, and emits <see cref="IRaidEvents.WeaponAssemblyFailed"/>.
@@ -20,30 +20,6 @@ namespace Systems
     /// </summary>
     public static class WeaponSyncSystem
     {
-        // ── TEMPORARY compat layer — removed at end of Tier 0b Cluster E ──
-        // Maps legacy inventory-item DefinitionIds onto WeaponConfigurations
-        // that the new pipeline can consume.
-        static readonly Dictionary<string, WeaponConfiguration> LegacyDefinitionToConfig = new()
-        {
-            ["Rifle"] = new WeaponConfiguration(
-                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
-                new DeliveryCoreInstance("Auto",          RarityTier.Common),
-                exotic: null,
-                ammoInMagazine: 30),
-
-            ["Pistol"] = new WeaponConfiguration(
-                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
-                new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
-                exotic: null,
-                ammoInMagazine: 12),
-
-            ["Shotgun"] = new WeaponConfiguration(
-                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
-                new DeliveryCoreInstance("Scatter",       RarityTier.Common),
-                exotic: null,
-                ammoInMagazine: 5),
-        };
-
         public static void Tick(RaidState state, in RaidContext context)
         {
             var player = state.PlayerEntity;
@@ -75,14 +51,14 @@ namespace Systems
 
                 if (invItem != null && hotbarWeapon == null)
                 {
-                    player.Hotbar[i] = BuildWeaponForItem(invItem, in context);
+                    player.Hotbar[i] = BuildWeaponForItem(invItem, context.CoreDefinitions, context.Events);
                     continue;
                 }
 
                 if (invItem != null && hotbarWeapon != null
                     && hotbarWeapon.Id != invItem.Id)
                 {
-                    player.Hotbar[i] = BuildWeaponForItem(invItem, in context);
+                    player.Hotbar[i] = BuildWeaponForItem(invItem, context.CoreDefinitions, context.Events);
 
                     if (player.SelectedHotbarSlot == i)
                         player.EquippedWeapon = player.Hotbar[i];
@@ -91,40 +67,46 @@ namespace Systems
         }
 
         /// <summary>
-        /// Attempts to build a <see cref="WeaponEntityState"/> for an inventory weapon item
-        /// via the assembly pipeline. Returns null on failure (ghost-weapon path per D7):
-        /// item remains in inventory, hotbar slot empty, event emitted.
+        /// Builds a <see cref="WeaponEntityState"/> for an inventory weapon item via the
+        /// assembly pipeline. Returns null on failure (ghost-weapon path per D7): caller
+        /// should leave the inventory item in place and treat the hotbar slot as empty.
+        ///
+        /// Shared by <see cref="Tick"/> and <see cref="PlayerSpawnSystem"/> so initial
+        /// hotbar population and ongoing inventory sync use the same code path.
         /// </summary>
-        static WeaponEntityState BuildWeaponForItem(ItemState invItem, in RaidContext context)
+        public static WeaponEntityState BuildWeaponForItem(
+            ItemState invItem,
+            ICoreDefinitionRegistry registry,
+            IRaidEvents events)
         {
-            if (!LegacyDefinitionToConfig.TryGetValue(invItem.DefinitionId, out var config))
+            if (!invItem.HasWeaponConfiguration)
             {
-                // Unknown weapon type: nothing the pipeline can do. Ghost.
-                context.Events.WeaponAssemblyFailed(
+                events?.WeaponAssemblyFailed(
                     invItem.DefinitionId,
-                    $"No weapon configuration found for definition '{invItem.DefinitionId}'.");
+                    $"Inventory item '{invItem.DefinitionId}' has no WeaponConfiguration attached.");
                 return null;
             }
 
-            if (context.CoreDefinitions == null)
+            if (registry == null)
             {
-                // Registry missing (e.g. CoreDefinitionDatabase.asset not created).
-                // Fall back to the legacy factory so gameplay keeps working during Tier 0b rollout.
-                // This fallback is removed alongside factories in Cluster E.
-                return WeaponEntityState.CreateFromDefinitionId(invItem.Id, invItem.DefinitionId);
+                events?.WeaponAssemblyFailed(
+                    invItem.DefinitionId,
+                    "Core definition registry is not available.");
+                return null;
             }
 
-            if (!WeaponAssemblySystem.TryAssemble(config, context.CoreDefinitions,
-                    out var result, out var reason))
+            var config = invItem.WeaponConfiguration;
+
+            if (!WeaponAssemblySystem.TryAssemble(config, registry, out var result, out var reason))
             {
-                context.Events.WeaponAssemblyFailed(invItem.DefinitionId, reason);
+                events?.WeaponAssemblyFailed(invItem.DefinitionId, reason);
                 return null;
             }
 
             return new WeaponEntityState
             {
                 Id             = invItem.Id,
-                PrefabId       = GetPrefabIdForLegacy(invItem.DefinitionId),
+                PrefabId       = invItem.Definition?.WeaponPrefabId,
 
                 PayloadCore        = config.Payload,
                 DeliveryCore       = config.Delivery,
@@ -144,16 +126,5 @@ namespace Systems
                 PhaseStartTime = 0f,
             };
         }
-
-        // TEMPORARY (removed in Cluster E): prefab id still tied to legacy definition.
-        // In a later tier PrefabId will be derived from the composition
-        // (e.g. delivery form-factor + payload VFX skin).
-        static string GetPrefabIdForLegacy(string legacyDefinitionId) => legacyDefinitionId switch
-        {
-            "Rifle"   => "Weapon_Rifle",
-            "Pistol"  => "Weapon_Pistol",
-            "Shotgun" => "Weapon_Shotgun",
-            _         => null,
-        };
     }
 }

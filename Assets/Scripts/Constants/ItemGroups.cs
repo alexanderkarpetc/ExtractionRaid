@@ -21,14 +21,13 @@ namespace Constants
         static readonly LootDrop[] AmmoDrops =
         {
             new("Ammo_Rifle", 10, 40),
-            new("Ammo_Shotgun", 4, 14),
             new("Ammo_Pistol", 8, 24),
         };
 
         static readonly LootDrop[] WeaponsDrops =
         {
             new("Rifle", 1, 1),
-            new("Shotgun", 1, 1),
+            new("Pistol", 1, 1),
         };
 
         static readonly LootDrop[] GearDrops =
@@ -48,10 +47,9 @@ namespace Constants
             new("Bandage", 1, 1),
             new("Grenade", 1, 1),
             new("Ammo_Rifle", 10, 30),
-            new("Ammo_Shotgun", 4, 10),
             new("Ammo_Pistol", 8, 18),
             new("Rifle", 1, 1),
-            new("Shotgun", 1, 1),
+            new("Pistol", 1, 1),
             new("Helmet_Basic", 1, 1),
             new("Armor_Basic", 1, 1),
         };

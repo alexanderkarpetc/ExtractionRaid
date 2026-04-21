@@ -274,7 +274,9 @@ namespace Systems
                     int count = def.IsStackable
                         ? (remaining < def.MaxStackSize ? remaining : def.MaxStackSize)
                         : 1;
-                    inventory.Backpack[free] = ItemState.Create(raidState.AllocateEId(), reward.ItemId, count);
+                    inventory.Backpack[free] = WeaponItemFactory.IsKnownWeaponDefinition(reward.ItemId)
+                        ? WeaponItemFactory.SpawnItem(raidState.AllocateEId(), reward.ItemId)
+                        : ItemState.Create(raidState.AllocateEId(), reward.ItemId, count);
                     remaining -= count;
                 }
             }

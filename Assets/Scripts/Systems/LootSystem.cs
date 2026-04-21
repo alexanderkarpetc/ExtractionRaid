@@ -37,7 +37,9 @@ namespace Systems
                 if (def != null)
                     count = Mathf.Min(count, def.MaxStackSize);
 
-                inventory.Backpack[slot++] = ItemState.Create(itemId, drop.DefinitionId, count);
+                inventory.Backpack[slot++] = WeaponItemFactory.IsKnownWeaponDefinition(drop.DefinitionId)
+                    ? WeaponItemFactory.SpawnItem(itemId, drop.DefinitionId)
+                    : ItemState.Create(itemId, drop.DefinitionId, count);
             }
 
             var lootable = LootableContainerState.Create(id, position, config.TypeId, inventory, isContainer: true);
@@ -55,7 +57,7 @@ namespace Systems
             if (weaponDefId != null)
             {
                 var weaponItemId = state.AllocateEId();
-                inventory.WeaponSlots[0] = ItemState.Create(weaponItemId, weaponDefId);
+                inventory.WeaponSlots[0] = WeaponItemFactory.SpawnItem(weaponItemId, weaponDefId);
             }
 
             int backpackSlot = 0;
@@ -255,10 +257,9 @@ namespace Systems
         {
             return weaponPrefabId switch
             {
-                "Weapon_Rifle" => "Rifle",
-                "Weapon_Shotgun" => "Shotgun",
+                "Weapon_Rifle"  => "Rifle",
                 "Weapon_Pistol" => "Pistol",
-                _ => null,
+                _               => null,
             };
         }
 
@@ -266,10 +267,9 @@ namespace Systems
         {
             return weaponPrefabId switch
             {
-                "Weapon_Rifle" => "Ammo_Rifle",
-                "Weapon_Shotgun" => "Ammo_Shotgun",
+                "Weapon_Rifle"  => "Ammo_Rifle",
                 "Weapon_Pistol" => "Ammo_Pistol",
-                _ => null,
+                _               => null,
             };
         }
     }

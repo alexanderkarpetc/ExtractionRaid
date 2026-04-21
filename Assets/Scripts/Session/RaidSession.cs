@@ -86,7 +86,10 @@ namespace Session
                 var (defId, count) = sp.RollItem();
                 if (defId == null) continue;
                 var id = RaidState.AllocateEId();
-                var groundItem = GroundItemState.Create(id, defId, sp.transform.position, count);
+                var groundItem = Systems.WeaponItemFactory.IsKnownWeaponDefinition(defId)
+                    ? GroundItemState.CreateWeapon(id, defId, sp.transform.position,
+                        Systems.WeaponItemFactory.DefaultConfigFor(defId))
+                    : GroundItemState.Create(id, defId, sp.transform.position, count);
                 RaidState.GroundItems.Add(groundItem);
                 _eventBuffer.GroundItemSpawned(id, sp.transform.position, defId);
             }
@@ -144,7 +147,10 @@ namespace Session
                     if (string.IsNullOrEmpty(findItem.ItemId)) continue;
 
                     var id = RaidState.AllocateEId();
-                    var groundItem = GroundItemState.Create(id, findItem.ItemId, findItem.Coordinates, 1);
+                    var groundItem = Systems.WeaponItemFactory.IsKnownWeaponDefinition(findItem.ItemId)
+                        ? GroundItemState.CreateWeapon(id, findItem.ItemId, findItem.Coordinates,
+                            Systems.WeaponItemFactory.DefaultConfigFor(findItem.ItemId))
+                        : GroundItemState.Create(id, findItem.ItemId, findItem.Coordinates, 1);
                     RaidState.GroundItems.Add(groundItem);
                     _eventBuffer.GroundItemSpawned(id, findItem.Coordinates, findItem.ItemId);
                 }
@@ -159,15 +165,16 @@ namespace Session
                 ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f), 1),
                 ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f), 1),
                 ("Ammo_Rifle", new UnityEngine.Vector3(-3f, 0f, -3f), 30),
-                ("Ammo_Shotgun", new UnityEngine.Vector3(-1f, 0f, -4f), 10),
                 ("Rifle", new UnityEngine.Vector3(4f, 0f, 4f), 1),
-                ("Shotgun", new UnityEngine.Vector3(-4f, 0f, 1f), 1),
             };
 
             foreach (var (defId, pos, count) in testItems)
             {
                 var id = RaidState.AllocateEId();
-                var groundItem = GroundItemState.Create(id, defId, pos, count);
+                var groundItem = Systems.WeaponItemFactory.IsKnownWeaponDefinition(defId)
+                    ? GroundItemState.CreateWeapon(id, defId, pos,
+                        Systems.WeaponItemFactory.DefaultConfigFor(defId))
+                    : GroundItemState.Create(id, defId, pos, count);
                 RaidState.GroundItems.Add(groundItem);
                 _eventBuffer.GroundItemSpawned(id, pos, defId);
             }

@@ -67,7 +67,10 @@ namespace Systems
             int free = inventory.FindFreeBackpackSlot();
             if (free < 0) return false;
 
-            var item = ItemState.Create(groundItem.Id, groundItem.DefinitionId);
+            // Preserve WeaponConfiguration when picking up a weapon from ground.
+            var item = groundItem.HasWeaponConfiguration
+                ? ItemState.CreateWeapon(groundItem.Id, groundItem.DefinitionId, groundItem.WeaponConfiguration)
+                : ItemState.Create(groundItem.Id, groundItem.DefinitionId);
             inventory.Backpack[free] = item;
             state.GroundItems.RemoveAt(groundIndex);
             events.GroundItemDespawned(groundItemId);
@@ -81,7 +84,10 @@ namespace Systems
 
             inventory.SetSlot(slot, null);
 
-            var groundItem = GroundItemState.Create(item.Id, item.DefinitionId, dropPosition, item.StackCount);
+            // Preserve WeaponConfiguration when dropping a weapon to the ground.
+            var groundItem = item.HasWeaponConfiguration
+                ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPosition, item.WeaponConfiguration)
+                : GroundItemState.Create(item.Id, item.DefinitionId, dropPosition, item.StackCount);
             state.GroundItems.Add(groundItem);
             events.GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
             return true;

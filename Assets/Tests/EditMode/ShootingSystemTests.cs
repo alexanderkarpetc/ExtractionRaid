@@ -419,14 +419,15 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_ShotgunFiringConsumesOneAmmo()
+        public void Tick_MultiPelletFiringConsumesOneAmmo()
         {
+            // Scatter-pattern weapon (N pellets per trigger pull, 1 shell consumed).
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var weapon = state.PlayerEntity.EquippedWeapon;
             weapon.Stats.ProjectilesPerShot = 7;
             weapon.Stats.SpreadAngle = 30f;
-            weapon.AmmoType = "Ammo_Shotgun";
+            weapon.AmmoType = "Ammo_Rifle";
             weapon.AmmoInMagazine = 5;
             weapon.Stats.MagazineSize = 5;
             var input = new FakeInputAdapter { AttackPressed = true };
@@ -435,7 +436,7 @@ namespace Tests.EditMode
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(7, state.Projectiles.Count, "7 pellets spawned");
-            Assert.AreEqual(4, weapon.AmmoInMagazine, "Only 1 shell consumed");
+            Assert.AreEqual(4, weapon.AmmoInMagazine, "Only 1 round consumed per trigger pull");
         }
 
         [Test]

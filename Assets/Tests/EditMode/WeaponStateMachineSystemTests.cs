@@ -171,7 +171,7 @@ namespace Tests.EditMode
             WeaponStateMachineSystem.Tick(state, in context);
 
             Assert.IsNotNull(state.PlayerEntity.EquippedWeapon);
-            Assert.AreEqual("Weapon_Shotgun", state.PlayerEntity.EquippedWeapon.PrefabId);
+            Assert.AreEqual("Weapon_Pistol", state.PlayerEntity.EquippedWeapon.PrefabId);
             Assert.AreEqual(WeaponPhase.Equipping, state.PlayerEntity.EquippedWeapon.Phase);
             Assert.AreEqual(1, state.PlayerEntity.SelectedHotbarSlot);
             Assert.AreEqual(-1, state.PlayerEntity.PendingHotbarSlot);

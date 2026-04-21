@@ -31,6 +31,9 @@ namespace State
         public float ArmorDamage;
         public float BleedChance;
 
+        // Weapon visual prefab (weapon items) — resolved by WeaponSyncSystem when assembling runtime state.
+        public string WeaponPrefabId;
+
         public bool IsStackable => MaxStackSize > 1;
 
         static Dictionary<string, ItemDefinition> _registry;
@@ -58,18 +61,14 @@ namespace State
                     Id = "Rifle",
                     DisplayName = "Rifle",
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
-                },
-                ["Shotgun"] = new()
-                {
-                    Id = "Shotgun",
-                    DisplayName = "Shotgun",
-                    AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
+                    WeaponPrefabId = "Weapon_Rifle",
                 },
                 ["Pistol"] = new()
                 {
                     Id = "Pistol",
                     DisplayName = "Pistol",
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
+                    WeaponPrefabId = "Weapon_Pistol",
                 },
                 ["Helmet_Basic"] = new()
                 {
@@ -105,16 +104,6 @@ namespace State
                     AmmoType = "Ammo_Rifle",
                     Penetration = 10f,
                     ArmorDamage = 5f,
-                },
-                ["Ammo_Shotgun"] = new()
-                {
-                    Id = "Ammo_Shotgun",
-                    DisplayName = "Shotgun Ammo",
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 20,
-                    AmmoType = "Ammo_Shotgun",
-                    Penetration = 8f,
-                    ArmorDamage = 4f,
                 },
                 ["Ammo_Pistol"] = new()
                 {
@@ -276,17 +265,6 @@ namespace State
                     Penetration = 0f,
                     ArmorDamage = 0f,
                     BleedChance = 0.30f,
-                },
-                ["Ammo_Shotgun_HP"] = new()
-                {
-                    Id = "Ammo_Shotgun_HP",
-                    DisplayName = "Shotgun HP Ammo",
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 20,
-                    AmmoType = "Ammo_Shotgun_HP",
-                    Penetration = 0f,
-                    ArmorDamage = 0f,
-                    BleedChance = 0.08f, // per pellet, 7 pellets → ~44% per shot
                 },
                 ["Ammo_Pistol_HP"] = new()
                 {

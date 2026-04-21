@@ -430,7 +430,9 @@ namespace View.UI
             if (item != null)
             {
                 fromInv.SetSlot(_dragSource.SlotRef, null);
-                var ground = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+                var ground = item.HasWeaponConfiguration
+                    ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPos, item.WeaponConfiguration)
+                    : GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
                 state.GroundItems.Add(ground);
                 session.ConsumeEvents().GroundItemSpawned(ground.Id, ground.Position, ground.DefinitionId);
             }
@@ -586,8 +588,11 @@ namespace View.UI
                         if (item != null)
                         {
                             container.BoundInventory.SetSlot(slot.SlotRef, null);
-                            var ground = GroundItemState.Create(item.Id, item.DefinitionId,
-                                dropPos, item.StackCount);
+                            var ground = item.HasWeaponConfiguration
+                                ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId,
+                                    dropPos, item.WeaponConfiguration)
+                                : GroundItemState.Create(item.Id, item.DefinitionId,
+                                    dropPos, item.StackCount);
                             state.GroundItems.Add(ground);
                             session.ConsumeEvents().GroundItemSpawned(
                                 ground.Id, ground.Position, ground.DefinitionId);
@@ -614,7 +619,9 @@ namespace View.UI
                 var gi = state.GroundItems[i];
                 if (Vector3.Distance(playerPos, gi.Position) > LootSystem.LootRange)
                     continue;
-                _floorItems.Add(ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
+                _floorItems.Add(gi.HasWeaponConfiguration
+                    ? ItemState.CreateWeapon(gi.Id, gi.DefinitionId, gi.WeaponConfiguration)
+                    : ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
                 _floorItemEIds.Add(gi.Id);
             }
         }
@@ -638,8 +645,9 @@ namespace View.UI
                 if (def != null && (def.AllowedSlots & slotType) == 0) return;
                 if (App.Instance.Player.Inventory.GetSlot(targetSlot) != null) return;
 
-                App.Instance.Player.Inventory.SetSlot(targetSlot,
-                    ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
+                App.Instance.Player.Inventory.SetSlot(targetSlot, gi.HasWeaponConfiguration
+                    ? ItemState.CreateWeapon(gi.Id, gi.DefinitionId, gi.WeaponConfiguration)
+                    : ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount));
                 state.GroundItems.RemoveAt(i);
                 session.ConsumeEvents().GroundItemDespawned(gi.Id);
 
@@ -660,7 +668,9 @@ namespace View.UI
                 ? state.PlayerEntity.Position + state.PlayerEntity.FacingDirection * 1.5f
                 : Vector3.zero;
 
-            var ground = GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+            var ground = item.HasWeaponConfiguration
+                ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPos, item.WeaponConfiguration)
+                : GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
             state.GroundItems.Add(ground);
             session.ConsumeEvents().GroundItemSpawned(ground.Id, ground.Position, ground.DefinitionId);
 

@@ -83,32 +83,6 @@ namespace Tests.EditMode
             Assert.IsNull(slots.BodyArmor);
         }
 
-        // ── Weapon factories carry BasePenetration ────────────
-
-        [Test]
-        public void CreateRifle_HasBasePenetration()
-        {
-            var weapon = WeaponEntityState.CreateRifle(new EId(1));
-            Assert.Greater(weapon.Stats.BasePenetration, 0f);
-            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
-        }
-
-        [Test]
-        public void CreateShotgun_HasBasePenetration()
-        {
-            var weapon = WeaponEntityState.CreateShotgun(new EId(1));
-            Assert.Greater(weapon.Stats.BasePenetration, 0f);
-            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
-        }
-
-        [Test]
-        public void CreatePistol_HasBasePenetration()
-        {
-            var weapon = WeaponEntityState.CreatePistol(new EId(1));
-            Assert.Greater(weapon.Stats.BasePenetration, 0f);
-            Assert.Greater(weapon.Stats.BaseArmorDamage, 0f);
-        }
-
         // ── Projectile carries Penetration ────────────────────
 
         [Test]
@@ -178,15 +152,6 @@ namespace Tests.EditMode
             Assert.IsNotNull(def);
             Assert.Greater(def.BleedChance, 0f, "HP ammo should have bleed chance");
             Assert.AreEqual(0f, def.Penetration, 0.001f, "HP ammo should have zero penetration");
-        }
-
-        [Test]
-        public void ItemDefinition_AmmoShotgunHP_HasLowPerPelletBleed()
-        {
-            var def = ItemDefinition.Get("Ammo_Shotgun_HP");
-            Assert.IsNotNull(def);
-            Assert.Greater(def.BleedChance, 0f);
-            Assert.Less(def.BleedChance, 0.15f, "Shotgun HP per-pellet bleed should be low");
         }
 
         [Test]

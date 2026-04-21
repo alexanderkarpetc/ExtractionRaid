@@ -121,7 +121,7 @@ namespace Game.Editor
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
             {
-                // Values sourced from WeaponEntityState.CreatePistol
+                // Values sourced from pre-migration Pistol stats (Ballistic + SingleAction, Common tier)
                 FireInterval        = 0.4f,
                 ProjectilesPerShot  = 1,
                 SpreadAngle         = 0f,
@@ -156,7 +156,7 @@ namespace Game.Editor
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
             {
-                // Values sourced from WeaponEntityState.CreateRifle
+                // Values sourced from pre-migration Rifle stats (Ballistic + Auto, Common tier)
                 FireInterval        = 0.2f,
                 ProjectilesPerShot  = 1,
                 SpreadAngle         = 0f,

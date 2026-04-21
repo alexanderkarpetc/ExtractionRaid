@@ -44,7 +44,9 @@ namespace Systems
             if (freeSlot < 0) return false;
 
             var resultId = state.AllocateEId();
-            inventory.Backpack[freeSlot] = ItemState.Create(resultId, recipe.ResultItemId, recipe.ResultCount);
+            inventory.Backpack[freeSlot] = WeaponItemFactory.IsKnownWeaponDefinition(recipe.ResultItemId)
+                ? WeaponItemFactory.SpawnItem(resultId, recipe.ResultItemId)
+                : ItemState.Create(resultId, recipe.ResultItemId, recipe.ResultCount);
             return true;
         }
 

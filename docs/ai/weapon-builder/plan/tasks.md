@@ -273,7 +273,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster E — Legacy cleanup
 
-- [ ] **T-0b.13 — Remove Shotgun completely**
+- [x] **T-0b.13 — Remove Shotgun completely** ✅
   - Paths (з grep):
     - `Assets/Scripts/State/WeaponEntityState.cs` — видалити `CreateShotgun`, case `"Shotgun"` у dispatcher
     - `Assets/Scripts/State/ItemDefinition.cs` — видалити `"Shotgun"`, `"Ammo_Shotgun"`, `"Ammo_Shotgun_HP"`
@@ -287,19 +287,22 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
   - `grep -R "Shotgun\|Ammo_Shotgun\|Weapon_Shotgun" Assets/Scripts` має повертати порожньо (окрім коментарів у deleted factories історичних commit'ів)
   - DoD: гра компілюється, тести зелені, shotgun ніде не референситься
 
-- [ ] **T-0b.14 — Remove `CreateRifle` / `CreatePistol` factories**
+- [x] **T-0b.14 — Remove `CreateRifle` / `CreatePistol` factories** ✅
   - Path: `Assets/Scripts/State/WeaponEntityState.cs`
   - Видалити обидва factory methods + dispatcher `CreateFromDefinitionId` cases
   - На цей момент `WeaponSyncSystem` через compat layer + assembly pipeline — factory не потрібна
   - DoD: `grep -R "CreateRifle\|CreatePistol" Assets/Scripts` порожньо; гра працює
 
-- [ ] **T-0b.15 — Remove compat layer**
-  - Path: `Assets/Scripts/Systems/WeaponSyncSystem.cs`
-  - InventoryItems тепер мають справжні `WeaponConfiguration` (не mapping через `DefinitionId`)
-  - **Увага:** це означає що InventoryItem schema треба розширити на `WeaponConfiguration?` поле. Якщо item — weapon, config populated; інакше — null
-  - Migration path для existing save files: при load, якщо item `DefinitionId` матчить "Rifle"/"Pistol", construct WeaponConfiguration через той самий mapping (runtime one-time translation, не table)
-  - Видалити `LegacyDefinitionToConfig` dictionary
-  - DoD: compat dictionary видалений; existing saves мігруються; нові saves містять WeaponConfiguration
+- [x] **T-0b.15 — Remove compat layer** ✅
+  - `ItemState` розширено на `HasWeaponConfiguration` + `WeaponConfiguration` + `CreateWeapon` factory
+  - `GroundItemState` — той самий pattern + `CreateWeapon`
+  - `ItemDefinition` — додано `WeaponPrefabId`, заповнено для Rifle/Pistol
+  - Новий `Systems/WeaponItemFactory` — центральний helper (`DefaultConfigFor`, `SpawnItem`, `IsKnownWeaponDefinition`)
+  - `WeaponSyncSystem` — **compat dict видалений**, `BuildWeaponForItem` читає `invItem.WeaponConfiguration` напряму
+  - Оновлено spawn sites: `PlayerSpawnSystem`, `LootSystem` (direct weapon + backpack drops), `CraftingSystem`, `QuestSystem`, `RaidSession` (3 місця — loot points, quest items, test spawns)
+  - `InventorySystem.TryPickUp` / `TryDrop` — копіюють WeaponConfiguration між ground ↔ inventory
+  - `LootPopupView` (4 місця) — copy WeaponConfiguration у всіх ground ↔ inventory flows + RebuildFloorInventory
+  - Save data breaking change OK (немає production saves)
 
 ### Cluster F — Tools & tests
 

@@ -63,7 +63,6 @@ namespace Constants
             possibleDrops: new[]
             {
                 new LootDrop("Ammo_Rifle", 10, 40),
-                new LootDrop("Ammo_Shotgun", 4, 14),
                 new LootDrop("Ammo_Pistol", 8, 24),
             }
         );
@@ -78,7 +77,6 @@ namespace Constants
                 new LootDrop("Bandage", 1, 1),
                 new LootDrop("Grenade", 1, 1),
                 new LootDrop("Ammo_Rifle", 10, 30),
-                new LootDrop("Ammo_Shotgun", 4, 10),
                 new LootDrop("Ammo_Pistol", 8, 18),
             }
         );

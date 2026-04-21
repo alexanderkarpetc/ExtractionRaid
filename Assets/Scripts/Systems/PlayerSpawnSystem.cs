@@ -27,10 +27,9 @@ namespace Systems
             {
                 var invItem = inventory.WeaponSlots[i];
                 if (invItem == null) continue;
-                var weapon = WeaponEntityState.CreateFromDefinitionId(invItem.Id, invItem.DefinitionId);
+                var weapon = WeaponSyncSystem.BuildWeaponForItem(
+                    invItem, App.Instance.CoreDefinitions, events);
                 if (weapon == null) continue;
-                weapon.Phase = WeaponPhase.Ready;
-                weapon.PhaseStartTime = 0f;
                 state.PlayerEntity.Hotbar[i] = weapon;
             }
 
@@ -72,14 +71,13 @@ namespace Systems
         static void GiveStartingLoadout(RaidState state, InventoryState inventory)
         {
             var weaponId = state.AllocateEId();
-            inventory.WeaponSlots[0] = ItemState.Create(weaponId, "Rifle");
+            inventory.WeaponSlots[0] = WeaponItemFactory.SpawnItem(weaponId, "Rifle");
 
             var weapon2Id = state.AllocateEId();
-            inventory.WeaponSlots[1] = ItemState.Create(weapon2Id, "Shotgun");
+            inventory.WeaponSlots[1] = WeaponItemFactory.SpawnItem(weapon2Id, "Pistol");
 
             inventory.Backpack[0] = ItemState.Create(state.AllocateEId(), "Ammo_Rifle", 60);
-            inventory.Backpack[1] = ItemState.Create(state.AllocateEId(), "Ammo_Shotgun", 15);
-            inventory.Backpack[2] = ItemState.Create(state.AllocateEId(), "Ammo_Pistol", 36);
+            inventory.Backpack[1] = ItemState.Create(state.AllocateEId(), "Ammo_Pistol", 36);
 
             for (int i = 0; i < GrenadeConstants.StartingCount; i++)
                 inventory.Backpack[3 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
@@ -88,7 +86,7 @@ namespace Systems
                 (int)MedConstants.TotalHealAmount);
             inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
             inventory.Backpack[8] = ItemState.Create(state.AllocateEId(), "Bandage");
-            inventory.Backpack[9] = ItemState.Create(state.AllocateEId(), "Pistol");
+            inventory.Backpack[9] = WeaponItemFactory.SpawnItem(state.AllocateEId(), "Pistol");
 
             inventory.Backpack[10] = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
             inventory.Backpack[11] = ItemState.Create(state.AllocateEId(), "Armor_Basic");
