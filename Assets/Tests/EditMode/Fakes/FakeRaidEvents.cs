@@ -212,9 +212,11 @@ namespace Tests.EditMode.Fakes
             RicochetProjectileId = projectileId;
         }
 
+        public readonly System.Collections.Generic.List<(string weaponId, string reason)> WeaponAssemblyFailures = new();
+
         public void WeaponAssemblyFailed(string weaponIdentifier, string reason)
         {
-            
+            WeaponAssemblyFailures.Add((weaponIdentifier, reason));
         }
     }
 }

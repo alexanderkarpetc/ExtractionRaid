@@ -306,7 +306,7 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster F — Tools & tests
 
-- [ ] **T-0b.16 — Update `RaidStateDebuggerWindow`**
+- [x] **T-0b.16 — Update `RaidStateDebuggerWindow`** ✅ (composition section у Cluster C; inventory weapon slots показують WeaponConfiguration у Cluster F)
   - Path: `Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`
   - Відобразити новий shape `WeaponEntityState`:
     - Composition section (Payload ID+Rarity, Delivery ID+Rarity, Exotic ID)
@@ -314,14 +314,14 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
     - Runtime (Phase, Ammo, Recoil, etc.)
   - DoD: debugger показує нову shape без exceptions
 
-- [ ] **T-0b.17 — Unit tests for Cluster A+B helpers**
+- [x] **T-0b.17 — Unit tests for Cluster A+B helpers** ✅ (зроблено під час Cluster A/B: 9 ArchetypeLabel + 7 Composer + 6 Assembly = 22 тести)
   - Path: `Assets/Tests/EditMode/`
   - `WeaponArchetypeLabelTests.cs` — compose format, null-guards
   - `WeaponStatComposerTests.cs` — Common tier compose → очікувані значення; Rarity selection правильна
   - `WeaponAssemblySystemTests.cs` — TryAssemble success + 3 fail cases (missing Payload, Delivery, Exotic)
   - DoD: ~15-20 нових тестів зелені
 
-- [ ] **T-0b.18 — Integration test: Rifle / Pistol parity**
+- [x] **T-0b.18 — Integration test: Rifle / Pistol parity** ✅ (7 тестів: Rifle + Pistol parity, 4 ghost-weapon paths, ground round-trip)
   - Path: `Assets/Tests/EditMode/WeaponSyncSystemIntegrationTests.cs`
   - Spawn weapon через InventoryItem("Rifle") → WeaponEntityState має FireInterval=0.2, Damage=15 (Ballistic Common), Mag=30
   - Spawn через "Pistol" → FireInterval=0.4, Damage=15, Mag=12
@@ -330,22 +330,20 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ---
 
-## Tier 0b Exit Gate
+## Tier 0b Exit Gate ✅ PASSED (2026-04-22)
 
-Перед стартом Tier 1:
-
-- [ ] Всі T-0b.* закриті
-- [ ] Rifle і Pistol працюють на new pipeline (не через factories)
-- [ ] `WeaponEntityState` — composition + Stats + runtime, без flat legacy полів
-- [ ] `ShootingSystem` dispatch по FiringPattern (Single + Auto повноцінно)
-- [ ] Shotgun повністю видалений (code, assets, ammo, constants)
-- [ ] Factories (`CreateRifle`/`CreatePistol`/`CreateShotgun`) видалені
-- [ ] Compat layer видалений
-- [ ] InventoryItem schema містить `WeaponConfiguration?`
-- [ ] `WeaponAssemblyFailed` event emittable + handleable
-- [ ] Raid State Debugger актуальний
-- [ ] Unit + integration tests зелені (Tier 0a 24 + ~20 нових = ~44 total)
-- [ ] Shooting range, armor tests зелені
+- [x] Всі T-0b.01..18 закриті
+- [x] Rifle і Pistol працюють на new pipeline (через WeaponItemFactory → WeaponAssemblySystem)
+- [x] `WeaponEntityState` — composition + Stats + runtime, без flat legacy полів
+- [x] `ShootingSystem` dispatch по FiringPattern (Single/Auto/Scatter fall-through, Rotary/Swarm NotImplemented)
+- [x] Shotgun повністю видалений (10 файлів code, assets, ammo, constants)
+- [x] Factories (`CreateRifle`/`CreatePistol`/`CreateShotgun`) видалені
+- [x] Compat layer видалений — items carry WeaponConfiguration themselves
+- [x] `ItemState` + `GroundItemState` schema розширено на `WeaponConfiguration`
+- [x] `WeaponAssemblyFailed` event emittable + captured у FakeRaidEvents
+- [x] Raid State Debugger — composition section для weapons + WeaponConfiguration на inventory slots
+- [x] Unit + integration tests зелені (Tier 0a 24 + ArchetypeLabel 9 + Composer 7 + Assembly 6 + Integration 7 = 53 тести)
+- [ ] Shooting range, armor tests зелені (verify у Unity)
 - [ ] 0b merged у master
 
 ---

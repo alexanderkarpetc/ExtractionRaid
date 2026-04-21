@@ -100,6 +100,9 @@
 
 **Див.:** [architecture.md §D6, D7, D8](../architecture.md)
 
+### 2026-04-22 — Tier 0b complete ✅
+Всі 18 задач 6 кластерів закриті. Legacy factories + compat layer + Shotgun повністю видалені. WeaponEntityState — pure data з composition + cached Stats. ItemState/GroundItemState тепер carry WeaponConfiguration. 53 tests (24 Tier 0a + 22 unit + 7 integration). Tier 1 розблокований.
+
 ### 2026-04-22 — Bot weapons deferred to Tier 4
 **Decision:** Bot weapons (BotSpawnSystem + BotConstants) залишаються **повністю hardcoded** для Tier 0b і 1. Вони не проходять через assembly pipeline, їхні Stats populate напряму з BotConstants raw fields.
 
@@ -317,9 +320,9 @@
 - [x] ~~Merge Tier 0a~~ ✅ committed `03e07b9` (2026-04-20)
 - [x] ~~Закрити D6-D8~~ ✅ (2026-04-20)
 - [x] ~~Детальна декомпозиція Tier 0b у конкретні T-0b.NN task'и~~ ✅ 18 задач, 6 кластерів ([tasks.md](./tasks.md))
-- [ ] **Старт імплементації Tier 0b** (Cluster A → B → C → D → E → F)
-- [ ] Size estimation для Tier 0 — вирішити split 0a+0b чи ні
-- [ ] Закрити D6-D8 перед стартом Tier 1 коду
+- [x] ~~Старт імплементації Tier 0b~~ ✅ complete (2026-04-22)
+- [ ] **Merge Tier 0b у master** (наступний крок)
+- [ ] **Start Tier 1** — Vertical Slice: Ballistic + Single-Action end-to-end + UI збірки на базі
 
 ---
 

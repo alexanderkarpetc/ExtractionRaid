@@ -406,7 +406,7 @@ namespace Editor
             for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
             {
                 var item = inv.WeaponSlots[i];
-                Field($"Weapon [{i}]", item != null ? item.DisplayName : "[empty]");
+                Field($"Weapon [{i}]", item != null ? FormatWeaponItem(item) : "[empty]");
             }
 
             Field("Helmet", inv.HelmetSlot != null ? inv.HelmetSlot.DisplayName : "[empty]");
@@ -719,7 +719,7 @@ namespace Editor
                     for (int w = 0; w < InventoryState.WeaponSlotCount; w++)
                     {
                         var wi = loot.Inventory.WeaponSlots[w];
-                        Field($"Weapon[{w}]", wi != null ? wi.DefinitionId : "(empty)");
+                        Field($"Weapon[{w}]", wi != null ? FormatWeaponItem(wi) : "(empty)");
                     }
                     for (int b = 0; b < InventoryState.BackpackSize; b++)
                     {
@@ -731,6 +731,16 @@ namespace Editor
                 EditorGUI.indentLevel--;
             }
             EditorGUI.indentLevel--;
+        }
+
+        static string FormatWeaponItem(State.ItemState item)
+        {
+            if (item == null) return "(empty)";
+            if (!item.HasWeaponConfiguration) return item.DefinitionId;
+            var cfg = item.WeaponConfiguration;
+            var exotic = cfg.Exotic.HasValue ? $" +{cfg.Exotic.Value.DefinitionId}" : string.Empty;
+            return $"{item.DefinitionId} [{cfg.Payload.DefinitionId}/{cfg.Payload.Rarity}, " +
+                   $"{cfg.Delivery.DefinitionId}/{cfg.Delivery.Rarity}{exotic}, mag={cfg.AmmoInMagazine}]";
         }
     }
 }
