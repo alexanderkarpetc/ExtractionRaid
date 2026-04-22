@@ -5,6 +5,7 @@ using Dev;
 using Systems;
 using UnityEditor;
 using UnityEngine;
+using View.UI.CraftingMockup;
 
 namespace Editor
 {
@@ -170,6 +171,13 @@ namespace Editor
                     if (appReady)
                         App.Instance.ExtractToHideout().Forget();
                 }
+            }
+
+            EditorGUILayout.Space(4);
+            using (new EditorGUI.DisabledScope(!appReady || CraftingMockupWindow.Instance == null))
+            {
+                if (GUILayout.Button("Toggle Crafting UI Mockup (F10)"))
+                    CraftingMockupWindow.Instance?.Toggle();
             }
 
             if (!appReady)

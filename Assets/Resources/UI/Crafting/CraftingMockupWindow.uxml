@@ -1,0 +1,94 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="CraftingMockupWindow.uss"/>
+    <ui:VisualElement name="app" class="app" picking-mode="Position">
+        <ui:VisualElement name="window" class="window">
+
+            <!-- Topbar -->
+            <ui:VisualElement name="topbar" class="topbar">
+                <ui:Label text="CRAFTING" class="title"/>
+                <ui:Button name="closeBtn" text="×" class="close-btn"/>
+            </ui:VisualElement>
+
+            <!-- Tabs -->
+            <ui:VisualElement name="tabs" class="tabs"/>
+
+            <!-- Content (sidebar + details) -->
+            <ui:VisualElement name="content" class="content">
+
+                <!-- Sidebar -->
+                <ui:VisualElement name="sidebar" class="sidebar">
+                    <ui:VisualElement name="sidebarToolbar" class="sidebar-toolbar">
+                        <ui:VisualElement name="typeFilters" class="toolbar-left"/>
+                        <ui:TextField name="searchInput" class="search" picking-mode="Position"/>
+                    </ui:VisualElement>
+
+                    <ui:ScrollView name="itemGridWrap" class="item-grid-wrap" mode="Vertical">
+                        <ui:VisualElement name="itemGrid" class="item-grid"/>
+                    </ui:ScrollView>
+
+                    <ui:VisualElement name="sidebarFooter" class="sidebar-footer">
+                        <ui:Toggle name="craftableOnly" label="Show only craftable" class="toggle"/>
+                        <ui:Label name="footerCount" text="0 / 0 items" class="footer-count"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Details -->
+                <ui:VisualElement name="details" class="details">
+
+                    <!-- Hero -->
+                    <ui:VisualElement name="detailsTop" class="details-top">
+                        <ui:VisualElement name="heroCopy" class="hero-copy">
+                            <ui:VisualElement class="rarity-row">
+                                <ui:Label name="heroTitle" class="hero-title" text="Item"/>
+                                <ui:Label name="rarityBadge" class="rarity-badge" text="Common"/>
+                            </ui:VisualElement>
+                            <ui:Label name="heroSubtitle" class="subtitle" text=""/>
+                            <ui:Label name="heroDescription" class="description" text=""/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="heroVisual" class="hero-visual">
+                            <ui:Label name="heroEmoji" class="hero-emoji" text="❓"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- Middle (parameters + requirements) -->
+                    <ui:VisualElement name="detailsMiddle" class="details-middle">
+                        <ui:VisualElement name="parameters" class="parameters">
+                            <ui:Label text="Parameters" class="section-title"/>
+                            <ui:ScrollView name="statsList" class="stats-list" mode="Vertical"/>
+                        </ui:VisualElement>
+
+                        <ui:VisualElement name="requirementsSide" class="requirements-side">
+                            <ui:VisualElement name="requirementsTop" class="requirements-top">
+                                <ui:Label text="Requires" class="section-title"/>
+                                <ui:VisualElement name="requirementGrid" class="requirement-grid"/>
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="craftMeta" class="craft-meta">
+                                <ui:VisualElement style="flex-direction: row;">
+                                    <ui:Label text="Workbench Level"/>
+                                    <ui:Label name="workbenchValue" text="" class="workbench-value"/>
+                                </ui:VisualElement>
+                                <ui:Label name="craftStatus" text="Ready to craft"/>
+                            </ui:VisualElement>
+
+                            <ui:VisualElement name="craftPanel" class="craft-panel">
+                                <ui:VisualElement name="amountBlock" class="amount-block">
+                                    <ui:Label text="Craft Amount" class="amount-label"/>
+                                    <ui:VisualElement class="amount-row">
+                                        <ui:Button name="minusBtn" text="−" class="amount-btn"/>
+                                        <ui:Label name="amountValue" text="1" class="amount-value"/>
+                                        <ui:Button name="plusBtn" text="+" class="amount-btn"/>
+                                        <ui:Button name="maxBtn" text="Max" class="action-btn"/>
+                                        <ui:Button name="maxAvailableBtn" text="Max Available" class="action-btn"/>
+                                    </ui:VisualElement>
+                                </ui:VisualElement>
+
+                                <ui:Button name="craftBtn" text="Craft" class="action-btn primary craft-btn"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

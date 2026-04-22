@@ -1,6 +1,7 @@
 using UnityEngine;
 using View;
 using View.UI;
+using View.UI.CraftingMockup;
 
 namespace ApplicationCore
 {
@@ -38,6 +39,12 @@ namespace ApplicationCore
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
+
+            // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
+            var craftingMockupHost = new GameObject("CraftingMockupWindow");
+            craftingMockupHost.transform.SetParent(transform, false);
+            craftingMockupHost.AddComponent<CraftingMockupWindow>();
+            craftingMockupHost.AddComponent<CraftingMockupHotkey>();
         }
 
         void Start()

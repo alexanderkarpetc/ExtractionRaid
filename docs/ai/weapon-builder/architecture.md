@@ -233,6 +233,117 @@ Production гравці не можуть створити invalid config чер
 
 ---
 
+### D9. Weapon Builder UI location ✅ RESOLVED (2026-04-22)
+
+**Rule:** Окремий modal screen, який можна відкрити **з будь-якого контексту** (raid, hideout, menu). Trigger'и context-specific, але сам screen — один.
+
+**Primary trigger (player-facing, production):** фізичний workbench object у hideout level. Гравець підходить до workbench → натискає Interact key → відкривається Builder screen. Consistent з extraction shooter pattern (Escape from Tarkov / Duckov workbench).
+
+**Secondary trigger (dev):** DevCheats кнопка для запуску Builder з будь-якого стану — включно з рейдом. Debug-only, не production feature.
+
+**Screen as modal:** коли open — pause input/time (як і inventory modal), ESC/Cancel закриває. Не окрема Unity scene — overlay.
+
+**Наслідки для Tier 1:**
+- Новий `WorkbenchInteractable` MonoBehaviour + view component на scene object у hideout
+- Нова DevCheats section "Weapon Builder" з toggle-відкриття
+- Builder UI screen — overlay, що працює поверх будь-якого стейту
+
+### D10. Module supply для Tier 1 ✅ RESOLVED (2026-04-22)
+
+**Рішення:** Всі Payload / Delivery / Exotic — infinite та all-unlocked у Builder screen для Tier 1. Нема loot/economy integration.
+
+**Чому:** Tier 1 validates UX і pipeline, не balance/loot. Economy — Tier 6.
+
+**Наслідки:**
+- Builder screen запитує у registry список усіх available Payloads/Deliveries
+- В UI всі показуються як selectable options
+- Нуль inventory lookup для модулів
+- Після Tier 6 (loot integration): same UI, але options фільтруються по модулям у player inventory
+
+### D11. Builder UI layout ✅ RESOLVED (2026-04-22)
+
+**Рішення:** Single screen, 3 dropdowns (Payload / Delivery / Exotic optional), live preview zone нижче.
+
+**Layout sketch:**
+```
+┌── Weapon Builder ──────────────────────────────┐
+│                                                │
+│  Payload:  [ Ballistic Round ▼ ]  [Common ▼]  │
+│  Delivery: [ Single-Action  ▼ ]  [Common ▼]  │
+│  Exotic:   [ (none)         ▼ ]              │
+│                                                │
+│  ── Preview ───────────────────────────────    │
+│  Archetype: Ballistic Pistol                   │
+│  Damage:       15    ProjectileSpeed: 25       │
+│  FireInterval: 0.4   Magazine: 12              │
+│  HeadshotMult: 2.0x  Penetration: 15           │
+│  ...                                           │
+│                                                │
+│  [ Cancel ]                       [ Build ]    │
+└────────────────────────────────────────────────┘
+```
+
+**Behaviour:**
+- Dropdowns reactive: зміна будь-якого triggers recompose + preview update (in-memory)
+- Preview — stats + archetype label
+- Build button creates new ItemState у backpack
+- Cancel — close without changes
+
+### D12. Build result ✅ RESOLVED (2026-04-22)
+
+**Рішення:** Build створює **новий** `ItemState` з `WeaponConfiguration` — прилітає у перший free backpack slot. Existing inventory items не зачіпаються.
+
+**Initial state:**
+- `AmmoInMagazine = MagazineSize` (повний магазин)
+- `DefinitionId = "Weapon"` (generic — build defines identity, see note)
+- `WeaponPrefabId` — mapped з Delivery FormFactor (Pistol/Rifle — у Tier 1 з hardcoded map; Tier 3+ — може приходити з Delivery asset)
+
+**Якщо backpack повний:** Build button disabled + tooltip "Backpack full".
+
+**DefinitionId нота:** після міграції "Rifle"/"Pistol" — це legacy item types. Нові builds можуть використати **"Weapon"** як generic DefinitionId (або конкретний derived з archetype — "Ballistic Pistol"). Пропоную generic "Weapon" для Tier 1 — identity живе у `WeaponConfiguration`, `DisplayName` беремо з `WeaponArchetypeLabel.Compose`.
+
+### D13. Entry point — physical workbench ✅ RESOLVED (2026-04-22)
+
+**Рішення:** Hideout level має scene object "Workbench" (prefab + collider + interactable behaviour). Гравець підходить, натискає Interact → Builder screen open.
+
+**Implementation components:**
+- `WorkbenchView` MonoBehaviour — scene object, рендер та interact prompt
+- Existing interact input (use якщо є — перевірити `IInputAdapter`)
+- `WorkbenchState` (entity?) — поки не потрібен, workbench — просто interactable object без внутрішнього стану
+
+**DevCheats shortcut** — global hotkey / UI button для testability з рейду.
+
+**Scope Tier 1:**
+- 1 workbench prefab у Hideout scene
+- Interact range (e.g., 2m) + prompt UI ("Press E to craft")
+- Opens Builder screen
+
+### D14. Tier 1 Minimum E2E demo ✅ RESOLVED (2026-04-22)
+
+**Scope:** Ballistic Round (Common) + Single-Action (Common) end-to-end.
+
+**Demo steps:**
+1. Player у Hideout level підходить до Workbench
+2. Interact → Builder screen opens
+3. Default state: empty composition, preview порожній
+4. Player selects Payload = Ballistic Round (Common)
+5. Player selects Delivery = Single-Action (Common)
+6. Preview shows: "Ballistic Pistol" label, full stats table (Damage=15, FireInterval=0.4, Mag=12, ...)
+7. Player clicks Build → new `ItemState` with `WeaponConfiguration` lands у backpack
+8. Close Builder, extract to raid
+9. Equip new weapon in hotbar slot → WeaponSyncSystem builds WeaponEntityState
+10. Shoot — стріляє як pistol
+
+**Out of Tier 1 scope (deferred):**
+- Laser Charge (Tier 2 — charge-up logic)
+- Auto Delivery (Tier 2 — rewrite ShootingSystem Auto handler)
+- Scatter Delivery (Tier 2)
+- Exotic Mods (Tier 5)
+- Rarity UI (Tier 4 — Common-only)
+- Banned combos / slot structure (Tier 4)
+- Module drops / loot integration (Tier 6)
+- Repair / salvage UI for broken weapons (Tier 4)
+
 ### D8. Archetype label system ✅ RESOLVED (2026-04-20)
 
 **Pattern: pure template `{Payload.DisplayName} {Delivery.FormFactor}`.** Без override-table у Tier 1, без baseline stripping. Consistent і explicit — extension'и приходять Tier 5 polish'ом.

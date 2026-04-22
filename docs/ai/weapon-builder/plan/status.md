@@ -100,6 +100,22 @@
 
 **Див.:** [architecture.md §D6, D7, D8](../architecture.md)
 
+### 2026-04-22 — D9-D14 resolved (Tier 1 design decisions)
+
+**D9 — UI location:** окремий modal screen, callable з будь-якого контексту (hideout + raid). Primary trigger — physical workbench у hideout scene. Secondary — DevCheats shortcut для debug/raid.
+
+**D10 — Module supply:** infinite, all-unlocked у Tier 1. Loot integration — Tier 6.
+
+**D11 — UI layout:** single screen з 3 dropdowns (Payload/Delivery/Exotic), live preview (stats + archetype label), Build/Cancel buttons.
+
+**D12 — Build result:** новий ItemState у перший free backpack slot, `AmmoInMagazine = MagazineSize`. Existing items не зачіпаються. `DefinitionId = "Weapon"` (generic — identity у WeaponConfiguration).
+
+**D13 — Entry point:** physical Workbench scene object у hideout + Interact key. `WorkbenchView` MonoBehaviour + prompt UI + DevCheats global hotkey для dev testing.
+
+**D14 — Tier 1 E2E scope:** Ballistic + Single-Action, 10-step demo approved. Deferred to 2+: Laser/Auto/Scatter/Exotic/Rarity UI/loot integration/repair UI.
+
+**Див.:** [architecture.md §D9-D14](../architecture.md)
+
 ### 2026-04-22 — Tier 0b complete ✅
 Всі 18 задач 6 кластерів закриті. Legacy factories + compat layer + Shotgun повністю видалені. WeaponEntityState — pure data з composition + cached Stats. ItemState/GroundItemState тепер carry WeaponConfiguration. 53 tests (24 Tier 0a + 22 unit + 7 integration). Tier 1 розблокований.
 
