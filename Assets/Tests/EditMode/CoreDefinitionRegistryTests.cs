@@ -111,6 +111,37 @@ namespace Tests.EditMode
             Assert.IsNull(def);
         }
 
+        // ── List accessors (for Weapon Builder UI) ────────────
+
+        [Test]
+        public void AllPayloads_ReturnsAllRegisteredDefinitions()
+        {
+            var registry = new DatabaseCoreDefinitionRegistry(_db);
+            var all = registry.AllPayloads;
+            Assert.AreEqual(2, all.Count);
+            Assert.Contains(_ballistic, (System.Collections.ICollection)all);
+            Assert.Contains(_laser,     (System.Collections.ICollection)all);
+        }
+
+        [Test]
+        public void AllDeliveries_ReturnsAllRegisteredDefinitions()
+        {
+            var registry = new DatabaseCoreDefinitionRegistry(_db);
+            var all = registry.AllDeliveries;
+            Assert.AreEqual(2, all.Count);
+            Assert.Contains(_single, (System.Collections.ICollection)all);
+            Assert.Contains(_auto,   (System.Collections.ICollection)all);
+        }
+
+        [Test]
+        public void AllExotics_ReturnsAllRegisteredDefinitions()
+        {
+            var registry = new DatabaseCoreDefinitionRegistry(_db);
+            var all = registry.AllExotics;
+            Assert.AreEqual(1, all.Count);
+            Assert.AreSame(_ricochet, all[0]);
+        }
+
         // ── Null safety ───────────────────────────────────────
 
         [Test]

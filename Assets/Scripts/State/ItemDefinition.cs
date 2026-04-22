@@ -56,6 +56,16 @@ namespace State
         {
             return new Dictionary<string, ItemDefinition>
             {
+                // Generic weapon entry for Builder-created weapons. PrefabId is left
+                // empty here; WeaponSyncSystem derives it from the Delivery FormFactor
+                // at assembly time. Display name shown in inventory UI is expected to be
+                // replaced by the archetype label (e.g. "Ballistic Pistol").
+                ["Weapon"] = new()
+                {
+                    Id = "Weapon",
+                    DisplayName = "Weapon",
+                    AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
+                },
                 ["Rifle"] = new()
                 {
                     Id = "Rifle",

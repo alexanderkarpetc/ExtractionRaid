@@ -23,6 +23,10 @@ namespace Adapters
             _database = database ?? throw new System.ArgumentNullException(nameof(database));
         }
 
+        public IReadOnlyList<PayloadCoreDefinition>  AllPayloads   => _database.Payloads;
+        public IReadOnlyList<DeliveryCoreDefinition> AllDeliveries => _database.Deliveries;
+        public IReadOnlyList<ExoticModDefinition>    AllExotics    => _database.Exotics;
+
         public PayloadCoreDefinition GetPayload(string id)
         {
             EnsurePayloadIndex();

@@ -58,9 +58,12 @@ namespace State
         public bool IsSprinting;
         public float LastSprintStopTime;
 
+        public bool IsWeaponBuilderOpen;
+
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
         public bool IsInMenu => IsInventoryOpen || IsQuestLogOpen || LootTargetId != EId.None
-            || CraftTargetId != EId.None || DeployTargetId != EId.None || NpcTargetId != EId.None;
+            || CraftTargetId != EId.None || DeployTargetId != EId.None || NpcTargetId != EId.None
+            || IsWeaponBuilderOpen;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

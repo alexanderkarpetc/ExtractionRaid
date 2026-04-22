@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using State;
 
 namespace Adapters
@@ -11,6 +12,7 @@ namespace Adapters
     /// Consistency:
     ///   - Get* throws KeyNotFoundException when id is missing.
     ///   - TryGet* returns bool and populates out parameter (default on miss).
+    ///   - All* lists are read-only snapshots — enumeration order matches the database.
     ///
     /// See docs/ai/weapon-builder/architecture.md §D3.
     /// </summary>
@@ -23,5 +25,9 @@ namespace Adapters
         bool TryGetPayload(string id, out PayloadCoreDefinition definition);
         bool TryGetDelivery(string id, out DeliveryCoreDefinition definition);
         bool TryGetExotic(string id, out ExoticModDefinition definition);
+
+        IReadOnlyList<PayloadCoreDefinition>  AllPayloads   { get; }
+        IReadOnlyList<DeliveryCoreDefinition> AllDeliveries { get; }
+        IReadOnlyList<ExoticModDefinition>    AllExotics    { get; }
     }
 }

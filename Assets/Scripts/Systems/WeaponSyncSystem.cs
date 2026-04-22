@@ -106,7 +106,7 @@ namespace Systems
             return new WeaponEntityState
             {
                 Id             = invItem.Id,
-                PrefabId       = invItem.Definition?.WeaponPrefabId,
+                PrefabId       = ResolveWeaponPrefab(invItem.Definition, result.DeliveryDefinition),
 
                 PayloadCore        = config.Payload,
                 DeliveryCore       = config.Delivery,
@@ -124,6 +124,24 @@ namespace Systems
                 LastFireTime   = -999f,
                 Phase          = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
+            };
+        }
+
+        /// <summary>
+        /// Chooses the weapon prefab for a built weapon.
+        /// Priority: explicit <c>ItemDefinition.WeaponPrefabId</c> (legacy Rifle/Pistol
+        /// inventory items carry one) → derived from Delivery form-factor (Builder-created
+        /// weapons whose <c>ItemDefinition</c> is the generic "Weapon" entry).
+        /// </summary>
+        static string ResolveWeaponPrefab(ItemDefinition itemDef, DeliveryCoreDefinition deliveryDef)
+        {
+            if (!string.IsNullOrEmpty(itemDef?.WeaponPrefabId))
+                return itemDef.WeaponPrefabId;
+            return deliveryDef?.FormFactor switch
+            {
+                "Pistol" => "Weapon_Pistol",
+                "Rifle"  => "Weapon_Rifle",
+                _        => "Weapon_Rifle",
             };
         }
     }

@@ -348,9 +348,57 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ---
 
-## Tier 1+ (placeholder)
+## Tier 1 — Vertical Slice (Ballistic + Single-Action end-to-end)
 
-> Деталізується коли Tier 0 закритий і ми підійдемо ближче до Tier 1.
+**Goal:** Player interacts з physical Workbench у Hideout → Weapon Builder screen (UI Toolkit) → selects Payload + Delivery → Build → new ItemState у backpack → equip → shoot. DevCheats shortcut — open Builder з будь-де (включно з рейдом).
+
+**Scope reminder (per D14):** Common-only tier, no Exotic Mods у UI, Ballistic + Single-Action мінімум. Laser/Auto/Scatter — коли їхні assets додадуться у Database, вони з'являться в UI автоматично (Tier 2 scope).
+
+### Cluster A — Presenter + state (pure C#, testable)
+
+- [x] **T-1.01 — List accessors у `ICoreDefinitionRegistry`** ✅ (+3 tests)
+- [x] **T-1.01b — Generic "Weapon" ItemDefinition + FormFactor prefab fallback** ✅
+- [x] **T-1.02 — `WeaponBuilderState` struct** ✅
+- [x] **T-1.03 — `WeaponBuilderPresenter` class** ✅
+- [x] **T-1.04 — `WeaponBuilderPresenterTests`** ✅ (14 tests: defaults, partial/full selection, events, inventory gating, TryBuild success+3 fail paths)
+- [x] **T-1.05 — `IsWeaponBuilderOpen` flag на `PlayerEntityState`** ✅
+
+### Cluster B — UI Toolkit view
+
+- [ ] **T-1.06 — UXML + USS**
+- [ ] **T-1.07 — `WeaponBuilderWindow` MonoBehaviour + UIDocument**
+- [ ] **T-1.08 — Bindings (dropdowns → presenter → preview)**
+- [ ] **T-1.09 — Open/Close input pause**
+
+### Cluster C — Workbench scene interactable
+
+- [ ] **T-1.10 — `InteractPressed` у `IInputAdapter`**
+- [ ] **T-1.11 — `WorkbenchView` MonoBehaviour**
+- [ ] **T-1.12 — Hideout scene integration** (додати prefab)
+
+### Cluster D — DevCheats shortcut
+
+- [ ] **T-1.13 — `DevCheatsWeaponBuilderSection` + toggle button**
+
+### Cluster E — Integration + tests
+
+- [ ] **T-1.14 — WeaponBuilderWindow initialization у `App`**
+- [ ] **T-1.15 — Integration test (end-to-end без UI)**
+
+### Tier 1 Exit Gate
+
+- [ ] Всі T-1.* закриті
+- [ ] Hideout workbench → Builder open works
+- [ ] DevCheats global shortcut works
+- [ ] Build → new weapon у backpack, equippable, shoots as pistol
+- [ ] Presenter unit tests + integration tests зелені
+- [ ] Merge
+
+---
+
+## Tier 2+ (placeholder)
+
+> Деталізується ближче до Tier 2.
 
 ---
 
