@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crafting UI Mockup</title>
+  <style>
+    :root {
+      --bg: #070d18;
+      --panel: rgba(10, 17, 30, 0.42);
+      --panel-2: rgba(13, 22, 38, 0.5);
+      --panel-3: rgba(17, 28, 47, 0.56);
+      --border: rgba(178, 188, 205, 0.24);
+      --border-soft: rgba(196, 204, 219, 0.15);
+      --text: #e9eef8;
+      --muted: #90a0bd;
+      --muted-2: #5f7397;
+      --accent: #4b79ff;
+      --accent-2: #3ae18f;
+      --danger: #ff7676;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --gap: 16px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        linear-gradient(180deg, rgba(4, 9, 21, 0.3) 0%, rgba(6, 11, 21, 0.36) 45%, rgba(5, 9, 19, 0.42) 100%),
+        radial-gradient(circle at top left, rgba(42, 77, 145, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(50, 104, 255, 0.08), transparent 20%),
+        url("./bg.jpg") center / cover no-repeat,
+        linear-gradient(180deg, #040915 0%, #060b15 40%, #050913 100%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .app {
+      height: 100vh;
+      padding: 18px;
+    }
+
+    .window {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      background: linear-gradient(180deg, rgba(34, 38, 44, 0.92), rgba(22, 25, 30, 0.88));
+      border: 1px solid rgba(150, 160, 176, 0.18);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(14, 23, 40, 0.9);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      transition: 0.18s ease;
+    }
+
+    .close-btn:hover,
+    .tab:hover,
+    .toolbar-btn:hover,
+    .amount-btn:hover,
+    .action-btn:hover,
+    .toggle:hover,
+    .item-card:hover,
+    .tag-btn:hover {
+      transform: translateY(-1px);
+      border-color: #2a446d;
+      color: var(--text);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--border-soft);
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .tab {
+      position: relative;
+      padding: 16px 18px 14px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: var(--text);
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(75, 121, 255, 0.55);
+    }
+
+    .content {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 44% 56%;
+    }
+
+    .sidebar {
+      min-width: 0;
+      border-right: 1px solid var(--border-soft);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .sidebar-toolbar {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-soft);
+      align-items: center;
+    }
+
+    .toolbar-left {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toolbar-btn,
+    .tag-btn,
+    .toggle,
+    .amount-btn,
+    .action-btn,
+    .select {
+      border: 1px solid var(--border);
+      background: rgba(14, 23, 40, 0.9);
+      color: var(--muted);
+      border-radius: 10px;
+      transition: 0.18s ease;
+    }
+
+    .toolbar-btn,
+    .tag-btn {
+      min-width: 40px;
+      height: 40px;
+      padding: 0 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .toolbar-btn.active,
+    .tag-btn.active,
+    .toggle.active {
+      border-color: rgba(58, 225, 143, 0.35);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(58, 225, 143, 0.15);
+    }
+
+    .search {
+      width: 100%;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(12, 20, 35, 0.95);
+      color: var(--text);
+      outline: none;
+    }
+
+    .search::placeholder { color: var(--muted-2); }
+
+    .item-grid-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 128px));
+      gap: 12px;
+      justify-content: start;
+    }
+
+    .item-card {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      min-height: 128px;
+      border: 1px solid rgba(36, 56, 89, 0.95);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgb(34, 38, 44), rgb(22, 25, 30));
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      color: var(--text);
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .item-card.selected {
+      border-color: rgba(58, 225, 143, 0.3);
+      box-shadow: inset 0 0 0 1px rgba(58, 225, 143, 0.08);
+      background: linear-gradient(180deg, rgb(40, 45, 52), rgb(27, 31, 37));
+    }
+
+    .item-count {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 11px;
+      color: var(--muted-2);
+      padding: 4px 6px;
+      border-radius: 8px;
+      background: rgba(20, 31, 52, 0.95);
+      border: 1px solid rgba(34, 52, 83, 0.8);
+    }
+
+    .icon-box {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(23, 36, 58, 0.98), rgba(13, 22, 38, 0.98));
+      border: 1px solid rgba(36, 56, 89, 0.95);
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+
+    .item-icon {
+      width: 52px;
+      height: 52px;
+      font-size: 26px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(44, 66, 106, 0.62), rgba(21, 34, 58, 0.5));
+      border: 1px solid rgba(126, 159, 222, 0.3);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(8, 16, 29, 0.16);
+    }
+
+    .item-name {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .item-meta {
+      font-size: 13px;
+      color: var(--accent-2);
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      padding: 14px 16px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .toggle input { display: none; }
+    .footer-count {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .details {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 0;
+    }
+
+    .details-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 0;
+      border-bottom: 1px solid var(--border-soft);
+      min-height: 244px;
+    }
+
+    .hero-copy {
+      padding: 26px 26px 24px;
+      min-width: 0;
+    }
+
+    .rarity-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      margin: 0;
+    }
+
+    .rarity-badge {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 800;
+      border: 1px solid rgba(58, 225, 143, 0.25);
+      color: var(--accent-2);
+      background: rgba(22, 58, 46, 0.28);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    .description {
+      color: #c2cce0;
+      line-height: 1.72;
+      max-width: 760px;
+      white-space: pre-line;
+    }
+
+    .hero-visual {
+      position: relative;
+      border-left: 1px solid var(--border-soft);
+      background:
+        radial-gradient(circle at center, rgba(69, 110, 255, 0.1), transparent 42%),
+        linear-gradient(180deg, rgba(11, 19, 34, 0.98), rgba(8, 14, 25, 0.98));
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .hero-emoji {
+      font-size: 128px;
+      filter: drop-shadow(0 14px 30px rgba(0,0,0,0.4));
+      transform: rotate(-8deg);
+    }
+
+    .details-middle {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 46% 54%;
+    }
+
+    .parameters,
+    .requirements-panel,
+    .extra-info,
+    .craft-panel {
+      min-width: 0;
+    }
+
+    .parameters {
+      border-right: 1px solid var(--border-soft);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 0;
+    }
+
+    .section-title {
+      padding: 18px 26px 10px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .stats-list {
+      padding: 0 26px 18px;
+      overflow: auto;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(133, 164, 220, 0.62) rgba(10, 18, 31, 0.18);
+    }
+
+    .stats-list::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .stats-list::-webkit-scrollbar-track {
+      background: rgba(10, 18, 31, 0.14);
+      border-radius: 999px;
+    }
+
+    .stats-list::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(173, 197, 244, 0.72), rgba(101, 133, 196, 0.68));
+      border-radius: 999px;
+      border: 2px solid rgba(10, 18, 31, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(230, 238, 255, 0.12);
+    }
+
+    .stats-list::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(196, 214, 249, 0.82), rgba(118, 149, 209, 0.78));
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 0;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(130, 157, 205, 0.12);
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-label {
+      color: #bcc7db;
+      font-size: 14px;
+    }
+
+    .stat-value {
+      min-width: 56px;
+      text-align: right;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .requirements-side {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .requirements-top {
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .requirement-grid {
+      padding: 6px 22px 18px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .req-card {
+      min-height: 128px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgb(34, 38, 44), rgb(22, 25, 30));
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .req-card.ready {
+      border-color: rgba(58, 225, 143, 0.3);
+      box-shadow: inset 0 0 0 1px rgba(58, 225, 143, 0.08);
+    }
+
+    .req-name {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .req-count {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    .craft-meta {
+      padding: 14px 22px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .craft-panel {
+      padding: 18px 22px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px 22px;
+      align-items: end;
+    }
+
+    .amount-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .amount-row,
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .amount-label,
+    .craft-time {
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .amount-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .amount-value {
+      min-width: 34px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .action-btn {
+      height: 40px;
+      padding: 0 16px;
+      cursor: pointer;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(180deg, #5b86ff, #3e69e7);
+      color: white;
+      border-color: rgba(110, 149, 255, 0.55);
+      box-shadow: 0 8px 18px rgba(42, 83, 193, 0.25);
+    }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      padding: 40px;
+    }
+
+    @media (max-width: 1400px) {
+      .content { grid-template-columns: 40% 60%; }
+      .details-top { grid-template-columns: minmax(0, 1fr) 260px; }
+      .requirement-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      .app { height: auto; min-height: 100vh; }
+      .window { height: auto; }
+      .content,
+      .details-middle,
+      .details-top {
+        grid-template-columns: 1fr;
+      }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border-soft); }
+      .hero-visual { min-height: 220px; border-left: none; border-top: 1px solid var(--border-soft); }
+      .parameters { border-right: none; border-bottom: 1px solid var(--border-soft); }
+      .craft-panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="window">
+      <div class="topbar">
+        <div class="title">Crafting</div>
+        <button class="close-btn" type="button">×</button>
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+
+      <div class="content">
+        <aside class="sidebar">
+          <div class="sidebar-toolbar">
+            <div class="toolbar-left" id="typeFilters"></div>
+            <input id="searchInput" class="search" type="text" placeholder="Search..." />
+          </div>
+
+          <div class="item-grid-wrap">
+            <div id="itemGrid" class="item-grid"></div>
+          </div>
+
+          <div class="sidebar-footer">
+            <label class="toggle active">
+              <input id="craftableOnly" type="checkbox" />
+              <span>Show only craftable</span>
+            </label>
+            <div id="footerCount" class="footer-count">0 / 0 items</div>
+          </div>
+        </aside>
+
+        <section class="details" id="details"></section>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const tabs = [
+      { key: 'meds', label: 'Meds' },
+      { key: 'weapons', label: 'Weapons' },
+      { key: 'ammo', label: 'Ammo' },
+      { key: 'mods', label: 'Mods' },
+      { key: 'tools', label: 'Tools' },
+      { key: 'utils', label: 'Utils' }
+    ];
+
+    const rarityOrder = { common: 1, uncommon: 2, rare: 3, epic: 4 };
+
+    const items = [
+      {
+        id: 'field-medkit', category: 'meds', type: 'medical', icon: '💊', count: 201,
+        title: 'Field Medkit', subtitle: 'Portable medkit', rarity: 'uncommon',
+        description: 'Portable medkit for field use. Restores moderate health over time and stops light bleeding. Compact enough to carry in a tactical pouch without sacrificing too much inventory space.',
+        stats: [
+          ['Healing', 72, '72'], ['Bleed Control', 64, '64'], ['Use Time', 40, '3.5 s'], ['Weight', 22, '0.4 kg']
+        ],
+        extra: [['Use Cases', 'Sustain, field treatment'], ['Duration', '8 sec'], ['Stackable', 'Yes'], ['Workbench', 'Any field station']],
+        requirements: [
+          { name: 'Bandage', icon: '🩹', have: 2, need: 2 },
+          { name: 'Antiseptic', icon: '🧴', have: 1, need: 1 },
+          { name: 'Rag', icon: '🧶', have: 5, need: 3 }
+        ],
+        workbench: 'Level 1', craftTime: '00:18'
+      },
+      {
+        id: 'advanced-medkit', category: 'meds', type: 'medical', icon: '🧰', count: 0,
+        title: 'Advanced Medkit', subtitle: 'Emergency trauma kit', rarity: 'rare',
+        description: 'A larger trauma-oriented kit used for critical stabilization. Slower to craft and heavier to carry, but significantly more effective in drawn-out encounters.',
+        stats: [
+          ['Healing', 92, '92'], ['Bleed Control', 88, '88'], ['Use Time', 28, '5.8 s'], ['Weight', 36, '0.9 kg']
+        ],
+        extra: [['Use Cases', 'Heavy sustain, severe injuries'], ['Duration', '12 sec'], ['Stackable', 'No'], ['Workbench', 'Medical bench']],
+        requirements: [
+          { name: 'Field Medkit', icon: '💊', have: 2, need: 2 },
+          { name: 'Antiseptic', icon: '🧴', have: 1, need: 2 },
+          { name: 'Blood Bag', icon: '🩸', have: 0, need: 1 },
+          { name: 'Injector', icon: '💉', have: 1, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '00:52'
+      },
+      {
+        id: 'bandage', category: 'meds', type: 'medical', icon: '🩹', count: 31,
+        title: 'Bandage', subtitle: 'Basic consumable', rarity: 'common',
+        description: 'Simple wound dressing used to stop light bleeding. Cheap, common, and useful as a core ingredient in many medical recipes.',
+        stats: [ ['Healing', 18, '18'], ['Bleed Control', 34, '34'], ['Use Time', 75, '1.4 s'] ],
+        extra: [['Use Cases', 'Early game healing'], ['Stackable', 'Yes']],
+        requirements: [
+          { name: 'Rag', icon: '🧶', have: 5, need: 2 }
+        ],
+        workbench: 'Level 1', craftTime: '00:08'
+      },
+      {
+        id: 'antiseptic', category: 'meds', type: 'medical', icon: '🧴', count: 143,
+        title: 'Antiseptic', subtitle: 'Disinfectant bottle', rarity: 'common',
+        description: 'A disinfectant solution required for clean treatment procedures and advanced medical crafting.',
+        stats: [ ['Purity', 60, '60'], ['Volume', 50, '250 ml'] ],
+        extra: [['Use Cases', 'Craft ingredient'], ['Stackable', 'Yes']],
+        requirements: [
+          { name: 'Chemicals', icon: '🧪', have: 5, need: 1 },
+          { name: 'Bottle', icon: '🍼', have: 3, need: 1 }
+        ],
+        workbench: 'Level 1', craftTime: '00:12'
+      },
+      {
+        id: 'rag', category: 'meds', type: 'material', icon: '🧶', count: 312,
+        title: 'Rag', subtitle: 'Fabric scrap', rarity: 'common',
+        description: 'Fabric scrap used in field repairs, cleaning, and emergency medical crafting.',
+        stats: [ ['Durability', 16, '16'], ['Softness', 24, '24'] ],
+        extra: [['Use Cases', 'Core material'], ['Stackable', 'Yes']],
+        requirements: [
+          { name: 'Cloth Scrap', icon: '🧵', have: 8, need: 2 }
+        ],
+        workbench: 'Level 1', craftTime: '00:06'
+      },
+      {
+        id: 'painkillers', category: 'meds', type: 'medical', icon: '💊', count: 76,
+        title: 'Painkillers', subtitle: 'Tablet pack', rarity: 'common',
+        description: 'Suppresses pain effects for a short time and improves combat survivability in emergencies.',
+        stats: [ ['Pain Relief', 58, '58'], ['Duration', 44, '35 s'] ],
+        extra: [['Use Cases', 'Combat survival'], ['Stackable', 'Yes']],
+        requirements: [
+          { name: 'Chemicals', icon: '🧪', have: 5, need: 2 },
+          { name: 'Pack', icon: '📦', have: 2, need: 1 }
+        ],
+        workbench: 'Level 1', craftTime: '00:16'
+      },
+      {
+        id: 'adrenaline', category: 'meds', type: 'medical', icon: '💉', count: 24,
+        title: 'Adrenaline', subtitle: 'Combat stim', rarity: 'rare',
+        description: 'Short burst stimulant that boosts movement and responsiveness, but may have post-use penalties.',
+        stats: [ ['Stamina Boost', 80, '80'], ['Speed Boost', 55, '+12%'], ['Duration', 36, '18 s'] ],
+        extra: [['Use Cases', 'Escape, push'], ['Side Effects', 'Fatigue']],
+        requirements: [
+          { name: 'Injector', icon: '💉', have: 1, need: 1 },
+          { name: 'Chemicals', icon: '🧪', have: 5, need: 3 },
+          { name: 'Stabilizer', icon: '🧫', have: 0, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '00:44'
+      },
+      {
+        id: 'blood-bag', category: 'meds', type: 'medical', icon: '🩸', count: 12,
+        title: 'Blood Bag', subtitle: 'Transfusion pack', rarity: 'rare',
+        description: 'Sterile transfusion pack used in advanced medical recipes and severe emergency treatment.',
+        stats: [ ['Medical Value', 88, '88'], ['Stability', 62, '62'] ],
+        extra: [['Use Cases', 'Advanced kits'], ['Storage', 'Cold preferred']],
+        requirements: [
+          { name: 'Bag', icon: '🧃', have: 1, need: 1 },
+          { name: 'Anticoagulant', icon: '🧪', have: 0, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '00:50'
+      },
+      {
+        id: 'rusty-pistol', category: 'weapons', type: 'weapon', icon: '🔫', count: 0,
+        title: 'Rusty Pistol', subtitle: 'Handgun', rarity: 'common',
+        description: 'An old sidearm pieced together from mismatched parts. Unreliable but serviceable in the early game.',
+        stats: [
+          ['Damage', 19, '19'], ['Fire Rate', 38, '310 RPM'], ['Accuracy', 42, '42'], ['Recoil Control', 34, '34'], ['Durability', 27, '27 / 100']
+        ],
+        extra: [['Ammo Type', '9x18'], ['Firing Mode', 'Semi'], ['Attachments', 'Muzzle'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 6 },
+          { name: 'Barrel', icon: '🧱', have: 0, need: 1 },
+          { name: 'Spring', icon: '🌀', have: 6, need: 2 },
+          { name: 'Grip', icon: '🪵', have: 3, need: 1 }
+        ],
+        workbench: 'Level 1', craftTime: '01:20'
+      },
+      {
+        id: 'smg-45', category: 'weapons', type: 'weapon', icon: '🔫', count: 0,
+        title: 'SMG-45', subtitle: 'Submachine Gun', rarity: 'uncommon',
+        description: 'A compact submachine gun designed for close-quarters combat. High rate of fire with low vertical recoil makes it effective in corridors, interiors, and urban ambushes.\n\nBuilt around a simple blowback system, it is easy to maintain and forgiving for players who prefer aggressive flanks. Weak at long range, but excellent for fast room clears when paired with the right ammo and muzzle setup.',
+        stats: [
+          ['Damage', 24, '24'],
+          ['Fire Rate', 95, '950 RPM'],
+          ['Accuracy', 48, '48'],
+          ['Recoil Control', 62, '62'],
+          ['Ergonomics', 68, '68'],
+          ['Magazine Size', 70, '30'],
+          ['Reload Time', 46, '2.1 s'],
+          ['Effective Range', 60, '60 m'],
+          ['Muzzle Velocity', 40, '400 m/s'],
+          ['Weight', 58, '2.45 kg'],
+          ['Durability', 100, '100 / 100']
+        ],
+        extra: [
+          ['Ammo Type', '.45 ACP'],
+          ['Firing Mode', 'Auto'],
+          ['Attachments', 'Stock, Sight, Muzzle, Magazine'],
+          ['Repairable', 'Yes'],
+          ['Notes', 'Best used in short range fights and narrow interiors.']
+        ],
+        requirements: [
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 12 },
+          { name: 'Polymer', icon: '⬛', have: 8, need: 8 },
+          { name: 'Screws', icon: '🔩', have: 15, need: 15 },
+          { name: 'Spring', icon: '🌀', have: 6, need: 6 },
+          { name: 'Duct Tape', icon: '🪙', have: 4, need: 4 },
+          { name: 'Gun Powder', icon: '⚫', have: 10, need: 10 },
+          { name: 'Tool Kit', icon: '🧰', have: 1, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '02:30'
+      },
+      {
+        id: 'shotgun-m870', category: 'weapons', type: 'weapon', icon: '🔫', count: 0,
+        title: 'Shotgun M870', subtitle: 'Pump-action shotgun', rarity: 'rare',
+        description: 'Reliable close-range weapon with devastating stopping power, balanced by long reloads and heavy spread.',
+        stats: [ ['Damage', 86, '86'], ['Fire Rate', 18, '80 RPM'], ['Accuracy', 30, '30'], ['Recoil Control', 26, '26'], ['Durability', 88, '88 / 100'] ],
+        extra: [['Ammo Type', '12g'], ['Firing Mode', 'Pump'], ['Attachments', 'Barrel, Stock, Optic'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 10 },
+          { name: 'Wood Parts', icon: '🪵', have: 5, need: 4 },
+          { name: 'Barrel', icon: '🧱', have: 0, need: 1 },
+          { name: 'Spring', icon: '🌀', have: 6, need: 3 }
+        ],
+        workbench: 'Level 2', craftTime: '03:10'
+      },
+      {
+        id: 'hunting-rifle', category: 'weapons', type: 'weapon', icon: '🔫', count: 0,
+        title: 'Hunting Rifle', subtitle: 'Bolt-action rifle', rarity: 'uncommon',
+        description: 'Simple long-range rifle with strong per-shot impact and moderate crafting requirements.',
+        stats: [ ['Damage', 78, '78'], ['Fire Rate', 14, '42 RPM'], ['Accuracy', 84, '84'], ['Recoil Control', 44, '44'], ['Durability', 80, '80 / 100'] ],
+        extra: [['Ammo Type', '7.62'], ['Firing Mode', 'Bolt'], ['Attachments', 'Optic, Barrel'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 9 },
+          { name: 'Wood Parts', icon: '🪵', have: 5, need: 5 },
+          { name: 'Scope Mount', icon: '🔭', have: 0, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '02:45'
+      },
+      {
+        id: 'crossbow', category: 'weapons', type: 'weapon', icon: '🏹', count: 0,
+        title: 'Crossbow', subtitle: 'Silent ranged weapon', rarity: 'rare',
+        description: 'Slow but silent. Useful for careful players who value stealth, bolt recovery, and precise opening shots.',
+        stats: [ ['Damage', 74, '74'], ['Fire Rate', 10, '20 RPM'], ['Accuracy', 82, '82'], ['Noise', 14, 'Very low'] ],
+        extra: [['Ammo Type', 'Bolts'], ['Firing Mode', 'Single'], ['Attachments', 'Optic'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Wood Parts', icon: '🪵', have: 5, need: 6 },
+          { name: 'String', icon: '🧵', have: 8, need: 3 },
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 3 }
+        ],
+        workbench: 'Level 2', craftTime: '02:00'
+      },
+      {
+        id: 'molotov', category: 'weapons', type: 'throwable', icon: '🍾', count: 87,
+        title: 'Molotov', subtitle: 'Incendiary throwable', rarity: 'common',
+        description: 'Improvised fire bomb for area denial and panic pressure.',
+        stats: [ ['Burn Radius', 54, '2.8 m'], ['Duration', 48, '7 s'], ['Throw Range', 44, '18 m'] ],
+        extra: [['Use Cases', 'Area denial'], ['Firing Mode', 'Thrown']],
+        requirements: [
+          { name: 'Bottle', icon: '🍼', have: 3, need: 1 },
+          { name: 'Fuel', icon: '⛽', have: 2, need: 1 },
+          { name: 'Rag', icon: '🧶', have: 5, need: 1 }
+        ],
+        workbench: 'Level 1', craftTime: '00:14'
+      },
+      {
+        id: 'stun-grenade', category: 'weapons', type: 'throwable', icon: '💣', count: 45,
+        title: 'Stun Grenade', subtitle: 'Tactical throwable', rarity: 'uncommon',
+        description: 'Disorients enemies in a short radius and opens aggressive entry windows.',
+        stats: [ ['Stun Radius', 62, '4.1 m'], ['Fuse', 55, '1.5 s'] ],
+        extra: [['Use Cases', 'Entry, disengage']],
+        requirements: [
+          { name: 'Shell', icon: '🧱', have: 2, need: 1 },
+          { name: 'Chemicals', icon: '🧪', have: 5, need: 2 },
+          { name: 'Fuse', icon: '🧵', have: 8, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '00:22'
+      },
+      {
+        id: 'smoke-grenade', category: 'weapons', type: 'throwable', icon: '💨', count: 63,
+        title: 'Smoke Grenade', subtitle: 'Concealment tool', rarity: 'common',
+        description: 'Creates a smoke cloud for repositioning, looting, and rescue plays.',
+        stats: [ ['Smoke Duration', 68, '12 s'], ['Cloud Size', 52, 'Large'] ],
+        extra: [['Use Cases', 'Cover, reposition']],
+        requirements: [
+          { name: 'Shell', icon: '🧱', have: 2, need: 1 },
+          { name: 'Powder', icon: '⚫', have: 10, need: 2 },
+          { name: 'Fuse', icon: '🧵', have: 8, need: 1 }
+        ],
+        workbench: 'Level 1', craftTime: '00:20'
+      },
+      {
+        id: 'flashlight', category: 'tools', type: 'tool', icon: '🔦', count: 28,
+        title: 'Flashlight', subtitle: 'Basic utility tool', rarity: 'common',
+        description: 'Compact handheld flashlight. Cheap to make and useful in dark interiors.',
+        stats: [ ['Brightness', 52, '320 lm'], ['Battery Life', 48, '2 h'] ],
+        extra: [['Use Cases', 'Utility'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Housing', icon: '⬛', have: 8, need: 1 },
+          { name: 'Bulb', icon: '💡', have: 2, need: 1 },
+          { name: 'Battery', icon: '🔋', have: 4, need: 2 }
+        ],
+        workbench: 'Level 1', craftTime: '00:25'
+      },
+      {
+        id: 'ammo-9mm', category: 'ammo', type: 'ammo', icon: '🔸', count: 180,
+        title: '9mm Ammo', subtitle: 'Standard pistol ammo', rarity: 'common',
+        description: 'Basic handgun ammunition crafted in small batches.',
+        stats: [ ['Penetration', 34, '34'], ['Damage', 22, '22'] ],
+        extra: [['Batch Size', '20 rounds'], ['Ammo Type', '9mm']],
+        requirements: [
+          { name: 'Brass', icon: '🟨', have: 12, need: 4 },
+          { name: 'Gun Powder', icon: '⚫', have: 10, need: 2 },
+          { name: 'Primer', icon: '⚪', have: 8, need: 4 }
+        ],
+        workbench: 'Level 1', craftTime: '00:18'
+      },
+      {
+        id: 'rifle-scope', category: 'mods', type: 'mod', icon: '🔭', count: 3,
+        title: 'Rifle Scope', subtitle: 'Optic attachment', rarity: 'rare',
+        description: 'Precision optic for long-range engagements. Requires cleaner assembly and better workbench tools.',
+        stats: [ ['Zoom', 74, '4x'], ['Clarity', 62, '62'], ['Weight', 22, '0.5 kg'] ],
+        extra: [['Attachment Slot', 'Optic'], ['Repairable', 'Yes']],
+        requirements: [
+          { name: 'Lens', icon: '🔍', have: 1, need: 2 },
+          { name: 'Metal Parts', icon: '⚙️', have: 12, need: 4 },
+          { name: 'Mount', icon: '🧱', have: 0, need: 1 }
+        ],
+        workbench: 'Level 2', craftTime: '01:40'
+      }
+    ];
+
+    let state = {
+      activeTab: 'weapons',
+      selectedItemId: 'smg-45',
+      search: '',
+      craftableOnly: false,
+      typeFilter: 'all',
+      amount: 1
+    };
+
+    const tabsEl = document.getElementById('tabs');
+    const typeFiltersEl = document.getElementById('typeFilters');
+    const itemGridEl = document.getElementById('itemGrid');
+    const detailsEl = document.getElementById('details');
+    const footerCountEl = document.getElementById('footerCount');
+    const searchInput = document.getElementById('searchInput');
+    const craftableOnly = document.getElementById('craftableOnly');
+    const toggleWrap = craftableOnly.closest('.toggle');
+
+    function canCraft(item) {
+      return item.requirements.every(r => r.have >= r.need);
+    }
+
+    function getCurrentTabItems() {
+      let list = items.filter(i => i.category === state.activeTab);
+
+      if (state.typeFilter !== 'all') {
+        list = list.filter(i => i.type === state.typeFilter);
+      }
+
+      if (state.search.trim()) {
+        const q = state.search.trim().toLowerCase();
+        list = list.filter(i =>
+          i.title.toLowerCase().includes(q) ||
+          i.subtitle.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q)
+        );
+      }
+
+      if (state.craftableOnly) {
+        list = list.filter(canCraft);
+      }
+
+      return list;
+    }
+
+    function ensureValidSelection(list) {
+      if (!list.length) return;
+      const exists = list.some(i => i.id === state.selectedItemId);
+      if (!exists) state.selectedItemId = list[0].id;
+    }
+
+    function getSelectedItem() {
+      return items.find(i => i.id === state.selectedItemId) || getCurrentTabItems()[0] || null;
+    }
+
+    function renderTabs() {
+      tabsEl.innerHTML = tabs.map(tab => `
+        <button class="tab ${state.activeTab === tab.key ? 'active' : ''}" data-tab="${tab.key}">${tab.label}</button>
+      `).join('');
+
+      tabsEl.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeTab = btn.dataset.tab;
+          state.typeFilter = 'all';
+          state.search = '';
+          state.amount = 1;
+          searchInput.value = '';
+          render();
+        });
+      });
+    }
+
+    function getTypeButtons() {
+      const map = {
+        meds: [
+          { key: 'all', label: 'All' },
+          { key: 'medical', label: '💊' },
+          { key: 'material', label: '🧶' }
+        ],
+        weapons: [
+          { key: 'all', label: 'All' },
+          { key: 'weapon', label: '🔫' },
+          { key: 'throwable', label: '💣' }
+        ],
+        ammo: [
+          { key: 'all', label: 'All' },
+          { key: 'ammo', label: '🔸' }
+        ],
+        mods: [
+          { key: 'all', label: 'All' },
+          { key: 'mod', label: '🔭' }
+        ],
+        tools: [
+          { key: 'all', label: 'All' },
+          { key: 'tool', label: '🛠️' }
+        ],
+        utils: [
+          { key: 'all', label: 'All' },
+          { key: 'utility', label: '🧰' }
+        ]
+      };
+      return map[state.activeTab] || [{ key: 'all', label: 'All' }];
+    }
+
+    function renderTypeButtons() {
+      typeFiltersEl.innerHTML = `<button class="toolbar-btn active" data-type="all" type="button">All</button>`;
+      typeFiltersEl.querySelector('.toolbar-btn')?.addEventListener('click', () => {
+        state.typeFilter = 'all';
+        render();
+      });
+    }
+
+    function renderGrid() {
+      const tabItems = items.filter(i => i.category === state.activeTab);
+      const list = getCurrentTabItems();
+      ensureValidSelection(list);
+
+      footerCountEl.textContent = `${list.length} / ${tabItems.length} items`;
+
+      if (!list.length) {
+        itemGridEl.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+          <div>
+            <div style="font-size: 40px; margin-bottom: 12px;">∅</div>
+            <div style="font-weight: 700; margin-bottom: 6px;">No matching recipes</div>
+            <div class="hint">Try another search or disable craftable-only mode.</div>
+          </div>
+        </div>`;
+        return;
+      }
+
+      itemGridEl.innerHTML = list.map(item => `
+        <button class="item-card ${item.id === state.selectedItemId ? 'selected' : ''}" data-id="${item.id}" type="button">
+          <div class="item-count">${item.count}</div>
+          <div class="icon-box item-icon">${item.icon}</div>
+          <div>
+            <div class="item-name">${item.title}</div>
+            <div class="item-meta">x1</div>
+          </div>
+        </button>
+      `).join('');
+
+      itemGridEl.querySelectorAll('.item-card').forEach(card => {
+        card.addEventListener('click', () => {
+          state.selectedItemId = card.dataset.id;
+          state.amount = 1;
+          render();
+        });
+      });
+    }
+
+    function renderDetails() {
+      const item = getSelectedItem();
+      if (!item) {
+        detailsEl.innerHTML = `<div class="empty-state"><div>Select an item to see recipe details.</div></div>`;
+        return;
+      }
+
+      const ready = canCraft(item);
+      const rarityLabel = item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1);
+
+      detailsEl.innerHTML = `
+        <div class="details-top">
+          <div class="hero-copy">
+            <div class="rarity-row">
+              <h2 class="hero-title">${item.title}</h2>
+              <span class="rarity-badge">${rarityLabel}</span>
+            </div>
+            <div class="subtitle">${item.subtitle}</div>
+            <div class="description">${item.description}</div>
+          </div>
+          <div class="hero-visual">
+            <div class="hero-emoji">${item.icon}</div>
+          </div>
+        </div>
+
+        <div class="details-middle">
+          <div class="parameters">
+            <div class="section-title">Parameters</div>
+            <div class="stats-list">
+              ${item.stats.map(([label, _value, shown]) => `
+                <div class="stat-row">
+                  <div class="stat-label">${label}</div>
+                  <div class="stat-value">${shown}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="requirements-side">
+            <div class="requirements-top">
+              <div class="section-title">Requires</div>
+              <div class="requirement-grid">
+                ${item.requirements.map(req => `
+                  <div class="req-card ${req.have >= req.need ? 'ready' : ''}">
+                    <div class="icon-box" style="width:52px;height:52px;font-size:26px;">${req.icon}</div>
+                    <div class="req-name">${req.name}</div>
+                    <div class="req-count">${req.have} / ${req.need}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="craft-meta">
+              <div>Workbench Level <span style="color:var(--accent-2); margin-left:6px;">${item.workbench}</span></div>
+              <div>${ready ? 'Ready to craft' : 'Missing materials'}</div>
+            </div>
+
+            <div class="craft-panel">
+              <div class="amount-block">
+                <div class="amount-label">Craft Amount</div>
+                <div class="amount-row">
+                  <button class="amount-btn" id="minusBtn" type="button">−</button>
+                  <div class="amount-value" id="amountValue">${state.amount}</div>
+                  <button class="amount-btn" id="plusBtn" type="button">+</button>
+                  <button class="action-btn" id="maxBtn" type="button">Max</button>
+                  <button class="action-btn" id="maxAvailableBtn" type="button">Max Available</button>
+                </div>
+              </div>
+
+              <div>
+                <button class="action-btn primary" id="craftBtn" type="button" style="min-width:240px;height:52px;font-size:14px;" ${ready ? '' : 'disabled'}>
+                  Craft
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('minusBtn')?.addEventListener('click', () => {
+        state.amount = Math.max(1, state.amount - 1);
+        renderDetails();
+      });
+      document.getElementById('plusBtn')?.addEventListener('click', () => {
+        state.amount = Math.min(99, state.amount + 1);
+        renderDetails();
+      });
+      document.getElementById('maxBtn')?.addEventListener('click', () => {
+        state.amount = 99;
+        renderDetails();
+      });
+      document.getElementById('maxAvailableBtn')?.addEventListener('click', () => {
+        const maxAvailable = Math.max(1, Math.min(...item.requirements.map(r => Math.floor(r.have / r.need))));
+        state.amount = Math.min(99, maxAvailable || 1);
+        renderDetails();
+      });
+      document.getElementById('craftBtn')?.addEventListener('click', () => {
+        if (!ready) return;
+        alert(`Crafted ${state.amount} × ${item.title}`);
+      });
+    }
+
+    function render() {
+      renderTabs();
+      renderTypeButtons();
+      renderGrid();
+      renderDetails();
+      toggleWrap.classList.toggle('active', state.craftableOnly);
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      state.search = e.target.value;
+      render();
+    });
+
+    craftableOnly.addEventListener('change', (e) => {
+      state.craftableOnly = e.target.checked;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
