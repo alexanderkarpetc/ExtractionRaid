@@ -154,6 +154,16 @@ namespace Adapters
             }
         }
 
+        public bool InteractPressed
+        {
+            get
+            {
+                if (BlockGameplayInput) return false;
+                var kb = Keyboard.current;
+                return kb != null && kb[Key.E].wasPressedThisFrame;
+            }
+        }
+
         public bool ReloadPressed
         {
             get

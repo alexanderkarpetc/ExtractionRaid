@@ -100,6 +100,35 @@
 
 **Див.:** [architecture.md §D6, D7, D8](../architecture.md)
 
+### 2026-04-23 — Tier 1 complete ✅
+**Vertical slice landed.** Гравець може:
+- Підійти до Workbench у Hideout → press E → Builder opens
+- Select Payload + Delivery у 2 dropdowns → live preview stats + archetype label
+- Click Build → new ItemState (з WeaponConfiguration) у backpack
+- Equip → стріляє як pistol/rifle згідно з Delivery FormFactor
+- Alt route: DevCheats "Toggle Weapon Builder" button — відкриває Builder з будь-де
+
+**Зроблено:**
+- Cluster A — Presenter + state, 14 unit tests
+- Cluster B — UI Toolkit modal (UXML + USS + runtime Window), 2x upsized layout
+- Cluster C — Workbench scene interactable (InteractPressed input, proximity prompt)
+- Cluster D — DevCheats toggle button
+- Cluster E — AppBootstrap integration + end-to-end tests (5)
+
+**Архітектурно:**
+- Presenter — pure C#, testable без Unity
+- UI Toolkit runtime pattern (UIDocument + PanelSettings bootstrap) — slope для future UI
+- Generic "Weapon" ItemDefinition — identity у WeaponConfiguration, prefab derived з Delivery FormFactor
+- `PlayerEntityState.IsWeaponBuilderOpen` auto-gates gameplay input через existing `IsInMenu`
+
+**Test coverage after Tier 1:** ~75 total зелених (Tier 0a 24 + Tier 0b 29 + Tier 1 22).
+
+**Unlocked для Tier 2:**
+- Додати Laser Charge payload + charge-up state machine
+- Додати Auto Delivery handler у ShootingSystem
+- Додати Scatter Delivery handler
+- 6 working архетипів (2 payloads × 3 deliveries)
+
 ### 2026-04-22 — D9-D14 resolved (Tier 1 design decisions)
 
 **D9 — UI location:** окремий modal screen, callable з будь-якого контексту (hideout + raid). Primary trigger — physical workbench у hideout scene. Secondary — DevCheats shortcut для debug/raid.

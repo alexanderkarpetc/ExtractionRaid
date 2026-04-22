@@ -2,6 +2,7 @@ using UnityEngine;
 using View;
 using View.UI;
 using View.UI.CraftingMockup;
+using View.UI.WeaponBuilder;
 
 namespace ApplicationCore
 {
@@ -45,6 +46,24 @@ namespace ApplicationCore
             craftingMockupHost.transform.SetParent(transform, false);
             craftingMockupHost.AddComponent<CraftingMockupWindow>();
             craftingMockupHost.AddComponent<CraftingMockupHotkey>();
+
+            // Weapon Builder modal — hidden by default, opened by Workbench or DevCheats.
+            var weaponBuilderHost = new GameObject("WeaponBuilderWindow");
+            weaponBuilderHost.transform.SetParent(transform, false);
+            var weaponBuilderWindow = weaponBuilderHost.AddComponent<WeaponBuilderWindow>();
+            if (App.Instance.CoreDefinitions != null)
+            {
+                var presenter = new WeaponBuilderPresenter(
+                    App.Instance.CoreDefinitions,
+                    App.Instance.Player.Inventory,
+                    App.Instance.AllocateEId);
+                weaponBuilderWindow.Initialize(presenter);
+            }
+            else
+            {
+                Debug.LogWarning("[AppBootstrap] Skipping WeaponBuilder initialization — " +
+                                 "CoreDefinitionDatabase missing. Run Tools → Weapon Builder → Create Stub Assets.");
+            }
         }
 
         void Start()

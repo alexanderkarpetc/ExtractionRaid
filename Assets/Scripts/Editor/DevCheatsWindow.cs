@@ -6,6 +6,7 @@ using Systems;
 using UnityEditor;
 using UnityEngine;
 using View.UI.CraftingMockup;
+using View.UI.WeaponBuilder;
 
 namespace Editor
 {
@@ -178,6 +179,13 @@ namespace Editor
             {
                 if (GUILayout.Button("Toggle Crafting UI Mockup (F10)"))
                     CraftingMockupWindow.Instance?.Toggle();
+            }
+
+            EditorGUILayout.Space(4);
+            using (new EditorGUI.DisabledScope(!appReady || WeaponBuilderWindow.Instance == null))
+            {
+                if (GUILayout.Button("Toggle Weapon Builder"))
+                    WeaponBuilderWindow.Instance?.Toggle();
             }
 
             if (!appReady)

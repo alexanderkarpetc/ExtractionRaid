@@ -1,0 +1,175 @@
+/* Weapon Builder modal — Tier 1 minimal styling.
+ * Dimmed backdrop + centered card. No theme-specific assets; should render cleanly
+ * with the default Unity runtime theme. */
+
+.wb-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+}
+
+.wb-window {
+    width: 1040px;
+    background-color: rgb(26, 28, 34);
+    border-color: rgb(70, 75, 85);
+    border-width: 2px;
+    border-radius: 12px;
+    padding: 0;
+}
+
+/* Header */
+
+.wb-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(50, 55, 65);
+    background-color: rgb(30, 33, 40);
+}
+
+.wb-title {
+    font-size: 32px;
+    color: rgb(235, 240, 250);
+    -unity-font-style: bold;
+}
+
+.wb-close-btn {
+    width: 52px;
+    height: 52px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(200, 205, 215);
+    font-size: 36px;
+    -unity-font-style: bold;
+    padding: 0;
+}
+
+.wb-close-btn:hover {
+    background-color: rgb(55, 60, 70);
+    border-radius: 8px;
+}
+
+/* Body */
+
+.wb-body {
+    padding: 32px;
+}
+
+.wb-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.wb-row-label {
+    width: 160px;
+    color: rgb(180, 185, 195);
+    font-size: 22px;
+}
+
+.wb-dropdown {
+    flex-grow: 1;
+    font-size: 22px;
+    min-height: 44px;
+}
+
+/* Preview */
+
+.wb-preview {
+    margin-top: 24px;
+    padding: 24px;
+    background-color: rgb(22, 24, 30);
+    border-color: rgb(50, 55, 65);
+    border-width: 1px;
+    border-radius: 8px;
+    min-height: 240px;
+}
+
+.wb-archetype {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: rgb(230, 200, 140);
+    margin-bottom: 20px;
+}
+
+.wb-stats-grid {
+    flex-direction: column;
+}
+
+.wb-stat-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.wb-stat-label {
+    color: rgb(150, 155, 165);
+    font-size: 20px;
+}
+
+.wb-stat-value {
+    color: rgb(210, 215, 225);
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+.wb-error {
+    color: rgb(220, 100, 100);
+    font-size: 20px;
+    margin-top: 16px;
+    white-space: normal;
+}
+
+/* Footer */
+
+.wb-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 24px 32px;
+    border-top-width: 2px;
+    border-top-color: rgb(50, 55, 65);
+    background-color: rgb(30, 33, 40);
+}
+
+.wb-btn {
+    min-width: 200px;
+    height: 56px;
+    margin-left: 16px;
+    border-radius: 8px;
+    border-width: 1px;
+    font-size: 22px;
+    -unity-font-style: bold;
+}
+
+.wb-btn-cancel {
+    background-color: rgb(55, 60, 70);
+    border-color: rgb(70, 75, 85);
+    color: rgb(200, 205, 215);
+}
+
+.wb-btn-cancel:hover {
+    background-color: rgb(65, 70, 80);
+}
+
+.wb-btn-build {
+    background-color: rgb(60, 130, 90);
+    border-color: rgb(80, 160, 110);
+    color: rgb(240, 250, 245);
+}
+
+.wb-btn-build:hover {
+    background-color: rgb(70, 150, 105);
+}
+
+.wb-btn-build:disabled {
+    background-color: rgb(45, 55, 50);
+    border-color: rgb(55, 65, 60);
+    color: rgb(130, 140, 135);
+}

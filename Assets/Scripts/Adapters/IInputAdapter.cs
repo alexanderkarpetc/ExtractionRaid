@@ -21,6 +21,8 @@ namespace Adapters
         int HotbarSlotPressed { get; }
         bool InventoryTogglePressed { get; }
         bool PickUpPressed { get; }
+        /// <summary>Generic "interact with world object" — used by Workbench, doors, NPCs (Tier 1: Key.E).</summary>
+        bool InteractPressed { get; }
         bool ReloadPressed { get; }
         bool DodgePressed { get; }
         bool GrenadePressed { get; }

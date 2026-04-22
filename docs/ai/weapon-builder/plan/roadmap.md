@@ -14,7 +14,7 @@
 |------|-------|--------|
 | 0a | Data model foundation (types, SO infra, registry) | ✅ complete (2026-04-20) |
 | 0b | Migration (refactor state, assembly pipeline, legacy cleanup) | ✅ complete (2026-04-22) |
-| 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ⏳ not started |
+| 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ⏳ not started |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ not started |
 | 4 | Rarity + Slot Compatibility | ⏳ not started |

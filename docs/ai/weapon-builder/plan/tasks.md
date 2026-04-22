@@ -365,34 +365,34 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster B — UI Toolkit view
 
-- [ ] **T-1.06 — UXML + USS**
-- [ ] **T-1.07 — `WeaponBuilderWindow` MonoBehaviour + UIDocument**
-- [ ] **T-1.08 — Bindings (dropdowns → presenter → preview)**
-- [ ] **T-1.09 — Open/Close input pause**
+- [x] **T-1.06 — UXML + USS** ✅ (`Resources/UI/WeaponBuilder/WeaponBuilderWindow.{uxml,uss}` + `WeaponBuilderAssetsBootstrap` для PanelSettings)
+- [x] **T-1.07 — `WeaponBuilderWindow` MonoBehaviour + UIDocument** ✅
+- [x] **T-1.08 — Bindings (dropdowns → presenter → preview)** ✅
+- [x] **T-1.09 — Open/Close input pause** ✅ (`PlayerEntityState.IsWeaponBuilderOpen`)
 
 ### Cluster C — Workbench scene interactable
 
-- [ ] **T-1.10 — `InteractPressed` у `IInputAdapter`**
-- [ ] **T-1.11 — `WorkbenchView` MonoBehaviour**
-- [ ] **T-1.12 — Hideout scene integration** (додати prefab)
+- [x] **T-1.10 — `InteractPressed` у `IInputAdapter`** ✅ (Key.E, gated по `BlockGameplayInput`)
+- [x] **T-1.11 — `WorkbenchView` MonoBehaviour** ✅ (proximity detection + billboard prompt TextMesh + open Builder on E)
+- [x] **T-1.12 — Hideout scene integration** ✅ (workbench placed у Hideout by user; editor utility removed after one-shot use)
 
 ### Cluster D — DevCheats shortcut
 
-- [ ] **T-1.13 — `DevCheatsWeaponBuilderSection` + toggle button**
+- [x] **T-1.13 — DevCheats toggle button** ✅ (просто кнопка у `DevCheatsWindow` — без окремої SO section, mirror CraftingMockup pattern)
 
 ### Cluster E — Integration + tests
 
-- [ ] **T-1.14 — WeaponBuilderWindow initialization у `App`**
-- [ ] **T-1.15 — Integration test (end-to-end без UI)**
+- [x] **T-1.14 — WeaponBuilderWindow initialization у `App`** ✅ (AppBootstrap spawns host GameObject + constructs presenter з registry/inventory/allocator)
+- [x] **T-1.15 — Integration test (end-to-end без UI)** ✅ (5 tests: pistol full-flow, rifle full-flow, multi-build, ground-round-trip, preview drives final stats)
 
-### Tier 1 Exit Gate
+### Tier 1 Exit Gate ✅ PASSED (2026-04-23)
 
-- [ ] Всі T-1.* закриті
-- [ ] Hideout workbench → Builder open works
-- [ ] DevCheats global shortcut works
-- [ ] Build → new weapon у backpack, equippable, shoots as pistol
-- [ ] Presenter unit tests + integration tests зелені
-- [ ] Merge
+- [x] Всі T-1.* закриті
+- [x] Hideout workbench → Builder open works
+- [x] DevCheats global shortcut works
+- [x] Build → new weapon у backpack, equippable, shoots as pistol
+- [x] Presenter unit tests (14) + registry list tests (3) + end-to-end tests (5) зелені — **22 Tier 1 tests**
+- [ ] Merge у master
 
 ---
 
