@@ -112,6 +112,14 @@ namespace Tests.EditMode.Fakes
             WeaponDryFiredPrefabId = prefabId;
         }
 
+        public readonly System.Collections.Generic.List<string> WeaponChargeStartedPrefabs = new();
+        public readonly System.Collections.Generic.List<string> WeaponChargeCompletedPrefabs = new();
+        public readonly System.Collections.Generic.List<string> WeaponChargeCancelledPrefabs = new();
+
+        public void WeaponChargeStarted(string prefabId)   => WeaponChargeStartedPrefabs.Add(prefabId);
+        public void WeaponChargeCompleted(string prefabId) => WeaponChargeCompletedPrefabs.Add(prefabId);
+        public void WeaponChargeCancelled(string prefabId) => WeaponChargeCancelledPrefabs.Add(prefabId);
+
         public bool GrenadeSpawnedCalled;
         public EId GrenadeSpawnedId;
         public Vector3 GrenadeSpawnedVelocity;

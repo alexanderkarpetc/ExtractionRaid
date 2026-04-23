@@ -39,6 +39,9 @@ namespace Adapters
         ArmorBroken,
         ProjectileRicochet,
         WeaponAssemblyFailed,
+        WeaponChargeStarted,
+        WeaponChargeCompleted,
+        WeaponChargeCancelled,
     }
 
     public struct RaidEvent
@@ -347,6 +350,21 @@ namespace Adapters
                 StringPayload  = weaponIdentifier,
                 StringPayload2 = reason,
             });
+        }
+
+        public void WeaponChargeStarted(string prefabId)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.WeaponChargeStarted, StringPayload = prefabId });
+        }
+
+        public void WeaponChargeCompleted(string prefabId)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.WeaponChargeCompleted, StringPayload = prefabId });
+        }
+
+        public void WeaponChargeCancelled(string prefabId)
+        {
+            _events.Add(new RaidEvent { Type = RaidEventType.WeaponChargeCancelled, StringPayload = prefabId });
         }
 
         public void Clear()

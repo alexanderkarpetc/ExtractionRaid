@@ -396,9 +396,48 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ---
 
-## Tier 2+ (placeholder)
+## Tier 2 — Core Breadth (Laser + Scatter)
 
-> Деталізується ближче до Tier 2.
+**Goal:** Ballistic × {Single, Auto, Scatter} + Laser × {Single, Auto, Scatter} = 6 working archetypes. Laser payload вводить charge-up mechanic — `ChargeTime` відпрацьовує перед кожним пострілом, незалежно від delivery (Variant B — consistent behaviour).
+
+### Cluster A — Charge-up pipeline
+
+- [x] **T-2.01 — `WeaponPhase.Charging` + `ChargeStartTime` runtime field** ✅
+- [x] **T-2.02 — Charge events у `IRaidEvents`** ✅ (Started/Completed/Cancelled + FakeRaidEvents impl)
+- [x] **T-2.03 — `WeaponStateMachineSystem.Charging` handler** ✅ (cancel on release або swap-pending → Unequipping; completion → ShootingSystem)
+- [x] **T-2.04 — `ShootingSystem` charge gate** ✅ (Ready+Laser → Charging; Charging+elapsed → fall-through до fire pipeline)
+- [x] **T-2.05 — ChargeTime lookup helper** ✅ (`Systems/WeaponChargeResolver.cs`)
+
+### Cluster B — Asset content
+
+- [ ] **T-2.06 — `LaserCharge.asset`** (Common + ChargeTime)
+- [ ] **T-2.07 — `Scatter.asset`** (FormFactor="Shotgun")
+- [ ] **T-2.08 — `Ammo_EnergyCell` ItemDefinition**
+- [ ] **T-2.09 — Update `WeaponBuilderStubAssets`**
+
+### Cluster C — UI feedback
+
+- [ ] **T-2.10 — AimCursorOverlay charge ring**
+
+### Cluster D — Tests
+
+- [ ] **T-2.11 — State machine tests (Charging flow)**
+- [ ] **T-2.12 — ShootingSystem charge tests**
+- [ ] **T-2.13 — End-to-end: Laser+Single / Laser+Auto / Laser+Scatter**
+
+### Tier 2 Exit Gate
+
+- [ ] 6 working archetypes (Ballistic/Laser × Single/Auto/Scatter)
+- [ ] Laser charges перед кожним shot консистентно
+- [ ] UI charge progress ring
+- [ ] Tests зелені
+- [ ] Merge
+
+---
+
+## Tier 3+ (placeholder)
+
+> Деталізується ближче до Tier 3.
 
 ---
 

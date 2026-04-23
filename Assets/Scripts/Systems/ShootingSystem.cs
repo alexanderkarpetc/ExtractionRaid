@@ -23,11 +23,15 @@ namespace Systems
 
             if (!input.AttackPressed) return;
 
-            if (weapon.Phase != WeaponPhase.Ready) return;
+            // Phase gate: Ready starts a new shot (or charge); Charging waits for
+            // the charge-up to complete. Cancel (AttackJustReleased) is handled by
+            // WeaponStateMachineSystem. Other phases ignore attack input.
+            if (weapon.Phase != WeaponPhase.Ready && weapon.Phase != WeaponPhase.Charging)
+                return;
 
-            // Ammo check: dry fire if magazine empty
+            // Ammo check on Ready only — don't dry-fire repeatedly while Charging.
             bool usesAmmo = !string.IsNullOrEmpty(weapon.AmmoType);
-            if (usesAmmo && weapon.AmmoInMagazine <= 0)
+            if (weapon.Phase == WeaponPhase.Ready && usesAmmo && weapon.AmmoInMagazine <= 0)
             {
                 context.Events.WeaponDryFired(weapon.PrefabId);
                 if (AmmoSystem.CanReload(weapon, App.Instance.Player.Inventory))
@@ -37,6 +41,28 @@ namespace Systems
                     context.Events.WeaponReloadStarted(weapon.PrefabId);
                 }
                 return;
+            }
+
+            // Charge gate. Laser payload requires a Charging window before every shot.
+            //   - Ready + requires charge → transition to Charging, no fire this tick.
+            //   - Charging + time elapsed → emit Completed, fall through to fire.
+            //   - Charging + time remaining → return and wait.
+            if (weapon.Phase == WeaponPhase.Ready && WeaponChargeResolver.RequiresChargeUp(weapon))
+            {
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.PhaseStartTime = state.ElapsedTime;
+                weapon.ChargeStartTime = state.ElapsedTime;
+                context.Events.WeaponChargeStarted(weapon.PrefabId);
+                return;
+            }
+
+            if (weapon.Phase == WeaponPhase.Charging)
+            {
+                float chargeTime = WeaponChargeResolver.GetChargeTime(weapon);
+                if (chargeTime > 0f && (state.ElapsedTime - weapon.ChargeStartTime) < chargeTime)
+                    return;
+                context.Events.WeaponChargeCompleted(weapon.PrefabId);
+                // Fall through to fire pipeline.
             }
 
             // Dispatch by Delivery Core's FiringPattern.

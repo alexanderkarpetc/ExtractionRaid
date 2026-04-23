@@ -10,6 +10,13 @@ namespace State
         Equipping,
         Unequipping,
         Reloading,
+        /// <summary>
+        /// Charge-up window before a shot can be released. Used by charge-up payloads
+        /// (e.g. Laser). Weapon transitions Ready → Charging → Firing once
+        /// ChargeTime elapses, or Charging → Ready if attack is released early.
+        /// See docs/ai/weapon-builder/architecture.md §D2.
+        /// </summary>
+        Charging,
     }
 
     /// <summary>
@@ -61,5 +68,10 @@ namespace State
         public WeaponPhase Phase;
         public float       PhaseStartTime;
         public Vector3     RecoilOffset;
+        /// <summary>
+        /// Time at which the current <see cref="WeaponPhase.Charging"/> window began.
+        /// Meaningful only while Phase == Charging; otherwise untouched.
+        /// </summary>
+        public float       ChargeStartTime;
     }
 }

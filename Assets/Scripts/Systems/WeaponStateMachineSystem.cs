@@ -45,6 +45,27 @@ namespace Systems
                     weapon.PhaseStartTime = elapsed;
                     break;
 
+                case WeaponPhase.Charging:
+                    // Swap request cancels charge and starts unequip (consistent with Ready-like phases).
+                    if (player.PendingHotbarSlot >= 0)
+                    {
+                        context.Events.WeaponChargeCancelled(weapon.PrefabId);
+                        weapon.Phase = WeaponPhase.Unequipping;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponUnequipStarted(weapon.PrefabId);
+                        break;
+                    }
+
+                    // Early release before charge completes → cancel, no shot, back to Ready.
+                    if (context.Input != null && context.Input.AttackJustReleased)
+                    {
+                        weapon.Phase = WeaponPhase.Ready;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponChargeCancelled(weapon.PrefabId);
+                    }
+                    // Charge completion is driven by ShootingSystem (owns the fire pipeline).
+                    break;
+
                 case WeaponPhase.Cooldown:
                     float effectiveInterval = weapon.Stats.FireInterval / DevCheats.FireRateMultiplier;
                     if (phaseDuration >= effectiveInterval)
