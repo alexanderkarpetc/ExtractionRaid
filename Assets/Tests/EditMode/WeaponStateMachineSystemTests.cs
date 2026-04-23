@@ -497,5 +497,106 @@ namespace Tests.EditMode
 
             Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
         }
+
+        // ── Charging phase (Tier 2) ───────────────────────────
+
+        [Test]
+        public void Tick_ChargingWithAttackJustReleased_CancelsToReady()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.PhaseStartTime = 0.5f;
+                weapon.ChargeStartTime = 0.5f;
+                state.ElapsedTime = 0.7f; // half-way through charge
+                var events = new RaidEventBuffer();
+                var input = new FakeInputAdapter { AttackJustReleased = true };
+                var context = CreateContextWithInput(input, events);
+
+                WeaponStateMachineSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
+                Assert.IsTrue(events.All.Any(e =>
+                    e.Type == RaidEventType.WeaponChargeCancelled),
+                    "Cancelled event should fire on early release");
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_ChargingWithAttackHeld_StaysInCharging()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 0.3f;
+                var input = new FakeInputAdapter { AttackPressed = true, AttackJustReleased = false };
+                var context = CreateContextWithInput(input);
+
+                WeaponStateMachineSystem.Tick(state, in context);
+
+                // State machine does NOT complete charge — ShootingSystem handles completion.
+                Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_ChargingWithPendingSwap_CancelsChargeAndTransitionsToUnequipping()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var player = state.PlayerEntity;
+            var weapon = player.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.Stats.UnequipTime = 0.2f;
+                player.PendingHotbarSlot = 1;
+                state.ElapsedTime = 0.3f;
+                var events = new RaidEventBuffer();
+                var context = CreateContextWithInput(new FakeInputAdapter(), events);
+
+                WeaponStateMachineSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Unequipping, weapon.Phase);
+                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled));
+                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponUnequipStarted));
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        static LaserPayloadDefinition MakeLaserPayloadSO(float chargeTime)
+        {
+            var def = ScriptableObject.CreateInstance<LaserPayloadDefinition>();
+            var specific = new LaserSpecificStats[5];
+            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = chargeTime };
+            SetPrivateField(def, "_specificByTier", specific);
+            return def;
+        }
+
+        static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var type = target.GetType();
+            while (type != null)
+            {
+                var field = type.GetField(
+                    fieldName,
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly);
+                if (field != null) { field.SetValue(target, value); return; }
+                type = type.BaseType;
+            }
+            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
+        }
     }
 }

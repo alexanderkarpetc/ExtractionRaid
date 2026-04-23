@@ -1,5 +1,86 @@
 # Weapon Builder — Status
 
+> **⏸ PAUSED after Tier 2 (2026-04-24).** See [Pause summary](#pause-summary--session-resumption-guide) below for a condensed resumption guide.
+
+---
+
+## Pause summary — session resumption guide
+
+### TL;DR стан
+
+Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець підходить до Workbench у Hideout, відкриває Builder screen (UI Toolkit modal), обирає Payload + Delivery з dropdowns, бачить live preview, тисне Build — отримує assembled weapon у backpack. Laser payload має charge-up перед кожним shot. 6 working archetypes (Ballistic × {Pistol, Rifle, Shotgun} + Laser × {Pistol, Rifle, Shotgun}). ~90 зелених тестів. Data-driven — усі stats з SO assets.
+
+### Де все живе
+
+**Code:**
+- Types: `Assets/Scripts/State/` (enums, structs, SO definitions, WeaponConfiguration)
+- Systems: `Assets/Scripts/Systems/` (WeaponAssemblySystem, WeaponStatComposer, WeaponItemFactory, WeaponChargeResolver, WeaponSyncSystem, ShootingSystem, WeaponStateMachineSystem)
+- Adapters: `Assets/Scripts/Adapters/` (ICoreDefinitionRegistry, DatabaseCoreDefinitionRegistry)
+- UI: `Assets/Scripts/View/UI/WeaponBuilder/` (presenter + window)
+- Scene interactable: `Assets/Scripts/View/WorkbenchView.cs`
+- Editor: `Assets/Scripts/Editor/WeaponBuilderStubAssets.cs` (menu `Tools → Weapon Builder → Create Stub Assets`)
+
+**Assets:**
+- SOs: `Assets/Resources/WeaponBuilder/Payloads/{BallisticRound,LaserCharge}.asset` + `Deliveries/{SingleAction,Auto,Scatter}.asset` + `CoreDefinitionDatabase.asset` + `WeaponBuilderPanelSettings.asset`
+- UXML/USS: `Assets/Resources/UI/WeaponBuilder/`
+
+**Tests:** `Assets/Tests/EditMode/` (10 test files related — grep "Weapon|Core|Ammo|Armor")
+
+### Як перевірити що все працює
+
+1. Unity → **Test Runner → EditMode → Run All** → очікується ~90 зелених
+2. Play mode → hideout scene → знайди Workbench → press E → modal відкривається
+3. Або: **Window → Dev Cheats → "Toggle Weapon Builder"** — відкриває з будь-де
+4. Build a Laser+Rifle → equip → shoot → повинен бути charge-up затримка + laser projectile
+
+### Якщо assets відсутні (fresh clone)
+
+`Tools → Weapon Builder → Create Stub Assets` (idempotent — створює 5 .asset файлів у Resources/WeaponBuilder/).
+
+### Next work: на вибір один з
+
+| Варіант | Scope | Value |
+|---|---|---|
+| **Tier 3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm = 20 archetypes | Повна content breadth |
+| **Tier 4** Rarity + Slots | Per-tier balance + banned combos + bot migration | Chase progression |
+| **Tier 5** Exotic Mods | 5 exotics + hook system | Feature identity |
+| **Tier 6** Loot integration | Modules як loot drops | Closes design promise "chase за модулями" |
+| **Tier 7** Polish | VFX/SFX/balance/UI polish | Production quality feel |
+
+Детальна декомпозиція кожного — у [roadmap.md](./roadmap.md). Наступний tier декомпозується у конкретні T-*.NN (як робили для Tier 0b/1/2) коли беремось.
+
+### Known gaps (to track)
+
+- Bot weapons hardcoded у `BotConstants` — migration deferred до Tier 4 (per 2026-04-22 decision)
+- `.cursor/rules/weapon-builder*.mdc` counterpart (CLAUDE.md §7 вимога) — не зроблено
+- `docs/ai/weapons.md` застаріла (pre-migration Rifle/Shotgun/Pistol) — не оновлена
+- Weapon mesh для FormFactor="Shotgun" (видалений разом з Shotgun item у 0b) — fallback на Weapon_Rifle prefab
+- Inventory UI показує "Weapon" DefinitionId замість archetype label — Tier 7 polish
+
+### Key architectural decisions (швидкий reference)
+
+Усі з rationale в [architecture.md](../architecture.md):
+
+- **Q1** Composition + cached computed stats (не monolithic)
+- **Q2** FiringPattern enum + internal dispatch у ShootingSystem (не Strategy per delivery)
+- **Q6** Per-module-instance rarity, `StatsByTier` tables per module
+- **Q7** Phased migration через compat layer (already removed у 0b); AmmoType на Payload
+- **D1** 7 Payload stats + 13 Delivery stats, no overlap
+- **D2** Abstract `PayloadCoreDefinition` + typed subclasses (heterogeneous payload stats)
+- **D3** SO + central `CoreDefinitionDatabase` aggregator (не `Resources.LoadAll`)
+- **D4** `readonly struct` з `[Serializable]` + `IEquatable<T>` для `*CoreInstance`
+- **D6** On-equip + explicit Apply button trigger for re-assembly
+- **D7** Ghost-weapon pattern (strict, no auto-repair) for invalid configs
+- **D8** Pure template archetype label `"{payload.DisplayName} {delivery.FormFactor}"`
+- **D9** Modal callable from anywhere (Workbench physical + DevCheats button)
+- **D10** Infinite module supply у Tier 1 (loot integration → Tier 6)
+- **D11** Single-screen UI Toolkit dropdowns + live preview
+- **D12** New ItemState у backpack, magazine full, generic `"Weapon"` DefinitionId
+- **D13** Physical Workbench scene object + InteractPressed key (E)
+- **D14** Variant B charge-up: Laser charges перед кожним пострілом regardless of Delivery
+
+---
+
 > **Living doc.** Трекає відкриті питання, прийняті рішення і блокери по ходу роботи над Weapon Builder. Оновлюється часто.
 
 ---
@@ -353,21 +434,23 @@
 
 ---
 
-## Next actions
+## Next actions (after pause)
 
-- [x] ~~Пройти Tier 0 архітектурні питання Q1, Q2, Q6, Q7~~ ✅
-- [x] ~~Комплексне ревʼю стану архітектури~~ ✅
-- [x] ~~Закрити D1+D2~~ ✅
-- [x] ~~Закрити D3, D4~~ ✅
-- [x] ~~R1 decision — Tier 0 split~~ ✅ 0a (data model) + 0b (migration)
-- [x] ~~Декомпозувати Tier 0a у конкретні задачі~~ ✅
-- [x] ~~Старт імплементації Tier 0a~~ ✅ complete (2026-04-20)
-- [x] ~~Merge Tier 0a~~ ✅ committed `03e07b9` (2026-04-20)
-- [x] ~~Закрити D6-D8~~ ✅ (2026-04-20)
-- [x] ~~Детальна декомпозиція Tier 0b у конкретні T-0b.NN task'и~~ ✅ 18 задач, 6 кластерів ([tasks.md](./tasks.md))
-- [x] ~~Старт імплементації Tier 0b~~ ✅ complete (2026-04-22)
-- [ ] **Merge Tier 0b у master** (наступний крок)
-- [ ] **Start Tier 1** — Vertical Slice: Ballistic + Single-Action end-to-end + UI збірки на базі
+Foundation (Tiers 0a/0b/1/2) завершений 2026-04-24. Усі immediate action items закриті:
+
+- [x] ~~Пройти Tier 0 архітектурні питання Q1-Q7~~ ✅
+- [x] ~~Закрити D1-D14 subsidiary details~~ ✅
+- [x] ~~Tier 0a (foundation)~~ ✅ committed `03e07b9` (2026-04-20)
+- [x] ~~Tier 0b (migration)~~ ✅ complete (2026-04-22)
+- [x] ~~Tier 1 (vertical slice)~~ ✅ complete (2026-04-23)
+- [x] ~~Tier 2 (core breadth)~~ ✅ complete (2026-04-23)
+
+**Next tier (коли повертаємось) — див. [Pause summary](#pause-summary--session-resumption-guide) на початку файлу** для вибору з Tier 3-7 і короткого context.
+
+Коли береться тier — кроки:
+1. Прочитати декомпозицію потрібного tier у [roadmap.md](./roadmap.md)
+2. Розписати у `tasks.md` конкретні T-N.NN задачі (як робили для 0b/1/2)
+3. Код по кластерах з чекбоксами
 
 ---
 

@@ -1,4 +1,3 @@
-using System.IO;
 using System.Reflection;
 using State;
 using UnityEditor;
@@ -7,31 +6,35 @@ using UnityEngine;
 namespace Game.Editor
 {
     /// <summary>
-    /// Menu action that creates (or refreshes) the Tier 0a stub assets for Weapon Builder.
-    /// Idempotent — running twice updates existing assets in place.
+    /// Menu action that creates (or refreshes) the stub core-definition assets for the
+    /// Weapon Builder. Idempotent — running twice updates existing assets in place.
     ///
-    /// Tier 0a scope:
-    ///   - BallisticRound (Common) — numeric parity with pre-migration Ballistic payload
-    ///   - SingleAction (Common)   — delivery slice matching pre-migration Pistol
-    ///   - Auto (Common)           — delivery slice matching pre-migration Rifle
-    ///   - CoreDefinitionDatabase  — aggregator referencing the above three
+    /// Populated content (Common tier only; other tiers zero-filled until Tier 4):
+    ///   Payloads:
+    ///     - BallisticRound  — numeric parity with pre-migration Ballistic weapons
+    ///     - LaserCharge     — charge-up energy payload (Tier 2)
+    ///   Deliveries:
+    ///     - SingleAction    — Pistol-like, 1 pellet, slower cadence
+    ///     - Auto            — Rifle-like, sustained automatic
+    ///     - Scatter         — Shotgun-like, 7 pellets with spread (Tier 2)
+    ///   Exotics: none yet (Tier 5)
+    ///   CoreDefinitionDatabase — aggregator referencing the above.
     ///
-    /// Only Common-tier values are populated; other tiers are left at default (zero)
-    /// until the full StatsByTier table is filled in Tier 4.
-    ///
-    /// See docs/ai/weapon-builder/plan/tasks.md T-0a.14 / T-0a.15.
+    /// See docs/ai/weapon-builder/plan/tasks.md T-0a.14/15 and T-2.06..T-2.09.
     /// </summary>
     public static class WeaponBuilderStubAssets
     {
-        const string ResourcesFolder = "Assets/Resources/WeaponBuilder";
-        const string PayloadsFolder  = ResourcesFolder + "/Payloads";
+        const string ResourcesFolder  = "Assets/Resources/WeaponBuilder";
+        const string PayloadsFolder   = ResourcesFolder + "/Payloads";
         const string DeliveriesFolder = ResourcesFolder + "/Deliveries";
-        const string ExoticsFolder   = ResourcesFolder + "/Exotics";
+        const string ExoticsFolder    = ResourcesFolder + "/Exotics";
 
-        const string BallisticPath   = PayloadsFolder  + "/BallisticRound.asset";
+        const string BallisticPath    = PayloadsFolder   + "/BallisticRound.asset";
+        const string LaserPath        = PayloadsFolder   + "/LaserCharge.asset";
         const string SingleActionPath = DeliveriesFolder + "/SingleAction.asset";
-        const string AutoPath        = DeliveriesFolder + "/Auto.asset";
-        const string DatabasePath    = ResourcesFolder + "/CoreDefinitionDatabase.asset";
+        const string AutoPath         = DeliveriesFolder + "/Auto.asset";
+        const string ScatterPath      = DeliveriesFolder + "/Scatter.asset";
+        const string DatabasePath     = ResourcesFolder  + "/CoreDefinitionDatabase.asset";
 
         [MenuItem("Tools/Weapon Builder/Create Stub Assets")]
         public static void CreateStubAssets()
@@ -41,20 +44,27 @@ namespace Game.Editor
             var ballistic = GetOrCreate<BallisticPayloadDefinition>(BallisticPath);
             PopulateBallistic(ballistic);
 
+            var laser = GetOrCreate<LaserPayloadDefinition>(LaserPath);
+            PopulateLaser(laser);
+
             var single = GetOrCreate<DeliveryCoreDefinition>(SingleActionPath);
             PopulateSingleAction(single);
 
             var auto = GetOrCreate<DeliveryCoreDefinition>(AutoPath);
             PopulateAuto(auto);
 
+            var scatter = GetOrCreate<DeliveryCoreDefinition>(ScatterPath);
+            PopulateScatter(scatter);
+
             var database = GetOrCreate<CoreDefinitionDatabase>(DatabasePath);
-            PopulateDatabase(database, ballistic, single, auto);
+            PopulateDatabase(database, ballistic, laser, single, auto, scatter);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log("[WeaponBuilderStubAssets] Stub assets created / refreshed:\n" +
-                      $"  {BallisticPath}\n  {SingleActionPath}\n  {AutoPath}\n  {DatabasePath}");
+                      $"  {BallisticPath}\n  {LaserPath}\n  {SingleActionPath}\n  " +
+                      $"{AutoPath}\n  {ScatterPath}\n  {DatabasePath}");
         }
 
         // ── Folder setup ──────────────────────────────────────
@@ -87,7 +97,7 @@ namespace Game.Editor
             return asset;
         }
 
-        // ── Population ────────────────────────────────────────
+        // ── Payload: Ballistic ────────────────────────────────
 
         static void PopulateBallistic(BallisticPayloadDefinition def)
         {
@@ -111,6 +121,40 @@ namespace Game.Editor
 
             EditorUtility.SetDirty(def);
         }
+
+        // ── Payload: Laser Charge (Tier 2) ────────────────────
+
+        static void PopulateLaser(LaserPayloadDefinition def)
+        {
+            SetField(def, "_id",          "LaserCharge");
+            SetField(def, "_archetype",   "Laser");
+            SetField(def, "_displayName", "Laser");
+            SetField(def, "_ammoType",    "Ammo_EnergyCell");
+
+            // Common-tier payload stats: higher single-shot damage and projectile speed
+            // than Ballistic — compensates for the charge-up overhead.
+            var stats = new CommonPayloadStats[5];
+            stats[(int)RarityTier.Common] = new CommonPayloadStats
+            {
+                Damage                   = 25f,
+                ProjectileSpeed          = 50f,
+                ProjectileLifetime       = 3f,
+                HeadshotDamageMultiplier = 2.0f,
+                BasePenetration          = 25f,
+                BaseArmorDamage          = 8f,
+                BaseBleedChance          = 0f, // energy — no bleed
+            };
+            SetField(def, "_statsByTier", stats);
+
+            // Laser-specific: ChargeTime. 1s is a sensible starting point for MVP feel.
+            var specific = new LaserSpecificStats[5];
+            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = 1.0f };
+            SetField(def, "_specificByTier", specific);
+
+            EditorUtility.SetDirty(def);
+        }
+
+        // ── Delivery: Single-Action ───────────────────────────
 
         static void PopulateSingleAction(DeliveryCoreDefinition def)
         {
@@ -147,6 +191,8 @@ namespace Game.Editor
             EditorUtility.SetDirty(def);
         }
 
+        // ── Delivery: Auto ────────────────────────────────────
+
         static void PopulateAuto(DeliveryCoreDefinition def)
         {
             SetField(def, "_id",         "Auto");
@@ -181,15 +227,56 @@ namespace Game.Editor
             EditorUtility.SetDirty(def);
         }
 
+        // ── Delivery: Scatter (Tier 2) ────────────────────────
+
+        static void PopulateScatter(DeliveryCoreDefinition def)
+        {
+            SetField(def, "_id",         "Scatter");
+            SetField(def, "_formFactor", "Shotgun");
+            SetField(def, "_pattern",    FiringPattern.Scatter);
+
+            var stats = new DeliveryStats[5];
+            stats[(int)RarityTier.Common] = new DeliveryStats
+            {
+                // Shotgun-like: slow cadence, heavy recoil, multiple pellets in a wide cone.
+                // Values mirror pre-migration Shotgun tuning where applicable.
+                FireInterval        = 0.6f,
+                ProjectilesPerShot  = 7,
+                SpreadAngle         = 30f,
+                ConeHalfAngle       = 20f,
+                BodyRotationSpeed   = 180f,
+                AimFollowSharpness  = 5f,
+                RecoilKickForward   = 3f,
+                RecoilKickSide      = 6f,
+                RecoilRecoverySpeed = 3f,
+                EquipTime           = 0.4f,
+                UnequipTime         = 0.25f,
+                MagazineSize        = 5,
+                ReloadTime          = 2.5f,
+            };
+            SetField(def, "_statsByTier", stats);
+
+            SetField(def, "_spinUpTime",     0f);
+            SetField(def, "_spinDownTime",   0f);
+            SetField(def, "_volleyCount",    0);
+            SetField(def, "_volleyInterval", 0f);
+
+            EditorUtility.SetDirty(def);
+        }
+
+        // ── Database aggregator ───────────────────────────────
+
         static void PopulateDatabase(
             CoreDefinitionDatabase db,
             BallisticPayloadDefinition ballistic,
+            LaserPayloadDefinition laser,
             DeliveryCoreDefinition single,
-            DeliveryCoreDefinition auto)
+            DeliveryCoreDefinition auto,
+            DeliveryCoreDefinition scatter)
         {
             db.SetEntries(
-                new System.Collections.Generic.List<PayloadCoreDefinition>  { ballistic },
-                new System.Collections.Generic.List<DeliveryCoreDefinition> { single, auto },
+                new System.Collections.Generic.List<PayloadCoreDefinition>  { ballistic, laser },
+                new System.Collections.Generic.List<DeliveryCoreDefinition> { single, auto, scatter },
                 new System.Collections.Generic.List<ExoticModDefinition>());
             EditorUtility.SetDirty(db);
         }

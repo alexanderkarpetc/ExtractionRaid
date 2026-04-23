@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b4dd8cf5e834c9eac5ee3157d88702, type: 3}
+  m_Name: LaserCharge
+  m_EditorClassIdentifier: Game::State.LaserPayloadDefinition
+  _id: LaserCharge
+  _archetype: Laser
+  _displayName: Laser
+  _ammoType: Ammo_EnergyCell
+  _statsByTier:
+  - Damage: 25
+    ProjectileSpeed: 50
+    ProjectileLifetime: 3
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 25
+    BaseArmorDamage: 8
+    BaseBleedChance: 0
+  - Damage: 0
+    ProjectileSpeed: 0
+    ProjectileLifetime: 0
+    HeadshotDamageMultiplier: 0
+    BasePenetration: 0
+    BaseArmorDamage: 0
+    BaseBleedChance: 0
+  - Damage: 0
+    ProjectileSpeed: 0
+    ProjectileLifetime: 0
+    HeadshotDamageMultiplier: 0
+    BasePenetration: 0
+    BaseArmorDamage: 0
+    BaseBleedChance: 0
+  - Damage: 0
+    ProjectileSpeed: 0
+    ProjectileLifetime: 0
+    HeadshotDamageMultiplier: 0
+    BasePenetration: 0
+    BaseArmorDamage: 0
+    BaseBleedChance: 0
+  - Damage: 0
+    ProjectileSpeed: 0
+    ProjectileLifetime: 0
+    HeadshotDamageMultiplier: 0
+    BasePenetration: 0
+    BaseArmorDamage: 0
+    BaseBleedChance: 0
+  _specificByTier:
+  - ChargeTime: 1
+  - ChargeTime: 0
+  - ChargeTime: 0
+  - ChargeTime: 0
+  - ChargeTime: 0

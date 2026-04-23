@@ -115,6 +115,19 @@ namespace State
                     Penetration = 10f,
                     ArmorDamage = 5f,
                 },
+                ["Ammo_EnergyCell"] = new()
+                {
+                    Id = "Ammo_EnergyCell",
+                    DisplayName = "Energy Cell",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 30,
+                    AmmoType = "Ammo_EnergyCell",
+                    // Laser payload does its damage through weapon base stats; ammo-level
+                    // pen/armor/bleed modifiers are zero in Tier 2 (AP/HP variants → Tier 4).
+                    Penetration = 0f,
+                    ArmorDamage = 0f,
+                    BleedChance = 0f,
+                },
                 ["Ammo_Pistol"] = new()
                 {
                     Id = "Ammo_Pistol",

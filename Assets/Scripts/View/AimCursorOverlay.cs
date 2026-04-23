@@ -54,6 +54,8 @@ namespace View
         static readonly Color RawDotColor = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
         static readonly Color ReloadEmptyColor = new Color(0.4f, 0.4f, 0.4f, 0.4f);
+        static readonly Color ChargeFilledColor = new Color(0.35f, 0.75f, 1f, 0.95f); // energy blue
+        static readonly Color ChargeEmptyColor  = new Color(0.25f, 0.30f, 0.45f, 0.4f);
         static readonly Color UnarmedColor = new Color(0.7f, 0.7f, 0.7f, 0.6f);
 
         void Awake()
@@ -178,6 +180,16 @@ namespace View
                     DrawReloadRing(pos, reloadProgress, alphaMul);
                     break;
 
+                case WeaponPhase.Charging:
+                    // Charge progress ring (Laser & other charge-up payloads). Uses the same
+                    // dot-ring layout as reload but in energy-blue to visually distinguish.
+                    float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon);
+                    float chargeProgress = chargeTime > 0f
+                        ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
+                        : 1f;
+                    DrawChargeRing(pos, chargeProgress, alphaMul);
+                    break;
+
                 case WeaponPhase.Equipping:
                     float equipAlpha = weapon.Stats.EquipTime > 0f
                         ? Mathf.Clamp01(elapsed / weapon.Stats.EquipTime)
@@ -251,6 +263,31 @@ namespace View
             // Center dot in reload color
             GUI.color = new Color(ReloadFilledColor.r, ReloadFilledColor.g, ReloadFilledColor.b,
                 ReloadFilledColor.a * alpha);
+            DrawRect(center, CenterDotSize);
+
+            GUI.color = Color.white;
+        }
+
+        void DrawChargeRing(Vector2 center, float progress, float alpha)
+        {
+            // Same dot-ring geometry as reload; distinct energy-blue palette so the
+            // player can't confuse "weapon is charging" with "weapon is reloading".
+            int filledCount = Mathf.FloorToInt(progress * ReloadDotCount);
+
+            for (int i = 0; i < ReloadDotCount; i++)
+            {
+                float angle = i * (2f * Mathf.PI / ReloadDotCount) - Mathf.PI * 0.5f;
+                float x = center.x + Mathf.Cos(angle) * ReloadRingRadius;
+                float y = center.y + Mathf.Sin(angle) * ReloadRingRadius;
+
+                var dotColor = i < filledCount ? ChargeFilledColor : ChargeEmptyColor;
+                GUI.color = new Color(dotColor.r, dotColor.g, dotColor.b, dotColor.a * alpha);
+                DrawRect(new Vector2(x, y), ReloadDotSize);
+            }
+
+            // Center dot pulses with charge intensity — more filled dots → brighter center.
+            float centerAlpha = ChargeFilledColor.a * alpha * Mathf.Lerp(0.4f, 1f, progress);
+            GUI.color = new Color(ChargeFilledColor.r, ChargeFilledColor.g, ChargeFilledColor.b, centerAlpha);
             DrawRect(center, CenterDotSize);
 
             GUI.color = Color.white;

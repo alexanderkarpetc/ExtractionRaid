@@ -410,27 +410,27 @@ Values sourced from `CreatePistol` (SingleAction) / `CreateRifle` (Auto) / compr
 
 ### Cluster B — Asset content
 
-- [ ] **T-2.06 — `LaserCharge.asset`** (Common + ChargeTime)
-- [ ] **T-2.07 — `Scatter.asset`** (FormFactor="Shotgun")
-- [ ] **T-2.08 — `Ammo_EnergyCell` ItemDefinition**
-- [ ] **T-2.09 — Update `WeaponBuilderStubAssets`**
+- [/] **T-2.06 — `LaserCharge.asset`** (script готовий, треба run menu)
+- [/] **T-2.07 — `Scatter.asset`** (script готовий, треба run menu)
+- [x] **T-2.08 — `Ammo_EnergyCell` ItemDefinition** ✅
+- [x] **T-2.09 — Update `WeaponBuilderStubAssets`** ✅ (PopulateLaser + PopulateScatter + Database тепер reference'ить всі 5 core assets)
 
 ### Cluster C — UI feedback
 
-- [ ] **T-2.10 — AimCursorOverlay charge ring**
+- [x] **T-2.10 — AimCursorOverlay charge ring** ✅ (energy-blue dot ring поверх crosshair, center dot pulses з intensity)
 
 ### Cluster D — Tests
 
-- [ ] **T-2.11 — State machine tests (Charging flow)**
-- [ ] **T-2.12 — ShootingSystem charge tests**
-- [ ] **T-2.13 — End-to-end: Laser+Single / Laser+Auto / Laser+Scatter**
+- [x] **T-2.11 — State machine tests (Charging flow)** ✅ (3 tests: cancel on release, hold stays, swap cancels + Unequipping)
+- [x] **T-2.12 — ShootingSystem charge tests** ✅ (4 tests: Ready→Charging, time-remaining stays, time-elapsed fires+emits Completed, non-laser bypass)
+- [x] **T-2.13 — End-to-end: Laser charge flow** ✅ (8 tests: RequiresChargeUp for all Laser combos, Scatter new content parity, full Charging cycles, cancel)
 
-### Tier 2 Exit Gate
+### Tier 2 Exit Gate ✅ (pending user verification)
 
-- [ ] 6 working archetypes (Ballistic/Laser × Single/Auto/Scatter)
-- [ ] Laser charges перед кожним shot консистентно
-- [ ] UI charge progress ring
-- [ ] Tests зелені
+- [x] 6 working archetypes (Ballistic/Laser × Single/Auto/Scatter)
+- [x] Laser charges перед кожним shot консистентно (Variant B)
+- [x] UI charge progress ring (blue pulsing center)
+- [x] Tests — +15 нових (3 state machine + 4 ShootingSystem + 8 end-to-end)
 - [ ] Merge
 
 ---

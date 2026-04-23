@@ -455,5 +455,115 @@ namespace Tests.EditMode
             Assert.AreEqual(0, state.PlayerEntity.EquippedWeapon.AmmoInMagazine,
                 "Should not change AmmoInMagazine when AmmoType is null");
         }
+
+        // ── Charge-up gate (Tier 2) ──────────────────────────
+
+        [Test]
+        public void Tick_LaserPayload_AttackPressed_TransitionsToChargingNotFiring()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                state.ElapsedTime = 0f;
+                var events = new RaidEventBuffer();
+                var input = new FakeInputAdapter { AttackPressed = true };
+                var context = CreateContext(input, events: events);
+
+                ShootingSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
+                Assert.AreEqual(0, state.Projectiles.Count, "No fire until charge completes");
+                Assert.AreEqual(0f, weapon.ChargeStartTime);
+                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeStarted));
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_LaserPayload_ChargingWithTimeRemaining_DoesNotFire()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 0.5f; // half way
+                var input = new FakeInputAdapter { AttackPressed = true };
+                var context = CreateContext(input);
+
+                ShootingSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
+                Assert.AreEqual(0, state.Projectiles.Count);
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_LaserPayload_ChargingWithTimeElapsed_FiresAndEmitsCompleted()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 1.1f;
+                var events = new RaidEventBuffer();
+                var input = new FakeInputAdapter { AttackPressed = true };
+                var context = CreateContext(input, events: events);
+
+                ShootingSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Firing, weapon.Phase, "Fire pipeline sets Firing");
+                Assert.AreEqual(1, state.Projectiles.Count);
+                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCompleted));
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_NonLaserPayload_AttackPressed_FiresImmediatelyBypassingCharge()
+        {
+            // Default weapon (rifle-like) has no PayloadDefinition — charge gate bypassed.
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            Assert.IsNull(weapon.PayloadDefinition, "Precondition: non-laser weapon");
+
+            var events = new RaidEventBuffer();
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = CreateContext(input, events: events);
+
+            ShootingSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Firing, weapon.Phase);
+            Assert.AreEqual(1, state.Projectiles.Count);
+            Assert.IsFalse(events.All.Any(e => e.Type == RaidEventType.WeaponChargeStarted),
+                "Non-laser must not emit charge events");
+        }
+
+        static LaserPayloadDefinition MakeLaserPayloadSO(float chargeTime)
+        {
+            var def = ScriptableObject.CreateInstance<LaserPayloadDefinition>();
+            var specific = new LaserSpecificStats[5];
+            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = chargeTime };
+            var field = typeof(LaserPayloadDefinition).GetField(
+                "_specificByTier",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            field.SetValue(def, specific);
+            return def;
+        }
     }
 }
