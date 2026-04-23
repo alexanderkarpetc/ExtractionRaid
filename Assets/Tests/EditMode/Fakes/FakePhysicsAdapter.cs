@@ -30,5 +30,11 @@ namespace Tests.EditMode.Fakes
             hitPoint = WallHit ? WallHitPoint : default;
             return WallHit;
         }
+
+        public bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask,
+            Vector3 ignoreNearA, Vector3 ignoreNearB, float ignoreRadius)
+        {
+            return Blocked;
+        }
     }
 }

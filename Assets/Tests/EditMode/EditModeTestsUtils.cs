@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
+using Adapters;
 using ApplicationCore;
 using Session;
 using State;
@@ -9,13 +11,23 @@ namespace Tests.EditMode
 {
     public static class EditModeTestsUtils
     {
+        static readonly List<Object> _ownedScriptableObjects = new();
+
         /// <summary>
         /// Injects a minimal App instance via reflection so edit-mode tests can access
-        /// App.Instance.Player without running AppBootstrap or any Unity adapters.
+        /// App.Instance.Player / CoreDefinitions without running AppBootstrap or any
+        /// Unity adapters. The injected <see cref="ICoreDefinitionRegistry"/> knows
+        /// about BallisticRound / Auto / SingleAction — enough for
+        /// <see cref="Systems.WeaponItemFactory"/> default configurations to assemble.
         /// Call ResetApp() in [TearDown] to clean up static state between test runs.
         /// </summary>
         public static void EnsureAppForTests()
         {
+            // Destroy any SOs we own from a previous invocation — many test fixtures
+            // don't call ResetApp() between tests, so destroy-then-create keeps the
+            // leak bounded to one batch.
+            DestroyOwnedScriptableObjects();
+
             var appType = typeof(App);
             var instanceField = appType.GetField("_instance",
                 BindingFlags.NonPublic | BindingFlags.Static);
@@ -26,18 +38,95 @@ namespace Tests.EditMode
             var playerProp = appType.GetProperty("Player");
             playerProp.SetValue(appInstance, new Player());
 
+            var coreDefsProp = appType.GetProperty("CoreDefinitions");
+            coreDefsProp.SetValue(appInstance, BuildDefaultCoreRegistry());
+
             instanceField.SetValue(null, appInstance);
         }
 
         /// <summary>
-        /// Clears the injected App instance. Call in [TearDown] to avoid state leaking
-        /// between test runs.
+        /// Clears the injected App instance and destroys any ScriptableObjects that
+        /// <see cref="EnsureAppForTests"/> created. Call in [TearDown] to avoid state
+        /// leaking between test runs.
         /// </summary>
         public static void ResetApp()
         {
             var instanceField = typeof(App).GetField("_instance",
                 BindingFlags.NonPublic | BindingFlags.Static);
             instanceField.SetValue(null, null);
+
+            DestroyOwnedScriptableObjects();
+        }
+
+        static void DestroyOwnedScriptableObjects()
+        {
+            for (int i = 0; i < _ownedScriptableObjects.Count; i++)
+            {
+                if (_ownedScriptableObjects[i] != null)
+                    Object.DestroyImmediate(_ownedScriptableObjects[i]);
+            }
+            _ownedScriptableObjects.Clear();
+        }
+
+        static ICoreDefinitionRegistry BuildDefaultCoreRegistry()
+        {
+            var ballistic = MakeBallisticPayload("BallisticRound", "Ammo_Rifle");
+            var single    = MakeDelivery("SingleAction", FiringPattern.Single);
+            var auto      = MakeDelivery("Auto",         FiringPattern.Auto);
+
+            var db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
+            db.SetEntries(
+                new List<PayloadCoreDefinition>  { ballistic },
+                new List<DeliveryCoreDefinition> { single, auto },
+                new List<ExoticModDefinition>());
+
+            _ownedScriptableObjects.Add(ballistic);
+            _ownedScriptableObjects.Add(single);
+            _ownedScriptableObjects.Add(auto);
+            _ownedScriptableObjects.Add(db);
+
+            return new DatabaseCoreDefinitionRegistry(db);
+        }
+
+        static BallisticPayloadDefinition MakeBallisticPayload(string id, string ammoType)
+        {
+            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
+            SetPrivateField(def, "_id", id);
+            SetPrivateField(def, "_ammoType", ammoType);
+            var array = new CommonPayloadStats[5];
+            array[(int)RarityTier.Common] = default;
+            SetPrivateField(def, "_statsByTier", array);
+            return def;
+        }
+
+        static DeliveryCoreDefinition MakeDelivery(string id, FiringPattern pattern)
+        {
+            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
+            SetPrivateField(def, "_id", id);
+            SetPrivateField(def, "_pattern", pattern);
+            var array = new DeliveryStats[5];
+            array[(int)RarityTier.Common] = default;
+            SetPrivateField(def, "_statsByTier", array);
+            return def;
+        }
+
+        static void SetPrivateField(object target, string fieldName, object value)
+        {
+            var type = target.GetType();
+            while (type != null)
+            {
+                var field = type.GetField(
+                    fieldName,
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (field != null)
+                {
+                    field.SetValue(target, value);
+                    return;
+                }
+                type = type.BaseType;
+            }
+            throw new System.InvalidOperationException(
+                $"Field '{fieldName}' not found on {target.GetType()}.");
         }
 
         public static RaidState CreateStateWithPlayer(Vector3 startPos)

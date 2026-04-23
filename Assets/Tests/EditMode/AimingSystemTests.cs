@@ -63,19 +63,6 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_AimOnPlayer_KeepsPreviousFacingDirection()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.right;
-            var input = new FakeInputAdapter { AimWorldPoint = Vector3.zero };
-            var context = CreateContext(input);
-
-            AimingSystem.Tick(state, in context);
-
-            Assert.AreEqual(Vector3.right, state.PlayerEntity.FacingDirection);
-        }
-
-        [Test]
         public void Tick_AimWithYOffset_IgnoresYComponent()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);

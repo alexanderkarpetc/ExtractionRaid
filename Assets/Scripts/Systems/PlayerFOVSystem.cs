@@ -70,28 +70,18 @@ namespace Systems
             }
         }
 
+        // Character-collider ignore radius for FOV sight checks: CapsuleColliders on Default
+        // layer would otherwise spuriously block vision near player/bot positions.
+        const float CharacterIgnoreRadius = 2f;
+
         static bool IsOccluded(IPhysicsAdapter physics, Vector3 eyePos, Vector3 botPos, Vector3 playerPos)
         {
             if (physics == null) return false;
 
             var targetPos = botPos + Vector3.up * BotConstants.PlayerEyeHeight;
-
-            // RaycastAll + filter out character colliders (by proximity to player/bot positions)
-            // to prevent CapsuleColliders on Default layer from blocking FOV vision.
-            var dir = targetPos - eyePos;
-            float maxDist = dir.magnitude;
-            if (maxDist < 0.001f) return false;
-
-            var hits = Physics.RaycastAll(eyePos, dir / maxDist, maxDist, BotConstants.VisionBlockingMask);
-            for (int h = 0; h < hits.Length; h++)
-            {
-                var hitPos = hits[h].collider.transform.position;
-                if ((hitPos - playerPos).sqrMagnitude < 4f) continue;
-                if ((hitPos - botPos).sqrMagnitude < 4f) continue;
-                return true; // blocked by real obstacle
-            }
-
-            return false;
+            return physics.IsLineOfSightBlocked(
+                eyePos, targetPos, BotConstants.VisionBlockingMask,
+                playerPos, botPos, CharacterIgnoreRadius);
         }
     }
 }

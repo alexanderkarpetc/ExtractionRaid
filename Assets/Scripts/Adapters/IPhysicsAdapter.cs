@@ -21,5 +21,16 @@ namespace Adapters
         /// </summary>
         bool RaycastFirstWallHit(Vector3 from, Vector3 to, int layerMask,
             Transform ignoreRoot, out Vector3 hitPoint);
+
+        /// <summary>
+        /// True if the line from <paramref name="from"/> to <paramref name="to"/> is blocked
+        /// by a real obstacle — colliders whose transform position lies within
+        /// <paramref name="ignoreRadius"/> of either <paramref name="ignoreNearA"/> or
+        /// <paramref name="ignoreNearB"/> are treated as character colliders and skipped.
+        /// Used by FOV occlusion checks where character CapsuleColliders can otherwise
+        /// spuriously block sight lines.
+        /// </summary>
+        bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask,
+            Vector3 ignoreNearA, Vector3 ignoreNearB, float ignoreRadius);
     }
 }
