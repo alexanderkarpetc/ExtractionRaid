@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace View.UI.Quests
+namespace View.UI.Common
 {
     public class TabItemView : MonoBehaviour
     {

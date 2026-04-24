@@ -7,6 +7,7 @@ using Systems;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using View.UI.Common;
 
 namespace View.UI.Quests
 {
