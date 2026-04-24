@@ -36,7 +36,7 @@ namespace ApplicationCore
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
-            gameObject.AddComponent<CraftingUI>();
+            gameObject.AddComponent<CraftPresenter>();
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();

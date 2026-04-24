@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8919276667589185134
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1225,6 +1225,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4464027475846012650}
     m_Modifications:
+    - target: {fileID: 1088754493810902719, guid: 3cec6c0d38f5f804fa92785a51021220, type: 3}
+      propertyPath: m_fontSize
+      value: 15.29
+      objectReference: {fileID: 0}
+    - target: {fileID: 1088754493810902719, guid: 3cec6c0d38f5f804fa92785a51021220, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 15.29
+      objectReference: {fileID: 0}
     - target: {fileID: 1709536830337257144, guid: 3cec6c0d38f5f804fa92785a51021220, type: 3}
       propertyPath: m_Name
       value: CraftPopup
