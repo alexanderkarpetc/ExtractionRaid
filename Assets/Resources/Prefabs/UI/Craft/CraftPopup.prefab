@@ -1296,6 +1296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game::View.UI.Craft.CraftPopupView
   _closeButton: {fileID: 4912760277534635509}
+  _allTabButton: {fileID: 5518145719024496533}
   _weaponTabButton: {fileID: 5952179069258652437}
   _medsTabButton: {fileID: 7397407392480870500}
   _modsTabButton: {fileID: 3871770834416656135}
@@ -5004,6 +5005,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3605437898227070911}
+  - {fileID: 6287010040638119907}
   - {fileID: 5274266337683565411}
   - {fileID: 9008123726812377106}
   - {fileID: 3319396014479110001}
@@ -6203,6 +6205,151 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1928246b5f5d4c5a8fb3e8ff8b82a88c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game::View.UI.Quests.TabItemView
+--- !u!1001 &4010988600000794894
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3272981371852536057}
+    m_Modifications:
+    - target: {fileID: 4100726265884069954, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_Name
+      value: AllTab
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088587039045403568, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_text
+      value: all
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088587039045403568, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_fontColor.b
+      value: 0.7411765
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088587039045403568, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_fontColor.g
+      value: 0.627451
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088587039045403568, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_fontColor.r
+      value: 0.5647059
+      objectReference: {fileID: 0}
+    - target: {fileID: 6088587039045403568, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4290617488
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 114
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 28.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: _inactiveTextColor.b
+      value: 0.7411765
+      objectReference: {fileID: 0}
+    - target: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: _inactiveTextColor.g
+      value: 0.627451
+      objectReference: {fileID: 0}
+    - target: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+      propertyPath: _inactiveTextColor.r
+      value: 0.5647059
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+--- !u!114 &5518145719024496533 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8880395511710645915, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+  m_PrefabInstance: {fileID: 4010988600000794894}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1928246b5f5d4c5a8fb3e8ff8b82a88c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.UI.Quests.TabItemView
+--- !u!224 &6287010040638119907 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6959775232315674349, guid: 440854dd55aad834cabe69d9ed986660, type: 3}
+  m_PrefabInstance: {fileID: 4010988600000794894}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4274112304456494576
 PrefabInstance:
   m_ObjectHideFlags: 0

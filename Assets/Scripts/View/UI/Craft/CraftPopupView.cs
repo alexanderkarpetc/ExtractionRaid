@@ -14,10 +14,14 @@ namespace View.UI.Craft
     public class CraftPopupView : PopupBase
     {
         [SerializeField] private Button _closeButton;
+        [SerializeField] private TabItemView _allTabButton;
         [SerializeField] private TabItemView _weaponTabButton;
         [SerializeField] private TabItemView _medsTabButton;
         [SerializeField] private TabItemView _modsTabButton;
         [SerializeField] private TabItemView _ammoTabButton;
+
+        // null = All categories
+        private CraftCategory? _selectedCategory;
         [SerializeField] private TMP_InputField _searchInputField;
         [SerializeField] private Button _searchResetButton;
 
@@ -40,7 +44,6 @@ namespace View.UI.Craft
 
         public event Action Closed;
 
-        private CraftCategory _selectedCategory = CraftCategory.Meds;
         private string _selectedRecipeId;
         private int _craftCount = 1;
         private string _searchText = string.Empty;
@@ -55,6 +58,7 @@ namespace View.UI.Craft
 
             _closeButton.onClick.AddListener(RequestClose);
 
+            _allTabButton.Button.onClick.AddListener(() => SelectCategory(null));
             _weaponTabButton.Button.onClick.AddListener(() => SelectCategory(CraftCategory.Weapons));
             _medsTabButton.Button.onClick.AddListener(() => SelectCategory(CraftCategory.Meds));
             _modsTabButton.Button.onClick.AddListener(() => SelectCategory(CraftCategory.WeaponMods));
@@ -74,7 +78,10 @@ namespace View.UI.Craft
         public void Open()
         {
             _craftCount = 1;
+            _selectedCategory = null;
             _selectedRecipeId = null;
+            _searchText = string.Empty;
+            _searchInputField.SetTextWithoutNotify(string.Empty);
             SelectFirstRecipe();
             RefreshAll();
         }
@@ -96,7 +103,7 @@ namespace View.UI.Craft
             RefreshDynamicData();
         }
 
-        void SelectCategory(CraftCategory category)
+        void SelectCategory(CraftCategory? category)
         {
             _selectedCategory = category;
             _selectedRecipeId = null;
@@ -192,6 +199,7 @@ namespace View.UI.Craft
 
         void RefreshTabs()
         {
+            _allTabButton.SetSelected(_selectedCategory == null);
             _medsTabButton.SetSelected(_selectedCategory == CraftCategory.Meds);
             _weaponTabButton.SetSelected(_selectedCategory == CraftCategory.Weapons);
             _ammoTabButton.SetSelected(_selectedCategory == CraftCategory.Ammo);
@@ -295,12 +303,17 @@ namespace View.UI.Craft
 
         IReadOnlyList<CraftRecipe> GetFilteredRecipes()
         {
-            var all = CraftConstants.GetByCategory(_selectedCategory);
+            // Layer 1: tab filter
+            IReadOnlyList<CraftRecipe> pool = _selectedCategory.HasValue
+                ? CraftConstants.GetByCategory(_selectedCategory.Value)
+                : CraftConstants.GetAll();
+
+            // Layer 2: search filter
             if (string.IsNullOrEmpty(_searchText))
-                return all;
+                return pool;
 
             var filtered = new List<CraftRecipe>();
-            foreach (var r in all)
+            foreach (var r in pool)
                 if (r.DisplayName.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) >= 0)
                     filtered.Add(r);
             return filtered;
