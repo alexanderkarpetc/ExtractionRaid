@@ -361,6 +361,13 @@ public static class WeaponArchetypeLabel
 }
 ```
 
+**Null/empty tolerance (contract).** Callers in production always pass resolved SO refs
+from the registry — so the happy path is both-present. However the composer is also
+used during *partial* UI state (presenter shows "Ballistic" once only a payload is
+picked, or "Pistol" once only a delivery is picked), so the helper falls back to a
+single segment when one side is null/empty, and returns `string.Empty` when both are
+missing. Tests in `WeaponArchetypeLabelTests` lock this behaviour.
+
 **Tier 1 matrix (Pattern → FormFactor):**
 | Delivery Pattern | FormFactor |
 |------------------|------------|

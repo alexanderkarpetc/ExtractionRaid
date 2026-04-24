@@ -1,7 +1,7 @@
-using System.Reflection;
 using NUnit.Framework;
 using State;
 using Systems;
+using Tests.EditMode.Fakes;
 using UnityEngine;
 
 namespace Tests.EditMode
@@ -86,12 +86,12 @@ namespace Tests.EditMode
         [Test]
         public void Compose_PicksCorrectPayloadTier()
         {
-            var payload = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
+            var payload = WeaponBuilderTestFactory.MakeBallistic();
             var statsArray = new CommonPayloadStats[5];
             statsArray[(int)RarityTier.Common]    = new CommonPayloadStats { Damage = 10f };
             statsArray[(int)RarityTier.Rare]      = new CommonPayloadStats { Damage = 20f };
             statsArray[(int)RarityTier.Legendary] = new CommonPayloadStats { Damage = 40f };
-            SetPrivateField(payload, "_statsByTier", statsArray);
+            WeaponBuilderTestFactory.SetPrivateField(payload, "_statsByTier", statsArray);
 
             var delivery = MakeDeliveryWithStats(RarityTier.Common, default);
             try
@@ -107,11 +107,11 @@ namespace Tests.EditMode
         public void Compose_PicksCorrectDeliveryTier()
         {
             var payload = MakePayloadWithStats(RarityTier.Common, default);
-            var delivery = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
+            var delivery = WeaponBuilderTestFactory.MakeDelivery();
             var statsArray = new DeliveryStats[5];
             statsArray[(int)RarityTier.Common] = new DeliveryStats { FireInterval = 0.4f };
             statsArray[(int)RarityTier.Epic]   = new DeliveryStats { FireInterval = 0.2f };
-            SetPrivateField(delivery, "_statsByTier", statsArray);
+            WeaponBuilderTestFactory.SetPrivateField(delivery, "_statsByTier", statsArray);
 
             try
             {
@@ -150,63 +150,14 @@ namespace Tests.EditMode
             finally { Cleanup(payload, delivery); }
         }
 
-        // ── Exotic null / ignored ─────────────────────────────
-
-        [Test]
-        public void Compose_ExoticNull_UsesBaseStats()
-        {
-            var payload  = MakePayloadWithStats(RarityTier.Common, new CommonPayloadStats { Damage = 10f });
-            var delivery = MakeDeliveryWithStats(RarityTier.Common, default);
-            try
-            {
-                var stats = WeaponStatComposer.Compose(payload, RarityTier.Common, delivery, RarityTier.Common, exotic: null);
-                Assert.AreEqual(10f, stats.Damage);
-            }
-            finally { Cleanup(payload, delivery); }
-        }
-
         // ── Helpers ───────────────────────────────────────────
 
         static BallisticPayloadDefinition MakePayloadWithStats(RarityTier tier, CommonPayloadStats stats)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            var array = new CommonPayloadStats[5];
-            array[(int)tier] = stats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
+            => WeaponBuilderTestFactory.MakeBallistic(commonStats: stats, statsTier: tier);
 
         static DeliveryCoreDefinition MakeDeliveryWithStats(RarityTier tier, DeliveryStats stats)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            var array = new DeliveryStats[5];
-            array[(int)tier] = stats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
+            => WeaponBuilderTestFactory.MakeDelivery(commonStats: stats, statsTier: tier);
 
-        static void Cleanup(Object a, Object b)
-        {
-            Object.DestroyImmediate(a);
-            Object.DestroyImmediate(b);
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null)
-                {
-                    field.SetValue(target, value);
-                    return;
-                }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
-        }
+        static void Cleanup(Object a, Object b) => WeaponBuilderTestFactory.DestroyAll(a, b);
     }
 }

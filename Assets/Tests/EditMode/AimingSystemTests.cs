@@ -1,6 +1,5 @@
 using Systems;
 using NUnit.Framework;
-using Session;
 using State;
 using Tests.EditMode.Fakes;
 using UnityEngine;
@@ -10,16 +9,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class AimingSystemTests
     {
-        static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: new FakeRaidEvents(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: input,
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         // ── FacingDirection tests (follows raw aim, unchanged behavior) ──
 
@@ -28,7 +17,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -42,7 +31,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             AimingSystem.Tick(state, in context);
 
@@ -55,7 +44,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, 5f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -67,7 +56,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 5f, 10f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -80,7 +69,7 @@ namespace Tests.EditMode
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(0f, 0f, 10f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             Assert.DoesNotThrow(() => AimingSystem.Tick(state, in context));
         }
@@ -90,7 +79,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(new Vector3(5f, 0f, 5f));
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, 15f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -105,7 +94,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var aimDir = Quaternion.Euler(0f, 30f, 0f) * Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -120,7 +109,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1);
+            var context = TestContextFactory.Create(input, deltaTime: 1);
 
             AimingSystem.Tick(state, in context);
 
@@ -135,7 +124,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var aimDir = Quaternion.Euler(0f, 45f, 0f) * Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -151,7 +140,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var aimDir = Quaternion.Euler(0f, 30f, 0f) * Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -167,7 +156,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var aimDir = Quaternion.Euler(0f, 20f, 0f) * Vector3.forward;
             var input = new FakeInputAdapter { AimWorldPoint = aimDir * 10f };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             for (int i = 0; i < 120; i++)
                 AimingSystem.Tick(state, in context);
@@ -184,7 +173,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var aimTarget = new Vector3(7f, 2f, 12f);
             var input = new FakeInputAdapter { AimWorldPoint = aimTarget };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -198,7 +187,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, 5f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
             Assert.AreEqual(5f, state.PlayerEntity.RawAimPoint.x, 0.001f);
@@ -217,7 +206,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.WeaponAimPoint = Vector3.zero;
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -234,7 +223,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -252,7 +241,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =50f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             for (int i = 0; i < 10; i++)
                 AimingSystem.Tick(state, in context);
@@ -270,7 +259,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =3f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             for (int i = 0; i < 10; i++)
                 AimingSystem.Tick(state, in context);
@@ -288,7 +277,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon = null;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -304,7 +293,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             for (int i = 0; i < 60; i++)
                 AimingSystem.Tick(state, in context);
@@ -324,7 +313,7 @@ namespace Tests.EditMode
             // Pre-align weapon aim to target so AimDirection matches instantly
             state.PlayerEntity.WeaponAimPoint = new Vector3(10f, 0f, 0f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             AimingSystem.Tick(state, in context);
 
@@ -339,7 +328,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.AimFollowSharpness =5f;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 
@@ -353,7 +342,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             for (int i = 0; i < 60; i++)
                 AimingSystem.Tick(state, in context);
@@ -372,7 +361,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.WeaponAimPoint = new Vector3(0f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             AimingSystem.Tick(state, in context);
 
@@ -389,7 +378,7 @@ namespace Tests.EditMode
             // Weapon aim starts at (0, 0, 10), raw aim at (0, 0, -10) — same X
             state.PlayerEntity.WeaponAimPoint = new Vector3(5f, 0f, 10f);
             var input = new FakeInputAdapter { AimWorldPoint = new Vector3(5f, 0f, -10f) };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             AimingSystem.Tick(state, in context);
 

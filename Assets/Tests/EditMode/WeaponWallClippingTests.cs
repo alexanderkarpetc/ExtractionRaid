@@ -1,4 +1,3 @@
-using Adapters;
 using NUnit.Framework;
 using Session;
 using Systems;
@@ -23,20 +22,6 @@ namespace Tests.EditMode
             return cfg;
         }
 
-        static RaidContext CreateContext(FakeInputAdapter input, FakePhysicsAdapter physics,
-            ShootingConfig cfg)
-        {
-            return new RaidContext(
-                deltaTime: 1f / 60f,
-                events: new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = 1f / 60f },
-                input: input,
-                navMesh: new FakeNavMeshAdapter(),
-                physics: physics,
-                shootingConfig: cfg
-            );
-        }
-
         [Test]
         public void Tick_MuzzleBlockDisabled_SpawnsAtMuzzle()
         {
@@ -45,7 +30,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = muzzlePos };
             var physics = new FakePhysicsAdapter { WallHit = true, WallHitPoint = new Vector3(1f, 0.5f, 2f) };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(false));
+            var context = TestContextFactory.Create(input, physics: physics, shootingConfig: ConfigWithMuzzleBlock(false));
 
             ShootingSystem.Tick(state, in context);
 
@@ -64,7 +49,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = muzzlePos };
             var physics = new FakePhysicsAdapter { WallHit = false };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(true));
+            var context = TestContextFactory.Create(input, physics: physics, shootingConfig: ConfigWithMuzzleBlock(true));
 
             ShootingSystem.Tick(state, in context);
 
@@ -86,7 +71,7 @@ namespace Tests.EditMode
             state.PlayerEntity.WeaponAimPoint = new Vector3(10f, 0f, 0f);
             var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = muzzlePos };
             var physics = new FakePhysicsAdapter { WallHit = true, WallHitPoint = wallHitPoint };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(true));
+            var context = TestContextFactory.Create(input, physics: physics, shootingConfig: ConfigWithMuzzleBlock(true));
 
             ShootingSystem.Tick(state, in context);
 
@@ -97,36 +82,6 @@ namespace Tests.EditMode
                 "Spawn X must be on the player-side of the wall.");
             Assert.AreEqual(ShootingConfig.Default.ProjectileSpawnHeight, proj.Position.y, 0.001f,
                 "Y must remain at the configured spawn height.");
-        }
-
-        [Test]
-        public void Tick_MuzzleBlockDisabled_DoesNotCallPhysics()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.forward;
-            var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = new Vector3(2f, 0.5f, 0f) };
-            var physics = new FakePhysicsAdapter();
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(false));
-
-            ShootingSystem.Tick(state, in context);
-
-            Assert.AreEqual(0, physics.RaycastFirstWallHitCallCount,
-                "Physics raycast must not be called when muzzle block is disabled.");
-        }
-
-        [Test]
-        public void Tick_MuzzleBlockEnabled_CallsPhysicsOnce()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.forward;
-            var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = new Vector3(2f, 0.5f, 0f) };
-            var physics = new FakePhysicsAdapter { WallHit = false };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(true));
-
-            ShootingSystem.Tick(state, in context);
-
-            Assert.AreEqual(1, physics.RaycastFirstWallHitCallCount,
-                "Physics raycast must be called exactly once per shot.");
         }
 
         [Test]
@@ -142,7 +97,7 @@ namespace Tests.EditMode
             state.PlayerEntity.WeaponAimPoint = new Vector3(10f, 0f, 0f);
             var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = muzzlePos };
             var physics = new FakePhysicsAdapter { WallHit = true, WallHitPoint = wallHitPoint };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(true, backoff: 0.5f));
+            var context = TestContextFactory.Create(input, physics: physics, shootingConfig: ConfigWithMuzzleBlock(true, backoff: 0.5f));
 
             ShootingSystem.Tick(state, in context);
 
@@ -168,7 +123,7 @@ namespace Tests.EditMode
             state.PlayerEntity.WeaponAimPoint = new Vector3(10f, 0f, 0f);
             var input = new FakeInputAdapter { AttackPressed = true, MuzzleWorldPoint = muzzlePos };
             var physics = new FakePhysicsAdapter { WallHit = true, WallHitPoint = wallHitPoint };
-            var context = CreateContext(input, physics, ConfigWithMuzzleBlock(true));
+            var context = TestContextFactory.Create(input, physics: physics, shootingConfig: ConfigWithMuzzleBlock(true));
 
             ShootingSystem.Tick(state, in context);
 

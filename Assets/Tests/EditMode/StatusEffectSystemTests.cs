@@ -1,8 +1,5 @@
-using System.Collections.Generic;
-using Adapters;
 using Constants;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems;
 using Tests.EditMode.Fakes;
@@ -12,16 +9,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class StatusEffectSystemTests
     {
-        static RaidContext CreateContext(IRaidEvents events = null)
-        {
-            return new RaidContext(
-                deltaTime: 1f / 60f,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = 1f / 60f },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         // ── TickBleed L1/L2 ───────────────────────────────────
 
@@ -36,7 +23,7 @@ namespace Tests.EditMode
             // Level defaults to 1
 
             state.ElapsedTime = 1.5f; // past 1s tick interval
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
             StatusEffectSystem.Tick(state, in context);
 
             Assert.AreEqual(100f - StatusEffectConstants.BleedL1DamagePerTick,
@@ -55,7 +42,7 @@ namespace Tests.EditMode
             StatusEffectSystem.ApplyEffect(state, entityId, StatusEffectType.Bleeding);
 
             state.ElapsedTime = 1.5f;
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
             StatusEffectSystem.Tick(state, in context);
 
             Assert.AreEqual(100f - StatusEffectConstants.BleedL2DamagePerTick,

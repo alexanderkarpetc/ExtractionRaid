@@ -5,6 +5,7 @@ using Adapters;
 using ApplicationCore;
 using Session;
 using State;
+using Tests.EditMode.Fakes;
 using UnityEngine;
 
 namespace Tests.EditMode
@@ -70,63 +71,19 @@ namespace Tests.EditMode
 
         static ICoreDefinitionRegistry BuildDefaultCoreRegistry()
         {
-            var ballistic = MakeBallisticPayload("BallisticRound", "Ammo_Rifle");
-            var single    = MakeDelivery("SingleAction", FiringPattern.Single);
-            var auto      = MakeDelivery("Auto",         FiringPattern.Auto);
-
-            var db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            db.SetEntries(
-                new List<PayloadCoreDefinition>  { ballistic },
-                new List<DeliveryCoreDefinition> { single, auto },
-                new List<ExoticModDefinition>());
+            var ballistic = WeaponBuilderTestFactory.MakeBallistic("BallisticRound", ammoType: "Ammo_Rifle");
+            var single    = WeaponBuilderTestFactory.MakeDelivery("SingleAction", pattern: FiringPattern.Single);
+            var auto      = WeaponBuilderTestFactory.MakeDelivery("Auto",         pattern: FiringPattern.Auto);
+            var db        = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new[] { (PayloadCoreDefinition)ballistic },
+                deliveries: new[] { single, auto });
 
             _ownedScriptableObjects.Add(ballistic);
             _ownedScriptableObjects.Add(single);
             _ownedScriptableObjects.Add(auto);
             _ownedScriptableObjects.Add(db);
 
-            return new DatabaseCoreDefinitionRegistry(db);
-        }
-
-        static BallisticPayloadDefinition MakeBallisticPayload(string id, string ammoType)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_id", id);
-            SetPrivateField(def, "_ammoType", ammoType);
-            var array = new CommonPayloadStats[5];
-            array[(int)RarityTier.Common] = default;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static DeliveryCoreDefinition MakeDelivery(string id, FiringPattern pattern)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id", id);
-            SetPrivateField(def, "_pattern", pattern);
-            var array = new DeliveryStats[5];
-            array[(int)RarityTier.Common] = default;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null)
-                {
-                    field.SetValue(target, value);
-                    return;
-                }
-                type = type.BaseType;
-            }
-            throw new System.InvalidOperationException(
-                $"Field '{fieldName}' not found on {target.GetType()}.");
+            return WeaponBuilderTestFactory.MakeRegistry(db);
         }
 
         public static RaidState CreateStateWithPlayer(Vector3 startPos)

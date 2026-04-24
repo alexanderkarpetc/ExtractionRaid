@@ -1,6 +1,4 @@
-using Adapters;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -11,16 +9,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class BotBrainSystemTests
     {
-        static RaidContext CreateContext(float dt = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: dt,
-                events: new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = dt },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         static RaidState CreateStateWithBot(string typeId, Vector3 botPos, Vector3[] waypoints = null)
         {
@@ -36,7 +24,7 @@ namespace Tests.EditMode
         {
             var waypoints = new[] { new Vector3(0, 0, 10f), new Vector3(10f, 0, 0) };
             var state = CreateStateWithBot("Scav", Vector3.zero, waypoints);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -55,7 +43,7 @@ namespace Tests.EditMode
             bot.Blackboard.DistanceToTarget = 10f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             bot.Blackboard.ReactionTimer = 999f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -72,7 +60,7 @@ namespace Tests.EditMode
             bot.Blackboard.DistanceToTarget = 40f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             bot.Blackboard.ReactionTimer = 0f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -84,7 +72,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithBot("Scav", Vector3.zero);
             state.HealthMap[state.Bots[0].Id].IsAlive = false;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -103,24 +91,13 @@ namespace Tests.EditMode
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             state.HealthMap[bot.Id].CurrentHp = 10f;
             state.ElapsedTime = 5f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
             Assert.IsTrue(bot.WantsToHeal, "PMC should want to heal when safe");
         }
 
-        [Test]
-        public void Tick_Scav_CannotHeal()
-        {
-            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
-            var bot = state.Bots[0];
-            state.HealthMap[bot.Id].CurrentHp = 10f;
-            var ctx = CreateContext();
-
-            BotBrainSystem.Tick(state, in ctx);
-
-            Assert.IsFalse(bot.WantsToHeal, "Scav should not be able to heal");
-        }
+        // (Scav_CannotHeal covered by BotHealTests.Scav_CannotHeal)
     }
 }

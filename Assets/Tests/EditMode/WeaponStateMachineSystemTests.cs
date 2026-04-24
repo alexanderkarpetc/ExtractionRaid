@@ -2,7 +2,6 @@ using System.Linq;
 using Adapters;
 using ApplicationCore;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems;
 using Tests.EditMode.Fakes;
@@ -13,15 +12,41 @@ namespace Tests.EditMode
     [TestFixture]
     public class WeaponStateMachineSystemTests
     {
-        static RaidContext CreateContext(IRaidEvents events = null, float deltaTime = 1f / 60f)
+        // ── Setup DSL ─────────────────────────────────────────
+        //
+        // Most tests drive the same shape:
+        //   1. Player state with default weapon (CreateStateWithPlayer).
+        //   2. Put weapon into a specific Phase + timings.
+        //   3. Call WeaponStateMachineSystem.Tick with a default/empty context.
+        //
+        // `Setup(...)` wraps steps 1-2. Callers can still mutate state.PlayerEntity
+        // (hotbar slots, SelectedHotbarSlot, etc.) after the call for per-test nuance.
+
+        static (RaidState state, WeaponEntityState weapon) Setup(
+            WeaponPhase phase = WeaponPhase.Ready,
+            float phaseStart = 0f,
+            float elapsedTime = 0f,
+            float? fireInterval = null,
+            float? equipTime = null,
+            float? unequipTime = null,
+            float? reloadTime = null,
+            int? ammoInMag = null,
+            int? pendingSlot = null)
         {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.Phase = phase;
+            weapon.PhaseStartTime = phaseStart;
+            state.ElapsedTime = elapsedTime;
+
+            if (fireInterval.HasValue) weapon.Stats.FireInterval = fireInterval.Value;
+            if (equipTime.HasValue)    weapon.Stats.EquipTime    = equipTime.Value;
+            if (unequipTime.HasValue)  weapon.Stats.UnequipTime  = unequipTime.Value;
+            if (reloadTime.HasValue)   weapon.Stats.ReloadTime   = reloadTime.Value;
+            if (ammoInMag.HasValue)    weapon.AmmoInMagazine     = ammoInMag.Value;
+            if (pendingSlot.HasValue)  state.PlayerEntity.PendingHotbarSlot = pendingSlot.Value;
+
+            return (state, weapon);
         }
 
         // ── Firing → Cooldown ─────────────────────────────────────
@@ -29,12 +54,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_FiringPhase_TransitionsToCooldown()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Firing;
-            weapon.PhaseStartTime = 1f;
-            state.ElapsedTime = 1f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Firing, phaseStart: 1f, elapsedTime: 1f);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -47,13 +68,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_CooldownExpired_TransitionsToReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Cooldown;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.FireInterval = 0.2f;
-            state.ElapsedTime = 0.3f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Cooldown, fireInterval: 0.2f, elapsedTime: 0.3f);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -63,13 +79,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_CooldownNotExpired_StaysInCooldown()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Cooldown;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.FireInterval = 0.2f;
-            state.ElapsedTime = 0.1f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Cooldown, fireInterval: 0.2f, elapsedTime: 0.1f);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -81,13 +92,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EquippingDone_TransitionsToReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Equipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.EquipTime = 0.3f;
-            state.ElapsedTime = 0.4f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Equipping, equipTime: 0.3f, elapsedTime: 0.4f);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -97,14 +103,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EquippingDone_EmitsWeaponEquipFinished()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Equipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.EquipTime = 0.3f;
-            state.ElapsedTime = 0.4f;
+            var (state, weapon) = Setup(phase: WeaponPhase.Equipping, equipTime: 0.3f, elapsedTime: 0.4f);
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -117,13 +118,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EquippingNotDone_StaysEquipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Equipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.EquipTime = 0.3f;
-            state.ElapsedTime = 0.1f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Equipping, equipTime: 0.3f, elapsedTime: 0.1f);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -135,16 +131,10 @@ namespace Tests.EditMode
         [Test]
         public void Tick_UnequippingDone_ToggleOff_GoesUnarmed()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Unequipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.UnequipTime = 0.2f;
-            state.ElapsedTime = 0.3f;
-            // PendingSlot == SelectedSlot → toggle off
-            state.PlayerEntity.PendingHotbarSlot = 0;
-            state.PlayerEntity.SelectedHotbarSlot = 0;
-            var context = CreateContext();
+            // PendingSlot == SelectedSlot (both 0) → toggle off.
+            var (state, _) = Setup(phase: WeaponPhase.Unequipping, unequipTime: 0.2f, elapsedTime: 0.3f,
+                pendingSlot: 0);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -156,17 +146,11 @@ namespace Tests.EditMode
         [Test]
         public void Tick_UnequippingDone_SwitchToNewWeapon_StartsEquipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Unequipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.UnequipTime = 0.2f;
-            state.ElapsedTime = 0.3f;
-            // Switch from slot 0 to slot 1
-            state.PlayerEntity.SelectedHotbarSlot = 0;
-            state.PlayerEntity.PendingHotbarSlot = 1;
+            // Switch from slot 0 to slot 1.
+            var (state, _) = Setup(phase: WeaponPhase.Unequipping, unequipTime: 0.2f, elapsedTime: 0.3f,
+                pendingSlot: 1);
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -184,17 +168,10 @@ namespace Tests.EditMode
         [Test]
         public void Tick_UnequippingDone_SwitchToEmptySlot_GoesUnarmed()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Unequipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.UnequipTime = 0.2f;
-            state.ElapsedTime = 0.3f;
-            // Switch to empty slot 1 (clear it first)
-            state.PlayerEntity.Hotbar[1] = null;
-            state.PlayerEntity.SelectedHotbarSlot = 0;
-            state.PlayerEntity.PendingHotbarSlot = 1;
-            var context = CreateContext();
+            var (state, _) = Setup(phase: WeaponPhase.Unequipping, unequipTime: 0.2f, elapsedTime: 0.3f,
+                pendingSlot: 1);
+            state.PlayerEntity.Hotbar[1] = null; // target slot is empty
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -207,12 +184,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReadyWithPendingSwap_StartsUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Ready;
-            state.PlayerEntity.PendingHotbarSlot = 1;
+            var (state, weapon) = Setup(phase: WeaponPhase.Ready, pendingSlot: 1);
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -225,14 +199,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_CooldownWithPendingSwap_StartsUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Cooldown;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.FireInterval = 0.2f;
-            state.ElapsedTime = 0.05f; // still in cooldown
-            state.PlayerEntity.PendingHotbarSlot = 1;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Cooldown, fireInterval: 0.2f,
+                elapsedTime: 0.05f /* still in cooldown */, pendingSlot: 1);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -243,14 +212,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_EquippingWithPendingSwap_StartsUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Equipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.EquipTime = 0.3f;
-            state.ElapsedTime = 0.1f; // still equipping
-            state.PlayerEntity.PendingHotbarSlot = 1;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Equipping, equipTime: 0.3f,
+                elapsedTime: 0.1f /* still equipping */, pendingSlot: 1);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -268,7 +232,7 @@ namespace Tests.EditMode
             state.PlayerEntity.SelectedHotbarSlot = -1;
             state.PlayerEntity.PendingHotbarSlot = 0;
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -289,7 +253,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon = null;
             state.PlayerEntity.SelectedHotbarSlot = -1;
             state.PlayerEntity.PendingHotbarSlot = -1;
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -303,7 +267,7 @@ namespace Tests.EditMode
         public void Tick_NullPlayer_DoesNotThrow()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
 
             Assert.DoesNotThrow(() => WeaponStateMachineSystem.Tick(state, in context));
         }
@@ -311,11 +275,8 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReadyNoPending_StaysReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Ready;
-            state.PlayerEntity.PendingHotbarSlot = -1;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Ready, pendingSlot: -1);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -325,14 +286,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_UnequippingNotDone_StaysUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Unequipping;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.UnequipTime = 0.2f;
-            state.ElapsedTime = 0.1f;
-            state.PlayerEntity.PendingHotbarSlot = 1;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Unequipping, unequipTime: 0.2f,
+                elapsedTime: 0.1f, pendingSlot: 1);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -341,29 +297,12 @@ namespace Tests.EditMode
 
         // ── Reloading tests ─────────────────────────────────────
 
-        static RaidContext CreateContextWithInput(FakeInputAdapter input, IRaidEvents events = null,
-            float deltaTime = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: input,
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
-
         [Test]
         public void Tick_ReloadingDone_TransitionsToReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Reloading;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.ReloadTime = 2.0f;
-            weapon.AmmoInMagazine = 0;
-            state.ElapsedTime = 2.5f;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Reloading, reloadTime: 2.0f,
+                elapsedTime: 2.5f, ammoInMag: 0);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -373,15 +312,10 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReloadingDone_FillsMagazine()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Reloading;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.ReloadTime = 2.0f;
-            weapon.AmmoInMagazine = 0;
-            state.ElapsedTime = 2.5f;
-            // Reserve ammo already in backpack from CreateStateWithPlayer (60 Ammo_Rifle)
-            var context = CreateContext();
+            // Reserve ammo already in backpack from CreateStateWithPlayer (60 Ammo_Rifle).
+            var (state, weapon) = Setup(phase: WeaponPhase.Reloading, reloadTime: 2.0f,
+                elapsedTime: 2.5f, ammoInMag: 0);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -391,15 +325,10 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReloadingDone_EmitsReloadFinished()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Reloading;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.ReloadTime = 2.0f;
-            weapon.AmmoInMagazine = 0;
-            state.ElapsedTime = 2.5f;
+            var (state, weapon) = Setup(phase: WeaponPhase.Reloading, reloadTime: 2.0f,
+                elapsedTime: 2.5f, ammoInMag: 0);
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -412,14 +341,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReloadingNotDone_StaysReloading()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Reloading;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.ReloadTime = 2.0f;
-            weapon.AmmoInMagazine = 0;
-            state.ElapsedTime = 1.0f; // only halfway
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Reloading, reloadTime: 2.0f,
+                elapsedTime: 1.0f /* halfway */, ammoInMag: 0);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -430,32 +354,22 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReloadingWithSwapIntent_InterruptsToUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Reloading;
-            weapon.PhaseStartTime = 0f;
-            weapon.Stats.ReloadTime = 2.0f;
-            weapon.AmmoInMagazine = 0;
-            state.ElapsedTime = 1.0f;
-            state.PlayerEntity.PendingHotbarSlot = 1;
-            var context = CreateContext();
+            var (state, weapon) = Setup(phase: WeaponPhase.Reloading, reloadTime: 2.0f,
+                elapsedTime: 1.0f, ammoInMag: 0, pendingSlot: 1);
+            var context = TestContextFactory.Create();
 
             WeaponStateMachineSystem.Tick(state, in context);
 
-            Assert.AreEqual(WeaponPhase.Unequipping, weapon.Phase,
-                "Swap should interrupt reload");
+            Assert.AreEqual(WeaponPhase.Unequipping, weapon.Phase, "Swap should interrupt reload");
         }
 
         [Test]
         public void Tick_ReadyWithReloadPressed_StartsReloading()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Ready;
-            weapon.AmmoInMagazine = 10; // not full
+            var (state, weapon) = Setup(phase: WeaponPhase.Ready, ammoInMag: 10); // not full
             var input = new FakeInputAdapter { ReloadPressed = true };
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContextWithInput(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -468,12 +382,9 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReadyWithReloadPressed_FullMag_StaysReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Ready;
-            weapon.AmmoInMagazine = 30; // full
+            var (state, weapon) = Setup(phase: WeaponPhase.Ready, ammoInMag: 30); // full
             var input = new FakeInputAdapter { ReloadPressed = true };
-            var context = CreateContextWithInput(input);
+            var context = TestContextFactory.Create(input);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -483,15 +394,12 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ReadyWithReloadPressed_NoReserve_StaysReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            weapon.Phase = WeaponPhase.Ready;
-            weapon.AmmoInMagazine = 10;
-            // Clear all reserve ammo
+            var (state, weapon) = Setup(phase: WeaponPhase.Ready, ammoInMag: 10);
+            // Clear all reserve ammo.
             for (int i = 0; i < InventoryState.BackpackSize; i++)
                 App.Instance.Player.Inventory.Backpack[i] = null;
             var input = new FakeInputAdapter { ReloadPressed = true };
-            var context = CreateContextWithInput(input);
+            var context = TestContextFactory.Create(input);
 
             WeaponStateMachineSystem.Tick(state, in context);
 
@@ -503,25 +411,21 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ChargingWithAttackJustReleased_CancelsToReady()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            var (state, weapon) = Setup(phase: WeaponPhase.Charging, phaseStart: 0.5f,
+                elapsedTime: 0.7f /* half-way through charge */);
+            var laserSO = WeaponBuilderTestFactory.MakeLaser(chargeTime: 1.0f);
             try
             {
                 weapon.PayloadDefinition = laserSO;
-                weapon.Phase = WeaponPhase.Charging;
-                weapon.PhaseStartTime = 0.5f;
                 weapon.ChargeStartTime = 0.5f;
-                state.ElapsedTime = 0.7f; // half-way through charge
                 var events = new RaidEventBuffer();
-                var input = new FakeInputAdapter { AttackJustReleased = true };
-                var context = CreateContextWithInput(input, events);
+                var context = TestContextFactory.Create(
+                    new FakeInputAdapter { AttackJustReleased = true }, events);
 
                 WeaponStateMachineSystem.Tick(state, in context);
 
                 Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
-                Assert.IsTrue(events.All.Any(e =>
-                    e.Type == RaidEventType.WeaponChargeCancelled),
+                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled),
                     "Cancelled event should fire on early release");
             }
             finally { Object.DestroyImmediate(laserSO); }
@@ -530,17 +434,14 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ChargingWithAttackHeld_StaysInCharging()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var weapon = state.PlayerEntity.EquippedWeapon;
-            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            var (state, weapon) = Setup(phase: WeaponPhase.Charging, elapsedTime: 0.3f);
+            var laserSO = WeaponBuilderTestFactory.MakeLaser(chargeTime: 1.0f);
             try
             {
                 weapon.PayloadDefinition = laserSO;
-                weapon.Phase = WeaponPhase.Charging;
                 weapon.ChargeStartTime = 0f;
-                state.ElapsedTime = 0.3f;
                 var input = new FakeInputAdapter { AttackPressed = true, AttackJustReleased = false };
-                var context = CreateContextWithInput(input);
+                var context = TestContextFactory.Create(input);
 
                 WeaponStateMachineSystem.Tick(state, in context);
 
@@ -553,19 +454,14 @@ namespace Tests.EditMode
         [Test]
         public void Tick_ChargingWithPendingSwap_CancelsChargeAndTransitionsToUnequipping()
         {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            var player = state.PlayerEntity;
-            var weapon = player.EquippedWeapon;
-            var laserSO = MakeLaserPayloadSO(chargeTime: 1.0f);
+            var (state, weapon) = Setup(phase: WeaponPhase.Charging, unequipTime: 0.2f,
+                elapsedTime: 0.3f, pendingSlot: 1);
+            var laserSO = WeaponBuilderTestFactory.MakeLaser(chargeTime: 1.0f);
             try
             {
                 weapon.PayloadDefinition = laserSO;
-                weapon.Phase = WeaponPhase.Charging;
-                weapon.Stats.UnequipTime = 0.2f;
-                player.PendingHotbarSlot = 1;
-                state.ElapsedTime = 0.3f;
                 var events = new RaidEventBuffer();
-                var context = CreateContextWithInput(new FakeInputAdapter(), events);
+                var context = TestContextFactory.Create(new FakeInputAdapter(), events);
 
                 WeaponStateMachineSystem.Tick(state, in context);
 
@@ -574,29 +470,6 @@ namespace Tests.EditMode
                 Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponUnequipStarted));
             }
             finally { Object.DestroyImmediate(laserSO); }
-        }
-
-        static LaserPayloadDefinition MakeLaserPayloadSO(float chargeTime)
-        {
-            var def = ScriptableObject.CreateInstance<LaserPayloadDefinition>();
-            var specific = new LaserSpecificStats[5];
-            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = chargeTime };
-            SetPrivateField(def, "_specificByTier", specific);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.DeclaredOnly);
-                if (field != null) { field.SetValue(target, value); return; }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
         }
     }
 }

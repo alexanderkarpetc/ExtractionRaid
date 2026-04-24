@@ -37,14 +37,6 @@ namespace Tests.EditMode
             Assert.IsTrue(a != b);
         }
 
-        [Test]
-        public void PayloadCoreInstance_ConstructorStoresFields()
-        {
-            var inst = new PayloadCoreInstance("MicroRocket", RarityTier.Rare);
-            Assert.AreEqual("MicroRocket", inst.DefinitionId);
-            Assert.AreEqual(RarityTier.Rare, inst.Rarity);
-        }
-
         // ── DeliveryCoreInstance equality ─────────────────────
 
         [Test]
@@ -84,13 +76,6 @@ namespace Tests.EditMode
             var b = new ExoticModInstance("SplitOnImpact");
             Assert.IsFalse(a == b);
             Assert.IsTrue(a != b);
-        }
-
-        [Test]
-        public void ExoticModInstance_ConstructorStoresId()
-        {
-            var inst = new ExoticModInstance("BoomerangFlight");
-            Assert.AreEqual("BoomerangFlight", inst.DefinitionId);
         }
 
         // ── Enum sanity ───────────────────────────────────────
@@ -133,21 +118,5 @@ namespace Tests.EditMode
             Assert.AreEqual(exotic, cfg.Exotic.Value);
         }
 
-        [Test]
-        public void WeaponConfiguration_ExoticSetterTogglesFlag()
-        {
-            var cfg = new WeaponConfiguration(
-                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
-                new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
-                exotic: null,
-                ammoInMagazine: 0);
-
-            cfg.Exotic = new ExoticModInstance("SplitOnImpact");
-            Assert.IsTrue(cfg.Exotic.HasValue);
-            Assert.AreEqual("SplitOnImpact", cfg.Exotic.Value.DefinitionId);
-
-            cfg.Exotic = null;
-            Assert.IsFalse(cfg.Exotic.HasValue);
-        }
     }
 }

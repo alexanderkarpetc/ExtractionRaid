@@ -1,6 +1,6 @@
-using System.Reflection;
 using NUnit.Framework;
 using State;
+using Tests.EditMode.Fakes;
 using UnityEngine;
 
 namespace Tests.EditMode
@@ -10,39 +10,15 @@ namespace Tests.EditMode
     {
         // ── Happy path ────────────────────────────────────────
 
-        [Test]
-        public void Compose_BallisticPistol_ReturnsTemplate()
+        // Template: "{payload.DisplayName} {delivery.FormFactor}" — D8.
+        [TestCase("Ballistic", "Pistol",  ExpectedResult = "Ballistic Pistol")]
+        [TestCase("Laser",     "Rifle",   ExpectedResult = "Laser Rifle")]
+        [TestCase("Foam",      "Shotgun", ExpectedResult = "Foam Shotgun")]
+        public string Compose_PayloadAndDelivery_ReturnsTemplate(string displayName, string formFactor)
         {
-            var payload  = MakePayload(displayName: "Ballistic");
-            var delivery = MakeDelivery(formFactor: "Pistol");
-            try
-            {
-                Assert.AreEqual("Ballistic Pistol", WeaponArchetypeLabel.Compose(payload, delivery));
-            }
-            finally { Cleanup(payload, delivery); }
-        }
-
-        [Test]
-        public void Compose_LaserRifle_ReturnsTemplate()
-        {
-            var payload  = MakePayload(displayName: "Laser");
-            var delivery = MakeDelivery(formFactor: "Rifle");
-            try
-            {
-                Assert.AreEqual("Laser Rifle", WeaponArchetypeLabel.Compose(payload, delivery));
-            }
-            finally { Cleanup(payload, delivery); }
-        }
-
-        [Test]
-        public void Compose_FoamShotgun_ReturnsTemplate()
-        {
-            var payload  = MakePayload(displayName: "Foam");
-            var delivery = MakeDelivery(formFactor: "Shotgun");
-            try
-            {
-                Assert.AreEqual("Foam Shotgun", WeaponArchetypeLabel.Compose(payload, delivery));
-            }
+            var payload  = MakePayload(displayName: displayName);
+            var delivery = MakeDelivery(formFactor: formFactor);
+            try   { return WeaponArchetypeLabel.Compose(payload, delivery); }
             finally { Cleanup(payload, delivery); }
         }
 
@@ -115,41 +91,11 @@ namespace Tests.EditMode
         // ── Helpers ───────────────────────────────────────────
 
         static BallisticPayloadDefinition MakePayload(string displayName)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_displayName", displayName);
-            return def;
-        }
+            => WeaponBuilderTestFactory.MakeBallistic(displayName: displayName);
 
         static DeliveryCoreDefinition MakeDelivery(string formFactor)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_formFactor", formFactor);
-            return def;
-        }
+            => WeaponBuilderTestFactory.MakeDelivery(formFactor: formFactor);
 
-        static void Cleanup(Object a, Object b)
-        {
-            Object.DestroyImmediate(a);
-            Object.DestroyImmediate(b);
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null)
-                {
-                    field.SetValue(target, value);
-                    return;
-                }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
-        }
+        static void Cleanup(Object a, Object b) => WeaponBuilderTestFactory.DestroyAll(a, b);
     }
 }

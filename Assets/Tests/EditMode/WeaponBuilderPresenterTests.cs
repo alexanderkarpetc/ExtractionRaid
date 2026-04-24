@@ -1,8 +1,7 @@
-using System.Collections.Generic;
-using System.Reflection;
 using Adapters;
 using NUnit.Framework;
 using State;
+using Tests.EditMode.Fakes;
 using UnityEngine;
 using View.UI.WeaponBuilder;
 
@@ -27,38 +26,27 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _ballistic = MakeBallistic("BallisticRound", "Ballistic", "Ammo_Rifle", new CommonPayloadStats
-            {
-                Damage = 15f, ProjectileSpeed = 25f, BasePenetration = 15f,
-            });
-            _singleAction = MakeDelivery("SingleAction", "Pistol", FiringPattern.Single, new DeliveryStats
-            {
-                FireInterval = 0.4f, MagazineSize = 12, ProjectilesPerShot = 1,
-            });
-            _auto = MakeDelivery("Auto", "Rifle", FiringPattern.Auto, new DeliveryStats
-            {
-                FireInterval = 0.2f, MagazineSize = 30, ProjectilesPerShot = 1,
-            });
+            _ballistic = WeaponBuilderTestFactory.MakeBallistic(
+                "BallisticRound", displayName: "Ballistic", ammoType: "Ammo_Rifle",
+                commonStats: new CommonPayloadStats { Damage = 15f, ProjectileSpeed = 25f, BasePenetration = 15f });
+            _singleAction = WeaponBuilderTestFactory.MakeDelivery(
+                "SingleAction", formFactor: "Pistol", pattern: FiringPattern.Single,
+                commonStats: new DeliveryStats { FireInterval = 0.4f, MagazineSize = 12, ProjectilesPerShot = 1 });
+            _auto = WeaponBuilderTestFactory.MakeDelivery(
+                "Auto", formFactor: "Rifle", pattern: FiringPattern.Auto,
+                commonStats: new DeliveryStats { FireInterval = 0.2f, MagazineSize = 30, ProjectilesPerShot = 1 });
 
-            _db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            _db.SetEntries(
-                new List<PayloadCoreDefinition>  { _ballistic },
-                new List<DeliveryCoreDefinition> { _singleAction, _auto },
-                new List<ExoticModDefinition>());
-
-            _registry = new DatabaseCoreDefinitionRegistry(_db);
+            _db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { _ballistic },
+                deliveries: new DeliveryCoreDefinition[] { _singleAction, _auto });
+            _registry  = WeaponBuilderTestFactory.MakeRegistry(_db);
             _inventory = new InventoryState();
-            _nextEId = 0;
+            _nextEId   = 0;
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Object.DestroyImmediate(_ballistic);
-            Object.DestroyImmediate(_singleAction);
-            Object.DestroyImmediate(_auto);
-            Object.DestroyImmediate(_db);
-        }
+        public void TearDown() =>
+            WeaponBuilderTestFactory.DestroyAll(_ballistic, _singleAction, _auto, _db);
 
         // ── Initial / default state ───────────────────────────
 
@@ -157,22 +145,12 @@ namespace Tests.EditMode
             p.SelectDelivery("SingleAction");
             p.ClearSelection();
 
-            Assert.AreEqual(3, callCount);
-        }
-
-        // ── CanBuild gating by inventory ──────────────────────
-
-        [Test]
-        public void FullBackpack_CanBuildFalseEvenWithValidSelection()
-        {
-            FillBackpack(_inventory);
-
-            var p = MakePresenter();
-            p.SelectPayload("BallisticRound");
-            p.SelectDelivery("SingleAction");
-
-            Assert.IsFalse(p.CanBuild, "Backpack full → can't build");
-            Assert.IsNotNull(p.PreviewStats, "Preview should still compose");
+            // At least one event per mutating call; exact count not asserted so internal
+            // refactors (e.g. a debounced preview recompute) don't break the test.
+            Assert.GreaterOrEqual(callCount, 3, "StateChanged should fire for each selection mutation");
+            Assert.IsFalse(p.State.HasPayload,  "ClearSelection should leave no payload");
+            Assert.IsFalse(p.State.HasDelivery, "ClearSelection should leave no delivery");
+            Assert.IsFalse(p.CanBuild);
         }
 
         // ── TryBuild commits to inventory ─────────────────────
@@ -226,7 +204,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void TryBuild_BackpackFull_FailsWithReason()
+        public void TryBuild_BackpackFull_FailsAndCanBuildFalse()
         {
             FillBackpack(_inventory);
 
@@ -234,8 +212,10 @@ namespace Tests.EditMode
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
 
-            bool built = p.TryBuild(out var reason);
+            Assert.IsFalse(p.CanBuild, "Backpack full → CanBuild is false");
+            Assert.IsNotNull(p.PreviewStats, "Preview should still compose");
 
+            bool built = p.TryBuild(out var reason);
             Assert.IsFalse(built);
             StringAssert.Contains("full", reason.ToLowerInvariant());
         }
@@ -246,46 +226,6 @@ namespace Tests.EditMode
         {
             for (int i = 0; i < InventoryState.BackpackSize; i++)
                 inv.Backpack[i] = ItemState.Create(new EId(1000 + i), "Medkit");
-        }
-
-        static BallisticPayloadDefinition MakeBallistic(string id, string displayName, string ammoType,
-            CommonPayloadStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_id",          id);
-            SetPrivateField(def, "_displayName", displayName);
-            SetPrivateField(def, "_ammoType",    ammoType);
-            var array = new CommonPayloadStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static DeliveryCoreDefinition MakeDelivery(string id, string formFactor, FiringPattern pattern,
-            DeliveryStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id",         id);
-            SetPrivateField(def, "_formFactor", formFactor);
-            SetPrivateField(def, "_pattern",    pattern);
-            var array = new DeliveryStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null) { field.SetValue(target, value); return; }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
         }
     }
 }

@@ -86,6 +86,7 @@ DevCheats provides runtime-tunable parameters via ScriptableObject assets.
 4. When adding a new section: create the SO class file, add `[SerializeField]` + property in `DevCheatsConfig.cs`, add accessors in `DevCheats.cs`, add `CreateSectionIfMissing` call in `DevCheatsWindow.CreateSectionAssets()`, add UI in `DevCheatsWindow.OnGUI()`.
 5. After adding/renaming sections, run `Window → Dev Cheats — Create Section Assets` to generate assets and apply migrated values.
 6. All gameplay-tunable parameters should go through DevCheats, not hardcoded constants.
+7. **Systems must not read `DevCheats.X` directly.** Tunable values go through `RaidContext.*Config` structs (`AimConfig`, `ShootingConfig`, …). `RaidSession.Tick` populates those from DevCheats when building the context. See `testing-and-workflow.md §1` for the testing rationale. Known latent violations (2026-04-24, flagged for refactor): `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem`.
 
 ## 7) Documentation sync
 

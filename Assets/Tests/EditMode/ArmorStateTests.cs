@@ -3,6 +3,11 @@ using State;
 
 namespace Tests.EditMode
 {
+    /// <summary>
+    /// Tests for <see cref="ArmorState"/> factory + derived properties. Sibling fixtures:
+    /// <see cref="ProjectileEntityStateTests"/> for projectile-level penetration carry,
+    /// <see cref="ItemDefinitionRegistryTests"/> for the core-items registry shape.
+    /// </summary>
     [TestFixture]
     public class ArmorStateTests
     {
@@ -73,109 +78,7 @@ namespace Tests.EditMode
             Assert.AreEqual(0f, armor.DurabilityPercent, 0.001f);
         }
 
-        // ── ArmorSlotState ────────────────────────────────────
-
-        [Test]
-        public void ArmorSlotState_DefaultSlotsAreNull()
-        {
-            var slots = new ArmorSlotState();
-            Assert.IsNull(slots.Helmet);
-            Assert.IsNull(slots.BodyArmor);
-        }
-
-        // ── Projectile carries Penetration ────────────────────
-
-        [Test]
-        public void ProjectileCreate_WithPenetration_CarriesValues()
-        {
-            var proj = ProjectileEntityState.Create(
-                new EId(1), new EId(2), default, default,
-                10f, 0f, 3f, 25f,
-                penetration: 45f, armorDamage: 12f);
-
-            Assert.AreEqual(45f, proj.Penetration, 0.001f);
-            Assert.AreEqual(12f, proj.ArmorDamage, 0.001f);
-        }
-
-        [Test]
-        public void ProjectileCreate_DefaultPenetration_Zero()
-        {
-            var proj = ProjectileEntityState.Create(
-                new EId(1), new EId(2), default, default,
-                10f, 0f, 3f, 25f);
-
-            Assert.AreEqual(0f, proj.Penetration, 0.001f);
-            Assert.AreEqual(0f, proj.ArmorDamage, 0.001f);
-        }
-
-        // ── ItemDefinition armor/ammo stats ───────────────────
-
-        [Test]
-        public void ItemDefinition_HelmetBasic_HasArmorStats()
-        {
-            var def = ItemDefinition.Get("Helmet_Basic");
-            Assert.IsNotNull(def);
-            Assert.Greater(def.ArmorPoints, 0f);
-            Assert.Greater(def.MaxDurability, 0f);
-        }
-
-        [Test]
-        public void ItemDefinition_ArmorBasic_HasArmorStats()
-        {
-            var def = ItemDefinition.Get("Armor_Basic");
-            Assert.IsNotNull(def);
-            Assert.Greater(def.ArmorPoints, 0f);
-            Assert.Greater(def.MaxDurability, 0f);
-        }
-
-        [Test]
-        public void ItemDefinition_AmmoRifle_HasPenetration()
-        {
-            var def = ItemDefinition.Get("Ammo_Rifle");
-            Assert.IsNotNull(def);
-            Assert.Greater(def.Penetration, 0f);
-        }
-
-        [Test]
-        public void ItemDefinition_AmmoRifleAP_HasHigherPenetration()
-        {
-            var standard = ItemDefinition.Get("Ammo_Rifle");
-            var ap = ItemDefinition.Get("Ammo_Rifle_AP");
-            Assert.Greater(ap.Penetration, standard.Penetration,
-                "AP ammo should have higher penetration than standard");
-        }
-
-        [Test]
-        public void ItemDefinition_AmmoRifleHP_HasBleedChance()
-        {
-            var def = ItemDefinition.Get("Ammo_Rifle_HP");
-            Assert.IsNotNull(def);
-            Assert.Greater(def.BleedChance, 0f, "HP ammo should have bleed chance");
-            Assert.AreEqual(0f, def.Penetration, 0.001f, "HP ammo should have zero penetration");
-        }
-
-        [Test]
-        public void ItemDefinition_HelmetBasic_HasArmorPrefabId()
-        {
-            var def = ItemDefinition.Get("Helmet_Basic");
-            Assert.IsNotNull(def.ArmorPrefabId, "Helmet should have ArmorPrefabId for visual");
-        }
-
-        [Test]
-        public void ItemDefinition_ArmorBasic_HasArmorPrefabId()
-        {
-            var def = ItemDefinition.Get("Armor_Basic");
-            Assert.IsNotNull(def.ArmorPrefabId, "Body armor should have ArmorPrefabId for visual");
-        }
-
-        [Test]
-        public void ItemDefinition_StandardAmmo_NoBleedChance()
-        {
-            var def = ItemDefinition.Get("Ammo_Rifle");
-            Assert.AreEqual(0f, def.BleedChance, 0.001f, "Standard ammo should have no bleed");
-        }
-
-        // ── RaidState.ArmorMap ────────────────────────────────
+        // ── RaidState.ArmorMap (lives here because it's an armor-related field) ──
 
         [Test]
         public void RaidState_Create_HasArmorMap()

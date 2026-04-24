@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Reflection;
 using Adapters;
 using NUnit.Framework;
 using State;
@@ -39,54 +37,52 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _ballistic = MakeBallistic("BallisticRound", "Ballistic", "Ammo_Rifle", new CommonPayloadStats
-            {
-                Damage                   = 15f,
-                ProjectileSpeed          = 25f,
-                ProjectileLifetime       = 2.5f,
-                HeadshotDamageMultiplier = 2.0f,
-                BasePenetration          = 15f,
-                BaseArmorDamage          = 5f,
-            });
-            _singleAction = MakeDelivery("SingleAction", "Pistol", FiringPattern.Single, new DeliveryStats
-            {
-                FireInterval       = 0.4f,
-                ProjectilesPerShot = 1,
-                ConeHalfAngle      = 35f,
-                MagazineSize       = 12,
-                ReloadTime         = 1.5f,
-                EquipTime          = 0.2f,
-            });
-            _auto = MakeDelivery("Auto", "Rifle", FiringPattern.Auto, new DeliveryStats
-            {
-                FireInterval       = 0.2f,
-                ProjectilesPerShot = 1,
-                ConeHalfAngle      = 45f,
-                MagazineSize       = 30,
-                ReloadTime         = 2.0f,
-                EquipTime          = 0.3f,
-            });
+            _ballistic = WeaponBuilderTestFactory.MakeBallistic(
+                "BallisticRound", displayName: "Ballistic", ammoType: "Ammo_Rifle",
+                commonStats: new CommonPayloadStats
+                {
+                    Damage                   = 15f,
+                    ProjectileSpeed          = 25f,
+                    ProjectileLifetime       = 2.5f,
+                    HeadshotDamageMultiplier = 2.0f,
+                    BasePenetration          = 15f,
+                    BaseArmorDamage          = 5f,
+                });
+            _singleAction = WeaponBuilderTestFactory.MakeDelivery(
+                "SingleAction", formFactor: "Pistol", pattern: FiringPattern.Single,
+                commonStats: new DeliveryStats
+                {
+                    FireInterval       = 0.4f,
+                    ProjectilesPerShot = 1,
+                    ConeHalfAngle      = 35f,
+                    MagazineSize       = 12,
+                    ReloadTime         = 1.5f,
+                    EquipTime          = 0.2f,
+                });
+            _auto = WeaponBuilderTestFactory.MakeDelivery(
+                "Auto", formFactor: "Rifle", pattern: FiringPattern.Auto,
+                commonStats: new DeliveryStats
+                {
+                    FireInterval       = 0.2f,
+                    ProjectilesPerShot = 1,
+                    ConeHalfAngle      = 45f,
+                    MagazineSize       = 30,
+                    ReloadTime         = 2.0f,
+                    EquipTime          = 0.3f,
+                });
 
-            _db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            _db.SetEntries(
-                new List<PayloadCoreDefinition>  { _ballistic },
-                new List<DeliveryCoreDefinition> { _singleAction, _auto },
-                new List<ExoticModDefinition>());
-
-            _registry  = new DatabaseCoreDefinitionRegistry(_db);
+            _db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { _ballistic },
+                deliveries: new DeliveryCoreDefinition[] { _singleAction, _auto });
+            _registry  = WeaponBuilderTestFactory.MakeRegistry(_db);
             _inventory = new InventoryState();
             _events    = new FakeRaidEvents();
             _nextEId   = 0;
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Object.DestroyImmediate(_ballistic);
-            Object.DestroyImmediate(_singleAction);
-            Object.DestroyImmediate(_auto);
-            Object.DestroyImmediate(_db);
-        }
+        public void TearDown() =>
+            WeaponBuilderTestFactory.DestroyAll(_ballistic, _singleAction, _auto, _db);
 
         // ── Core vertical slice: build → equip → runtime state ─
 
@@ -235,46 +231,5 @@ namespace Tests.EditMode
             Assert.AreEqual(30, runtime.Stats.MagazineSize);
         }
 
-        // ── Helpers ───────────────────────────────────────────
-
-        static BallisticPayloadDefinition MakeBallistic(string id, string displayName, string ammoType,
-            CommonPayloadStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_id",          id);
-            SetPrivateField(def, "_displayName", displayName);
-            SetPrivateField(def, "_ammoType",    ammoType);
-            var array = new CommonPayloadStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static DeliveryCoreDefinition MakeDelivery(string id, string formFactor, FiringPattern pattern,
-            DeliveryStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id",         id);
-            SetPrivateField(def, "_formFactor", formFactor);
-            SetPrivateField(def, "_pattern",    pattern);
-            var array = new DeliveryStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null) { field.SetValue(target, value); return; }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
-        }
     }
 }

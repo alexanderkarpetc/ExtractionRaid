@@ -12,6 +12,23 @@ Test systems with synthetic state, fake adapters/ports, deterministic RNG, event
 
 **MUST: no DevCheats in systems under test.** Systems read tuning values from `RaidContext` config structs (`AimConfig`, `ShootingConfig`, etc.), never from `DevCheats.*` directly. Tests use `XxxConfig.Default`; production code (`RaidSession`) populates structs from `DevCheats`. New DevCheats-dependent logic → add field to config struct → wire in `RaidSession.Tick()`.
 
+### Pre-test architectural audit
+
+Before writing/extending tests for a system, grep for two red flags:
+
+1. **`DevCheats.X` reads** — violates the rule above. Tests pass via default alignment but silently diverge from production on toggle. Refactor through a `RaidContext.*Config` struct before writing tests. Known-violating systems: `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem` (2026-04-24, see `docs/ai/tests-review.md`).
+2. **Direct Unity API calls** in `Tick` — `Physics.*`, `Time.*`, `GameObject.Find`, `Resources.Load`, etc. Violates architecture rule 9. Fake adapters get bypassed → semi-deterministic tests. Route through an adapter port first.
+
+If a violation is found, fix the architecture before adding coverage — otherwise new tests lock in false-green behaviour.
+
+### Common test-hygiene pitfalls
+
+- **Save+restore static state.** Tests mutating `DevCheats.X`, `App.Instance` fields, any module-level static must snapshot in `SetUp` and restore in `TearDown` — else the next fixture inherits altered state. See `PlayerFOVSystemTests` for the pattern.
+- **One fixture = one subject.** `XxxTests.cs` tests `Xxx` only. When drifting into adjacent subjects, split into sibling fixtures.
+- **Extract shared helpers on the second copy**, not the fifth. Second occurrence of an SO factory / context builder / scenario setup → move into `Assets/Tests/EditMode/Fakes/` (see `TestContextFactory`, `WeaponBuilderTestFactory`).
+- **Prefer `[TestCase]` when 3+ tests differ only by input.** Stop when the body diverges. Skip tests for compiler guarantees (reference-field-null-default, `readonly struct` constructor copies).
+- **Assert end-state, not exact counts**, on observables that can churn (event callbacks, adapter call counts). `GreaterOrEqual(N)` + `Assert.IsFalse(state.HasX)` is resilient; `AreEqual(3, callCount)` is not.
+
 ### Integration tests (PlayMode)
 Only for Unity integration: navmesh validation, bullet collisions, spawn/extraction triggers, launch flow wiring.
 

@@ -1,6 +1,5 @@
 using Systems;
 using NUnit.Framework;
-using Session;
 using State;
 using Tests.EditMode.Fakes;
 using UnityEngine;
@@ -10,23 +9,13 @@ namespace Tests.EditMode
     [TestFixture]
     public class MovementSystemTests
     {
-        static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: new FakeRaidEvents(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: input,
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         [Test]
         public void Tick_WithForwardInput_MovesPlayerAlongPositiveZ()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             MovementSystem.Tick(state, in context);
 
@@ -40,7 +29,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = Vector2.right };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             MovementSystem.Tick(state, in context);
 
@@ -54,7 +43,7 @@ namespace Tests.EditMode
             var startPos = new Vector3(5f, 0f, 3f);
             var state = EditModeTestsUtils.CreateStateWithPlayer(startPos);
             var input = new FakeInputAdapter { MoveInput = Vector2.zero };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             MovementSystem.Tick(state, in context);
 
@@ -67,7 +56,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = new Vector2(1f, 1f) };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             MovementSystem.Tick(state, in context);
 
@@ -80,7 +69,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
-            var context = CreateContext(input, deltaTime: 0.5f);
+            var context = TestContextFactory.Create(input, deltaTime: 0.5f);
 
             MovementSystem.Tick(state, in context);
 
@@ -92,7 +81,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = Vector2.right };
-            var context = CreateContext(input, deltaTime: 1f / 60f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
 
             MovementSystem.Tick(state, in context);
 
@@ -105,7 +94,7 @@ namespace Tests.EditMode
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             Assert.DoesNotThrow(() => MovementSystem.Tick(state, in context));
         }
@@ -115,7 +104,7 @@ namespace Tests.EditMode
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var input = new FakeInputAdapter { MoveInput = Vector2.up };
-            var context = CreateContext(input, deltaTime: 1f);
+            var context = TestContextFactory.Create(input, deltaTime: 1f);
 
             MovementSystem.Tick(state, in context);
             MovementSystem.Tick(state, in context);

@@ -1,9 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Adapters;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems;
 using Tests.EditMode.Fakes;
@@ -42,35 +39,39 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _ballistic = MakeBallistic("BallisticRound", "Ballistic", "Ammo_Rifle");
-            _laser     = MakeLaser(chargeTime: LaserChargeTime);
+            var payloadStats = new CommonPayloadStats
+            {
+                Damage = 15f, ProjectileSpeed = 25f, ProjectileLifetime = 2.5f,
+                HeadshotDamageMultiplier = 2f, BasePenetration = 15f, BaseArmorDamage = 5f,
+            };
+            _ballistic = WeaponBuilderTestFactory.MakeBallistic(
+                "BallisticRound", displayName: "Ballistic", ammoType: "Ammo_Rifle",
+                commonStats: payloadStats);
+            _laser = WeaponBuilderTestFactory.MakeLaser(
+                "LaserCharge", displayName: "Laser", ammoType: "Ammo_EnergyCell",
+                commonStats: new CommonPayloadStats
+                {
+                    Damage = 25f, ProjectileSpeed = 50f, ProjectileLifetime = 3f,
+                    HeadshotDamageMultiplier = 2f, BasePenetration = 25f, BaseArmorDamage = 8f,
+                },
+                chargeTime: LaserChargeTime);
             _singleAction = MakeDelivery("SingleAction", "Pistol", FiringPattern.Single, magazine: 12);
             _auto         = MakeDelivery("Auto",         "Rifle",  FiringPattern.Auto,   magazine: 30);
             _scatter      = MakeDelivery("Scatter",      "Shotgun", FiringPattern.Scatter, magazine: 5,
                 projectilesPerShot: 7);
 
-            _db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            _db.SetEntries(
-                new List<PayloadCoreDefinition>  { _ballistic, _laser },
-                new List<DeliveryCoreDefinition> { _singleAction, _auto, _scatter },
-                new List<ExoticModDefinition>());
-
-            _registry  = new DatabaseCoreDefinitionRegistry(_db);
+            _db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { _ballistic, _laser },
+                deliveries: new DeliveryCoreDefinition[] { _singleAction, _auto, _scatter });
+            _registry  = WeaponBuilderTestFactory.MakeRegistry(_db);
             _inventory = new InventoryState();
             _events    = new FakeRaidEvents();
             _nextEId   = 0;
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Object.DestroyImmediate(_ballistic);
-            Object.DestroyImmediate(_laser);
-            Object.DestroyImmediate(_singleAction);
-            Object.DestroyImmediate(_auto);
-            Object.DestroyImmediate(_scatter);
-            Object.DestroyImmediate(_db);
-        }
+        public void TearDown() =>
+            WeaponBuilderTestFactory.DestroyAll(_ballistic, _laser, _singleAction, _auto, _scatter, _db);
 
         // ── Build → resolver detects charge-up requirement ───
 
@@ -132,7 +133,7 @@ namespace Tests.EditMode
 
             var input = new FakeInputAdapter { AttackPressed = true };
             var events = new RaidEventBuffer();
-            var context = MakeContext(input, events);
+            var context = TestContextFactory.Create(input, events);
 
             ShootingSystem.Tick(state, in context);
 
@@ -150,7 +151,7 @@ namespace Tests.EditMode
             // Tick 1: enter Charging
             var input  = new FakeInputAdapter { AttackPressed = true };
             var events = new RaidEventBuffer();
-            var context = MakeContext(input, events);
+            var context = TestContextFactory.Create(input, events);
             state.ElapsedTime = 0f;
             ShootingSystem.Tick(state, in context);
             Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
@@ -171,7 +172,7 @@ namespace Tests.EditMode
             var weapon = state.PlayerEntity.EquippedWeapon;
 
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = MakeContext(input);
+            var context = TestContextFactory.Create(input);
             state.ElapsedTime = 0f;
             ShootingSystem.Tick(state, in context); // Charging
 
@@ -190,15 +191,15 @@ namespace Tests.EditMode
 
             // Start charge
             var startInput = new FakeInputAdapter { AttackPressed = true };
-            var ctx  = MakeContext(startInput);
+            var ctx  = TestContextFactory.Create(startInput);
             ShootingSystem.Tick(state, in ctx);
             Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
 
             // Now release
-            state.ElapsedTime = 0.4f; // half-way
+            state.ElapsedTime = 0.4f; // 40% into the 1s charge — release before completion
             var releaseInput = new FakeInputAdapter { AttackPressed = false, AttackJustReleased = true };
             var events = new RaidEventBuffer();
-            ctx = MakeContext(releaseInput, events);
+            ctx = TestContextFactory.Create(releaseInput, events);
             WeaponStateMachineSystem.Tick(state, in ctx);
 
             Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
@@ -238,87 +239,19 @@ namespace Tests.EditMode
             return state;
         }
 
-        static RaidContext MakeContext(FakeInputAdapter input, IRaidEvents events = null)
-        {
-            return new RaidContext(
-                deltaTime: 1f / 60f,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = 1f / 60f },
-                input: input,
-                navMesh: new FakeNavMeshAdapter());
-        }
-
-        // ── SO factories ──────────────────────────────────────
-
-        static BallisticPayloadDefinition MakeBallistic(string id, string displayName, string ammoType)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_id",          id);
-            SetPrivateField(def, "_displayName", displayName);
-            SetPrivateField(def, "_ammoType",    ammoType);
-            var array = new CommonPayloadStats[5];
-            array[(int)RarityTier.Common] = new CommonPayloadStats
-            {
-                Damage = 15f, ProjectileSpeed = 25f, ProjectileLifetime = 2.5f,
-                HeadshotDamageMultiplier = 2f, BasePenetration = 15f, BaseArmorDamage = 5f,
-            };
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static LaserPayloadDefinition MakeLaser(float chargeTime)
-        {
-            var def = ScriptableObject.CreateInstance<LaserPayloadDefinition>();
-            SetPrivateField(def, "_id",          "LaserCharge");
-            SetPrivateField(def, "_displayName", "Laser");
-            SetPrivateField(def, "_ammoType",    "Ammo_EnergyCell");
-            var stats = new CommonPayloadStats[5];
-            stats[(int)RarityTier.Common] = new CommonPayloadStats
-            {
-                Damage = 25f, ProjectileSpeed = 50f, ProjectileLifetime = 3f,
-                HeadshotDamageMultiplier = 2f, BasePenetration = 25f, BaseArmorDamage = 8f,
-            };
-            SetPrivateField(def, "_statsByTier", stats);
-
-            var specific = new LaserSpecificStats[5];
-            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = chargeTime };
-            SetPrivateField(def, "_specificByTier", specific);
-            return def;
-        }
+        // ── Delivery-specific helper (keeps fixture-local defaults for magazine etc.) ─
 
         static DeliveryCoreDefinition MakeDelivery(
             string id, string formFactor, FiringPattern pattern, int magazine, int projectilesPerShot = 1)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id",         id);
-            SetPrivateField(def, "_formFactor", formFactor);
-            SetPrivateField(def, "_pattern",    pattern);
-            var array = new DeliveryStats[5];
-            array[(int)RarityTier.Common] = new DeliveryStats
-            {
-                FireInterval       = 0.2f,
-                ProjectilesPerShot = projectilesPerShot,
-                SpreadAngle        = projectilesPerShot > 1 ? 30f : 0f,
-                ConeHalfAngle      = 45f,
-                MagazineSize       = magazine,
-                ReloadTime         = 2f,
-            };
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null) { field.SetValue(target, value); return; }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
-        }
+            => WeaponBuilderTestFactory.MakeDelivery(id, formFactor: formFactor, pattern: pattern,
+                commonStats: new DeliveryStats
+                {
+                    FireInterval       = 0.2f,
+                    ProjectilesPerShot = projectilesPerShot,
+                    SpreadAngle        = projectilesPerShot > 1 ? 30f : 0f,
+                    ConeHalfAngle      = 45f,
+                    MagazineSize       = magazine,
+                    ReloadTime         = 2f,
+                });
     }
 }

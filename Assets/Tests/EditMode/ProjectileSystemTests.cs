@@ -2,7 +2,6 @@ using System.Linq;
 using Adapters;
 using Systems;
 using NUnit.Framework;
-using Session;
 using State;
 using Tests.EditMode.Fakes;
 using UnityEngine;
@@ -12,16 +11,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class ProjectileSystemTests
     {
-        static RaidContext CreateContext(float deltaTime = 1f / 60f, IRaidEvents events = null)
-        {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         static ProjectileEntityState CreateProjectile(
             RaidState state, Vector3 position, Vector3 direction,
@@ -40,7 +29,7 @@ namespace Tests.EditMode
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
-            var context = CreateContext(deltaTime: 1f);
+            var context = TestContextFactory.Create(deltaTime: 1f);
 
             ProjectileSystem.Tick(state, in context);
 
@@ -53,7 +42,7 @@ namespace Tests.EditMode
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 5f);
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 15f);
-            var context = CreateContext(deltaTime: 1f);
+            var context = TestContextFactory.Create(deltaTime: 1f);
 
             ProjectileSystem.Tick(state, in context);
 
@@ -66,7 +55,7 @@ namespace Tests.EditMode
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
-            var context = CreateContext(deltaTime: 0.5f);
+            var context = TestContextFactory.Create(deltaTime: 0.5f);
 
             ProjectileSystem.Tick(state, in context);
 
@@ -79,7 +68,7 @@ namespace Tests.EditMode
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             state.ElapsedTime = 4f;
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
 
             ProjectileSystem.Tick(state, in context);
 
@@ -93,7 +82,7 @@ namespace Tests.EditMode
             state.ElapsedTime = 4f;
             var proj = CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var eventBuffer = new RaidEventBuffer();
-            var context = CreateContext(events: eventBuffer);
+            var context = TestContextFactory.Create(events: eventBuffer);
 
             ProjectileSystem.Tick(state, in context);
 
@@ -109,7 +98,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, speed: 10f);
             CreateProjectile(state, Vector3.zero, Vector3.right, speed: 10f);
             CreateProjectile(state, Vector3.zero, Vector3.left, speed: 10f);
-            var context = CreateContext(deltaTime: 1f);
+            var context = TestContextFactory.Create(deltaTime: 1f);
 
             ProjectileSystem.Tick(state, in context);
 
@@ -123,7 +112,7 @@ namespace Tests.EditMode
         public void Tick_EmptyList_DoesNotThrow()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
 
             Assert.DoesNotThrow(() => ProjectileSystem.Tick(state, in context));
         }
@@ -135,7 +124,7 @@ namespace Tests.EditMode
             state.ElapsedTime = 4f;
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 3f);
             var alive = CreateProjectile(state, Vector3.zero, Vector3.right, spawnTime: 3f, lifetime: 3f);
-            var context = CreateContext();
+            var context = TestContextFactory.Create();
 
             ProjectileSystem.Tick(state, in context);
 
@@ -151,7 +140,7 @@ namespace Tests.EditMode
             CreateProjectile(state, Vector3.zero, Vector3.forward, spawnTime: 0f, lifetime: 1f);
             var alive = CreateProjectile(state, Vector3.zero, Vector3.right, spawnTime: 4f, lifetime: 3f);
             CreateProjectile(state, Vector3.zero, Vector3.left, spawnTime: 0f, lifetime: 2f);
-            var context = CreateContext(deltaTime: 1f);
+            var context = TestContextFactory.Create(deltaTime: 1f);
 
             ProjectileSystem.Tick(state, in context);
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Adapters;
 using NUnit.Framework;
 using State;
+using Tests.EditMode.Fakes;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -10,70 +11,60 @@ namespace Tests.EditMode
     [TestFixture]
     public class CoreDefinitionRegistryTests
     {
-        CoreDefinitionDatabase _db;
-        BallisticPayloadDefinition _ballistic;
-        LaserPayloadDefinition     _laser;
-        DeliveryCoreDefinition     _single;
-        DeliveryCoreDefinition     _auto;
-        ExoticModDefinition        _ricochet;
+        CoreDefinitionDatabase      _db;
+        BallisticPayloadDefinition  _ballistic;
+        LaserPayloadDefinition      _laser;
+        DeliveryCoreDefinition      _single;
+        DeliveryCoreDefinition      _auto;
+        ExoticModDefinition         _ricochet;
+        ICoreDefinitionRegistry     _registry;
 
         [SetUp]
         public void SetUp()
         {
-            _ballistic = MakePayload<BallisticPayloadDefinition>("BallisticRound");
-            _laser     = MakePayload<LaserPayloadDefinition>("LaserCharge");
-            _single    = MakeDelivery("SingleAction");
-            _auto      = MakeDelivery("Auto");
-            _ricochet  = MakeExotic("Ricochet");
+            _ballistic = WeaponBuilderTestFactory.MakeBallistic("BallisticRound");
+            _laser     = WeaponBuilderTestFactory.MakeLaser("LaserCharge");
+            _single    = WeaponBuilderTestFactory.MakeDelivery("SingleAction");
+            _auto      = WeaponBuilderTestFactory.MakeDelivery("Auto");
+            _ricochet  = WeaponBuilderTestFactory.MakeExotic("Ricochet");
 
-            _db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            _db.SetEntries(
-                new List<PayloadCoreDefinition>  { _ballistic, _laser },
-                new List<DeliveryCoreDefinition> { _single, _auto },
-                new List<ExoticModDefinition>    { _ricochet });
+            _db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { _ballistic, _laser },
+                deliveries: new DeliveryCoreDefinition[] { _single, _auto },
+                exotics:    new[]                         { _ricochet });
+            _registry = WeaponBuilderTestFactory.MakeRegistry(_db);
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Object.DestroyImmediate(_ballistic);
-            Object.DestroyImmediate(_laser);
-            Object.DestroyImmediate(_single);
-            Object.DestroyImmediate(_auto);
-            Object.DestroyImmediate(_ricochet);
-            Object.DestroyImmediate(_db);
-        }
+        public void TearDown() =>
+            WeaponBuilderTestFactory.DestroyAll(_ballistic, _laser, _single, _auto, _ricochet, _db);
 
         // ── Payload lookups ───────────────────────────────────
 
         [Test]
         public void GetPayload_ExistingId_ReturnsDefinition()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.AreSame(_ballistic, registry.GetPayload("BallisticRound"));
-            Assert.AreSame(_laser,     registry.GetPayload("LaserCharge"));
+            Assert.AreSame(_ballistic, _registry.GetPayload("BallisticRound"));
+            Assert.AreSame(_laser,     _registry.GetPayload("LaserCharge"));
         }
 
         [Test]
         public void GetPayload_MissingId_Throws()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.Throws<KeyNotFoundException>(() => registry.GetPayload("MicroRocket"));
+            Assert.Throws<KeyNotFoundException>(() => _registry.GetPayload("MicroRocket"));
         }
 
         [Test]
         public void TryGetPayload_ExistingId_ReturnsTrue()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.IsTrue(registry.TryGetPayload("BallisticRound", out var def));
+            Assert.IsTrue(_registry.TryGetPayload("BallisticRound", out var def));
             Assert.AreSame(_ballistic, def);
         }
 
         [Test]
         public void TryGetPayload_MissingId_ReturnsFalseAndNull()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.IsFalse(registry.TryGetPayload("Nonexistent", out var def));
+            Assert.IsFalse(_registry.TryGetPayload("Nonexistent", out var def));
             Assert.IsNull(def);
         }
 
@@ -82,16 +73,14 @@ namespace Tests.EditMode
         [Test]
         public void GetDelivery_ExistingId_ReturnsDefinition()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.AreSame(_single, registry.GetDelivery("SingleAction"));
-            Assert.AreSame(_auto,   registry.GetDelivery("Auto"));
+            Assert.AreSame(_single, _registry.GetDelivery("SingleAction"));
+            Assert.AreSame(_auto,   _registry.GetDelivery("Auto"));
         }
 
         [Test]
         public void GetDelivery_MissingId_Throws()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.Throws<KeyNotFoundException>(() => registry.GetDelivery("Scatter"));
+            Assert.Throws<KeyNotFoundException>(() => _registry.GetDelivery("Scatter"));
         }
 
         // ── Exotic lookups ────────────────────────────────────
@@ -99,15 +88,13 @@ namespace Tests.EditMode
         [Test]
         public void GetExotic_ExistingId_ReturnsDefinition()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.AreSame(_ricochet, registry.GetExotic("Ricochet"));
+            Assert.AreSame(_ricochet, _registry.GetExotic("Ricochet"));
         }
 
         [Test]
         public void TryGetExotic_MissingId_ReturnsFalse()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            Assert.IsFalse(registry.TryGetExotic("SplitOnImpact", out var def));
+            Assert.IsFalse(_registry.TryGetExotic("SplitOnImpact", out var def));
             Assert.IsNull(def);
         }
 
@@ -116,8 +103,7 @@ namespace Tests.EditMode
         [Test]
         public void AllPayloads_ReturnsAllRegisteredDefinitions()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            var all = registry.AllPayloads;
+            var all = _registry.AllPayloads;
             Assert.AreEqual(2, all.Count);
             Assert.Contains(_ballistic, (System.Collections.ICollection)all);
             Assert.Contains(_laser,     (System.Collections.ICollection)all);
@@ -126,8 +112,7 @@ namespace Tests.EditMode
         [Test]
         public void AllDeliveries_ReturnsAllRegisteredDefinitions()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            var all = registry.AllDeliveries;
+            var all = _registry.AllDeliveries;
             Assert.AreEqual(2, all.Count);
             Assert.Contains(_single, (System.Collections.ICollection)all);
             Assert.Contains(_auto,   (System.Collections.ICollection)all);
@@ -136,8 +121,7 @@ namespace Tests.EditMode
         [Test]
         public void AllExotics_ReturnsAllRegisteredDefinitions()
         {
-            var registry = new DatabaseCoreDefinitionRegistry(_db);
-            var all = registry.AllExotics;
+            var all = _registry.AllExotics;
             Assert.AreEqual(1, all.Count);
             Assert.AreSame(_ricochet, all[0]);
         }
@@ -151,63 +135,67 @@ namespace Tests.EditMode
                 () => new DatabaseCoreDefinitionRegistry(null));
         }
 
-        // ── Duplicate handling ────────────────────────────────
+        // ── Duplicate handling (parameterized across all 3 categories) ──
 
-        [Test]
-        public void DuplicatePayloadIds_LogWarningAndLastWins()
+        public enum DupKind { Payload, Delivery, Exotic }
+
+        [TestCase(DupKind.Payload,  "Duplicate payload id")]
+        [TestCase(DupKind.Delivery, "Duplicate delivery id")]
+        [TestCase(DupKind.Exotic,   "Duplicate exotic id")]
+        public void DuplicateIds_LogWarningAndLastWins(DupKind kind, string expectedWarning)
         {
-            var duplicate = MakePayload<BallisticPayloadDefinition>("BallisticRound");
+            // Build a fresh DB per case — register one original + one duplicate with the
+            // same id, then assert: warning logged, index resolves to the last occurrence.
+            ScriptableObject dup = null;
+            var payloads   = new List<PayloadCoreDefinition>();
+            var deliveries = new List<DeliveryCoreDefinition>();
+            var exotics    = new List<ExoticModDefinition>();
             try
             {
-                _db.SetEntries(
-                    new List<PayloadCoreDefinition>  { _ballistic, duplicate },
-                    new List<DeliveryCoreDefinition> { _single },
-                    new List<ExoticModDefinition>());
+                switch (kind)
+                {
+                    case DupKind.Payload:
+                        var dupPayload = WeaponBuilderTestFactory.MakeBallistic("BallisticRound");
+                        dup = dupPayload;
+                        payloads.Add(_ballistic);
+                        payloads.Add(dupPayload);
+                        break;
+                    case DupKind.Delivery:
+                        var dupDelivery = WeaponBuilderTestFactory.MakeDelivery("SingleAction");
+                        dup = dupDelivery;
+                        deliveries.Add(_single);
+                        deliveries.Add(dupDelivery);
+                        break;
+                    case DupKind.Exotic:
+                        var dupExotic = WeaponBuilderTestFactory.MakeExotic("Ricochet");
+                        dup = dupExotic;
+                        exotics.Add(_ricochet);
+                        exotics.Add(dupExotic);
+                        break;
+                }
 
-                LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("Duplicate payload id"));
+                _db.SetEntries(payloads, deliveries, exotics);
+
+                LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex(expectedWarning));
                 var registry = new DatabaseCoreDefinitionRegistry(_db);
-                Assert.AreSame(duplicate, registry.GetPayload("BallisticRound"));
+
+                switch (kind)
+                {
+                    case DupKind.Payload:
+                        Assert.AreSame(dup, registry.GetPayload("BallisticRound"));
+                        break;
+                    case DupKind.Delivery:
+                        Assert.AreSame(dup, registry.GetDelivery("SingleAction"));
+                        break;
+                    case DupKind.Exotic:
+                        Assert.AreSame(dup, registry.GetExotic("Ricochet"));
+                        break;
+                }
             }
             finally
             {
-                Object.DestroyImmediate(duplicate);
+                if (dup != null) Object.DestroyImmediate(dup);
             }
-        }
-
-        // ── Helpers ───────────────────────────────────────────
-
-        static T MakePayload<T>(string id) where T : PayloadCoreDefinition
-        {
-            var def = ScriptableObject.CreateInstance<T>();
-            SetPrivateField(def, "_id", id);
-            return def;
-        }
-
-        static DeliveryCoreDefinition MakeDelivery(string id)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id", id);
-            return def;
-        }
-
-        static ExoticModDefinition MakeExotic(string id)
-        {
-            var def = ScriptableObject.CreateInstance<ExoticModDefinition>();
-            SetPrivateField(def, "_id", id);
-            return def;
-        }
-
-        static void SetPrivateField(object obj, string fieldName, object value)
-        {
-            var field = obj.GetType().GetField(
-                fieldName,
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            if (field == null && obj.GetType().BaseType != null)
-                field = obj.GetType().BaseType.GetField(
-                    fieldName,
-                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            Assert.NotNull(field, $"Field '{fieldName}' not found on {obj.GetType()}");
-            field.SetValue(obj, value);
         }
     }
 }

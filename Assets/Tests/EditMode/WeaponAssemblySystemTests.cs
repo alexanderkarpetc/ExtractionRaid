@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-using System.Reflection;
 using Adapters;
 using NUnit.Framework;
 using State;
 using Systems;
-using UnityEngine;
+using Tests.EditMode.Fakes;
 
 namespace Tests.EditMode
 {
@@ -19,29 +17,23 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
-            _ballistic = MakeBallistic("BallisticRound",
-                new CommonPayloadStats { Damage = 15f, ProjectileSpeed = 25f });
-            _single = MakeDelivery("SingleAction",
-                new DeliveryStats { FireInterval = 0.4f, MagazineSize = 12 });
-            _ricochet = MakeExotic("Ricochet");
+            _ballistic = WeaponBuilderTestFactory.MakeBallistic("BallisticRound",
+                commonStats: new CommonPayloadStats { Damage = 15f, ProjectileSpeed = 25f });
+            _single = WeaponBuilderTestFactory.MakeDelivery("SingleAction",
+                commonStats: new DeliveryStats { FireInterval = 0.4f, MagazineSize = 12 });
+            _ricochet = WeaponBuilderTestFactory.MakeExotic("Ricochet");
 
-            _db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
-            _db.SetEntries(
-                new List<PayloadCoreDefinition>  { _ballistic },
-                new List<DeliveryCoreDefinition> { _single },
-                new List<ExoticModDefinition>    { _ricochet });
+            _db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { _ballistic },
+                deliveries: new DeliveryCoreDefinition[] { _single },
+                exotics:    new[]                         { _ricochet });
         }
 
         [TearDown]
-        public void TearDown()
-        {
-            Object.DestroyImmediate(_ballistic);
-            Object.DestroyImmediate(_single);
-            Object.DestroyImmediate(_ricochet);
-            Object.DestroyImmediate(_db);
-        }
+        public void TearDown() =>
+            WeaponBuilderTestFactory.DestroyAll(_ballistic, _single, _ricochet, _db);
 
-        ICoreDefinitionRegistry Registry() => new DatabaseCoreDefinitionRegistry(_db);
+        ICoreDefinitionRegistry Registry() => WeaponBuilderTestFactory.MakeRegistry(_db);
 
         // ── Success path ──────────────────────────────────────
 
@@ -150,51 +142,5 @@ namespace Tests.EditMode
             StringAssert.Contains("registry", reason.ToLowerInvariant());
         }
 
-        // ── Helpers ───────────────────────────────────────────
-
-        static BallisticPayloadDefinition MakeBallistic(string id, CommonPayloadStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<BallisticPayloadDefinition>();
-            SetPrivateField(def, "_id", id);
-            var array = new CommonPayloadStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static DeliveryCoreDefinition MakeDelivery(string id, DeliveryStats commonStats)
-        {
-            var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
-            SetPrivateField(def, "_id", id);
-            var array = new DeliveryStats[5];
-            array[(int)RarityTier.Common] = commonStats;
-            SetPrivateField(def, "_statsByTier", array);
-            return def;
-        }
-
-        static ExoticModDefinition MakeExotic(string id)
-        {
-            var def = ScriptableObject.CreateInstance<ExoticModDefinition>();
-            SetPrivateField(def, "_id", id);
-            return def;
-        }
-
-        static void SetPrivateField(object target, string fieldName, object value)
-        {
-            var type = target.GetType();
-            while (type != null)
-            {
-                var field = type.GetField(
-                    fieldName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null)
-                {
-                    field.SetValue(target, value);
-                    return;
-                }
-                type = type.BaseType;
-            }
-            Assert.Fail($"Field '{fieldName}' not found on {target.GetType()}.");
-        }
     }
 }

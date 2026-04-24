@@ -1,7 +1,5 @@
-using Adapters;
 using Constants;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -12,16 +10,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class BotHealTests
     {
-        static RaidContext CreateContext(float dt = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: dt,
-                events: new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = dt },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         static (RaidState state, BotEntityState bot) CreatePMCSafe(
             float hpRatio, float elapsedTime, float lastDamageTime = -999f)
@@ -50,7 +38,7 @@ namespace Tests.EditMode
         public void EmergencyHeal_CriticalHp_NoDamageRecently_Heals()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -62,7 +50,7 @@ namespace Tests.EditMode
         public void EmergencyHeal_DamageTooRecent_DoesNotHeal()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 9.5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -76,7 +64,7 @@ namespace Tests.EditMode
         public void NormalHeal_ModerateHp_SafeWindow_Heals()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -88,7 +76,7 @@ namespace Tests.EditMode
         public void NormalHeal_DamageTooRecent_DoesNotHeal()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 8f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -101,7 +89,7 @@ namespace Tests.EditMode
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Blackboard.CanSeeTarget = true;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -114,7 +102,7 @@ namespace Tests.EditMode
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Blackboard.DistanceToTarget = 5f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -127,7 +115,7 @@ namespace Tests.EditMode
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Weapon.Phase = WeaponPhase.Reloading;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -139,7 +127,7 @@ namespace Tests.EditMode
         public void NormalHeal_HpAboveThreshold_DoesNotHeal()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.6f, elapsedTime: 10f, lastDamageTime: 5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -155,7 +143,7 @@ namespace Tests.EditMode
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Blackboard.HasTarget = false;
             bot.Blackboard.DistanceToTarget = float.MaxValue;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -170,7 +158,7 @@ namespace Tests.EditMode
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Blackboard.HealCooldownTimer = 5f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -182,7 +170,7 @@ namespace Tests.EditMode
         public void EmergencyHeal_SetsShorterCooldown()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -195,7 +183,7 @@ namespace Tests.EditMode
         public void NormalHeal_SetsFullCooldown()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -212,7 +200,7 @@ namespace Tests.EditMode
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 9.9f);
             bot.Blackboard.CanSeeTarget = true;
             bot.Blackboard.DistanceToTarget = 5f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -227,7 +215,7 @@ namespace Tests.EditMode
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 5f);
             bot.Blackboard.MedkitsRemaining = 0;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
@@ -246,7 +234,7 @@ namespace Tests.EditMode
             var bot = state.Bots[0];
             state.HealthMap[bot.Id].CurrentHp = 10f;
             state.ElapsedTime = 100f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 

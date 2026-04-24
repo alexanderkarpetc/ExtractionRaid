@@ -13,17 +13,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class ShootingSystemTests
     {
-        static RaidContext CreateContext(FakeInputAdapter input, float deltaTime = 1f / 60f,
-            IRaidEvents events = null)
-        {
-            return new RaidContext(
-                deltaTime: deltaTime,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = deltaTime },
-                input: input,
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         [Test]
         public void Tick_WithAttackPressedAndValidFacing_SpawnsProjectile()
@@ -31,7 +20,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -44,67 +33,29 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AttackPressed = false };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(0, state.Projectiles.Count);
         }
 
-        [Test]
-        public void Tick_InCooldownPhase_DoesNotSpawn()
+        // Ready is the only phase that allows the ballistic fire path to spawn a projectile.
+        [TestCase(WeaponPhase.Ready,       1)]
+        [TestCase(WeaponPhase.Cooldown,    0)]
+        [TestCase(WeaponPhase.Equipping,   0)]
+        [TestCase(WeaponPhase.Unequipping, 0)]
+        public void Tick_PhaseGate_ControlsProjectileSpawn(WeaponPhase phase, int expectedProjectiles)
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Cooldown;
+            state.PlayerEntity.EquippedWeapon.Phase = phase;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
-            Assert.AreEqual(0, state.Projectiles.Count);
-        }
-
-        [Test]
-        public void Tick_InReadyPhase_SpawnsProjectile()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Ready;
-            var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
-
-            ShootingSystem.Tick(state, in context);
-
-            Assert.AreEqual(1, state.Projectiles.Count);
-        }
-
-        [Test]
-        public void Tick_DuringEquipping_DoesNotSpawn()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Equipping;
-            var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
-
-            ShootingSystem.Tick(state, in context);
-
-            Assert.AreEqual(0, state.Projectiles.Count);
-        }
-
-        [Test]
-        public void Tick_DuringUnequipping_DoesNotSpawn()
-        {
-            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
-            state.PlayerEntity.FacingDirection = Vector3.forward;
-            state.PlayerEntity.EquippedWeapon.Phase = WeaponPhase.Unequipping;
-            var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
-
-            ShootingSystem.Tick(state, in context);
-
-            Assert.AreEqual(0, state.Projectiles.Count);
+            Assert.AreEqual(expectedProjectiles, state.Projectiles.Count);
         }
 
         [Test]
@@ -114,7 +65,7 @@ namespace Tests.EditMode
             state.PlayerEntity.AimDirection = Vector3.zero;
             state.PlayerEntity.WeaponAimPoint = Vector3.zero;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -130,7 +81,7 @@ namespace Tests.EditMode
             state.PlayerEntity.AimDirection = aimDir;
             state.PlayerEntity.WeaponAimPoint = aimDir * 10f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -150,7 +101,7 @@ namespace Tests.EditMode
                 AttackPressed = true,
                 MuzzleWorldPoint = muzzlePos,
             };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -165,7 +116,7 @@ namespace Tests.EditMode
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             Assert.DoesNotThrow(() => ShootingSystem.Tick(state, in context));
         }
@@ -177,7 +128,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.ElapsedTime = 2.5f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -192,7 +143,7 @@ namespace Tests.EditMode
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.EquippedWeapon = null;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             Assert.DoesNotThrow(() => ShootingSystem.Tick(state, in context));
             Assert.AreEqual(0, state.Projectiles.Count);
@@ -205,7 +156,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
@@ -222,7 +173,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
             state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -238,7 +189,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =7;
             state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -261,7 +212,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.ProjectilesPerShot =1;
             state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =0f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -280,7 +231,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.ProjectileSpeed = 25f;
             state.PlayerEntity.EquippedWeapon.Stats.Damage = 8f;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -300,7 +251,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =20f;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
@@ -315,7 +266,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
@@ -332,7 +283,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.Stats.SpreadAngle =30f;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
@@ -349,7 +300,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -364,7 +315,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             var eventBuffer = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: eventBuffer);
+            var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
@@ -380,7 +331,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             // Reserve ammo already in backpack from CreateStateWithPlayer
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -397,7 +348,7 @@ namespace Tests.EditMode
             for (int i = 0; i < InventoryState.BackpackSize; i++)
                 App.Instance.Player.Inventory.Backpack[i] = null;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -411,7 +362,7 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 30;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -431,7 +382,7 @@ namespace Tests.EditMode
             weapon.AmmoInMagazine = 5;
             weapon.Stats.MagazineSize = 5;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -447,7 +398,7 @@ namespace Tests.EditMode
             state.PlayerEntity.EquippedWeapon.AmmoType = null;
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input);
+            var context = TestContextFactory.Create(input);
 
             ShootingSystem.Tick(state, in context);
 
@@ -471,7 +422,7 @@ namespace Tests.EditMode
                 state.ElapsedTime = 0f;
                 var events = new RaidEventBuffer();
                 var input = new FakeInputAdapter { AttackPressed = true };
-                var context = CreateContext(input, events: events);
+                var context = TestContextFactory.Create(input, events: events);
 
                 ShootingSystem.Tick(state, in context);
 
@@ -497,7 +448,7 @@ namespace Tests.EditMode
                 weapon.ChargeStartTime = 0f;
                 state.ElapsedTime = 0.5f; // half way
                 var input = new FakeInputAdapter { AttackPressed = true };
-                var context = CreateContext(input);
+                var context = TestContextFactory.Create(input);
 
                 ShootingSystem.Tick(state, in context);
 
@@ -522,7 +473,7 @@ namespace Tests.EditMode
                 state.ElapsedTime = 1.1f;
                 var events = new RaidEventBuffer();
                 var input = new FakeInputAdapter { AttackPressed = true };
-                var context = CreateContext(input, events: events);
+                var context = TestContextFactory.Create(input, events: events);
 
                 ShootingSystem.Tick(state, in context);
 
@@ -544,7 +495,7 @@ namespace Tests.EditMode
 
             var events = new RaidEventBuffer();
             var input = new FakeInputAdapter { AttackPressed = true };
-            var context = CreateContext(input, events: events);
+            var context = TestContextFactory.Create(input, events: events);
 
             ShootingSystem.Tick(state, in context);
 
@@ -555,15 +506,6 @@ namespace Tests.EditMode
         }
 
         static LaserPayloadDefinition MakeLaserPayloadSO(float chargeTime)
-        {
-            var def = ScriptableObject.CreateInstance<LaserPayloadDefinition>();
-            var specific = new LaserSpecificStats[5];
-            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = chargeTime };
-            var field = typeof(LaserPayloadDefinition).GetField(
-                "_specificByTier",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-            field.SetValue(def, specific);
-            return def;
-        }
+            => WeaponBuilderTestFactory.MakeLaser(chargeTime: chargeTime);
     }
 }

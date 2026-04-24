@@ -1,6 +1,5 @@
 using Adapters;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -11,16 +10,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class BotCombatSystemTests
     {
-        static RaidContext CreateContext(float dt = 1f / 60f, IRaidEvents events = null)
-        {
-            return new RaidContext(
-                deltaTime: dt,
-                events: events ?? new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = dt },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         static RaidState CreateStateWithBotWantingToFire(string typeId = "Scav")
         {
@@ -40,7 +29,7 @@ namespace Tests.EditMode
         public void Tick_BotWantsToFire_SpawnsProjectile()
         {
             var state = CreateStateWithBotWantingToFire();
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotCombatSystem.Tick(state, in ctx);
 
@@ -52,7 +41,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithBotWantingToFire();
             state.Bots[0].WantsToFire = false;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotCombatSystem.Tick(state, in ctx);
 
@@ -72,7 +61,7 @@ namespace Tests.EditMode
             bot.WantsToHeal = true;
             bot.Blackboard.TimeSinceTargetSeen = 5f;
             int medkitsBefore = bot.Blackboard.MedkitsRemaining;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotCombatSystem.Tick(state, in ctx);
 
@@ -88,7 +77,7 @@ namespace Tests.EditMode
             var state = CreateStateWithBotWantingToFire();
             state.Bots[0].Weapon.LastFireTime = 0f;
             state.ElapsedTime = 0.1f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotCombatSystem.Tick(state, in ctx);
 
@@ -100,7 +89,7 @@ namespace Tests.EditMode
         public void Tick_BossSpawnsMultiplePellets()
         {
             var state = CreateStateWithBotWantingToFire("Boss");
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotCombatSystem.Tick(state, in ctx);
 
@@ -112,7 +101,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithBotWantingToFire();
             var eventBuffer = new RaidEventBuffer();
-            var ctx = CreateContext(events: eventBuffer);
+            var ctx = TestContextFactory.Create(events: eventBuffer);
 
             BotCombatSystem.Tick(state, in ctx);
 

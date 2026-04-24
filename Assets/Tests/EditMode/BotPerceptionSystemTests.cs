@@ -1,6 +1,4 @@
-using Adapters;
 using NUnit.Framework;
-using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -11,16 +9,6 @@ namespace Tests.EditMode
     [TestFixture]
     public class BotPerceptionSystemTests
     {
-        static RaidContext CreateContext(float dt = 1f / 60f)
-        {
-            return new RaidContext(
-                deltaTime: dt,
-                events: new RaidEventBuffer(),
-                time: new FakeTimeAdapter { DeltaTime = dt },
-                input: new FakeInputAdapter(),
-                navMesh: new FakeNavMeshAdapter()
-            );
-        }
 
         static RaidState CreateStateWithPlayerAndBot(Vector3 playerPos, Vector3 botPos,
             string botType = "Scav")
@@ -37,7 +25,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 10f));
             state.Bots[0].FacingDirection = -Vector3.forward;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotPerceptionSystem.Tick(state, in ctx);
 
@@ -50,7 +38,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 100f));
             state.Bots[0].FacingDirection = -Vector3.forward;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotPerceptionSystem.Tick(state, in ctx);
 
@@ -62,7 +50,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 10f));
             state.Bots[0].FacingDirection = Vector3.forward;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotPerceptionSystem.Tick(state, in ctx);
 
@@ -75,7 +63,7 @@ namespace Tests.EditMode
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 5f));
             state.Bots[0].FacingDirection = Vector3.forward;
             state.PlayerEntity.Velocity = Vector3.right * 5f;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotPerceptionSystem.Tick(state, in ctx);
 
@@ -87,7 +75,7 @@ namespace Tests.EditMode
         {
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 10f));
             state.Bots[0].FacingDirection = -Vector3.forward;
-            var ctx = CreateContext();
+            var ctx = TestContextFactory.Create();
 
             BotPerceptionSystem.Tick(state, in ctx);
             Assert.IsTrue(state.Bots[0].Blackboard.HasTarget);
