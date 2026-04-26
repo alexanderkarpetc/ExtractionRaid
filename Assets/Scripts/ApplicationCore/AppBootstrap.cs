@@ -2,6 +2,7 @@ using UnityEngine;
 using View;
 using View.UI;
 using View.UI.CraftingMockup;
+using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
 
 namespace ApplicationCore
@@ -40,6 +41,13 @@ namespace ApplicationCore
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
+
+            // Tooltip overlay — runtime UI Toolkit panel that floats on top of everything.
+            // Reachable via TooltipController.Instance from inventory hover handlers and
+            // (later) Builder D&D cards.
+            var tooltipHost = new GameObject("TooltipController");
+            tooltipHost.transform.SetParent(transform, false);
+            tooltipHost.AddComponent<TooltipController>();
 
             // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
             var craftingMockupHost = new GameObject("CraftingMockupWindow");

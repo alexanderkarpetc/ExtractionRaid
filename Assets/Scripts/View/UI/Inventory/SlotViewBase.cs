@@ -64,7 +64,7 @@ namespace View.UI
                 RightClicked?.Invoke(this, eventData);
         }
 
-        public void OnPointerEnter(PointerEventData eventData) => IsHovered = true;
-        public void OnPointerExit(PointerEventData eventData) => IsHovered = false;
+        public virtual void OnPointerEnter(PointerEventData eventData) => IsHovered = true;
+        public virtual void OnPointerExit(PointerEventData eventData) => IsHovered = false;
     }
 }

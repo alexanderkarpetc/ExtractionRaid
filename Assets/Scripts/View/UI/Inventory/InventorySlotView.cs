@@ -3,7 +3,10 @@ using State;
 using Systems;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using View.UI.Tooltip;
+using View.UI.Tooltip.Builders;
 
 namespace View.UI
 {
@@ -101,6 +104,20 @@ namespace View.UI
                 _hotbarBadgeRoot.SetActive(show);
             if (show && _hotbarKeyText != null)
                 _hotbarKeyText.text = quickSlotKey.ToString();
+        }
+
+        public override void OnPointerEnter(PointerEventData eventData)
+        {
+            base.OnPointerEnter(eventData);
+            if (CurrentItem == null || TooltipController.Instance == null) return;
+            var model = ItemTooltipBuilder.For(CurrentItem, App.Instance?.CoreDefinitions);
+            TooltipController.Instance.Show(model, eventData.position);
+        }
+
+        public override void OnPointerExit(PointerEventData eventData)
+        {
+            base.OnPointerExit(eventData);
+            TooltipController.Instance?.Hide();
         }
     }
 }

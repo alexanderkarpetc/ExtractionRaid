@@ -1,0 +1,82 @@
+/* Tooltip overlay — single floating card positioned by TooltipController.
+ * picking-mode is Ignore everywhere so the tooltip never steals pointer events
+ * from the inventory / Builder underneath it.
+ *
+ * Sizes follow the project's UI Toolkit scale — see docs/ai/ui-styling.md.
+ * Tooltip is the "compact panel" tier (one notch smaller than the modal tier
+ * used by Weapon Builder). */
+
+.tt-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.tt-card {
+    position: absolute;
+    min-width: 320px;
+    max-width: 540px;
+    padding: 20px 24px;
+    background-color: rgb(22, 24, 30);
+    border-color: rgb(70, 75, 85);
+    border-width: 2px;
+    border-radius: 8px;
+}
+
+.tt-title {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: rgb(230, 200, 140);
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.tt-subtitle {
+    font-size: 18px;
+    color: rgb(150, 155, 165);
+    white-space: normal;
+    margin-bottom: 12px;
+}
+
+.tt-subtitle.is-empty {
+    display: none;
+}
+
+.tt-sections {
+    flex-direction: column;
+}
+
+.tt-section {
+    margin-top: 10px;
+}
+
+.tt-section-heading {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(140, 175, 210);
+    -unity-text-align: middle-left;
+    margin-bottom: 4px;
+}
+
+.tt-section-heading.is-empty {
+    display: none;
+}
+
+.tt-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 2px 0;
+}
+
+.tt-row-label {
+    font-size: 20px;
+    color: rgb(160, 165, 175);
+}
+
+.tt-row-value {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(220, 225, 235);
+}

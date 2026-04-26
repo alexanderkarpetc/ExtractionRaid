@@ -109,6 +109,7 @@ Read extra docs depending on the task:
 - RPG modifier system (stat composition) -> `docs/ai/rpg-modifier-system.md`
 - Armor research (competitor analysis) -> `docs/ai/armor-research.md`
 - Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`
+- UI Toolkit panel sizing / theme / sort order -> `docs/ai/ui-styling.md`
 - DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
 
 Do not load all docs unless the task spans multiple areas.
