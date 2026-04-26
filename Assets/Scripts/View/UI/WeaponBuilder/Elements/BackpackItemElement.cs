@@ -50,10 +50,13 @@ namespace View.UI.WeaponBuilder.Elements
                 _label.text = string.Empty;
                 _stackCount.text = string.Empty;
                 AddToClassList("wb-bp-item-empty");
+                RemoveFromClassList("wb-bp-item-weapon");
                 return;
             }
 
             RemoveFromClassList("wb-bp-item-empty");
+            EnableInClassList("wb-bp-item-weapon", item.HasWeaponConfiguration);
+
             _label.text = WeaponDisplayName.For(item, registry);
             _stackCount.text = item.StackCount > 1 ? $"x{item.StackCount}" : string.Empty;
         }

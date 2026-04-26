@@ -1,4 +1,3 @@
-using System;
 using State;
 using UnityEngine.UIElements;
 using View.UI.Tooltip;
@@ -8,11 +7,12 @@ namespace View.UI.WeaponBuilder.Elements
 {
     /// <summary>
     /// Visual representation of one module (Payload or Delivery) in the Builder
-    /// palette. Pure data-bound — no game logic. Click selects, hover shows tooltip,
-    /// drag is wired separately by <see cref="ModuleDragManipulator"/>.
+    /// palette. Pure data-bound — no game logic.
     ///
-    /// Type metadata lives on the element so slot drop targets can validate the
-    /// drag without back-references to the registry.
+    /// Pointer / click handling is owned by <c>WeaponBuilderWindow</c> so it can
+    /// coordinate the drag state machine + click-suppression after a drag. This
+    /// element only exposes <see cref="Kind"/>, <see cref="DefinitionId"/> and
+    /// <see cref="GetDisplayName"/>, plus tooltip wiring on hover.
     /// </summary>
     public class ModuleCardElement : VisualElement
     {
@@ -24,15 +24,12 @@ namespace View.UI.WeaponBuilder.Elements
         readonly PayloadCoreDefinition  _payload;
         readonly DeliveryCoreDefinition _delivery;
 
-        public event Action<ModuleCardElement> Clicked;
-
         public ModuleCardElement(PayloadCoreDefinition def)
         {
             Kind = ModuleKind.Payload;
             _payload = def;
             DefinitionId = def?.Id;
             BuildLayout(def?.DisplayName, def?.Id, "Payload");
-            RegisterCallback<ClickEvent>(_ => Clicked?.Invoke(this));
             RegisterCallback<PointerEnterEvent>(OnPointerEnter);
             RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
         }
@@ -43,7 +40,6 @@ namespace View.UI.WeaponBuilder.Elements
             _delivery = def;
             DefinitionId = def?.Id;
             BuildLayout(def?.FormFactor, def?.Id, "Delivery");
-            RegisterCallback<ClickEvent>(_ => Clicked?.Invoke(this));
             RegisterCallback<PointerEnterEvent>(OnPointerEnter);
             RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
         }
@@ -52,6 +48,14 @@ namespace View.UI.WeaponBuilder.Elements
         {
             if (selected) AddToClassList("wb-card-selected");
             else          RemoveFromClassList("wb-card-selected");
+        }
+
+        /// <summary>Display name shown on the card (and reused by drag ghosts).</summary>
+        public string GetDisplayName()
+        {
+            if (_payload != null)
+                return !string.IsNullOrEmpty(_payload.DisplayName) ? _payload.DisplayName : _payload.Id;
+            return !string.IsNullOrEmpty(_delivery?.FormFactor) ? _delivery.FormFactor : _delivery?.Id;
         }
 
         void BuildLayout(string title, string fallback, string kindLabel)

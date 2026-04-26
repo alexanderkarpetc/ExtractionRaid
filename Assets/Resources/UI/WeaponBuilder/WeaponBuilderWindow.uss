@@ -74,10 +74,10 @@
 }
 
 .wb-section-heading {
-    font-size: 16px;
+    font-size: 22px;
     -unity-font-style: bold;
     color: rgb(140, 175, 210);
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 /* ── Palette (left column) ──────────────────────────── */
@@ -311,8 +311,24 @@
 }
 
 .wb-bp-item-empty {
-    background-color: rgb(20, 22, 26);
-    border-color: rgb(40, 44, 52);
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgb(38, 42, 50);
+}
+
+/* Empty slots stay quiet on hover — no tooltip, so no point flashing the border. */
+.wb-bp-item-empty:hover {
+    border-color: rgb(38, 42, 50);
+}
+
+/* Built weapons get a gold accent so the player spots their own builds among
+ * ammo / medkits / armor pieces. Same gold as the archetype label. */
+.wb-bp-item-weapon {
+    border-color: rgb(230, 200, 140);
+    background-color: rgb(36, 32, 26);
+}
+
+.wb-bp-item-weapon:hover {
+    border-color: rgb(245, 215, 155);
 }
 
 .wb-bp-item-name {
@@ -375,15 +391,7 @@
     color: rgb(130, 140, 135);
 }
 
-/* ── Drag layer (overlay for ghost element during drag) ── */
-
-.wb-drag-layer {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-}
+/* ── Drag ghost (lives directly on the document root during drag) ── */
 
 .wb-drag-ghost {
     position: absolute;

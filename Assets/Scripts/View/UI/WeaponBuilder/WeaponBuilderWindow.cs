@@ -3,6 +3,7 @@ using ApplicationCore;
 using State;
 using UnityEngine;
 using UnityEngine.UIElements;
+using View.UI.Tooltip;
 using View.UI.WeaponBuilder.Elements;
 
 namespace View.UI.WeaponBuilder
@@ -61,6 +62,15 @@ namespace View.UI.WeaponBuilder
         readonly List<ModuleCardElement> _payloadCards  = new();
         readonly List<ModuleCardElement> _deliveryCards = new();
 
+        // ── Drag state ────────────────────────────────────────
+        const float DragThreshold = 4f;          // pixels of movement before a drag starts
+        ModuleCardElement _draggedCard;
+        int _dragPointerId = -1;
+        Vector2 _dragStartPanelPos;
+        bool _isDragging;
+        VisualElement _dragGhost;
+        bool _suppressNextClick;                 // skip click that follows a successful drag
+
         bool _isVisible;
 
         void Awake()
@@ -112,9 +122,23 @@ namespace View.UI.WeaponBuilder
         public void Close()
         {
             if (_root == null) return;
+            CancelActiveDrag();
             _root.style.display = DisplayStyle.None;
             _isVisible = false;
             SetInputGate(false);
+        }
+
+        void CancelActiveDrag()
+        {
+            if (_draggedCard == null) return;
+            if (_dragPointerId >= 0 && _draggedCard.HasPointerCapture(_dragPointerId))
+                _draggedCard.ReleasePointer(_dragPointerId);
+            DestroyGhost();
+            ClearSlotHover();
+            _draggedCard       = null;
+            _dragPointerId     = -1;
+            _isDragging        = false;
+            _suppressNextClick = false;
         }
 
         void HideImmediate()
@@ -209,7 +233,7 @@ namespace View.UI.WeaponBuilder
             {
                 if (def == null) continue;
                 var card = new ModuleCardElement(def);
-                card.Clicked += OnPayloadCardClicked;
+                WireCardInteractions(card);
                 _payloadGrid.Add(card);
                 _payloadCards.Add(card);
             }
@@ -220,25 +244,189 @@ namespace View.UI.WeaponBuilder
             {
                 if (def == null) continue;
                 var card = new ModuleCardElement(def);
-                card.Clicked += OnDeliveryCardClicked;
+                WireCardInteractions(card);
                 _deliveryGrid.Add(card);
                 _deliveryCards.Add(card);
             }
         }
 
-        void OnPayloadCardClicked(ModuleCardElement card)
+        void WireCardInteractions(ModuleCardElement card)
         {
-            if (_presenter == null) return;
-            // Toggle: click again on the selected card to clear it.
-            bool alreadySelected = _presenter.State.SelectedPayload.DefinitionId == card.DefinitionId;
-            _presenter.SelectPayload(alreadySelected ? null : card.DefinitionId);
+            card.RegisterCallback<PointerDownEvent>(evt => OnCardPointerDown(card, evt));
+            card.RegisterCallback<PointerMoveEvent>(evt => OnCardPointerMove(card, evt));
+            card.RegisterCallback<PointerUpEvent>(evt   => OnCardPointerUp(card, evt));
+            card.RegisterCallback<PointerCaptureOutEvent>(evt => OnCardPointerCaptureOut(card, evt));
+            card.RegisterCallback<ClickEvent>(_         => OnCardClicked(card));
         }
 
-        void OnDeliveryCardClicked(ModuleCardElement card)
+        // Click fallback when no drag occurred. Toggles selection on/off so the
+        // player can clear a slot with a second click on the selected card.
+        void OnCardClicked(ModuleCardElement card)
         {
             if (_presenter == null) return;
-            bool alreadySelected = _presenter.State.SelectedDelivery.DefinitionId == card.DefinitionId;
-            _presenter.SelectDelivery(alreadySelected ? null : card.DefinitionId);
+            if (_suppressNextClick)
+            {
+                _suppressNextClick = false;
+                return;
+            }
+            DispatchSelect(card, toggle: true);
+        }
+
+        void DispatchSelect(ModuleCardElement card, bool toggle)
+        {
+            if (card.Kind == ModuleCardElement.ModuleKind.Payload)
+            {
+                bool already = toggle && _presenter.State.SelectedPayload.DefinitionId == card.DefinitionId;
+                _presenter.SelectPayload(already ? null : card.DefinitionId);
+            }
+            else
+            {
+                bool already = toggle && _presenter.State.SelectedDelivery.DefinitionId == card.DefinitionId;
+                _presenter.SelectDelivery(already ? null : card.DefinitionId);
+            }
+        }
+
+        // ── Drag state machine ────────────────────────────────
+
+        void OnCardPointerDown(ModuleCardElement card, PointerDownEvent evt)
+        {
+            if (evt.button != 0) return;          // left-click only
+            if (_draggedCard != null) return;     // already tracking another pointer
+
+            _draggedCard       = card;
+            _dragPointerId     = evt.pointerId;
+            _dragStartPanelPos = evt.position;
+            _isDragging        = false;
+            card.CapturePointer(evt.pointerId);
+        }
+
+        void OnCardPointerMove(ModuleCardElement card, PointerMoveEvent evt)
+        {
+            if (_draggedCard != card) return;
+            if (!card.HasPointerCapture(evt.pointerId)) return;
+
+            if (!_isDragging)
+            {
+                Vector2 delta = (Vector2)evt.position - _dragStartPanelPos;
+                if (delta.sqrMagnitude < DragThreshold * DragThreshold) return;
+
+                _isDragging = true;
+                TooltipController.Instance?.Hide();
+                CreateGhost(card);
+            }
+
+            UpdateGhostPosition(evt.position);
+            UpdateSlotHover(evt.position);
+        }
+
+        void OnCardPointerUp(ModuleCardElement card, PointerUpEvent evt)
+        {
+            if (_draggedCard != card) return;
+
+            if (card.HasPointerCapture(evt.pointerId))
+                card.ReleasePointer(evt.pointerId);
+
+            if (_isDragging)
+            {
+                TryDropOnSlot(evt.position);
+                DestroyGhost();
+                ClearSlotHover();
+                // The ClickEvent fires after PointerUp on the originating element,
+                // even when the pointer drifted off and we already handled a drop.
+                // Suppress the impending click so we don't toggle the selection
+                // we just set via drop.
+                _suppressNextClick = true;
+            }
+
+            _draggedCard   = null;
+            _dragPointerId = -1;
+            _isDragging    = false;
+        }
+
+        void OnCardPointerCaptureOut(ModuleCardElement card, PointerCaptureOutEvent evt)
+        {
+            if (_draggedCard != card) return;
+            // Capture lost (e.g. window closed mid-drag): tear down ghost cleanly.
+            DestroyGhost();
+            ClearSlotHover();
+            _draggedCard   = null;
+            _dragPointerId = -1;
+            _isDragging    = false;
+        }
+
+        // ── Drop target detection ─────────────────────────────
+
+        void TryDropOnSlot(Vector2 panelPos)
+        {
+            var slot = SlotUnder(panelPos);
+            if (slot == null || _draggedCard == null) return;
+            if (slot.Kind != _draggedCard.Kind) return; // wrong type — silent reject
+            DispatchSelect(_draggedCard, toggle: false);
+        }
+
+        ModuleSlotElement SlotUnder(Vector2 panelPos)
+        {
+            if (_payloadSlot.worldBound.Contains(panelPos))  return _payloadSlot;
+            if (_deliverySlot.worldBound.Contains(panelPos)) return _deliverySlot;
+            return null;
+        }
+
+        void UpdateSlotHover(Vector2 panelPos)
+        {
+            if (_draggedCard == null) return;
+            bool overPayload  = _payloadSlot.worldBound.Contains(panelPos);
+            bool overDelivery = _deliverySlot.worldBound.Contains(panelPos);
+            bool isPayloadDrag = _draggedCard.Kind == ModuleCardElement.ModuleKind.Payload;
+
+            _payloadSlot.SetDragOver(valid: isPayloadDrag,  hovering: overPayload);
+            _deliverySlot.SetDragOver(valid: !isPayloadDrag, hovering: overDelivery);
+        }
+
+        void ClearSlotHover()
+        {
+            _payloadSlot.SetDragOver(false, false);
+            _deliverySlot.SetDragOver(false, false);
+        }
+
+        // ── Ghost element ─────────────────────────────────────
+
+        void CreateGhost(ModuleCardElement source)
+        {
+            DestroyGhost();
+            _dragGhost = new VisualElement { pickingMode = PickingMode.Ignore };
+            _dragGhost.AddToClassList("wb-card");
+            _dragGhost.AddToClassList("wb-drag-ghost");
+
+            var title = new Label(source.GetDisplayName());
+            title.AddToClassList("wb-card-title");
+            _dragGhost.Add(title);
+
+            var kind = new Label(source.Kind == ModuleCardElement.ModuleKind.Payload ? "Payload" : "Delivery");
+            kind.AddToClassList("wb-card-kind");
+            _dragGhost.Add(kind);
+
+            // Adding to _root puts the ghost on top of the window in tree order
+            // and uses panel-coord origin — same space as evt.position.
+            _root.Add(_dragGhost);
+        }
+
+        void UpdateGhostPosition(Vector2 panelPos)
+        {
+            if (_dragGhost == null) return;
+            float w = _dragGhost.resolvedStyle.width;
+            float h = _dragGhost.resolvedStyle.height;
+            // First-frame fallback: card sizing inherited from .wb-card.
+            if (w <= 0f) w = 160f;
+            if (h <= 0f) h = 96f;
+            _dragGhost.style.left = panelPos.x - w * 0.5f;
+            _dragGhost.style.top  = panelPos.y - h * 0.5f;
+        }
+
+        void DestroyGhost()
+        {
+            if (_dragGhost == null) return;
+            _dragGhost.RemoveFromHierarchy();
+            _dragGhost = null;
         }
 
         // ── Refresh on presenter state change ─────────────────
