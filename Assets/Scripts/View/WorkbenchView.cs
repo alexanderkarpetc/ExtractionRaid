@@ -11,8 +11,8 @@ namespace View
     ///
     /// Pure view component — no gameplay state. Reads player position off
     /// <see cref="App.Instance.RaidSession"/>. Shows a world-space TextMesh prompt
-    /// ("Press E to craft") while in range. Input is read directly via Unity's
-    /// <see cref="Keyboard.current"/> — view-layer access is fine here.
+    /// ("Weapon Workbench  ·  Press E") while in range. Input is read directly via
+    /// Unity's <see cref="Keyboard.current"/> — view-layer access is fine here.
     ///
     /// See docs/ai/weapon-builder/architecture.md §D13.
     /// </summary>
@@ -25,7 +25,7 @@ namespace View
         [SerializeField] float _promptHeight = 1.4f;
 
         [Tooltip("Prompt text shown while in range. Empty → hides the prompt entirely.")]
-        [SerializeField] string _promptText = "Press E to craft";
+        [SerializeField] string _promptText = "Weapon Workbench  ·  Press E";
 
         GameObject _promptGo;
         TextMesh _promptText3D;

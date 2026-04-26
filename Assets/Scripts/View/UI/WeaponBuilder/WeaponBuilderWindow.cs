@@ -36,6 +36,7 @@ namespace View.UI.WeaponBuilder
         DropdownField _payloadDropdown;
         DropdownField _deliveryDropdown;
         Label _archetypeLabel;
+        Label _chargeHint;
         VisualElement _statsGrid;
         Label _errorLabel;
         Button _closeBtn;
@@ -153,6 +154,7 @@ namespace View.UI.WeaponBuilder
             _payloadDropdown  = _root.Q<DropdownField>("payloadDropdown");
             _deliveryDropdown = _root.Q<DropdownField>("deliveryDropdown");
             _archetypeLabel   = _root.Q<Label>("archetypeLabel");
+            _chargeHint       = _root.Q<Label>("chargeHint");
             _statsGrid        = _root.Q<VisualElement>("statsGrid");
             _errorLabel       = _root.Q<Label>("errorLabel");
             _closeBtn         = _root.Q<Button>("closeBtn");
@@ -237,6 +239,18 @@ namespace View.UI.WeaponBuilder
             var archetype = _presenter.PreviewArchetype;
             _archetypeLabel.text = string.IsNullOrEmpty(archetype) ? "—" : archetype;
 
+            // Charge-up hint (only shown when payload requires charging)
+            if (_presenter.PreviewRequiresCharge)
+            {
+                _chargeHint.text = $"⚡ Requires charge — {_presenter.PreviewChargeTime:0.0}s before each shot";
+                _chargeHint.style.display = DisplayStyle.Flex;
+            }
+            else
+            {
+                _chargeHint.text = string.Empty;
+                _chargeHint.style.display = DisplayStyle.None;
+            }
+
             // Stats grid
             _statsGrid.Clear();
             var stats = _presenter.PreviewStats;
@@ -252,8 +266,10 @@ namespace View.UI.WeaponBuilder
                 AppendStatRow(_statsGrid, "Projectiles/Shot", stats.Value.ProjectilesPerShot.ToString());
             }
 
-            // Build button enabled state
-            _buildBtn.SetEnabled(_presenter.CanBuild);
+            // Build button enabled state + disabled tooltip explaining why
+            bool canBuild = _presenter.CanBuild;
+            _buildBtn.SetEnabled(canBuild);
+            _buildBtn.tooltip = canBuild ? string.Empty : _presenter.DisabledReason;
             _errorLabel.text = string.Empty;
         }
 

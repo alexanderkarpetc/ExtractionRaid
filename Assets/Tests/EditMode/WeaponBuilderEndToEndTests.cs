@@ -162,16 +162,25 @@ namespace Tests.EditMode
             presenter.SelectDelivery("SingleAction");
             Assert.IsTrue(presenter.TryBuild(out _));
 
-            // Build 2: rifle — should go to slot 1
+            // Build 2: rifle. Note: ammo auto-grant from build 1 takes the next free
+            // slot, so the second weapon doesn't land at index 1 — search by config.
             presenter.SelectDelivery("Auto");
             Assert.IsTrue(presenter.TryBuild(out _));
 
-            Assert.IsNotNull(_inventory.Backpack[0]);
-            Assert.IsNotNull(_inventory.Backpack[1]);
-            Assert.AreNotEqual(_inventory.Backpack[0].Id, _inventory.Backpack[1].Id, "Each build gets a fresh EId");
+            ItemState pistolItem = null;
+            ItemState rifleItem  = null;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var slot = _inventory.Backpack[i];
+                if (slot == null || !slot.HasWeaponConfiguration) continue;
+                var deliveryId = slot.WeaponConfiguration.Delivery.DefinitionId;
+                if (deliveryId == "SingleAction") pistolItem = slot;
+                else if (deliveryId == "Auto")    rifleItem  = slot;
+            }
 
-            Assert.AreEqual("SingleAction", _inventory.Backpack[0].WeaponConfiguration.Delivery.DefinitionId);
-            Assert.AreEqual("Auto",         _inventory.Backpack[1].WeaponConfiguration.Delivery.DefinitionId);
+            Assert.IsNotNull(pistolItem, "Pistol build should land in backpack");
+            Assert.IsNotNull(rifleItem,  "Rifle build should land in backpack");
+            Assert.AreNotEqual(pistolItem.Id, rifleItem.Id, "Each build gets a fresh EId");
         }
 
         // ── Round-trip through ground item ────────────────────

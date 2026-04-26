@@ -1,4 +1,6 @@
+using ApplicationCore;
 using State;
+using Systems;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,7 +29,7 @@ namespace View.UI
             CurrentItem = item;
 
             if (_nameLabel != null)
-                _nameLabel.text = item != null ? item.DisplayName : "";
+                _nameLabel.text = WeaponDisplayName.For(item, App.Instance?.CoreDefinitions);
 
             UpdateResourceText(item);
             UpdateDurability(item);

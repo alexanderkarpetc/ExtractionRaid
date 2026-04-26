@@ -21,6 +21,7 @@
 
                 <ui:VisualElement name="previewBox" class="wb-preview">
                     <ui:Label name="archetypeLabel" text="—" class="wb-archetype" />
+                    <ui:Label name="chargeHint" class="wb-hint" />
                     <ui:VisualElement name="statsGrid" class="wb-stats-grid" />
                     <ui:Label name="errorLabel" class="wb-error" />
                 </ui:VisualElement>

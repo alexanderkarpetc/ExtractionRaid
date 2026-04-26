@@ -96,7 +96,15 @@
     font-size: 28px;
     -unity-font-style: bold;
     color: rgb(230, 200, 140);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
+}
+
+.wb-hint {
+    font-size: 18px;
+    -unity-font-style: italic;
+    color: rgb(120, 195, 235);
+    margin-bottom: 14px;
+    white-space: normal;
 }
 
 .wb-stats-grid {

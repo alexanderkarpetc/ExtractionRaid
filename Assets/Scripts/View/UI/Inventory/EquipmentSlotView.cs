@@ -1,4 +1,6 @@
+using ApplicationCore;
 using State;
+using Systems;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,7 +30,7 @@ namespace View.UI
             CurrentItem = item;
 
             if (_itemName != null)
-                _itemName.text = item != null ? item.DisplayName : "";
+                _itemName.text = WeaponDisplayName.For(item, App.Instance?.CoreDefinitions);
 
             UpdateDurability(item);
             ResetHighlight();

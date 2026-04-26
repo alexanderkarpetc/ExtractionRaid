@@ -111,6 +111,48 @@ namespace View.UI.WeaponBuilder
             TryResolveSelection(out _, out _) &&
             _inventory.FindFreeBackpackSlot() >= 0;
 
+        /// <summary>
+        /// True when the currently selected payload triggers a charge-up phase before
+        /// every shot. Hint shown in the preview pane before the player builds, so they
+        /// don't get surprised by "click attack → nothing fires" after equip.
+        /// </summary>
+        public bool PreviewRequiresCharge =>
+            WeaponChargeResolver.RequiresChargeUp(TryGetPayloadDefinition());
+
+        /// <summary>
+        /// Charge duration (seconds) of the currently selected payload at its selected
+        /// rarity. 0 for non-charge-up payloads — caller should check
+        /// <see cref="PreviewRequiresCharge"/> first.
+        /// </summary>
+        public float PreviewChargeTime
+        {
+            get
+            {
+                var def = TryGetPayloadDefinition();
+                return def != null
+                    ? WeaponChargeResolver.GetChargeTime(def, State.SelectedPayload.Rarity)
+                    : 0f;
+            }
+        }
+
+        /// <summary>
+        /// Human-readable reason why the Build action is unavailable. Empty string when
+        /// <see cref="CanBuild"/> is true. Shown as the disabled Build button's tooltip
+        /// so the player can see what's blocking them without trial-and-error.
+        /// Order: missing payload → missing delivery → missing slot.
+        /// </summary>
+        public string DisabledReason
+        {
+            get
+            {
+                if (!State.HasPayload)  return "Select a payload";
+                if (!State.HasDelivery) return "Select a delivery";
+                if (!TryResolveSelection(out _, out _)) return "Selected modules unavailable";
+                if (_inventory.FindFreeBackpackSlot() < 0) return "Backpack is full";
+                return string.Empty;
+            }
+        }
+
         // ── Commit ────────────────────────────────────────────
 
         /// <summary>
@@ -157,8 +199,50 @@ namespace View.UI.WeaponBuilder
             // WeaponConfiguration. DisplayName is derived via WeaponArchetypeLabel.
             _inventory.Backpack[freeSlot] = ItemState.CreateWeapon(_allocateEId(), "Weapon", config);
 
+            // Grant a reserve of matching ammo so the build is usable immediately —
+            // without this the player builds a Laser, fires the full magazine, then
+            // the first reload finds 0 EnergyCells in inventory and the weapon is dead.
+            // 2× MagazineSize is enough for one full reload + a partial. Silent if
+            // there's no inventory room — Build itself does not fail.
+            GrantAmmoReserve(payloadDef.AmmoType, stats.MagazineSize * 2);
+
             failReason = null;
             return true;
+        }
+
+        /// <summary>
+        /// Stack-then-overflow ammo grant. Mirrors <c>InventorySystem.TryPickUp</c>'s
+        /// pattern: phase 1 fills partial stacks of the same definition, phase 2 takes
+        /// remaining free slots. Returns silently when ammo type is unknown or there's
+        /// no room — this is a UX courtesy, not a Build precondition.
+        /// </summary>
+        void GrantAmmoReserve(string ammoType, int amount)
+        {
+            if (string.IsNullOrEmpty(ammoType) || amount <= 0) return;
+            var def = ItemDefinition.Get(ammoType);
+            if (def == null || def.MaxStackSize <= 0) return;
+
+            // Phase 1: fill existing partial stacks of this ammo type.
+            for (int i = 0; i < InventoryState.BackpackSize && amount > 0; i++)
+            {
+                var slot = _inventory.Backpack[i];
+                if (slot == null || slot.DefinitionId != ammoType) continue;
+                int space = def.MaxStackSize - slot.StackCount;
+                if (space <= 0) continue;
+                int add = amount < space ? amount : space;
+                slot.StackCount += add;
+                amount -= add;
+            }
+
+            // Phase 2: overflow into free slots, capped at MaxStackSize per slot.
+            while (amount > 0)
+            {
+                int freeSlot = _inventory.FindFreeBackpackSlot();
+                if (freeSlot < 0) return;
+                int add = amount < def.MaxStackSize ? amount : def.MaxStackSize;
+                _inventory.Backpack[freeSlot] = ItemState.Create(_allocateEId(), ammoType, add);
+                amount -= add;
+            }
         }
 
         // ── Helpers ───────────────────────────────────────────

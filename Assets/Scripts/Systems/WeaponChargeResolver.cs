@@ -34,5 +34,25 @@ namespace Systems
                 return laser.SpecificByTier(weapon.PayloadCore.Rarity).ChargeTime;
             return 0f;
         }
+
+        /// <summary>
+        /// Definition-level overload for callers that don't yet have a built
+        /// <see cref="WeaponEntityState"/> (e.g. Weapon Builder preview pane).
+        /// </summary>
+        public static bool RequiresChargeUp(PayloadCoreDefinition payload)
+        {
+            return payload is LaserPayloadDefinition;
+        }
+
+        /// <summary>
+        /// Definition-level overload for charge time at a given rarity tier.
+        /// Returns 0 for non-charge-up payloads.
+        /// </summary>
+        public static float GetChargeTime(PayloadCoreDefinition payload, RarityTier rarity)
+        {
+            if (payload is LaserPayloadDefinition laser)
+                return laser.SpecificByTier(rarity).ChargeTime;
+            return 0f;
+        }
     }
 }

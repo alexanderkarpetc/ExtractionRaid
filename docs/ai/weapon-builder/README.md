@@ -2,20 +2,27 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-24): ⏸ Paused after Tier 2.** Foundation + 6 working archetypes у грі. Playable, тестований. Продовження (Tier 3+) — коли повернемось.
+> **Status (2026-04-24):** Foundation done (Tiers 0-2). 📋 **Next active work: UX Improvements Pass 1** — see [plan/ux-improvements.md](./plan/ux-improvements.md).
+
+---
+
+## ⭐ Next active work — START HERE
+
+**[plan/ux-improvements.md](./plan/ux-improvements.md)** — фокусований UX polish pass над тим що вже є. Self-contained: контекст, scope, 3 cluster з конкретними файлами + acceptance criteria. Розраховано на нову сесію — все потрібне для одразу почати кодити.
 
 ---
 
 ## Quick resume для нової сесії
 
-Якщо ти повертаєшся до фічі після паузи, читай у цьому порядку:
+Якщо ти повертаєшся до фічі, читай у цьому порядку:
 
-1. **Цей файл** — стан, що працює, що далі
-2. [plan/status.md](./plan/status.md) — decisions log, відкриті питання, pause summary
-3. [plan/roadmap.md](./plan/roadmap.md) — tier structure і exit criteria
-4. [plan/tasks.md](./plan/tasks.md) — конкретні checkbox'и (T-*.NN)
-5. [architecture.md](./architecture.md) — якщо працюєш з кодом: усі ключові рішення (Q1-7, D1-14) з rationale
-6. [design.md](./design.md) — якщо треба перевірити design intent
+1. **[plan/ux-improvements.md](./plan/ux-improvements.md)** — поточний план роботи (UX pass)
+2. **Цей файл** — стан, що працює, що зроблено
+3. [plan/status.md](./plan/status.md) — decisions log, pause summary, 14 key decisions reference
+4. [architecture.md](./architecture.md) — якщо потрібно глибше у код: rationale Q1-7 / D1-14
+5. [design.md](./design.md) — design intent
+6. [plan/roadmap.md](./plan/roadmap.md) — повний tier roadmap (Tier 3-7 — для майбутньої роботи)
+7. [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (історичний reference)
 
 **Короткий entry point:** `Tools → Weapon Builder → Create Stub Assets` у Unity Editor відновлює всі SO assets, якщо їх немає локально.
 
@@ -176,8 +183,9 @@ Projectiles spawned
 - [architecture.md](./architecture.md) — технічна архітектура, усі resolved rationale
 
 ### План та статус
+- **[plan/ux-improvements.md](./plan/ux-improvements.md) — поточний work plan (UX Pass 1)**
 - [plan/roadmap.md](./plan/roadmap.md) — tier structure + exit criteria
-- [plan/tasks.md](./plan/tasks.md) — конкретні задачі з checkbox'ами (оновлюється по ходу коду)
+- [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (historical)
 - [plan/status.md](./plan/status.md) — decisions log, відкриті питання, pause summary
 
 ---

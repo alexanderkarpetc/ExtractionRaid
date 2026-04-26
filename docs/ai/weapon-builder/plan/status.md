@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **⏸ PAUSED after Tier 2 (2026-04-24).** See [Pause summary](#pause-summary--session-resumption-guide) below for a condensed resumption guide.
+> **Status:** Foundation done (Tiers 0-2). 📋 Next active work: **[UX Improvements Pass 1](./ux-improvements.md)** — focused polish on existing feature. Read that doc first — self-contained.
 
 ---
 
@@ -9,6 +9,8 @@
 ### TL;DR стан
 
 Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець підходить до Workbench у Hideout, відкриває Builder screen (UI Toolkit modal), обирає Payload + Delivery з dropdowns, бачить live preview, тисне Build — отримує assembled weapon у backpack. Laser payload має charge-up перед кожним shot. 6 working archetypes (Ballistic × {Pistol, Rifle, Shotgun} + Laser × {Pistol, Rifle, Shotgun}). ~90 зелених тестів. Data-driven — усі stats з SO assets.
+
+**Active work:** [`ux-improvements.md`](./ux-improvements.md) — UX polish pass на foundation. 3 clusters (Builder preview clarity / Inventory integration / Workflow polish). Не торкає content (Tier 3+) і не реалізує rarity/loot.
 
 ### Де все живе
 
