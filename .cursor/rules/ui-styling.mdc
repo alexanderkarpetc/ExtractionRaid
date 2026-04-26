@@ -29,8 +29,9 @@ Reference file: `Assets/Resources/UI/WeaponBuilder/WeaponBuilderWindow.{uxml,uss
 | Window title (header) | `32px` bold |
 | Section title (e.g. archetype label) | `28px` bold |
 | Row label / dropdown text / button label | `22px` |
-| Inline stat label | `20px` |
-| Inline stat value | `20px` bold |
+| Inline stat label | `22px` |
+| Inline stat value | `22px` bold |
+| Inline stat row padding | `3px 0` |
 | Hint / italic note | `18px` italic |
 | Button height | `56px`, min-width `200px` |
 | Border radius | `8–12px` |
@@ -47,9 +48,10 @@ Reference file: `Assets/Resources/UI/Tooltip/TooltipOverlay.{uxml,uss}`.
 | Card max-width | `540px` |
 | Title | `28px` bold accent |
 | Subtitle | `18px` muted |
-| Section heading | `16px` bold |
-| Row label | `20px` |
-| Row value | `20px` bold |
+| Section heading | `22px` bold |
+| Row label | `22px` |
+| Row value | `22px` bold |
+| Row padding | `3px 0` |
 | Border radius | `8px` |
 | Border width | `2px` |
 

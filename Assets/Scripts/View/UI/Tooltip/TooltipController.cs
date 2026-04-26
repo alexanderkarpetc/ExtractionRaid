@@ -52,6 +52,16 @@ namespace View.UI.Tooltip
         // ── Public API ────────────────────────────────────────
 
         /// <summary>
+        /// UI-Toolkit-friendly variant. Takes a position in panel coordinates
+        /// (top-left origin — what <c>PointerEnterEvent.position</c> reports) and
+        /// flips Y internally to the bottom-left form <see cref="Show"/> expects.
+        /// </summary>
+        public void ShowFromPanel(TooltipModel model, Vector2 panelPos)
+        {
+            Show(model, new Vector2(panelPos.x, Screen.height - panelPos.y));
+        }
+
+        /// <summary>
         /// Show the tooltip at <paramref name="screenPos"/> (bottom-left origin).
         /// No-op when <paramref name="model"/> is null/empty.
         /// </summary>

@@ -3,6 +3,7 @@ using ApplicationCore;
 using State;
 using UnityEngine;
 using UnityEngine.UIElements;
+using View.UI.WeaponBuilder.Elements;
 
 namespace View.UI.WeaponBuilder
 {
@@ -16,6 +17,10 @@ namespace View.UI.WeaponBuilder
     /// Singleton pattern for easy access from Workbench / DevCheats. Instance lives as
     /// long as the root GameObject (spawned by <c>App</c> at composition-root time).
     ///
+    /// Layout: palette (cards) + slots (Payload + Delivery) + preview + read-only
+    /// backpack context. Drag-and-drop is layered on top in Phase 2 — Phase 1
+    /// uses click-to-select.
+    ///
     /// See docs/ai/weapon-builder/architecture.md §D9, §D11, §D13.
     /// </summary>
     [DefaultExecutionOrder(-100)]
@@ -28,24 +33,33 @@ namespace View.UI.WeaponBuilder
 
         // ── Runtime UI ────────────────────────────────────────
         UIDocument _doc;
-        PanelSettings _panelSettings;
-        VisualTreeAsset _treeAsset;
-        StyleSheet _styleSheet;
-
         VisualElement _root;
-        DropdownField _payloadDropdown;
-        DropdownField _deliveryDropdown;
+
+        // Palette / slots
+        VisualElement _payloadGrid;
+        VisualElement _deliveryGrid;
+        VisualElement _slotsHost;
+        ModuleSlotElement _payloadSlot;
+        ModuleSlotElement _deliverySlot;
+
+        // Preview
         Label _archetypeLabel;
         Label _chargeHint;
         VisualElement _statsGrid;
         Label _errorLabel;
+
+        // Backpack
+        VisualElement _backpackGrid;
+        readonly List<BackpackItemElement> _backpackItems = new();
+
+        // Window chrome
         Button _closeBtn;
         Button _cancelBtn;
         Button _buildBtn;
 
-        // Parallel lists: index-aligned id → display (dropdowns use display strings).
-        readonly List<string> _payloadIds = new();
-        readonly List<string> _deliveryIds = new();
+        // Card lookup (for highlighting current selection)
+        readonly List<ModuleCardElement> _payloadCards  = new();
+        readonly List<ModuleCardElement> _deliveryCards = new();
 
         bool _isVisible;
 
@@ -59,18 +73,14 @@ namespace View.UI.WeaponBuilder
         void OnDestroy()
         {
             if (Instance == this) Instance = null;
-            if (_presenter != null) _presenter.StateChanged -= RefreshPreview;
+            if (_presenter != null) _presenter.StateChanged -= OnPresenterChanged;
         }
 
-        /// <summary>
-        /// Called by <c>App</c> once the registry + inventory are ready. Wires the
-        /// presenter to this view.
-        /// </summary>
         public void Initialize(WeaponBuilderPresenter presenter)
         {
-            if (_presenter != null) _presenter.StateChanged -= RefreshPreview;
+            if (_presenter != null) _presenter.StateChanged -= OnPresenterChanged;
             _presenter = presenter;
-            if (_presenter != null) _presenter.StateChanged += RefreshPreview;
+            if (_presenter != null) _presenter.StateChanged += OnPresenterChanged;
         }
 
         // ── Public API ────────────────────────────────────────
@@ -84,15 +94,15 @@ namespace View.UI.WeaponBuilder
         {
             if (_presenter == null)
             {
-                Debug.LogWarning("[WeaponBuilder] Cannot Open — presenter not initialized. " +
-                                 "App.StartRaid must run first (or DevCheats invoked before composition root).");
+                Debug.LogWarning("[WeaponBuilder] Cannot Open — presenter not initialized.");
                 return;
             }
             if (_root == null) return;
 
             _presenter.ClearSelection();
-            PopulateDropdowns();
-            RefreshPreview();
+            PopulatePalette();
+            RefreshBackpack();
+            RefreshAll();
 
             _root.style.display = DisplayStyle.Flex;
             _isVisible = true;
@@ -117,25 +127,23 @@ namespace View.UI.WeaponBuilder
 
         void BuildDocument()
         {
-            _treeAsset     = Resources.Load<VisualTreeAsset>("UI/WeaponBuilder/WeaponBuilderWindow");
-            _styleSheet    = Resources.Load<StyleSheet>("UI/WeaponBuilder/WeaponBuilderWindow");
-            _panelSettings = Resources.Load<PanelSettings>("UI/WeaponBuilder/WeaponBuilderPanelSettings");
+            var tree   = Resources.Load<VisualTreeAsset>("UI/WeaponBuilder/WeaponBuilderWindow");
+            var sheet  = Resources.Load<StyleSheet>("UI/WeaponBuilder/WeaponBuilderWindow");
+            var panel  = Resources.Load<PanelSettings>("UI/WeaponBuilder/WeaponBuilderPanelSettings");
 
-            if (_treeAsset == null || _panelSettings == null)
+            if (tree == null || panel == null)
             {
-                Debug.LogWarning("[WeaponBuilder] Missing UXML or PanelSettings at Resources/UI/WeaponBuilder/. " +
-                                 "Check the editor bootstrap log and make sure the assets imported.");
+                Debug.LogWarning("[WeaponBuilder] Missing UXML or PanelSettings at Resources/UI/WeaponBuilder/.");
                 return;
             }
 
             _doc = gameObject.AddComponent<UIDocument>();
-            _doc.panelSettings = _panelSettings;
-            _doc.visualTreeAsset = _treeAsset;
+            _doc.panelSettings   = panel;
+            _doc.visualTreeAsset = tree;
 
             _root = _doc.rootVisualElement;
-
-            if (_styleSheet != null && !_root.styleSheets.Contains(_styleSheet))
-                _root.styleSheets.Add(_styleSheet);
+            if (sheet != null && !_root.styleSheets.Contains(sheet))
+                _root.styleSheets.Add(sheet);
 
             _root.style.flexGrow = 1;
             _root.style.flexDirection = FlexDirection.Column;
@@ -146,46 +154,41 @@ namespace View.UI.WeaponBuilder
             _root.style.bottom = 0;
 
             CacheElements();
+            BuildSlots();
             WireEvents();
         }
 
         void CacheElements()
         {
-            _payloadDropdown  = _root.Q<DropdownField>("payloadDropdown");
-            _deliveryDropdown = _root.Q<DropdownField>("deliveryDropdown");
-            _archetypeLabel   = _root.Q<Label>("archetypeLabel");
-            _chargeHint       = _root.Q<Label>("chargeHint");
-            _statsGrid        = _root.Q<VisualElement>("statsGrid");
-            _errorLabel       = _root.Q<Label>("errorLabel");
-            _closeBtn         = _root.Q<Button>("closeBtn");
-            _cancelBtn        = _root.Q<Button>("cancelBtn");
-            _buildBtn         = _root.Q<Button>("buildBtn");
+            _payloadGrid    = _root.Q<VisualElement>("payloadGrid");
+            _deliveryGrid   = _root.Q<VisualElement>("deliveryGrid");
+            _slotsHost      = _root.Q<VisualElement>("slotsHost");
+            _archetypeLabel = _root.Q<Label>("archetypeLabel");
+            _chargeHint     = _root.Q<Label>("chargeHint");
+            _statsGrid      = _root.Q<VisualElement>("statsGrid");
+            _errorLabel     = _root.Q<Label>("errorLabel");
+            _backpackGrid   = _root.Q<VisualElement>("backpackGrid");
+            _closeBtn       = _root.Q<Button>("closeBtn");
+            _cancelBtn      = _root.Q<Button>("cancelBtn");
+            _buildBtn       = _root.Q<Button>("buildBtn");
+        }
+
+        void BuildSlots()
+        {
+            _payloadSlot  = new ModuleSlotElement(ModuleCardElement.ModuleKind.Payload);
+            _deliverySlot = new ModuleSlotElement(ModuleCardElement.ModuleKind.Delivery);
+            _payloadSlot.Cleared  += _ => _presenter?.SelectPayload(null);
+            _deliverySlot.Cleared += _ => _presenter?.SelectDelivery(null);
+            _slotsHost.Add(_payloadSlot);
+            _slotsHost.Add(_deliverySlot);
         }
 
         void WireEvents()
         {
             _closeBtn.clicked  += Close;
             _cancelBtn.clicked += Close;
+            _buildBtn.clicked  += OnBuildClicked;
 
-            _buildBtn.clicked += OnBuildClicked;
-
-            _payloadDropdown.RegisterValueChangedCallback(evt =>
-            {
-                if (_presenter == null) return;
-                int idx = _payloadDropdown.choices.IndexOf(evt.newValue);
-                var id = (idx >= 0 && idx < _payloadIds.Count) ? _payloadIds[idx] : null;
-                _presenter.SelectPayload(id);
-            });
-
-            _deliveryDropdown.RegisterValueChangedCallback(evt =>
-            {
-                if (_presenter == null) return;
-                int idx = _deliveryDropdown.choices.IndexOf(evt.newValue);
-                var id = (idx >= 0 && idx < _deliveryIds.Count) ? _deliveryIds[idx] : null;
-                _presenter.SelectDelivery(id);
-            });
-
-            // ESC to close.
             _root.RegisterCallback<KeyDownEvent>(evt =>
             {
                 if (evt.keyCode == KeyCode.Escape)
@@ -196,50 +199,99 @@ namespace View.UI.WeaponBuilder
             });
         }
 
-        // ── Dropdown population ───────────────────────────────
+        // ── Palette population ────────────────────────────────
 
-        void PopulateDropdowns()
+        void PopulatePalette()
         {
-            _payloadIds.Clear();
-            var payloadChoices = new List<string>();
+            _payloadGrid.Clear();
+            _payloadCards.Clear();
             foreach (var def in _presenter.AllPayloads)
             {
                 if (def == null) continue;
-                _payloadIds.Add(def.Id);
-                payloadChoices.Add(FormatPayloadName(def));
+                var card = new ModuleCardElement(def);
+                card.Clicked += OnPayloadCardClicked;
+                _payloadGrid.Add(card);
+                _payloadCards.Add(card);
             }
-            _payloadDropdown.choices = payloadChoices;
-            _payloadDropdown.SetValueWithoutNotify(string.Empty);
 
-            _deliveryIds.Clear();
-            var deliveryChoices = new List<string>();
+            _deliveryGrid.Clear();
+            _deliveryCards.Clear();
             foreach (var def in _presenter.AllDeliveries)
             {
                 if (def == null) continue;
-                _deliveryIds.Add(def.Id);
-                deliveryChoices.Add(FormatDeliveryName(def));
+                var card = new ModuleCardElement(def);
+                card.Clicked += OnDeliveryCardClicked;
+                _deliveryGrid.Add(card);
+                _deliveryCards.Add(card);
             }
-            _deliveryDropdown.choices = deliveryChoices;
-            _deliveryDropdown.SetValueWithoutNotify(string.Empty);
         }
 
-        static string FormatPayloadName(PayloadCoreDefinition def)
-            => !string.IsNullOrEmpty(def.DisplayName) ? def.DisplayName : def.Id;
+        void OnPayloadCardClicked(ModuleCardElement card)
+        {
+            if (_presenter == null) return;
+            // Toggle: click again on the selected card to clear it.
+            bool alreadySelected = _presenter.State.SelectedPayload.DefinitionId == card.DefinitionId;
+            _presenter.SelectPayload(alreadySelected ? null : card.DefinitionId);
+        }
 
-        static string FormatDeliveryName(DeliveryCoreDefinition def)
-            => !string.IsNullOrEmpty(def.FormFactor) ? def.FormFactor : def.Id;
+        void OnDeliveryCardClicked(ModuleCardElement card)
+        {
+            if (_presenter == null) return;
+            bool alreadySelected = _presenter.State.SelectedDelivery.DefinitionId == card.DefinitionId;
+            _presenter.SelectDelivery(alreadySelected ? null : card.DefinitionId);
+        }
 
-        // ── Preview rendering ─────────────────────────────────
+        // ── Refresh on presenter state change ─────────────────
+
+        void OnPresenterChanged() => RefreshAll();
+
+        void RefreshAll()
+        {
+            if (_presenter == null) return;
+            RefreshSlots();
+            RefreshCardSelection();
+            RefreshPreview();
+        }
+
+        void RefreshSlots()
+        {
+            // Payload slot
+            if (_presenter.State.HasPayload &&
+                TryGetPayloadDef(_presenter.State.SelectedPayload.DefinitionId, out var pdef))
+            {
+                _payloadSlot.Fill(pdef);
+            }
+            else
+            {
+                _payloadSlot.Clear();
+            }
+
+            // Delivery slot
+            if (_presenter.State.HasDelivery &&
+                TryGetDeliveryDef(_presenter.State.SelectedDelivery.DefinitionId, out var ddef))
+            {
+                _deliverySlot.Fill(ddef);
+            }
+            else
+            {
+                _deliverySlot.Clear();
+            }
+        }
+
+        void RefreshCardSelection()
+        {
+            string payloadId  = _presenter.State.HasPayload  ? _presenter.State.SelectedPayload.DefinitionId  : null;
+            string deliveryId = _presenter.State.HasDelivery ? _presenter.State.SelectedDelivery.DefinitionId : null;
+
+            foreach (var c in _payloadCards)  c.SetSelected(c.DefinitionId == payloadId);
+            foreach (var c in _deliveryCards) c.SetSelected(c.DefinitionId == deliveryId);
+        }
 
         void RefreshPreview()
         {
-            if (_presenter == null) return;
-
-            // Archetype label
             var archetype = _presenter.PreviewArchetype;
             _archetypeLabel.text = string.IsNullOrEmpty(archetype) ? "—" : archetype;
 
-            // Charge-up hint (only shown when payload requires charging)
             if (_presenter.PreviewRequiresCharge)
             {
                 _chargeHint.text = $"⚡ Requires charge — {_presenter.PreviewChargeTime:0.0}s before each shot";
@@ -251,31 +303,29 @@ namespace View.UI.WeaponBuilder
                 _chargeHint.style.display = DisplayStyle.None;
             }
 
-            // Stats grid
             _statsGrid.Clear();
             var stats = _presenter.PreviewStats;
             if (stats.HasValue)
             {
-                AppendStatRow(_statsGrid, "Damage",         stats.Value.Damage.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Fire Interval",  stats.Value.FireInterval.ToString("0.##") + " s");
-                AppendStatRow(_statsGrid, "Magazine",       stats.Value.MagazineSize.ToString());
-                AppendStatRow(_statsGrid, "Reload Time",    stats.Value.ReloadTime.ToString("0.##") + " s");
-                AppendStatRow(_statsGrid, "Projectile Speed", stats.Value.ProjectileSpeed.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Headshot Mult",  stats.Value.HeadshotDamageMultiplier.ToString("0.##") + "×");
-                AppendStatRow(_statsGrid, "Penetration",    stats.Value.BasePenetration.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Projectiles/Shot", stats.Value.ProjectilesPerShot.ToString());
+                AppendStatRow(_statsGrid, "Damage",            stats.Value.Damage.ToString("0.##"));
+                AppendStatRow(_statsGrid, "Fire Interval",     stats.Value.FireInterval.ToString("0.##") + " s");
+                AppendStatRow(_statsGrid, "Magazine",          stats.Value.MagazineSize.ToString());
+                AppendStatRow(_statsGrid, "Reload Time",       stats.Value.ReloadTime.ToString("0.##") + " s");
+                AppendStatRow(_statsGrid, "Projectile Speed",  stats.Value.ProjectileSpeed.ToString("0.##"));
+                AppendStatRow(_statsGrid, "Headshot Mult",     stats.Value.HeadshotDamageMultiplier.ToString("0.##") + "×");
+                AppendStatRow(_statsGrid, "Penetration",       stats.Value.BasePenetration.ToString("0.##"));
+                AppendStatRow(_statsGrid, "Projectiles/Shot",  stats.Value.ProjectilesPerShot.ToString());
             }
 
-            // Build button enabled state + disabled tooltip explaining why
             bool canBuild = _presenter.CanBuild;
             _buildBtn.SetEnabled(canBuild);
             _buildBtn.tooltip = canBuild ? string.Empty : _presenter.DisabledReason;
-            _errorLabel.text = string.Empty;
+            _errorLabel.text  = string.Empty;
         }
 
         static void AppendStatRow(VisualElement grid, string label, string value)
         {
-            var row = new VisualElement { name = "statRow" };
+            var row = new VisualElement();
             row.AddToClassList("wb-stat-row");
 
             var l = new Label(label);
@@ -289,6 +339,26 @@ namespace View.UI.WeaponBuilder
             grid.Add(row);
         }
 
+        // ── Backpack rendering ────────────────────────────────
+
+        void RefreshBackpack()
+        {
+            _backpackGrid.Clear();
+            _backpackItems.Clear();
+
+            var inventory = App.Instance?.Player?.Inventory;
+            var registry  = App.Instance?.CoreDefinitions;
+            if (inventory == null) return;
+
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var el = new BackpackItemElement();
+                el.Bind(inventory.Backpack[i], registry);
+                _backpackGrid.Add(el);
+                _backpackItems.Add(el);
+            }
+        }
+
         // ── Build action ──────────────────────────────────────
 
         void OnBuildClicked()
@@ -296,10 +366,34 @@ namespace View.UI.WeaponBuilder
             if (_presenter == null) return;
             if (_presenter.TryBuild(out var reason))
             {
+                // Reflect the just-added weapon + ammo grant in the in-window backpack.
+                RefreshBackpack();
                 Close();
                 return;
             }
             _errorLabel.text = reason ?? "Build failed.";
+        }
+
+        // ── Helpers ───────────────────────────────────────────
+
+        bool TryGetPayloadDef(string id, out PayloadCoreDefinition def)
+        {
+            foreach (var d in _presenter.AllPayloads)
+            {
+                if (d != null && d.Id == id) { def = d; return true; }
+            }
+            def = null;
+            return false;
+        }
+
+        bool TryGetDeliveryDef(string id, out DeliveryCoreDefinition def)
+        {
+            foreach (var d in _presenter.AllDeliveries)
+            {
+                if (d != null && d.Id == id) { def = d; return true; }
+            }
+            def = null;
+            return false;
         }
 
         // ── Input gate ────────────────────────────────────────

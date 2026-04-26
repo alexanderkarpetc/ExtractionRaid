@@ -1,6 +1,13 @@
-/* Weapon Builder modal — Tier 1 minimal styling.
- * Dimmed backdrop + centered card. No theme-specific assets; should render cleanly
- * with the default Unity runtime theme. */
+/* Weapon Builder modal — D&D layout (Tier 1-2 + UX pass).
+ *
+ * Layout:
+ *   header
+ *   body
+ *     topRow:  [palette ───────────] [buildPanel ─────────────]
+ *     backpackPanel: [thumbnails ─────────────────────────────]
+ *   footer
+ *
+ * Sizes follow Tier A scale — see docs/ai/ui-styling.md. */
 
 .wb-backdrop {
     position: absolute;
@@ -14,7 +21,7 @@
 }
 
 .wb-window {
-    width: 1040px;
+    width: 1280px;
     background-color: rgb(26, 28, 34);
     border-color: rgb(70, 75, 85);
     border-width: 2px;
@@ -22,7 +29,7 @@
     padding: 0;
 }
 
-/* Header */
+/* ── Header ─────────────────────────────────────────── */
 
 .wb-header {
     flex-direction: row;
@@ -56,47 +63,182 @@
     border-radius: 8px;
 }
 
-/* Body */
+/* ── Body ───────────────────────────────────────────── */
 
 .wb-body {
-    padding: 32px;
+    padding: 24px 32px;
 }
 
-.wb-row {
+.wb-top-row {
     flex-direction: row;
-    align-items: center;
-    margin-bottom: 20px;
 }
 
-.wb-row-label {
-    width: 160px;
-    color: rgb(180, 185, 195);
-    font-size: 22px;
+.wb-section-heading {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(140, 175, 210);
+    margin-bottom: 12px;
 }
 
-.wb-dropdown {
-    flex-grow: 1;
-    font-size: 22px;
-    min-height: 44px;
-}
+/* ── Palette (left column) ──────────────────────────── */
 
-/* Preview */
-
-.wb-preview {
-    margin-top: 24px;
-    padding: 24px;
+.wb-palette {
+    width: 580px;
+    margin-right: 24px;
+    padding: 20px;
     background-color: rgb(22, 24, 30);
     border-color: rgb(50, 55, 65);
     border-width: 1px;
     border-radius: 8px;
-    min-height: 240px;
+}
+
+.wb-palette-group-label {
+    font-size: 18px;
+    color: rgb(150, 155, 165);
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+.wb-palette-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.wb-card {
+    width: 160px;
+    height: 96px;
+    margin: 0 8px 8px 0;
+    padding: 12px 14px;
+    background-color: rgb(38, 42, 52);
+    border-color: rgb(70, 75, 85);
+    border-width: 2px;
+    border-radius: 8px;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.wb-card:hover {
+    background-color: rgb(48, 54, 66);
+    border-color: rgb(120, 195, 235);
+}
+
+.wb-card-selected {
+    border-color: rgb(230, 200, 140);
+    background-color: rgb(48, 44, 36);
+}
+
+.wb-card-title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    color: rgb(235, 240, 250);
+    white-space: normal;
+}
+
+.wb-card-kind {
+    font-size: 18px;
+    color: rgb(190, 200, 215);
+    -unity-text-align: middle-left;
+}
+
+/* ── Build panel (right column) ─────────────────────── */
+
+.wb-build-panel {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: rgb(22, 24, 30);
+    border-color: rgb(50, 55, 65);
+    border-width: 1px;
+    border-radius: 8px;
+}
+
+.wb-slots-host {
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.wb-slot {
+    height: 88px;
+    margin-bottom: 12px;
+    padding: 14px 20px;
+    background-color: rgb(30, 33, 40);
+    border-color: rgb(70, 75, 85);
+    border-width: 2px;
+    border-radius: 8px;
+    justify-content: center;
+}
+
+.wb-slot-empty {
+    font-size: 20px;
+    color: rgb(120, 130, 145);
+    -unity-text-align: middle-center;
+    -unity-font-style: italic;
+}
+
+.wb-slot-filled {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wb-slot-filled-state {
+    border-color: rgb(120, 195, 235);
+    background-color: rgb(34, 42, 54);
+}
+
+.wb-slot-filled-title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    color: rgb(235, 240, 250);
+}
+
+.wb-slot-filled-kind {
+    font-size: 18px;
+    color: rgb(190, 200, 215);
+    flex-grow: 1;
+    margin-left: 12px;
+}
+
+.wb-slot-clear {
+    width: 36px;
+    height: 36px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(200, 205, 215);
+    font-size: 26px;
+    -unity-font-style: bold;
+    padding: 0;
+}
+
+.wb-slot-clear:hover {
+    background-color: rgb(70, 50, 50);
+    border-radius: 6px;
+}
+
+.wb-slot-drag-valid {
+    border-color: rgb(80, 200, 120);
+    background-color: rgb(28, 44, 34);
+}
+
+.wb-slot-drag-invalid {
+    border-color: rgb(200, 80, 80);
+    background-color: rgb(50, 28, 28);
+}
+
+/* ── Preview ────────────────────────────────────────── */
+
+.wb-preview {
+    padding: 20px;
+    background-color: rgb(30, 33, 40);
+    border-color: rgb(50, 55, 65);
+    border-width: 1px;
+    border-radius: 8px;
 }
 
 .wb-archetype {
     font-size: 28px;
     -unity-font-style: bold;
     color: rgb(230, 200, 140);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .wb-hint {
@@ -114,28 +256,79 @@
 .wb-stat-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 4px 0;
+    padding: 3px 0;
 }
 
 .wb-stat-label {
-    color: rgb(150, 155, 165);
-    font-size: 20px;
+    color: rgb(180, 190, 205);
+    font-size: 22px;
 }
 
 .wb-stat-value {
-    color: rgb(210, 215, 225);
-    font-size: 20px;
+    color: rgb(230, 235, 245);
+    font-size: 22px;
     -unity-font-style: bold;
 }
 
 .wb-error {
     color: rgb(220, 100, 100);
-    font-size: 20px;
-    margin-top: 16px;
+    font-size: 18px;
+    margin-top: 12px;
     white-space: normal;
 }
 
-/* Footer */
+/* ── Backpack panel (bottom strip) ──────────────────── */
+
+.wb-backpack-panel {
+    margin-top: 24px;
+    padding: 20px;
+    background-color: rgb(22, 24, 30);
+    border-color: rgb(50, 55, 65);
+    border-width: 1px;
+    border-radius: 8px;
+}
+
+.wb-backpack-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.wb-bp-item {
+    width: 152px;
+    height: 88px;
+    margin: 0 8px 8px 0;
+    padding: 10px 14px;
+    background-color: rgb(30, 33, 40);
+    border-color: rgb(50, 55, 65);
+    border-width: 1px;
+    border-radius: 8px;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.wb-bp-item:hover {
+    border-color: rgb(120, 195, 235);
+}
+
+.wb-bp-item-empty {
+    background-color: rgb(20, 22, 26);
+    border-color: rgb(40, 44, 52);
+}
+
+.wb-bp-item-name {
+    font-size: 18px;
+    color: rgb(220, 225, 235);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.wb-bp-item-count {
+    font-size: 16px;
+    color: rgb(180, 190, 205);
+    -unity-text-align: middle-right;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
 
 .wb-footer {
     flex-direction: row;
@@ -180,4 +373,20 @@
     background-color: rgb(45, 55, 50);
     border-color: rgb(55, 65, 60);
     color: rgb(130, 140, 135);
+}
+
+/* ── Drag layer (overlay for ghost element during drag) ── */
+
+.wb-drag-layer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.wb-drag-ghost {
+    position: absolute;
+    opacity: 0.85;
+    /* card sizing inherited via wb-card class */
 }

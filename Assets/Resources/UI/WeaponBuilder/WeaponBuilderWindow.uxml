@@ -2,6 +2,7 @@
     <Style src="WeaponBuilderWindow.uss" />
     <ui:VisualElement name="backdrop" class="wb-backdrop">
         <ui:VisualElement name="window" class="wb-window">
+
             <ui:VisualElement name="header" class="wb-header">
                 <ui:Label text="Weapon Builder" class="wb-title" />
                 <ui:Button name="closeBtn" text="×" class="wb-close-btn" />
@@ -9,21 +10,36 @@
 
             <ui:VisualElement name="body" class="wb-body">
 
-                <ui:VisualElement class="wb-row">
-                    <ui:Label text="Payload" class="wb-row-label" />
-                    <ui:DropdownField name="payloadDropdown" class="wb-dropdown" />
+                <ui:VisualElement name="topRow" class="wb-top-row">
+
+                    <ui:VisualElement name="palette" class="wb-palette">
+                        <ui:Label text="AVAILABLE MODULES" class="wb-section-heading" />
+
+                        <ui:Label text="Payload" class="wb-palette-group-label" />
+                        <ui:VisualElement name="payloadGrid" class="wb-palette-grid" />
+
+                        <ui:Label text="Delivery" class="wb-palette-group-label" />
+                        <ui:VisualElement name="deliveryGrid" class="wb-palette-grid" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="buildPanel" class="wb-build-panel">
+                        <ui:Label text="YOUR BUILD" class="wb-section-heading" />
+
+                        <ui:VisualElement name="slotsHost" class="wb-slots-host" />
+
+                        <ui:VisualElement name="previewBox" class="wb-preview">
+                            <ui:Label name="archetypeLabel" text="—" class="wb-archetype" />
+                            <ui:Label name="chargeHint" class="wb-hint" />
+                            <ui:VisualElement name="statsGrid" class="wb-stats-grid" />
+                            <ui:Label name="errorLabel" class="wb-error" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
                 </ui:VisualElement>
 
-                <ui:VisualElement class="wb-row">
-                    <ui:Label text="Delivery" class="wb-row-label" />
-                    <ui:DropdownField name="deliveryDropdown" class="wb-dropdown" />
-                </ui:VisualElement>
-
-                <ui:VisualElement name="previewBox" class="wb-preview">
-                    <ui:Label name="archetypeLabel" text="—" class="wb-archetype" />
-                    <ui:Label name="chargeHint" class="wb-hint" />
-                    <ui:VisualElement name="statsGrid" class="wb-stats-grid" />
-                    <ui:Label name="errorLabel" class="wb-error" />
+                <ui:VisualElement name="backpackPanel" class="wb-backpack-panel">
+                    <ui:Label text="YOUR BACKPACK" class="wb-section-heading" />
+                    <ui:VisualElement name="backpackGrid" class="wb-backpack-grid" />
                 </ui:VisualElement>
 
             </ui:VisualElement>
@@ -32,6 +48,9 @@
                 <ui:Button name="cancelBtn" text="Cancel" class="wb-btn wb-btn-cancel" />
                 <ui:Button name="buildBtn" text="Build" class="wb-btn wb-btn-build" />
             </ui:VisualElement>
+
+            <ui:VisualElement name="dragLayer" picking-mode="Ignore" class="wb-drag-layer" />
+
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

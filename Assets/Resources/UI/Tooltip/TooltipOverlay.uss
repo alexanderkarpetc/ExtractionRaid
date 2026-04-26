@@ -49,11 +49,11 @@
 }
 
 .tt-section {
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .tt-section-heading {
-    font-size: 16px;
+    font-size: 22px;
     -unity-font-style: bold;
     color: rgb(140, 175, 210);
     -unity-text-align: middle-left;
@@ -67,16 +67,16 @@
 .tt-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 2px 0;
+    padding: 3px 0;
 }
 
 .tt-row-label {
-    font-size: 20px;
-    color: rgb(160, 165, 175);
+    font-size: 22px;
+    color: rgb(180, 190, 205);
 }
 
 .tt-row-value {
-    font-size: 20px;
+    font-size: 22px;
     -unity-font-style: bold;
-    color: rgb(220, 225, 235);
+    color: rgb(230, 235, 245);
 }
