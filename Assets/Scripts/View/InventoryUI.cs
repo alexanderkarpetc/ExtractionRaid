@@ -3,6 +3,7 @@ using State;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using View.UI;
+using View.UI.WeaponBuilder;
 
 namespace View
 {
@@ -10,6 +11,7 @@ namespace View
     {
         bool _isOpen;
         bool _openedByLoot;
+        bool _openedByBuilder;
 
         PopupManager _popupManager;
         LootPopupView _lootPopupView;
@@ -21,21 +23,29 @@ namespace View
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
+            bool builderOpen = player.BuilderTargetId != EId.None;
+
             var kb = Keyboard.current;
             if (kb != null && kb[Key.Tab].wasPressedThisFrame)
             {
-                if (_isOpen)
+                if (builderOpen)
+                {
+                    // Tab is the universal "close everything" key. While Builder is
+                    // open it tears down the modal — Builder.Close clears
+                    // BuilderTargetId, and the next Update sees `!builderOpen` and
+                    // closes the inventory popup naturally.
+                    WeaponBuilderWindow.Instance?.Close();
+                }
+                else if (_isOpen)
                 {
                     _isOpen = false;
                     _openedByLoot = false;
-                    if (player != null)
-                        player.LootTargetId = EId.None;
+                    player.LootTargetId = EId.None;
                 }
                 else
                 {
                     _isOpen = true;
-                    if (player != null)
-                        player.CraftTargetId = EId.None;
+                    player.CraftTargetId = EId.None;
                 }
             }
 
@@ -55,6 +65,19 @@ namespace View
             {
                 _isOpen = false;
                 _openedByLoot = false;
+            }
+
+            // Builder side-by-side: BuilderTargetId drives the inventory popup
+            // open/close in lockstep with the Builder modal.
+            if (builderOpen && !_isOpen)
+            {
+                _isOpen = true;
+                _openedByBuilder = true;
+            }
+            else if (!builderOpen && _openedByBuilder)
+            {
+                _isOpen = false;
+                _openedByBuilder = false;
             }
 
             player.IsInventoryOpen = _isOpen;
@@ -82,7 +105,10 @@ namespace View
             if (_isOpen && !popupOpen)
             {
                 _popupManager.Open(_lootPopupView);
-                _lootPopupView.Open(state);
+                if (_openedByBuilder)
+                    _lootPopupView.OpenForBuilder();
+                else
+                    _lootPopupView.Open(state);
             }
             else if (!_isOpen && popupOpen)
             {

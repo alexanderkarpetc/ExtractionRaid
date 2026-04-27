@@ -2,7 +2,7 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work: pick next from Tier 3-7 — see [plan/status.md](./plan/status.md) Pause summary.
+> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work: **Tier 6 — Loot / Inventory integration** (modules-as-items, drag-from-backpack у Builder, dev grant). Then Tier 8 (3D viz). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
 
 ---
 
@@ -32,12 +32,17 @@
 | **0b** Migration | State refactor, assembly pipeline, Shotgun + factories видалено | ✅ complete (2026-04-22) |
 | **1** Vertical slice | Workbench, Builder UI (UI Toolkit), DevCheats, Ballistic+Pistol E2E | ✅ complete (2026-04-23) |
 | **2** Core breadth | +Laser (charge-up), +Scatter, 6 archetypes | ✅ complete (2026-04-23) |
-| **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant | ✅ complete (2026-04-27) |
+| **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant, resolution scaling | ✅ complete (2026-04-27) |
+| **6** Loot / Inventory integration | Modules-as-items, loot drops, drag-from-backpack у Builder, dev grant cheat | ⏳ **NEXT** |
+| **8** 3D Modular Visualization | Modular weapon meshes (4 payload + 5 delivery), runtime composition, attachment sockets | ⏳ planned |
 | **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
 | **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
 | **5** Exotic Mods | 5 Exotic mods via hook system | ⏳ planned |
-| **6** Loot integration | Module items у loot pipeline | ⏳ planned |
-| **7** Polish | VFX, SFX, balance, UI polish | ⏳ planned |
+| **9** VFX / SFX Language | Per-payload/delivery/exotic visual + audio language, hit feedback polish | ⏳ planned |
+| **10** Weapon Feel Polish | Iterative tuning loop — fire interval, recoil, charge timing, animation polish, balance | ⏳ planned |
+| ~~**7**~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
+
+**Tier numbers = stable IDs.** Execution order ≠ tier number order — see [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for rationale. Currently: 6 → 8 → 3 → 4 → 5 → 9 → 10.
 
 **Test coverage:** ~120 зелених тестів (90 з foundation + ~30 з UX Pass 1: WeaponDisplayName, Tooltip builders, presenter extensions).
 
@@ -138,7 +143,23 @@ Projectiles spawned
 
 ---
 
-## Що ще треба зробити
+## Що ще треба зробити (in execution order)
+
+### NEXT — Tier 6: Loot / Inventory integration
+- Modules як `ItemState` items (per Payload + Delivery type) — кожний з icon, stackable=false, slot=Backpack
+- Loot drops: модулі падають з контейнерів і ботів
+- DevCheats grant-module shortcut (для playtest без рейду)
+- Builder palette filter: показуємо тільки доступні (з inventory) модулі
+- Drag-from-backpack у Builder активується (currently read-only)
+- Build consume'ить модулі з backpack
+- Initial player loadout — starting modules visible у backpack
+
+### Tier 8: 3D Modular Visualization
+- Modular `WeaponView` — runtime composition payload mesh + delivery mesh
+- 4 payload meshes (Ballistic, Laser, Rocket, Foam) + 5 delivery meshes
+- Attachment socket system на delivery prefabs
+- Animator integration (per-module bone/socket mapping)
+- Backpack item icons reflect actual archetype
 
 ### Content (Tier 3)
 - Payload: **Foam** (status effects: slow + stick), **Rocket** (AoE explosion, ExplosionRadius)
@@ -149,25 +170,28 @@ Projectiles spawned
 - Rarity: fill `StatsByTier` для Uncommon → Legendary, UI dropdown для rarity selection, balance pass
 - Slot compatibility: banned combos matrix, UI feedback
 - Bot weapons: мігрувати BotSpawnSystem на assembly pipeline
+- Rarity visual tint на cards + inventory items
 
 ### Feature (Tier 5)
 - Exotic Mods × 5, hook system (OnFire / OnHit / OnKill / OnProjectileUpdate)
 
-### Integration (Tier 6)
-- Module items як ground items / loot drops
-- Remove "infinite" placeholder у Builder UI — filter по inventory modules
+### Tier 9: VFX / SFX Language
+- Per-Payload VFX (Ballistic muzzle+tracer+spark, Laser beam+glow+burn, Rocket missile+AoE, Foam splat+slow zone)
+- Per-Delivery VFX (Rotary spinup, Swarm volley flash sequence, Scatter cone)
+- Per-Exotic VFX (Ricochet sparks, Split fork, Boomerang trail)
+- SFX library (charge sound, fire variants, reload variations)
+- Hit feedback polish (screen shake, hit pause, damage numbers)
 
-### Polish (Tier 7)
-- VFX per payload (Ballistic bullet, Laser beam, Rocket explosion, Foam splat)
-- SFX: charge sound, fire variations per delivery
-- Weapon meshes per FormFactor
-- Rarity visual tint на cards + inventory items
-- ~~Inventory UI: archetype label замість "Weapon" DefinitionId~~ ✅ done у UX Pass 1
+### Tier 10: Weapon Feel Polish
+- Iterative playtest tuning: fire interval, recoil, charge timing, reload pace
+- Animation polish, sound design integration
+- Damage curves vs armor balance pass
+- Comprehensive playtest sweep (no archetype dominance / dead-on-arrival)
 
 ### Відкладено з минулого
 - `.cursor/rules/weapon-builder*.mdc` counterpart (per CLAUDE.md §7) — не зроблено
 - Update `docs/ai/weapons.md` — зараз застаріла, описує pre-migration Rifle/Shotgun/Pistol
-- Weapon view prefabs (Weapon_Shotgun було видалено — нового mesh для Scatter formfactor немає, fallback на Weapon_Rifle)
+- Weapon view prefabs (Weapon_Shotgun було видалено — нового mesh для Scatter formfactor немає, fallback на Weapon_Rifle) — буде закрите Tier 8
 
 ---
 

@@ -1,6 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <Style src="WeaponBuilderWindow.uss" />
-    <ui:VisualElement name="backdrop" class="wb-backdrop">
+    <!-- Backdrop is picking-Ignore: it renders the dim tint but lets pointer events
+         pass through to whatever sits underneath (uGUI inventory canvas in Tier 6
+         side-by-side mode). The window itself stays default-pickable. -->
+    <ui:VisualElement name="backdrop" picking-mode="Ignore" class="wb-backdrop">
         <ui:VisualElement name="window" class="wb-window">
 
             <ui:VisualElement name="header" class="wb-header">
@@ -36,11 +39,6 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
 
-                </ui:VisualElement>
-
-                <ui:VisualElement name="backpackPanel" class="wb-backpack-panel">
-                    <ui:Label text="YOUR BACKPACK" class="wb-section-heading" />
-                    <ui:VisualElement name="backpackGrid" class="wb-backpack-grid" />
                 </ui:VisualElement>
 
             </ui:ScrollView>

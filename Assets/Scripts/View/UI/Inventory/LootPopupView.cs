@@ -78,6 +78,20 @@ namespace View.UI
             Refresh();
         }
 
+        /// <summary>
+        /// Side-by-side variant for Weapon Builder mode — shows only the player
+        /// panel (no loot containers / floor pickup), even if state has nearby
+        /// lootables. Builder UI lives on the right; this panel sits on the left.
+        /// </summary>
+        public void OpenForBuilder()
+        {
+            _playerPanel.Bind(App.Instance.Player.Inventory);
+
+            ReturnAllContainers();
+            _lootContainerParent.gameObject.SetActive(false);
+            Refresh();
+        }
+
         public void Refresh()
         {
             var inventory = App.Instance?.Player?.Inventory;

@@ -12,8 +12,9 @@ namespace View.UI.WeaponBuilder
     /// Runtime UI Toolkit modal for the Weapon Builder. Owns a <see cref="UIDocument"/>
     /// and binds it to a <see cref="WeaponBuilderPresenter"/>. The window is hidden by
     /// default; <see cref="Open"/> / <see cref="Close"/> / <see cref="Toggle"/> drive
-    /// visibility and the <see cref="PlayerEntityState.IsWeaponBuilderOpen"/> gameplay
-    /// input gate.
+    /// visibility and the <see cref="PlayerEntityState.BuilderTargetId"/> gameplay
+    /// input gate (also picked up by InventoryUI to open the side-by-side uGUI
+    /// inventory canvas).
     ///
     /// Singleton pattern for easy access from Workbench / DevCheats. Instance lives as
     /// long as the root GameObject (spawned by <c>App</c> at composition-root time).
@@ -55,9 +56,6 @@ namespace View.UI.WeaponBuilder
         VisualElement _statsGrid;
         Label _errorLabel;
 
-        // Backpack
-        VisualElement _backpackGrid;
-        readonly List<BackpackItemElement> _backpackItems = new();
 
         // Window chrome
         Button _closeBtn;
@@ -117,7 +115,6 @@ namespace View.UI.WeaponBuilder
 
             _presenter.ClearSelection();
             PopulatePalette();
-            RefreshBackpack();
             RefreshAll();
 
             // Mount the window invisible, then drop the class next frame so the USS
@@ -275,7 +272,6 @@ namespace View.UI.WeaponBuilder
             _chargeHint      = _root.Q<Label>("chargeHint");
             _statsGrid       = _root.Q<VisualElement>("statsGrid");
             _errorLabel      = _root.Q<Label>("errorLabel");
-            _backpackGrid   = _root.Q<VisualElement>("backpackGrid");
             _closeBtn       = _root.Q<Button>("closeBtn");
             _cancelBtn      = _root.Q<Button>("cancelBtn");
             _buildBtn       = _root.Q<Button>("buildBtn");
@@ -643,26 +639,6 @@ namespace View.UI.WeaponBuilder
             else       el.RemoveFromClassList(cls);
         }
 
-        // ── Backpack rendering ────────────────────────────────
-
-        void RefreshBackpack()
-        {
-            _backpackGrid.Clear();
-            _backpackItems.Clear();
-
-            var inventory = App.Instance?.Player?.Inventory;
-            var registry  = App.Instance?.CoreDefinitions;
-            if (inventory == null) return;
-
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-            {
-                var el = new BackpackItemElement();
-                el.Bind(inventory.Backpack[i], registry);
-                _backpackGrid.Add(el);
-                _backpackItems.Add(el);
-            }
-        }
-
         // ── Build action ──────────────────────────────────────
 
         void OnBuildClicked()
@@ -670,8 +646,6 @@ namespace View.UI.WeaponBuilder
             if (_presenter == null) return;
             if (_presenter.TryBuild(out var reason))
             {
-                // Reflect the just-added weapon + ammo grant in the in-window backpack.
-                RefreshBackpack();
                 Close();
                 return;
             }
@@ -700,13 +674,21 @@ namespace View.UI.WeaponBuilder
             return false;
         }
 
-        // ── Input gate ────────────────────────────────────────
+        // ── Input gate + side-by-side inventory coordination ──
+
+        // Sentinel non-zero EId used as `BuilderTargetId` value while the modal is
+        // open. We don't currently need to track *which* workbench triggered the
+        // Builder (Tier 6 scope) — just the boolean "Builder is open" semantic via
+        // the EId pattern that matches LootTargetId / CraftTargetId / etc. Setting
+        // this also drives the side-by-side uGUI inventory canvas open/close via
+        // InventoryUI.Update.
+        static readonly EId BuilderSentinelEId = new EId(int.MaxValue - 1);
 
         static void SetInputGate(bool open)
         {
             var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             if (player != null)
-                player.IsWeaponBuilderOpen = open;
+                player.BuilderTargetId = open ? BuilderSentinelEId : EId.None;
         }
     }
 }

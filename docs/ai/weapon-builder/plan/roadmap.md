@@ -16,13 +16,44 @@
 | 0b | Migration (refactor state, assembly pipeline, legacy cleanup) | ✅ complete (2026-04-22) |
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ✅ complete (2026-04-23) |
-| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ not started |
-| 4 | Rarity + Slot Compatibility | ⏳ not started |
-| 5 | Exotic Mods | ⏳ not started |
-| 6 | Loot / Economy integration | ⏳ not started |
-| 7 | Polish (Art/VFX, UX, balance) | ⏳ not started |
+| UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
+| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ⏳ **NEXT** |
+| 8 | 3D Modular Visualization | ⏳ planned |
+| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
+| 4 | Rarity + Slot Compatibility | ⏳ planned |
+| 5 | Exotic Mods | ⏳ planned |
+| 9 | VFX / SFX Language | ⏳ planned |
+| 10 | Weapon Feel Polish | ⏳ planned |
+| ~~7~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
+
+**Tier numbers = stable IDs** (для посилань у коді/тестах/інших доках). **Execution order — нижче, ≠ tier number order.**
 
 **Відкладено поза scope:** Fist Delivery (melee system — окремий проект), Typed Attachments.
+
+---
+
+## Execution sequence (поточний план виконання)
+
+Послідовність вибрана щоб максимізувати player-facing value на кожному кроці. Tier 6 і Tier 8 reordered наперед (раніше були "пізніше" по tier number, але дають видиму трансформацію feature найшвидше).
+
+```
+✅ 0a → 0b → 1 → 2 → UX Pass 1
+⏳ 6 (loot)  →  8 (3D viz)  →  3 (content)  →  4 (rarity)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
+```
+
+**Чому така послідовність:**
+
+1. **Tier 6 first** — рiveть фічу. Зараз модулі infinite (debug), backpack у Builder read-only. Після Tier 6 модулі = real loot, drag-from-backpack у Builder активується, можна dev-grant'ом видавати конкретні модулі для playtesting. **Closes core design promise** "raid → loot → build". Залежність від Tier 4 (rarity для distribution) → відкидаємо вимогу: початково все Common, rarity layer'иться у Tier 4.
+
+2. **Tier 8 next** — 3D modular visualization. Currently всі weapons виглядають однаково (Weapon_Pistol/Rifle prefabs derive'аться з Delivery FormFactor only). Це підриває core promise "weapons are 2 modules". Після Tier 8 player візуально розрізняє Ballistic Pistol vs Laser Pistol vs Foam Pistol. Найбільший visual impact на playtest.
+
+3. **3 → 4 → 5** — content + progression + identity (per original plan). Кожен tier розширює опції без зміни core loop.
+
+4. **9 (VFX)** — після того як content існує (бо VFX мови треба знати під що проектувати).
+
+5. **10 (Feel polish)** — фінальний tuning перед release. Iterative playtest loop.
+
+**Parallel tracks possible:** Tier 8 (3D art), Tier 9 (VFX), part of Tier 10 (sound design) — все це може йти паралельно з programmer-driven Tier 3/4/5 якщо є artist/sound designer. Programmer track тримає sequential.
 
 ---
 
@@ -292,43 +323,225 @@ Tier 4 complete.
 
 ---
 
-## Tier 6 — Loot / Economy Integration
+## Tier 6 — Loot / Inventory integration
+
+> **Execution:** NEXT (per execution sequence above). Reordered наперед щоб fire-up the feature loop ASAP — модулі-як-items активують real inventory loop і дають реальну причину raid'ити.
 
 ### Goal
-Модулі здобуваються через loot і extraction loop.
+Модулі здобуваються як real inventory items. Builder перестає бути "infinite-supply debug screen" — стає продовженням inventory loop. **Builder UI не embed'ить власний backpack — використовує uGUI inventory canvas side-by-side** (per architecture decision 2026-04-28).
 
-### Work items (high-level)
-- [ ] G1. Core modules як loot items
-- [ ] G2. Rarity distribution (які rarity звідки випадають)
-- [ ] G3. Module storage в інвентарі
-- [ ] G4. Integration з extraction loop
+### Architectural decisions (resolved 2026-04-28)
 
-### Exit criteria
-- ✅ Модулі падають з ворогів/контейнерів
-- ✅ Гравець приносить модулі з рейду на базу
-- ✅ Rarity distribution збалансована (не все Legendary відразу)
+1. **Module → ItemDefinition mapping:** hardcode 5 entries у `ItemDefinition.BuildRegistry` (BallisticRound, LaserCharge, SingleAction, Auto, Scatter). Auto-gen відкладений у Tier 4.
+2. **Module stackability:** non-stackable (`MaxStackSize: 1`). Forward-compat з Tier 4 rarity.
+3. **Build cost:** 1×payload + 1×delivery. Multi-quantity → Tier 10.
+4. **Palette filter:** grayed-out for unavailable (не hidden) — player бачить possibility space.
+5. **Bot module drops:** out of Tier 6 scope. Container drops + DevCheats покривають playtest. Bot drops → Tier 4 (з bot weapon migration).
+6. **Side-by-side layout:** Builder + uGUI inventory canvas одночасно при interact з Workbench. Embedded backpack у Builder видаляється. Drag з inventory у Builder slot — через cross-stack `DragService` bridge.
 
-### Dependencies
-Tier 4 complete (rarity потрібна для distribution).
+### Work items (G1-G10)
+
+- [ ] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false)
+- [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
+- [ ] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду)
+- [ ] **G4.** Builder palette filter — `WeaponBuilderPresenter` exposes `IsPayloadAvailable(id)` / `IsDeliveryAvailable(id)` (read inventory), `ModuleCardElement` adds `wb-card-unavailable` class for grayed-out look
+- [ ] **G5★.** **Cross-stack drag bridge (HIGHEST PRIORITY).** New `DragService` (static, view-layer): uGUI `InventorySlotView` registers drag start when item is module → DragService.SetActive(moduleId, slotRef). UI Toolkit `ModuleSlotElement` polls DragService у Update + tests pointer position (panel coords) vs `worldBound` → on uGUI EndDrag, if matching slot found, calls `presenter.SelectPayload/SelectDelivery(id)` + DragService consumes drag.
+- [ ] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success. Fails з reason "Out of stock" якщо modules disappeared (race з inventory mutation).
+- [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
+- [ ] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
+- [ ] **G9.** Open uGUI inventory canvas alongside Builder — Workbench interact triggers BOTH `WeaponBuilderWindow.Open()` AND inventory canvas show. ESC/Cancel у Builder closes both. Inventory layout shifted left у "Builder open" mode.
+- [ ] **G10.** Layout coordination — Builder centered → Builder positioned right of viewport center; inventory canvas left. Anchor points + position math у `WeaponBuilderWindow.Open()` що sets layout mode + notifies inventory canvas.
+
+### Removals (cleanup, виконати на старті Tier 6)
+
+- [ ] Видалити `BackpackItemElement.cs` — embedded backpack item view більше не потрібен
+- [ ] Видалити `wb-backpack-panel`, `wb-backpack-grid`, `wb-bp-item*` USS classes
+- [ ] Видалити `RefreshBackpack()` + `_backpackGrid`/`_backpackItems` fields у `WeaponBuilderWindow.cs`
+- [ ] Видалити `<ui:VisualElement name="backpackPanel">` block у `WeaponBuilderWindow.uxml`
+
+### Execution waves (priority-ordered, revised 2026-04-28)
+
+| Wave | Items | Why this order | Verifiable end state |
+|---|---|---|---|
+| **A. Side-by-side launch** ⭐ HIGHEST | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). Roboоtaємо це першим — все інше layer'иться natural. | Workbench interact opens Builder + uGUI inventory side-by-side; ESC closes both. Builder без embedded backpack. |
+| **B. Foundation** | G1 + G3 | Modules as items потрібні як testbed для cross-stack drag (Wave C) | DevCheats "Spawn Module" → module appears у player Backpack. |
+| **C. Cross-stack drag bridge** | G5★ | Load-bearing piece: write clean once, reuse forever | Drag module from uGUI inventory slot → drop on Builder Payload/Delivery slot → presenter Select fires. |
+| **D. Build cost** | G6 | Завершує build cycle | TryBuild removes 1×payload + 1×delivery from backpack on success. |
+| **E. UX completeness** | G4 | Polish: player знає що шукати | Builder palette grayed-out unavailable. |
+| **F. Economy** | G2 | In-game inventory loop | Open container in raid → module drops. |
+| **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
+
+**Why Wave A first** (revised priority 2026-04-28): без side-by-side layout усе інше базується на assumption яку ми тільки-но відмовились (embedded backpack у Builder). Робимо architectural pivot first — навіть якщо G1/G3 (foundation) логічно "перші" по dependency graph, layout decision є **проривним** і має landing першим щоб інші waves будувались на ньому.
 
 ---
 
-## Tier 7 — Polish
+### Wave A — Side-by-side launch (detailed plan)
 
-### Goal
-Фіча виглядає, звучить і грається як production quality.
+**Goal:** Workbench interact відкриває Builder + uGUI inventory canvas side-by-side. Embedded backpack у Builder видалений. Existing inventory functionality (drag/drop, equipment, hover tooltips, durability bars) працює з коробки.
 
-### Work items (high-level)
-- [ ] H1. Per-Payload VFX (projectile visuals, muzzle flash, impact)
-- [ ] H2. Per-Delivery animations і SFX
-- [ ] H3. Per-Exotic VFX (ricochet sparks, boomerang trail)
-- [ ] H4. Weapon mesh variations (якщо потрібно)
-- [ ] F3. Slot visualization в UI
-- [ ] F4. Module inventory UI polishing
-- [ ] I1-I4. Comprehensive testing + balance pass
+**Current state (relevant):**
+- `WeaponBuilderWindow` (UI Toolkit) — modal centered у panel, embedded `backpackPanel` всередині body ScrollView
+- `InventoryUI.cs` — Tab key handler, sets `IsInventoryOpen` flag, drives `LootPopupView` через `PopupManager`
+- `LootPopupView` (PopupBase, uGUI Canvas) — actual inventory visual: `_playerPanel` + optional `_lootContainerParent` (hidden when no loot)
+- Existing pattern: setting `CraftTargetId` CLOSES inventory (InventoryUI:42-46) — opposite for Builder, треба інверсну coordination
+
+**Sub-tasks:**
+
+| Task | Files | Description |
+|---|---|---|
+| **A.1** Cleanup embedded backpack | `WeaponBuilderWindow.uxml/uss/cs`, delete `BackpackItemElement.cs` | Remove backpackPanel block, RefreshBackpack(), _backpackGrid/_backpackItems fields, all `wb-backpack-*` USS classes. |
+| **A.2** WeaponBuilderWindow positioned right | `WeaponBuilderWindow.uss` `.wb-backdrop` align-items center → flex-end (right) with right padding | Builder shifts right, leaving ~700px на лівій частині viewport для inventory. |
+| **A.3** Open inventory alongside Builder | `WeaponBuilderWindow.cs` Open(), new public API on `InventoryUI`, possibly new `BuilderTargetId` flag on PlayerEntityState | Workbench interact → Builder.Open() + InventoryUI.OpenForBuilder() (analog of LootTargetId/CraftTargetId pattern). |
+| **A.4** Inventory canvas positioned left | `LootPopupView` RectTransform anchor — new "Builder mode" alignment, OR direct position adjustment | Inventory `_playerPanel` shifts to left side of viewport. Loot containers panel hidden у Builder mode. |
+| **A.5** Coordinated close lifecycle | `WeaponBuilderWindow.Close()`, `InventoryUI.Update()` | ESC/Cancel/× у Builder → both close. Tab while Builder open → ignored OR also closes both (TBD). |
+
+**Open design questions — confirmed 2026-04-28:**
+
+1. ✅ **Position offsets** — measure first approach. Inspect inventory canvas width, then adjust Builder + inventory positioning to fit 1080p reference viewport.
+2. ✅ **Inventory mode у Builder context** — only player panel (`_playerPanel`); hide `_lootContainerParent` (no loot context on Workbench).
+3. ✅ **State flag** — new `BuilderTargetId` EId on `PlayerEntityState`, parallel to `LootTargetId`/`CraftTargetId`. InventoryUI watches → opens inventory canvas if `!= EId.None`.
+4. ✅ **Tab as universal close** — Tab is the canonical "close everything" key. Pressing Tab while Builder open → closes BOTH Builder and inventory. ESC у Builder → same coordinated close.
+
+**Effort:** ~4-6h. Plurality of work — coordination між UI Toolkit та uGUI lifecycle, layout positioning, edge cases у close logic.
+
+**Tests:** Manual playtest checklist. Unit tests difficult у view layer; rely on existing tests still зелені.
+
+---
+
+### Exit criteria
+
+- ✅ Модулі падають з contains'ів як real items + DevCheats grant works
+- ✅ Гравець приносить модулі з рейду на базу
+- ✅ Workbench interact → Builder + uGUI inventory side-by-side
+- ✅ Drag з inventory у Builder slot працює (cross-stack bridge OK)
+- ✅ Build consume'ить 1×payload + 1×delivery з backpack
+- ✅ Builder palette показує grayed-out unavailable
+- ✅ Initial player loadout містить starting modules
+- ✅ Embedded backpack code видалений (no dead code)
 
 ### Dependencies
-Tier 5-6 complete. Частина art-роботи (H1, H2) може йти паралельно з Tier 2-3, якщо є художники.
+
+UX Pass 1 complete. ~~Tier 4 (rarity для distribution)~~ — зняли, все Common initially.
+
+### Estimated effort
+
+~12-15h Tier 6 (revised з 8-12h після adopting side-by-side approach). Cross-stack drag bridge — найвагоміша частина (~4-6h).
+
+---
+
+## Tier 7 — DEPRECATED
+
+> **Розформовано (2026-04-27):** original Tier 7 був "polish bucket" що неявно об'єднував три зовсім різні категорії робіт (3D mesh variants / VFX-SFX / feel tuning). Розділено на **Tier 8** (3D viz), **Tier 9** (VFX/SFX), **Tier 10** (Feel polish) для чесного scope tracking.
+
+---
+
+## Tier 8 — 3D Modular Visualization
+
+### Goal
+Player візуально розрізняє composition. Замість одного `Weapon_Pistol` prefab'а для всіх "Pistol"-form builds — modular weapon view де payload mesh + delivery mesh runtime assembly. 4 payload meshes + 5 delivery meshes покривають усі 4×5=20 archetypes без геометричного scope.
+
+### Architectural questions
+- **Assembly model:**
+  - **(A) Pre-built prefabs per archetype** — 20 prefabs at scale, scope grows ×N з exotic mods
+  - **(B) Modular runtime composition** — each module mesh з attachment socket, runtime assembly
+  - Recommend **(B)** — реально virtually безкоштовно scaling, відображає design intent (composition-based weapons)
+- **Attachment socket strategy:** delivery mesh має named socket (e.g., "PayloadMount") — payload prefab прикріплюється з local transform
+- **Animation rigging:** WeaponView animator має знати про modular parts (наприклад reload тримає charge module visible, fire trigger animates payload-specific particles emitter)
+
+### Work items (high-level)
+- [ ] V1. `WeaponView` rewrite — composition-aware, спам payload + delivery sub-prefabs at runtime
+- [ ] V2. Modular mesh contract — кожний `PayloadCoreDefinition` / `DeliveryCoreDefinition` reference's prefab + attachment socket name
+- [ ] V3. Resource loading — payload/delivery prefabs у `Resources/WeaponBuilder/Modules/`
+- [ ] V4. Animator integration — bone/socket mapping per module type
+- [ ] V5. Art delivery: 4 payload meshes (Ballistic, Laser, Rocket, Foam) + 5 delivery meshes (Single/Auto/Scatter — Pistol/Rifle/Shotgun forms; Rotary, Swarm — окремі forms)
+- [ ] V6. Backpack item icons reflect actual archetype (compose from module thumbnails or use archetype-specific icon set)
+
+### Exit criteria
+- ✅ Build Ballistic+Pistol vs Laser+Pistol — visually distinct у hand
+- ✅ Equip swap показує correct mesh
+- ✅ Adding нового payload/delivery (Tier 3) = drop in 1 mesh, no system changes
+- ✅ Inventory icons reflect archetype (player одразу бачить що у backpack)
+
+### Dependencies
+Tier 6 complete (бажано — модулі-як-items дає stronger reason to differentiate visually).
+
+### Parallel tracks
+Art (modular meshes + rigging) може йти паралельно з усіма іншими tiers якщо є artist. Programmer-side робота compact (~3-5 days).
+
+---
+
+## Tier 9 — VFX / SFX Language
+
+### Goal
+Кожен archetype має впізнавану візуальну і звукову мову. Ballistic стріляє кулями з muzzle flash; Laser — beam'ом з charged glow; Rocket — missile + AoE explosion; Foam — viscous splash; etc.
+
+### Architectural questions
+- **VFX hook system:** event-driven (через `RaidEventBuffer`) чи pulled by view? Recommend events — вже існує infrastructure (WeaponFired, ProjectileSpawned, etc.).
+- **Particle ownership:** per-payload particle prefab vs runtime composition like meshes? Recommend per-payload prefab — particle composability вища.
+- **SFX pipeline:** AudioSource pooling? Separate `SfxPresenter`? Recommend pooled через event-driven presenter (як інші presenter'и).
+
+### Work items (high-level)
+- [ ] X1. VFX events plumbing — `WeaponView` reads `WeaponFired`/`ChargingStarted`/`ChargeCompleted`/`ProjectileImpact` events, dispatches per-module particles
+- [ ] X2. Per-Payload VFX:
+  - Ballistic: muzzle flash + tracer + impact spark/decal
+  - Laser: charged glow at muzzle (build-up) + beam projectile + impact burn + heat haze
+  - Rocket: missile launch + smoke trail + AoE explosion (existing GrenadeSystem infra)
+  - Foam: viscous projectile + splat decal + slow zone visualization
+- [ ] X3. Per-Delivery VFX:
+  - Rotary: barrel spinup animation + heat haze accumulation
+  - Swarm: volley flash sequence (1 fire = 5 muzzle flashes у series)
+  - Scatter: cone burst pattern (multi-pellet visualization)
+- [ ] X4. Per-Exotic VFX:
+  - Ricochet sparks
+  - Split on Impact: visual fork at hit point
+  - Boomerang trail
+- [ ] X5. SFX library — fire variants per archetype, charge sound (Laser), spin sound (Rotary), reload variations
+- [ ] X6. Hit feedback — screen shake, hit pause, damage number animation polish (extending existing `DamageNumberOverlay`)
+
+### Exit criteria
+- ✅ Player closing eyes може упізнати archetype по sound (Laser hum vs Ballistic crack vs Rocket whoosh)
+- ✅ Кожна exotic mod має recognizable visual signature
+- ✅ Hit feedback відчувається punchy без screen-saver-level over-effect
+
+### Dependencies
+Tier 3-5 complete (need content to design visual language for). Tier 8 не блокучий, але в parallel дає synergy (mesh + VFX часто розробляються разом).
+
+### Parallel tracks
+Most of цього tier — artist + sound designer work. Programmer-side: hooks plumbing (~3-5 days).
+
+---
+
+## Tier 10 — Weapon Feel Polish
+
+### Goal
+Кожна збірка стріляє так, щоб гравець хотів стріляти ще раз. Це **iterative playtest loop**, не "напиши код".
+
+### Природа роботи
+На відміну від попередніх tiers — це не feature delivery, а **тюнінг знаючи кожен number**. Industry стандарт для AAA shooter: 6+ months dedicated полишнгу. Для нашого scope — concentrated milestone у кінці перед public release.
+
+### Work items (qualitative)
+- [ ] Fire interval per archetype — feels snappy / punchy / heavy?
+- [ ] Recoil patterns (per delivery): kick magnitude + direction + recovery curve
+- [ ] Charge-up timing (Laser) — 1.0s OK чи треба 0.7-1.3?
+- [ ] Reload pace per archetype (Pistol fast, Shotgun slow shell-by-shell?)
+- [ ] Hit feedback timing — screen shake duration, hit pause length, damage number flight
+- [ ] Sound design integration — every audio cue tuned to gameplay moment
+- [ ] Animation polish — chamber/eject timing, idle pose, transition smoothness
+- [ ] Damage curves vs armor (DPS targets per archetype role)
+- [ ] Comprehensive balance pass — no archetype дominantні / dead-on-arrival
+
+### Exit criteria
+- ✅ Playtest sessions кажуть "feels good" не "функціонально"
+- ✅ No archetype дominance (telemetry / balance heatmap)
+- ✅ All audio + animation cues feel synced до moment-of-impact
+
+### Dependencies
+Tier 8 + Tier 9 complete (need real visuals/audio to tune feel against). Tier 5 (exotic) at minimum — щоб полирувати full archetype set, не лише core.
+
+### Process
+- Iterative playtest weeks (1-week sprints зі specific focus: "this week — Laser feel")
+- Telemetry-driven (TTK heatmaps, fire-rate logs, kill streak distributions)
+- Може running у parallel з content/feature work earlier — collect data continuously, dedicate sprints later.
 
 ---
 

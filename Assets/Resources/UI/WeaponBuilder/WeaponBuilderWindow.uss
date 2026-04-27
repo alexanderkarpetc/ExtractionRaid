@@ -1,10 +1,10 @@
 /* Weapon Builder modal — D&D layout (Tier 1-2 + UX pass).
  *
- * Layout:
+ * Layout (post-Tier 6 Wave A — embedded backpack removed; uGUI inventory canvas
+ * opens side-by-side instead, see docs/ai/weapon-builder/plan/roadmap.md):
  *   header
  *   body
  *     topRow:  [palette ───────────] [buildPanel ─────────────]
- *     backpackPanel: [thumbnails ─────────────────────────────]
  *   footer
  *
  * Sizes follow Tier A scale — see docs/ai/ui-styling.md. */
@@ -15,9 +15,16 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.55);
-    align-items: center;
+    /* Transparent: side-by-side layout means inventory is visible to the left,
+     * dim would just obscure it. Builder window has its own bg + border so it
+     * stays visually distinct without a backdrop tint. */
+    background-color: rgba(0, 0, 0, 0);
+    /* Right-anchored: Builder positioned on the right of the viewport so the uGUI
+     * inventory canvas (left-anchored at 0..~31% width) can sit alongside without
+     * overlap. See docs/ai/weapon-builder/plan/roadmap.md → Tier 6 Wave A. */
+    align-items: flex-end;
     justify-content: center;
+    padding-right: 32px;
 }
 
 .wb-window {
@@ -324,73 +331,6 @@
     font-size: 14px;
     margin-top: 10px;
     white-space: normal;
-}
-
-/* ── Backpack panel (bottom strip) ──────────────────── */
-
-.wb-backpack-panel {
-    margin-top: 24px;
-    padding: 20px;
-    background-color: rgb(22, 24, 30);
-    border-color: rgb(50, 55, 65);
-    border-width: 1px;
-    border-radius: 8px;
-}
-
-.wb-backpack-grid {
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-.wb-bp-item {
-    width: 130px;
-    height: 72px;
-    margin: 0 8px 8px 0;
-    padding: 8px 10px;
-    background-color: rgb(30, 33, 40);
-    border-color: rgb(50, 55, 65);
-    border-width: 1px;
-    border-radius: 8px;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.wb-bp-item:hover {
-    border-color: rgb(120, 195, 235);
-}
-
-.wb-bp-item-empty {
-    background-color: rgba(0, 0, 0, 0);
-    border-color: rgb(38, 42, 50);
-}
-
-/* Empty slots stay quiet on hover — no tooltip, so no point flashing the border. */
-.wb-bp-item-empty:hover {
-    border-color: rgb(38, 42, 50);
-}
-
-/* Built weapons get a gold accent so the player spots their own builds among
- * ammo / medkits / armor pieces. Same gold as the archetype label. */
-.wb-bp-item-weapon {
-    border-color: rgb(230, 200, 140);
-    background-color: rgb(36, 32, 26);
-}
-
-.wb-bp-item-weapon:hover {
-    border-color: rgb(245, 215, 155);
-}
-
-.wb-bp-item-name {
-    font-size: 14px;
-    color: rgb(220, 225, 235);
-    -unity-font-style: bold;
-    white-space: normal;
-}
-
-.wb-bp-item-count {
-    font-size: 12px;
-    color: rgb(180, 190, 205);
-    -unity-text-align: middle-right;
 }
 
 /* ── Footer ─────────────────────────────────────────── */

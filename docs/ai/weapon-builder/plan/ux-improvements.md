@@ -242,14 +242,12 @@ Recommended sequence:
 
 ---
 
-## Open design questions for next agent
+## Open design questions for next agent — all resolved (2026-04-27)
 
-Перед coding — підтвердити з користувачем:
-
-1. **UX-C.02 ammo amount** — скільки давати? My recommendation: 2× MagazineSize. Confirm.
-2. **UX-A.04 flavor table** — hardcode у helper, чи додати на SO як `[SerializeField] string _flavorText`? Recommend SO field — data-driven, але scope-bigger. MVP: hardcode 6 entries.
-3. **UX-B.04 tooltip** — створювати власну infrastructure чи reuse existing (грепнути)? Якщо немає — yet-another-modal scope concern. Possible to scope-cap до simple text overlay у inventory UI.
-4. **UX-C.05 fade-out** — yes/no? Optional polish.
+1. ✅ **UX-C.02 ammo amount** — **2× MagazineSize** (e.g. Laser+Pistol → 24 EnergyCell). Implemented in `WeaponBuilderPresenter.GrantAmmoReserve`.
+2. ✅ **UX-A.04 flavor table** — **hardcoded 6 entries** у `Systems/WeaponArchetypeFlavor.cs`. SO migration deferred to Tier 4 (rarity authoring forces SO touch anyway).
+3. ✅ **UX-B.04 tooltip** — **built universal infrastructure**, not minimal. `TooltipController` + `TooltipModel` + 3 builders. Reused у всіх UI surfaces.
+4. ✅ **UX-C.05 fade-out** — **yes**. USS opacity transition + generation-counter race protection у `WeaponBuilderWindow.Open/Close`.
 
 ---
 
@@ -276,6 +274,43 @@ Recommended sequence:
 - T9 spec'ом передбачав мінімальний tooltip — натомість зробили universal infrastructure (більший scope, але один раз). Reused у Builder cards / slots / backpack items, без додаткової роботи.
 - C.04 (dropdown styling polish) — Builder перестав використовувати dropdowns у Pass 4, тому пункт став N/A.
 - B.05 (ghost weapon visual badge) — видалений з плану (див. inline note вище).
+
+---
+
+## Bonus scope (понад original plan)
+
+Робота яка landed разом з UX Pass 1, але виходить за рамки оригінального плану. Записано тут щоб майбутній reader побачив повний context того що насправді shipped.
+
+### Pass 4 — Builder D&D rewrite
+Замість dropdown UX — палітра module cards + 2 typed drop slots + read-only backpack panel inside Builder. Pure UI Toolkit drag&drop (PointerCapture pattern), click fallback, click suppression after drag. Replaces UX-C.04 (dropdown polish became moot).
+
+### Universal tooltip system
+Замість мінімального inventory-only tooltip (як спершу описано у UX-B.04) — побудовано `TooltipController` з cross-stack support (uGUI inventory + UI Toolkit cards/slots/backpack). 3 builders (Item/Weapon/Module), `TooltipModel` data type. Reused у всіх hover surfaces проекту.
+
+### Resolution adaptiveness pass
+Після shipping основних changes виявилось що modal не масштабується між resolutions. Додано:
+- **PanelSettings → ScaleWithScreenSize** (1920×1080 reference, match 0.5) у всіх 3 PanelSettings assets + editor bootstraps (`WeaponBuilderAssetsBootstrap`, `TooltipAssetsBootstrap`).
+- **Runtime override** PanelSettings у `BuildDocument` (Unity caches assets — без runtime set scale mode не застосовується).
+- **Window max-height cap** через `_root.resolvedStyle.height` (panel coords) — НЕ `Screen.height` (actual px → double-shrinks при scale > 1).
+- **Body → ScrollView** як fallback для extreme cases (720p тощо).
+- **Tooltip cursor offset fix** — `Show(screenPos)` тепер converts screen-px (uGUI bottom-left) → panel-coords (UI Toolkit top-left) accounting for scale. Раніше offset ламався на будь-якому non-1080p.
+
+### Sizing reduction pass (~20%)
+Після resolution fix виявилось що modal proportionally дорогий у viewport. Скоротили:
+- Tier A (modal) sizes ~20% (window title 32→26, stat labels 22→16, card 160×96 → 144×80, button 56h → 44h, etc.)
+- Tier B (tooltip) sizes ~25% (title 28→20, row 22→15, padding tightened)
+
+### `docs/ai/ui-styling.md` + `.cursor` mirror
+Створено новий top-level doc з:
+- **Resolution scaling** rules (mandatory ScaleWithScreenSize)
+- **Sizing rules** (5 правил: min-height, ScrollView, max-height cap pattern, multi-res testing, content height smell)
+- **Tier A/B** size tables
+- **Color palette** (13 ролей)
+- **Panel sort order** registry
+- **Runtime gotchas** (PanelSettings caching, `resolvedStyle = 0` при `display:None`, defer reads via `schedule.Execute`)
+- **Cross-stack coordinates** (uGUI screen-px ↔ UI Toolkit panel-coords conversion + Show/ShowFromPanel API pattern)
+
+Це source of truth для будь-якого нового UI Toolkit surface у проекті — щоб майбутні агенти не повторили тих самих helter-skelter sessions з нашого досвіду.
 
 ---
 

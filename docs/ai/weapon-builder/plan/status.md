@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work — pick from Tier 3-7 (див. [Pause summary](#pause-summary--session-resumption-guide)).
+> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work: **Tier 6 — Loot / Inventory integration**. Then Tier 8 (3D viz) → 3 → 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
 
 ---
 
@@ -42,15 +42,23 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 
 `Tools → Weapon Builder → Create Stub Assets` (idempotent — створює 5 .asset файлів у Resources/WeaponBuilder/).
 
-### Next work: на вибір один з
+### Next work: planned execution sequence (revised 2026-04-27)
 
-| Варіант | Scope | Value |
-|---|---|---|
-| **Tier 3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm = 20 archetypes | Повна content breadth |
-| **Tier 4** Rarity + Slots | Per-tier balance + banned combos + bot migration | Chase progression |
-| **Tier 5** Exotic Mods | 5 exotics + hook system | Feature identity |
-| **Tier 6** Loot integration | Modules як loot drops | Closes design promise "chase за модулями" |
-| **Tier 7** Polish | VFX/SFX/balance/UI polish | Production quality feel |
+**Виконуємо у такому порядку:**
+
+| # | Tier ID | Назва | Чому саме тут |
+|---|---------|-------|---|
+| 1 | **6** | Loot / Inventory integration | Активує core loop "raid → loot → build". Drag-from-backpack у Builder оживає. NEXT. |
+| 2 | **8** | 3D Modular Visualization (NEW) | Player візуально розрізняє composition. Найбільший visual impact на playtest. |
+| 3 | **3** | Content expansion (Foam, Rocket, Rotary, Swarm) | Повна 4×5 archetype matrix. |
+| 4 | **4** | Rarity + Slot Compatibility | Progression hook + bot weapon migration. |
+| 5 | **5** | Exotic Mods | Hook system + 5 exotic mods. Identity / "wow" factor. |
+| 6 | **9** | VFX / SFX Language (NEW) | Per-archetype visual і audio мова. |
+| 7 | **10** | Weapon Feel Polish (NEW) | Iterative playtest loop — final tuning. |
+
+> **Note:** Tier numbers = stable IDs (для refs). Execution order ≠ tier number order — see [roadmap.md execution sequence](./roadmap.md#execution-sequence-поточний-план-виконання) for rationale.
+>
+> **Old Tier 7 (Polish bucket)** — deprecated, split into Tier 8/9/10 на 2026-04-27 щоб чесно tracking'увати окремі категорії робіт (3D meshes / VFX-SFX / feel tuning).
 
 Детальна декомпозиція кожного — у [roadmap.md](./roadmap.md). Наступний tier декомпозується у конкретні T-*.NN (як робили для Tier 0b/1/2) коли беремось.
 
@@ -146,6 +154,58 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 ## Decisions log
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
+
+### 2026-04-28 — Tier 6 architecture: side-by-side inventory + cross-stack drag bridge
+
+**Контекст:** під час планування Tier 6 (loot/inventory) виникло концептуальне питання: чи правильно тримати backpack як embedded panel у Builder UI (поточний стан після UX Pass 1), чи відкривати uGUI inventory canvas alongside Builder як side-by-side layout (industry pattern: Diablo, Tarkov, Minecraft, PoE).
+
+**Decision: side-by-side (approach B).** Поточний embedded backpack у Builder видаляється; uGUI inventory canvas відкривається при interact з Workbench, Builder shift'иться вправо.
+
+**Чому:**
+- Reuse existing inventory functionality (durability bars, weight, stack counts, equipment slots) — без duplicate rendering у `BackpackItemElement`.
+- Less cluttered Builder — фокус на core job (palette + slots + preview).
+- Familiar UX pattern для гравця.
+- `BackpackItemElement` уже почав drift'ити від `InventorySlotView` (різні tooltip approaches) — divergence стане більше з часом.
+
+**Cost:**
+- Cross-stack drag bridge (uGUI → UI Toolkit) — нова engineering інвестиція (~4-6h). Записано як **highest priority всередині Tier 6** — це load-bearing piece що reuse'ається у будь-яких future inventory ↔ UI Toolkit interactions.
+- Layout coordination (Builder shift on Workbench open + close coord).
+- Visual style mismatch (uGUI old style vs UI Toolkit new dark cards) — тимчасово, до Tier 9 polish pass.
+
+**Tier 6 scope revised:** G1-G10 (було G1-G8). Embedded backpack видаляється явно. Detailed waves у [roadmap.md](./roadmap.md#tier-6--loot--inventory-integration).
+
+### 2026-04-28 — Tier 6 architectural decisions (5 confirmed)
+
+Підтверджено перед стартом Tier 6 коду:
+
+1. **Module → ItemDefinition mapping:** hardcode 5 entries у `ItemDefinition.BuildRegistry` (BallisticRound, LaserCharge, SingleAction, Auto, Scatter). Auto-gen відкладений у Tier 4 (rarity змусить refactor anyway).
+2. **Module stackability:** non-stackable (`MaxStackSize: 1`). Forward-compat з Tier 4 rarity (різні tier = різні items).
+3. **Build cost:** 1×payload + 1×delivery. Multi-quantity рішення відкладене у Tier 10 (feel/balance).
+4. **Palette filter behavior:** grayed-out for unavailable modules (player бачить full possibility space + усвідомлює що шукати), не hidden.
+5. **Bot module drops:** out of Tier 6 scope. Bot loot config refactor зв'язаний з bot weapon migration (Tier 4). Container drops + DevCheats покривають Tier 6 playtest потреби.
+
+### 2026-04-27 — Roadmap restructure: Tier 7 split, execution reorder
+
+**Контекст:** після UX Pass 1 closeout стало видно що original Tier 7 ("Polish") був неявним bucket'ом для 3 зовсім різних категорій робіт — 3D meshes, VFX/SFX, feel tuning. Окремо — Tier 6 (loot integration) дає найбільший player-facing impact (активує core loop), тому має йти раніше за content tiers.
+
+**Зміни:**
+1. **Tier 7 deprecated** — розділений на 3 окремі tier'и:
+   - **Tier 8** — 3D Modular Visualization (modular weapon meshes per payload + delivery)
+   - **Tier 9** — VFX / SFX Language (per-archetype visual і audio мова)
+   - **Tier 10** — Weapon Feel Polish (iterative playtest tuning)
+2. **Execution reorder:** Tier 6 (loot) виконується **NEXT** замість після Tier 5. Залежність "Tier 6 needs Tier 4 rarity" знята — initial drops все Common, rarity layer'иться у Tier 4 пізніше.
+3. **Tier 8 виконується після Tier 6**, а не у кінці (як було Tier 7) — щоб visual differentiation з'явилась швидше.
+4. **Tier numbers стабільні як ID** для refs у коді/тестах. Execution order — окремо.
+
+**Причини:**
+- 3D mesh work не "polish" — це structural feature gap (підриває "weapons are 2 modules" promise)
+- VFX і Feel — два різних типи робіт (visual language vs gameplay tuning), кожен значний scope
+- Tier 6 first → активує real loot loop і drag-from-backpack у Builder, що найбільший transformation feature
+
+**Documentation updated:**
+- `roadmap.md` — нові tier secії 8/9/10, deprecated Tier 7 note, expanded Tier 6 з work items + revised dependencies, "Execution sequence" секція на початку
+- `README.md` — tier progress table reordered, "Що ще треба зробити" rewritten в execution order
+- `status.md` — "Next work" заміна на planned execution sequence з rationale
 
 ### 2026-04-27 — UX Pass 1 closeout: A.02 + A.03 + A.04 + C.05 done
 
@@ -495,7 +555,7 @@ Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі
 - [x] ~~Tier 2 (core breadth)~~ ✅ complete (2026-04-23)
 - [x] ~~UX Pass 1 (clarity + inventory + tooltip + D&D)~~ ✅ complete (2026-04-27)
 
-**Next tier (коли повертаємось) — див. [Pause summary](#pause-summary--session-resumption-guide) на початку файлу** для вибору з Tier 3-7 і короткого context.
+**Next: Tier 6 — Loot / Inventory integration.** Затим Tier 8 (3D viz) → 3 → 4 → 5 → 9 → 10. Повне rationale у [Pause summary](#pause-summary--session-resumption-guide) на початку файлу.
 
 Коли береться тier — кроки:
 1. Прочитати декомпозицію потрібного tier у [roadmap.md](./roadmap.md)
