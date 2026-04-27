@@ -357,6 +357,41 @@ namespace Tests.EditMode
             Assert.AreEqual(0f, p.PreviewChargeTime);
         }
 
+        // ── Archetype flavor (UX-A.04) ────────────────────────
+
+        [Test]
+        public void PreviewArchetypeFlavor_NoSelection_Empty()
+        {
+            var p = MakePresenter();
+            Assert.AreEqual(string.Empty, p.PreviewArchetypeFlavor);
+        }
+
+        [Test]
+        public void PreviewArchetypeFlavor_OnlyPayload_Empty()
+        {
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            Assert.AreEqual(string.Empty, p.PreviewArchetypeFlavor);
+        }
+
+        [Test]
+        public void PreviewArchetypeFlavor_BallisticPistol_Reliable()
+        {
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            p.SelectDelivery("SingleAction");
+            Assert.AreEqual("Reliable single-shot sidearm", p.PreviewArchetypeFlavor);
+        }
+
+        [Test]
+        public void PreviewArchetypeFlavor_LaserRifle_MentionsCharge()
+        {
+            var p = MakePresenter();
+            p.SelectPayload("LaserCharge");
+            p.SelectDelivery("Auto");
+            StringAssert.Contains("charged", p.PreviewArchetypeFlavor.ToLowerInvariant());
+        }
+
         // ── Disabled reason (Pass 1 / T4) ─────────────────────
 
         [Test]

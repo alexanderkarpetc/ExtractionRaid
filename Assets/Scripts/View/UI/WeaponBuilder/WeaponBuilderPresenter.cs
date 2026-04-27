@@ -136,6 +136,23 @@ namespace View.UI.WeaponBuilder
         }
 
         /// <summary>
+        /// One-line flavor text describing how the current archetype feels in play
+        /// (e.g. "Reliable single-shot sidearm"). Empty when one of the slots is
+        /// unselected or the combination is not yet mapped in
+        /// <see cref="WeaponArchetypeFlavor"/>.
+        /// </summary>
+        public string PreviewArchetypeFlavor
+        {
+            get
+            {
+                if (!State.HasPayload || !State.HasDelivery) return string.Empty;
+                return WeaponArchetypeFlavor.For(
+                    State.SelectedPayload.DefinitionId,
+                    State.SelectedDelivery.DefinitionId);
+            }
+        }
+
+        /// <summary>
         /// Human-readable reason why the Build action is unavailable. Empty string when
         /// <see cref="CanBuild"/> is true. Shown as the disabled Build button's tooltip
         /// so the player can see what's blocking them without trial-and-error.

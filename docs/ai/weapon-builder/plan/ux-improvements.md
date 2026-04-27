@@ -1,8 +1,12 @@
 # Weapon Builder — UX Improvements Pass 1
 
-> **Status:** 📋 Planned, awaiting implementation. Created 2026-04-24.
+> **Status:** ✅ **Complete (2026-04-27).** Original plan лишається нижче як record. Outcome — у [`status.md`](./status.md#2026-04-27--ux-pass-1-complete--) і у [README — UX Pass 1 outcome](../README.md#ux-pass-1--outcome-2026-04-27).
 > **Goal:** Polish UX of existing Weapon Builder feature (Tier 0-2 done) — clarity & inventory integration.
 > **Scope position:** Subset of future Tier 7 polish, лендує перед content expansion (Tier 3+).
+>
+> **Шиплено з тим планом, але з 2 значними розширеннями скоупу за згодою користувача:**
+> 1. **Builder UI rewrite з dropdowns на drag&drop slots** + read-only backpack panel inside Builder (інтеграція з contextom replaces dropdown UX)
+> 2. **Universal tooltip system** замість одного inventory tooltip (G7 → general infrastructure для всіх UI surfaces). Окремий doc — `docs/ai/ui-styling.md`.
 
 ---
 
@@ -75,9 +79,9 @@ Weapon Builder feature is paused after Tier 2 (2026-04-24). Foundation is solid:
 
 ### Edge cases
 
-**G19. Ghost weapon UI silent.** Якщо item має невалідну `WeaponConfiguration`, inventory просто не показує weapon у hotbar — без візуальної ознаки broken state. Player не знає чому слот пустий після reload save.
-
 **G20. Build button disabled state без tooltip explaining why.** Сіра кнопка — гравець не бачить причини (немає payload selected? backpack full? обидва?).
+
+> **Note (2026-04-27):** G19 (ghost weapon visual badge) видалений з плану — `WeaponDisplayName.For` вже повертає текст `[Broken Weapon]`, чого достатньо для current scope. Visual red-tint badge — edge case який в практиці не trigger'иться (Tier 0b прибрав legacy compat layer). Якщо знадобиться — переглянути у Tier 6 (loot drops з невідомих модулів).
 
 ---
 
@@ -144,13 +148,13 @@ Goal: built weapons показуються як archetype labels у inventory + 
 | **UX-B.02** Inventory UI uses helper | `Assets/Scripts/View/UI/Inventory/InventoryUI.cs` (and any other place що рендерить ItemState назву — grep `item.DisplayName`) | Replace direct `item.DisplayName` для weapon-slot rendering з `WeaponDisplayName.For(item, App.Instance.CoreDefinitions)`. **Don't replace** для backpack non-weapon items (zero behaviour change). Find every location showing weapon items. Note: UX-B uses `App.Instance` access у view layer — OK по CLAUDE.md (View layer can access App) |
 | **UX-B.03** Hotbar slot label | Knwown слоти у HUD (search "Hotbar" / `WeaponSlots[`) — `View/AimCursorOverlay`? `InventoryUI.cs`? | Same treatment for hotbar UI rendering. Якщо hotbar показує тільки prefab visualy + не label — потрібно додати inline text label поверх slot icon |
 | **UX-B.04** Weapon item tooltip | Find existing tooltip infrastructure (grep "Tooltip" — there might be `Assets/Scripts/View/UI/Tooltips` etc.) | На hover weapon item у inventory → показати: archetype label, payload+delivery names, key 4-5 stats (Damage, FireInterval, Magazine, Penetration, ChargeTime if present). Якщо tooltip system не існує — створити мінімальний (UI Toolkit panel або Canvas Text) — scope-cap |
-| **UX-B.05** Ghost weapon visual badge | Inventory UI — when `WeaponDisplayName.For` повертає "[Broken Weapon]" → red tint or warning icon overlay | Self-explanatory broken-state — гравець відразу розуміє що item потребує attention |
+
+> **UX-B.05 removed (2026-04-27):** Ghost weapon visual badge. Reason: text marker `[Broken Weapon]` from `WeaponDisplayName.For` is enough for current scope; visual badge is edge-case polish that doesn't trigger in normal play after Tier 0b legacy cleanup.
 
 **Acceptance for Cluster B:**
 - Backpack: 3 different builds показуються як "Ballistic Pistol" / "Ballistic Rifle" / "Laser Pistol", не "Weapon × 3"
 - Hotbar slot tooltip / label показує archetype
 - Hover на weapon item → tooltip з композицією + key stats
-- Item з broken config → red badge у inventory
 
 **Tests:** unit tests на `WeaponDisplayName.For` (5-7 cases). Integration test: build → check `WeaponDisplayName.For` повертає expected label.
 
@@ -249,21 +253,29 @@ Recommended sequence:
 
 ---
 
-## Acceptance gate (whole pass)
+## Acceptance gate (whole pass) — closed 2026-04-27
 
-- [ ] Усі UX-A.* tasks done
-- [ ] Усі UX-B.* tasks done
-- [ ] Усі UX-C.* tasks done (or explicitly skipped/deferred з обґрунтуванням)
-- [ ] Existing tests все ще зелені
-- [ ] +20-25 нових unit/integration tests
-- [ ] Manual play-test:
-  - Open Builder, бачу module descriptions
-  - Build Laser+Pistol — preview show charge hint, build disabled tooltip when no selection
-  - Inventory shows "Ballistic Pistol" / "Laser Rifle" instead of "Weapon × N"
-  - Hover на weapon item → tooltip з compositioin
-  - Workbench prompt "Weapon Workbench"
-- [ ] Update `README.md` + `status.md` з outcome
-- [ ] Commit + merge
+- [x] Cluster A (preview clarity) — повністю закрита: T1 charge hint, T4 disabled Build tooltip, **A.02 module descriptions у tooltip (`WeaponModuleFlavor`)**, **A.03 stats grouping Combat/Cadence/Pattern у Builder preview**, **A.04 archetype flavor sub-line ("Reliable single-shot sidearm" і т.д.)**.
+- [x] Cluster B (inventory integration) — T2 archetype labels у inventory (`WeaponDisplayName.For` + 2 callsites), T9★ universal tooltip system replacing limited B.04. Drag-and-drop integration ставиться у Pass 4.
+- [x] Cluster C (workflow) — T3 auto-grant ammo, T5 workbench prompt, T4 disabled Build tooltip, **C.05 modal fade-in/fade-out (USS opacity transition + generation-counter race protection)**.
+- [x] Existing tests лишилися зеленими (1 retro-fix у `WeaponBuilderEndToEndTests` для нового ammo-grant behavior, тест переписаний на predicate-based search).
+- [x] +28 нових unit/integration tests (ціль 20-25 перевиконана з огляду на розширений scope).
+- [x] Manual play-test:
+  - Open Builder, бачу charge hint коли Laser selected ✅
+  - Build Laser+Pistol — preview shows charge hint, Build disabled tooltip explaining why ✅
+  - Inventory shows "Ballistic Pistol" / "Laser Rifle" instead of "Weapon × N" ✅
+  - Hover на weapon item → tooltip з композицією + Combat/Cadence stat groups ✅
+  - Workbench prompt "Weapon Workbench · Press E" ✅
+  - **Bonus:** Drag&drop у Builder (palette → typed slots), read-only backpack panel inside Builder, type filtering, click fallback ✅
+- [x] Update `README.md` + `status.md` з outcome (this commit)
+- [x] Commit + merge — chain `ddff7b7` (tooltips) → `027fade` (WB iteration) → `3de3b40` (D&D + view polish)
+
+**Closeout (2026-04-27):** усі items з оригінального плану закриті, окрім B.05 (видалений з doc'у явним рішенням — `[Broken Weapon]` text marker достатньо для current scope; visual badge edge-case який не trigger'иться у normal play після Tier 0b legacy cleanup).
+
+**Out-of-scope items (свідомо deferred з обґрунтуванням):**
+- T9 spec'ом передбачав мінімальний tooltip — натомість зробили universal infrastructure (більший scope, але один раз). Reused у Builder cards / slots / backpack items, без додаткової роботи.
+- C.04 (dropdown styling polish) — Builder перестав використовувати dropdowns у Pass 4, тому пункт став N/A.
+- B.05 (ghost weapon visual badge) — видалений з плану (див. inline note вище).
 
 ---
 

@@ -176,6 +176,37 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void ModuleBuilder_BallisticPayload_HasFlavorDescription()
+        {
+            var model = ModuleTooltipBuilder.ForPayload(_ballistic);
+            StringAssert.Contains("bullet", model.Description.ToLowerInvariant(),
+                "Ballistic payload tooltip should include the WeaponModuleFlavor description");
+        }
+
+        [Test]
+        public void ModuleBuilder_DeliverySingleAction_HasFlavorDescription()
+        {
+            var model = ModuleTooltipBuilder.ForDelivery(_singleAction);
+            StringAssert.Contains("heavy shot", model.Description.ToLowerInvariant());
+        }
+
+        [Test]
+        public void ModuleBuilder_UnknownPayloadId_DescriptionEmpty()
+        {
+            var unknown = WeaponBuilderTestFactory.MakeBallistic(
+                "MysteryPayload", displayName: "Mystery", ammoType: "Ammo_Rifle");
+            try
+            {
+                var model = ModuleTooltipBuilder.ForPayload(unknown);
+                Assert.AreEqual(string.Empty, model.Description);
+            }
+            finally
+            {
+                WeaponBuilderTestFactory.DestroyAll(unknown);
+            }
+        }
+
+        [Test]
         public void ModuleBuilder_LaserPayload_IncludesChargeRow()
         {
             var model = ModuleTooltipBuilder.ForPayload(_laser);

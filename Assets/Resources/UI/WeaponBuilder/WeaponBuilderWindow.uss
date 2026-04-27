@@ -22,11 +22,28 @@
 
 .wb-window {
     width: 1280px;
+    /* Hard cap at the reference panel height (1080 ref px). With
+     * ScaleWithScreenSize this fits 16:9 screens at any resolution because the
+     * panel layout space is always 1920×1080 ref. C# UpdateWindowMaxHeight
+     * tightens this further at runtime for non-16:9 aspects (ultrawide) where
+     * panel ref height drops below 1080. */
+    max-height: 1080px;
     background-color: rgb(26, 28, 34);
     border-color: rgb(70, 75, 85);
     border-width: 2px;
     border-radius: 12px;
     padding: 0;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}
+
+/* Pre-open and post-close opacity gate. The window starts hidden, gets `display:Flex`,
+ * then has this class removed next frame to drive the fade-in. On Close the class is
+ * added, the transition runs, then the runtime sets display:None after the timer. */
+.wb-window-fading {
+    opacity: 0;
 }
 
 /* ── Header ─────────────────────────────────────────── */
@@ -67,6 +84,10 @@
 
 .wb-body {
     padding: 24px 32px;
+    /* ScrollView fills the space between header and footer; content scrolls when
+     * the natural content height exceeds the viewport. */
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .wb-top-row {
@@ -238,7 +259,19 @@
     font-size: 28px;
     -unity-font-style: bold;
     color: rgb(230, 200, 140);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.wb-archetype-flavor {
+    font-size: 18px;
+    -unity-font-style: italic;
+    color: rgb(170, 175, 185);
+    margin-bottom: 12px;
+    white-space: normal;
+}
+
+.wb-archetype-flavor.is-empty {
+    display: none;
 }
 
 .wb-hint {
@@ -249,6 +282,18 @@
     white-space: normal;
 }
 
+.wb-stat-group-heading {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: rgb(140, 175, 210);
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.wb-stat-group-heading.first {
+    margin-top: 0;
+}
+
 .wb-stats-grid {
     flex-direction: column;
 }
@@ -257,6 +302,10 @@
     flex-direction: row;
     justify-content: space-between;
     padding: 3px 0;
+    /* Belt-and-suspenders against text overlap if anything else in the layout
+     * misbehaves: rows refuse to shrink below their natural reading size. */
+    min-height: 28px;
+    flex-shrink: 0;
 }
 
 .wb-stat-label {

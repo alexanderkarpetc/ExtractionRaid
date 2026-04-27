@@ -33,8 +33,13 @@ namespace View.UI.WeaponBuilder
         WeaponBuilderPresenter _presenter;
 
         // ── Runtime UI ────────────────────────────────────────
+        const int  FadeDurationMs = 160;          // matches USS .wb-window transition (0.15s + 10ms safety)
+        const string FadingClass  = "wb-window-fading";
+
         UIDocument _doc;
         VisualElement _root;
+        VisualElement _window;
+        int _fadeGen;                              // bumps on each Open/Close to invalidate stale timers
 
         // Palette / slots
         VisualElement _payloadGrid;
@@ -45,6 +50,7 @@ namespace View.UI.WeaponBuilder
 
         // Preview
         Label _archetypeLabel;
+        Label _archetypeFlavor;
         Label _chargeHint;
         VisualElement _statsGrid;
         Label _errorLabel;
@@ -114,18 +120,42 @@ namespace View.UI.WeaponBuilder
             RefreshBackpack();
             RefreshAll();
 
+            // Mount the window invisible, then drop the class next frame so the USS
+            // opacity transition runs (0 → 1) for a soft fade-in. Input gate flips
+            // immediately — gameplay shouldn't accept input during the fade.
+            int gen = ++_fadeGen;
             _root.style.display = DisplayStyle.Flex;
+            if (_window != null) _window.AddToClassList(FadingClass);
             _isVisible = true;
             SetInputGate(true);
+
+            _root.schedule.Execute(() =>
+            {
+                if (gen != _fadeGen) return;
+                if (_window != null) _window.RemoveFromClassList(FadingClass);
+            }).StartingIn(0);
         }
 
         public void Close()
         {
             if (_root == null) return;
             CancelActiveDrag();
-            _root.style.display = DisplayStyle.None;
+            if (!_isVisible) return;
+
+            // Start fade-out, then collapse display after the transition. Input gate
+            // flips immediately — player should regain control without waiting for
+            // the visual to finish.
+            int gen = ++_fadeGen;
             _isVisible = false;
             SetInputGate(false);
+            if (_window != null) _window.AddToClassList(FadingClass);
+
+            _root.schedule.Execute(() =>
+            {
+                if (gen != _fadeGen) return;
+                _root.style.display = DisplayStyle.None;
+                if (_window != null) _window.RemoveFromClassList(FadingClass);
+            }).StartingIn(FadeDurationMs);
         }
 
         void CancelActiveDrag()
@@ -161,6 +191,13 @@ namespace View.UI.WeaponBuilder
                 return;
             }
 
+            // Force scale settings at runtime — Unity sometimes keeps a stale
+            // cached copy of PanelSettings even after the .asset YAML is edited
+            // unless the asset is explicitly reimported. Setting the properties
+            // here makes the code authoritative regardless of asset state. See
+            // docs/ai/ui-styling.md "Resolution scaling" for required values.
+            ApplyResponsiveScale(panel);
+
             _doc = gameObject.AddComponent<UIDocument>();
             _doc.panelSettings   = panel;
             _doc.visualTreeAsset = tree;
@@ -178,19 +215,78 @@ namespace View.UI.WeaponBuilder
             _root.style.bottom = 0;
 
             CacheElements();
+            ConfigureBodyScrollView();
             BuildSlots();
             WireEvents();
+
+            // Cap window height to the root's resolved height. With
+            // ScaleWithScreenSize the root sits in *reference* (panel) space
+            // — not actual screen pixels — so capping here is correct: window
+            // can't exceed the reference 1080-ish ref px, and body's ScrollView
+            // takes over scroll when natural content is taller. (Capping by
+            // Screen.height instead would double-shrink under any scale > 1.)
+            _root.RegisterCallback<GeometryChangedEvent>(_ => UpdateWindowMaxHeight());
+            UpdateWindowMaxHeight();
+        }
+
+        int _diagLogCount;
+        void UpdateWindowMaxHeight()
+        {
+            if (_window == null) return;
+            float h = _root != null ? _root.resolvedStyle.height : 0f;
+            if (h <= 0f) return;
+            _window.style.maxHeight = h;
+
+            // One-shot diagnostic — logs scale mode + dims so we can debug
+            // resolution issues without hooking the inspector. Remove once
+            // resolution scaling stops being a moving target.
+            if (_diagLogCount++ == 0)
+            {
+                var p = _doc?.panelSettings;
+                Debug.Log($"[WB] scaleMode={p?.scaleMode} ref={p?.referenceResolution} " +
+                          $"match={p?.match:0.##} screenMatchMode={p?.screenMatchMode} | " +
+                          $"Screen={Screen.width}×{Screen.height}, rootH={h:0.##}");
+            }
+        }
+
+        // Project-wide PanelSettings configuration. Pulled from
+        // docs/ai/ui-styling.md "Resolution scaling". Applied at runtime so a
+        // stale cached asset cannot regress the modal's behavior. The runtime
+        // override persists in the loaded ScriptableObject instance — every
+        // panel using the same asset benefits.
+        static void ApplyResponsiveScale(PanelSettings panel)
+        {
+            panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            panel.referenceResolution = new Vector2Int(1920, 1080);
+            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panel.match = 0.5f;
+        }
+
+        // Body is a ScrollView as a defensive fallback for viewports where the
+        // modal's natural reference content height exceeds 1080 ref px. The
+        // ScaleWithScreenSize scale factor doesn't help with vertical overflow
+        // — it only changes pixel mapping. See docs/ai/ui-styling.md
+        // "Resolution scaling".
+        void ConfigureBodyScrollView()
+        {
+            var body = _root.Q<ScrollView>("body");
+            if (body == null) return;
+            body.mode = ScrollViewMode.Vertical;
+            body.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            body.verticalScrollerVisibility   = ScrollerVisibility.Auto;
         }
 
         void CacheElements()
         {
-            _payloadGrid    = _root.Q<VisualElement>("payloadGrid");
-            _deliveryGrid   = _root.Q<VisualElement>("deliveryGrid");
-            _slotsHost      = _root.Q<VisualElement>("slotsHost");
-            _archetypeLabel = _root.Q<Label>("archetypeLabel");
-            _chargeHint     = _root.Q<Label>("chargeHint");
-            _statsGrid      = _root.Q<VisualElement>("statsGrid");
-            _errorLabel     = _root.Q<Label>("errorLabel");
+            _window          = _root.Q<VisualElement>("window");
+            _payloadGrid     = _root.Q<VisualElement>("payloadGrid");
+            _deliveryGrid    = _root.Q<VisualElement>("deliveryGrid");
+            _slotsHost       = _root.Q<VisualElement>("slotsHost");
+            _archetypeLabel  = _root.Q<Label>("archetypeLabel");
+            _archetypeFlavor = _root.Q<Label>("archetypeFlavor");
+            _chargeHint      = _root.Q<Label>("chargeHint");
+            _statsGrid       = _root.Q<VisualElement>("statsGrid");
+            _errorLabel      = _root.Q<Label>("errorLabel");
             _backpackGrid   = _root.Q<VisualElement>("backpackGrid");
             _closeBtn       = _root.Q<Button>("closeBtn");
             _cancelBtn      = _root.Q<Button>("cancelBtn");
@@ -480,6 +576,11 @@ namespace View.UI.WeaponBuilder
             var archetype = _presenter.PreviewArchetype;
             _archetypeLabel.text = string.IsNullOrEmpty(archetype) ? "—" : archetype;
 
+            // Archetype flavor sub-line ("Reliable single-shot sidearm" etc.)
+            var flavor = _presenter.PreviewArchetypeFlavor;
+            _archetypeFlavor.text = flavor;
+            ToggleEmpty(_archetypeFlavor, string.IsNullOrEmpty(flavor));
+
             if (_presenter.PreviewRequiresCharge)
             {
                 _chargeHint.text = $"⚡ Requires charge — {_presenter.PreviewChargeTime:0.0}s before each shot";
@@ -495,20 +596,40 @@ namespace View.UI.WeaponBuilder
             var stats = _presenter.PreviewStats;
             if (stats.HasValue)
             {
-                AppendStatRow(_statsGrid, "Damage",            stats.Value.Damage.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Fire Interval",     stats.Value.FireInterval.ToString("0.##") + " s");
-                AppendStatRow(_statsGrid, "Magazine",          stats.Value.MagazineSize.ToString());
-                AppendStatRow(_statsGrid, "Reload Time",       stats.Value.ReloadTime.ToString("0.##") + " s");
-                AppendStatRow(_statsGrid, "Projectile Speed",  stats.Value.ProjectileSpeed.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Headshot Mult",     stats.Value.HeadshotDamageMultiplier.ToString("0.##") + "×");
-                AppendStatRow(_statsGrid, "Penetration",       stats.Value.BasePenetration.ToString("0.##"));
-                AppendStatRow(_statsGrid, "Projectiles/Shot",  stats.Value.ProjectilesPerShot.ToString());
+                var s = stats.Value;
+
+                // Combat — what each shot does on hit.
+                AppendGroupHeading(_statsGrid, "Combat", first: true);
+                AppendStatRow(_statsGrid, "Damage",      s.Damage.ToString("0.##"));
+                AppendStatRow(_statsGrid, "Headshot",    s.HeadshotDamageMultiplier.ToString("0.##") + "×");
+                AppendStatRow(_statsGrid, "Penetration", s.BasePenetration.ToString("0.##"));
+
+                // Cadence — pacing of shots and reloads.
+                AppendGroupHeading(_statsGrid, "Cadence");
+                if (_presenter.PreviewRequiresCharge)
+                    AppendStatRow(_statsGrid, "Charge",   _presenter.PreviewChargeTime.ToString("0.##") + " s");
+                AppendStatRow(_statsGrid, "Fire Interval", s.FireInterval.ToString("0.##") + " s");
+                AppendStatRow(_statsGrid, "Magazine",      s.MagazineSize.ToString());
+                AppendStatRow(_statsGrid, "Reload Time",   s.ReloadTime.ToString("0.##") + " s");
+
+                // Pattern — how shots travel and spread.
+                AppendGroupHeading(_statsGrid, "Pattern");
+                AppendStatRow(_statsGrid, "Projectile Speed",  s.ProjectileSpeed.ToString("0.##"));
+                AppendStatRow(_statsGrid, "Projectiles/Shot",  s.ProjectilesPerShot.ToString());
             }
 
             bool canBuild = _presenter.CanBuild;
             _buildBtn.SetEnabled(canBuild);
             _buildBtn.tooltip = canBuild ? string.Empty : _presenter.DisabledReason;
             _errorLabel.text  = string.Empty;
+        }
+
+        static void AppendGroupHeading(VisualElement grid, string heading, bool first = false)
+        {
+            var label = new Label(heading);
+            label.AddToClassList("wb-stat-group-heading");
+            if (first) label.AddToClassList("first");
+            grid.Add(label);
         }
 
         static void AppendStatRow(VisualElement grid, string label, string value)
@@ -525,6 +646,13 @@ namespace View.UI.WeaponBuilder
             row.Add(l);
             row.Add(v);
             grid.Add(row);
+        }
+
+        static void ToggleEmpty(VisualElement el, bool empty)
+        {
+            const string cls = "is-empty";
+            if (empty) el.AddToClassList(cls);
+            else       el.RemoveFromClassList(cls);
         }
 
         // ── Backpack rendering ────────────────────────────────

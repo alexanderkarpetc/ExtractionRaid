@@ -16,16 +16,23 @@ namespace View.UI.Tooltip
     {
         public string Title { get; }
         public string Subtitle { get; }
+        /// <summary>
+        /// Optional 1-2 line flavor / description block, rendered between the
+        /// subtitle and the first section. Hidden when empty.
+        /// </summary>
+        public string Description { get; }
         public IReadOnlyList<TooltipSection> Sections { get; }
 
         public TooltipModel(
             string title,
             string subtitle = null,
-            IReadOnlyList<TooltipSection> sections = null)
+            IReadOnlyList<TooltipSection> sections = null,
+            string description = null)
         {
-            Title    = title    ?? string.Empty;
-            Subtitle = subtitle ?? string.Empty;
-            Sections = sections ?? Array.Empty<TooltipSection>();
+            Title       = title       ?? string.Empty;
+            Subtitle    = subtitle    ?? string.Empty;
+            Description = description ?? string.Empty;
+            Sections    = sections    ?? Array.Empty<TooltipSection>();
         }
 
         public bool IsEmpty => string.IsNullOrEmpty(Title) && Sections.Count == 0;

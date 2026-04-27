@@ -2,8 +2,9 @@
     <Style src="TooltipOverlay.uss" />
     <ui:VisualElement name="root" picking-mode="Ignore" class="tt-root">
         <ui:VisualElement name="card" picking-mode="Ignore" class="tt-card">
-            <ui:Label name="title"    class="tt-title" />
-            <ui:Label name="subtitle" class="tt-subtitle" />
+            <ui:Label name="title"       class="tt-title" />
+            <ui:Label name="subtitle"    class="tt-subtitle" />
+            <ui:Label name="description" class="tt-description" />
             <ui:VisualElement name="sections" picking-mode="Ignore" class="tt-sections" />
         </ui:VisualElement>
     </ui:VisualElement>

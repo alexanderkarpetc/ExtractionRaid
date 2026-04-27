@@ -39,7 +39,11 @@ namespace View.UI.Tooltip.Builders
                 ? "Payload"
                 : $"Payload · {def.AmmoType}";
 
-            return new TooltipModel(def.DisplayName, subtitle, sections);
+            return new TooltipModel(
+                def.DisplayName,
+                subtitle,
+                sections,
+                description: WeaponModuleFlavor.ForPayload(def.Id));
         }
 
         public static TooltipModel ForDelivery(
@@ -60,7 +64,8 @@ namespace View.UI.Tooltip.Builders
             return new TooltipModel(
                 def.FormFactor,
                 $"Delivery · {def.Pattern}",
-                new[] { new TooltipSection("Stats", rows) });
+                new[] { new TooltipSection("Stats", rows) },
+                description: WeaponModuleFlavor.ForDelivery(def.Id));
         }
     }
 }

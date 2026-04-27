@@ -8,8 +8,86 @@ alwaysApply: false
 Single source of truth for UI Toolkit panel sizing and theming. Match these
 scales when adding new UI surfaces so the game reads as a consistent family.
 
-Resolution baseline: **1920×1080 (1080p)**, scaleMode `ConstantPixelSize`,
-referenceDpi 96.
+Resolution baseline: **1920×1080 (1080p)**, scaleMode `ScaleWithScreenSize`,
+match 0.5, screenMatchMode `MatchWidthOrHeight`. All sizes in this doc
+assume 1080p reference — UI scales proportionally on 4K (×2.0) and
+1366×768 (×0.71) without layout breakage.
+
+---
+
+## Resolution scaling (mandatory baseline)
+
+All player-facing `PanelSettings` MUST use:
+
+```
+scaleMode:        ScaleWithScreenSize
+referenceResolution: 1920 × 1080
+screenMatchMode:  MatchWidthOrHeight
+match:            0.5
+```
+
+**Why ScaleWithScreenSize, not ConstantPixelSize:**
+- `ConstantPixelSize` means 1 CSS px = 1 screen px regardless of resolution.
+  At 4K a 1280px modal occupies 33% of width; at 1366×768 it nearly fills it
+  and content overflows vertically. No real game uses this for player UI —
+  Tarkov, Hunt: Showdown and friends all scale-with-screen.
+- `ScaleWithScreenSize` keeps proportions identical across the supported
+  resolution range (720p → 4K). Players see the modal occupy the same
+  fraction of their screen on any monitor.
+
+**`ConstantPixelSize` is allowed only for:**
+- Editor-only tooling (Dev Cheats window, Raid State Debugger)
+- Debug overlays not shown to players (HotbarDebugOverlay)
+
+**Auto-provision in editor bootstraps.** Every `PanelSettings` asset created
+by an `[InitializeOnLoad]` bootstrap (e.g. `WeaponBuilderAssetsBootstrap`,
+`TooltipAssetsBootstrap`) must set the four scale fields above. New
+overlays should follow the same pattern so panels stay consistent without
+remembering inspector values.
+
+---
+
+## Sizing rules (mandatory for any new modal/panel)
+
+These rules complement scale-with-screen — they protect against layout
+breakage when resolution scaling alone isn't enough (e.g. 720p, ultrawide,
+content that legitimately exceeds reference height).
+
+1. **Set `min-height` + `flex-shrink: 0` on rows that contain readable
+   text** (stat rows, list items). Prevents text overlap when something
+   else in the layout misbehaves. Example:
+   `.wb-stat-row { min-height: 28px; flex-shrink: 0; }`
+
+2. **Wrap variable-height body content in `ScrollView`.** Modals taller
+   than the reference 1080p height should not assume they fit on every
+   monitor. Scale-with-screen handles ratio scaling, but a 1500px-tall
+   modal at 0.71× still wants ~1066px of vertical space — fine on 1080p,
+   tight on 768p. Scroll fallback is cheap insurance.
+
+3. **Cap window max-height to the root visual element's resolved height.**
+   `ScaleWithScreenSize` makes the panel proportional, but a modal whose
+   natural content height exceeds the 1080 ref-px panel height will still
+   overflow vertically — only the *pixel mapping* changes with scale, the
+   *layout space* doesn't grow. Pattern (see `WeaponBuilderWindow.UpdateWindowMaxHeight`):
+
+   ```csharp
+   _root.RegisterCallback<GeometryChangedEvent>(_ => {
+       _window.style.maxHeight = _root.resolvedStyle.height; // panel coords, scale-correct
+   });
+   ```
+
+   ⚠️ Use `_root.resolvedStyle.height` (panel/reference coords). Do NOT
+   use `Screen.height` (actual screen pixels) — that would double-shrink
+   on 4K where scale = 2.
+
+4. **Test the modal at 1080p baseline + 4K + 1366×768.** Unity's "16:9
+   Aspect" Game-view mode is misleading — it renders at the editor window
+   size, which on a typical dev monitor is much taller than 1080p. Layout
+   that "looks fine" there may break at fixed resolutions.
+
+5. **Modals taller than ~1100px reference content height are a smell.**
+   Split into tabs, scroll regions, or rethink layout — the user's eye
+   shouldn't have to scan a 1300px column.
 
 ---
 

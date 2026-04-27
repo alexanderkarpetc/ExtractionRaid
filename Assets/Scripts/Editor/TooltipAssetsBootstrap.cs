@@ -35,7 +35,13 @@ namespace Editor
 
             var ps = ScriptableObject.CreateInstance<PanelSettings>();
             ps.name = "TooltipPanelSettings";
-            ps.scaleMode = PanelScaleMode.ConstantPixelSize;
+            // Match the project-wide resolution scaling baseline (see
+            // docs/ai/ui-styling.md "Resolution scaling"). Sort 1000 keeps the
+            // tooltip on top of every modal regardless of resolution.
+            ps.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            ps.referenceResolution = new Vector2Int(1920, 1080);
+            ps.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            ps.match = 0.5f;
             ps.referenceDpi = 96f;
             ps.fallbackDpi = 96f;
             ps.sortingOrder = 1000;

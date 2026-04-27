@@ -8,7 +8,7 @@
                 <ui:Button name="closeBtn" text="×" class="wb-close-btn" />
             </ui:VisualElement>
 
-            <ui:VisualElement name="body" class="wb-body">
+            <ui:ScrollView name="body" class="wb-body">
 
                 <ui:VisualElement name="topRow" class="wb-top-row">
 
@@ -29,6 +29,7 @@
 
                         <ui:VisualElement name="previewBox" class="wb-preview">
                             <ui:Label name="archetypeLabel" text="—" class="wb-archetype" />
+                            <ui:Label name="archetypeFlavor" class="wb-archetype-flavor" />
                             <ui:Label name="chargeHint" class="wb-hint" />
                             <ui:VisualElement name="statsGrid" class="wb-stats-grid" />
                             <ui:Label name="errorLabel" class="wb-error" />
@@ -42,7 +43,7 @@
                     <ui:VisualElement name="backpackGrid" class="wb-backpack-grid" />
                 </ui:VisualElement>
 
-            </ui:VisualElement>
+            </ui:ScrollView>
 
             <ui:VisualElement class="wb-footer">
                 <ui:Button name="cancelBtn" text="Cancel" class="wb-btn wb-btn-cancel" />

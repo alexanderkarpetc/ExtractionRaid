@@ -33,6 +33,7 @@ namespace View.UI.Tooltip
         VisualElement _card;
         Label _title;
         Label _subtitle;
+        Label _description;
         VisualElement _sections;
 
         bool _isVisible;
@@ -97,6 +98,17 @@ namespace View.UI.Tooltip
             var sheet   = Resources.Load<StyleSheet>("UI/Tooltip/TooltipOverlay");
             var panel   = Resources.Load<PanelSettings>("UI/Tooltip/TooltipPanelSettings");
 
+            // Force responsive scale settings at runtime — keeps tooltip in
+            // lockstep with the rest of the UI regardless of cached asset state.
+            // See docs/ai/ui-styling.md "Resolution scaling".
+            if (panel != null)
+            {
+                panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+                panel.referenceResolution = new Vector2Int(1920, 1080);
+                panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+                panel.match = 0.5f;
+            }
+
             if (tree == null || panel == null)
             {
                 Debug.LogWarning("[Tooltip] Missing UXML / PanelSettings at Resources/UI/Tooltip/. " +
@@ -120,10 +132,11 @@ namespace View.UI.Tooltip
             _root.style.bottom = 0;
             _root.pickingMode = PickingMode.Ignore;
 
-            _card     = _root.Q<VisualElement>("card");
-            _title    = _root.Q<Label>("title");
-            _subtitle = _root.Q<Label>("subtitle");
-            _sections = _root.Q<VisualElement>("sections");
+            _card        = _root.Q<VisualElement>("card");
+            _title       = _root.Q<Label>("title");
+            _subtitle    = _root.Q<Label>("subtitle");
+            _description = _root.Q<Label>("description");
+            _sections    = _root.Q<VisualElement>("sections");
         }
 
         void HideImmediate()
@@ -139,6 +152,9 @@ namespace View.UI.Tooltip
             _title.text    = model.Title;
             _subtitle.text = model.Subtitle;
             ToggleEmptyClass(_subtitle, string.IsNullOrEmpty(model.Subtitle));
+
+            _description.text = model.Description;
+            ToggleEmptyClass(_description, string.IsNullOrEmpty(model.Description));
 
             _sections.Clear();
             for (int i = 0; i < model.Sections.Count; i++)

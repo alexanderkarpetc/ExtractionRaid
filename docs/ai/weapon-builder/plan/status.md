@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **Status:** Foundation done (Tiers 0-2). 📋 Next active work: **[UX Improvements Pass 1](./ux-improvements.md)** — focused polish on existing feature. Read that doc first — self-contained.
+> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work — pick from Tier 3-7 (див. [Pause summary](#pause-summary--session-resumption-guide)).
 
 ---
 
@@ -8,32 +8,35 @@
 
 ### TL;DR стан
 
-Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець підходить до Workbench у Hideout, відкриває Builder screen (UI Toolkit modal), обирає Payload + Delivery з dropdowns, бачить live preview, тисне Build — отримує assembled weapon у backpack. Laser payload має charge-up перед кожним shot. 6 working archetypes (Ballistic × {Pistol, Rifle, Shotgun} + Laser × {Pistol, Rifle, Shotgun}). ~90 зелених тестів. Data-driven — усі stats з SO assets.
+Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гравець підходить до Workbench у Hideout (prompt "Weapon Workbench · Press E"), відкриває Builder screen (UI Toolkit modal з drag&drop palette + slots + read-only backpack context). Перетягує Payload + Delivery cards у typed slots, бачить live preview (archetype, charge hint якщо Laser, stat groups). Build → новий weapon у backpack + auto-grant `2× MagazineSize` matching ammo. Hover на будь-який inventory item / module card → tooltip з композицією і stats. Inventory показує archetype labels ("Laser Pistol") замість generic "Weapon". 6 working archetypes (Ballistic × {Pistol, Rifle, Shotgun} + Laser × {Pistol, Rifle, Shotgun}). ~120 зелених тестів. Data-driven — усі stats з SO assets.
 
-**Active work:** [`ux-improvements.md`](./ux-improvements.md) — UX polish pass на foundation. 3 clusters (Builder preview clarity / Inventory integration / Workflow polish). Не торкає content (Tier 3+) і не реалізує rarity/loot.
+**Last work:** UX Pass 1 (4 passes, 4 commits): charge hint + disabled tooltip + workbench prompt; archetype labels у inventory + auto-grant ammo; universal tooltip system; Builder D&D rewrite.
 
 ### Де все живе
 
 **Code:**
 - Types: `Assets/Scripts/State/` (enums, structs, SO definitions, WeaponConfiguration)
-- Systems: `Assets/Scripts/Systems/` (WeaponAssemblySystem, WeaponStatComposer, WeaponItemFactory, WeaponChargeResolver, WeaponSyncSystem, ShootingSystem, WeaponStateMachineSystem)
+- Systems: `Assets/Scripts/Systems/` (WeaponAssemblySystem, WeaponStatComposer, WeaponItemFactory, WeaponChargeResolver, WeaponSyncSystem, WeaponDisplayName, ShootingSystem, WeaponStateMachineSystem)
 - Adapters: `Assets/Scripts/Adapters/` (ICoreDefinitionRegistry, DatabaseCoreDefinitionRegistry)
-- UI: `Assets/Scripts/View/UI/WeaponBuilder/` (presenter + window)
+- Builder UI: `Assets/Scripts/View/UI/WeaponBuilder/` (presenter + window + Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement})
+- Tooltip system: `Assets/Scripts/View/UI/Tooltip/` (TooltipController, TooltipModel, Builders/{Item,Weapon,Module}TooltipBuilder)
 - Scene interactable: `Assets/Scripts/View/WorkbenchView.cs`
-- Editor: `Assets/Scripts/Editor/WeaponBuilderStubAssets.cs` (menu `Tools → Weapon Builder → Create Stub Assets`)
+- Editor: `Assets/Scripts/Editor/WeaponBuilderStubAssets.cs`, `Assets/Scripts/Editor/TooltipAssetsBootstrap.cs` (menu `Tools → Weapon Builder → Create Stub Assets`)
 
 **Assets:**
 - SOs: `Assets/Resources/WeaponBuilder/Payloads/{BallisticRound,LaserCharge}.asset` + `Deliveries/{SingleAction,Auto,Scatter}.asset` + `CoreDefinitionDatabase.asset` + `WeaponBuilderPanelSettings.asset`
-- UXML/USS: `Assets/Resources/UI/WeaponBuilder/`
+- UXML/USS: `Assets/Resources/UI/WeaponBuilder/` (D&D layout) + `Assets/Resources/UI/Tooltip/` (tooltip overlay)
 
-**Tests:** `Assets/Tests/EditMode/` (10 test files related — grep "Weapon|Core|Ammo|Armor")
+**Tests:** `Assets/Tests/EditMode/` (12 test files related — grep "Weapon|Core|Ammo|Armor|Tooltip")
 
 ### Як перевірити що все працює
 
-1. Unity → **Test Runner → EditMode → Run All** → очікується ~90 зелених
-2. Play mode → hideout scene → знайди Workbench → press E → modal відкривається
+1. Unity → **Test Runner → EditMode → Run All** → очікується ~120 зелених
+2. Play mode → hideout scene → знайди Workbench → press E → modal відкривається з drag&drop palette
 3. Або: **Window → Dev Cheats → "Toggle Weapon Builder"** — відкриває з будь-де
-4. Build a Laser+Rifle → equip → shoot → повинен бути charge-up затримка + laser projectile
+4. Drag Laser card → Payload slot, Auto card → Delivery slot → Build → equip → shoot → повинен бути charge-up затримка + laser projectile
+5. Open inventory (Tab) → built weapon показується як "Laser Rifle", не "Weapon"
+6. Hover на будь-який item у inventory → tooltip з композицією/stats
 
 ### Якщо assets відсутні (fresh clone)
 
@@ -57,7 +60,8 @@ Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець �
 - `.cursor/rules/weapon-builder*.mdc` counterpart (CLAUDE.md §7 вимога) — не зроблено
 - `docs/ai/weapons.md` застаріла (pre-migration Rifle/Shotgun/Pistol) — не оновлена
 - Weapon mesh для FormFactor="Shotgun" (видалений разом з Shotgun item у 0b) — fallback на Weapon_Rifle prefab
-- Inventory UI показує "Weapon" DefinitionId замість archetype label — Tier 7 polish
+- ~~Inventory UI показує "Weapon" DefinitionId замість archetype label~~ ✅ done у UX Pass 1 (`WeaponDisplayName.For` helper)
+- Drag-from-backpack у Builder — навмисно read-only до Tier 6 (модулів-як-items ще немає)
 
 ### Key architectural decisions (швидкий reference)
 
@@ -142,6 +146,49 @@ Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець �
 ## Decisions log
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
+
+### 2026-04-27 — UX Pass 1 closeout: A.02 + A.03 + A.04 + C.05 done
+
+Дозакрив 4 items з оригінального doc'у які раніше були помічені як "deferred":
+- **A.02** Module descriptions — `Systems/WeaponModuleFlavor.cs` (5 hardcoded entries) + `TooltipModel` extended з optional `Description` field + `ModuleTooltipBuilder` surfaces it. Description рендериться у tooltip між subtitle і stats sections (UXML/USS додано `tt-description` style).
+- **A.03** Stats grouping у Builder preview — refactored `RefreshPreview` на 3 групи: **Combat** (Damage / Headshot / Penetration) / **Cadence** (Charge if Laser / Fire Interval / Magazine / Reload) / **Pattern** (Projectile Speed / Projectiles per Shot). New USS class `wb-stat-group-heading` (18px bold blue), no emoji icons (skipped як cosmetic noise).
+- **A.04** Archetype flavor sub-line — `Systems/WeaponArchetypeFlavor.cs` (6 hardcoded entries для Tier 1-2 archetypes). `WeaponBuilderPresenter.PreviewArchetypeFlavor` getter. New label у preview UXML між archetype і chargeHint (`wb-archetype-flavor`).
+- **C.05** Modal fade-in/out — USS `transition-property: opacity; transition-duration: 0.15s` на `.wb-window` + `.wb-window-fading` class. Open: mount with class → next-frame remove. Close: add class → schedule.Execute(160ms) sets display=None. Generation-counter (`_fadeGen`) protects against rapid Open/Close races.
+
+**B.05** (ghost weapon visual badge) видалений з плану — `[Broken Weapon]` text marker достатньо; visual badge edge-case полишимо до Tier 6 коли module loot drops зможуть створити reality для ghosted state.
+
+**+10 нових тестів:** WeaponArchetypeFlavorTests (8), WeaponBuilderPresenter Archetype flavor (4), TooltipBuilders Module description (3). Загалом ~130 зелених.
+
+**Files NEW (3):** WeaponArchetypeFlavor.cs, WeaponModuleFlavor.cs, WeaponArchetypeFlavorTests.cs.
+**Files MODIFIED:** Presenter, Window (UXML/USS/cs), TooltipModel, TooltipController, ModuleTooltipBuilder, TooltipOverlay (UXML/USS), 2 існуючих test files.
+
+### 2026-04-27 — UX Pass 1 complete ✅
+
+Фокусний UX polish над foundation. 4 sub-passes, 4 commits. Не torkнув content (Tier 3+) і rarity/loot.
+
+**Sub-passes:**
+1. **Quick wins** — charge hint у preview ("⚡ Requires charge — 1.0s before each shot"), disabled Build button tooltip з reason, Workbench prompt rename ("Weapon Workbench · Press E"). Presenter exposed `PreviewRequiresCharge`, `PreviewChargeTime`, `DisabledReason`.
+2. **Inventory + ammo** — `Systems/WeaponDisplayName.For(item, registry)` helper у 2 callsites (`InventorySlotView`, `EquipmentSlotView`); built weapons показуються як "Ballistic Pistol" / "Laser Rifle" замість "Weapon". Auto-grant `2× MagazineSize` matching ammo після TryBuild — fix для Laser-trap (mag full, reserve empty).
+3. **Universal tooltip system** — `TooltipController` (view-singleton як `WeaponBuilderWindow.Instance`) + `TooltipModel` data + 3 builders (`Item`, `Weapon`, `Module`). Cross-stack: uGUI inventory hover → UI Toolkit overlay panel (sortOrder=1000). Y-flip helper `ShowFromPanel` для UI Toolkit callers. Naming: `TooltipModel` (не `TooltipPayload` — конфлікт з weapon-builder term "payload").
+4. **Builder D&D rewrite** — UXML/USS rewrite, presenter unchanged. Layout: palette (cards) + slots + preview + read-only backpack context. Drag mechanic: PointerDown→capture→ghost→geometry overlap test проти `worldBound` of slots→drop. Type filtering, click fallback, click suppression after drag. Backpack source: `App.Instance.Player.Inventory.Backpack` (read-only до Tier 6).
+
+**Архітектурні рішення:**
+- View-layer singletons (`*.Instance`) дозволені — повторюємо `WeaponBuilderWindow.Instance` precedent. CLAUDE.md §3.12 ("never add new singletons") трактується як "не додавай global gameplay state" — view service locators tolerated.
+- `App.Instance.Tooltip` accessor НЕ додавали — лишаємось у letter §3.2.
+- Stack vs uGUI tradeoff для D&D: вибрали залишитись у UI Toolkit для Builder. Аргумент — UXML/USS markup редагується агентом напряму (Edit/Write), uGUI Canvas потребує Inspector wiring що сильно сповільнює iteration. Cross-stack drag (uGUI ↔ UI Toolkit) відкладено до Tier 6 коли воно реально потрібне.
+- Tooltip naming: `TooltipModel`, не `TooltipPayload` — щоб не плутати з weapon "Payload Core" terminology.
+
+**Нові артефакти (reusable):**
+- `Systems/WeaponDisplayName.For(item, registry)` — будь-який inventory rendering
+- `View/UI/Tooltip/TooltipController` + `TooltipModel` + 3 builders
+- `View/UI/WeaponBuilder/Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement}` — UI Toolkit primitives
+- `docs/ai/ui-styling.md` (+ `.cursor/rules` mirror) — Tier A/B sizing + sort orders + color palette
+
+**Tests:** +28 (WeaponDisplayName 7, Tooltip builders 14, Presenter extensions 10, end-to-end fix 1 retro).
+
+**Out-of-scope (свідомо deferred):** edit-existing-weapon mode, build feedback toast, fade-in/out animations, rarity tint, decision support callouts, drag-from-backpack у Builder.
+
+**Див.:** [`ux-improvements.md`](./ux-improvements.md), [`docs/ai/ui-styling.md`](../../ui-styling.md).
 
 ### 2026-04-17 — v0.7 approved, Hidden Budget removed
 **Було:** Hidden Budget як невидимий ліміт проти "все найкраще одразу".
@@ -438,7 +485,7 @@ Foundation (Tiers 0a, 0b, 1, 2) завершений. Gameplay: гравець �
 
 ## Next actions (after pause)
 
-Foundation (Tiers 0a/0b/1/2) завершений 2026-04-24. Усі immediate action items закриті:
+Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі immediate action items закриті:
 
 - [x] ~~Пройти Tier 0 архітектурні питання Q1-Q7~~ ✅
 - [x] ~~Закрити D1-D14 subsidiary details~~ ✅
@@ -446,6 +493,7 @@ Foundation (Tiers 0a/0b/1/2) завершений 2026-04-24. Усі immediate a
 - [x] ~~Tier 0b (migration)~~ ✅ complete (2026-04-22)
 - [x] ~~Tier 1 (vertical slice)~~ ✅ complete (2026-04-23)
 - [x] ~~Tier 2 (core breadth)~~ ✅ complete (2026-04-23)
+- [x] ~~UX Pass 1 (clarity + inventory + tooltip + D&D)~~ ✅ complete (2026-04-27)
 
 **Next tier (коли повертаємось) — див. [Pause summary](#pause-summary--session-resumption-guide) на початку файлу** для вибору з Tier 3-7 і короткого context.
 

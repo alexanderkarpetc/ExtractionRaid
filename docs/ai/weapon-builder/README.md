@@ -2,13 +2,7 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-24):** Foundation done (Tiers 0-2). 📋 **Next active work: UX Improvements Pass 1** — see [plan/ux-improvements.md](./plan/ux-improvements.md).
-
----
-
-## ⭐ Next active work — START HERE
-
-**[plan/ux-improvements.md](./plan/ux-improvements.md)** — фокусований UX polish pass над тим що вже є. Self-contained: контекст, scope, 3 cluster з конкретними файлами + acceptance criteria. Розраховано на нову сесію — все потрібне для одразу почати кодити.
+> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work: pick next from Tier 3-7 — see [plan/status.md](./plan/status.md) Pause summary.
 
 ---
 
@@ -16,19 +10,19 @@
 
 Якщо ти повертаєшся до фічі, читай у цьому порядку:
 
-1. **[plan/ux-improvements.md](./plan/ux-improvements.md)** — поточний план роботи (UX pass)
-2. **Цей файл** — стан, що працює, що зроблено
-3. [plan/status.md](./plan/status.md) — decisions log, pause summary, 14 key decisions reference
+1. **Цей файл** — стан, що працює, що зроблено (UX Pass 1 outcome зафіксовано нижче)
+2. [plan/status.md](./plan/status.md) — decisions log, pause summary, наступні tier'и
+3. [plan/ux-improvements.md](./plan/ux-improvements.md) — completed UX pass record (acceptance gate done)
 4. [architecture.md](./architecture.md) — якщо потрібно глибше у код: rationale Q1-7 / D1-14
 5. [design.md](./design.md) — design intent
-6. [plan/roadmap.md](./plan/roadmap.md) — повний tier roadmap (Tier 3-7 — для майбутньої роботи)
+6. [plan/roadmap.md](./plan/roadmap.md) — повний tier roadmap (Tier 3-7)
 7. [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (історичний reference)
 
 **Короткий entry point:** `Tools → Weapon Builder → Create Stub Assets` у Unity Editor відновлює всі SO assets, якщо їх немає локально.
 
 ---
 
-## Current state (2026-04-24)
+## Current state (2026-04-27)
 
 ### Tier progress
 
@@ -38,23 +32,26 @@
 | **0b** Migration | State refactor, assembly pipeline, Shotgun + factories видалено | ✅ complete (2026-04-22) |
 | **1** Vertical slice | Workbench, Builder UI (UI Toolkit), DevCheats, Ballistic+Pistol E2E | ✅ complete (2026-04-23) |
 | **2** Core breadth | +Laser (charge-up), +Scatter, 6 archetypes | ✅ complete (2026-04-23) |
+| **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant | ✅ complete (2026-04-27) |
 | **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
 | **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
 | **5** Exotic Mods | 5 Exotic mods via hook system | ⏳ planned |
 | **6** Loot integration | Module items у loot pipeline | ⏳ planned |
 | **7** Polish | VFX, SFX, balance, UI polish | ⏳ planned |
 
-**Test coverage:** ~90 зелених тестів (24 Tier 0a + 29 Tier 0b + 22 Tier 1 + 15 Tier 2).
+**Test coverage:** ~120 зелених тестів (90 з foundation + ~30 з UX Pass 1: WeaponDisplayName, Tooltip builders, presenter extensions).
 
 ### Що працює у грі прямо зараз
 
 **Player flow:**
-1. Гравець у Hideout підходить до Workbench object → натискає `E`
-2. Відкривається Weapon Builder modal (UI Toolkit): 2 dropdowns (Payload, Delivery) + live preview (stats + archetype label) + Build/Cancel
-3. Select Payload × Delivery → preview оновлюється в реальному часі через presenter
-4. Build → новий `ItemState` з `WeaponConfiguration` лендає у backpack
-5. Close → control повертається. Equip у hotbar → weapon готов
-6. Shoot — стріляє згідно з assembled stats
+1. Гравець у Hideout підходить до Workbench object → натискає `E` (prompt: "Weapon Workbench · Press E")
+2. Відкривається Weapon Builder modal (UI Toolkit): palette of module **cards** + 2 drop **slots** (Payload, Delivery) + live preview (archetype, charge hint якщо Laser, stat groups) + read-only **backpack panel** для context
+3. **Drag&drop:** перетягнути card з palette → drop на typed slot. Wrong type → red border, silent reject. Filled slot → replace
+4. **Click fallback:** клік на card теж selects (toggle off повторним кліком на selected)
+5. Hover на card / slot / backpack item → **tooltip** з композицією і stats
+6. Build → новий `ItemState` (з WeaponConfiguration) + auto-grant `2× MagazineSize` matching ammo лендають у backpack
+7. Close → control повертається. Equip у hotbar → weapon готов. Inventory показує **archetype label** ("Laser Pistol") замість generic "Weapon"
+8. Shoot — стріляє згідно з assembled stats. Disabled Build button показує tooltip з причиною
 
 **Alt entry:** DevCheats → "Toggle Weapon Builder" button — відкриває Builder з будь-де (включно з рейдом).
 
@@ -164,13 +161,54 @@ Projectiles spawned
 - VFX per payload (Ballistic bullet, Laser beam, Rocket explosion, Foam splat)
 - SFX: charge sound, fire variations per delivery
 - Weapon meshes per FormFactor
-- Inventory UI: archetype label вмеsто "Weapon" DefinitionId
-- Rarity visual tint на dropdown items + inventory items
+- Rarity visual tint на cards + inventory items
+- ~~Inventory UI: archetype label замість "Weapon" DefinitionId~~ ✅ done у UX Pass 1
 
 ### Відкладено з минулого
 - `.cursor/rules/weapon-builder*.mdc` counterpart (per CLAUDE.md §7) — не зроблено
 - Update `docs/ai/weapons.md` — зараз застаріла, описує pre-migration Rifle/Shotgun/Pistol
 - Weapon view prefabs (Weapon_Shotgun було видалено — нового mesh для Scatter formfactor немає, fallback на Weapon_Rifle)
+
+---
+
+## UX Pass 1 — outcome (2026-04-27)
+
+Фокусний UX polish над foundation. Перетворив dropdown-based Builder з generic-name inventory у drag-and-drop card UX з hover tooltips і archetype labels у всьому інвентарі.
+
+**Зроблено (4 passes, 4 commits):**
+
+| Pass | Tasks | Highlights |
+|------|-------|------------|
+| 1 | Charge hint, disabled Build tooltip, Workbench prompt | Confusion fixes, presenter exposes `PreviewRequiresCharge` / `PreviewChargeTime` / `DisabledReason` |
+| 2 | `WeaponDisplayName` helper + 2 inventory callsites, auto-grant ammo on Build | Inventory shows "Ballistic Pistol" / "Laser Rifle" замість "Weapon"; Laser-trap fix (2× mag of correct ammo type) |
+| 3 | Universal tooltip system (`TooltipModel` + 3 builders + UI Toolkit overlay) | Cross-stack: uGUI inventory hover → UI Toolkit overlay panel. Hooked у InventorySlotView/EquipmentSlotView |
+| 4 | Builder D&D rewrite (palette + slots + ghost + backpack context) | UXML/USS rewrite, presenter unchanged. Drag&drop intra-stack у UI Toolkit. Read-only backpack visible inside Builder |
+
+**Нові архітектурні артефакти (reusable):**
+- `Systems/WeaponDisplayName.For(item, registry)` — будь-яке inventory rendering показує archetype
+- `View/UI/Tooltip/TooltipController.Instance` — view-singleton, `Show` (uGUI bottom-left coords) / `ShowFromPanel` (UI Toolkit top-left coords)
+- 3 tooltip builders: `Item`, `Weapon`, `Module` (для Payload/Delivery cards)
+- `WeaponBuilder/Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement}` — UI Toolkit primitives
+- `docs/ai/ui-styling.md` (+ `.cursor/rules` mirror) — Tier A/B sizing + sort orders + color palette
+
+**Нові файли:**
+- `Assets/Scripts/Systems/WeaponDisplayName.cs`
+- `Assets/Scripts/View/UI/Tooltip/{TooltipModel, TooltipController}.cs` + `Builders/{Item,Weapon,Module}TooltipBuilder.cs`
+- `Assets/Scripts/View/UI/WeaponBuilder/Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement}.cs`
+- `Assets/Resources/UI/Tooltip/TooltipOverlay.{uxml,uss}` + `TooltipPanelSettings.asset`
+- `Assets/Scripts/Editor/TooltipAssetsBootstrap.cs`
+- `docs/ai/ui-styling.md`
+
+**Тести +28:** WeaponDisplayName (7), Tooltip builders (14), Presenter extensions (10), end-to-end fix (1 retro). Загалом ~120 зелених.
+
+**Out-of-scope (свідомо deferred):**
+- Edit existing weapon mode — не реалізується
+- Module cards як real loot items у backpack — це Tier 6 work
+- Build feedback toast / fade-in animations — Tier 7 polish
+- Rarity tint на cards / inventory — Tier 4
+- Decision support callouts ("you already have this build") — out of scope per design
+
+**Backpack source у Builder = `App.Instance.Player.Inventory.Backpack` (read-only).** Drag-from-backpack додасться коли Tier 6 переведе модулі у форму items.
 
 ---
 
@@ -183,10 +221,13 @@ Projectiles spawned
 - [architecture.md](./architecture.md) — технічна архітектура, усі resolved rationale
 
 ### План та статус
-- **[plan/ux-improvements.md](./plan/ux-improvements.md) — поточний work plan (UX Pass 1)**
+- [plan/status.md](./plan/status.md) — decisions log, pause summary, next-tier guidance
 - [plan/roadmap.md](./plan/roadmap.md) — tier structure + exit criteria
 - [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (historical)
-- [plan/status.md](./plan/status.md) — decisions log, відкриті питання, pause summary
+- [plan/ux-improvements.md](./plan/ux-improvements.md) — UX Pass 1 record (completed 2026-04-27)
+
+### UI styling
+- [docs/ai/ui-styling.md](../ui-styling.md) — Tier A/B sizing, color palette, sort orders (created у UX Pass 1)
 
 ---
 

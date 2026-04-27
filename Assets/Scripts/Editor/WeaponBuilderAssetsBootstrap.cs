@@ -33,9 +33,14 @@ namespace Editor
             var ps = ScriptableObject.CreateInstance<PanelSettings>();
             ps.name = "WeaponBuilderPanelSettings";
 
-            // Modal panel: constant pixel size, above HUD. Sorting order 110 keeps it
-            // on top of the Crafting mockup (100) too, in case both are open via DevCheats.
-            ps.scaleMode = PanelScaleMode.ConstantPixelSize;
+            // Modal panel: scale-with-screen so the modal is proportional on 4K and
+            // still fits on 1366×768. Reference 1920×1080, balanced match — see
+            // docs/ai/ui-styling.md "Resolution scaling". Sort 110 keeps it above
+            // CraftingMockup (100). Tooltip stays on top via its own 1000.
+            ps.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            ps.referenceResolution = new Vector2Int(1920, 1080);
+            ps.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            ps.match = 0.5f;
             ps.referenceDpi = 96f;
             ps.fallbackDpi = 96f;
             ps.sortingOrder = 110;
