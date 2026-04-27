@@ -14,10 +14,18 @@ namespace View.UI.Tooltip
     /// <see cref="UIDocument"/> with the highest sortingOrder so it draws on top of
     /// whatever UI is open.
     ///
-    /// Coordinates: <see cref="Show"/> takes a screen-space position with origin at
-    /// the bottom-left (Unity's standard for <c>Input.mousePosition</c> /
-    /// <c>PointerEventData.position</c>) and flips Y internally for the UI Toolkit
-    /// panel which uses top-left origin.
+    /// Coordinates:
+    /// <list type="bullet">
+    ///   <item><see cref="Show"/> — uGUI flavour. Takes screen-space pos
+    ///     (bottom-left origin, actual screen pixels — what
+    ///     <c>PointerEventData.position</c> reports). Converted internally to
+    ///     panel coords accounting for the active <c>PanelSettings</c> scale
+    ///     (otherwise the cursor↔tooltip offset is wrong on any non-1080p
+    ///     display under <see cref="PanelScaleMode.ScaleWithScreenSize"/>).</item>
+    ///   <item><see cref="ShowFromPanel"/> — UI Toolkit flavour. Takes panel
+    ///     coords directly (top-left origin, reference pixels — what
+    ///     <c>PointerEnterEvent.position</c> reports). No conversion.</item>
+    /// </list>
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public class TooltipController : MonoBehaviour
@@ -53,18 +61,25 @@ namespace View.UI.Tooltip
         // ── Public API ────────────────────────────────────────
 
         /// <summary>
-        /// UI-Toolkit-friendly variant. Takes a position in panel coordinates
-        /// (top-left origin — what <c>PointerEnterEvent.position</c> reports) and
-        /// flips Y internally to the bottom-left form <see cref="Show"/> expects.
+        /// UI-Toolkit-friendly variant. <paramref name="panelPos"/> is already in
+        /// panel (reference) coordinates with top-left origin — exactly what
+        /// <c>PointerEnterEvent.position</c> reports. No conversion needed.
         /// </summary>
         public void ShowFromPanel(TooltipModel model, Vector2 panelPos)
         {
-            Show(model, new Vector2(panelPos.x, Screen.height - panelPos.y));
+            ShowAtPanelPos(model, panelPos);
         }
 
         /// <summary>
-        /// Show the tooltip at <paramref name="screenPos"/> (bottom-left origin).
-        /// No-op when <paramref name="model"/> is null/empty.
+        /// uGUI-friendly variant. <paramref name="screenPos"/> is in actual screen
+        /// pixels with bottom-left origin (Unity's <c>Input.mousePosition</c> /
+        /// <c>PointerEventData.position</c>). Converted to panel coordinates
+        /// inside the deferred positioning callback — under
+        /// <see cref="PanelScaleMode.ScaleWithScreenSize"/> the panel uses
+        /// reference pixels, so the cursor screen px ≠ panel px until divided
+        /// by the active scale. The conversion has to happen *after* layout has
+        /// caught up (when the tooltip is hidden, <c>_root.resolvedStyle.height</c>
+        /// is 0 — no layout is computed for <c>display:None</c> elements).
         /// </summary>
         public void Show(TooltipModel model, Vector2 screenPos)
         {
@@ -79,8 +94,38 @@ namespace View.UI.Tooltip
             _root.style.display = DisplayStyle.Flex;
             _isVisible = true;
 
-            // Defer position so the card has measured its size before clamping.
-            _root.schedule.Execute(() => PositionCard(screenPos)).StartingIn(0);
+            _root.schedule.Execute(() =>
+            {
+                var panelPos = ScreenToPanel(screenPos);
+                PositionCard(panelPos);
+            }).StartingIn(0);
+        }
+
+        void ShowAtPanelPos(TooltipModel model, Vector2 panelPos)
+        {
+            if (_root == null) return;
+            if (model == null || model.IsEmpty)
+            {
+                Hide();
+                return;
+            }
+
+            Populate(model);
+            _root.style.display = DisplayStyle.Flex;
+            _isVisible = true;
+
+            // Defer so the card has measured its size before edge-clamping.
+            _root.schedule.Execute(() => PositionCard(panelPos)).StartingIn(0);
+        }
+
+        Vector2 ScreenToPanel(Vector2 screenPos)
+        {
+            float panelHeight = _root.resolvedStyle.height;
+            if (panelHeight <= 0f) panelHeight = Screen.height;
+            float scale = Screen.height > 0 ? Screen.height / panelHeight : 1f;
+            return new Vector2(
+                screenPos.x / scale,
+                panelHeight - screenPos.y / scale);
         }
 
         public void Hide()
@@ -199,26 +244,27 @@ namespace View.UI.Tooltip
 
         // ── Positioning ───────────────────────────────────────
 
-        void PositionCard(Vector2 screenPos)
+        // panelPos is already in panel (reference) coordinates with top-left
+        // origin. Both Show() (after screen→panel conversion) and ShowFromPanel()
+        // funnel here so the math is single-sourced.
+        void PositionCard(Vector2 panelPos)
         {
             if (_card == null) return;
 
-            // Convert from bottom-left screen origin to UI Toolkit's top-left.
             float panelHeight = _root.resolvedStyle.height;
+            float panelWidth  = _root.resolvedStyle.width;
             if (panelHeight <= 0f) panelHeight = Screen.height;
-
-            float panelWidth = _root.resolvedStyle.width;
-            if (panelWidth <= 0f) panelWidth = Screen.width;
+            if (panelWidth  <= 0f) panelWidth  = Screen.width;
 
             float cardW = _card.resolvedStyle.width;
             float cardH = _card.resolvedStyle.height;
 
-            float left = screenPos.x + CursorOffsetX;
-            float top  = (panelHeight - screenPos.y) + CursorOffsetY;
+            float left = panelPos.x + CursorOffsetX;
+            float top  = panelPos.y + CursorOffsetY;
 
             // Flip horizontally if the card would overflow the right edge.
             if (left + cardW > panelWidth - ViewportPadding)
-                left = screenPos.x - cardW - CursorOffsetX;
+                left = panelPos.x - cardW - CursorOffsetX;
 
             // Push up if it would overflow the bottom edge.
             if (top + cardH > panelHeight - ViewportPadding)

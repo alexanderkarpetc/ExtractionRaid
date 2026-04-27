@@ -51,7 +51,7 @@ content that legitimately exceeds reference height).
 1. **Set `min-height` + `flex-shrink: 0` on rows that contain readable
    text** (stat rows, list items). Prevents text overlap when something
    else in the layout misbehaves. Example:
-   `.wb-stat-row { min-height: 28px; flex-shrink: 0; }`
+   `.wb-stat-row { min-height: 22px; flex-shrink: 0; }`
 
 2. **Wrap variable-height body content in `ScrollView`.** Modals taller
    than the reference 1080p height should not assume they fit on every
@@ -96,17 +96,22 @@ Reference file: `Assets/Resources/UI/WeaponBuilder/WeaponBuilderWindow.{uxml,uss
 
 | Element | Size |
 |---|---|
-| Window width | `1040px` |
+| Window width | `1280px` |
 | Header padding | `24px 32px` |
-| Body padding | `32px` |
-| Window title (header) | `32px` bold |
-| Section title (e.g. archetype label) | `28px` bold |
-| Row label / dropdown text / button label | `22px` |
-| Inline stat label | `22px` |
-| Inline stat value | `22px` bold |
-| Inline stat row padding | `3px 0` |
-| Hint / italic note | `18px` italic |
-| Button height | `56px`, min-width `200px` |
+| Body padding | `24px 32px` |
+| Window title (header) | `26px` bold |
+| Section heading (column header — "AVAILABLE MODULES") | `18px` bold |
+| Inline group label (e.g. "Payload"/"Delivery") | `14px` |
+| Card | `144×80`, padding `10/12`, title `18px` bold, kind `14px` |
+| Slot | height `72px`, padding `12/16`, title `18px` bold, kind `14px`, empty placeholder `16px` italic |
+| Preview archetype label | `22px` bold |
+| Preview flavor / hint | `14px` italic |
+| Preview stat group heading | `14px` bold |
+| Inline stat label | `16px` |
+| Inline stat value | `16px` bold |
+| Inline stat row padding | `2px 0`, min-height `22px` |
+| Backpack tile | `130×72`, padding `8/10`, name `14px` bold, count `12px` |
+| Button | height `44px`, min-width `160px`, font `18px` bold |
 | Border radius | `8–12px` |
 | Border width | `2px` (window) / `1px` (inset boxes) |
 
@@ -116,15 +121,16 @@ Reference file: `Assets/Resources/UI/Tooltip/TooltipOverlay.{uxml,uss}`.
 
 | Element | Size |
 |---|---|
-| Card padding | `20px 24px` |
-| Card min-width | `320px` |
-| Card max-width | `540px` |
-| Title | `28px` bold accent |
-| Subtitle | `18px` muted |
-| Section heading | `22px` bold |
-| Row label | `22px` |
-| Row value | `22px` bold |
-| Row padding | `3px 0` |
+| Card padding | `16px 20px` |
+| Card min-width | `280px` |
+| Card max-width | `460px` |
+| Title | `20px` bold accent |
+| Subtitle | `14px` muted |
+| Description (flavor) | `14px` italic |
+| Section heading | `14px` bold |
+| Row label | `15px` |
+| Row value | `15px` bold |
+| Row padding | `2px 0` |
 | Border radius | `8px` |
 | Border width | `2px` |
 
@@ -190,3 +196,88 @@ including the open modal.
   locators are tolerated.
 - Don't add new accessors to `App.Instance` — view singletons go on the
   view component itself.
+
+---
+
+## Runtime gotchas (learned the hard way)
+
+### 1. Override `PanelSettings` scale fields in code, don't trust the asset
+
+Unity aggressively caches `PanelSettings` assets — editing the YAML doesn't
+always propagate to the running editor instance, even after Domain Reload.
+Always re-apply the scale config in `BuildDocument` *before* assigning the
+panel to the `UIDocument`:
+
+```csharp
+var panel = Resources.Load<PanelSettings>(...);
+panel.scaleMode          = PanelScaleMode.ScaleWithScreenSize;
+panel.referenceResolution = new Vector2Int(1920, 1080);
+panel.screenMatchMode     = PanelScreenMatchMode.MatchWidthOrHeight;
+panel.match               = 0.5f;
+
+_doc.panelSettings = panel;
+```
+
+See `WeaponBuilderWindow.ApplyResponsiveScale` and `TooltipController.BuildDocument`
+for live examples.
+
+### 2. `resolvedStyle` is zero while `display: None`
+
+When a `VisualElement` has `display: None`, no layout pass runs and
+`resolvedStyle.width / height` return 0. Reading those values inside the
+same call frame as `display = Flex` gives stale zeros — the layout hasn't
+caught up yet.
+
+Fix: defer the read into `_root.schedule.Execute(..).StartingIn(0)`. By
+next-frame layout has run.
+
+```csharp
+_root.style.display = DisplayStyle.Flex;
+_root.schedule.Execute(() =>
+{
+    var h = _root.resolvedStyle.height; // now valid
+    // ...positioning math here
+}).StartingIn(0);
+```
+
+This bit us in `TooltipController.Show` — cursor→tooltip offset was wrong
+on every non-1080p display because we read `resolvedStyle.height` before
+layout, fell back to `Screen.height`, and ended up with `scale = 1`.
+
+---
+
+## Cross-stack coordinates (uGUI ↔ UI Toolkit)
+
+The project mixes uGUI (Inventory, Hotbar) with UI Toolkit (Builder,
+Tooltip overlay, future modals). Pointer event coordinate systems differ:
+
+| Stack | Source | Origin | Units |
+|---|---|---|---|
+| uGUI | `PointerEventData.position`, `Input.mousePosition` | bottom-left | actual screen pixels |
+| UI Toolkit | `PointerEnterEvent.position` (and friends) | top-left | panel (reference) pixels under `ScaleWithScreenSize` |
+
+When passing positions between stacks (e.g. uGUI inventory hovers a slot
+and asks `TooltipController` to show the tooltip in UI Toolkit space), do
+**not** assume `Screen.height` equals `_root.resolvedStyle.height` — under
+`ScaleWithScreenSize` they differ by the active scale factor.
+
+Conversion (screen → panel):
+
+```csharp
+float panelHeight = _root.resolvedStyle.height;     // panel/ref coords (~1080)
+float scale = Screen.height / panelHeight;          // 0.71 / 1.0 / 2.0 / …
+Vector2 panelPos = new Vector2(
+    screenPos.x / scale,
+    panelHeight - screenPos.y / scale);             // also flips Y origin
+```
+
+API pattern — give callers the entry point that fits their stack so neither
+side has to know the math:
+
+- `Show(model, screenPos)` — uGUI flavour. Input is screen pixels
+  (bottom-left). Conversion happens inside.
+- `ShowFromPanel(model, panelPos)` — UI Toolkit flavour. Input is panel
+  coords (top-left). No conversion.
+
+Implementation in `TooltipController` — both funnel into a single
+panel-coord positioning routine.

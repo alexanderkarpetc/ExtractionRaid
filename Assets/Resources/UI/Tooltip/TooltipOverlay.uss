@@ -16,9 +16,9 @@
 
 .tt-card {
     position: absolute;
-    min-width: 320px;
-    max-width: 540px;
-    padding: 20px 24px;
+    min-width: 280px;
+    max-width: 460px;
+    padding: 16px 20px;
     background-color: rgb(22, 24, 30);
     border-color: rgb(70, 75, 85);
     border-width: 2px;
@@ -26,18 +26,18 @@
 }
 
 .tt-title {
-    font-size: 28px;
+    font-size: 20px;
     -unity-font-style: bold;
     color: rgb(230, 200, 140);
     white-space: normal;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .tt-subtitle {
-    font-size: 18px;
+    font-size: 14px;
     color: rgb(150, 155, 165);
     white-space: normal;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .tt-subtitle.is-empty {
@@ -45,11 +45,11 @@
 }
 
 .tt-description {
-    font-size: 18px;
+    font-size: 14px;
     -unity-font-style: italic;
     color: rgb(190, 200, 215);
     white-space: normal;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .tt-description.is-empty {
@@ -61,15 +61,15 @@
 }
 
 .tt-section {
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .tt-section-heading {
-    font-size: 22px;
+    font-size: 14px;
     -unity-font-style: bold;
     color: rgb(140, 175, 210);
     -unity-text-align: middle-left;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .tt-section-heading.is-empty {
@@ -79,16 +79,16 @@
 .tt-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 3px 0;
+    padding: 2px 0;
 }
 
 .tt-row-label {
-    font-size: 22px;
+    font-size: 15px;
     color: rgb(180, 190, 205);
 }
 
 .tt-row-value {
-    font-size: 22px;
+    font-size: 15px;
     -unity-font-style: bold;
     color: rgb(230, 235, 245);
 }

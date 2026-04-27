@@ -229,24 +229,12 @@ namespace View.UI.WeaponBuilder
             UpdateWindowMaxHeight();
         }
 
-        int _diagLogCount;
         void UpdateWindowMaxHeight()
         {
             if (_window == null) return;
             float h = _root != null ? _root.resolvedStyle.height : 0f;
             if (h <= 0f) return;
             _window.style.maxHeight = h;
-
-            // One-shot diagnostic — logs scale mode + dims so we can debug
-            // resolution issues without hooking the inspector. Remove once
-            // resolution scaling stops being a moving target.
-            if (_diagLogCount++ == 0)
-            {
-                var p = _doc?.panelSettings;
-                Debug.Log($"[WB] scaleMode={p?.scaleMode} ref={p?.referenceResolution} " +
-                          $"match={p?.match:0.##} screenMatchMode={p?.screenMatchMode} | " +
-                          $"Screen={Screen.width}×{Screen.height}, rootH={h:0.##}");
-            }
         }
 
         // Project-wide PanelSettings configuration. Pulled from
