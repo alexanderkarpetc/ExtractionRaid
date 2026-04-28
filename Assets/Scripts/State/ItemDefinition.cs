@@ -13,10 +13,24 @@ namespace State
         Backpack = 1 << 3,
     }
 
+    public enum ItemCategory
+    {
+        None,
+        Weapon,
+        Armor,
+        Meds,
+        Throwable,
+        Ammo,
+        Material,
+        WeaponMod,
+        Quest,
+    }
+
     public class ItemDefinition
     {
         public string Id;
         public string DisplayName;
+        public ItemCategory Category;
         public ItemSlotType AllowedSlots;
         public int MaxStackSize = 1;
         public string AmmoType;
@@ -71,12 +85,14 @@ namespace State
                 {
                     Id = "Weapon",
                     DisplayName = "Weapon",
+                    Category = ItemCategory.Weapon,
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
                 },
                 ["Rifle"] = new()
                 {
                     Id = "Rifle",
                     DisplayName = "Rifle",
+                    Category = ItemCategory.Weapon,
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
                     WeaponPrefabId = "Weapon_Rifle",
                 },
@@ -84,6 +100,7 @@ namespace State
                 {
                     Id = "Pistol",
                     DisplayName = "Pistol",
+                    Category = ItemCategory.Weapon,
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
                     WeaponPrefabId = "Weapon_Pistol",
                 },
@@ -91,6 +108,7 @@ namespace State
                 {
                     Id = "Helmet_Basic",
                     DisplayName = "Basic Helmet",
+                    Category = ItemCategory.Armor,
                     AllowedSlots = ItemSlotType.Helmet | ItemSlotType.Backpack,
                     ArmorPoints = 30f,
                     MaxDurability = 100f,
@@ -100,6 +118,7 @@ namespace State
                 {
                     Id = "Armor_Basic",
                     DisplayName = "Basic Armor",
+                    Category = ItemCategory.Armor,
                     AllowedSlots = ItemSlotType.BodyArmor | ItemSlotType.Backpack,
                     ArmorPoints = 40f,
                     MaxDurability = 120f,
@@ -109,6 +128,7 @@ namespace State
                 {
                     Id = "Medkit",
                     DisplayName = "Medkit",
+                    Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 200,
                 },
@@ -116,6 +136,7 @@ namespace State
                 {
                     Id = "Ammo_Rifle",
                     DisplayName = "Rifle Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle",
@@ -126,6 +147,7 @@ namespace State
                 {
                     Id = "Ammo_EnergyCell",
                     DisplayName = "Energy Cell",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 30,
                     AmmoType = "Ammo_EnergyCell",
@@ -139,6 +161,7 @@ namespace State
                 {
                     Id = "Ammo_Pistol",
                     DisplayName = "Pistol Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol",
@@ -149,6 +172,7 @@ namespace State
                 {
                     Id = "Grenade",
                     DisplayName = "Grenade",
+                    Category = ItemCategory.Throwable,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -156,6 +180,7 @@ namespace State
                 {
                     Id = "Bandage",
                     DisplayName = "Bandage",
+                    Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -163,6 +188,7 @@ namespace State
                 {
                     Id = "Advanced_Medkit",
                     DisplayName = "Advanced Medkit",
+                    Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -172,6 +198,7 @@ namespace State
                 {
                     Id = "Adhesive",
                     DisplayName = "Adhesive",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                 },
@@ -179,6 +206,7 @@ namespace State
                 {
                     Id = "Metal_Parts",
                     DisplayName = "Metal Parts",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 30,
                 },
@@ -186,6 +214,7 @@ namespace State
                 {
                     Id = "Mechanical_Parts",
                     DisplayName = "Mechanical Parts",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                 },
@@ -193,6 +222,7 @@ namespace State
                 {
                     Id = "Electronics",
                     DisplayName = "Electronics",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 15,
                 },
@@ -200,6 +230,7 @@ namespace State
                 {
                     Id = "Chemicals",
                     DisplayName = "Chemicals",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                 },
@@ -207,6 +238,7 @@ namespace State
                 {
                     Id = "Cloth",
                     DisplayName = "Cloth",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 30,
                 },
@@ -214,6 +246,7 @@ namespace State
                 {
                     Id = "Gunpowder",
                     DisplayName = "Gunpowder",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 30,
                 },
@@ -221,6 +254,7 @@ namespace State
                 {
                     Id = "Plastic",
                     DisplayName = "Plastic",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                 },
@@ -228,6 +262,7 @@ namespace State
                 {
                     Id = "Glass",
                     DisplayName = "Glass",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 15,
                 },
@@ -235,6 +270,7 @@ namespace State
                 {
                     Id = "Rubber",
                     DisplayName = "Rubber",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 15,
                 },
@@ -242,6 +278,7 @@ namespace State
                 {
                     Id = "Springs",
                     DisplayName = "Springs",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 15,
                 },
@@ -251,6 +288,7 @@ namespace State
                 {
                     Id = "Military_Components",
                     DisplayName = "Military Components",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 5,
                 },
@@ -258,6 +296,7 @@ namespace State
                 {
                     Id = "Energy_Core",
                     DisplayName = "Energy Core",
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 3,
                 },
@@ -267,6 +306,7 @@ namespace State
                 {
                     Id = "Ammo_Pistol_AP",
                     DisplayName = "Pistol AP Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol_AP",
@@ -277,6 +317,7 @@ namespace State
                 {
                     Id = "Ammo_Rifle_AP",
                     DisplayName = "Rifle AP Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle_AP",
@@ -289,6 +330,7 @@ namespace State
                 {
                     Id = "Ammo_Rifle_HP",
                     DisplayName = "Rifle HP Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle_HP",
@@ -300,6 +342,7 @@ namespace State
                 {
                     Id = "Ammo_Pistol_HP",
                     DisplayName = "Pistol HP Ammo",
+                    Category = ItemCategory.Ammo,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol_HP",
@@ -313,72 +356,84 @@ namespace State
                 {
                     Id = "Basic_Scope",
                     DisplayName = "Basic Scope",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Advanced_Scope"] = new()
                 {
                     Id = "Advanced_Scope",
                     DisplayName = "Advanced Scope",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Long_Barrel"] = new()
                 {
                     Id = "Long_Barrel",
                     DisplayName = "Long Barrel",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Short_Barrel"] = new()
                 {
                     Id = "Short_Barrel",
                     DisplayName = "Short Barrel",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Suppressor"] = new()
                 {
                     Id = "Suppressor",
                     DisplayName = "Suppressor",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Compensator"] = new()
                 {
                     Id = "Compensator",
                     DisplayName = "Compensator",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Extended_Mag"] = new()
                 {
                     Id = "Extended_Mag",
                     DisplayName = "Extended Mag",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Fast_Reload_Mag"] = new()
                 {
                     Id = "Fast_Reload_Mag",
                     DisplayName = "Fast Reload Mag",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Recoil_Grip"] = new()
                 {
                     Id = "Recoil_Grip",
                     DisplayName = "Recoil Grip",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Stabilized_Stock"] = new()
                 {
                     Id = "Stabilized_Stock",
                     DisplayName = "Stabilized Stock",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["AP_Barrel"] = new()
                 {
                     Id = "AP_Barrel",
                     DisplayName = "Armor-Piercing Barrel",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
                 ["Overclock_Receiver"] = new()
                 {
                     Id = "Overclock_Receiver",
                     DisplayName = "Overclock Receiver",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                 },
 
@@ -387,6 +442,7 @@ namespace State
                 {
                     Id = "Worn_Warehouse_Key",
                     DisplayName = "Worn Warehouse Key",
+                    Category = ItemCategory.Quest,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -403,6 +459,7 @@ namespace State
                 {
                     Id = "BallisticRound",
                     DisplayName = "Ballistic Round",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -410,6 +467,7 @@ namespace State
                 {
                     Id = "LaserCharge",
                     DisplayName = "Laser Charge",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -419,6 +477,7 @@ namespace State
                 {
                     Id = "SingleAction",
                     DisplayName = "Single-Action Delivery",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -426,6 +485,7 @@ namespace State
                 {
                     Id = "Auto",
                     DisplayName = "Auto Delivery",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
@@ -433,6 +493,7 @@ namespace State
                 {
                     Id = "Scatter",
                     DisplayName = "Scatter Delivery",
+                    Category = ItemCategory.WeaponMod,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
