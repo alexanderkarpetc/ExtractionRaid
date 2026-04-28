@@ -518,6 +518,7 @@ namespace View.UI.WeaponBuilder
             if (_presenter == null) return;
             RefreshSlots();
             RefreshCardSelection();
+            RefreshCardAvailability();
             RefreshPreview();
         }
 
@@ -553,6 +554,24 @@ namespace View.UI.WeaponBuilder
 
             foreach (var c in _payloadCards)  c.SetSelected(c.DefinitionId == payloadId);
             foreach (var c in _deliveryCards) c.SetSelected(c.DefinitionId == deliveryId);
+        }
+
+        // Tier 6 G4: dim palette cards whose module isn't у player backpack. Polled
+        // each frame while the modal is visible — inventory state has no dedicated
+        // change event, and 5 cards × 1 string compare is essentially free.
+        void RefreshCardAvailability()
+        {
+            if (_presenter == null) return;
+            foreach (var c in _payloadCards)
+                c.SetAvailable(_presenter.IsModuleAvailable(c.DefinitionId));
+            foreach (var c in _deliveryCards)
+                c.SetAvailable(_presenter.IsModuleAvailable(c.DefinitionId));
+        }
+
+        void Update()
+        {
+            if (_isVisible)
+                RefreshCardAvailability();
         }
 
         void RefreshPreview()

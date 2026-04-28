@@ -104,6 +104,30 @@ namespace Tests.EditMode
             Assert.IsTrue(HasSection(model, "Cadence"));
         }
 
+        [Test]
+        public void ItemBuilder_DelegatesToModuleBuilderForPayloadModuleItem()
+        {
+            // Module items у backpack share identity з palette cards (Tier 6 G1).
+            // Tooltip має бути однаковий — full module info, не generic "Ballistic" only.
+            var moduleItem = ItemState.Create(new EId(50), "BallisticRound");
+            var model = ItemTooltipBuilder.For(moduleItem, _registry);
+
+            Assert.AreEqual("Ballistic", model.Title);
+            StringAssert.Contains("Payload", model.Subtitle);
+            Assert.IsTrue(HasSection(model, "Stats"));
+        }
+
+        [Test]
+        public void ItemBuilder_DelegatesToModuleBuilderForDeliveryModuleItem()
+        {
+            var moduleItem = ItemState.Create(new EId(51), "SingleAction");
+            var model = ItemTooltipBuilder.For(moduleItem, _registry);
+
+            Assert.AreEqual("Pistol", model.Title);
+            StringAssert.Contains("Delivery", model.Subtitle);
+            Assert.IsTrue(HasSection(model, "Stats"));
+        }
+
         // ── WeaponTooltipBuilder ──────────────────────────────
 
         [Test]

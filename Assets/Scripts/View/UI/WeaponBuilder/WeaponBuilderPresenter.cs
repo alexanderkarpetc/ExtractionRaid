@@ -269,6 +269,14 @@ namespace View.UI.WeaponBuilder
             FindModuleSlot(definitionId) >= 0;
 
         /// <summary>
+        /// True when the player has the corresponding module item у backpack — used
+        /// by Builder UI (Tier 6 G4) to grey-out palette cards that the player can't
+        /// currently use. Reads inventory state directly so callers can poll per-frame.
+        /// </summary>
+        public bool IsModuleAvailable(string moduleDefinitionId) =>
+            HasModuleInBackpack(moduleDefinitionId);
+
+        /// <summary>
         /// Stack-then-overflow ammo grant. Mirrors <c>InventorySystem.TryPickUp</c>'s
         /// pattern: phase 1 fills partial stacks of the same definition, phase 2 takes
         /// remaining free slots. Returns silently when ammo type is unknown or there's

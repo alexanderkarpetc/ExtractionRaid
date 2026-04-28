@@ -67,16 +67,16 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void SpawnPlayer_SecondWeaponInHotbarSlotOne()
+        public void SpawnPlayer_SecondHotbarSlotEmpty()
         {
+            // Starting loadout cleaned up 2026-04-28: only single Ballistic Rifle
+            // у slot 0; slot 1 is empty. Weapon variety тепер через Builder + loot.
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            Assert.IsNotNull(state.PlayerEntity.Hotbar[1]);
-            Assert.IsTrue(state.PlayerEntity.Hotbar[1].Id.IsValid);
-            Assert.AreNotEqual(state.PlayerEntity.Hotbar[0].Id, state.PlayerEntity.Hotbar[1].Id);
+            Assert.IsNull(state.PlayerEntity.Hotbar[1]);
         }
 
         [Test]

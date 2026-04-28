@@ -50,6 +50,17 @@ namespace View.UI.WeaponBuilder.Elements
             else          RemoveFromClassList("wb-card-selected");
         }
 
+        /// <summary>
+        /// Toggles the dimmed "unavailable" look — used коли player не has the
+        /// corresponding module item у backpack (Tier 6 G4). Click/drag still work
+        /// for selection consistency; CanBuild gating prevents actual Build.
+        /// </summary>
+        public void SetAvailable(bool available)
+        {
+            if (available) RemoveFromClassList("wb-card-unavailable");
+            else           AddToClassList("wb-card-unavailable");
+        }
+
         /// <summary>Display name shown on the card (and reused by drag ghosts).</summary>
         public string GetDisplayName()
         {

@@ -155,6 +155,20 @@
     background-color: rgb(48, 44, 36);
 }
 
+/* Tier 6 G4: dimmed look for modules player doesn't currently own у backpack.
+ * Visual cue — player знає що йому не хватає для Build. Click/drag still work
+ * (CanBuild + DisabledReason gate the actual Build). */
+.wb-card-unavailable {
+    opacity: 0.45;
+    border-color: rgb(50, 55, 65);
+    background-color: rgb(28, 30, 36);
+}
+
+.wb-card-unavailable:hover {
+    background-color: rgb(28, 30, 36);
+    border-color: rgb(50, 55, 65);
+}
+
 .wb-card-title {
     font-size: 18px;
     -unity-font-style: bold;

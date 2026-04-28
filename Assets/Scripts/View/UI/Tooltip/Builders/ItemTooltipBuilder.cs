@@ -6,8 +6,10 @@ namespace View.UI.Tooltip.Builders
 {
     /// <summary>
     /// Builds a <see cref="TooltipModel"/> for any inventory item. Delegates to
-    /// <see cref="WeaponTooltipBuilder"/> for weapon items (built via Weapon Builder)
-    /// so callers don't have to branch on <see cref="ItemState.HasWeaponConfiguration"/>.
+    /// <see cref="WeaponTooltipBuilder"/> for built weapon items, and to
+    /// <see cref="ModuleTooltipBuilder"/> for Weapon Builder module items
+    /// (Payload / Delivery cores stored у backpack as standalone items — Tier 6 G1).
+    /// Falls through to the generic item view (stack count, armor, ammo) otherwise.
     ///
     /// Pure C# — no Unity refs — fully unit-testable.
     /// </summary>
@@ -17,6 +19,16 @@ namespace View.UI.Tooltip.Builders
         {
             if (item == null) return new TooltipModel(string.Empty);
             if (item.HasWeaponConfiguration) return WeaponTooltipBuilder.For(item, registry);
+
+            // Tier 6 G1: module items у backpack share identity з palette cards у
+            // Builder — tooltip має бути однаковий, не generic "module name only".
+            if (registry != null)
+            {
+                if (registry.TryGetPayload(item.DefinitionId, out var payloadDef))
+                    return ModuleTooltipBuilder.ForPayload(payloadDef);
+                if (registry.TryGetDelivery(item.DefinitionId, out var deliveryDef))
+                    return ModuleTooltipBuilder.ForDelivery(deliveryDef);
+            }
 
             var def   = item.Definition;
             var title = def?.DisplayName ?? item.DefinitionId;
