@@ -16,6 +16,19 @@ namespace Editor
         SerializedObject _so;
         DevCheatsConfig _config;
         string _questIdInput = "";
+        int _spawnModuleIndex;
+
+        // Module catalog for "Spawn Module" devcheat (Tier 6 G3). Order:
+        // payload modules first, then delivery — keeps related entries grouped
+        // у dropdown.
+        static readonly (string Id, string DisplayName)[] SpawnableModules =
+        {
+            ("BallisticRound", "Ballistic Round (Payload)"),
+            ("LaserCharge",    "Laser Charge (Payload)"),
+            ("SingleAction",   "Single-Action (Delivery)"),
+            ("Auto",           "Auto (Delivery)"),
+            ("Scatter",        "Scatter (Delivery)"),
+        };
 
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
@@ -188,12 +201,54 @@ namespace Editor
                     WeaponBuilderWindow.Instance?.Toggle();
             }
 
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Spawn Module", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!appReady))
+            {
+                EditorGUILayout.BeginHorizontal();
+                var displayNames = new string[SpawnableModules.Length];
+                for (int i = 0; i < SpawnableModules.Length; i++)
+                    displayNames[i] = SpawnableModules[i].DisplayName;
+                _spawnModuleIndex = EditorGUILayout.Popup(_spawnModuleIndex, displayNames);
+                if (GUILayout.Button("Spawn", GUILayout.Width(80)) && appReady)
+                    SpawnModuleIntoBackpack(SpawnableModules[_spawnModuleIndex].Id);
+                EditorGUILayout.EndHorizontal();
+
+                if (GUILayout.Button("Spawn All Modules") && appReady)
+                {
+                    foreach (var (id, _) in SpawnableModules)
+                        SpawnModuleIntoBackpack(id);
+                }
+            }
+
             if (!appReady)
                 EditorGUILayout.HelpBox("Enter Play Mode to use raid cheats.", MessageType.Info);
             else if (App.Instance.IsInHideout)
                 EditorGUILayout.HelpBox("Already in hideout.", MessageType.Info);
 
             EditorGUI.indentLevel--;
+        }
+
+        static void SpawnModuleIntoBackpack(string moduleDefinitionId)
+        {
+            var inventory = App.Instance?.Player?.Inventory;
+            var session   = App.Instance?.RaidSession;
+            if (inventory == null || session == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot spawn module — Player.Inventory / RaidSession not ready.");
+                return;
+            }
+
+            int freeSlot = inventory.FindFreeBackpackSlot();
+            if (freeSlot < 0)
+            {
+                Debug.LogWarning("[DevCheats] Cannot spawn module — backpack is full.");
+                return;
+            }
+
+            var id = session.RaidState.AllocateEId();
+            inventory.Backpack[freeSlot] = State.ItemState.Create(id, moduleDefinitionId);
+            Debug.Log($"[DevCheats] Spawned {moduleDefinitionId} у backpack slot {freeSlot}.");
         }
 
         void DrawQuestsSection()

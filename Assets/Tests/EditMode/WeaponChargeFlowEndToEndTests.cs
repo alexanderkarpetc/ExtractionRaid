@@ -211,11 +211,21 @@ namespace Tests.EditMode
 
         WeaponEntityState BuildAndAssemble(string payloadId, string deliveryId)
         {
+            // Tier 6 G6: Build consumes module items from backpack. Place them first.
+            int slot = 0;
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot++] = ItemState.Create(AllocateEId(), payloadId);
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot] = ItemState.Create(AllocateEId(), deliveryId);
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
             presenter.SelectPayload(payloadId);
             presenter.SelectDelivery(deliveryId);
             Assert.IsTrue(presenter.TryBuild(out _));
 
+            // After consume + weapon placement, weapon lands у freed module slot (slot 0).
             var item = _inventory.Backpack[0];
             var runtime = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
             Assert.IsNotNull(runtime);

@@ -84,11 +84,26 @@ namespace Tests.EditMode
         public void TearDown() =>
             WeaponBuilderTestFactory.DestroyAll(_ballistic, _singleAction, _auto, _db);
 
+        /// <summary>Places payload + delivery module items into free backpack slots
+        /// so TryBuild's module-consumption check passes (Tier 6 G6).</summary>
+        void PutModulesInBackpack(string payloadId, string deliveryId)
+        {
+            int slot = 0;
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot++] = ItemState.Create(AllocateEId(), payloadId);
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot] = ItemState.Create(AllocateEId(), deliveryId);
+        }
+
         // ── Core vertical slice: build → equip → runtime state ─
 
         [Test]
         public void FullFlow_BuildBallisticPistol_ProducesRuntimeWeaponWithMatchingStats()
         {
+            PutModulesInBackpack("BallisticRound", "SingleAction");
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
 
             // === 1. UX — select both slots
@@ -99,7 +114,8 @@ namespace Tests.EditMode
             Assert.AreEqual("Ballistic Pistol", presenter.PreviewArchetype);
             var previewStats = presenter.PreviewStats.Value;
 
-            // === 2. UX — Build → item in backpack
+            // === 2. UX — Build → item in backpack (lands at slot 0 — payload module's
+            // freed slot)
             Assert.IsTrue(presenter.TryBuild(out var reason), reason);
             var builtItem = _inventory.Backpack[0];
             Assert.IsNotNull(builtItem);
@@ -136,6 +152,8 @@ namespace Tests.EditMode
         [Test]
         public void FullFlow_BuildBallisticRifle_ProducesRifleVariant()
         {
+            PutModulesInBackpack("BallisticRound", "Auto");
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
 
             presenter.SelectPayload("BallisticRound");
@@ -155,6 +173,10 @@ namespace Tests.EditMode
         [Test]
         public void FullFlow_TwoBuilds_BothLandInBackpack_EachIsUniqueInstance()
         {
+            // Two payload + two delivery modules — one set per Build.
+            PutModulesInBackpack("BallisticRound", "SingleAction");
+            PutModulesInBackpack("BallisticRound", "Auto");
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
 
             // Build 1: pistol
@@ -162,8 +184,8 @@ namespace Tests.EditMode
             presenter.SelectDelivery("SingleAction");
             Assert.IsTrue(presenter.TryBuild(out _));
 
-            // Build 2: rifle. Note: ammo auto-grant from build 1 takes the next free
-            // slot, so the second weapon doesn't land at index 1 — search by config.
+            // Build 2: rifle. Modules are consumed each Build — both weapons exist
+            // у backpack alongside ammo grants from each Build.
             presenter.SelectDelivery("Auto");
             Assert.IsTrue(presenter.TryBuild(out _));
 
@@ -188,6 +210,8 @@ namespace Tests.EditMode
         [Test]
         public void FullFlow_BuildThenDropToGroundThenPickUp_ConfigSurvives()
         {
+            PutModulesInBackpack("BallisticRound", "Auto");
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
             presenter.SelectPayload("BallisticRound");
             presenter.SelectDelivery("Auto");
@@ -222,6 +246,9 @@ namespace Tests.EditMode
         [Test]
         public void FullFlow_PreviewChanges_AsSelectionChanges()
         {
+            // Final selection is BallisticRound + Auto, so place those for Build.
+            PutModulesInBackpack("BallisticRound", "Auto");
+
             var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
 
             presenter.SelectPayload("BallisticRound");
@@ -234,9 +261,18 @@ namespace Tests.EditMode
             Assert.AreEqual(30, presenter.PreviewStats.Value.MagazineSize);
             Assert.AreEqual("Ballistic Rifle", presenter.PreviewArchetype);
 
-            // Build after switch — the final item reflects the LAST selection, not the first
+            // Build after switch — the final item reflects the LAST selection, not the first.
+            // Note: Auto module (slot 1) is consumed; weapon lands у freed slot.
             Assert.IsTrue(presenter.TryBuild(out _));
-            var runtime = WeaponSyncSystem.BuildWeaponForItem(_inventory.Backpack[0], _registry, _events);
+            int weaponSlot = -1;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (_inventory.Backpack[i] != null && _inventory.Backpack[i].HasWeaponConfiguration)
+                {
+                    weaponSlot = i;
+                    break;
+                }
+            Assert.GreaterOrEqual(weaponSlot, 0);
+            var runtime = WeaponSyncSystem.BuildWeaponForItem(_inventory.Backpack[weaponSlot], _registry, _events);
             Assert.AreEqual(30, runtime.Stats.MagazineSize);
         }
 

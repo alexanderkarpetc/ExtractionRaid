@@ -383,6 +383,52 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
                 },
+
+                // --- Weapon Builder modules (Tier 6 G1) ---
+                // Module Ids match PayloadCoreDefinition.Id / DeliveryCoreDefinition.Id у
+                // CoreDefinitionDatabase. Non-stackable (MaxStackSize=1) for forward-compat
+                // з Tier 4 rarity (різні tier = різні items). Auto-gen path → Tier 4 коли
+                // rarity змусить SO refactor anyway. See docs/ai/weapon-builder/plan/roadmap.md
+                // → Tier 6.
+
+                // Payload modules
+                ["BallisticRound"] = new()
+                {
+                    Id = "BallisticRound",
+                    DisplayName = "Ballistic Round",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+                ["LaserCharge"] = new()
+                {
+                    Id = "LaserCharge",
+                    DisplayName = "Laser Charge",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+
+                // Delivery modules
+                ["SingleAction"] = new()
+                {
+                    Id = "SingleAction",
+                    DisplayName = "Single-Action Delivery",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+                ["Auto"] = new()
+                {
+                    Id = "Auto",
+                    DisplayName = "Auto Delivery",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+                ["Scatter"] = new()
+                {
+                    Id = "Scatter",
+                    DisplayName = "Scatter Delivery",
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
             };
         }
     }

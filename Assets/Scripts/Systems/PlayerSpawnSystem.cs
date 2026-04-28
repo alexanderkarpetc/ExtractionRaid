@@ -70,26 +70,25 @@ namespace Systems
 
         static void GiveStartingLoadout(RaidState state, InventoryState inventory)
         {
+            // Single Ballistic Rifle (Ballistic + Auto). Pistol slot и spare-pistol
+            // у backpack[9] прибрані 2026-04-28 — гравець тепер має одну дефолтну
+            // зброю, решта надходить через loot / Weapon Builder. Module loot —
+            // Tier 6 Wave F (G2).
             var weaponId = state.AllocateEId();
             inventory.WeaponSlots[0] = WeaponItemFactory.SpawnItem(weaponId, "Rifle");
 
-            var weapon2Id = state.AllocateEId();
-            inventory.WeaponSlots[1] = WeaponItemFactory.SpawnItem(weapon2Id, "Pistol");
-
             inventory.Backpack[0] = ItemState.Create(state.AllocateEId(), "Ammo_Rifle", 60);
-            inventory.Backpack[1] = ItemState.Create(state.AllocateEId(), "Ammo_Pistol", 36);
 
             for (int i = 0; i < GrenadeConstants.StartingCount; i++)
-                inventory.Backpack[3 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
+                inventory.Backpack[2 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
 
-            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit",
+            inventory.Backpack[5] = ItemState.Create(state.AllocateEId(), "Medkit",
                 (int)MedConstants.TotalHealAmount);
+            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Bandage");
             inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
-            inventory.Backpack[8] = ItemState.Create(state.AllocateEId(), "Bandage");
-            inventory.Backpack[9] = WeaponItemFactory.SpawnItem(state.AllocateEId(), "Pistol");
 
-            inventory.Backpack[10] = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
-            inventory.Backpack[11] = ItemState.Create(state.AllocateEId(), "Armor_Basic");
+            inventory.Backpack[9] = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
+            inventory.Backpack[10] = ItemState.Create(state.AllocateEId(), "Armor_Basic");
         }
     }
 }

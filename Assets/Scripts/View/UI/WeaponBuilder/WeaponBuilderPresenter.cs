@@ -104,12 +104,17 @@ namespace View.UI.WeaponBuilder
         }
 
         /// <summary>
-        /// True when both cores are selected, resolvable via registry, and backpack
-        /// has at least one free slot to receive the built weapon.
+        /// True when both cores are selected, resolvable via registry, AND both
+        /// the corresponding payload + delivery module items are present in the
+        /// player's backpack (Tier 6 G6: Build consumes modules).
+        /// Free-slot check is intentionally absent — module consumption frees ≥ 2
+        /// slots before the new weapon item is placed, so backpack overflow is
+        /// impossible when modules exist.
         /// </summary>
         public bool CanBuild =>
             TryResolveSelection(out _, out _) &&
-            _inventory.FindFreeBackpackSlot() >= 0;
+            HasModuleInBackpack(State.SelectedPayload.DefinitionId) &&
+            HasModuleInBackpack(State.SelectedDelivery.DefinitionId);
 
         /// <summary>
         /// True when the currently selected payload triggers a charge-up phase before
@@ -156,7 +161,7 @@ namespace View.UI.WeaponBuilder
         /// Human-readable reason why the Build action is unavailable. Empty string when
         /// <see cref="CanBuild"/> is true. Shown as the disabled Build button's tooltip
         /// so the player can see what's blocking them without trial-and-error.
-        /// Order: missing payload → missing delivery → missing slot.
+        /// Order: missing selection → invalid registry → missing inventory module.
         /// </summary>
         public string DisabledReason
         {
@@ -165,7 +170,10 @@ namespace View.UI.WeaponBuilder
                 if (!State.HasPayload)  return "Select a payload";
                 if (!State.HasDelivery) return "Select a delivery";
                 if (!TryResolveSelection(out _, out _)) return "Selected modules unavailable";
-                if (_inventory.FindFreeBackpackSlot() < 0) return "Backpack is full";
+                if (!HasModuleInBackpack(State.SelectedPayload.DefinitionId))
+                    return "No payload module у backpack";
+                if (!HasModuleInBackpack(State.SelectedDelivery.DefinitionId))
+                    return "No delivery module у backpack";
                 return string.Empty;
             }
         }
@@ -174,8 +182,9 @@ namespace View.UI.WeaponBuilder
 
         /// <summary>
         /// Materialises the current selection into an <see cref="ItemState"/> and drops
-        /// it into the first free backpack slot. Magazine starts full.
-        /// Returns false on any failure (no selection, invalid config, no free slot).
+        /// it into the first free backpack slot. Consumes 1× payload + 1× delivery
+        /// module items from the backpack (Tier 6 G6). Magazine starts full.
+        /// Returns false on any failure (no selection, invalid config, missing module).
         /// </summary>
         public bool TryBuild(out string failReason)
         {
@@ -195,10 +204,16 @@ namespace View.UI.WeaponBuilder
                 return false;
             }
 
-            int freeSlot = _inventory.FindFreeBackpackSlot();
-            if (freeSlot < 0)
+            int payloadSlot  = FindModuleSlot(State.SelectedPayload.DefinitionId);
+            int deliverySlot = FindModuleSlot(State.SelectedDelivery.DefinitionId);
+            if (payloadSlot < 0)
             {
-                failReason = "Backpack is full.";
+                failReason = "Payload module not in backpack.";
+                return false;
+            }
+            if (deliverySlot < 0)
+            {
+                failReason = "Delivery module not in backpack.";
                 return false;
             }
 
@@ -212,8 +227,14 @@ namespace View.UI.WeaponBuilder
                 exotic: null,
                 ammoInMagazine: stats.MagazineSize);
 
-            // DefinitionId is set to "Weapon" as a generic marker — identity lives in
-            // WeaponConfiguration. DisplayName is derived via WeaponArchetypeLabel.
+            // Consume modules first — this guarantees ≥ 2 backpack slots free,
+            // so the new weapon (and ammo grant) always have somewhere to land.
+            _inventory.Backpack[payloadSlot]  = null;
+            _inventory.Backpack[deliverySlot] = null;
+
+            int freeSlot = _inventory.FindFreeBackpackSlot();
+            // DefinitionId "Weapon" as a generic marker — identity lives in
+            // WeaponConfiguration. DisplayName derived via WeaponArchetypeLabel.
             _inventory.Backpack[freeSlot] = ItemState.CreateWeapon(_allocateEId(), "Weapon", config);
 
             // Grant a reserve of matching ammo so the build is usable immediately —
@@ -226,6 +247,26 @@ namespace View.UI.WeaponBuilder
             failReason = null;
             return true;
         }
+
+        /// <summary>
+        /// Finds the first backpack slot containing an item with the given
+        /// <paramref name="definitionId"/>. Returns -1 when none. Module items
+        /// are non-stackable so any matching slot represents 1 unit.
+        /// </summary>
+        int FindModuleSlot(string definitionId)
+        {
+            if (string.IsNullOrEmpty(definitionId)) return -1;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var item = _inventory.Backpack[i];
+                if (item != null && item.DefinitionId == definitionId)
+                    return i;
+            }
+            return -1;
+        }
+
+        bool HasModuleInBackpack(string definitionId) =>
+            FindModuleSlot(definitionId) >= 0;
 
         /// <summary>
         /// Stack-then-overflow ammo grant. Mirrors <c>InventorySystem.TryPickUp</c>'s

@@ -112,6 +112,8 @@ namespace Tests.EditMode
         [Test]
         public void SelectBoth_PreviewStatsComposed_ArchetypeFormed_CanBuildTrue()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
+
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
@@ -165,6 +167,8 @@ namespace Tests.EditMode
         [Test]
         public void TryBuild_Success_ItemLandsInBackpack_WithWeaponConfiguration()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
+
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
@@ -174,7 +178,8 @@ namespace Tests.EditMode
             Assert.IsTrue(built);
             Assert.IsNull(reason);
 
-            // First free slot should have the new weapon item
+            // After consume + weapon placement, first free slot (slot 0, just freed
+            // by payload module consumption) holds the new weapon item.
             var item = _inventory.Backpack[0];
             Assert.IsNotNull(item);
             Assert.IsTrue(item.HasWeaponConfiguration);
@@ -190,6 +195,8 @@ namespace Tests.EditMode
         [Test]
         public void TryBuild_BallisticPistol_GrantsRifleAmmoReserve()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
+
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");   // ammoType = "Ammo_Rifle"
             p.SelectDelivery("SingleAction");    // MagazineSize = 12
@@ -203,6 +210,8 @@ namespace Tests.EditMode
         [Test]
         public void TryBuild_LaserPistol_GrantsEnergyCellAmmoReserve()
         {
+            PlaceModulesInBackpack("LaserCharge", "SingleAction");
+
             var p = MakePresenter();
             p.SelectPayload("LaserCharge");      // ammoType = "Ammo_EnergyCell"
             p.SelectDelivery("SingleAction");    // MagazineSize = 12
@@ -218,6 +227,7 @@ namespace Tests.EditMode
         [Test]
         public void TryBuild_StacksAmmoIntoExistingPartialStack()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
             // Pre-place a partial Ammo_Rifle stack so the grant should top it up.
             _inventory.Backpack[5] = ItemState.Create(new EId(99), "Ammo_Rifle", 10);
 
@@ -236,6 +246,7 @@ namespace Tests.EditMode
         [Test]
         public void TryBuild_AmmoOverflowSpillsIntoFreeSlots()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
             // Pre-place a near-full stack so overflow forces a second slot.
             _inventory.Backpack[5] = ItemState.Create(new EId(99), "Ammo_Rifle", 55);
 
@@ -248,31 +259,6 @@ namespace Tests.EditMode
             // 55 + space = 5 → top-up to 60. Remaining 19 spill into a new slot.
             Assert.AreEqual(60, _inventory.Backpack[5].StackCount);
             Assert.AreEqual(55 + 24, SumAmmoInBackpack("Ammo_Rifle"));
-        }
-
-        [Test]
-        public void TryBuild_NoRoomForAmmo_StillSucceeds_AmmoSilentlySkipped()
-        {
-            // Fill every slot except slot 0 (where the weapon will land) with
-            // non-ammo items. After the weapon takes slot 0, no room for ammo —
-            // grant must silent-skip, Build still succeeds.
-            for (int i = 1; i < InventoryState.BackpackSize; i++)
-                _inventory.Backpack[i] = ItemState.Create(new EId(2000 + i), "Medkit");
-
-            var p = MakePresenter();
-            p.SelectPayload("BallisticRound");
-            p.SelectDelivery("SingleAction");
-
-            Assert.IsTrue(p.TryBuild(out var reason),
-                "Build must succeed even when ammo grant has nowhere to go");
-            Assert.IsNull(reason);
-
-            // Weapon should land in slot 0.
-            Assert.IsNotNull(_inventory.Backpack[0]);
-            Assert.IsTrue(_inventory.Backpack[0].HasWeaponConfiguration);
-
-            Assert.AreEqual(0, SumAmmoInBackpack("Ammo_Rifle"),
-                "No ammo should have been added — every slot was occupied");
         }
 
         [Test]
@@ -300,21 +286,82 @@ namespace Tests.EditMode
             StringAssert.Contains("delivery", reason.ToLowerInvariant());
         }
 
+        // ── Module consumption (Tier 6 G6) ────────────────────
+
         [Test]
-        public void TryBuild_BackpackFull_FailsAndCanBuildFalse()
+        public void TryBuild_ConsumesPayloadAndDeliveryModules()
         {
-            FillBackpack(_inventory);
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
+            Assert.AreEqual(1, CountInBackpack("BallisticRound"));
+            Assert.AreEqual(1, CountInBackpack("SingleAction"));
 
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
 
-            Assert.IsFalse(p.CanBuild, "Backpack full → CanBuild is false");
-            Assert.IsNotNull(p.PreviewStats, "Preview should still compose");
+            Assert.IsTrue(p.TryBuild(out _));
 
-            bool built = p.TryBuild(out var reason);
-            Assert.IsFalse(built);
-            StringAssert.Contains("full", reason.ToLowerInvariant());
+            Assert.AreEqual(0, CountInBackpack("BallisticRound"),
+                "Payload module should be consumed on Build");
+            Assert.AreEqual(0, CountInBackpack("SingleAction"),
+                "Delivery module should be consumed on Build");
+        }
+
+        [Test]
+        public void TryBuild_NoPayloadModuleInBackpack_Fails()
+        {
+            // Only delivery present.
+            _inventory.Backpack[0] = ItemState.Create(new EId(500), "SingleAction");
+
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            p.SelectDelivery("SingleAction");
+
+            Assert.IsFalse(p.CanBuild);
+            Assert.IsTrue(p.TryBuild(out var reason) == false && reason != null);
+            StringAssert.Contains("payload", reason.ToLowerInvariant());
+        }
+
+        [Test]
+        public void TryBuild_NoDeliveryModuleInBackpack_Fails()
+        {
+            // Only payload present.
+            _inventory.Backpack[0] = ItemState.Create(new EId(500), "BallisticRound");
+
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            p.SelectDelivery("SingleAction");
+
+            Assert.IsFalse(p.CanBuild);
+            Assert.IsTrue(p.TryBuild(out var reason) == false && reason != null);
+            StringAssert.Contains("delivery", reason.ToLowerInvariant());
+        }
+
+        [Test]
+        public void TryBuild_BackpackFullWithModules_StillSucceeds()
+        {
+            // Modules + 18 medkits = 20 items, backpack at capacity. Module
+            // consumption frees 2 slots, weapon + ammo land у freed slots — Build
+            // succeeds even though pre-Build the inventory was "full".
+            FillBackpack(_inventory);
+            // Replace 2 medkits with modules
+            _inventory.Backpack[0] = ItemState.Create(new EId(500), "BallisticRound");
+            _inventory.Backpack[1] = ItemState.Create(new EId(501), "SingleAction");
+
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            p.SelectDelivery("SingleAction");
+
+            Assert.IsTrue(p.CanBuild);
+            Assert.IsTrue(p.TryBuild(out _));
+
+            // Modules consumed; weapon now occupies one of the freed slots.
+            Assert.AreEqual(0, CountInBackpack("BallisticRound"));
+            Assert.AreEqual(0, CountInBackpack("SingleAction"));
+            int weaponCount = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (_inventory.Backpack[i] != null && _inventory.Backpack[i].HasWeaponConfiguration) weaponCount++;
+            Assert.AreEqual(1, weaponCount, "Built weapon should be у backpack");
         }
 
         // ── Charge-up preview (Pass 1 / T1) ───────────────────
@@ -418,18 +465,31 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void DisabledReason_BackpackFull_SaysFull()
+        public void DisabledReason_NoPayloadModule_SaysNoPayload()
         {
-            FillBackpack(_inventory);
+            // Delivery present, payload missing.
+            _inventory.Backpack[0] = ItemState.Create(new EId(500), "SingleAction");
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
-            StringAssert.Contains("full", p.DisabledReason.ToLowerInvariant());
+            StringAssert.Contains("payload", p.DisabledReason.ToLowerInvariant());
+        }
+
+        [Test]
+        public void DisabledReason_NoDeliveryModule_SaysNoDelivery()
+        {
+            // Payload present, delivery missing.
+            _inventory.Backpack[0] = ItemState.Create(new EId(500), "BallisticRound");
+            var p = MakePresenter();
+            p.SelectPayload("BallisticRound");
+            p.SelectDelivery("SingleAction");
+            StringAssert.Contains("delivery", p.DisabledReason.ToLowerInvariant());
         }
 
         [Test]
         public void DisabledReason_AllOk_Empty()
         {
+            PlaceModulesInBackpack("BallisticRound", "SingleAction");
             var p = MakePresenter();
             p.SelectPayload("BallisticRound");
             p.SelectDelivery("SingleAction");
@@ -443,6 +503,29 @@ namespace Tests.EditMode
         {
             for (int i = 0; i < InventoryState.BackpackSize; i++)
                 inv.Backpack[i] = ItemState.Create(new EId(1000 + i), "Medkit");
+        }
+
+        /// <summary>Places payload + delivery module items into the first two free
+        /// backpack slots so TryBuild's module-consumption check passes (Tier 6 G6).
+        /// Tests that assert <c>CanBuild==true</c> or expect <c>TryBuild</c> to
+        /// succeed must call this first.</summary>
+        void PlaceModulesInBackpack(string payloadId, string deliveryId)
+        {
+            int slot = 0;
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot++] = ItemState.Create(new EId(500 + slot), payloadId);
+            while (slot < InventoryState.BackpackSize && _inventory.Backpack[slot] != null) slot++;
+            if (slot < InventoryState.BackpackSize)
+                _inventory.Backpack[slot] = ItemState.Create(new EId(500 + slot), deliveryId);
+        }
+
+        int CountInBackpack(string definitionId)
+        {
+            int n = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (_inventory.Backpack[i]?.DefinitionId == definitionId) n++;
+            return n;
         }
 
         int SumAmmoInBackpack(string ammoDefinitionId)

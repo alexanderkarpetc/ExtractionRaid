@@ -93,6 +93,17 @@ namespace ApplicationCore
 
             _instance = new App();
 
+#if UNITY_EDITOR
+            // Editor-only convenience: "Raid → Remove Save On Start" menu toggle wipes
+            // the save file before load so Play Mode starts with a fresh player. Default
+            // ON for dev velocity; toggle off when explicitly testing save persistence.
+            // Pref key duplicated from Editor.RaidToolsMenu.RemoveSaveOnStartPrefKey
+            // (Game asmdef can't reference Editor asmdef directly).
+            const string removeSaveOnStartPrefKey = "ExtractionRaid.RemoveSaveOnStart";
+            if (UnityEditor.EditorPrefs.GetBool(removeSaveOnStartPrefKey, true))
+                SaveManager.Delete();
+#endif
+
             var save = SaveManager.Load();
             if (save != null)
                 _instance.Player.LoadFrom(save);

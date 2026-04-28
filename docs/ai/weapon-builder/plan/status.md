@@ -155,6 +155,47 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
 
+### 2026-04-28 — Tier 6 Wave C deferred: cross-stack drag → Tier 4
+
+**Decision:** Wave C (cross-stack drag bridge G5★) defer'нута з Tier 6 у Tier 4.
+
+**Rationale:**
+- Builder palette уже drag-source (Pass 4 D&D rewrite). Drag-from-inventory дублював би existing функціонал — player click'ом палітри селект'ить модуль, інвентар показує availability.
+- **Unique value cross-stack drag — instance disambiguation** — виникає тільки коли rarity (Tier 4) робить 2× BallisticRound (Common vs Rare) different items. Без rarity всі instances однакові → palette достатньо disambiguate'ить.
+- Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag: палітра показує grayed-out unavailable, Build consumes modules з backpack.
+- Saves ~4-6h, redirected у G6/G4/G2/G7 які closing the loop more meaningfully.
+
+**Tier 4 will pick this up alongside rarity work** — DragService implementation тоді matches the actual UX need.
+
+### 2026-04-28 — Tier 6 Wave B complete: foundation ✅
+
+G1 + G3 done.
+
+- **G1**: 5 module ItemDefinitions у `ItemDefinition.BuildRegistry` (BallisticRound, LaserCharge, SingleAction, Auto, Scatter — all `MaxStackSize: 1`, `AllowedSlots: Backpack`). Ids match `PayloadCoreDefinition.Id` / `DeliveryCoreDefinition.Id` для майбутнього Wave D consume lookup.
+- **G3**: DevCheats "Spawn Module" dropdown + button у Raid section + "Spawn All Modules" convenience button. `SpawnModuleIntoBackpack(id)` finds free slot, allocates EId, places `ItemState.Create`.
+- **Bonus**: `Raid → Remove Save On Start` toggle (default ON) — Editor menu checkbox + EditorPrefs persistence + App.Initialize hook (`#if UNITY_EDITOR`). Fresh player every Play Mode entry by default; toggle off to test save persistence.
+- **Inventory cleanup**: starting loadout simplified — лише single Ballistic Rifle (slot 0). Pistol + spare-Pistol + Ammo_Pistol прибрані з `GiveStartingLoadout`. Weapon variety тепер через Builder + loot.
+
+**Effort actual:** ~1.5h (within estimate).
+
+### 2026-04-28 — Tier 6 Wave A complete: side-by-side launch ✅
+
+Workbench interact (E key) тепер відкриває **Builder modal на правому боці** + **uGUI inventory canvas на лівому**. Player бачить Familiar inventory UI (durability bars, weight, equipment slots, hotbar) поряд з Builder. Embedded backpack у Builder UI повністю видалений.
+
+**Implementation summary:**
+- `PlayerEntityState.BuilderTargetId` (EId) — replaces old `IsWeaponBuilderOpen` bool, parallel to `LootTargetId`/`CraftTargetId`. Sentinel value у `WeaponBuilderWindow` since Tier 6 doesn't track specific workbench yet.
+- `WeaponBuilderWindow.uss` — backdrop `align-items: flex-end + padding-right: 32px` (right-anchor); transparent bg (no dim); `picking-mode="Ignore"` on UXML so pointer events pass through до uGUI underneath.
+- `LootPopupView.OpenForBuilder()` — Builder mode variant: only `_playerPanel`, `_lootContainerParent` forced hidden.
+- `InventoryUI.Update` — watches `BuilderTargetId`, `_openedByBuilder` flag для lifecycle tracking. Tab while Builder open → calls `WeaponBuilderWindow.Instance.Close()` (universal "close everything" key).
+
+**Files modified:** PlayerEntityState, WeaponBuilderWindow (cs/uxml/uss), LootPopupView, InventoryUI. **Files deleted:** `BackpackItemElement.cs`.
+
+**Runtime polish (caught у Editor playtest):**
+- `picking-mode="Ignore"` on backdrop — без цього UI Toolkit panel consume'ив усі pointer events, inventory був не-interactive.
+- Backdrop dim → transparent — side-by-side layout не потребує dim, він тільки obscure'ив inventory візуально.
+
+**Effort actual:** ~5h (within 4-6h estimate).
+
 ### 2026-04-28 — Tier 6 architecture: side-by-side inventory + cross-stack drag bridge
 
 **Контекст:** під час планування Tier 6 (loot/inventory) виникло концептуальне питання: чи правильно тримати backpack як embedded panel у Builder UI (поточний стан після UX Pass 1), чи відкривати uGUI inventory canvas alongside Builder як side-by-side layout (industry pattern: Diablo, Tarkov, Minecraft, PoE).

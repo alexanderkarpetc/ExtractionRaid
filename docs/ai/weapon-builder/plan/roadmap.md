@@ -345,7 +345,7 @@ Tier 4 complete.
 - [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
 - [ ] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду)
 - [ ] **G4.** Builder palette filter — `WeaponBuilderPresenter` exposes `IsPayloadAvailable(id)` / `IsDeliveryAvailable(id)` (read inventory), `ModuleCardElement` adds `wb-card-unavailable` class for grayed-out look
-- [ ] **G5★.** **Cross-stack drag bridge (HIGHEST PRIORITY).** New `DragService` (static, view-layer): uGUI `InventorySlotView` registers drag start when item is module → DragService.SetActive(moduleId, slotRef). UI Toolkit `ModuleSlotElement` polls DragService у Update + tests pointer position (panel coords) vs `worldBound` → on uGUI EndDrag, if matching slot found, calls `presenter.SelectPayload/SelectDelivery(id)` + DragService consumes drag.
+- [ ] ~~**G5★.** Cross-stack drag bridge.~~ **DEFERRED → Tier 4** (2026-04-28). Palette уже drag-source; drag-from-inventory дублював би функціонал. Unique value (instance disambiguation when 2× BallisticRound різних rarity) виникає тільки у Tier 4. Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag.
 - [ ] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success. Fails з reason "Out of stock" якщо modules disappeared (race з inventory mutation).
 - [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
 - [ ] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
@@ -363,11 +363,11 @@ Tier 4 complete.
 
 | Wave | Items | Why this order | Verifiable end state |
 |---|---|---|---|
-| **A. Side-by-side launch** ⭐ HIGHEST | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). Roboоtaємо це першим — все інше layer'иться natural. | Workbench interact opens Builder + uGUI inventory side-by-side; ESC closes both. Builder без embedded backpack. |
-| **B. Foundation** | G1 + G3 | Modules as items потрібні як testbed для cross-stack drag (Wave C) | DevCheats "Spawn Module" → module appears у player Backpack. |
-| **C. Cross-stack drag bridge** | G5★ | Load-bearing piece: write clean once, reuse forever | Drag module from uGUI inventory slot → drop on Builder Payload/Delivery slot → presenter Select fires. |
-| **D. Build cost** | G6 | Завершує build cycle | TryBuild removes 1×payload + 1×delivery from backpack on success. |
-| **E. UX completeness** | G4 | Polish: player знає що шукати | Builder palette grayed-out unavailable. |
+| **A. Side-by-side launch** ✅ DONE 2026-04-28 | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). | ✅ Workbench → E opens Builder right + uGUI inventory left; loot panel hidden у Builder mode; Tab/ESC/× closes both; backdrop transparent + picking-mode=Ignore. |
+| **B. Foundation** ✅ DONE 2026-04-28 | G1 + G3 | Modules as items + DevCheats grant — testbed для решти Tier 6 | ✅ 5 module ItemDefinitions у `BuildRegistry`; DevCheats "Spawn Module" + "Spawn All Modules" buttons. |
+| ~~**C. Cross-stack drag bridge**~~ | ~~G5★~~ | **DEFERRED → Tier 4** (2026-04-28). Палітра вже drag-source — drag-from-inventory дублював би функціонал. Unique value cross-stack drag (instance disambiguation) виникає тільки коли rarity (Tier 4) робить individual items meaningful. Premature optimization для Tier 6. | — |
+| **D. Build cost** ⭐ NEXT | G6 | Closes build cycle — Build тепер реально "коштує" модулі | TryBuild removes 1×payload + 1×delivery from backpack on success. |
+| **E. UX completeness** | G4 | Visual feedback "що ти можеш зібрати" | Builder palette grayed-out для модулів яких нема у inventory. |
 | **F. Economy** | G2 | In-game inventory loop | Open container in raid → module drops. |
 | **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
 
