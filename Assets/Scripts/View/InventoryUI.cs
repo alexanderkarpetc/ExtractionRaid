@@ -107,6 +107,8 @@ namespace View
                 _popupManager.Open(_lootPopupView);
                 if (_openedByBuilder)
                     _lootPopupView.OpenForBuilder();
+                else if (App.Instance.IsInHideout)
+                    _lootPopupView.OpenForHideout();
                 else
                     _lootPopupView.Open(state);
             }

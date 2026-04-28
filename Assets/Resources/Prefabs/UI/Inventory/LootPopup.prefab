@@ -134,7 +134,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 610, y: -17}
-  m_SizeDelta: {x: 486, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &7056255801925235641
 CanvasRenderer:
@@ -212,7 +212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
-  m_HorizontalFit: 0
+  m_HorizontalFit: 2
   m_VerticalFit: 2
 --- !u!1 &1198053913927299674
 GameObject:
@@ -283,6 +283,7 @@ MonoBehaviour:
   _playerPanel: {fileID: 2312849492791994430}
   _lootContainerParent: {fileID: 3569790896340446533}
   _containerPrefab: {fileID: 1171866249883138925, guid: 73340607daa0ed54091cf1d9445bc1b6, type: 3}
+  _hideoutContainerPrefab: {fileID: 5236561927665229830, guid: ab4bce8b2f398cc4baaabe21dc746236, type: 3}
   _dragGhost: {fileID: 2726512715429155592}
   _dragGhostGroup: {fileID: 1032481049366041579}
   _contextMenu: {fileID: 6499419299264910084}

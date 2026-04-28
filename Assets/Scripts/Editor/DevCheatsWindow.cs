@@ -30,6 +30,31 @@ namespace Editor
             ("Scatter",        "Scatter (Delivery)"),
         };
 
+        // "Give Hideout Items" devcheat — bundle of items that lands directly in
+        // Player.Stash so the hideout container has something to display when
+        // testing inventory UI in the hideout scene.
+        static readonly (string Id, int Count)[] HideoutGiftItems =
+        {
+            ("Medkit", 5),
+            ("Bandage", 5),
+            ("Grenade", 3),
+            ("Ammo_Rifle", 60),
+            ("Ammo_Pistol", 36),
+            ("Ammo_Rifle_AP", 30),
+            ("Ammo_Pistol_AP", 18),
+            ("Adhesive", 10),
+            ("Metal_Parts", 20),
+            ("Mechanical_Parts", 10),
+            ("Electronics", 8),
+            ("Chemicals", 10),
+            ("Cloth", 15),
+            ("Gunpowder", 15),
+            ("Helmet_Basic", 1),
+            ("Armor_Basic", 1),
+            ("Rifle", 1),
+            ("Pistol", 1),
+        };
+
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
 
@@ -221,12 +246,39 @@ namespace Editor
                 }
             }
 
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Hideout Stash", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!appReady))
+            {
+                if (GUILayout.Button("Give Hideout Items") && appReady)
+                    GiveHideoutItems();
+            }
+
             if (!appReady)
                 EditorGUILayout.HelpBox("Enter Play Mode to use raid cheats.", MessageType.Info);
             else if (App.Instance.IsInHideout)
                 EditorGUILayout.HelpBox("Already in hideout.", MessageType.Info);
 
             EditorGUI.indentLevel--;
+        }
+
+        static void GiveHideoutItems()
+        {
+            var player = App.Instance?.Player;
+            if (player == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot give hideout items — Player not ready.");
+                return;
+            }
+
+            int added = 0;
+            foreach (var (defId, count) in HideoutGiftItems)
+            {
+                var eid = App.Instance.AllocateEId();
+                player.Stash.Add(State.ItemState.Create(eid, defId, count));
+                added++;
+            }
+            Debug.Log($"[DevCheats] Added {added} item stack(s) to hideout stash. Stash size = {player.Stash.Count}.");
         }
 
         static void SpawnModuleIntoBackpack(string moduleDefinitionId)

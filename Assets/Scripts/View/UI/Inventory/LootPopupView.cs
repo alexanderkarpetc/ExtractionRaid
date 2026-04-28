@@ -5,6 +5,7 @@ using Systems;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using View.UI.Inventory;
 
 namespace View.UI
 {
@@ -24,6 +25,7 @@ namespace View.UI
         [Header("Loot panel (right side)")]
         [SerializeField] Transform _lootContainerParent;
         [SerializeField] LootContainerView _containerPrefab;
+        [SerializeField] HideoutContainerView _hideoutContainerPrefab;
 
         [Header("Drag ghost (InventorySlotView inside LootPopup)")]
         [SerializeField] InventorySlotView _dragGhost;
@@ -34,10 +36,12 @@ namespace View.UI
 
         readonly List<LootContainerView> _activeContainers = new();
         readonly List<LootContainerView> _containerPool = new();
+        HideoutContainerView _activeHideoutContainer;
 
         // drag state
         SlotViewBase _dragSource;
         LootContainerView _dragSourceContainer;
+        HideoutContainerView _dragSourceHideout;
         Vector2 _dragOffset;
 
         // floor state
@@ -74,6 +78,7 @@ namespace View.UI
         {
             _playerPanel.Bind(App.Instance.Player.Inventory);
 
+            HideHideoutContainer();
             RebuildLootContainers(state);
             Refresh();
         }
@@ -88,7 +93,25 @@ namespace View.UI
             _playerPanel.Bind(App.Instance.Player.Inventory);
 
             ReturnAllContainers();
+            HideHideoutContainer();
             _lootContainerParent.gameObject.SetActive(false);
+            Refresh();
+        }
+
+        /// <summary>
+        /// Hideout variant — shows the player inventory on the left and a single
+        /// stash container (paginated) on the right backed by Player.Stash.
+        /// No loot containers / floor pickup, regardless of any nearby lootables
+        /// the hideout scene may contain.
+        /// </summary>
+        public void OpenForHideout()
+        {
+            _playerPanel.Bind(App.Instance.Player.Inventory);
+
+            ReturnAllContainers();
+            EnsureHideoutContainer();
+            _activeHideoutContainer.Bind(App.Instance.Player.Stash);
+            _lootContainerParent.gameObject.SetActive(true);
             Refresh();
         }
 
@@ -101,6 +124,8 @@ namespace View.UI
             _playerPanel.Refresh();
             foreach (var c in _activeContainers)
                 c.Refresh();
+            if (_activeHideoutContainer != null && _activeHideoutContainer.gameObject.activeSelf)
+                _activeHideoutContainer.Refresh();
         }
 
         // ------------------------------------------------------------------
@@ -166,6 +191,29 @@ namespace View.UI
                 _containerPool.Add(c);
             }
             _activeContainers.Clear();
+        }
+
+        void EnsureHideoutContainer()
+        {
+            if (_activeHideoutContainer != null)
+            {
+                _activeHideoutContainer.gameObject.SetActive(true);
+                return;
+            }
+
+            _activeHideoutContainer = Instantiate(_hideoutContainerPrefab, _lootContainerParent);
+            _activeHideoutContainer.Init();
+            _activeHideoutContainer.SlotDragStarted += OnHideoutSlotDragStarted;
+            _activeHideoutContainer.SlotDragEnded += (_, s) => OnSlotDragEnded(s);
+            _activeHideoutContainer.SlotDropReceived += OnHideoutSlotDropReceived;
+            _activeHideoutContainer.SlotRightClicked += OnHideoutSlotRightClicked;
+            _activeHideoutContainer.gameObject.SetActive(true);
+        }
+
+        void HideHideoutContainer()
+        {
+            if (_activeHideoutContainer != null)
+                _activeHideoutContainer.gameObject.SetActive(false);
         }
 
         // ------------------------------------------------------------------
@@ -258,15 +306,44 @@ namespace View.UI
                 var slot = FindHoveredPlayerSlot();
                 if (slot != null)
                 {
-                    DropToFloor(state, session, slot.SlotRef);
+                    if (App.Instance.IsInHideout && _activeHideoutContainer != null)
+                    {
+                        var playerInv = App.Instance.Player.Inventory;
+                        var item = playerInv.GetSlot(slot.SlotRef);
+                        if (item != null)
+                        {
+                            playerInv.SetSlot(slot.SlotRef, null);
+                            App.Instance.Player.Stash.Add(item);
+                        }
+                    }
+                    else
+                    {
+                        DropToFloor(state, session, slot.SlotRef);
+                        RefreshFloorContainer(state);
+                    }
                     SyncArmorAfterTransfer();
-                    RefreshFloorContainer(state);
                     Refresh();
                 }
             }
 
             if (kb[Key.F].wasPressedThisFrame)
             {
+                if (_activeHideoutContainer != null && _activeHideoutContainer.gameObject.activeSelf)
+                {
+                    foreach (var s in _activeHideoutContainer.GetComponentsInChildren<InventorySlotView>())
+                    {
+                        if (s.IsHovered && s.CurrentItem != null)
+                        {
+                            int free = App.Instance.Player.Inventory.FindFreeBackpackSlot();
+                            if (free >= 0)
+                                TryTakeFromStash(_activeHideoutContainer, s.SlotRef.Index,
+                                    InventorySlotRef.BackpackSlot(free));
+                            Refresh();
+                            return;
+                        }
+                    }
+                }
+
                 LootContainerView hitContainer = null;
                 InventorySlotView hitSlot = null;
                 foreach (var c in _activeContainers)
@@ -307,6 +384,7 @@ namespace View.UI
             if (_contextMenu != null && _contextMenu.IsVisible) return;
             _dragSource = source;
             _dragSourceContainer = null;
+            _dragSourceHideout = null;
             source.SetHighlight(true);
             ShowDragGhost(source);
         }
@@ -322,7 +400,11 @@ namespace View.UI
             var playerInv = App.Instance.Player.Inventory;
 
             bool floorChanged = false;
-            if (_dragSourceContainer == null)
+            if (_dragSourceHideout != null)
+            {
+                TryTakeFromStash(_dragSourceHideout, _dragSource.SlotRef.Index, target.SlotRef);
+            }
+            else if (_dragSourceContainer == null)
             {
                 InventorySystem.TryMove(playerInv, _dragSource.SlotRef, target.SlotRef);
             }
@@ -354,6 +436,7 @@ namespace View.UI
             if (_contextMenu != null && _contextMenu.IsVisible) return;
             _dragSource = source;
             _dragSourceContainer = container;
+            _dragSourceHideout = null;
             source.SetHighlight(true);
             ShowDragGhost(source);
         }
@@ -369,7 +452,13 @@ namespace View.UI
             var playerInv = App.Instance.Player.Inventory;
 
             bool floorChanged = false;
-            if (_dragSourceContainer == null)
+            if (_dragSourceHideout != null)
+            {
+                // Stash → loot/floor container is unsupported in hideout flow.
+                CancelDrag();
+                return;
+            }
+            else if (_dragSourceContainer == null)
             {
                 if (targetContainer.IsFloorContainer)
                 {
@@ -395,6 +484,54 @@ namespace View.UI
             SyncArmorAfterTransfer();
             CancelDrag();
             if (floorChanged) RefreshFloorContainer(state);
+            Refresh();
+        }
+
+        // ------------------------------------------------------------------
+        // Drag & drop — hideout container
+        // ------------------------------------------------------------------
+
+        void OnHideoutSlotDragStarted(HideoutContainerView container, SlotViewBase source)
+        {
+            if (_contextMenu != null && _contextMenu.IsVisible) return;
+            _dragSource = source;
+            _dragSourceContainer = null;
+            _dragSourceHideout = container;
+            source.SetHighlight(true);
+            ShowDragGhost(source);
+        }
+
+        void OnHideoutSlotDropReceived(HideoutContainerView targetContainer, SlotViewBase target)
+        {
+            if (_dragSource == null) return;
+            if (_dragSource == target) { CancelDrag(); return; }
+
+            var playerInv = App.Instance.Player.Inventory;
+
+            if (_dragSourceHideout != null)
+            {
+                // Within-stash drop — leave order alone for now.
+                CancelDrag();
+                return;
+            }
+
+            if (_dragSourceContainer != null)
+            {
+                // Loot/floor → stash isn't part of the hideout flow.
+                CancelDrag();
+                return;
+            }
+
+            // Player → stash: pull item, append to stash list.
+            var item = playerInv.GetSlot(_dragSource.SlotRef);
+            if (item != null)
+            {
+                playerInv.SetSlot(_dragSource.SlotRef, null);
+                App.Instance.Player.Stash.Add(item);
+            }
+
+            SyncArmorAfterTransfer();
+            CancelDrag();
             Refresh();
         }
 
@@ -427,6 +564,14 @@ namespace View.UI
             if (state == null) { CancelDrag(); return; }
 
             if (_dragSourceContainer != null && _dragSourceContainer.IsFloorContainer)
+            {
+                CancelDrag();
+                return;
+            }
+
+            // Dragging out of the popup in hideout mode (or from the stash) shouldn't
+            // spawn ground items in the hideout scene. Cancel instead.
+            if (_dragSourceHideout != null || App.Instance.IsInHideout)
             {
                 CancelDrag();
                 return;
@@ -471,6 +616,7 @@ namespace View.UI
                 _dragSource.SetHighlight(false);
             _dragSource = null;
             _dragSourceContainer = null;
+            _dragSourceHideout = null;
             HideDragGhost();
         }
 
@@ -551,12 +697,72 @@ namespace View.UI
             var state = session?.RaidState;
             if (state == null) return;
 
+            if (App.Instance.IsInHideout && _activeHideoutContainer != null)
+            {
+                _contextMenu.Show(eventData.position, new[] { "Stash" }, new[] { "" }, _ =>
+                {
+                    var playerInv = App.Instance.Player.Inventory;
+                    var item = playerInv.GetSlot(slot.SlotRef);
+                    if (item != null)
+                    {
+                        playerInv.SetSlot(slot.SlotRef, null);
+                        App.Instance.Player.Stash.Add(item);
+                    }
+                    SyncArmorAfterTransfer();
+                    Refresh();
+                });
+                return;
+            }
+
             _contextMenu.Show(eventData.position, new[] { "Drop" }, new[] { "Del" }, _ =>
             {
                 DropToFloor(state, session, slot.SlotRef);
                 SyncArmorAfterTransfer();
                 Refresh();
             });
+        }
+
+        // ------------------------------------------------------------------
+        // Context menu — hideout container
+        // ------------------------------------------------------------------
+
+        void OnHideoutSlotRightClicked(HideoutContainerView container, SlotViewBase slot,
+            PointerEventData eventData)
+        {
+            CancelDrag();
+
+            _contextMenu.Show(eventData.position, new[] { "Take" }, new[] { "F" }, _ =>
+            {
+                int free = App.Instance.Player.Inventory.FindFreeBackpackSlot();
+                if (free >= 0)
+                    TryTakeFromStash(container, slot.SlotRef.Index,
+                        InventorySlotRef.BackpackSlot(free));
+                Refresh();
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // Stash helpers
+        // ------------------------------------------------------------------
+
+        void TryTakeFromStash(HideoutContainerView container, int stashIndex,
+            InventorySlotRef targetSlot)
+        {
+            var stash = container.Stash;
+            if (stash == null || stashIndex < 0 || stashIndex >= stash.Count) return;
+
+            var item = stash[stashIndex];
+            if (item == null) return;
+
+            var def = ItemDefinition.Get(item.DefinitionId);
+            var slotType = targetSlot.ToItemSlotType();
+            if (def != null && (def.AllowedSlots & slotType) == 0) return;
+
+            var playerInv = App.Instance.Player.Inventory;
+            if (playerInv.GetSlot(targetSlot) != null) return;
+
+            playerInv.SetSlot(targetSlot, item);
+            stash.RemoveAt(stashIndex);
         }
 
         // ------------------------------------------------------------------
