@@ -39,7 +39,6 @@ namespace View
 
         // Solution 3a: WeaponPivot pullback
         Vector3 _weaponPivotRestLocalPos;
-        bool _weaponPivotRestCached;
         static readonly RaycastHit[] PullbackHitBuffer = new RaycastHit[16];
 
         // Throttling / LOD state
@@ -84,11 +83,9 @@ namespace View
             if (_weaponPivot != null)
             {
                 _weaponPivotRestLocalPos = _weaponPivot.localPosition;
-                _weaponPivotRestCached = true;
             }
         }
         public Transform MuzzlePoint => _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
-        public Animator Animator => _animator;
 
         public void SyncAnimatorState(bool isRolling, Vector3 velocity, float maxSpeed)
         {
@@ -109,9 +106,7 @@ namespace View
             float damp = DevCheats.Config.Player.LocomotionBlendDampTime;
             _animator.SetFloat("SpeedX", Mathf.Clamp(localVel.x * invMax, -1f, 1f), damp, Time.deltaTime);
             _animator.SetFloat("SpeedY", Mathf.Clamp(localVel.z * invMax, -1f, 1f), damp, Time.deltaTime);
-
-            _animator.SetBool("Run", !isRolling && isMoving);
-
+            
             if (isRolling && !_wasRollingLastFrame)
             {
                 _animator.ResetTrigger("Roll");

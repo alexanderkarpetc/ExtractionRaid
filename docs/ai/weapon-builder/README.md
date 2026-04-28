@@ -2,7 +2,7 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-27):** Foundation done (Tiers 0-2) + **UX Pass 1 done**. 📋 Next active work: **Tier 6 — Loot / Inventory integration** (modules-as-items, drag-from-backpack у Builder, dev grant). Then Tier 8 (3D viz). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
+> **Status (2026-04-28):** Foundation done (Tiers 0-2) + **UX Pass 1 + Tier 6 done**. 📋 Next active work: **Tier 8 — 3D Modular Visualization**. Then Tier 3 → 4 → 5 → 9 → 10. See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
 
 ---
 
@@ -33,8 +33,8 @@
 | **1** Vertical slice | Workbench, Builder UI (UI Toolkit), DevCheats, Ballistic+Pistol E2E | ✅ complete (2026-04-23) |
 | **2** Core breadth | +Laser (charge-up), +Scatter, 6 archetypes | ✅ complete (2026-04-23) |
 | **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant, resolution scaling | ✅ complete (2026-04-27) |
-| **6** Loot / Inventory integration | Modules-as-items, loot drops, drag-from-backpack у Builder, dev grant cheat | ⏳ **NEXT** |
-| **8** 3D Modular Visualization | Modular weapon meshes (4 payload + 5 delivery), runtime composition, attachment sockets | ⏳ planned |
+| **6** Loot / Inventory integration | Modules-as-items, side-by-side inventory, build cost, palette filter, DevCheats spawn (G2/G5/G7 → Tier 4) | ✅ complete (2026-04-28) |
+| **8** 3D Modular Visualization | Modular weapon meshes (4 payload + 5 delivery), runtime composition, attachment sockets | ⏳ **NEXT** |
 | **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
 | **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
 | **5** Exotic Mods | 5 Exotic mods via hook system | ⏳ planned |
@@ -145,16 +145,7 @@ Projectiles spawned
 
 ## Що ще треба зробити (in execution order)
 
-### NEXT — Tier 6: Loot / Inventory integration
-- Modules як `ItemState` items (per Payload + Delivery type) — кожний з icon, stackable=false, slot=Backpack
-- Loot drops: модулі падають з контейнерів і ботів
-- DevCheats grant-module shortcut (для playtest без рейду)
-- Builder palette filter: показуємо тільки доступні (з inventory) модулі
-- Drag-from-backpack у Builder активується (currently read-only)
-- Build consume'ить модулі з backpack
-- Initial player loadout — starting modules visible у backpack
-
-### Tier 8: 3D Modular Visualization
+### NEXT — Tier 8: 3D Modular Visualization
 - Modular `WeaponView` — runtime composition payload mesh + delivery mesh
 - 4 payload meshes (Ballistic, Laser, Rocket, Foam) + 5 delivery meshes
 - Attachment socket system на delivery prefabs
@@ -171,6 +162,10 @@ Projectiles spawned
 - Slot compatibility: banned combos matrix, UI feedback
 - Bot weapons: мігрувати BotSpawnSystem на assembly pipeline
 - Rarity visual tint на cards + inventory items
+- **Deferred from Tier 6:**
+  - G2 — module loot drops (containers + bots together with rarity layer)
+  - G5 — cross-stack drag bridge (uGUI → UI Toolkit), для instance disambiguation under rarity
+  - G7 — starting modules у player loadout (balanced із starting rarity)
 
 ### Feature (Tier 5)
 - Exotic Mods × 5, hook system (OnFire / OnHit / OnKill / OnProjectileUpdate)

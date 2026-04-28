@@ -88,7 +88,26 @@ DevCheats provides runtime-tunable parameters via ScriptableObject assets.
 6. All gameplay-tunable parameters should go through DevCheats, not hardcoded constants.
 7. **Systems must not read `DevCheats.X` directly.** Tunable values go through `RaidContext.*Config` structs (`AimConfig`, `ShootingConfig`, …). `RaidSession.Tick` populates those from DevCheats when building the context. See `testing-and-workflow.md §1` for the testing rationale. Known latent violations (2026-04-24, flagged for refactor): `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem`.
 
-## 7) Documentation sync
+## 7) Unity Editor via MCP
+
+When the Unity Editor for this project is open and the MCP for Unity bridge is listening on `127.0.0.1:6400`, prefer `mcp__unityMCP__*` tools over reading `.unity` / `.prefab` / `.asset` files as text.
+
+Quick reference (full doc: `docs/ai/unity-mcp.md`):
+- `read_console` — Unity console; **always call this first** for diagnostics.
+- `find_gameobjects` — search by component / name / path. ⚠️ no wildcards; `by_path "/"` returns 0. Use `by_component "Transform"` with `include_inactive: true` to enumerate the scene.
+- `manage_scene` / `manage_gameobject` / `manage_components` — scene + GO + component CRUD.
+- `manage_scriptable_object` — read/write DevCheats SOs without opening the Editor manually.
+- `apply_text_edits` / `script_apply_edits` — surgical C# edits with recompile signal.
+- `run_tests` (async, returns `job_id`) + `get_test_job` polling — EditMode/PlayMode runs.
+- `execute_menu_item` / `execute_code` — escape hatches for things not covered by typed tools.
+
+Preconditions:
+- Verify the bridge with `lsof -nP -iTCP:6400 -sTCP:LISTEN`. If down, **stop and ask the user** — do not fall back to scraping `.unity` files.
+- Modifying actions (play/stop, edits, code execution, deploy_package, run_tests in PlayMode) require **explicit user confirmation** before each call.
+
+When delegating Unity work to a subagent (Task / custom agent), pass the bridge-up assumption + a pointer to `docs/ai/unity-mcp.md` in the prompt — subagents inherit the tools but not this conversation's context.
+
+## 8) Documentation sync
 
 AI docs exist in two places that must stay in sync:
 - `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`, `fog-of-war.md`)
@@ -96,7 +115,9 @@ AI docs exist in two places that must stay in sync:
 
 When updating any AI doc, apply the same change to the corresponding Cursor doc.
 
-## 7) Task routing (read only what is relevant)
+`docs/ai/unity-mcp.md` is **Claude-only** (Cursor uses its own MCP setup) — no `.cursor/rules/` mirror needed.
+
+## 9) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
 - Architecture changes / new systems -> `docs/ai/architecture.md`
@@ -111,6 +132,7 @@ Read extra docs depending on the task:
 - Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`
 - UI Toolkit panel sizing / theme / sort order -> `docs/ai/ui-styling.md`
 - DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
+- Unity Editor automation (read console / find GOs / run tests / edit scripts via bridge) -> `docs/ai/unity-mcp.md`
 
 Do not load all docs unless the task spans multiple areas.
 Prefer the smallest relevant context.

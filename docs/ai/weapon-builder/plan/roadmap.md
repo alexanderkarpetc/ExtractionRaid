@@ -17,8 +17,8 @@
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ✅ complete (2026-04-23) |
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
-| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ⏳ **NEXT** |
-| 8 | 3D Modular Visualization | ⏳ planned |
+| 6 | Loot / Inventory integration (modules-as-items, build cost, palette filter; G2/G7 deferred → Tier 4) | ✅ complete (2026-04-28) |
+| 8 | 3D Modular Visualization | ⏳ **NEXT** |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
 | 4 | Rarity + Slot Compatibility | ⏳ planned |
 | 5 | Exotic Mods | ⏳ planned |
@@ -37,8 +37,8 @@
 Послідовність вибрана щоб максимізувати player-facing value на кожному кроці. Tier 6 і Tier 8 reordered наперед (раніше були "пізніше" по tier number, але дають видиму трансформацію feature найшвидше).
 
 ```
-✅ 0a → 0b → 1 → 2 → UX Pass 1
-⏳ 6 (loot)  →  8 (3D viz)  →  3 (content)  →  4 (rarity)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
+✅ 0a → 0b → 1 → 2 → UX Pass 1 → 6 (loot/inventory MVP)
+⏳ 8 (3D viz)  →  3 (content)  →  4 (rarity + deferred G2/G5/G7)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
 ```
 
 **Чому така послідовність:**
@@ -342,12 +342,12 @@ Tier 4 complete.
 ### Work items (G1-G10)
 
 - [ ] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false)
-- [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
+- [ ] ~~**G2.** Module spawning у loot tables.~~ **DEFERRED → Tier 4** (2026-04-28). Buys minimal value before rarity layer + bot weapon migration are in place. Tier 4 reforms drop distribution wholesale anyway. DevCheats "Spawn All Modules" covers dev playtest.
 - [ ] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду)
 - [ ] **G4.** Builder palette filter — `WeaponBuilderPresenter` exposes `IsPayloadAvailable(id)` / `IsDeliveryAvailable(id)` (read inventory), `ModuleCardElement` adds `wb-card-unavailable` class for grayed-out look
 - [ ] ~~**G5★.** Cross-stack drag bridge.~~ **DEFERRED → Tier 4** (2026-04-28). Palette уже drag-source; drag-from-inventory дублював би функціонал. Unique value (instance disambiguation when 2× BallisticRound різних rarity) виникає тільки у Tier 4. Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag.
 - [ ] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success. Fails з reason "Out of stock" якщо modules disappeared (race з inventory mutation).
-- [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
+- [ ] ~~**G7.** Initial player loadout starting modules.~~ **DEFERRED → Tier 4** (2026-04-28). Tied до economy design Tier 4 owns. Real loot drops + starting kit will be balanced together.
 - [ ] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
 - [ ] **G9.** Open uGUI inventory canvas alongside Builder — Workbench interact triggers BOTH `WeaponBuilderWindow.Open()` AND inventory canvas show. ESC/Cancel у Builder closes both. Inventory layout shifted left у "Builder open" mode.
 - [ ] **G10.** Layout coordination — Builder centered → Builder positioned right of viewport center; inventory canvas left. Anchor points + position math у `WeaponBuilderWindow.Open()` що sets layout mode + notifies inventory canvas.
@@ -366,10 +366,10 @@ Tier 4 complete.
 | **A. Side-by-side launch** ✅ DONE 2026-04-28 | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). | ✅ Workbench → E opens Builder right + uGUI inventory left; loot panel hidden у Builder mode; Tab/ESC/× closes both; backdrop transparent + picking-mode=Ignore. |
 | **B. Foundation** ✅ DONE 2026-04-28 | G1 + G3 | Modules as items + DevCheats grant — testbed для решти Tier 6 | ✅ 5 module ItemDefinitions у `BuildRegistry`; DevCheats "Spawn Module" + "Spawn All Modules" buttons. |
 | ~~**C. Cross-stack drag bridge**~~ | ~~G5★~~ | **DEFERRED → Tier 4** (2026-04-28). Палітра вже drag-source — drag-from-inventory дублював би функціонал. Unique value cross-stack drag (instance disambiguation) виникає тільки коли rarity (Tier 4) робить individual items meaningful. Premature optimization для Tier 6. | — |
-| **D. Build cost** ⭐ NEXT | G6 | Closes build cycle — Build тепер реально "коштує" модулі | TryBuild removes 1×payload + 1×delivery from backpack on success. |
-| **E. UX completeness** | G4 | Visual feedback "що ти можеш зібрати" | Builder palette grayed-out для модулів яких нема у inventory. |
-| **F. Economy** | G2 | In-game inventory loop | Open container in raid → module drops. |
-| **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
+| **D. Build cost** ✅ DONE 2026-04-28 | G6 | Closes build cycle — Build тепер реально "коштує" модулі | ✅ TryBuild consumes 1×payload + 1×delivery from backpack on success. |
+| **E. UX completeness** ✅ DONE 2026-04-28 | G4 | Visual feedback "що ти можеш зібрати" | ✅ Palette cards grayed-out (`wb-card-unavailable` USS, opacity 0.45) для модулів не у backpack. Per-frame poll у Window.Update. |
+| ~~**F. Economy**~~ | ~~G2~~ | **DEFERRED → Tier 4** (2026-04-28). Container drop infrastructure work без balance/rarity = throwaway code; Tier 4 reforms distribution разом з rarity layer + bot weapon migration. DevCheats Spawn All Modules покриває dev playtest. | — |
+| ~~**G. Initial state**~~ | ~~G7~~ | **DEFERRED → Tier 4** (2026-04-28). Same rationale — starting modules tied to economy design which Tier 4 owns. | — |
 
 **Why Wave A first** (revised priority 2026-04-28): без side-by-side layout усе інше базується на assumption яку ми тільки-но відмовились (embedded backpack у Builder). Робимо architectural pivot first — навіть якщо G1/G3 (foundation) логічно "перші" по dependency graph, layout decision є **проривним** і має landing першим щоб інші waves будувались на ньому.
 
