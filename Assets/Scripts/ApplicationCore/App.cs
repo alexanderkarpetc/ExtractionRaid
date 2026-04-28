@@ -100,7 +100,7 @@ namespace ApplicationCore
             // Pref key duplicated from Editor.RaidToolsMenu.RemoveSaveOnStartPrefKey
             // (Game asmdef can't reference Editor asmdef directly).
             const string removeSaveOnStartPrefKey = "ExtractionRaid.RemoveSaveOnStart";
-            if (UnityEditor.EditorPrefs.GetBool(removeSaveOnStartPrefKey, true))
+            if (UnityEditor.EditorPrefs.GetBool(removeSaveOnStartPrefKey, false))
                 SaveManager.Delete();
 #endif
 
@@ -127,7 +127,6 @@ namespace ApplicationCore
             if (cam != null)
                 _inputAdapter.SetCamera(cam);
 
-            SavePlayer();
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
 
