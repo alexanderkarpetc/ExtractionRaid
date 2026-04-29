@@ -83,7 +83,12 @@ namespace View
                 {
                     if (state.EquippedWeapon.PrefabId != _body.CurrentWeaponPrefabId)
                     {
-                        _body.SwapWeaponModel(state.EquippedWeapon.PrefabId);
+                        // Tier 8 Wave A: prefer direct GameObject reference from Delivery SO.
+                        // Fallback to legacy string path keeps bot weapons working until Tier 4.
+                        if (state.EquippedWeapon.WeaponPrefab != null)
+                            _body.SwapWeaponModel(state.EquippedWeapon.WeaponPrefab, state.EquippedWeapon.PrefabId);
+                        else
+                            _body.SwapWeaponModel(state.EquippedWeapon.PrefabId);
                         _onMuzzlePointChanged?.Invoke(_body.MuzzlePoint);
                     }
 

@@ -17,8 +17,8 @@
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ✅ complete (2026-04-23) |
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
-| 6 | Loot / Inventory integration (modules-as-items, build cost, palette filter; G2/G7 deferred → Tier 4) | ✅ complete (2026-04-28) |
-| 8 | 3D Modular Visualization | ⏳ **NEXT** |
+| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ⏳ **NEXT** |
+| 8 | 3D Modular Visualization | ⏳ planned |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
 | 4 | Rarity + Slot Compatibility | ⏳ planned |
 | 5 | Exotic Mods | ⏳ planned |
@@ -37,8 +37,8 @@
 Послідовність вибрана щоб максимізувати player-facing value на кожному кроці. Tier 6 і Tier 8 reordered наперед (раніше були "пізніше" по tier number, але дають видиму трансформацію feature найшвидше).
 
 ```
-✅ 0a → 0b → 1 → 2 → UX Pass 1 → 6 (loot/inventory MVP)
-⏳ 8 (3D viz)  →  3 (content)  →  4 (rarity + deferred G2/G5/G7)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
+✅ 0a → 0b → 1 → 2 → UX Pass 1
+⏳ 6 (loot)  →  8 (3D viz)  →  3 (content)  →  4 (rarity)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
 ```
 
 **Чому така послідовність:**
@@ -342,12 +342,12 @@ Tier 4 complete.
 ### Work items (G1-G10)
 
 - [ ] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false)
-- [ ] ~~**G2.** Module spawning у loot tables.~~ **DEFERRED → Tier 4** (2026-04-28). Buys minimal value before rarity layer + bot weapon migration are in place. Tier 4 reforms drop distribution wholesale anyway. DevCheats "Spawn All Modules" covers dev playtest.
+- [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
 - [ ] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду)
 - [ ] **G4.** Builder palette filter — `WeaponBuilderPresenter` exposes `IsPayloadAvailable(id)` / `IsDeliveryAvailable(id)` (read inventory), `ModuleCardElement` adds `wb-card-unavailable` class for grayed-out look
 - [ ] ~~**G5★.** Cross-stack drag bridge.~~ **DEFERRED → Tier 4** (2026-04-28). Palette уже drag-source; drag-from-inventory дублював би функціонал. Unique value (instance disambiguation when 2× BallisticRound різних rarity) виникає тільки у Tier 4. Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag.
 - [ ] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success. Fails з reason "Out of stock" якщо modules disappeared (race з inventory mutation).
-- [ ] ~~**G7.** Initial player loadout starting modules.~~ **DEFERRED → Tier 4** (2026-04-28). Tied до economy design Tier 4 owns. Real loot drops + starting kit will be balanced together.
+- [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
 - [ ] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
 - [ ] **G9.** Open uGUI inventory canvas alongside Builder — Workbench interact triggers BOTH `WeaponBuilderWindow.Open()` AND inventory canvas show. ESC/Cancel у Builder closes both. Inventory layout shifted left у "Builder open" mode.
 - [ ] **G10.** Layout coordination — Builder centered → Builder positioned right of viewport center; inventory canvas left. Anchor points + position math у `WeaponBuilderWindow.Open()` що sets layout mode + notifies inventory canvas.
@@ -366,10 +366,10 @@ Tier 4 complete.
 | **A. Side-by-side launch** ✅ DONE 2026-04-28 | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). | ✅ Workbench → E opens Builder right + uGUI inventory left; loot panel hidden у Builder mode; Tab/ESC/× closes both; backdrop transparent + picking-mode=Ignore. |
 | **B. Foundation** ✅ DONE 2026-04-28 | G1 + G3 | Modules as items + DevCheats grant — testbed для решти Tier 6 | ✅ 5 module ItemDefinitions у `BuildRegistry`; DevCheats "Spawn Module" + "Spawn All Modules" buttons. |
 | ~~**C. Cross-stack drag bridge**~~ | ~~G5★~~ | **DEFERRED → Tier 4** (2026-04-28). Палітра вже drag-source — drag-from-inventory дублював би функціонал. Unique value cross-stack drag (instance disambiguation) виникає тільки коли rarity (Tier 4) робить individual items meaningful. Premature optimization для Tier 6. | — |
-| **D. Build cost** ✅ DONE 2026-04-28 | G6 | Closes build cycle — Build тепер реально "коштує" модулі | ✅ TryBuild consumes 1×payload + 1×delivery from backpack on success. |
-| **E. UX completeness** ✅ DONE 2026-04-28 | G4 | Visual feedback "що ти можеш зібрати" | ✅ Palette cards grayed-out (`wb-card-unavailable` USS, opacity 0.45) для модулів не у backpack. Per-frame poll у Window.Update. |
-| ~~**F. Economy**~~ | ~~G2~~ | **DEFERRED → Tier 4** (2026-04-28). Container drop infrastructure work без balance/rarity = throwaway code; Tier 4 reforms distribution разом з rarity layer + bot weapon migration. DevCheats Spawn All Modules покриває dev playtest. | — |
-| ~~**G. Initial state**~~ | ~~G7~~ | **DEFERRED → Tier 4** (2026-04-28). Same rationale — starting modules tied to economy design which Tier 4 owns. | — |
+| **D. Build cost** ⭐ NEXT | G6 | Closes build cycle — Build тепер реально "коштує" модулі | TryBuild removes 1×payload + 1×delivery from backpack on success. |
+| **E. UX completeness** | G4 | Visual feedback "що ти можеш зібрати" | Builder palette grayed-out для модулів яких нема у inventory. |
+| **F. Economy** | G2 | In-game inventory loop | Open container in raid → module drops. |
+| **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
 
 **Why Wave A first** (revised priority 2026-04-28): без side-by-side layout усе інше базується на assumption яку ми тільки-но відмовились (embedded backpack у Builder). Робимо architectural pivot first — навіть якщо G1/G3 (foundation) логічно "перші" по dependency graph, layout decision є **проривним** і має landing першим щоб інші waves будувались на ньому.
 
@@ -437,36 +437,65 @@ UX Pass 1 complete. ~~Tier 4 (rarity для distribution)~~ — зняли, вс
 
 ## Tier 8 — 3D Modular Visualization
 
+> **Execution:** ⭐ ACTIVE (started 2026-04-29). Wave A NEXT. Tier 6 Waves D-G лишаються відкритими — Tier 8 стартує паралельним track'ом (architectural pivot прискорює visible feature transformation).
+
 ### Goal
 Player візуально розрізняє composition. Замість одного `Weapon_Pistol` prefab'а для всіх "Pistol"-form builds — modular weapon view де payload mesh + delivery mesh runtime assembly. 4 payload meshes + 5 delivery meshes покривають усі 4×5=20 archetypes без геометричного scope.
 
-### Architectural questions
-- **Assembly model:**
-  - **(A) Pre-built prefabs per archetype** — 20 prefabs at scale, scope grows ×N з exotic mods
-  - **(B) Modular runtime composition** — each module mesh з attachment socket, runtime assembly
-  - Recommend **(B)** — реально virtually безкоштовно scaling, відображає design intent (composition-based weapons)
-- **Attachment socket strategy:** delivery mesh має named socket (e.g., "PayloadMount") — payload prefab прикріплюється з local transform
-- **Animation rigging:** WeaponView animator має знати про modular parts (наприклад reload тримає charge module visible, fire trigger animates payload-specific particles emitter)
+### Current state of 3D pipeline (для context)
 
-### Work items (high-level)
-- [ ] V1. `WeaponView` rewrite — composition-aware, спам payload + delivery sub-prefabs at runtime
-- [ ] V2. Modular mesh contract — кожний `PayloadCoreDefinition` / `DeliveryCoreDefinition` reference's prefab + attachment socket name
-- [ ] V3. Resource loading — payload/delivery prefabs у `Resources/WeaponBuilder/Modules/`
-- [ ] V4. Animator integration — bone/socket mapping per module type
-- [ ] V5. Art delivery: 4 payload meshes (Ballistic, Laser, Rocket, Foam) + 5 delivery meshes (Single/Auto/Scatter — Pistol/Rifle/Shotgun forms; Rotary, Swarm — окремі forms)
-- [ ] V6. Backpack item icons reflect actual archetype (compose from module thumbnails or use archetype-specific icon set)
+```
+WeaponConfiguration → WeaponSyncSystem.ResolveWeaponPrefab(itemDef, deliveryDef)
+  ├─ ItemDefinition.WeaponPrefabId  (legacy override)
+  └─ DeliveryDef.FormFactor switch:
+       "Pistol"/"Rifle" → "Weapon_Pistol"/"Weapon_Rifle"
+       _                → "Weapon_Rifle" (Shotgun fallback ← Tier 0b gap)
+  → WeaponEntityState.PrefabId
+  → CharacterBody.SwapWeaponModel(prefabId)
+  → Resources.Load("Prefabs/Weapons/" + prefabId)
+  → instantiate під _weaponPivot
+  → WeaponView component → MuzzlePoint, Animator
+```
+
+3 prefabs (Pistol/Rifle/Shotgun), Payload **взагалі не впливає на візуал**, ні Payload ні Delivery SO не мають mesh-related полів.
+
+### Architectural decisions (resolved 2026-04-29)
+
+- **V-Q1.** Pre-built per-archetype prefabs (A) vs modular runtime composition (B)? → **B**. 4×5=20 prefabs × Exotic Mods (×5) = scope explosion. Modular reflects composition design intent.
+- **V-Q2.** Animator ownership? → **Delivery owns Animator + Fire/Reload/Equip triggers** (per-mechanism: pistol slide, rifle bolt, rotary spinup). Payload — purely visual; може мати own optional animator для passive flair (laser glow), не interferes з gameplay triggers.
+- **V-Q3.** MuzzlePoint ownership? → **Delivery** (barrel exit position). Payload може приплюсувати own emitter prefab spawned at MuzzlePoint runtime (Tier 9 VFX scope).
+- **V-Q4.** Mesh asset reference на SO? → **Direct `GameObject` field** (typesafe, Inspector-visible). Project не використовує Addressables.
+- **V-Q5.** `ItemDefinition.WeaponPrefabId` legacy override? → **Mark deprecated у Tier 8, видаляється у Tier 4** (разом з bot weapon migration що теж сидить на legacy path).
+- **V-Q6.** Payload attachment socket? → **Explicit `Transform` reference на Delivery prefab** (set у Inspector). Find-by-name (як `RightHandGrip`) — fragile.
+- **V-Q7.** Backpack item icons? → **Окремий Wave F**, виконується після visual pipeline. Composite — `Sprite` поля на обох SO + `InventorySlotView` рендерить 2 sub-images.
+
+### Execution waves
+
+| Wave | Items | Why this order | Verifiable end state |
+|---|---|---|---|
+| **A. Pipeline refactor (no art)** ⭐ NEXT | `WeaponPrefab` GameObject field на `DeliveryCoreDefinition`; `CharacterBody.SwapWeaponModel(string)` → `SwapWeaponModel(WeaponEntityState)`; resolver reads `delivery.WeaponPrefab` замість `prefabId` string switch; existing `Weapon_Pistol/Rifle/Shotgun` приписуються до SingleAction/Auto/Scatter SOs. | Architectural pivot first. Без цього усе art-делання базується на string-id resolver який ми викидаємо. | Equip Ballistic Pistol → виглядає як зараз (cube). Tests зелені. String-switch resolver видалений. |
+| **B. Payload attachment proof (1 archetype)** | `PayloadCoreDefinition` отримує `GameObject AttachmentPrefab`. `Module_Delivery_Rifle` додає `Transform PayloadMount` socket. `Module_Payload_BallisticBarrel` (primitive shape). Composer instantiate'ить delivery + child-instantiate'ить payload prefab у socket. | Smallest reproducible end-to-end з реальною композицією. Primitive shapes — без art-залежності. | Build Ballistic+Rifle → ствол primitive прикріплений до сокета. Equip/shoot/reload працює. |
+| **C. Cover existing 2×3 archetypes** | 2 payload prefabs (Ballistic, Laser — Tier 1-2 implemented set), 3 delivery prefabs (Pistol, Rifle, Scatter) з sockets. **Shotgun fallback видалений** — Scatter має власний mesh. | 6 archetypes — поточний content scope. Player візуально розрізняє composition. Closes Tier 0b memory gap (Shotgun fallback). | Усі 6 archetypes візуально distinct. Shotgun fallback memory gap closed. |
+| **D. Animator integration** | Verify Fire/Reload/Equip triggers працюють незалежно від payload prefab. Payload може мати own animator (visual flair, e.g., laser pulse) без interference з gameplay triggers. | Animation pipeline не повинен зламатися при composition. | Shoot Laser+Pistol → fire trigger animates pistol slide; payload glow окремо. |
+| **E. Forward-compat assets** | Editor utility `Tools → Weapon Builder → Create Module Prefabs` — idempotent — створює primitive prefabs для всіх payloads/deliveries у `Resources/Prefabs/Modules/`. Artist drop-in path: replace primitive з real mesh, не торкаючи коду. | Tier 3 content (Foam/Rocket/Rotary/Swarm) має drop-in path. | Add new payload SO → run utility → primitive prefab створюється + wired. |
+| **F. Backpack icons (V6)** | `Sprite Icon` поля на Payload + Delivery SO. `InventorySlotView` рендерить composite icon (2 sub-images) для weapon items. **Deferred до завершення A-E** (decision 2026-04-29) — visual pipeline пріоритетний. | Inventory readability — без цього будь-яка зброя у backpack виглядає однаково. Може йти у parallel якщо UI engineer вільний після Wave C. | Backpack item shows composite (payload + delivery sub-icons). |
 
 ### Exit criteria
 - ✅ Build Ballistic+Pistol vs Laser+Pistol — visually distinct у hand
 - ✅ Equip swap показує correct mesh
 - ✅ Adding нового payload/delivery (Tier 3) = drop in 1 mesh, no system changes
-- ✅ Inventory icons reflect archetype (player одразу бачить що у backpack)
+- ✅ Shotgun fallback видалений (closes Tier 0b memory gap)
+- ✅ Inventory icons reflect archetype (Wave F deliverable)
+- ✅ `ItemDefinition.WeaponPrefabId` deprecated (повне видалення у Tier 4 з bot migration)
 
 ### Dependencies
-Tier 6 complete (бажано — модулі-як-items дає stronger reason to differentiate visually).
+Tier 6 Wave B complete (modules-as-items). Wave A може стартувати незалежно від решти Tier 6 waves.
 
 ### Parallel tracks
-Art (modular meshes + rigging) може йти паралельно з усіма іншими tiers якщо є artist. Programmer-side робота compact (~3-5 days).
+Art (real meshes + rigging) може йти паралельно з Wave A-D якщо є artist. Wave F (UI icons) може стартувати паралельно з B-E якщо є UI engineer.
+
+### Estimated effort
+~15-20h programmer-side. Waves A+D — програмер (~6-8h). Waves B+C — програмер + primitive art (~4-6h). Wave E — engineer (~2h). Wave F — UI engineer (~3-4h).
 
 ---
 

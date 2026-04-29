@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **Status (2026-04-28):** Foundation done (Tiers 0-2) + **UX Pass 1 + Tier 6 done** (modules as items, build cost, palette filter; G2/G5/G7 deferred → Tier 4). 📋 Next active work: **Tier 8 — 3D Modular Visualization**. Then 3 → 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
+> **Status (2026-04-29):** Foundation done (Tiers 0-2) + UX Pass 1 done + Tier 6 Waves A+B done. 📋 Active work: **Tier 8 — 3D Modular Visualization (Wave A NEXT)**. Tier 6 Waves D-G лишаються відкритими — Tier 8 паралельний track. Then Tier 3 → 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
 
 ---
 
@@ -42,19 +42,19 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 
 `Tools → Weapon Builder → Create Stub Assets` (idempotent — створює 5 .asset файлів у Resources/WeaponBuilder/).
 
-### Next work: planned execution sequence (revised 2026-04-28)
+### Next work: planned execution sequence (revised 2026-04-27)
 
 **Виконуємо у такому порядку:**
 
 | # | Tier ID | Назва | Чому саме тут |
 |---|---------|-------|---|
-| ✅ | ~~6~~ | ~~Loot / Inventory integration~~ | Done MVP (modules-as-items, build cost, palette filter). G2/G5/G7 deferred → Tier 4. |
-| 1 | **8** | 3D Modular Visualization (NEW) — **NEXT** | Player візуально розрізняє composition. Найбільший visual impact на playtest. |
-| 2 | **3** | Content expansion (Foam, Rocket, Rotary, Swarm) | Повна 4×5 archetype matrix. |
-| 3 | **4** | Rarity + Slot Compatibility + deferred Tier 6 (G2 loot drops, G5 cross-stack drag, G7 starting modules) | Progression hook + bot weapon migration + module economy refactor (rarity layer). |
-| 4 | **5** | Exotic Mods | Hook system + 5 exotic mods. Identity / "wow" factor. |
-| 5 | **9** | VFX / SFX Language (NEW) | Per-archetype visual і audio мова. |
-| 6 | **10** | Weapon Feel Polish (NEW) | Iterative playtest loop — final tuning. |
+| 1 | **6** | Loot / Inventory integration | Активує core loop "raid → loot → build". Drag-from-backpack у Builder оживає. NEXT. |
+| 2 | **8** | 3D Modular Visualization (NEW) | Player візуально розрізняє composition. Найбільший visual impact на playtest. |
+| 3 | **3** | Content expansion (Foam, Rocket, Rotary, Swarm) | Повна 4×5 archetype matrix. |
+| 4 | **4** | Rarity + Slot Compatibility | Progression hook + bot weapon migration. |
+| 5 | **5** | Exotic Mods | Hook system + 5 exotic mods. Identity / "wow" factor. |
+| 6 | **9** | VFX / SFX Language (NEW) | Per-archetype visual і audio мова. |
+| 7 | **10** | Weapon Feel Polish (NEW) | Iterative playtest loop — final tuning. |
 
 > **Note:** Tier numbers = stable IDs (для refs). Execution order ≠ tier number order — see [roadmap.md execution sequence](./roadmap.md#execution-sequence-поточний-план-виконання) for rationale.
 >
@@ -155,38 +155,33 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
 
-### 2026-04-28 — Tier 6 closed: 4/7 waves shipped, F+G deferred → Tier 4
+### 2026-04-29 — Tier 8 architectural decisions + wave plan
 
-**Tier 6 status:** done. 4 of 7 waves shipped (A side-by-side, B foundation, D build cost, E palette filter). Cross-stack drag (Wave C), loot drops (Wave F), starting modules (Wave G) explicitly defer'нуті у Tier 4 alongside rarity layer + bot weapon migration.
+**Контекст:** старт Tier 8 (3D Modular Visualization). До цього усі weapons виглядали однаково (один prefab per FormFactor) — підриває core promise "weapons are 2 modules". Перед стартом коду — комплексне ревʼю поточного pipeline + резолюція 7 архітектурних питань.
 
-**Functional state at closeout:**
-- Workbench → E opens Builder + uGUI inventory canvas side-by-side; Tab/ESC closes both
-- 5 module ItemDefinitions exist (BallisticRound / LaserCharge / SingleAction / Auto / Scatter), non-stackable, slot=Backpack
-- DevCheats "Spawn Module" + "Spawn All Modules" + "Raid → Remove Save On Start" toggle для dev velocity
-- Builder palette grayed-out for unavailable modules (per-frame poll while open)
-- Build consumes 1×payload + 1×delivery on success; backpack-full guarantee through module consumption
-- `WeaponDisplayName.For` / `ItemTooltipBuilder` delegate module items до `ModuleTooltipBuilder` — single tooltip identity across uGUI inventory + Builder palette
+**Decomposition поточного pipeline'у:** `WeaponConfiguration → WeaponSyncSystem.ResolveWeaponPrefab` (string-switch по `DeliveryDef.FormFactor`) → `WeaponEntityState.PrefabId` → `CharacterBody.SwapWeaponModel(prefabId)` → `Resources.Load("Prefabs/Weapons/" + prefabId)` → instantiate під `_weaponPivot`. Лише 3 prefabs (Pistol/Rifle/Shotgun); Shotgun fallback на Rifle. Payload **взагалі не впливає на візуал**.
 
-**Why F + G deferred:**
-- Drop infrastructure work without rarity/balance = throwaway code (Tier 4 reforms distribution wholesale)
-- Bot weapon migration (Tier 4) provides the proper place для bot module drops in same pass
-- DevCheats covers dev-side playtest needs; real economy waits for "modules + rarity together"
-- Avoids guesswork balance pre-data
+**Architectural decisions (V-Q1 to V-Q7):**
 
-**What's left for Tier 4 alongside rarity:**
-- G2 — module loot drops (containers + bots together)
-- G5 — cross-stack drag bridge (uGUI → UI Toolkit)
-- G7 — starting modules у player loadout (balanced з starting rarity tier)
+1. **V-Q1.** Modular runtime composition (B), не pre-built per-archetype (A). 4×5 + Exotic (×5) = scope explosion.
+2. **V-Q2.** Animator на Delivery (Fire/Reload/Equip — per-mechanism). Payload може мати own optional animator для passive visual.
+3. **V-Q3.** MuzzlePoint на Delivery (barrel exit position). Payload emitter prefab spawn'иться там runtime (Tier 9).
+4. **V-Q4.** Direct `GameObject` reference на SO (не string path). Typesafe Inspector authoring.
+5. **V-Q5.** `ItemDefinition.WeaponPrefabId` deprecated у Tier 8, видаляється у Tier 4 (разом з bot weapon migration).
+6. **V-Q6.** Explicit `Transform` reference (PayloadMount) на Delivery prefab. Find-by-name fragile.
+7. **V-Q7.** Backpack icons (старий V6 у roadmap) defer'ються у Wave F (last). Visual pipeline — пріоритет; icons не блокують differentiation у hand.
 
-**Tests:** ~140 зелених. Wave D added 4 new module-consumption tests + reworked 3 existing. PlayerSpawnSystemTests.SpawnPlayer_SecondHotbarSlotEmpty replaces SecondWeaponInHotbarSlotOne post inventory cleanup.
+**Wave plan (A-F):**
+- **A. Pipeline refactor (no art) ⭐ NEXT** — заміна string-id resolver на SO-driven prefab refs.
+- **B. Payload attachment proof** — 1 archetype з реальною композицією (primitive shapes).
+- **C. Cover 2×3 archetypes** — Ballistic/Laser × Pistol/Rifle/Scatter; Shotgun fallback видалений (closes Tier 0b memory gap).
+- **D. Animator integration** — verify Fire/Reload/Equip незалежні від payload.
+- **E. Forward-compat assets** — editor utility для drop-in нових modules (підгот для Tier 3).
+- **F. Backpack icons** — composite Payload+Delivery sprites у inventory. **Deferred** після A-E.
 
-### 2026-04-28 — Tier 6 Wave E (G4): palette filter ✅
+**Effort estimate:** ~15-20h programmer-side. Detailed у [roadmap.md Tier 8](./roadmap.md#tier-8--3d-modular-visualization).
 
-`WeaponBuilderPresenter.IsModuleAvailable(string)` queries inventory backpack для module presence. `ModuleCardElement.SetAvailable(bool)` toggles `wb-card-unavailable` USS class (opacity 0.45, dim border, no hover). `WeaponBuilderWindow.Update()` polls per frame while visible; cards re-evaluate availability after Build (consume → next-frame palette refresh).
-
-### 2026-04-28 — Tier 6 Wave D (G6): build cost ✅
-
-`WeaponBuilderPresenter.TryBuild` consumes 1×payload + 1×delivery з backpack on success. Order: validate selection → resolve definitions → find module slots → consume modules → place weapon у freed slot → grant ammo. `CanBuild` requires modules у backpack (free-slot check redundant — consumption guarantees space). `DisabledReason` reports specific missing module. Tests: 4 нові (`TryBuild_ConsumesPayloadAndDeliveryModules`, `TryBuild_NoPayloadModuleInBackpack_Fails`, `TryBuild_NoDeliveryModuleInBackpack_Fails`, `TryBuild_BackpackFullWithModules_StillSucceeds`); 5 reworked для нової precondition.
+**Tier 6 status note:** Tier 6 Waves A+B complete. Решта (Wave D — build cost, E — palette filter, F — economy, G — initial state) лишаються відкритими — Tier 8 стартує як паралельний track. Architectural pivot Tier 8 (composition-based visual) пришвидшує core promise demonstration і не блокує Tier 6 economy waves які можна підняти потім.
 
 ### 2026-04-28 — Tier 6 Wave C deferred: cross-stack drag → Tier 4
 
@@ -628,9 +623,8 @@ Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі
 - [x] ~~Tier 1 (vertical slice)~~ ✅ complete (2026-04-23)
 - [x] ~~Tier 2 (core breadth)~~ ✅ complete (2026-04-23)
 - [x] ~~UX Pass 1 (clarity + inventory + tooltip + D&D)~~ ✅ complete (2026-04-27)
-- [x] ~~Tier 6 — Loot / Inventory integration~~ ✅ complete (2026-04-28). 4/7 waves shipped (A/B/D/E); G2/G5/G7 deferred → Tier 4 alongside rarity + bot weapons.
 
-**Next: Tier 8 — 3D Modular Visualization.** Затим 3 → 4 (з deferred G2/G5/G7) → 5 → 9 → 10. Повне rationale у [Pause summary](#pause-summary--session-resumption-guide) на початку файлу.
+**Next: Tier 6 — Loot / Inventory integration.** Затим Tier 8 (3D viz) → 3 → 4 → 5 → 9 → 10. Повне rationale у [Pause summary](#pause-summary--session-resumption-guide) на початку файлу.
 
 Коли береться тier — кроки:
 1. Прочитати декомпозицію потрібного tier у [roadmap.md](./roadmap.md)

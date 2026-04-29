@@ -103,10 +103,22 @@ namespace Systems
                 return null;
             }
 
+            // Tier 8 Wave A: hand prefab comes directly from the Delivery SO. The
+            // string PrefabId is now derived (used as a stable event payload string),
+            // not a Resources.Load key. Legacy ItemDefinition.WeaponPrefabId is honored
+            // as a transitional fallback (full removal — Tier 4, with bot migration).
+            var deliveryPrefab = result.DeliveryDefinition?.WeaponPrefab;
+#pragma warning disable CS0618 // intentional legacy fallback until Tier 4 bot migration
+            string prefabId = deliveryPrefab != null
+                ? deliveryPrefab.name
+                : invItem.Definition?.WeaponPrefabId;
+#pragma warning restore CS0618
+
             return new WeaponEntityState
             {
                 Id             = invItem.Id,
-                PrefabId       = ResolveWeaponPrefab(invItem.Definition, result.DeliveryDefinition),
+                PrefabId       = prefabId,
+                WeaponPrefab   = deliveryPrefab,
 
                 PayloadCore        = config.Payload,
                 DeliveryCore       = config.Delivery,
@@ -124,24 +136,6 @@ namespace Systems
                 LastFireTime   = -999f,
                 Phase          = WeaponPhase.Ready,
                 PhaseStartTime = 0f,
-            };
-        }
-
-        /// <summary>
-        /// Chooses the weapon prefab for a built weapon.
-        /// Priority: explicit <c>ItemDefinition.WeaponPrefabId</c> (legacy Rifle/Pistol
-        /// inventory items carry one) → derived from Delivery form-factor (Builder-created
-        /// weapons whose <c>ItemDefinition</c> is the generic "Weapon" entry).
-        /// </summary>
-        static string ResolveWeaponPrefab(ItemDefinition itemDef, DeliveryCoreDefinition deliveryDef)
-        {
-            if (!string.IsNullOrEmpty(itemDef?.WeaponPrefabId))
-                return itemDef.WeaponPrefabId;
-            return deliveryDef?.FormFactor switch
-            {
-                "Pistol" => "Weapon_Pistol",
-                "Rifle"  => "Weapon_Rifle",
-                _        => "Weapon_Rifle",
             };
         }
     }

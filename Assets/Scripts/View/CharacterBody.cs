@@ -39,6 +39,7 @@ namespace View
 
         // Solution 3a: WeaponPivot pullback
         Vector3 _weaponPivotRestLocalPos;
+        bool _weaponPivotRestCached;
         static readonly RaycastHit[] PullbackHitBuffer = new RaycastHit[16];
 
         // Throttling / LOD state
@@ -83,9 +84,11 @@ namespace View
             if (_weaponPivot != null)
             {
                 _weaponPivotRestLocalPos = _weaponPivot.localPosition;
+                _weaponPivotRestCached = true;
             }
         }
         public Transform MuzzlePoint => _currentWeaponView != null ? _currentWeaponView.MuzzlePoint : null;
+        public Animator Animator => _animator;
 
         public void SyncAnimatorState(bool isRolling, Vector3 velocity, float maxSpeed)
         {
@@ -106,7 +109,9 @@ namespace View
             float damp = DevCheats.Config.Player.LocomotionBlendDampTime;
             _animator.SetFloat("SpeedX", Mathf.Clamp(localVel.x * invMax, -1f, 1f), damp, Time.deltaTime);
             _animator.SetFloat("SpeedY", Mathf.Clamp(localVel.z * invMax, -1f, 1f), damp, Time.deltaTime);
-            
+
+            _animator.SetBool("Run", !isRolling && isMoving);
+
             if (isRolling && !_wasRollingLastFrame)
             {
                 _animator.ResetTrigger("Roll");
@@ -129,24 +134,21 @@ namespace View
 
         // ── Weapon ─────────────────────────────────────────
 
-        /// <summary>Equip weapon model. Returns the new WeaponView (or null).</summary>
-        public WeaponView SwapWeaponModel(string prefabId)
+        /// <summary>
+        /// Equip weapon model from a direct prefab reference (Tier 8 Wave A path).
+        /// Used by builder-assembled weapons whose Delivery SO carries the prefab ref.
+        /// Returns the new WeaponView (or null).
+        /// </summary>
+        public WeaponView SwapWeaponModel(GameObject prefab, string prefabIdForTracking = null)
         {
             if (_currentWeaponModel != null)
                 Destroy(_currentWeaponModel);
 
-            _currentWeaponPrefabId = prefabId;
+            _currentWeaponPrefabId = prefabIdForTracking ?? prefab?.name;
             _currentWeaponView = null;
 
-            if (string.IsNullOrEmpty(prefabId) || _weaponPivot == null)
+            if (prefab == null || _weaponPivot == null)
                 return null;
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Weapons/" + prefabId);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[CharacterBody] Weapon prefab not found: Prefabs/Weapons/{prefabId}");
-                return null;
-            }
 
             _currentWeaponModel = Instantiate(prefab, _weaponPivot);
             _currentWeaponModel.transform.localPosition = Vector3.zero;
@@ -158,6 +160,25 @@ namespace View
                 _rightHandIK.SetTarget(FindDeepChild(_currentWeaponModel.transform, "RightHandGrip"));
 
             return _currentWeaponView;
+        }
+
+        /// <summary>
+        /// Legacy entrypoint — resolves prefab via <c>Resources.Load("Prefabs/Weapons/" + prefabId)</c>.
+        /// Used by bot weapons (BotView.Initialize) until Tier 4 migrates them to the assembly pipeline.
+        /// New code should pass a <see cref="GameObject"/> directly via the other overload.
+        /// </summary>
+        public WeaponView SwapWeaponModel(string prefabId)
+        {
+            if (string.IsNullOrEmpty(prefabId))
+                return SwapWeaponModel((GameObject)null, null);
+
+            var prefab = Resources.Load<GameObject>("Prefabs/Weapons/" + prefabId);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[CharacterBody] Weapon prefab not found: Prefabs/Weapons/{prefabId}");
+                return SwapWeaponModel((GameObject)null, prefabId);
+            }
+            return SwapWeaponModel(prefab, prefabId);
         }
 
         public void ClearWeaponModel()

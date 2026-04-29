@@ -86,17 +86,30 @@ namespace Tests.EditMode.Fakes
             string formFactor = null,
             FiringPattern pattern = FiringPattern.Single,
             DeliveryStats? commonStats = null,
-            RarityTier statsTier = RarityTier.Common)
+            RarityTier statsTier = RarityTier.Common,
+            GameObject weaponPrefab = null)
         {
             var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
             SetPrivateField(def, "_id", id);
-            if (formFactor != null) SetPrivateField(def, "_formFactor", formFactor);
+            if (formFactor != null)   SetPrivateField(def, "_formFactor", formFactor);
+            if (weaponPrefab != null) SetPrivateField(def, "_weaponPrefab", weaponPrefab);
             SetPrivateField(def, "_pattern", pattern);
 
             var array = new DeliveryStats[5];
             array[(int)statsTier] = commonStats ?? default;
             SetPrivateField(def, "_statsByTier", array);
             return def;
+        }
+
+        /// <summary>
+        /// Creates a stub <see cref="GameObject"/> for use as a Delivery's <c>WeaponPrefab</c>
+        /// in EditMode tests. The GO's <c>.name</c> drives <see cref="WeaponEntityState.PrefabId"/>
+        /// after assembly — pass e.g. "Weapon_Pistol" to mirror production prefab naming.
+        /// Caller is responsible for cleanup via <see cref="DestroyAll"/> in TearDown.
+        /// </summary>
+        public static GameObject MakeStubWeaponPrefab(string name)
+        {
+            return new GameObject(name);
         }
 
         // ── Exotic definitions ────────────────────────────────

@@ -36,6 +36,12 @@ namespace Game.Editor
         const string ScatterPath      = DeliveriesFolder + "/Scatter.asset";
         const string DatabasePath     = ResourcesFolder  + "/CoreDefinitionDatabase.asset";
 
+        // Tier 8 Wave A: Delivery → weapon hand prefab. Wired here so
+        // `Create Stub Assets` is idempotent for fresh clones.
+        const string PistolPrefabPath  = "Assets/Resources/Prefabs/Weapons/Weapon_Pistol.prefab";
+        const string RiflePrefabPath   = "Assets/Resources/Prefabs/Weapons/Weapon_Rifle.prefab";
+        const string ShotgunPrefabPath = "Assets/Resources/Prefabs/Weapons/Weapon_Shotgun.prefab";
+
         [MenuItem("Tools/Weapon Builder/Create Stub Assets")]
         public static void CreateStubAssets()
         {
@@ -161,6 +167,7 @@ namespace Game.Editor
             SetField(def, "_id",         "SingleAction");
             SetField(def, "_formFactor", "Pistol");
             SetField(def, "_pattern",    FiringPattern.Single);
+            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(PistolPrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
@@ -198,6 +205,7 @@ namespace Game.Editor
             SetField(def, "_id",         "Auto");
             SetField(def, "_formFactor", "Rifle");
             SetField(def, "_pattern",    FiringPattern.Auto);
+            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(RiflePrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
@@ -234,6 +242,7 @@ namespace Game.Editor
             SetField(def, "_id",         "Scatter");
             SetField(def, "_formFactor", "Shotgun");
             SetField(def, "_pattern",    FiringPattern.Scatter);
+            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(ShotgunPrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats

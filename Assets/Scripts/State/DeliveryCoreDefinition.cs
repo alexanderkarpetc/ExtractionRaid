@@ -24,6 +24,13 @@ namespace State
         [SerializeField] FiringPattern _pattern;
         [SerializeField] DeliveryStats[] _statsByTier = new DeliveryStats[RarityTierCount];
 
+        // ── Visualization (Tier 8 Wave A) ─────────────────────────────────
+        [Header("Visualization")]
+        [Tooltip("Prefab spawned in the player's hand for any weapon built on this Delivery. " +
+                 "Owns the Animator (Fire/Reload/Equip triggers) and MuzzlePoint. " +
+                 "Payload meshes are attached as children of this prefab via the PayloadMount socket (Wave B).")]
+        [SerializeField] GameObject _weaponPrefab;
+
         // ── Pattern-specific params (only meaningful for the corresponding Pattern) ──
         [Header("Rotary (ignored unless Pattern == Rotary)")]
         [SerializeField] float _spinUpTime;
@@ -37,6 +44,11 @@ namespace State
         /// <summary>Form-factor name used in weapon archetype labels (e.g. "Pistol", "Rifle", "Shotgun").</summary>
         public string        FormFactor => _formFactor;
         public FiringPattern Pattern    => _pattern;
+        /// <summary>
+        /// Weapon hand prefab (3D model + Animator + MuzzlePoint). Spawned at equip time.
+        /// May be null in tests; production assets must wire this. See docs/ai/weapon-builder/plan/roadmap.md Tier 8 Wave A.
+        /// </summary>
+        public GameObject    WeaponPrefab => _weaponPrefab;
 
         /// <summary>Delivery stats for the given rarity tier.</summary>
         public DeliveryStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

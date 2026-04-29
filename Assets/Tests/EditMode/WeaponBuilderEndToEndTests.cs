@@ -27,6 +27,9 @@ namespace Tests.EditMode
         BallisticPayloadDefinition _ballistic;
         DeliveryCoreDefinition     _singleAction;
         DeliveryCoreDefinition     _auto;
+        // Tier 8 Wave A: stub weapon prefabs whose .name drives runtime PrefabId.
+        GameObject                 _pistolPrefabStub;
+        GameObject                 _riflePrefabStub;
         ICoreDefinitionRegistry    _registry;
         InventoryState             _inventory;
         FakeRaidEvents             _events;
@@ -48,6 +51,9 @@ namespace Tests.EditMode
                     BasePenetration          = 15f,
                     BaseArmorDamage          = 5f,
                 });
+            _pistolPrefabStub = WeaponBuilderTestFactory.MakeStubWeaponPrefab("Weapon_Pistol");
+            _riflePrefabStub  = WeaponBuilderTestFactory.MakeStubWeaponPrefab("Weapon_Rifle");
+
             _singleAction = WeaponBuilderTestFactory.MakeDelivery(
                 "SingleAction", formFactor: "Pistol", pattern: FiringPattern.Single,
                 commonStats: new DeliveryStats
@@ -58,7 +64,8 @@ namespace Tests.EditMode
                     MagazineSize       = 12,
                     ReloadTime         = 1.5f,
                     EquipTime          = 0.2f,
-                });
+                },
+                weaponPrefab: _pistolPrefabStub);
             _auto = WeaponBuilderTestFactory.MakeDelivery(
                 "Auto", formFactor: "Rifle", pattern: FiringPattern.Auto,
                 commonStats: new DeliveryStats
@@ -69,7 +76,8 @@ namespace Tests.EditMode
                     MagazineSize       = 30,
                     ReloadTime         = 2.0f,
                     EquipTime          = 0.3f,
-                });
+                },
+                weaponPrefab: _riflePrefabStub);
 
             _db = WeaponBuilderTestFactory.MakeDatabase(
                 payloads:   new PayloadCoreDefinition[]  { _ballistic },
@@ -82,7 +90,9 @@ namespace Tests.EditMode
 
         [TearDown]
         public void TearDown() =>
-            WeaponBuilderTestFactory.DestroyAll(_ballistic, _singleAction, _auto, _db);
+            WeaponBuilderTestFactory.DestroyAll(
+                _ballistic, _singleAction, _auto, _db,
+                _pistolPrefabStub, _riflePrefabStub);
 
         /// <summary>Places payload + delivery module items into free backpack slots
         /// so TryBuild's module-consumption check passes (Tier 6 G6).</summary>

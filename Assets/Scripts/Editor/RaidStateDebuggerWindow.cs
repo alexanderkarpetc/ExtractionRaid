@@ -572,6 +572,8 @@ namespace Editor
         {
             Field("Id", w.Id);
             Field("PrefabId", w.PrefabId);
+            // Tier 8 Wave A: direct prefab reference (null for legacy bot weapons until Tier 4)
+            Field("WeaponPrefab", w.WeaponPrefab != null ? w.WeaponPrefab.name : "<null — legacy/bot path>");
 
             // Phase status with remaining timer
             string phaseStatus;

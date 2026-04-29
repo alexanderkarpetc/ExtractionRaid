@@ -31,7 +31,13 @@ namespace State
         public float ArmorDamage;
         public float BleedChance;
 
-        // Weapon visual prefab (weapon items) — resolved by WeaponSyncSystem when assembling runtime state.
+        // Tier 8 Wave A (2026-04-30): legacy weapon visual prefab id. Builder-assembled
+        // weapons now resolve their hand prefab from DeliveryCoreDefinition.WeaponPrefab
+        // (a direct GameObject reference). This field is kept as a transitional fallback
+        // inside WeaponSyncSystem.BuildWeaponForItem for any inventory items that still
+        // carry it; full removal is scheduled for Tier 4 alongside the bot weapon
+        // migration onto the assembly pipeline.
+        [System.Obsolete("Tier 4 will migrate bots off this; use DeliveryCoreDefinition.WeaponPrefab for builder weapons.")]
         public string WeaponPrefabId;
 
         public bool IsStackable => MaxStackSize > 1;
@@ -54,6 +60,7 @@ namespace State
 
         static Dictionary<string, ItemDefinition> BuildRegistry()
         {
+#pragma warning disable CS0618 // Rifle/Pistol legacy entries still set WeaponPrefabId until Tier 4 bot migration
             return new Dictionary<string, ItemDefinition>
             {
                 // Generic weapon entry for Builder-created weapons. PrefabId is left
@@ -430,6 +437,7 @@ namespace State
                     MaxStackSize = 1,
                 },
             };
+#pragma warning restore CS0618
         }
     }
 }

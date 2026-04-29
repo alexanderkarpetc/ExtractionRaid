@@ -38,7 +38,19 @@ namespace State
     public class WeaponEntityState
     {
         public EId Id;
+        /// <summary>
+        /// Stable string identifier for this weapon's hand prefab. Used as event payload
+        /// (WeaponDryFired/WeaponReloadStarted/...) and by Raid State Debugger UI.
+        /// For builder-assembled weapons mirrors <see cref="WeaponPrefab"/>.name; for legacy
+        /// bot weapons set directly from <c>BotConstants.WeaponPrefabId</c>.
+        /// </summary>
         public string PrefabId;
+        /// <summary>
+        /// Direct reference to the hand prefab spawned by <c>CharacterBody.SwapWeaponModel</c>.
+        /// Tier 8 Wave A: builder weapons resolve this from <see cref="DeliveryDefinition"/>.WeaponPrefab;
+        /// legacy bot path leaves it null and falls back on the string <see cref="PrefabId"/> Resources.Load.
+        /// </summary>
+        public UnityEngine.GameObject WeaponPrefab;
 
         // ── Composition (identity) ─────────────────────────
         public PayloadCoreInstance  PayloadCore;
