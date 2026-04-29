@@ -42,8 +42,9 @@ namespace Game.Editor
         const string RiflePrefabPath   = "Assets/Resources/Prefabs/Weapons/Weapon_Rifle.prefab";
         const string ShotgunPrefabPath = "Assets/Resources/Prefabs/Weapons/Weapon_Shotgun.prefab";
 
-        // Tier 8 Wave B: Payload → attachment prefab spawned at PayloadMount socket.
+        // Tier 8 Wave B/C: Payload → attachment prefab spawned at PayloadMount socket.
         const string BallisticBarrelPrefabPath = "Assets/Resources/Prefabs/Modules/Module_Payload_BallisticBarrel.prefab";
+        const string LaserEmitterPrefabPath    = "Assets/Resources/Prefabs/Modules/Module_Payload_LaserEmitter.prefab";
 
         [MenuItem("Tools/Weapon Builder/Create Stub Assets")]
         public static void CreateStubAssets()
@@ -141,6 +142,8 @@ namespace Game.Editor
             SetField(def, "_archetype",   "Laser");
             SetField(def, "_displayName", "Laser");
             SetField(def, "_ammoType",    "Ammo_EnergyCell");
+            SetField(def, "_attachmentPrefab",
+                AssetDatabase.LoadAssetAtPath<GameObject>(LaserEmitterPrefabPath));
 
             // Common-tier payload stats: higher single-shot damage and projectile speed
             // than Ballistic — compensates for the charge-up overhead.
