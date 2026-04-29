@@ -8,11 +8,38 @@ namespace View
         [SerializeField] ParticleSystem _muzzleFlashPrefab;
         [SerializeField] Animator _animator;
 
+        // Tier 8 Wave B: optional socket for payload mesh attachment (e.g., barrel for
+        // Ballistic, emitter cone for Laser). Null on prefabs that don't yet expose one
+        // → AttachPayload silently no-ops. Wired explicitly in Inspector per V-Q6.
+        [SerializeField] Transform _payloadMount;
+
         ParticleSystem _muzzleFlashInstance;
+        GameObject _attachedPayload;
 
         static readonly int SpeedParam = Animator.StringToHash("Speed");
 
-        public Transform MuzzlePoint => _muzzlePoint;
+        public Transform MuzzlePoint  => _muzzlePoint;
+        public Transform PayloadMount => _payloadMount;
+
+        /// <summary>
+        /// Spawns <paramref name="payloadPrefab"/> as a child of <see cref="PayloadMount"/>.
+        /// Replaces any previously attached payload. No-op if either side is null.
+        /// </summary>
+        public void AttachPayload(GameObject payloadPrefab)
+        {
+            if (_attachedPayload != null)
+            {
+                Destroy(_attachedPayload);
+                _attachedPayload = null;
+            }
+
+            if (payloadPrefab == null || _payloadMount == null)
+                return;
+
+            _attachedPayload = Instantiate(payloadPrefab, _payloadMount);
+            _attachedPayload.transform.localPosition = Vector3.zero;
+            _attachedPayload.transform.localRotation = Quaternion.identity;
+        }
 
         public void PlayMuzzleFlash()
         {

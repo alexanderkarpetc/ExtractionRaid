@@ -31,10 +31,11 @@ namespace Tests.EditMode.Fakes
             string displayName = null,
             string ammoType = null,
             CommonPayloadStats? commonStats = null,
-            RarityTier statsTier = RarityTier.Common)
+            RarityTier statsTier = RarityTier.Common,
+            GameObject attachmentPrefab = null)
         {
             return MakePayload<BallisticPayloadDefinition>(
-                id, displayName, ammoType, commonStats, statsTier);
+                id, displayName, ammoType, commonStats, statsTier, attachmentPrefab);
         }
 
         /// <summary>
@@ -47,9 +48,10 @@ namespace Tests.EditMode.Fakes
             string ammoType = null,
             CommonPayloadStats? commonStats = null,
             float chargeTime = 1f,
-            RarityTier statsTier = RarityTier.Common)
+            RarityTier statsTier = RarityTier.Common,
+            GameObject attachmentPrefab = null)
         {
-            var def = MakePayload<LaserPayloadDefinition>(id, displayName, ammoType, commonStats, statsTier);
+            var def = MakePayload<LaserPayloadDefinition>(id, displayName, ammoType, commonStats, statsTier, attachmentPrefab);
             var specific = new LaserSpecificStats[5];
             specific[(int)statsTier] = new LaserSpecificStats { ChargeTime = chargeTime };
             SetPrivateField(def, "_specificByTier", specific);
@@ -65,13 +67,15 @@ namespace Tests.EditMode.Fakes
             string displayName = null,
             string ammoType = null,
             CommonPayloadStats? commonStats = null,
-            RarityTier statsTier = RarityTier.Common)
+            RarityTier statsTier = RarityTier.Common,
+            GameObject attachmentPrefab = null)
             where T : PayloadCoreDefinition
         {
             var def = ScriptableObject.CreateInstance<T>();
             SetPrivateField(def, "_id", id);
-            if (displayName != null) SetPrivateField(def, "_displayName", displayName);
-            if (ammoType    != null) SetPrivateField(def, "_ammoType",    ammoType);
+            if (displayName      != null) SetPrivateField(def, "_displayName",      displayName);
+            if (ammoType         != null) SetPrivateField(def, "_ammoType",         ammoType);
+            if (attachmentPrefab != null) SetPrivateField(def, "_attachmentPrefab", attachmentPrefab);
 
             var array = new CommonPayloadStats[5];
             array[(int)statsTier] = commonStats ?? default;

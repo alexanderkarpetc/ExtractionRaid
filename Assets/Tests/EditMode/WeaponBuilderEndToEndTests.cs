@@ -178,6 +178,61 @@ namespace Tests.EditMode
             Assert.AreEqual("Weapon_Rifle", runtime.PrefabId);
         }
 
+        // ── Tier 8 Wave B: payload prefab attachment ──────────────────
+
+        [Test]
+        public void Assembly_PropagatesPayloadAttachmentPrefab_ToRuntimeState()
+        {
+            // Setup a separate payload that carries an AttachmentPrefab. Ensures
+            // WeaponSyncSystem reads PayloadDefinition.AttachmentPrefab and stores
+            // it on WeaponEntityState.PayloadPrefab for the view layer to consume.
+            var attachmentStub = WeaponBuilderTestFactory.MakeStubWeaponPrefab("StubBarrel");
+            var ballisticWithBarrel = WeaponBuilderTestFactory.MakeBallistic(
+                id: "BallisticWithBarrel",
+                ammoType: "Ammo_Rifle",
+                commonStats: new CommonPayloadStats { Damage = 10f },
+                attachmentPrefab: attachmentStub);
+            var db2 = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:   new PayloadCoreDefinition[]  { ballisticWithBarrel },
+                deliveries: new[] { _auto });
+            var registry2 = new DatabaseCoreDefinitionRegistry(db2);
+
+            var item = ItemState.CreateWeapon(
+                AllocateEId(),
+                "Weapon",
+                new WeaponConfiguration(
+                    payload:  new PayloadCoreInstance("BallisticWithBarrel", RarityTier.Common),
+                    delivery: new DeliveryCoreInstance("Auto", RarityTier.Common),
+                    exotic:   null,
+                    ammoInMagazine: 30));
+
+            var runtime = WeaponSyncSystem.BuildWeaponForItem(item, registry2, _events);
+
+            Assert.IsNotNull(runtime);
+            Assert.IsNotNull(runtime.PayloadPrefab,    "PayloadPrefab must propagate from PayloadDefinition.AttachmentPrefab");
+            Assert.AreSame(attachmentStub, runtime.PayloadPrefab);
+
+            WeaponBuilderTestFactory.DestroyAll(ballisticWithBarrel, db2, attachmentStub);
+        }
+
+        [Test]
+        public void Assembly_LeavesPayloadPrefabNull_WhenPayloadHasNoAttachment()
+        {
+            // Default _ballistic in SetUp has no AttachmentPrefab — runtime field stays null.
+            // This is the graceful path for archetypes that haven't yet got a payload mesh.
+            PutModulesInBackpack("BallisticRound", "Auto");
+            var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
+            presenter.SelectPayload("BallisticRound");
+            presenter.SelectDelivery("Auto");
+            Assert.IsTrue(presenter.TryBuild(out _));
+
+            var runtime = WeaponSyncSystem.BuildWeaponForItem(_inventory.Backpack[0], _registry, _events);
+
+            Assert.IsNotNull(runtime);
+            Assert.IsNull(runtime.PayloadPrefab,
+                "Payload without AttachmentPrefab → runtime PayloadPrefab is null (graceful no-attachment).");
+        }
+
         // ── Multiple builds coexist ───────────────────────────
 
         [Test]

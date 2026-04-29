@@ -22,11 +22,23 @@ namespace State
         [SerializeField] string _ammoType;
         [SerializeField] CommonPayloadStats[] _statsByTier = new CommonPayloadStats[RarityTierCount];
 
+        // ── Visualization (Tier 8 Wave B) ─────────────────────────────────
+        [Header("Visualization")]
+        [Tooltip("Optional payload mesh attached as a child of the weapon's PayloadMount socket. " +
+                 "Null = no attachment (e.g. Tier 1 archetypes before Wave C). " +
+                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8 Wave B.")]
+        [SerializeField] GameObject _attachmentPrefab;
+
         public string Id          => _id;
         public string Archetype   => _archetype;
         /// <summary>Human-readable name used in weapon archetype labels (e.g. "Ballistic", "Laser").</summary>
         public string DisplayName => _displayName;
         public string AmmoType    => _ammoType;
+        /// <summary>
+        /// Visual prefab spawned as a child of the weapon's PayloadMount socket on equip.
+        /// Null = no attachment for this payload (graceful skip in <c>CharacterBody.SwapWeaponModel</c>).
+        /// </summary>
+        public GameObject AttachmentPrefab => _attachmentPrefab;
 
         /// <summary>Common payload stats for the given rarity tier.</summary>
         public CommonPayloadStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

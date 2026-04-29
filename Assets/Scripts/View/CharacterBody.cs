@@ -137,9 +137,11 @@ namespace View
         /// <summary>
         /// Equip weapon model from a direct prefab reference (Tier 8 Wave A path).
         /// Used by builder-assembled weapons whose Delivery SO carries the prefab ref.
+        /// Optional <paramref name="payloadPrefab"/> (Wave B) is attached at the
+        /// WeaponView's PayloadMount socket; null = no payload attachment.
         /// Returns the new WeaponView (or null).
         /// </summary>
-        public WeaponView SwapWeaponModel(GameObject prefab, string prefabIdForTracking = null)
+        public WeaponView SwapWeaponModel(GameObject prefab, string prefabIdForTracking = null, GameObject payloadPrefab = null)
         {
             if (_currentWeaponModel != null)
                 Destroy(_currentWeaponModel);
@@ -155,6 +157,7 @@ namespace View
             _currentWeaponModel.transform.localRotation = Quaternion.identity;
 
             _currentWeaponView = _currentWeaponModel.GetComponent<WeaponView>();
+            _currentWeaponView?.AttachPayload(payloadPrefab);
 
             if (_rightHandIK != null)
                 _rightHandIK.SetTarget(FindDeepChild(_currentWeaponModel.transform, "RightHandGrip"));

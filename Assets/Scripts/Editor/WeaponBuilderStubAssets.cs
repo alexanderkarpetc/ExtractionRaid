@@ -42,6 +42,9 @@ namespace Game.Editor
         const string RiflePrefabPath   = "Assets/Resources/Prefabs/Weapons/Weapon_Rifle.prefab";
         const string ShotgunPrefabPath = "Assets/Resources/Prefabs/Weapons/Weapon_Shotgun.prefab";
 
+        // Tier 8 Wave B: Payload → attachment prefab spawned at PayloadMount socket.
+        const string BallisticBarrelPrefabPath = "Assets/Resources/Prefabs/Modules/Module_Payload_BallisticBarrel.prefab";
+
         [MenuItem("Tools/Weapon Builder/Create Stub Assets")]
         public static void CreateStubAssets()
         {
@@ -111,6 +114,8 @@ namespace Game.Editor
             SetField(def, "_archetype",   "Ballistic");
             SetField(def, "_displayName", "Ballistic");
             SetField(def, "_ammoType",    "Ammo_Rifle");
+            SetField(def, "_attachmentPrefab",
+                AssetDatabase.LoadAssetAtPath<GameObject>(BallisticBarrelPrefabPath));
 
             var stats = new CommonPayloadStats[5];
             stats[(int)RarityTier.Common] = new CommonPayloadStats

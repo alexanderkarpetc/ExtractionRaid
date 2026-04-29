@@ -51,6 +51,12 @@ namespace State
         /// legacy bot path leaves it null and falls back on the string <see cref="PrefabId"/> Resources.Load.
         /// </summary>
         public UnityEngine.GameObject WeaponPrefab;
+        /// <summary>
+        /// Optional payload mesh attached to the weapon's PayloadMount socket on equip.
+        /// Tier 8 Wave B: resolved from <see cref="PayloadDefinition"/>.AttachmentPrefab.
+        /// Null = no payload mesh for this archetype (silently skipped by view layer).
+        /// </summary>
+        public UnityEngine.GameObject PayloadPrefab;
 
         // ── Composition (identity) ─────────────────────────
         public PayloadCoreInstance  PayloadCore;

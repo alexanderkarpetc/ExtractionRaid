@@ -108,6 +108,8 @@ namespace Systems
             // not a Resources.Load key. Legacy ItemDefinition.WeaponPrefabId is honored
             // as a transitional fallback (full removal — Tier 4, with bot migration).
             var deliveryPrefab = result.DeliveryDefinition?.WeaponPrefab;
+            // Tier 8 Wave B: optional payload mesh attached at PayloadMount socket on equip.
+            var payloadPrefab  = result.PayloadDefinition?.AttachmentPrefab;
 #pragma warning disable CS0618 // intentional legacy fallback until Tier 4 bot migration
             string prefabId = deliveryPrefab != null
                 ? deliveryPrefab.name
@@ -119,6 +121,7 @@ namespace Systems
                 Id             = invItem.Id,
                 PrefabId       = prefabId,
                 WeaponPrefab   = deliveryPrefab,
+                PayloadPrefab  = payloadPrefab,
 
                 PayloadCore        = config.Payload,
                 DeliveryCore       = config.Delivery,
