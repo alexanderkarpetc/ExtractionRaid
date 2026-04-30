@@ -244,6 +244,10 @@ namespace Editor
                     foreach (var (id, _) in SpawnableModules)
                         SpawnModuleIntoBackpack(id);
                 }
+
+                EditorGUILayout.Space(2);
+                if (GUILayout.Button("Spawn All Weapon Variations") && appReady)
+                    SpawnAllWeaponVariations();
             }
 
             EditorGUILayout.Space(8);
@@ -279,6 +283,57 @@ namespace Editor
                 added++;
             }
             Debug.Log($"[DevCheats] Added {added} item stack(s) to hideout stash. Stash size = {player.Stash.Count}.");
+        }
+
+        /// <summary>
+        /// Builds a fully-assembled <see cref="State.ItemState"/> for every Payload × Delivery
+        /// combination in <see cref="State.CoreDefinitionDatabase"/> and drops them into free
+        /// backpack slots. Lets QA/dev test each archetype without going through the Builder UI.
+        /// All variants spawn at <see cref="State.RarityTier.Common"/>; magazines start full.
+        /// </summary>
+        static void SpawnAllWeaponVariations()
+        {
+            var inventory = App.Instance?.Player?.Inventory;
+            var session   = App.Instance?.RaidSession;
+            if (inventory == null || session == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot spawn weapon variations — Player.Inventory / RaidSession not ready.");
+                return;
+            }
+
+            var db = Resources.Load<State.CoreDefinitionDatabase>("WeaponBuilder/CoreDefinitionDatabase");
+            if (db == null)
+            {
+                Debug.LogWarning("[DevCheats] CoreDefinitionDatabase not found at Resources/WeaponBuilder/.");
+                return;
+            }
+
+            int spawned = 0, skippedFull = 0;
+            foreach (var payload in db.Payloads)
+            {
+                if (payload == null) continue;
+                foreach (var delivery in db.Deliveries)
+                {
+                    if (delivery == null) continue;
+
+                    int slot = inventory.FindFreeBackpackSlot();
+                    if (slot < 0) { skippedFull++; continue; }
+
+                    var deliveryStats = delivery.StatsByTier(State.RarityTier.Common);
+                    var config = new State.WeaponConfiguration(
+                        payload:        new State.PayloadCoreInstance(payload.Id,   State.RarityTier.Common),
+                        delivery:       new State.DeliveryCoreInstance(delivery.Id, State.RarityTier.Common),
+                        exotic:         null,
+                        ammoInMagazine: deliveryStats.MagazineSize);
+
+                    var eid = session.RaidState.AllocateEId();
+                    inventory.Backpack[slot] = State.ItemState.CreateWeapon(eid, "Weapon", config);
+                    spawned++;
+                }
+            }
+
+            string skipNote = skippedFull > 0 ? $" Skipped {skippedFull} (backpack full)." : "";
+            Debug.Log($"[DevCheats] Spawned {spawned} weapon variation(s).{skipNote}");
         }
 
         static void SpawnModuleIntoBackpack(string moduleDefinitionId)

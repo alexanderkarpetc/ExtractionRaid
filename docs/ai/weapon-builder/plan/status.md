@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **Status (2026-04-29):** Foundation done (Tiers 0-2) + UX Pass 1 done + Tier 6 Waves A+B done. 📋 Active work: **Tier 8 — 3D Modular Visualization (Wave A NEXT)**. Tier 6 Waves D-G лишаються відкритими — Tier 8 паралельний track. Then Tier 3 → 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
+> **Status (2026-04-30):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 Waves A/B/D/E done** (build cost + palette filter audited 2026-04-30) + **Tier 8 done (Waves A-E, symmetric composition; Wave F deferred — blocked on UI icon support)**. 📋 Next: Tier 6 Waves F (loot economy) + G (initial loadout) AND/OR Tier 3 (content expansion). Then Tier 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
 
 ---
 
@@ -154,6 +154,58 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 ## Decisions log
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
+
+### 2026-04-30 — Tier 6 audit: D+E silently landed
+
+**Контекст:** post-Tier-8 review of Tier 6 status revealed roadmap claims to be stale — code review показало що Wave D (G6 build cost) AND Wave E (G4 palette filter) уже implemented, just not reflected in docs.
+
+**Findings (verified by `grep` + read of `WeaponBuilderPresenter.cs` + `ModuleCardElement.cs`):**
+
+- ✅ **G6 (Build cost)** — `WeaponBuilderPresenter.TryBuild` (line 189+) consumes 1×payload + 1×delivery from backpack on success; `CanBuild` (line 114) gates on `HasModuleInBackpack`; `DisabledReason` (line 166) explains missing module to player. Comment explicitly tagged "Tier 6 G6".
+- ✅ **G4 (Palette filter)** — `WeaponBuilderPresenter.IsModuleAvailable(id)` (line 277) + `ModuleCardElement.SetAvailable(bool)` (line 58) + `WeaponBuilderWindow.cs:566/568` calls SetAvailable on each card; USS classes `wb-card-unavailable` + `:hover` variant у `WeaponBuilderWindow.uss` lines 161-167.
+- ❌ **G2 (Loot economy)** — confirmed not done: no module IDs у `ContainerConstants` / loot system.
+- ❌ **G7 (Initial loadout)** — confirmed not done: `PlayerSpawnSystem.GiveStartingLoadout` (lines 71-92) only spawns weapon + ammo + grenade + medkit + bandage + helmet + armor; no modules.
+
+**Tier 6 actual state:** ✅ Waves A/B/D/E done. ❌ Waves F (G2 loot) + G (G7 initial loadout) open.
+
+**Decision:** No new code work — just sync roadmap/status/README docs to reflect reality. Updated:
+- `roadmap.md` Tier 6 work item checkboxes (G1/G3/G4/G6/G8/G9/G10 → ✅)
+- `roadmap.md` Tier 6 wave table (D/E "DONE — audited 2026-04-30", F = NEXT)
+- `roadmap.md` overview tier table ("⏳ NEXT" → "🚧 partial — Waves A/B/D/E done; F/G open")
+- `status.md` header (Tier 6 progress reflected)
+
+**Why this drift happened:** Tier 6 D+E were delivered earlier (likely during UX Pass 1 closeout або immediately after Wave B foundation, 2026-04-28+) but doc updates were missed. Audit triggered by user question "здається ми там вже багато чого зробили — якщо так, онови доки".
+
+**Lesson logged:** every Wave completion has to land roadmap checkbox + wave table status + overview table simultaneously, or status doc drifts.
+
+### 2026-04-30 — Tier 8 Waves A-E complete + symmetric pivot
+
+**Контекст:** після Wave A (pipeline refactor) + Wave B (initial asymmetric proof — delivery owns full weapon body, payload = small attachment), user pushed to **symmetric composition**: "не важливо які меші — головне реалізувати ідею збірки view зброї з двох головних модулей". PolygonApocalypse pack виявився містить modular parts (Mod_Body, Mod_Barrel, Mod_Stock, Mod_Handle, Mod_Loader, Mod_Attach) — switched approach mid-tier.
+
+**Final composition model:**
+- **Delivery prefab** (`Weapon_Pistol/Rifle/Shotgun.prefab`) carries: `DeliveryBody` (Mod_Body mesh) + `WeaponView` + `Animator` + `MuzzlePoint` + `RightHandGrip` + `PayloadMount` socket.
+- **Payload prefab** (`Module_Payload_BallisticBarrel/LaserEmitter.prefab`) carries: wrapper GO + barrel/emitter mesh.
+- Composition = delivery instantiated under WeaponPivot, payload spawned as child of PayloadMount socket on equip.
+
+**Wave outcomes:**
+- **Wave A** ✅ — `DeliveryCoreDefinition.WeaponPrefab` (GameObject ref); `WeaponSyncSystem` reads from SO; string-switch resolver видалений; `ItemDefinition.WeaponPrefabId` marked `[Obsolete]` (full removal у Tier 4 з bot migration).
+- **Wave B** ✅ — `PayloadCoreDefinition.AttachmentPrefab`; `WeaponEntityState.PayloadPrefab`; `WeaponView._payloadMount` socket + `AttachPayload(GameObject)`; `CharacterBody.SwapWeaponModel(prefab, id, payloadPrefab)` overload extended.
+- **Wave B-symmetric pivot** ✅ — replaced SM_Wep_AssaultRifle_01 → Mod_Body_05 + cube barrel → Mod_Barrel_01.
+- **Wave C** ✅ — Pistol = Body_10 + Barrel_01 (Ballistic) / Barrel_15 (Laser); Shotgun = Body_15 + same; LaserEmitter prefab created; `LaserCharge.AttachmentPrefab` wired; Shotgun fallback gap closed.
+- **Wave D** ✅ — Mecanim clips became stale after pivot (animation paths `Hand/Magazine` no longer exist); replaced з procedural recoil kick на `WeaponView` (positional impulse along -Z, ease-out-quad recovery scaled to fire interval). Payload's optional Animator runs independently per Unity defaults.
+- **Wave E** ✅ — `Tools → Weapon Builder → Create Module Prefabs` editor utility — idempotent, auto-creates primitive prefabs for any SO without wired visual prefab + auto-wires references. Forward-compat for Tier 3 content.
+
+**Test coverage:** 431 EditMode tests зелені (+2 Wave B propagation tests).
+
+**Follow-ups (logged, not blocking):**
+1. **Muzzle alignment for symmetric meshes.** Currently MuzzlePoint on delivery (V-Q3) — but barrel живе на payload, тому each payload has different barrel length → MuzzlePoint approximation. Окрема ітерація: чи move MuzzlePoint у payload prefab (`WeaponView` resolves dynamically post-`AttachPayload`).
+2. **Reload/Equip/Unequip procedural motion** — Wave D landed only Fire kick. Inert clips fire silently. Tier 9 polish.
+3. **Mecanim stale clip cleanup** — clips animate non-existent paths. Housekeeping → Tier 9.
+4. **Per-prefab PayloadMount/MuzzlePoint tuning** — placeholder positions (e.g., `(0, 0.03, 0.40)`) set on око; manual Inspector adjustment per-archetype.
+
+**Tier 8 status:** ✅ done (functionally). Waves A-E shipped end-to-end visible 2-module composition + drop-in path for new content. **Wave F (backpack composite icons) deferred sine die** — blocked on UI prereq (current uGUI `InventorySlotView`/`LootPopupView` не підтримує composite icons; чекаємо UI Toolkit / new inventory rendering track). Re-engage Wave F коли inventory rendering layer оновлений — until then Tier 8 closed.
+
+**Doc updates:** README "Workflow: додавання нового модуля" section додає крок 4 — run utility — щоб contributors не забували.
 
 ### 2026-04-29 — Tier 8 architectural decisions + wave plan
 

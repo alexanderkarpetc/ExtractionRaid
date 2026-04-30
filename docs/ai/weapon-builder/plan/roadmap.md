@@ -17,8 +17,8 @@
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ✅ complete (2026-04-23) |
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
-| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ⏳ **NEXT** |
-| 8 | 3D Modular Visualization | ⏳ planned |
+| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | 🚧 partial — Waves A/B/D/E done; F/G open |
+| 8 | 3D Modular Visualization | ✅ done (2026-04-30) — Waves A-E; Wave F deferred (UI prereq) |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
 | 4 | Rarity + Slot Compatibility | ⏳ planned |
 | 5 | Exotic Mods | ⏳ planned |
@@ -341,16 +341,16 @@ Tier 4 complete.
 
 ### Work items (G1-G10)
 
-- [ ] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false)
+- [x] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false) ✅
 - [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
-- [ ] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду)
-- [ ] **G4.** Builder palette filter — `WeaponBuilderPresenter` exposes `IsPayloadAvailable(id)` / `IsDeliveryAvailable(id)` (read inventory), `ModuleCardElement` adds `wb-card-unavailable` class for grayed-out look
+- [x] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду) ✅
+- [x] **G4.** Builder palette filter — `WeaponBuilderPresenter.IsModuleAvailable(id)` (read inventory), `ModuleCardElement.SetAvailable` adds `wb-card-unavailable` class for grayed-out look ✅
 - [ ] ~~**G5★.** Cross-stack drag bridge.~~ **DEFERRED → Tier 4** (2026-04-28). Palette уже drag-source; drag-from-inventory дублював би функціонал. Unique value (instance disambiguation when 2× BallisticRound різних rarity) виникає тільки у Tier 4. Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag.
-- [ ] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success. Fails з reason "Out of stock" якщо modules disappeared (race з inventory mutation).
+- [x] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success ✅
 - [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
-- [ ] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
-- [ ] **G9.** Open uGUI inventory canvas alongside Builder — Workbench interact triggers BOTH `WeaponBuilderWindow.Open()` AND inventory canvas show. ESC/Cancel у Builder closes both. Inventory layout shifted left у "Builder open" mode.
-- [ ] **G10.** Layout coordination — Builder centered → Builder positioned right of viewport center; inventory canvas left. Anchor points + position math у `WeaponBuilderWindow.Open()` що sets layout mode + notifies inventory canvas.
+- [x] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
+- [x] **G9.** Open uGUI inventory canvas alongside Builder ✅
+- [x] **G10.** Layout coordination ✅
 
 ### Removals (cleanup, виконати на старті Tier 6)
 
@@ -366,9 +366,9 @@ Tier 4 complete.
 | **A. Side-by-side launch** ✅ DONE 2026-04-28 | G9 + G10 + cleanup (delete embedded backpack) | **Architectural pivot.** Без side-by-side layout усі інші waves адаптуються до помилкової assumption (embedded backpack). | ✅ Workbench → E opens Builder right + uGUI inventory left; loot panel hidden у Builder mode; Tab/ESC/× closes both; backdrop transparent + picking-mode=Ignore. |
 | **B. Foundation** ✅ DONE 2026-04-28 | G1 + G3 | Modules as items + DevCheats grant — testbed для решти Tier 6 | ✅ 5 module ItemDefinitions у `BuildRegistry`; DevCheats "Spawn Module" + "Spawn All Modules" buttons. |
 | ~~**C. Cross-stack drag bridge**~~ | ~~G5★~~ | **DEFERRED → Tier 4** (2026-04-28). Палітра вже drag-source — drag-from-inventory дублював би функціонал. Unique value cross-stack drag (instance disambiguation) виникає тільки коли rarity (Tier 4) робить individual items meaningful. Premature optimization для Tier 6. | — |
-| **D. Build cost** ⭐ NEXT | G6 | Closes build cycle — Build тепер реально "коштує" модулі | TryBuild removes 1×payload + 1×delivery from backpack on success. |
-| **E. UX completeness** | G4 | Visual feedback "що ти можеш зібрати" | Builder palette grayed-out для модулів яких нема у inventory. |
-| **F. Economy** | G2 | In-game inventory loop | Open container in raid → module drops. |
+| **D. Build cost** ✅ DONE (audited 2026-04-30) | G6 | Closes build cycle — Build реально "коштує" модулі | ✅ TryBuild removes 1×payload + 1×delivery from backpack on success; CanBuild gates on backpack presence; DisabledReason explains "No payload module / No delivery module у backpack". |
+| **E. UX completeness** ✅ DONE (audited 2026-04-30) | G4 | Visual feedback "що ти можеш зібрати" | ✅ `IsModuleAvailable(id)` + `ModuleCardElement.SetAvailable(bool)` wired у `WeaponBuilderWindow`; `wb-card-unavailable` USS class з hover variant. |
+| **F. Economy** ⭐ NEXT | G2 | In-game inventory loop | Open container in raid → module drops. |
 | **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
 
 **Why Wave A first** (revised priority 2026-04-28): без side-by-side layout усе інше базується на assumption яку ми тільки-но відмовились (embedded backpack у Builder). Робимо architectural pivot first — навіть якщо G1/G3 (foundation) логічно "перші" по dependency graph, layout decision є **проривним** і має landing першим щоб інші waves будувались на ньому.
@@ -437,7 +437,7 @@ UX Pass 1 complete. ~~Tier 4 (rarity для distribution)~~ — зняли, вс
 
 ## Tier 8 — 3D Modular Visualization
 
-> **Execution:** ⭐ ACTIVE (started 2026-04-29). Wave A NEXT. Tier 6 Waves D-G лишаються відкритими — Tier 8 стартує паралельним track'ом (architectural pivot прискорює visible feature transformation).
+> **Execution:** ✅ DONE (2026-04-30). Waves A-E shipped end-to-end symmetric two-module visualization (delivery body + payload barrel from PolygonApocalypse modular parts). Wave F (backpack composite icons) — **deferred sine die**, blocked on UI prereq (current uGUI `InventorySlotView`/`LootPopupView` не підтримує composite icons). Re-engage Wave F коли inventory rendering layer оновлений (новий UI Toolkit track або redesign). Не блокує Tier 8 closure для visible-differentiation goal.
 
 ### Goal
 Player візуально розрізняє composition. Замість одного `Weapon_Pistol` prefab'а для всіх "Pistol"-form builds — modular weapon view де payload mesh + delivery mesh runtime assembly. 4 payload meshes + 5 delivery meshes покривають усі 4×5=20 archetypes без геометричного scope.

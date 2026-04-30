@@ -1,151 +1,150 @@
 ---
-description: Weapon system details — FSM, ammo/reload, aiming, weapon stats tables. Use for weapon-related changes.
+description: Weapon system details — composition, FSM, ammo/reload, aiming, 3D visualization. Use for weapon-related changes.
 alwaysApply: false
 ---
 
 # Weapons
 
-## Weapon State Machine (V1)
+> **Source of truth для weapon customization, composition, і content:** `docs/ai/weapon-builder/README.md`. This file describes runtime behaviour (FSM, aiming, ADS, visualization) shared by all assembled weapons.
 
-Player weapons use an enum-based FSM (`WeaponPhase` in `WeaponEntityState`).
-Phases: `Ready`, `Firing`, `Cooldown`, `Equipping`, `Unequipping`, `Reloading`.
+## Quick reference
+
+Player weapons are **assembled from Weapon Builder**. Composition lives in `ItemState.WeaponConfiguration`; runtime state in `WeaponEntityState` with cached `Stats` block.
 
 Key files:
-- `State/WeaponEntityState.cs` — `WeaponPhase` enum, `Phase`, `PhaseStartTime`, `EquipTime`, `UnequipTime`
-- `State/PlayerEntityState.cs` — `PendingHotbarSlot` (swap intent written by WeaponEquipSystem)
-- `Systems/WeaponStateMachineSystem.cs` — FSM orchestrator (runs after WeaponEquipSystem, before AimingSystem)
-- `Systems/WeaponEquipSystem.cs` — writes `PendingHotbarSlot` only (no instant swap)
-- `Systems/ShootingSystem.cs` — fires only when `Phase == Ready`, sets `Phase = Firing`
+- `State/WeaponEntityState.cs` — composition refs (PayloadCore, DeliveryCore, ExoticMod?), cached `WeaponStats`, runtime phase fields, `WeaponPrefab` + `PayloadPrefab` GameObject refs (Tier 8)
+- `State/PayloadCoreDefinition.cs` + subclasses (Ballistic / Laser / Rocket / Foam) — SO-driven stats per rarity tier; `AttachmentPrefab` field
+- `State/DeliveryCoreDefinition.cs` — SO-driven stats + `FiringPattern` enum; `WeaponPrefab` field
+- `Systems/WeaponSyncSystem.cs` — assembly pipeline (config → runtime state) + visualization prefab resolution
+- `Systems/WeaponAssemblySystem.cs` — `TryAssemble(config) → result`; ghost-weapon path on failure (D7)
+- `Systems/WeaponStatComposer.cs` — pure: (Payload + Delivery + Rarity) → WeaponStats
+- `Systems/ShootingSystem.cs` — dispatch по `FiringPattern`, charge gate для Laser
+- `Systems/WeaponStateMachineSystem.cs` — FSM phases
+- `View/WeaponView.cs` — visualization: PayloadMount socket, AttachPayload, procedural recoil kick on Fire
+- `View/CharacterBody.cs` — `SwapWeaponModel(prefab, idForTracking, payloadPrefab)` instantiates delivery + attaches payload at socket
 
-Bots do NOT use the FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
+Stats live in SO assets at `Assets/Resources/WeaponBuilder/*` (Payloads/, Deliveries/, CoreDefinitionDatabase). No hardcoded tables — values edited in Inspector.
+
+## Weapon State Machine
+
+`WeaponPhase` enum on `WeaponEntityState`:
+
+| Phase | Trigger → next | Notes |
+|-------|---------------|-------|
+| `Ready` | AttackPressed → `Charging` (Laser payload) or `Firing`; ReloadPressed → `Reloading` | Idle, accepts input |
+| `Charging` | ChargeTime elapsed → `Firing`; AttackJustReleased → `Ready` (cancel); PendingSwap → `Unequipping` | Tier 2: charge-up payloads |
+| `Firing` | Next tick → `Cooldown` | 1-tick marker; ShootingSystem spawned projectiles |
+| `Cooldown` | FireInterval elapsed → `Ready` | Inter-shot gap |
+| `Equipping` / `Unequipping` | EquipTime/UnequipTime elapsed → `Ready` / swap | Weapon draw/holster |
+| `Reloading` | ReloadTime elapsed → `Ready` + fill mag | `AmmoSystem.CompleteReload` |
 
 Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → ...`
 
-Events: `WeaponEquipStarted`, `WeaponUnequipStarted`, `WeaponEquipFinished` (for future animations).
+Events: `WeaponFired`, `WeaponEquipStarted/Finished`, `WeaponUnequipStarted`, `WeaponReloadStarted/Finished`, `WeaponDryFired`, `WeaponChargeStarted/Completed/Cancelled`, `WeaponAssemblyFailed`.
+
+Bots do NOT use this FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
 
 ## Ammo & Reload
 
-Weapons have magazine ammo and reserve ammo (from inventory backpack).
+Magazine ammo + reserve ammo (from player inventory backpack).
 
-Key fields on `WeaponEntityState`:
-- `AmmoType` — `"Ammo_Rifle"` | `"Ammo_Shotgun"` | `"Ammo_Pistol"` | `null` (infinite, used by bots)
-- `MagazineSize`, `AmmoInMagazine` — current/max rounds in magazine
-- `ReloadTime` — seconds for reload animation
+- `weapon.AmmoType` — identifier from payload (e.g. `"Ammo_Rifle"`, `"Ammo_EnergyCell"`); null for bots
+- `weapon.Stats.MagazineSize`, `weapon.AmmoInMagazine` — max / current
+- `weapon.Stats.ReloadTime` — reload duration
 
-Transition rules:
-- Ready + attack + empty mag → DryFire event + auto-reload (if reserve > 0)
-- Ready + R key → Reloading (if `CanReload`)
-- Cooldown → Ready → Reloading (same tick, if R pressed)
-- Reloading timer done → Ready + fill magazine from reserve
-- Reloading + swap intent → Unequipping (interrupt)
+`AmmoSystem` (stateless static): `CountReserve`, `ConsumeAmmo`, `CompleteReload`, `CanReload`.
 
-`AmmoSystem` (stateless static system in `Systems/AmmoSystem.cs`):
-- `CountReserve(inventory, ammoType)` — sums matching items in backpack
-- `ConsumeAmmo(inventory, ammoType, amount)` — drains from backpack, nulls empty slots
-- `CompleteReload(weapon, inventory)` — fills magazine from reserve
-- `CanReload(weapon, inventory)` — has room AND has reserve
+1 trigger pull = 1 ammo (Scatter spawns N pellets but consumes 1).
 
-1 trigger pull = 1 ammo consumed (shotgun: 1 shell = 7 pellets).
-
-## Ammo Types
-
-Three calibers, three variants each (Standard, AP, HP). Defined in `ItemDefinition.BuildRegistry()`.
-
-### Standard Ammo
-
-| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
-|---------|---------|----------|-------------|-------------|-------------|
-| Ammo_Rifle | Rifle | 60 | 10 | 5 | 0 |
-| Ammo_Shotgun | Shotgun | 20 | 8 | 4 | 0 |
-| Ammo_Pistol | Pistol | 36 | 12 | 6 | 0 |
-
-### AP Ammo (Armor-Piercing)
-
-| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
-|---------|---------|----------|-------------|-------------|-------------|
-| Ammo_Rifle_AP | Rifle | 60 | 35 | 8 | 0 |
-| Ammo_Pistol_AP | Pistol | 36 | 30 | 7 | 0 |
-
-### HP Ammo (Hollow Point — zero pen, high bleed)
-
-| Item ID | Caliber | MaxStack | Penetration | ArmorDamage | BleedChance |
-|---------|---------|----------|-------------|-------------|-------------|
-| Ammo_Rifle_HP | Rifle | 60 | 0 | 0 | 0.30 |
-| Ammo_Shotgun_HP | Shotgun | 20 | 0 | 0 | 0.08/pellet |
-| Ammo_Pistol_HP | Pistol | 36 | 0 | 0 | 0.25 |
+Ammo types defined in `ItemDefinition.BuildRegistry()`. Penetration/ArmorDamage/BleedChance modifiers stored on the ammo `ItemDefinition` and added to weapon base stats **in ShootingSystem on fire** (separate channel from cached `Stats`).
 
 ## Projectile Stat Composition
 
 ```
-totalPenetration = weapon.BasePenetration + ammoDef.Penetration   // + weaponMod + charTree (future)
-totalArmorDamage = weapon.BaseArmorDamage + ammoDef.ArmorDamage
-totalBleedChance = weapon.BaseBleedChance + ammoDef.BleedChance
+totalPenetration = weapon.Stats.BasePenetration + ammoDef.Penetration
+totalArmorDamage = weapon.Stats.BaseArmorDamage + ammoDef.ArmorDamage
+totalBleedChance = weapon.Stats.BaseBleedChance + ammoDef.BleedChance
 ```
 
-Composed in `ShootingSystem`, written to `ProjectileEntityState` fields.
+Damage and projectile speed scaled additionally by `ShootingConfig.DamageMultiplier` / `ProjectileSpeedMultiplier` (DevCheats). Result lands in `ProjectileEntityState` + emits `ProjectileSpawned`.
 
 ## Convergence & Parallax Correction
 
-Two-direction blend: parallax-corrected (visual trail through crosshair) + convergence (toward 3D hit point). `ConvergenceBlend` controls the mix. AimUp angles bullet toward upper body when convergence hits a character.
+Projectile direction blends two sources in `ShootingSystem`:
+1. **Parallax-corrected** — adjusts for camera height so trail passes through crosshair
+2. **Convergence** — toward `input.ConvergencePoint` (3D collider raycast hit)
+3. **Blend** — `Lerp(parallax, convergence, ConvergenceBlend)`
+
+**AimUp:** when convergence hits a character, projectile angles slightly up (`AimUpHeightRatio`) to intersect upper body — enables headshot detection from top-down camera.
+
+Spawn Y forced to `cfg.ProjectileSpawnHeight` to reduce parallax.
+
+DevCheats (ShootingConfig): `ParallaxCorrection`, `ConvergenceBlend`, `ConvergenceAimUp`, `AimUpHeightRatio`, `ProjectileSpawnHeight`.
 
 ## ADS (Aim Down Sights)
 
-Continuous blend `player.AdsBlend` (0=hip, 1=ADS). Effects:
-- Aim tracking: `AimFollowSharpness *= Lerp(1, AdsAimFollowMultiplier, AdsBlend)` (default 1.5x)
-- Recoil kick: `recoilMul *= Lerp(1, AdsRecoilMultiplier, AdsBlend)` (default 0.6x)
-- Recoil recovery: `decay *= Lerp(1, AdsRecoilRecoveryMultiplier, AdsBlend)` (default 1.5x)
-- Move speed: `speed *= Lerp(1, AdsMoveSpeedMultiplier, AdsBlend)` (default 0.7x)
-- Crosshair: gap/bloom lerp to ADS values, top line fades out
+Continuous blend `player.AdsBlend` (0=hip, 1=ADS), lerped each tick by `input.AdsPressed` and `AdsTransitionTime`.
+
+Aiming: `AimFollowSharpness *= Lerp(1, AdsAimFollowMultiplier, AdsBlend)`; recoil decay `*= Lerp(1, AdsRecoilRecoveryMultiplier, AdsBlend)`.
+Shooting: recoil kick `*= Lerp(1, AdsRecoilMultiplier, AdsBlend)` (default 0.6x).
+Movement: speed `*= Lerp(1, AdsMoveSpeedMultiplier, AdsBlend)` (default 0.7x).
+Crosshair (`AimCursorOverlay`): gap/bloom lerp toward ADS values; top crosshair line fades out.
+
+DevCheats (ADS section): `AdsTransitionTime`, `AdsMoveSpeedMultiplier`, `AdsAimFollowMultiplier`, `AdsRecoilMultiplier`, `AdsRecoilRecoveryMultiplier`, `AdsBaseGap`, `AdsBloomExtraGap`.
 
 ## Dual-Layer Aiming
 
 Player aiming has two layers:
-1. **Raw Aim** (`RawAimPoint`) — instant world position from mouse, no smoothing
-2. **Weapon Aim** (`WeaponAimPoint`) — follows Raw Aim with per-weapon exponential smoothing + recoil
+1. **RawAimPoint** — instant world position from mouse (player intent)
+2. **WeaponAimPoint** — smoothed toward Raw + recoil offset
 
-Key fields on `PlayerEntityState`:
-- `RawAimPoint`, `WeaponAimPoint`, `AimDirection`, `FacingDirection`, `IsADS`, `AdsBlend`
+Key fields:
+- `PlayerEntityState`: `RawAimPoint`, `WeaponAimPoint`, `AimDirection`, `FacingDirection`, `IsADS`, `AdsBlend`
+- `WeaponEntityState.Stats`: `AimFollowSharpness`, `RecoilKickForward`, `RecoilKickSide`, `RecoilRecoverySpeed`
+- `WeaponEntityState` runtime: `RecoilOffset`
 
-Key fields on `WeaponEntityState`:
-- `AimFollowSharpness`, `RecoilKickForward`, `RecoilKickSide`, `RecoilRecoverySpeed`, `RecoilOffset`
+Smoothing: position-based exponential `Lerp(current, target, 1 - exp(-sharpness * dt))`. Recoil: subtract-apply pattern in AimingSystem separates tracking (AimFollowSharpness) from decay (RecoilRecoverySpeed).
 
-Smoothing: position-based exponential. Recoil: subtract-apply pattern in AimingSystem.
+DevCheats: `AimSplitEnabled` (false = instant follow), `AimFollowMultiplier`, `RecoilMultiplier`, `RecoilForwardMultiplier`, `RecoilSideMultiplier`, `RecoilRecoveryMultiplier`.
 
-Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`
+## 3D Modular Visualization
 
-## Weapon Stats
+Tier 8 (2026-04-30): each weapon = runtime composition of two visual modules.
 
-### Combat Stats
+**Pipeline:**
+```
+WeaponConfiguration → WeaponSyncSystem.BuildWeaponForItem
+  resolves DeliveryDefinition.WeaponPrefab + PayloadDefinition.AttachmentPrefab
+WeaponEntityState { WeaponPrefab, PayloadPrefab }
+  PlayerView.SyncFromState
+CharacterBody.SwapWeaponModel(prefab, id, payloadPrefab)
+  Instantiate(delivery prefab) under WeaponPivot
+  WeaponView.AttachPayload(payloadPrefab) child of PayloadMount socket
+```
 
-| Weapon | PrefabId | FireInterval | Damage | HeadshotMul | ProjPerShot | SpreadAngle | ProjSpeed | ProjLifetime |
-|--------|----------|-------------|--------|-------------|-------------|-------------|-----------|-------------|
-| Rifle | Weapon_Rifle | 0.2 | 10 | 2.0x | 1 | 0 | 20 | 3.0 |
-| Shotgun | Weapon_Shotgun | 0.6 | 8 | 1.5x | 7 | 30 | 30 | 2.0 |
-| Pistol | Weapon_Pistol | 0.4 | 15 | 2.5x | 1 | 0 | 25 | 2.5 |
+**Symmetric composition:**
+- **Delivery prefab** carries body silhouette + Animator + sockets (`DeliveryBody` mesh, `MuzzlePoint`, `RightHandGrip`, `PayloadMount`) + WeaponView component
+- **Payload prefab** wraps barrel/emitter mesh; spawned under PayloadMount on equip
 
-### Armor Penetration Stats (weapon base)
+PolygonApocalypse modular parts (`SM_Wep_Mod_Body_*`, `SM_Wep_Mod_Barrel_*`) used for current 6 archetypes (Pistol/Rifle/Shotgun × Ballistic/Laser).
 
-| Weapon | BasePenetration | BaseArmorDamage | BaseBleedChance |
-|--------|-----------------|-----------------|-----------------|
-| Rifle | 20 | 5 | 0 |
-| Shotgun | 10 | 4 | 0 |
-| Pistol | 15 | 6 | 0 |
+**Procedural recoil** (`WeaponView.TriggerRecoilKick`): on `PlayFire(duration)` body kicks back -Z on `_recoilKickDistance` (default 0.04m), eases out-quad to rest over `max(0.06, duration*0.4)`. Per-prefab `[SerializeField]`. Replaces Mecanim animation paths stale after symmetric pivot.
 
-### Ammo & Equip
+**Optional payload Animator** — payload prefab may carry own Animator (e.g. Laser pulse) without interference. Real animation polish — Tier 9.
 
-| Weapon | AmmoType | MagSize | ReloadTime | EquipTime | UnequipTime |
-|--------|----------|---------|------------|-----------|-------------|
-| Rifle | Ammo_Rifle | 30 | 2.0s | 0.3s | 0.2s |
-| Shotgun | Ammo_Shotgun | 5 | 2.5s | 0.4s | 0.25s |
-| Pistol | Ammo_Pistol | 12 | 1.5s | 0.2s | 0.15s |
+**Adding new content (Tier 3+):**
+- Create `<Name>.asset` SO + add to `CoreDefinitionDatabase`
+- Run `Tools → Weapon Builder → Create Module Prefabs` → primitive prefab + wired refs (idempotent)
+- Replace primitive content artist drop-in (no code/SO touch)
+- Detailed workflow: `docs/ai/weapon-builder/README.md` (Workflow section)
 
-### Aiming & Recoil
+**Known follow-ups:**
+- Muzzle alignment for symmetric meshes — currently MuzzlePoint on delivery, approximate
+- Reload/Equip/Unequip procedural motion — Tier 9 polish
+- Mecanim controller stale clip cleanup — Tier 9 housekeeping
 
-| Weapon | AimFollowSharpness | ConeHalfAngle | BodyRotationSpeed | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed |
-|--------|--------------------|---------------|--------------------|--------------------|----------------|---------------------|
-| Rifle | 10 | 45 | 270 | 2 | 1.5 | 2 |
-| Shotgun | 5 | 20 | 180 | 3 | 6 | 3 |
-| Pistol | 15 | 35 | 300 | 1.5 | 1 | 4 |
-| Unarmed | 30 (const) | 60 (const) | 360 (const) | — | — | — |
+## Related docs
 
-Factory methods: `WeaponEntityState.CreateRifle(id)`, `CreateShotgun(id)`, `CreatePistol(id)`.
+- `docs/ai/weapon-builder/README.md` — Weapon Builder feature: composition, UI, content, plan, workflows
+- `docs/ai/crosshair.md` — crosshair rendering, recoil visuals, hit markers
+- `docs/ai/battle-design-status.md` — armor penetration pipeline

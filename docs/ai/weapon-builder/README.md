@@ -2,7 +2,7 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-30):** Foundation done (Tiers 0-2) + UX Pass 1 done + Tier 6 Waves A+B done. 📋 Active work: **Tier 8 — 3D Modular Visualization (Wave A NEXT)**. Tier 6 Waves D-G лишаються відкритими — паралельний track. See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
+> **Status (2026-04-30):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 Waves A/B/D/E done** (audit 2026-04-30) + **Tier 8 done (Waves A-E)**. 📋 Next: Tier 6 Waves F (loot economy) + G (initial loadout) AND/OR Tier 3 (content expansion). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
 
 ---
 
@@ -33,8 +33,8 @@
 | **1** Vertical slice | Workbench, Builder UI (UI Toolkit), DevCheats, Ballistic+Pistol E2E | ✅ complete (2026-04-23) |
 | **2** Core breadth | +Laser (charge-up), +Scatter, 6 archetypes | ✅ complete (2026-04-23) |
 | **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant, resolution scaling | ✅ complete (2026-04-27) |
-| **6** Loot / Inventory integration | Waves A+B done; D-G (build cost, palette filter, loot economy, initial loadout) — open, паралельний track | 🚧 partial |
-| **8** 3D Modular Visualization | Modular weapon meshes (runtime composition, attachment sockets) — **Wave A NEXT** | 🚧 active |
+| **6** Loot / Inventory integration | Waves A/B/D/E done (build cost + palette filter audited 2026-04-30); F (loot economy) + G (initial loadout) — open | 🚧 partial |
+| **8** 3D Modular Visualization | Modular weapon meshes (runtime composition, attachment sockets); Waves A-E done з symmetric pivot. Wave F (icons) deferred — blocked on UI prereq | ✅ done (Wave F → future track) |
 | **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
 | **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
 | **5** Exotic Mods | 5 Exotic mods via hook system | ⏳ planned |
@@ -92,6 +92,30 @@ Deliveries/
 
 ---
 
+## Workflow: додавання нового модуля (Tier 3+ content)
+
+**Крок 0** — design stats / behavior — поза scope цього документа.
+
+**Крок 1.** Створи SO asset:
+- Payload: `Assets/Resources/WeaponBuilder/Payloads/<Name>.asset` (через Create Asset menu, тип `BallisticPayloadDefinition` / `LaserPayloadDefinition` / `FoamPayloadDefinition` / `RocketPayloadDefinition`)
+- Delivery: `Assets/Resources/WeaponBuilder/Deliveries/<Name>.asset` (тип `DeliveryCoreDefinition`)
+
+**Крок 2.** Заповни stats у Inspector (Common tier мінімум — інші rarity у Tier 4).
+
+**Крок 3.** Додай SO у `CoreDefinitionDatabase.asset` array (`Payloads` або `Deliveries`).
+
+**Крок 4 ⭐** — `Tools → Weapon Builder → Create Module Prefabs`:
+- Auto-generates primitive 3D placeholder prefab за canonical path (`Resources/Prefabs/Modules/Module_Payload_<Id>.prefab` або `Resources/Prefabs/Weapons/Weapon_<Id>.prefab`)
+- Wires SO's `_attachmentPrefab` / `_weaponPrefab` reference
+- For new deliveries — створює full hand prefab з `WeaponView` component, `Animator`, `DeliveryBody`, `MuzzlePoint`, `RightHandGrip`, `PayloadMount` already wired
+- **Idempotent** — re-run never duplicates (skips already-wired SOs)
+
+**Крок 5 (optional, artist drop-in).** Replace primitive content of prefab з real mesh (відкрити prefab у editor, edit children) — code/SO setup не торкається. Position adjustments на `PayloadMount` / `MuzzlePoint` per-prefab у Inspector.
+
+> **Якщо Крок 4 пропустиш** — SO буде у Builder UI, але equip → ghost-weapon path / no visible weapon mesh. Утіліта закриває цей gap для будь-яких нових модулів.
+
+---
+
 ## Короткий опис для команди
 
 **Weapon Builder** — система кастомізації зброї, де гравець збирає зброю з двох ядер: **Payload Core** (що зброя випускає) і **Delivery Core** (як це дістається цілі). Комбінація двох cores визначає архетип зброї з explicit назвою (напр. "Laser Rifle", "Foam Shotgun"). Поверх архетипу можна додати один **Exotic Mod** — виразний twist поведінки снаряду або ресурсного ритму.
@@ -145,21 +169,27 @@ Projectiles spawned
 
 ## Що ще треба зробити (in execution order)
 
-### NEXT — Tier 8: 3D Modular Visualization (active 2026-04-30)
-- **Wave A ⭐** — pipeline refactor (no art): SO-driven prefab refs замість string-id resolver
-- Wave B — payload attachment proof (1 archetype, primitive shapes)
-- Wave C — cover existing 2×3 archetypes; Shotgun fallback видалений (closes Tier 0b memory gap)
-- Wave D — animator integration (Fire/Reload/Equip незалежні від payload)
-- Wave E — editor utility для drop-in нових modules (підготовка до Tier 3)
-- Wave F — backpack composite icons (deferred після A-E per decision 2026-04-29)
+### Tier 8: 3D Modular Visualization (active 2026-04-30)
+- ✅ **Wave A** — pipeline refactor: SO-driven prefab refs (DeliveryCore.WeaponPrefab, PayloadCore.AttachmentPrefab)
+- ✅ **Wave B (symmetric pivot)** — replaced asymmetric "delivery=full body, payload=tiny attachment" з symmetric "delivery=Mod_Body, payload=Mod_Barrel" using PolygonApocalypse modular parts
+- ✅ **Wave C** — cover existing 6 archetypes (Pistol/Rifle/Shotgun × Ballistic/Laser); Shotgun fallback gap closed
+- ✅ **Wave D** — procedural recoil kick на Fire (replaces stale Mecanim clips); payload's optional Animator works independently
+- ✅ **Wave E** — `Tools → Weapon Builder → Create Module Prefabs` editor utility — auto-creates primitive prefabs for new SOs (Tier 3 drop-in path)
+- ⏸ **Wave F deferred sine die** — backpack composite icons. Blocked on UI prereq: current uGUI inventory rendering не підтримує 2-image composite. Re-engage коли inventory layer оновлений. **Не блокує Tier 8 closure.**
 
-### Tier 6: Loot / Inventory integration (partial, паралельний track)
+**Open follow-ups (з Tier 8):**
+- Muzzle alignment for symmetric meshes — окрема ітерація після Wave C
+- Reload/Equip/Unequip procedural motion — Tier 9
+- Mecanim controller stale clip cleanup — Tier 9 housekeeping
+- PayloadMount/MuzzlePoint per-prefab tuning — manual у Inspector
+
+### Tier 6: Loot / Inventory integration (partial)
 - ✅ Wave A — side-by-side launch (Builder + uGUI inventory)
-- ✅ Wave B — modules-as-items + DevCheats grant
-- ⏳ Wave D — build cost (consume modules з backpack on Build)
-- ⏳ Wave E — palette filter (grayed-out unavailable modules)
-- ⏳ Wave F — loot economy (modules drop з containers у raid)
-- ⏳ Wave G — initial player loadout (starting modules)
+- ✅ Wave B — modules-as-items + DevCheats grant ("Spawn Module" / "Spawn All Modules")
+- ✅ Wave D — build cost (TryBuild consumes 1×payload + 1×delivery from backpack; CanBuild gates; DisabledReason explains missing module)
+- ✅ Wave E — palette filter (`IsModuleAvailable` + `wb-card-unavailable` USS class for grayed-out look)
+- ⏳ **Wave F** — loot economy (modules drop з containers у raid). NEXT.
+- ⏳ Wave G — initial player loadout (fresh save → 1× of each Common module у backpack)
 
 ### Content (Tier 3)
 - Payload: **Foam** (status effects: slow + stick), **Rocket** (AoE explosion, ExplosionRadius)
