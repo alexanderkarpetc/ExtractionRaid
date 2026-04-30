@@ -13,8 +13,22 @@ namespace View
         // → AttachPayload silently no-ops. Wired explicitly in Inspector per V-Q6.
         [SerializeField] Transform _payloadMount;
 
+        // Tier 8 Wave D: delivery body that receives procedural recoil kick on Fire.
+        // Mecanim clips authored against the legacy SM_Wep_AssaultRifle_01 transform
+        // paths went stale after Wave B/C symmetric pivot — code-driven kick replaces
+        // them across all archetypes without per-prefab clip authoring. Optional;
+        // null = no procedural feedback. Real animator-driven anim is Tier 9 polish.
+        [SerializeField] Transform _deliveryBody;
+        [SerializeField] float     _recoilKickDistance = 0.04f;
+
         ParticleSystem _muzzleFlashInstance;
         GameObject _attachedPayload;
+
+        // Procedural recoil state — local (not RaidState): purely visual feedback.
+        Vector3 _bodyRestLocalPos;
+        bool    _bodyRestCached;
+        float   _kickElapsed;
+        float   _kickDuration;
 
         static readonly int SpeedParam = Animator.StringToHash("Speed");
 
@@ -57,11 +71,50 @@ namespace View
 
         // ── Animation triggers ─────────────────────────────────
 
-        public void PlayFire(float duration)    => PlayClip("Fire", duration);
+        public void PlayFire(float duration)
+        {
+            PlayClip("Fire", duration);
+            TriggerRecoilKick(duration);
+        }
         public void PlayEquip(float duration)   => PlayClip("Equip", duration);
         public void PlayUnequip(float duration) => PlayClip("Unequip", duration);
         public void PlayReload(float duration)  => PlayClip("Reload", duration);
         public void PlayDryFire()               => _animator?.SetTrigger("DryFire");
+
+        // ── Procedural recoil ──────────────────────────────────
+
+        void TriggerRecoilKick(float fireDuration)
+        {
+            if (_deliveryBody == null || _recoilKickDistance <= 0f) return;
+            if (!_bodyRestCached)
+            {
+                _bodyRestLocalPos = _deliveryBody.localPosition;
+                _bodyRestCached = true;
+            }
+            // Recovery scaled to fire interval — fast cadence (Auto, FireInterval=0.2)
+            // gets snappy short kicks; slow cadence (Single, 0.4) gets longer kicks.
+            // Floored so very fast cadences still feel a kick.
+            _kickDuration = Mathf.Max(0.06f, fireDuration * 0.4f);
+            _kickElapsed  = 0f;
+            _deliveryBody.localPosition = _bodyRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance);
+        }
+
+        void Update()
+        {
+            if (!_bodyRestCached || _kickDuration <= 0f) return;
+
+            _kickElapsed += Time.deltaTime;
+            if (_kickElapsed >= _kickDuration)
+            {
+                _deliveryBody.localPosition = _bodyRestLocalPos;
+                _kickDuration = 0f;
+                return;
+            }
+
+            float t = _kickElapsed / _kickDuration;
+            float eased = (1f - t) * (1f - t); // ease-out quad → snap back
+            _deliveryBody.localPosition = _bodyRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance * eased);
+        }
 
         /// <summary>
         /// Plays an animation clip at adjusted speed so it finishes in exactly <paramref name="duration"/> seconds.

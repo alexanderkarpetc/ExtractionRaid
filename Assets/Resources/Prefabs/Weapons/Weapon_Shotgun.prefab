@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4422123595647999154
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5936366376946962600}
+  m_Layer: 0
+  m_Name: RightHandGrip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5936366376946962600
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4422123595647999154}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.63978314, y: 0.35485467, z: -0.35370564, w: 0.58279324}
+  m_LocalPosition: {x: 0.3895, y: -0.073, z: 0.036823507}
+  m_LocalScale: {x: 1.4541208, y: 2.7849746, z: 4.9205427}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6624447187750013959}
+  m_LocalEulerAnglesHint: {x: 94.62, y: 28.94, z: -31.25}
 --- !u!1 &6141121177088631937
 GameObject:
   m_ObjectHideFlags: 0
@@ -31,6 +62,7 @@ Transform:
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.85}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 5936366376946962600}
   - {fileID: 6078565370622074250}
   - {fileID: 3089498068811254166}
   - {fileID: 8202898763826705320}
@@ -52,6 +84,8 @@ MonoBehaviour:
   _muzzleFlashPrefab: {fileID: 0}
   _animator: {fileID: -8795030200470005071}
   _payloadMount: {fileID: 8202898763826705320}
+  _deliveryBody: {fileID: 3089498068811254166}
+  _recoilKickDistance: 0.04
 --- !u!95 &-8795030200470005071
 Animator:
   serializedVersion: 7
