@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> **Status (2026-04-30):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 Waves A/B/D/E done** (build cost + palette filter audited 2026-04-30) + **Tier 8 done (Waves A-E, symmetric composition; Wave F deferred — blocked on UI icon support)**. 📋 Next: Tier 6 Waves F (loot economy) + G (initial loadout) AND/OR Tier 3 (content expansion). Then Tier 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
+> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F shipped; G7 deferred sine die) + **Tier 8 done (Waves A-E; Wave F deferred — UI prereq)**. 📋 Next: Tier 3 (content expansion — Foam/Rocket/Rotary/Swarm). Then Tier 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
 
 ---
 
@@ -154,6 +154,28 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 ## Decisions log
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
+
+### 2026-05-01 — Tier 6 Wave F (G2) shipped + G7 deferred sine die
+
+**Wave F (G2 loot economy) done — code-side.** Modules can now drop в raid containers, completing the "raid → loot → build" core loop without DevCheats.
+
+**Implementation:**
+- `Constants/ContainerConstants.cs`:
+  - 5 module entries (`BallisticRound`, `LaserCharge`, `SingleAction`, `Auto`, `Scatter`) appended to `RandomLootBox.PossibleDrops` — uniform random pick → ~50% chance per drop slot is module
+  - New `ModuleCache` ContainerType (`enum ContainerType.ModuleCache`, displayName "Module Cache", MinDrops=1 MaxDrops=2, module-only pool)
+  - Shared `WeaponModuleDrops[]` static reused by ModuleCache pool — single source of truth для module loot composition
+  - `ContainerType` enum extended; Registry entry added
+- `Tests/EditMode/LootSystemTests.cs`: +3 tests — `ModuleCache_RegistryLookup_Succeeds`, `RandomLootBox_IncludesAllWeaponModules`, `CreateContainer_ModuleCache_DropsOnlyWeaponModules` (10-run sweep with deterministic seed)
+- Test count: **434 passed** (was 431).
+
+**Out of scope (per design):**
+- **Scene placement** of `ModuleCache` spawn points у raid maps — manual user task via Unity Editor; `LootContainerSpawnPoint` dropdown auto-shows new enum value.
+- **Bot drops** — Tier 4 (з bot weapon migration).
+- **Per-module weighting** — Tier 4 (з rarity layer).
+
+**G7 (initial loadout) deferred sine die.** Reason: DevCheats "Spawn All Modules" + Wave F loot economy cover testing/playtest needs. "Fresh save UX" доцільно полірувати разом з general onboarding pass (Tier 10 feel polish або earlier dedicated UX iteration).
+
+**Tier 6 status:** ✅ done (Waves A/B/D/E/F shipped). Wave C deferred → Tier 4. G7 deferred sine die.
 
 ### 2026-04-30 — Tier 6 audit: D+E silently landed
 

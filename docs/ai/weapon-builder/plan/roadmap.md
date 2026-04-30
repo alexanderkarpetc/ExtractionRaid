@@ -17,7 +17,7 @@
 | 1 | Minimum Vertical Slice (Ballistic + Single-Action end-to-end) | ✅ complete (2026-04-23) |
 | 2 | Core breadth (Laser Charge + Auto + Scatter) | ✅ complete (2026-04-23) |
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
-| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | 🚧 partial — Waves A/B/D/E done; F/G open |
+| 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ✅ done (Waves A/B/D/E/F); G7 deferred sine die |
 | 8 | 3D Modular Visualization | ✅ done (2026-04-30) — Waves A-E; Wave F deferred (UI prereq) |
 | 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
 | 4 | Rarity + Slot Compatibility | ⏳ planned |
@@ -342,12 +342,12 @@ Tier 4 complete.
 ### Work items (G1-G10)
 
 - [x] **G1.** Core modules як `ItemState` — 5 ItemDefinition entries у `ItemDefinition.BuildRegistry` (each: id, displayName, slot=Backpack, stackable=false) ✅
-- [ ] **G2.** Module spawning у loot tables — додати entries у `ContainerConstants.RandomLootBox` + new `ModuleCache` container type. **Bot drops out of scope** (Tier 4).
+- [x] **G2.** Module spawning у loot tables — added 5 modules to `ContainerConstants.RandomLootBox.PossibleDrops` + new `ModuleCache` ContainerType (1-2 drops, module-only pool). Bot drops out of scope (Tier 4). Scene placement of `ModuleCache` instances — manual user task. ✅ (2026-05-01)
 - [x] **G3.** DevCheats "Spawn Module" — dropdown by type у `DevCheatsWindow.cs`, places item у player Backpack (для playtest без рейду) ✅
 - [x] **G4.** Builder palette filter — `WeaponBuilderPresenter.IsModuleAvailable(id)` (read inventory), `ModuleCardElement.SetAvailable` adds `wb-card-unavailable` class for grayed-out look ✅
 - [ ] ~~**G5★.** Cross-stack drag bridge.~~ **DEFERRED → Tier 4** (2026-04-28). Palette уже drag-source; drag-from-inventory дублював би функціонал. Unique value (instance disambiguation when 2× BallisticRound різних rarity) виникає тільки у Tier 4. Wave D (G6 build cost) + Wave E (G4 palette filter) разом дають complete inventory loop без cross-stack drag.
 - [x] **G6.** Build consumes modules — `WeaponBuilderPresenter.TryBuild` removes 1×payload + 1×delivery items from backpack on success ✅
-- [ ] **G7.** Initial player loadout — starting modules у `Player`/`PlayerProfileState` setup. New player inventory contains 1× of each Common module so Builder is immediately functional.
+- [ ] **G7.** ~~Initial player loadout~~ — **DEFERRED "на потім" (2026-05-01)**. Reason: current onboarding не критичний — DevCheats "Spawn All Modules" + Wave F loot економіки покриває testing/playtest. Real "fresh save UX" доцільно полірувати разом з general onboarding pass (Tier 10 feel polish або earlier dedicated UX iteration).
 - [x] **G8.** ~~Inventory slot type для модулів~~ — **resolved**: модулі лежать у звичайному Backpack (decision 2026-04-28).
 - [x] **G9.** Open uGUI inventory canvas alongside Builder ✅
 - [x] **G10.** Layout coordination ✅
@@ -368,8 +368,8 @@ Tier 4 complete.
 | ~~**C. Cross-stack drag bridge**~~ | ~~G5★~~ | **DEFERRED → Tier 4** (2026-04-28). Палітра вже drag-source — drag-from-inventory дублював би функціонал. Unique value cross-stack drag (instance disambiguation) виникає тільки коли rarity (Tier 4) робить individual items meaningful. Premature optimization для Tier 6. | — |
 | **D. Build cost** ✅ DONE (audited 2026-04-30) | G6 | Closes build cycle — Build реально "коштує" модулі | ✅ TryBuild removes 1×payload + 1×delivery from backpack on success; CanBuild gates on backpack presence; DisabledReason explains "No payload module / No delivery module у backpack". |
 | **E. UX completeness** ✅ DONE (audited 2026-04-30) | G4 | Visual feedback "що ти можеш зібрати" | ✅ `IsModuleAvailable(id)` + `ModuleCardElement.SetAvailable(bool)` wired у `WeaponBuilderWindow`; `wb-card-unavailable` USS class з hover variant. |
-| **F. Economy** ⭐ NEXT | G2 | In-game inventory loop | Open container in raid → module drops. |
-| **G. Initial state** | G7 | Fresh save UX | Fresh save → modules у backpack без DevCheats. |
+| **F. Economy** ✅ DONE 2026-05-01 (code; scene placement manual) | G2 | In-game inventory loop | ✅ RandomLootBox + new ModuleCache ContainerType seeded; LootSystem.CreateContainer for ModuleCache produces only module items; tested. User places ModuleCache spawn points у raid scenes manually. |
+| ~~**G. Initial state**~~ | ~~G7~~ | **DEFERRED 2026-05-01** — DevCheats + loot economy cover playtest needs. Re-engage as part of broader onboarding/UX pass. | — |
 
 **Why Wave A first** (revised priority 2026-04-28): без side-by-side layout усе інше базується на assumption яку ми тільки-но відмовились (embedded backpack у Builder). Робимо architectural pivot first — навіть якщо G1/G3 (foundation) логічно "перші" по dependency graph, layout decision є **проривним** і має landing першим щоб інші waves будувались на ньому.
 

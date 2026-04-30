@@ -2,7 +2,7 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-04-30):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 Waves A/B/D/E done** (audit 2026-04-30) + **Tier 8 done (Waves A-E)**. 📋 Next: Tier 6 Waves F (loot economy) + G (initial loadout) AND/OR Tier 3 (content expansion). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
+> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (A/B/D/E/F shipped; G7 deferred) + **Tier 8 done (Waves A-E)**. 📋 Next: Tier 3 (content expansion — Foam/Rocket/Rotary/Swarm). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
 
 ---
 
@@ -33,7 +33,7 @@
 | **1** Vertical slice | Workbench, Builder UI (UI Toolkit), DevCheats, Ballistic+Pistol E2E | ✅ complete (2026-04-23) |
 | **2** Core breadth | +Laser (charge-up), +Scatter, 6 archetypes | ✅ complete (2026-04-23) |
 | **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant, resolution scaling | ✅ complete (2026-04-27) |
-| **6** Loot / Inventory integration | Waves A/B/D/E done (build cost + palette filter audited 2026-04-30); F (loot economy) + G (initial loadout) — open | 🚧 partial |
+| **6** Loot / Inventory integration | Waves A/B/D/E/F done (modules drop у containers); G7 deferred sine die | ✅ done |
 | **8** 3D Modular Visualization | Modular weapon meshes (runtime composition, attachment sockets); Waves A-E done з symmetric pivot. Wave F (icons) deferred — blocked on UI prereq | ✅ done (Wave F → future track) |
 | **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
 | **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
@@ -183,13 +183,13 @@ Projectiles spawned
 - Mecanim controller stale clip cleanup — Tier 9 housekeeping
 - PayloadMount/MuzzlePoint per-prefab tuning — manual у Inspector
 
-### Tier 6: Loot / Inventory integration (partial)
+### Tier 6: Loot / Inventory integration ✅ done (2026-05-01)
 - ✅ Wave A — side-by-side launch (Builder + uGUI inventory)
 - ✅ Wave B — modules-as-items + DevCheats grant ("Spawn Module" / "Spawn All Modules")
 - ✅ Wave D — build cost (TryBuild consumes 1×payload + 1×delivery from backpack; CanBuild gates; DisabledReason explains missing module)
 - ✅ Wave E — palette filter (`IsModuleAvailable` + `wb-card-unavailable` USS class for grayed-out look)
-- ⏳ **Wave F** — loot economy (modules drop з containers у raid). NEXT.
-- ⏳ Wave G — initial player loadout (fresh save → 1× of each Common module у backpack)
+- ✅ Wave F — loot economy (RandomLootBox + new ModuleCache ContainerType; modules drop у raid containers)
+- ⏸ Wave G (G7 initial loadout) — **deferred sine die** (DevCheats + loot cover playtest needs)
 
 ### Content (Tier 3)
 - Payload: **Foam** (status effects: slow + stick), **Rocket** (AoE explosion, ExplosionRadius)

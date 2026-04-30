@@ -218,5 +218,77 @@ namespace Tests.EditMode
             Assert.IsNull(_state.Lootables[0].Inventory.HelmetSlot,
                 "Broken armor should not appear in loot");
         }
+
+        // ── Tier 6 G2: Module Loot Economy ────────────────────
+
+        static readonly System.Collections.Generic.HashSet<string> ExpectedModuleIds =
+            new() { "BallisticRound", "LaserCharge", "SingleAction", "Auto", "Scatter" };
+
+        [Test]
+        public void ModuleCache_RegistryLookup_Succeeds()
+        {
+            Assert.IsTrue(ContainerConstants.TryGetConfig("ModuleCache", out var config));
+            Assert.AreEqual("ModuleCache",  config.TypeId);
+            Assert.AreEqual("Module Cache", config.DisplayName);
+            Assert.AreEqual(1, config.MinDrops);
+            Assert.AreEqual(2, config.MaxDrops);
+
+            Assert.AreEqual(5, config.PossibleDrops.Length, "ModuleCache pool should hold 5 modules.");
+            foreach (var drop in config.PossibleDrops)
+            {
+                Assert.Contains(drop.DefinitionId, new System.Collections.Generic.List<string>(ExpectedModuleIds),
+                    $"ModuleCache pool entry '{drop.DefinitionId}' is not a known weapon module.");
+                Assert.AreEqual(1, drop.MinCount, "Modules are non-stackable — min/max=1.");
+                Assert.AreEqual(1, drop.MaxCount);
+            }
+        }
+
+        [Test]
+        public void RandomLootBox_IncludesAllWeaponModules()
+        {
+            Assert.IsTrue(ContainerConstants.TryGetConfig(ContainerType.RandomLootBox, out var config));
+
+            var poolIds = new System.Collections.Generic.HashSet<string>();
+            foreach (var drop in config.PossibleDrops) poolIds.Add(drop.DefinitionId);
+
+            foreach (var moduleId in ExpectedModuleIds)
+                Assert.IsTrue(poolIds.Contains(moduleId),
+                    $"RandomLootBox pool missing weapon module '{moduleId}'.");
+        }
+
+        [Test]
+        public void CreateContainer_ModuleCache_DropsOnlyWeaponModules()
+        {
+            // Force deterministic Random.Range so we cover all 5 module entries
+            // (10 iterations × 1-2 drops each → reliably hits every pool index).
+            UnityEngine.Random.InitState(0xC0FFEE);
+
+            ContainerConstants.TryGetConfig(ContainerType.ModuleCache, out var config);
+
+            int totalSpawned = 0;
+            for (int run = 0; run < 10; run++)
+            {
+                int beforeCount = _state.Lootables.Count;
+                LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+                Assert.AreEqual(beforeCount + 1, _state.Lootables.Count);
+
+                var inv = _state.Lootables[_state.Lootables.Count - 1].Inventory;
+                int spawnedThisRun = 0;
+                for (int slot = 0; slot < InventoryState.BackpackSize; slot++)
+                {
+                    var item = inv.Backpack[slot];
+                    if (item == null) continue;
+                    Assert.Contains(item.DefinitionId, new System.Collections.Generic.List<string>(ExpectedModuleIds),
+                        $"ModuleCache produced non-module item '{item.DefinitionId}'.");
+                    Assert.IsFalse(item.HasWeaponConfiguration,
+                        "Loose modules ride as plain items, not assembled weapons.");
+                    spawnedThisRun++;
+                }
+                Assert.GreaterOrEqual(spawnedThisRun, config.MinDrops);
+                Assert.LessOrEqual   (spawnedThisRun, config.MaxDrops);
+                totalSpawned += spawnedThisRun;
+            }
+            Assert.Greater(totalSpawned, 0, "ModuleCache should spawn at least one module across 10 runs.");
+        }
     }
 }
