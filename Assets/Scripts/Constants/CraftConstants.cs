@@ -81,38 +81,68 @@ namespace Constants
                 new CraftIngredient("Electronics", 1),
             });
 
-        // ── Weapons ──────────────────────────────────────────────
+        // ── Weapon Builder Modules (Cluster A 2026-05-01) ────────
+        // Replaces ImprovisedRifle recipe — player crafts modules at workbench
+        // and assembles weapons via Weapon Builder. Each recipe outputs 1×
+        // module (non-stackable). Costs roughly half a full-weapon recipe
+        // since each weapon = 1×payload + 1×delivery.
 
-        public static readonly CraftRecipe ImprovisedRifle = new(
-            "ImprovisedRifle", "Improvised Rifle", "Cobbled-together rifle from scrap parts.",
-            CraftCategory.Weapons, "Rifle", 1,
+        public static readonly CraftRecipe BallisticRoundModule = new(
+            "BallisticRoundModule", "Ballistic Round (Payload)",
+            "Standard kinetic round payload — outputs metal-jacketed projectiles.",
+            CraftCategory.Weapons, "BallisticRound", 1,
             new[]
             {
-                new CraftIngredient("Metal_Parts", 7),
+                new CraftIngredient("Metal_Parts", 4),
+                new CraftIngredient("Gunpowder", 2),
+            });
+
+        public static readonly CraftRecipe LaserChargeModule = new(
+            "LaserChargeModule", "Laser Charge (Payload)",
+            "Energy charge payload — fires after a brief charge-up. Pricey.",
+            CraftCategory.Weapons, "LaserCharge", 1,
+            new[]
+            {
+                new CraftIngredient("Electronics", 4),
+                new CraftIngredient("Glass", 1),
+                new CraftIngredient("Metal_Parts", 2),
+            });
+
+        public static readonly CraftRecipe SingleActionModule = new(
+            "SingleActionModule", "Single-Action (Delivery)",
+            "Compact pistol-form mechanism — single-shot trigger.",
+            CraftCategory.Weapons, "SingleAction", 1,
+            new[]
+            {
+                new CraftIngredient("Metal_Parts", 3),
+                new CraftIngredient("Mechanical_Parts", 2),
+            });
+
+        public static readonly CraftRecipe AutoModule = new(
+            "AutoModule", "Auto (Delivery)",
+            "Rifle-form mechanism — sustained automatic fire.",
+            CraftCategory.Weapons, "Auto", 1,
+            new[]
+            {
+                new CraftIngredient("Metal_Parts", 4),
                 new CraftIngredient("Mechanical_Parts", 3),
-                new CraftIngredient("Adhesive", 2),
+                new CraftIngredient("Springs", 1),
+            });
+
+        public static readonly CraftRecipe ScatterModule = new(
+            "ScatterModule", "Scatter (Delivery)",
+            "Shotgun-form mechanism — wide cone of pellets per shot.",
+            CraftCategory.Weapons, "Scatter", 1,
+            new[]
+            {
+                new CraftIngredient("Metal_Parts", 5),
+                new CraftIngredient("Mechanical_Parts", 2),
             });
 
         // ── Ammo ─────────────────────────────────────────────────
-
-        public static readonly CraftRecipe PistolAmmo = new(
-            "PistolAmmo", "Pistol Ammo", "Standard pistol rounds.",
-            CraftCategory.Ammo, "Ammo_Pistol", 8,
-            new[]
-            {
-                new CraftIngredient("Gunpowder", 1),
-                new CraftIngredient("Metal_Parts", 1),
-            });
-
-        public static readonly CraftRecipe PistolAPAmmo = new(
-            "PistolAPAmmo", "Pistol AP Ammo", "Armor-piercing pistol rounds. Expensive but deadly.",
-            CraftCategory.Ammo, "Ammo_Pistol_AP", 8,
-            new[]
-            {
-                new CraftIngredient("Gunpowder", 1),
-                new CraftIngredient("Metal_Parts", 1),
-                new CraftIngredient("Military_Components", 1),
-            });
+        // Cluster A (2026-05-01): Ammo_Pistol / Ammo_Pistol_AP recipes retired —
+        // no current payload uses Pistol-caliber ammo (BallisticPayload reads Ammo_Rifle).
+        // May return if Tier 3 splits Ballistic into per-caliber payloads.
 
         public static readonly CraftRecipe RifleAmmo = new(
             "RifleAmmo", "Rifle Ammo", "Standard rifle cartridges.",
@@ -260,8 +290,10 @@ namespace Constants
         static readonly CraftRecipe[] AllRecipes =
         {
             Bandage, FieldMedkit, AdvancedMedkit,
-            ImprovisedRifle,
-            PistolAmmo, PistolAPAmmo, RifleAmmo, RifleAPAmmo,
+            // Weapon Builder modules (Cluster A 2026-05-01)
+            BallisticRoundModule, LaserChargeModule,
+            SingleActionModule, AutoModule, ScatterModule,
+            RifleAmmo, RifleAPAmmo,
             BasicScope, AdvancedScope,
             LongBarrel, ShortBarrel,
             Suppressor, Compensator,

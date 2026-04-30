@@ -70,12 +70,17 @@ namespace Systems
 
         static void GiveStartingLoadout(RaidState state, InventoryState inventory)
         {
-            // Single Ballistic Rifle (Ballistic + Auto). Pistol slot и spare-pistol
-            // у backpack[9] прибрані 2026-04-28 — гравець тепер має одну дефолтну
-            // зброю, решта надходить через loot / Weapon Builder. Module loot —
-            // Tier 6 Wave F (G2).
+            // Single Ballistic Rifle assembled via the Builder pipeline. Module
+            // composition lives in WeaponConfiguration so the starting weapon goes
+            // through the same flow as anything player crafts at Workbench.
+            // Legacy "Rifle" ItemDefinition path retired у Cluster A (2026-05-01).
             var weaponId = state.AllocateEId();
-            inventory.WeaponSlots[0] = WeaponItemFactory.SpawnItem(weaponId, "Rifle");
+            var startingConfig = new WeaponConfiguration(
+                payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                delivery:       new DeliveryCoreInstance("Auto",          RarityTier.Common),
+                exotic:         null,
+                ammoInMagazine: 30);
+            inventory.WeaponSlots[0] = ItemState.CreateWeapon(weaponId, "Weapon", startingConfig);
 
             inventory.Backpack[0] = ItemState.Create(state.AllocateEId(), "Ammo_Rifle", 60);
 

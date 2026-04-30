@@ -159,25 +159,36 @@ namespace Session
 
         void SpawnTestGroundItems()
         {
+            // Non-weapon ground items (legacy "Rifle" entry retired у Cluster A 2026-05-01).
             var testItems = new (string defId, UnityEngine.Vector3 pos, int count)[]
             {
-                ("Medkit", new UnityEngine.Vector3(3f, 0f, 2f), (int)Constants.MedConstants.TotalHealAmount),
-                ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f, 4f), 1),
-                ("Armor_Basic", new UnityEngine.Vector3(5f, 0f, -1f), 1),
-                ("Ammo_Rifle", new UnityEngine.Vector3(-3f, 0f, -3f), 30),
-                ("Rifle", new UnityEngine.Vector3(4f, 0f, 4f), 1),
+                ("Medkit",       new UnityEngine.Vector3( 3f, 0f,  2f), (int)Constants.MedConstants.TotalHealAmount),
+                ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f,  4f), 1),
+                ("Armor_Basic",  new UnityEngine.Vector3( 5f, 0f, -1f), 1),
+                ("Ammo_Rifle",   new UnityEngine.Vector3(-3f, 0f, -3f), 30),
             };
 
             foreach (var (defId, pos, count) in testItems)
             {
                 var id = RaidState.AllocateEId();
-                var groundItem = Systems.WeaponItemFactory.IsKnownWeaponDefinition(defId)
-                    ? GroundItemState.CreateWeapon(id, defId, pos,
-                        Systems.WeaponItemFactory.DefaultConfigFor(defId))
-                    : GroundItemState.Create(id, defId, pos, count);
+                var groundItem = State.GroundItemState.Create(id, defId, pos, count);
                 RaidState.GroundItems.Add(groundItem);
                 _eventBuffer.GroundItemSpawned(id, pos, defId);
             }
+
+            // Test Builder-assembled weapon as ground item — confirms WeaponConfiguration
+            // travels intact ground ↔ inventory.
+            var weaponId = RaidState.AllocateEId();
+            var weaponPos = new UnityEngine.Vector3(4f, 0f, 4f);
+            var testWeaponConfig = new State.WeaponConfiguration(
+                payload:        new State.PayloadCoreInstance("BallisticRound", State.RarityTier.Common),
+                delivery:       new State.DeliveryCoreInstance("Auto",          State.RarityTier.Common),
+                exotic:         null,
+                ammoInMagazine: 30);
+            var weaponGroundItem = State.GroundItemState.CreateWeapon(
+                weaponId, "Weapon", weaponPos, testWeaponConfig);
+            RaidState.GroundItems.Add(weaponGroundItem);
+            _eventBuffer.GroundItemSpawned(weaponId, weaponPos, "Weapon");
         }
 
         void SpawnTestBots()

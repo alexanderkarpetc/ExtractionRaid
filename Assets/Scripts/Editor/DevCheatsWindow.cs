@@ -33,15 +33,16 @@ namespace Editor
         // "Give Hideout Items" devcheat — bundle of items that lands directly in
         // Player.Stash so the hideout container has something to display when
         // testing inventory UI in the hideout scene.
+        // Cluster A (2026-05-01): legacy "Rifle"/"Pistol" weapons + Pistol-caliber
+        // ammo retired (no payload uses Ammo_Pistol). Modules dropped instead so
+        // player can build at Workbench from the hideout stash.
         static readonly (string Id, int Count)[] HideoutGiftItems =
         {
             ("Medkit", 5),
             ("Bandage", 5),
             ("Grenade", 3),
             ("Ammo_Rifle", 60),
-            ("Ammo_Pistol", 36),
             ("Ammo_Rifle_AP", 30),
-            ("Ammo_Pistol_AP", 18),
             ("Adhesive", 10),
             ("Metal_Parts", 20),
             ("Mechanical_Parts", 10),
@@ -51,8 +52,12 @@ namespace Editor
             ("Gunpowder", 15),
             ("Helmet_Basic", 1),
             ("Armor_Basic", 1),
-            ("Rifle", 1),
-            ("Pistol", 1),
+            // Weapon Builder modules — 1× of each so player can assemble any current archetype.
+            ("BallisticRound", 1),
+            ("LaserCharge",    1),
+            ("SingleAction",   1),
+            ("Auto",           1),
+            ("Scatter",        1),
         };
 
         // Section foldout states (persisted via EditorPrefs)

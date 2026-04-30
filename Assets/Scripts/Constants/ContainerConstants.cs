@@ -70,6 +70,8 @@ namespace Constants
             }
         );
 
+        // Cluster A (2026-05-01): Ammo_Pistol family retired from drop tables —
+        // no current payload uses Pistol-caliber ammo. Pool tightened to Rifle-only.
         public static readonly ContainerTypeConfig AmmoBox = new(
             typeId: "AmmoBox",
             displayName: "Ammo Box",
@@ -77,7 +79,6 @@ namespace Constants
             possibleDrops: new[]
             {
                 new LootDrop("Ammo_Rifle", 10, 40),
-                new LootDrop("Ammo_Pistol", 8, 24),
             }
         );
 
@@ -94,7 +95,6 @@ namespace Constants
                 new LootDrop("Bandage",        1, 1),
                 new LootDrop("Grenade",        1, 1),
                 new LootDrop("Ammo_Rifle",    10, 30),
-                new LootDrop("Ammo_Pistol",    8, 18),
                 new LootDrop("BallisticRound", 1, 1),
                 new LootDrop("LaserCharge",    1, 1),
                 new LootDrop("SingleAction",   1, 1),
