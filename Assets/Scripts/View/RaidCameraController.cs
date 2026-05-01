@@ -29,6 +29,9 @@ namespace View
         Vignette _vignette;
         float _baseVignetteIntensity;
 
+        // Gunplay A.3 — additive shake offset, layered after main follow lerp.
+        CameraShake _shake;
+
         public void SetTarget(Transform target)
         {
             _target = target;
@@ -46,6 +49,14 @@ namespace View
                 _vignette = v;
                 _baseVignetteIntensity = v.intensity.value;
             }
+
+            // Auto-attach CameraShake sibling so scene setup doesn't need manual wiring.
+            // Presenter route: register with App.CameraShakePresenter.SetTarget so events
+            // dispatch to this instance.
+            _shake = GetComponent<CameraShake>();
+            if (_shake == null)
+                _shake = gameObject.AddComponent<CameraShake>();
+            ApplicationCore.App.Instance?.CameraShakePresenter?.SetTarget(_shake);
         }
 
         void LateUpdate()
@@ -99,6 +110,11 @@ namespace View
             var desiredPos = _target.position + _cursorOffset + effectiveOffset;
             transform.position = Vector3.Lerp(transform.position, desiredPos,
                 Time.deltaTime * _followSpeed);
+
+            // Gunplay A.3 — additive shake offset AFTER follow lerp so it doesn't
+            // get smoothed away. Empty offset (no active shake) → no-op.
+            if (_shake != null)
+                transform.position += _shake.GetCurrentOffset();
 
             transform.rotation = Quaternion.Euler(_pitch, 0f, 0f);
 

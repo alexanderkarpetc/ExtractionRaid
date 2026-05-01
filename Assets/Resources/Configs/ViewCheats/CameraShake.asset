@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc3723b19f0d446eeb553dc6cd815858, type: 3}
+  m_Name: CameraShake
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsCameraShakeSection
+  Enabled: 1
+  GlobalScale: 1
+  FireKickMagnitude: 0.04
+  FireRecoilStatScale: 0.015
+  FireKickDuration: 0.12
+  FireTremorMagnitude: 0.02
+  FireTremorDuration: 0.1
+  DamageTremorMagnitude: 0.1
+  DamageTremorPerHp: 0.005
+  DamageTremorDuration: 0.3
+  TremorFrequency: 25

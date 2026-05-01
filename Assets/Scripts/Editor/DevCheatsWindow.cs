@@ -69,12 +69,16 @@ namespace Editor
         [MenuItem("Window/Dev Cheats")]
         static void Open()
         {
-            GetWindow<DevCheatsWindow>("Dev Cheats");
+            GetWindow<DevCheatsWindow>();
         }
 
         void OnEnable()
         {
             BindConfig();
+            // Tab title з settings icon — distinguishes от ViewCheats у crowded editor.
+            var icon = EditorGUIUtility.IconContent("SettingsIcon").image
+                       ?? EditorGUIUtility.IconContent("_Help").image;
+            titleContent = new GUIContent("Dev Cheats", icon, "Gameplay balance, cheats, runtime actions");
         }
 
         void OnDisable()
@@ -124,6 +128,8 @@ namespace Editor
 
         void OnGUI()
         {
+            DrawHeaderBanner();
+
             if (_so == null || _so.targetObject == null)
             {
                 EditorGUILayout.HelpBox(
@@ -141,23 +147,23 @@ namespace Editor
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
             // ── Sections (auto-rendered via inline editors) ──
-            DrawSection("Cheats", _config.Cheats);
-            DrawSection("Weapon", _config.Weapon);
-            DrawSection("Recoil", _config.Recoil);
-            DrawSection("Aim", _config.Aim);
-            DrawSection("Player", _config.Player);
-            DrawSection("FOV", _config.FOV);
-            DrawSection("Fog", _config.Fog);
-            DrawSection("Crosshair", _config.Crosshair);
-            DrawSection("ADS", _config.ADS);
-            DrawSection("Health Bar", _config.HealthBar);
-            DrawSection("Parallax", _config.Parallax);
-            DrawSection("Damage Numbers", _config.DamageNumbers);
-            DrawSection("Armor", _config.Armor);
-            DrawSection("Status Effects", _config.StatusEffects);
-            DrawSection("Hit Pause", _config.HitPause);
-            DrawSection("Hit Flash", _config.HitFlash);
-            DrawSection("Muzzle VFX", _config.MuzzleVfx);
+            DrawSection("💀 Cheats", _config.Cheats);
+            DrawSection("🔫 Weapon", _config.Weapon);
+            DrawSection("💢 Recoil", _config.Recoil);
+            DrawSection("🎯 Aim", _config.Aim);
+            DrawSection("🏃 Player", _config.Player);
+            DrawSection("👁 FOV", _config.FOV);
+            DrawSection("🌫 Fog", _config.Fog);
+            DrawSection("✛ Crosshair", _config.Crosshair);
+            DrawSection("🔍 ADS", _config.ADS);
+            DrawSection("❤ Health Bar", _config.HealthBar);
+            DrawSection("🌐 Parallax", _config.Parallax);
+            DrawSection("🔢 Damage Numbers", _config.DamageNumbers);
+            DrawSection("🛡 Armor", _config.Armor);
+            DrawSection("💉 Status Effects", _config.StatusEffects);
+            DrawSection("⏸ Hit Pause", _config.HitPause);
+            DrawSection("⚡ Hit Flash", _config.HitFlash);
+            DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
 
             EditorGUILayout.Space(8);
 
@@ -170,6 +176,49 @@ namespace Editor
             EditorGUILayout.EndScrollView();
 
             _so.ApplyModifiedProperties();
+        }
+
+        // ── Header banner ─────────────────────────────────────
+
+        // Warm orange tint розрізняє DevCheats від cool-blue ViewCheats.
+        static readonly Color HeaderColor  = new(0.45f, 0.28f, 0.12f, 1f);
+        static readonly Color HeaderAccent = new(0.92f, 0.55f, 0.18f, 1f);
+
+        void DrawHeaderBanner()
+        {
+            const float bannerHeight = 56f;
+            var rect = EditorGUILayout.GetControlRect(false, bannerHeight);
+
+            EditorGUI.DrawRect(rect, HeaderColor);
+            var accentRect = new Rect(rect.x, rect.yMax - 2, rect.width, 2);
+            EditorGUI.DrawRect(accentRect, HeaderAccent);
+
+            var iconImage = EditorGUIUtility.IconContent("SettingsIcon").image
+                            ?? EditorGUIUtility.IconContent("_Help").image;
+            if (iconImage != null)
+            {
+                var iconRect = new Rect(rect.x + 12, rect.y + 8, 40, 40);
+                GUI.DrawTexture(iconRect, iconImage, ScaleMode.ScaleToFit);
+            }
+
+            var titleStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 18,
+                normal   = { textColor = Color.white },
+            };
+            var titleRect = new Rect(rect.x + 60, rect.y + 6, rect.width - 70, 24);
+            GUI.Label(titleRect, "Dev Cheats", titleStyle);
+
+            var subStyle = new GUIStyle(EditorStyles.miniLabel)
+            {
+                normal    = { textColor = new Color(1f, 0.92f, 0.78f, 1f) },
+                wordWrap  = true,
+                fontStyle = FontStyle.Italic,
+            };
+            var subRect = new Rect(rect.x + 60, rect.y + 28, rect.width - 70, 28);
+            GUI.Label(subRect, "Gameplay balance, cheats, runtime actions. View polish lives у View Cheats.", subStyle);
+
+            EditorGUILayout.Space(4);
         }
 
         void DrawSection(string title, ScriptableObject section)

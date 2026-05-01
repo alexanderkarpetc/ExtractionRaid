@@ -110,7 +110,7 @@ namespace View
             _animator.SetFloat("SpeedX", Mathf.Clamp(localVel.x * invMax, -1f, 1f), damp, Time.deltaTime);
             _animator.SetFloat("SpeedY", Mathf.Clamp(localVel.z * invMax, -1f, 1f), damp, Time.deltaTime);
 
-//            _animator.SetBool("Run", !isRolling && isMoving);
+/*            _animator.SetBool("Run", !isRolling && isMoving);
 
             if (isRolling && !_wasRollingLastFrame)
             {
@@ -124,10 +124,10 @@ namespace View
 
             if (!isRolling && !isMoving && (_wasRollingLastFrame || _wasMovingLastFrame))
             {
-//                _animator.ResetTrigger("Idle");
-//                _animator.SetTrigger("Idle");
+                _animator.ResetTrigger("Idle");
+                _animator.SetTrigger("Idle");
             }
-
+*/
             _wasRollingLastFrame = isRolling;
             _wasMovingLastFrame = isMoving;
         }

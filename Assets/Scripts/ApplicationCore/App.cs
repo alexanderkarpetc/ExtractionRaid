@@ -48,6 +48,8 @@ namespace ApplicationCore
         readonly GrenadePresenter _grenadePresenter;
         readonly CorpsePresenter _corpsePresenter;
         readonly HitPausePresenter _hitPausePresenter;
+        readonly CameraShakePresenter _cameraShakePresenter;
+        public CameraShakePresenter CameraShakePresenter => _cameraShakePresenter;
 
         App()
         {
@@ -64,6 +66,7 @@ namespace ApplicationCore
             _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
             _corpsePresenter = new CorpsePresenter();
             _hitPausePresenter = new HitPausePresenter();
+            _cameraShakePresenter = new CameraShakePresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -179,6 +182,7 @@ namespace ApplicationCore
             _grenadePresenter.Dispose();
             _corpsePresenter.Dispose();
             _hitPausePresenter.Dispose();
+            _cameraShakePresenter.Dispose();
         }
 
         public void EndRaid()
@@ -212,6 +216,7 @@ namespace ApplicationCore
             _groundItemPresenter.LateTick(RaidSession);
             _corpsePresenter.LateTick(RaidSession);
             _hitPausePresenter.LateTick(RaidSession);
+            _cameraShakePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
