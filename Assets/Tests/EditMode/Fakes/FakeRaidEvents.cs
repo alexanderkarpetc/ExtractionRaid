@@ -62,7 +62,7 @@ namespace Tests.EditMode.Fakes
             BotDespawnedCalled = true;
             BotDespawnedId = id;
         }
-        public void WeaponFired(Vector3 position, Vector3 direction) { }
+        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null) { }
 
         public bool WeaponEquipStartedCalled;
         public string WeaponEquipStartedPrefabId;

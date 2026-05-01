@@ -52,6 +52,7 @@ namespace ApplicationCore
         public CameraShakePresenter CameraShakePresenter => _cameraShakePresenter;
         readonly BloodDecalPresenter _bloodDecalPresenter;
         readonly BulletHoleDecalPresenter _bulletHoleDecalPresenter;
+        readonly CasingEjectorPresenter _casingEjectorPresenter;
 
         App()
         {
@@ -71,6 +72,7 @@ namespace ApplicationCore
             _cameraShakePresenter = new CameraShakePresenter();
             _bloodDecalPresenter = new BloodDecalPresenter();
             _bulletHoleDecalPresenter = new BulletHoleDecalPresenter();
+            _casingEjectorPresenter = new CasingEjectorPresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -189,6 +191,7 @@ namespace ApplicationCore
             _cameraShakePresenter.Dispose();
             _bloodDecalPresenter.Dispose();
             _bulletHoleDecalPresenter.Dispose();
+            _casingEjectorPresenter.Dispose();
         }
 
         public void EndRaid()
@@ -225,6 +228,7 @@ namespace ApplicationCore
             _cameraShakePresenter.LateTick(RaidSession);
             _bloodDecalPresenter.LateTick(RaidSession);
             _bulletHoleDecalPresenter.LateTick(RaidSession);
+            _casingEjectorPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 

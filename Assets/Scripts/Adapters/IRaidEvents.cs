@@ -18,7 +18,7 @@ namespace Adapters
 
         void BotSpawned(EId id, Vector3 position, string typeId);
         void BotDespawned(EId id);
-        void WeaponFired(Vector3 position, Vector3 direction);
+        void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null);
         void WeaponEquipStarted(string prefabId);
         void WeaponUnequipStarted(string prefabId);
         void WeaponEquipFinished(string prefabId);

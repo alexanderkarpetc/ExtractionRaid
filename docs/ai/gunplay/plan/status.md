@@ -14,13 +14,13 @@ Track-wise:
 - ✅ **A.3 Camera Shake System** (2026-05-01)
 - ✅ **A.4 Blood Spray + Floor/Wall Decals** (2026-05-02) — particle layer уже covered ProjectilePresenter+BodyImpact; added floor + wall decals via reusable `DecalProjectorPool`
 - ✅ **A.5 Muzzle Flash + Real-time Light** (2026-05-01)
-- ⏳ A.6 Casing Ejection
+- ⏳ A.6 Casing Ejection — `SM_Prop_Bullet_Casing_01..03` prefabs already у Polygon pack
 - ⏳ A.7 Material-Specific Impact VFX
-- ⏳ A.8 Bullet Hole Decals — **DecalProjectorPool ready for reuse**
+- ✅ **A.8 Bullet Hole Decals** (2026-05-02) — reused DecalProjectorPool; extended ProjectileHit event з surface normal; surface jitter (vertical-biased) breaks top-down "trail line" cluster
 - ⏳ A.9 Ragdoll Death + Directional Knockback
 - ⏳ A.10 Blood Pool Decal Under Body — could merge з A.4 floor decal pipeline
 
-**Phase A halfway** — 5/10 done. Visible "feels visceral" baseline landed (hits register weight, characters glow on damage, weapons kick light, camera punches, blood marks ground). Remaining: physics/persistence layer (casings, decals, ragdoll) + material variation.
+**Phase A 6/10 done.** Visible "feels visceral" baseline solid: hits register weight, characters glow on damage, weapons kick light + camera, blood marks ground, walls show damage cumulatively. Remaining: physics layer (casings, ragdoll), death feedback (blood pool), material variation (concrete vs metal vs wood impact).
 
 Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-feel).
 
@@ -52,6 +52,24 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 ---
 
 ## Decisions log
+
+### 2026-05-02 — A.8 Bullet Hole Decals shipped
+
+**Reused** `DecalProjectorPool` infrastructure от A.4 — kind=3 для bullet holes, separate capacity (default 200 active, 90s lifetime). Авторовані prefabs `PolygonApocalypse/Prefabs/Props/SM_Prop_BulletHoles_01..03` (variants 04 і 05 — multi-hole "spray" patterns, excluded бо мatch'ать 1-per-shot logic).
+
+**Event schema extension:**
+- `CollisionSignal` → added `Vector3 Normal`
+- `ProjectileView.ReportHit` passes `hit.normal` from SphereCast
+- `IRaidEvents.ProjectileHit(id, position, normal, hitType)` — packed normal у `Direction` field
+- `RaidSession`/`DamageSystem` emit sites updated; `FakeRaidEvents` interface conformance
+- DamageSystem character-hit calls pass `Vector3.zero` normal (presenter filters by zero check + hitType prefix)
+
+**Bug fix landed:**
+- *"Trail line" cluster*: top-down camera shoots horizontal → all wall hits land на same Y → bullet holes form perfect horizontal track. Fixed via `ComputeSurfaceJitter(normal, upJitter, rightJitter)` — random offset projected onto surface plane, vertical-biased (default UpJitter=0.15m, RightJitter=0.05m). Same fix applied до blood wall splatter (BloodDecalPresenter.SpawnWallDecal).
+
+**Throttle:** per-bucket (10cm grid) з 0.05s window — prevents auto fire stacking decals в same spot.
+
+**ViewCheats:** new `🔫 Bullet Holes` section з 200/90s defaults. Live tunable.
 
 ### 2026-05-02 — A.4 Blood Decals shipped + ViewCheats infrastructure + layer convention
 
@@ -137,13 +155,12 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 
 ## Next actions
 
-Phase A halfway done (5/10). Remaining ranked by **payoff/effort + reuse leverage**:
+Phase A 6/10 done. Remaining ranked by **payoff/effort + reuse leverage**:
 
-1. ⭐ **A.8 Bullet Hole Decals** (~1.5-2h) — `DecalProjectorPool` already infrastructure-ready. Listen `ProjectileHit` event for non-character hits, raycast normal for orientation. Smaller code than A.4 because decal pipeline уже існує.
-2. **A.6 Casing Ejection** (~3-4h) — physics shells per shot. Independent track, no infrastructure dependencies.
+1. ⭐ **A.6 Casing Ejection** (~3-4h) — physics shells per shot. Bonus: `SM_Prop_Bullet_Casing_01..03` prefabs already у Polygon pack. Pure new sensory layer, no overlap з existing.
+2. **A.10 Blood Pool Under Body** (~1-2h) — extends DecalProjectorPool з new kind. Triggers on `EntityDied`. Death "marker" — distinct від per-hit blood (which is small splashes).
 3. **A.7 Material-Specific Impact VFX** (~4-5h) — biggest visceral juice multiplier. Requires `MaterialTag.cs` MonoBehaviour scene tagging pass.
-4. **A.10 Blood Pool Under Body** (~1-2h) — extends A.4 floor decal pipeline. Triggers on `EntityDied`. Could bundle з A.9.
-5. **A.9 Ragdoll Death** (~5-7h, biggest) — manual character rigging + RagdollController toggle on death.
+4. **A.9 Ragdoll Death** (~5-7h, biggest) — manual character rigging + RagdollController toggle on death.
 
 Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
 

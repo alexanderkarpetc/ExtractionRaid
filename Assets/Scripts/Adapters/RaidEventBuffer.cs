@@ -157,13 +157,14 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.BotDespawned, Id = id });
         }
 
-        public void WeaponFired(Vector3 position, Vector3 direction)
+        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null)
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.WeaponFired,
                 Position = position,
                 Direction = direction,
+                StringPayload = payloadArchetype,
             });
         }
 

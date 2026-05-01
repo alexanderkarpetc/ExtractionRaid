@@ -234,7 +234,7 @@ namespace Systems
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.Stats.Damage);
             }
 
-            context.Events.WeaponFired(spawnPos, dir);
+            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype);
             weapon.Phase = WeaponPhase.Firing;
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;

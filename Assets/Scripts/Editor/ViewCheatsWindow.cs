@@ -98,6 +98,7 @@ namespace Editor
             DrawSection("🎬 Camera Shake", _config.CameraShake);
             DrawSection("🩸 Blood Decals", _config.BloodDecal);
             DrawSection("🔫 Bullet Holes", _config.BulletHole);
+            DrawSection("🥃 Casings", _config.Casings);
 
             EditorGUILayout.EndScrollView();
             _so.ApplyModifiedProperties();
@@ -242,6 +243,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsCameraShakeSection>(so, "_cameraShake", folder, "CameraShake");
             CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
             CreateSectionIfMissing<ViewCheatsBulletHoleSection>(so, "_bulletHole", folder, "BulletHole");
+            CreateSectionIfMissing<ViewCheatsCasingsSection>(so, "_casings", folder, "Casings");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }
