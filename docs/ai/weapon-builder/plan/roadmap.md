@@ -19,11 +19,14 @@
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
 | 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ✅ done (Waves A/B/D/E/F); G7 deferred sine die |
 | 8 | 3D Modular Visualization | ✅ done (2026-04-30) — Waves A-E; Wave F deferred (UI prereq) |
-| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏳ planned |
-| 4 | Rarity + Slot Compatibility | ⏳ planned |
-| 5 | Exotic Mods | ⏳ planned |
-| 9 | VFX / SFX Language | ⏳ planned |
-| 10 | Weapon Feel Polish | ⏳ planned |
+| 8.x | Tier 8 follow-ups (muzzle alignment, reload/equip motion, Mecanim cleanup, socket tuning) | ⏳ NEXT (polish track) |
+| 4a | **Bot weapon migration ONLY** (split from Tier 4) — closes Cluster B legacy debt | ⏳ planned (polish track) |
+| 9 | VFX / SFX Language (scope-limited to current 2×3 archetypes) | ⏳ planned (polish track) |
+| 10 | Weapon Feel Polish (iterative playtest tuning) | ⏳ planned (polish track) |
+| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏸ deferred sine die — engage коли polish converges |
+| 4b | Rarity values + Slot Compatibility + banned combos (split from Tier 4) | ⏸ deferred sine die |
+| 5 | Exotic Mods | ⏸ deferred sine die |
+| 8 Wave F | Backpack composite icons | ⏸ deferred sine die — UI prereq |
 | ~~7~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
 
 **Tier numbers = stable IDs** (для посилань у коді/тестах/інших доках). **Execution order — нижче, ≠ tier number order.**
@@ -32,28 +35,66 @@
 
 ---
 
-## Execution sequence (поточний план виконання)
+## Execution sequence (revised 2026-05-01 — polish-first)
 
-Послідовність вибрана щоб максимізувати player-facing value на кожному кроці. Tier 6 і Tier 8 reordered наперед (раніше були "пізніше" по tier number, але дають видиму трансформацію feature найшвидше).
+**Strategic pivot:** після того як Tier 6+8 закрили "raid → loot → build" loop + visible 2-module composition, фокус переходить на **polish існуючих 6 archetypes** замість content expansion. Tier 3/5 (нові payloads/deliveries/exotics) defer'аться до моменту, коли поточна гра feels great. Гасло: "make existing content feel amazing before adding more."
 
 ```
-✅ 0a → 0b → 1 → 2 → UX Pass 1
-⏳ 6 (loot)  →  8 (3D viz)  →  3 (content)  →  4 (rarity)  →  5 (exotic)  →  9 (VFX)  →  10 (feel)
+✅ FOUNDATION
+   0a → 0b → 1 → 2 → UX Pass 1 → 6 → 8
+
+🎯 POLISH TRACK (next, in order)
+
+   1. Tier 8.x follow-ups
+      • Muzzle alignment for symmetric meshes
+      • Reload/Equip/Unequip procedural motion
+      • Mecanim controller stale clip cleanup or replacement
+      • Per-prefab PayloadMount/MuzzlePoint tuning
+
+   2. Tier 4a — bot weapon migration (split from Tier 4)
+      • Move BotSpawnSystem onto WeaponAssemblySystem.TryAssemble
+      • Per-bot WeaponConfiguration on BotTypeConfig
+      • Retire all Cluster B compat: WeaponItemFactory.DefaultConfigFor / SpawnItem,
+        LootSystem.MapWeaponPrefab*, ItemDefinition ["Rifle"]/["Pistol"] entries,
+        [Obsolete] WeaponPrefabId field, Ammo_Pistol family registry entries.
+      • Closes ALL legacy debt у one tier.
+
+   3. Tier 9 — VFX/SFX language (scope: current 2×3 archetypes)
+      • Per-Payload VFX: Ballistic muzzle/tracer/impact, Laser charge glow/beam/burn
+      • Per-Delivery feel: Auto cadence, Single emphatic, Scatter cone pellet pattern
+      • SFX library: fire variants, charge sound, reload variations
+      • Hit feedback polish: screen shake, hit pause, damage number animation
+
+   4. Tier 10 — Weapon Feel iterative tuning
+      • Recoil curves per archetype, charge timing, reload pace
+      • Damage curves vs armor balance
+      • Telemetry-driven playtest sprints (no archetype dominance / dead-on-arrival)
+
+⏸ DEFERRED SINE DIE
+   • Tier 3 — content expansion (Foam/Rocket/Rotary/Swarm)
+   • Tier 5 — exotic mods
+   • Tier 4b — rarity tier values + slot compat + banned combos
+   • Tier 8 Wave F — backpack composite icons (UI prereq)
+   • Tier 6 G7 — initial loadout polish (orphan, не блокує)
 ```
 
-**Чому така послідовність:**
+**Чому така послідовність (revised):**
 
-1. **Tier 6 first** — рiveть фічу. Зараз модулі infinite (debug), backpack у Builder read-only. Після Tier 6 модулі = real loot, drag-from-backpack у Builder активується, можна dev-grant'ом видавати конкретні модулі для playtesting. **Closes core design promise** "raid → loot → build". Залежність від Tier 4 (rarity для distribution) → відкидаємо вимогу: початково все Common, rarity layer'иться у Tier 4.
+1. **Tier 8.x follow-ups first** — закриває visible polish gap від symmetric pivot (muzzle position approximate, animator clips stale, sockets placed on око). Найшвидший visible win — make 6 archetypes feel coherent після Wave B-E foundation.
 
-2. **Tier 8 next** — 3D modular visualization. Currently всі weapons виглядають однаково (Weapon_Pistol/Rifle prefabs derive'аться з Delivery FormFactor only). Це підриває core promise "weapons are 2 modules". Після Tier 8 player візуально розрізняє Ballistic Pistol vs Laser Pistol vs Foam Pistol. Найбільший visual impact на playtest.
+2. **Tier 4a — bot migration** — closes ALL legacy compat debt (Cluster A retired player-facing references; Cluster B awaits bot migration). Bot loot stops dropping `Rifle`/`Pistol` items — гра стає coherent. Reusable foundation for future bot content (rarity per bot type у Tier 4b).
 
-3. **3 → 4 → 5** — content + progression + identity (per original plan). Кожен tier розширює опції без зміни core loop.
+3. **Tier 9 — VFX/SFX** — без content expansion (Tier 3) ми scope'имо це до існуючих 2×3. Original argument "need content to design visual language for" — applies only якщо ми робимо content тіерthem параллельно. Як standalone polish — current archetypes провідно distinguish'аються через VFX language (Ballistic vs Laser).
 
-4. **9 (VFX)** — після того як content існує (бо VFX мови треба знати під що проектувати).
+4. **Tier 10 — Feel polish** — iterative playtest sprints. Бере real visuals/audio від Tier 9, реальну кохерентну гру від Tier 4a, додає balance + tuning. Це **не один sprint** а ongoing loop.
 
-5. **10 (Feel polish)** — фінальний tuning перед release. Iterative playtest loop.
+**Re-engage content tracks (Tier 3/4b/5/Wave F) коли:**
+- Polish pass converged — playtest sessions кажуть "feels great", not "функціонально"
+- Telemetry shows balanced 2×3 matrix (no archetype dominance)
+- UI track оновлений (для Wave F)
+- Decision на content scope reset — based on what we learn from polishing 2×3
 
-**Parallel tracks possible:** Tier 8 (3D art), Tier 9 (VFX), part of Tier 10 (sound design) — все це може йти паралельно з programmer-driven Tier 3/4/5 якщо є artist/sound designer. Programmer track тримає sequential.
+**Parallel tracks possible:** Tier 9 (artist + sound designer) і Tier 10 (designer balance) можуть йти паралельно з програмер track Tier 8.x → 4a. Якщо artist/sound designer відсутній — programmer-only path is 8.x → 4a → (block on art for 9 → 10).
 
 ---
 
@@ -245,6 +286,8 @@ Tier 1 complete.
 
 ## Tier 3 — Content Expansion
 
+> **Status (2026-05-01): ⏸ DEFERRED SINE DIE.** Polish-first pivot — engage коли current 2×3 archetypes feel great (Tier 8.x → 4a → 9 → 10 converged). Reasoning: adding more content before existing feels polished risks scope spread + dilutes feedback-loop signal.
+
 ### Goal
 Повний набір 4 Payload × 5 Delivery (без Fist) = 20 архетипів.
 
@@ -268,35 +311,43 @@ Tier 2 complete.
 
 ---
 
-## Tier 4 — Rarity + Slot Compatibility
+## Tier 4 — split into 4a (bot migration) + 4b (rarity + slots)
 
-### Goal
+> **Split 2026-05-01:** original Tier 4 об'єднував 3 різні теми (rarity values + slot compat + bot weapon migration). Bot migration — це **legacy cleanup** (closes Cluster B compat layer, makes loot coherent), не зв'язана з content design. Rarity + slots — content progression layer.
+>
+> **Tier 4a** (bot migration only) — у polish track, scoped above після Tier 8.x. Detailed section: [Tier 4a — Bot Weapon Migration](#tier-4a--bot-weapon-migration-split-from-tier-4).
+>
+> **Tier 4b** (rarity values + slot compat) — deferred sine die. Scope below preserved для майбутнього engagement.
+
+### Tier 4b Goal (deferred)
 Механіка rarity (5 тірів з кращими статами) + явні правила сумісності модулів замість "все з усім".
 
-### Work items (high-level)
+### Tier 4b work items (high-level, deferred)
 - [ ] A3. Rarity data model (реалізація — structure вже затверджена в Tier 0)
 - [ ] E3. Rarity Scaling System (застосування множників до stats)
 - [ ] A4. Slot structure data model
 - [ ] E2. Slot Compatibility Rules engine
 - [ ] F5. UI feedback на заборонену комбінацію
-- [ ] **B1. Bot weapon migration** — видалити hardcoded stat fields з `BotConstants`, додати `WeaponConfiguration` до `BotTypeConfig`, `BotSpawnSystem` через assembly pipeline. Per-bot rarity/delivery combinations (Scav=Common, Boss=Epic, heavy=Rotary). Balance може "попливти" — це ок, буде зафіксоване у цій же tier balance pass. Див. [status.md 2026-04-22](./status.md)
+- [ ] **G5★ Cross-stack drag bridge** (deferred з Tier 6 Wave C) — uGUI ↔ UI Toolkit drag для distinguishing module instances by rarity
 
-### Architectural questions (deferred)
+### Tier 4b architectural questions (still deferred)
 - Q4 повністю: де живе правило сумісності (в модулі / в слоті / окремий rules engine)?
 - Rarity множники: глобальна таблиця vs per-module? Конкретні числа?
 - Banned combinations matrix — конкретний список?
 
-### Exit criteria
+### Tier 4b exit criteria
 - ✅ Rarity візуально відрізняється (модулі мають tier) і впливає на stats
 - ✅ Неможливо зібрати заборонену комбінацію
 - ✅ Slot structure відображена в UI
 
-### Dependencies
-Tier 3 complete (бажано, щоб було на чому тестувати rarity).
+### Tier 4b dependencies (when re-engaged)
+Polish loop converged (Tier 8.x → 4a → 9 → 10 done). Optionally Tier 3 для testing rarity на ширшому content matrix.
 
 ---
 
 ## Tier 5 — Exotic Mods
+
+> **Status (2026-05-01): ⏸ DEFERRED SINE DIE.** Same rationale as Tier 3 — polish current 2×3 first.
 
 ### Goal
 5 Exotic Mods через event-driven hook system.
@@ -499,6 +550,98 @@ Art (real meshes + rigging) може йти паралельно з Wave A-D я�
 
 ---
 
+## Tier 8.x — Tier 8 Follow-Ups (visual coherence pass)
+
+> **Execution:** ⭐ NEXT (polish track). Formalized 2026-05-01 from Tier 8 closeout follow-ups list. Closes visible polish gap від Wave B/C symmetric pivot.
+
+### Goal
+Make 6 archetypes (Pistol/Rifle/Shotgun × Ballistic/Laser) feel coherent. Tier 8 landed pipeline + composition; Tier 8.x закриває visible gaps що залишилися (muzzle position approximate, anim paths stale, sockets placed на око).
+
+### Work items
+
+- [ ] **8x.1 Muzzle alignment for symmetric meshes.** Зараз `MuzzlePoint` — на delivery prefab (V-Q3), approximate position relative to barrel tip. З symmetric model barrel живе на payload → each barrel has different length → MuzzlePoint visual mismatch. Two paths:
+  - **(a)** Move MuzzlePoint у payload prefab; `WeaponView.MuzzlePoint` resolves dynamically post-`AttachPayload` (lookup child by name або setter from AttachPayload).
+  - **(b)** Keep on delivery; per-prefab manual alignment (existing). Acceptable якщо barrel pool small.
+  - **Recommend (a)** — proper architectural fix; lays groundwork for Tier 9 (VFX spawn at correct muzzle).
+
+- [ ] **8x.2 Reload/Equip/Unequip procedural motion.** Wave D landed Fire kick only. Other animation triggers fire silently на stale Mecanim clips. Procedural patterns:
+  - Reload — body lowers (-Y) over `ReloadTime * 0.4`, holds, raises back. Optional magazine swap visible if `Magazine` socket exposed.
+  - Equip — body rises into position from below (+Y kick) over `EquipTime`.
+  - Unequip — body lowers off-screen.
+  - Reuse `_deliveryBody` reference + similar ease-out pattern.
+
+- [ ] **8x.3 Mecanim controller stale clip cleanup.** 3 weapon prefabs carry `Weapon_Pistol_Override` / `Weapon_Rifle_Override` / `Weapon_Shotgun_Override` controllers з 5 stale clips animating non-existent paths. Either:
+  - Strip controllers (set Animator.controller = null) — clean.
+  - Or recreate clips animating new `DeliveryBody` sub-children — Mecanim parity.
+  - **Recommend strip** — procedural recoil уже covers visible feedback; cleaning removes dead asset weight.
+
+- [ ] **8x.4 Per-prefab PayloadMount/MuzzlePoint tuning.** Pistol/Shotgun PayloadMount positioned `(0, 0.03, 0.18)`/`(0, 0.03, 0.40)` на око. Manual Inspector pass — verify barrel attaches properly when equipped. (Rifle уже tuned by user manually.)
+
+### Exit criteria
+- ✅ Bullets spawn at visible barrel tip across усіх 6 archetypes
+- ✅ Reload triggers visible motion (body lowers/raises)
+- ✅ Equip/Unequip — visible body intro/outro
+- ✅ No stale animator clips floating у prefabs
+- ✅ All 6 archetypes have tuned socket positions
+
+### Dependencies
+Tier 8 complete (already done).
+
+### Estimated effort
+~4-6h programmer-side. 8x.1 — biggest piece (~1.5h). 8x.2 — ~1.5h. 8x.3 — 30min. 8x.4 — 1h Inspector work.
+
+---
+
+## Tier 4a — Bot Weapon Migration (split from Tier 4)
+
+> **Execution:** Polish track #2. Split з оригінального Tier 4 на 2026-05-01 щоб не блокувати legacy cleanup на content/balance design (Tier 4b — rarity values, slot compat — defers sine die).
+
+### Goal
+Bot weapons go through `WeaponAssemblySystem.TryAssemble` like player weapons. Closes ALL Cluster B legacy debt — після Tier 4a компат-шару немає, registry clean, loot drops coherent.
+
+### Work items
+
+- [ ] **B1.** Add `WeaponConfiguration` field to `BotConstants.BotTypeConfig`. Per bot type — explicit Payload+Delivery composition:
+  - Scav, Target* — `Ballistic + Auto` (Common rarity)
+  - PMC, Boss — TBD (could vary з future rarity work)
+- [ ] **B2.** `BotSpawnSystem` reads `BotTypeConfig.WeaponConfiguration` → calls `WeaponAssemblySystem.TryAssemble` → builds `WeaponEntityState` via assembly pipeline (parity з player flow). Removes hardcoded stat field population from `BotConstants` body.
+- [ ] **B3.** Update `LootSystem.CreateLootable` для bots:
+  - Replace `WeaponItemFactory.SpawnItem(MapWeaponPrefabToDefinition(...))` → `ItemState.CreateWeapon("Weapon", botConfig.WeaponConfiguration)`
+  - Drop `MapWeaponPrefabToDefinition` + `MapWeaponPrefabToAmmo` static methods entirely
+  - Bot loot creates Builder weapon — same as player drops/creates
+
+### Removals after B1-B3 (cleanup)
+
+- [ ] Delete `WeaponItemFactory.DefaultConfigFor` + `IsKnownWeaponDefinition` + `SpawnItem`
+- [ ] Delete `WeaponItemFactory` entirely if no other callers
+- [ ] Delete `ItemDefinition.["Rifle"]` and `["Pistol"]` registry entries
+- [ ] Delete `[Obsolete] ItemDefinition.WeaponPrefabId` field (+ obsolete pragma на other side)
+- [ ] Delete `Ammo_Pistol` / `Ammo_Pistol_AP` / `Ammo_Pistol_HP` registry entries (no payload uses Pistol-caliber ammo. If Tier 3 splits Ballistic into per-caliber payloads later, re-add then.)
+- [ ] Update `WeaponSyncSystemIntegrationTests.cs` — 3 sites що тестують legacy "Rifle"/"Pistol" compat — переписати на pure Builder pipeline (replace `WeaponItemFactory.SpawnItem("Rifle")` → `ItemState.CreateWeapon("Weapon", config)`)
+- [ ] Update `EditModeTestsUtils.cs:114, 169` + `AmmoSystemTests` — drop Ammo_Pistol references якщо registry entry deleted
+- [ ] Update `WeaponSyncSystem.BuildWeaponForItem` — remove `[Obsolete]` fallback path (legacy WeaponPrefabId resolution)
+
+### Exit criteria
+- ✅ Bot weapons go through assembly pipeline (composition + cached Stats)
+- ✅ Bot loot drops Builder weapons (`"Weapon"` ItemState з WeaponConfiguration), не legacy "Rifle"/"Pistol"
+- ✅ Zero references to `Rifle`/`Pistol` ItemDefinition entries у codebase
+- ✅ `WeaponItemFactory` deleted (or trivial остаток, single use)
+- ✅ Cluster B Legacy debt fully closed
+- ✅ All 434+ tests зелені
+
+### Dependencies
+Tier 8 complete. Cluster A retired (already done). Tier 4a — only legacy cleanup; no rarity/balance design needed.
+
+### Out of scope (now Tier 4b)
+- Per-bot rarity tier (Scav=Common, Boss=Epic) — needs `StatsByTier` filling-in, balance pass
+- Slot compatibility rules (banned combos)
+- Cross-stack drag bridge (G5★ from Tier 6 Wave C)
+
+### Estimated effort
+~6-8h programmer. B1+B2 — ~3h. B3 + cleanup — ~3h. Tests — ~2h.
+
+---
+
 ## Tier 9 — VFX / SFX Language
 
 ### Goal
@@ -532,8 +675,16 @@ Art (real meshes + rigging) може йти паралельно з Wave A-D я�
 - ✅ Кожна exotic mod має recognizable visual signature
 - ✅ Hit feedback відчувається punchy без screen-saver-level over-effect
 
-### Dependencies
-Tier 3-5 complete (need content to design visual language for). Tier 8 не блокучий, але в parallel дає synergy (mesh + VFX часто розробляються разом).
+### Dependencies (revised 2026-05-01)
+Tier 8 done (✅). Tier 8.x follow-ups + Tier 4a recommended before Tier 9 — закривають visible coherence + bot loot coherence. **Tier 3/5 NOT prerequisite anymore** — Tier 9 scope обмежено до current 2×3 archetypes (Ballistic/Laser × Pistol/Rifle/Shotgun). Original "need content to design visual language for" applied if doing both у parallel; standalone polish для existing content not blocked.
+
+**Scope-limited work items для current 2×3:**
+- X1 (events plumbing) — full
+- X2 (per-Payload VFX) — Ballistic + Laser only (Foam/Rocket — defer)
+- X3 (per-Delivery VFX) — Single/Auto/Scatter only (Rotary/Swarm — defer)
+- X4 (per-Exotic VFX) — DEFER entirely (Tier 5 deferred)
+- X5 (SFX library) — current 2×3 + general reload/charge
+- X6 (hit feedback polish) — full
 
 ### Parallel tracks
 Most of цього tier — artist + sound designer work. Programmer-side: hooks plumbing (~3-5 days).
@@ -547,6 +698,9 @@ Most of цього tier — artist + sound designer work. Programmer-side: hooks
 
 ### Природа роботи
 На відміну від попередніх tiers — це не feature delivery, а **тюнінг знаючи кожен number**. Industry стандарт для AAA shooter: 6+ months dedicated полишнгу. Для нашого scope — concentrated milestone у кінці перед public release.
+
+### Scope (revised 2026-05-01)
+Iterative tuning over current **2×3 archetypes** (6 weapons). Re-scope коли content tracks (Tier 3/5) re-engage'аться. Goal: гра feels great на існуючому content, **не на гіпотетичному 4×5×exotics matrix.**
 
 ### Work items (qualitative)
 - [ ] Fire interval per archetype — feels snappy / punchy / heavy?

@@ -2,7 +2,11 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
-> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (A/B/D/E/F shipped; G7 deferred) + **Tier 8 done (Waves A-E)**. 📋 Next: Tier 3 (content expansion — Foam/Rocket/Rotary/Swarm). See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for full execution sequence.
+> ⏸ **PAUSED 2026-05-01.** Foundation + Tier 6 + Tier 8 shipped. Active dev focus shifted до **Better Feel Gunplay** epic ([`docs/ai/gunplay/`](../gunplay/README.md)) — make existing 6 archetypes feel visceral. Weapon Builder polish track (Tier 8.x → 4a → 9 → 10) re-engages коли gunplay polish loop converges. Tier 3/5 (content expansion) лишаються deferred sine die.
+
+> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (A/B/D/E/F shipped; G7 deferred) + **Tier 8 done (Waves A-E)** + Cluster A legacy-refs retirement.
+>
+> **Strategic pivot 2026-05-01: polish-first.** Tier 3/5 (content expansion + exotic) deferred sine die; current effort = make existing 6 archetypes feel great. 📋 Next: **Tier 8.x follow-ups → Tier 4a (bot migration) → Tier 9 (VFX/SFX) → Tier 10 (feel)**. See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-revised-2026-05-01--polish-first) for full execution sequence.
 
 ---
 
@@ -35,16 +39,19 @@
 | **UX Pass 1** | Builder D&D rewrite, universal tooltip system, inventory archetype labels, ammo auto-grant, resolution scaling | ✅ complete (2026-04-27) |
 | **6** Loot / Inventory integration | Waves A/B/D/E/F done (modules drop у containers); G7 deferred sine die | ✅ done |
 | **8** 3D Modular Visualization | Modular weapon meshes (runtime composition, attachment sockets); Waves A-E done з symmetric pivot. Wave F (icons) deferred — blocked on UI prereq | ✅ done (Wave F → future track) |
-| **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏳ planned |
-| **4** Rarity + Slots | Per-tier stat values, banned combos, bot weapon migration | ⏳ planned |
-| **5** Exotic Mods | 5 Exotic mods via hook system | ⏳ planned |
-| **9** VFX / SFX Language | Per-payload/delivery/exotic visual + audio language, hit feedback polish | ⏳ planned |
-| **10** Weapon Feel Polish | Iterative tuning loop — fire interval, recoil, charge timing, animation polish, balance | ⏳ planned |
+| **8.x** Tier 8 follow-ups | Muzzle alignment, reload/equip motion, Mecanim cleanup, socket tuning | ⏳ NEXT (polish track) |
+| **4a** Bot weapon migration | Bot weapons through assembly pipeline; retire Cluster B compat | ⏳ planned (polish track) |
+| **9** VFX / SFX Language | Per-payload/delivery visual + audio language; scope-limited to current 2×3 | ⏳ planned (polish track) |
+| **10** Weapon Feel Polish | Iterative tuning loop on existing 6 archetypes | ⏳ planned (polish track) |
+| **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏸ deferred sine die |
+| **4b** Rarity + Slots | Per-tier stat values, banned combos | ⏸ deferred sine die |
+| **5** Exotic Mods | 5 Exotic mods via hook system | ⏸ deferred sine die |
+| **8 Wave F** | Backpack composite icons | ⏸ deferred (UI prereq) |
 | ~~**7**~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
 
-**Tier numbers = stable IDs.** Execution order ≠ tier number order — see [plan/roadmap.md](./plan/roadmap.md#execution-sequence-поточний-план-виконання) for rationale. Currently: 6 → 8 → 3 → 4 → 5 → 9 → 10.
+**Tier numbers = stable IDs.** Execution order ≠ tier number order — see [plan/roadmap.md](./plan/roadmap.md#execution-sequence-revised-2026-05-01--polish-first) for rationale. Currently (revised 2026-05-01): **8.x → 4a → 9 → 10**, with 3/4b/5 deferred sine die.
 
-**Test coverage:** ~120 зелених тестів (90 з foundation + ~30 з UX Pass 1: WeaponDisplayName, Tooltip builders, presenter extensions).
+**Test coverage:** **434 зелених тестів** (foundation + UX Pass 1 + Tier 6 G2 loot + Tier 8 Wave B propagation).
 
 ### Що працює у грі прямо зараз
 
@@ -167,7 +174,50 @@ Projectiles spawned
 
 ---
 
-## Що ще треба зробити (in execution order)
+## Що ще треба зробити (revised execution order 2026-05-01)
+
+> **Strategic pivot 2026-05-01:** polish-first execution. Make existing 6 archetypes feel great перед content expansion. Tier 3/5 (нові payloads/exotic) deferred sine die — re-engage коли polish converges. Detailed rationale: [plan/status.md#2026-05-01--strategic-pivot](./plan/status.md).
+
+### NEXT: Tier 8.x — Tier 8 follow-ups (visual coherence)
+- ⏳ **8x.1 Muzzle alignment for symmetric meshes** — recommend move MuzzlePoint у payload prefab (resolves dynamically post-`AttachPayload`)
+- ⏳ **8x.2 Reload/Equip/Unequip procedural motion** — extend Wave D pattern (positional ease)
+- ⏳ **8x.3 Mecanim controller stale clip cleanup** — recommend strip controllers; procedural recoil уже covers feedback
+- ⏳ **8x.4 Per-prefab PayloadMount/MuzzlePoint tuning** — manual Inspector pass on Pistol/Shotgun (Rifle уже tuned)
+
+Detailed: [roadmap.md Tier 8.x](./plan/roadmap.md#tier-8x--tier-8-follow-ups-visual-coherence-pass).
+
+### Tier 4a — Bot weapon migration (split from Tier 4, polish track)
+- ⏳ Move bot weapons through `WeaponAssemblySystem.TryAssemble`
+- ⏳ Per-bot `WeaponConfiguration` on `BotTypeConfig`
+- ⏳ Retire ALL Cluster B compat: `WeaponItemFactory.DefaultConfigFor`, `LootSystem.MapWeaponPrefab*`, `["Rifle"]`/`["Pistol"]` registry entries, `[Obsolete] WeaponPrefabId` field, `Ammo_Pistol*` registry entries
+- ⏳ Update integration tests на Builder pipeline directly
+
+Detailed: [roadmap.md Tier 4a](./plan/roadmap.md#tier-4a--bot-weapon-migration-split-from-tier-4).
+
+### Tier 9: VFX / SFX Language (scope-limited to current 2×3)
+- Per-Payload VFX: Ballistic (muzzle/tracer/spark), Laser (charge glow/beam/burn) — Foam/Rocket defer
+- Per-Delivery feel: Single emphatic / Auto cadence / Scatter cone — Rotary/Swarm defer
+- SFX library: fire/charge/reload variants per archetype
+- Hit feedback polish (screen shake, hit pause, damage number animation)
+- Per-Exotic VFX — defer (Tier 5 deferred)
+
+### Tier 10: Weapon Feel Polish (iterative loop)
+- Recoil curves per archetype, charge timing, reload pace
+- Damage curves vs armor balance
+- Telemetry-driven playtest sprints — no archetype dominance / dead-on-arrival
+- Scope: current 2×3 (re-scope коли content tracks engage)
+
+### ⏸ DEFERRED SINE DIE
+
+**Tier 3 — Content expansion** (Foam/Rocket payloads + Rotary/Swarm deliveries) — 4×5=20 archetypes. Re-engage коли polish loop converges (Tier 8.x → 4a → 9 → 10).
+
+**Tier 4b — Rarity values + Slot compatibility + banned combos.** Includes cross-stack drag bridge (G5★ from Tier 6 Wave C). Re-engage with content tracks.
+
+**Tier 5 — Exotic Mods** (Multi-Shot, Ricochet, Split, Ammo Return, Boomerang). Hook system + 5 mods. Re-engage with content tracks.
+
+**Tier 8 Wave F — Backpack composite icons.** Blocked on UI prereq (uGUI inventory не підтримує composite). Re-engage коли inventory rendering layer оновлений.
+
+**Tier 6 G7 — Initial loadout polish.** DevCheats + loot economy cover testing. Re-engage у broader onboarding pass.
 
 ### Tier 8: 3D Modular Visualization (active 2026-04-30)
 - ✅ **Wave A** — pipeline refactor: SO-driven prefab refs (DeliveryCore.WeaponPrefab, PayloadCore.AttachmentPrefab)
@@ -191,37 +241,10 @@ Projectiles spawned
 - ✅ Wave F — loot economy (RandomLootBox + new ModuleCache ContainerType; modules drop у raid containers)
 - ⏸ Wave G (G7 initial loadout) — **deferred sine die** (DevCheats + loot cover playtest needs)
 
-### Content (Tier 3)
-- Payload: **Foam** (status effects: slow + stick), **Rocket** (AoE explosion, ExplosionRadius)
-- Delivery: **Rotary** (SpinningUp phase + state machine extension), **Swarm** (VolleyActive phase, serial burst)
-- Full 4×5 матриця = 20 archetypes
-
-### Systemic (Tier 4)
-- Rarity: fill `StatsByTier` для Uncommon → Legendary, UI dropdown для rarity selection, balance pass
-- Slot compatibility: banned combos matrix, UI feedback
-- Bot weapons: мігрувати BotSpawnSystem на assembly pipeline
-- Rarity visual tint на cards + inventory items
-
-### Feature (Tier 5)
-- Exotic Mods × 5, hook system (OnFire / OnHit / OnKill / OnProjectileUpdate)
-
-### Tier 9: VFX / SFX Language
-- Per-Payload VFX (Ballistic muzzle+tracer+spark, Laser beam+glow+burn, Rocket missile+AoE, Foam splat+slow zone)
-- Per-Delivery VFX (Rotary spinup, Swarm volley flash sequence, Scatter cone)
-- Per-Exotic VFX (Ricochet sparks, Split fork, Boomerang trail)
-- SFX library (charge sound, fire variants, reload variations)
-- Hit feedback polish (screen shake, hit pause, damage numbers)
-
-### Tier 10: Weapon Feel Polish
-- Iterative playtest tuning: fire interval, recoil, charge timing, reload pace
-- Animation polish, sound design integration
-- Damage curves vs armor balance pass
-- Comprehensive playtest sweep (no archetype dominance / dead-on-arrival)
-
 ### Відкладено з минулого
 - `.cursor/rules/weapon-builder*.mdc` counterpart (per CLAUDE.md §7) — не зроблено
-- Update `docs/ai/weapons.md` — зараз застаріла, описує pre-migration Rifle/Shotgun/Pistol
-- Weapon view prefabs (Weapon_Shotgun було видалено — нового mesh для Scatter formfactor немає, fallback на Weapon_Rifle) — буде закрите Tier 8
+- ~~Update `docs/ai/weapons.md`~~ — done 2026-05-01 (full sync; added 3D Visualization section + key file refs)
+- ~~Weapon view prefabs (Shotgun fallback)~~ — закрито Tier 8 Wave C (Scatter має власний symmetric body)
 
 ---
 

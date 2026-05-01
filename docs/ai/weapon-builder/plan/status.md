@@ -1,6 +1,10 @@
 # Weapon Builder — Status
 
-> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F shipped; G7 deferred sine die) + **Tier 8 done (Waves A-E; Wave F deferred — UI prereq)**. 📋 Next: Tier 3 (content expansion — Foam/Rocket/Rotary/Swarm). Then Tier 4 → 5 → 9 → 10. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
+> ⏸ **PAUSED 2026-05-01.** Foundation + Tier 6 + Tier 8 done; Cluster A legacy retirement done. Dev focus shifted до **Better Feel Gunplay** epic ([`../../gunplay/`](../../gunplay/README.md)). Re-engage цього roadmap (Tier 8.x → 4a → 9 → 10) коли gunplay polish converges. See [decisions log](#2026-05-01--paused-pivot-to-gunplay-epic) for full pause rationale.
+
+> **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F; G7 deferred) + **Tier 8 done** (Waves A-E; F deferred — UI prereq) + **Cluster A retired** (legacy `Rifle`/`Pistol`/`Ammo_Pistol*` player-facing references replaced з Builder content).
+>
+> **Strategic pivot 2026-05-01:** content expansion (Tier 3, 5) deferred sine die. Polish-first execution: make current 6 archetypes feel great. 📋 Next track: **Tier 8.x follow-ups → Tier 4a (bot weapon migration) → Tier 9 (VFX/SFX, scoped 2×3) → Tier 10 (feel)**. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
 
 ---
 
@@ -154,6 +158,85 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 ## Decisions log
 
 Фіксуємо прийняті рішення з контекстом — щоб через місяць не переобговорювати те саме.
+
+### 2026-05-01 — Paused, pivot to Gunplay epic
+
+**Контекст:** після того як ми засіли planning Tier 8.x follow-ups + Tier 4a (bot migration) + Tier 9 (VFX/SFX) у polish track, став очевидним більший pivot. Goal "make existing 6 archetypes feel great" — це не Weapon Builder polish, це **gunplay polish overall**. Recoil, hit feedback, blood, ragdoll, decals, camera shake — все це cross-cutting concerns живуть на рівні гри, не feature-specific.
+
+**Decision:** **Pause Weapon Builder roadmap.** Створено окремий epic [Better Feel Gunplay](../../gunplay/README.md) під який ми складаємо comprehensive list of polish items (categorized by impact tier). Weapon Builder специфічні follow-ups (Tier 8.x muzzle alignment, Tier 4a bot migration) waiting у roadmap — re-engage'аться у природний момент гри (e.g., bot migration може стати necessary якщо gunplay potlight reveals coherence issues з legacy bot loot).
+
+**User quote:** "взагалі всі пункти офігенні! Давай тоді зробимо паузу в роботі з weapon builder і почнемо роботу над іншим epic - better feel gunplay."
+
+**What's preserved:**
+- Roadmap up to date — usable resumption point
+- All Cluster A retirements landed (legacy player-facing weapon refs gone)
+- Polish track sequence (Tier 8.x → 4a → 9 → 10) documented для коли re-engage
+- Tier 3/4b/5 + Wave F still deferred sine die
+
+**Re-engage criteria:** Gunplay epic phase A-B done + visible "feel great" landing на existing 2×3 archetypes. Then revisit чи окремі Weapon Builder polish items уже covered by gunplay work, чи треба окремо.
+
+### 2026-05-01 — Strategic pivot: polish-first, content tracks deferred
+
+**Контекст:** Tier 6 + Tier 8 closed core "raid → loot → build" loop + visible 2-module composition. Question came up: continue з Tier 3 (content expansion — Foam/Rocket/Rotary/Swarm) or shift focus до polish on existing 2×3 archetypes? User decided **polish-first.**
+
+**User quote:** "tier 3 взагалі хочеться десь сильно потім робити, коли буде вже круто відчуватись те що є."
+
+**New execution sequence:**
+
+```
+🎯 POLISH TRACK (next, in order):
+  1. Tier 8.x follow-ups (formalized) — visual coherence after Wave B/C symmetric pivot
+  2. Tier 4a (split) — bot weapon migration ONLY → closes Cluster B legacy debt
+  3. Tier 9 — VFX/SFX language, scoped to current 2×3 archetypes
+  4. Tier 10 — Weapon Feel iterative tuning loop
+
+⏸ DEFERRED SINE DIE:
+  • Tier 3 — content expansion
+  • Tier 5 — exotic mods
+  • Tier 4b — rarity values + slot compat (split з оригінального Tier 4)
+  • Tier 8 Wave F — backpack composite icons (UI prereq)
+```
+
+**Tier 4 split rationale.** Original Tier 4 mixed 3 теми: rarity values + slot compat + bot weapon migration. Bot migration — pure legacy cleanup (independent of content design). Splitting allows shipping cleanup на polish track without committing to content/balance design (rarity values).
+
+**Tier 9 scope-limited.** Original "need content to design VFX language for" applied if Tier 3 ran у parallel. Standalone VFX polish для existing 2 payloads × 3 deliveries ≠ blocked.
+
+**Re-engage content tracks (3, 5, 4b, Wave F) коли:**
+- Polish loop converged — playtest sessions кажуть "feels great", not "функціонально"
+- Telemetry shows balanced 2×3 matrix
+- UI track оновлений (для Wave F)
+- Decision на content scope reset
+
+**Roadmap updates landed:** [overview tier table](./roadmap.md#огляд-tiers) reordered, [execution sequence](./roadmap.md#execution-sequence-revised-2026-05-01--polish-first) rewritten, two new tier blocks ([Tier 8.x](./roadmap.md#tier-8x--tier-8-follow-ups-visual-coherence-pass) + [Tier 4a](./roadmap.md#tier-4a--bot-weapon-migration-split-from-tier-4)) authored, Tier 4 split into 4a/4b, Tier 3/5 explicit defer notices added.
+
+### 2026-05-01 — Cluster A: legacy player-facing weapon refs retired
+
+**Goal:** remove all references що spawn'ять legacy `Rifle`/`Pistol` items або `Ammo_Pistol`-family ammo from player-facing flows (starting loadout, dev cheats, ground items, loot tables, crafting). Compat layer лишається для bot drops + tests until Tier 4a (bot migration).
+
+**Changes (1 commit):**
+- `Systems/PlayerSpawnSystem.GiveStartingLoadout` — `WeaponItemFactory.SpawnItem("Rifle")` → `ItemState.CreateWeapon("Weapon", BallisticRound+Auto config)`. Starting weapon тепер native Builder weapon.
+- `Session/RaidSession.SpawnTestGroundItems` — `("Rifle", pos, 1)` → Builder weapon ground item via `GroundItemState.CreateWeapon`. Confirms ground/inventory round-trip with `WeaponConfiguration`.
+- `Editor/DevCheatsWindow.HideoutGiftItems` — replaced `("Rifle", 1) + ("Pistol", 1) + ("Ammo_Pistol", 36) + ("Ammo_Pistol_AP", 18)` з 5 modules (BallisticRound/LaserCharge/SingleAction/Auto/Scatter — 1× each) + retired Pistol-caliber ammo.
+- `Constants/ItemGroups.WeaponsDrops` — now reuses `ContainerConstants.WeaponModuleDrops` (5 modules); `MixedDrops` interleaves modules + drops Ammo_Pistol; `AmmoDrops` = Rifle-only.
+- `Constants/CraftConstants` — `ImprovisedRifle` recipe replaced з 5 module recipes (`BallisticRoundModule`, `LaserChargeModule`, `SingleActionModule`, `AutoModule`, `ScatterModule`) under `CraftCategory.Weapons`. `PistolAmmo` + `PistolAPAmmo` recipes retired.
+- `Constants/ContainerConstants.AmmoBox` + `RandomLootBox` — `Ammo_Pistol` drop entries removed.
+
+**What survives до Tier 4a:**
+- `WeaponItemFactory.DefaultConfigFor` + `IsKnownWeaponDefinition` + `SpawnItem` — used by bot loot path
+- `LootSystem.MapWeaponPrefabToDefinition/Ammo` — bot loot fallback
+- `ItemDefinition.["Rifle"]` + `["Pistol"]` registry entries — bot loot creates these
+- `Ammo_Pistol`/`_AP`/`_HP` registry entries — bot loot fallback + EditMode tests
+- `[Obsolete] ItemDefinition.WeaponPrefabId` field — bot weapon prefab resolution
+
+All marked у коді як Cluster B targets (Tier 4a) — clear ownership.
+
+**Tests:** 434/434 зелені (no test changes needed — integration tests still validate compat layer).
+
+**Player-facing outcome:**
+- Starting weapon = native Builder weapon ("Ballistic Rifle" archetype label, configurable у Builder)
+- Hideout stash gift bag = 5 modules (player can build any current archetype з нуля)
+- Loot containers cleaned (no orphan Ammo_Pistol drops)
+- Crafting offers module recipes — extends Tier 6 module-as-items loop
 
 ### 2026-05-01 — Tier 6 Wave F (G2) shipped + G7 deferred sine die
 

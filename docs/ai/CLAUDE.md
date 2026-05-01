@@ -124,6 +124,8 @@ Read extra docs depending on the task:
 - Spawn/despawn, entity binding, callbacks, presenter wiring -> `docs/ai/entity-lifecycle.md`
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`
 - Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
+- Weapon Builder (composition, modules, builder UI) — paused -> `docs/ai/weapon-builder/`
+- **Better Feel Gunplay (active polish epic — hit feedback, camera shake, blood, ragdoll, decals, recoil polish)** -> `docs/ai/gunplay/`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
 - Armor system, penetration, durability, bleeding, feedback -> `docs/ai/battle-design-status.md`
