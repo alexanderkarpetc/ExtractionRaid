@@ -49,6 +49,10 @@ namespace View
                             }
                         }
                         break;
+                    case RaidEventType.EntityHit:
+                        if (_views.TryGetValue(e.Id, out var hitView))
+                            ApplyHitFlash(hitView, e);
+                        break;
                 }
             }
 
@@ -156,6 +160,31 @@ namespace View
                     Object.Destroy(kvp.Value.gameObject);
             }
             _views.Clear();
+        }
+
+        // Gunplay A.2 — pick flash color per hit kind, route to BotView.
+        static void ApplyHitFlash(BotView view, RaidEvent e)
+        {
+            var cfg = DevCheats.Config?.HitFlash;
+            if (cfg == null || !cfg.Enabled) return;
+
+            // RaidEventBuffer.EntityHit packs:
+            //   CurrentHp = isHeadshot ? 1 : 0
+            //   MaxHp     = isKill     ? 1 : 0
+            //   KillerId.Value = isRicochet ? 1 : 0
+            bool isHeadshot = e.CurrentHp > 0.5f;
+            bool isKill     = e.MaxHp     > 0.5f;
+            bool isRicochet = e.KillerId.Value == 1;
+
+            // Priority: Ricochet > Kill > Headshot > Normal — ricochet ловиться першим
+            // бо there's no damage taken (different kind of feedback).
+            Color color;
+            if      (isRicochet) color = cfg.RicochetColor;
+            else if (isKill)     color = cfg.KillColor;
+            else if (isHeadshot) color = cfg.HeadshotColor;
+            else                 color = cfg.NormalColor;
+
+            view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration, cfg.EmissionBoost);
         }
     }
 }

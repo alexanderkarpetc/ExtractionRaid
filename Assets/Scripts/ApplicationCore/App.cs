@@ -47,6 +47,7 @@ namespace ApplicationCore
         readonly BotPresenter _botPresenter;
         readonly GrenadePresenter _grenadePresenter;
         readonly CorpsePresenter _corpsePresenter;
+        readonly HitPausePresenter _hitPausePresenter;
 
         App()
         {
@@ -62,6 +63,7 @@ namespace ApplicationCore
             _botPresenter = new BotPresenter();
             _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
             _corpsePresenter = new CorpsePresenter();
+            _hitPausePresenter = new HitPausePresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -176,6 +178,7 @@ namespace ApplicationCore
             _botPresenter.Dispose();
             _grenadePresenter.Dispose();
             _corpsePresenter.Dispose();
+            _hitPausePresenter.Dispose();
         }
 
         public void EndRaid()
@@ -208,6 +211,7 @@ namespace ApplicationCore
             _grenadePresenter.LateTick(RaidSession);
             _groundItemPresenter.LateTick(RaidSession);
             _corpsePresenter.LateTick(RaidSession);
+            _hitPausePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 

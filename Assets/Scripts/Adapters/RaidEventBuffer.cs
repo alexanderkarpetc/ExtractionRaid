@@ -42,6 +42,7 @@ namespace Adapters
         WeaponChargeStarted,
         WeaponChargeCompleted,
         WeaponChargeCancelled,
+        EntityHit,
     }
 
     public struct RaidEvent
@@ -365,6 +366,30 @@ namespace Adapters
         public void WeaponChargeCancelled(string prefabId)
         {
             _events.Add(new RaidEvent { Type = RaidEventType.WeaponChargeCancelled, StringPayload = prefabId });
+        }
+
+        public void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)
+        {
+            // Packing convention для EntityHit:
+            //   Id           = targetEid
+            //   Position     = hitPoint
+            //   Direction    = projectileDirection
+            //   Damage       = absorptionRatio (0..1)
+            //   CurrentHp    = isHeadshot ? 1 : 0
+            //   MaxHp        = isKill ? 1 : 0
+            //   KillerId.Value = isRicochet ? 1 : 0
+            _events.Add(new RaidEvent
+            {
+                Type      = RaidEventType.EntityHit,
+                Id        = targetEid,
+                Position  = hitPoint,
+                Direction = projectileDirection,
+                Damage    = absorptionRatio,
+                CurrentHp = isHeadshot ? 1f : 0f,
+                MaxHp     = isKill     ? 1f : 0f,
+                KillerId  = new EId(isRicochet ? 1 : 0),
+            });
         }
 
         public void Clear()

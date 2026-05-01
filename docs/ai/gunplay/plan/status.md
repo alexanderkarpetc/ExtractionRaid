@@ -6,14 +6,14 @@
 
 ## Current phase
 
-**🎯 Phase A — NEXT.** Foundation impact feel — first item recommended `A.1 Hit Pause` (highest payoff per effort).
+**🎯 Phase A — IN PROGRESS.** Foundation impact feel.
 
 Track-wise:
-- ⏳ A.1 Hit Pause / Hitstop
-- ⏳ A.2 Hit Flash on Enemy
+- ✅ **A.1 Hit Pause / Hitstop** (2026-05-01)
+- ✅ **A.2 Hit Flash on Enemy** (2026-05-01)
 - ⏳ A.3 Camera Shake System
 - ⏳ A.4 Blood Spray on Character Impact
-- ⏳ A.5 Muzzle Flash + Real-time Light
+- ✅ **A.5 Muzzle Flash + Real-time Light** (2026-05-01)
 - ⏳ A.6 Casing Ejection
 - ⏳ A.7 Material-Specific Impact VFX
 - ⏳ A.8 Bullet Hole Decals
@@ -51,6 +51,41 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 
 ## Decisions log
 
+### 2026-05-01 — Phase A bundle 1 shipped: A.1 + A.2 + A.5
+
+**Bundled commit:** highest-impact code-side polish landed first для immediate "feels different" baseline. Manual playtest pending (ShootingScene available).
+
+**A.1 — Hit Pause / Hitstop (`View/HitPausePresenter.cs`):**
+- Stateful presenter registered у `App.LateTick` після existing presenters
+- Listens до `RaidEventType.HitConfirmed`, schedules pause end via `Time.unscaledTime`
+- Sets `Time.timeScale = cfg.PausedTimeScale` while active, restores to `1f` on expire
+- Per-event durations (DevCheats): Normal 30ms / Headshot 60ms / Kill 80ms / Ricochet 20ms
+- `Dispose()` releases timeScale on shutdown — prevents stuck slow time on scene swap
+
+**A.2 — Hit Flash (`View/BotView.TriggerHitFlash` + `BotPresenter.ApplyHitFlash`):**
+- New `IRaidEvents.EntityHit(targetEid, hitPoint, projectileDirection, isHeadshot, isRicochet, isKill, absorptionRatio)` event
+- DamageSystem emits EntityHit at all hit sites (regardless of projectile owner) — separate from HitConfirmed (player crosshair)
+- BotView caches `Renderer[]` + `MaterialPropertyBlock`; tints `_BaseColor` + `_Color` toward flash color, ease-out-quad decay over `cfg.Duration`
+- Color priority: Ricochet (blue) > Kill (red) > Headshot (gold) > Normal (white)
+- Uses `Time.unscaledDeltaTime` so flash decay continues during hit pause
+
+**A.5 — Muzzle Light Pulse (`View/WeaponView`):**
+- New `[SerializeField] Light _muzzleLight` — auto-creates Point Light child of MuzzlePoint at runtime if prefab didn't wire one (zero-config visible pulse)
+- DevCheats config drives intensity (12 default), color (warm orange), range (3m), duration (60ms)
+- Ease-out-quad decay у same `Update()` as recoil kick
+- Uses `Time.unscaledDeltaTime` for crisp pulse during hit pause
+
+**Cross-cutting:**
+- 3 new DevCheats sections: `DevCheatsHitPauseSection`, `DevCheatsHitFlashSection`, `DevCheatsMuzzleVfxSection` (per CLAUDE.md §6)
+- Wired у `DevCheatsConfig`, `DevCheatsWindow` (DrawSection + CreateSectionIfMissing)
+- 3 SO assets created у `Resources/Configs/DevCheats/` via Window menu
+- `RaidEvent` packs EntityHit fields without struct extension (Id=targetEid, Position=hitPoint, Direction=projDir, Damage=absorption, CurrentHp/MaxHp/KillerId.Value=flags)
+- `FakeRaidEvents` extended з `EntityHits` list для test fixture
+
+**Test status:** 434/434 EditMode tests pass (no test changes required — view-only polish, no logic regression).
+
+**Manual playtest pending:** ShootingScene → перевірити hit pause "feels weighty", flash visible on Row 1-3 immortal targets з different damage tiers, Row 8 weak bots для kill flash, Row 9 armor for ricochet feedback. Tune DevCheats values if перевідчуття "too soft" / "too aggressive".
+
 ### 2026-05-01 — Epic spawned, polish-first pivot from Weapon Builder
 
 **Контекст:** Weapon Builder Tier 6 + Tier 8 closed core "raid → loot → build" loop + visible 2-module composition. Discussion про next steps revealed: real "feels great" goal — це cross-cutting gunplay polish (hit pause, camera shake, blood, decals, ragdoll, recoil polish, headshot juice, etc.) — не Weapon Builder feature work.
@@ -78,17 +113,17 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 
 ## Next actions
 
-1. ⭐ **Start Phase A.1 (Hit Pause / Hitstop).** Smallest first item — solo `HitPauseSystem` static + DevCheats config + view-layer subscriber. Fast win → builds momentum для решти phase A.
+1. ⏳ **Manual playtest A.1 + A.2 + A.5 у ShootingScene** — verify "feels different" baseline; tune DevCheats values if needed
+2. After playtest signal: continue Phase A:
+   - A.3 Camera Shake System (separate commit, ~2-3h)
+   - A.4 Blood Spray on Character Impact (~3-4h with decal projection)
+   - A.6 Casing Ejection (~3-4h with pool)
+   - A.7 Material-Specific Impact VFX (~4-5h, includes scene tagging pass)
+   - A.8 Bullet Hole Decals (~3-4h)
+   - A.9 Ragdoll Death (~5-7h, biggest single item, own commit)
+   - A.10 Blood Pool Decal (~2-3h)
 
-2. After A.1 ships:
-   - Quick playtest — "feels different?"
-   - If yes → continue з A.2 (Hit Flash). If feels minimal → tune duration parameters.
-
-3. Cluster small items для one commit:
-   - A.1 + A.2 + A.5 — pure code-side, ~3-4h, immediate visible feel difference
-   - A.3 — bigger (camera system), separate commit
-   - A.7 — separate (material tagging pass + scene work)
-   - A.9 — biggest (ragdoll rigging) — own commit + manual editor work
+3. Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
 
 ---
 

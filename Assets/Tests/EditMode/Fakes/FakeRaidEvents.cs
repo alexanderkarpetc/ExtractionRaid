@@ -165,6 +165,16 @@ namespace Tests.EditMode.Fakes
             HitConfirmedIsRicochet = isRicochet;
         }
 
+        public readonly System.Collections.Generic.List<(EId targetEid, Vector3 hitPoint, Vector3 dir,
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)> EntityHits = new();
+
+        public void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)
+        {
+            EntityHits.Add((targetEid, hitPoint, projectileDirection,
+                isHeadshot, isRicochet, isKill, absorptionRatio));
+        }
+
         public bool StatusEffectAppliedCalled;
         public string StatusEffectAppliedType;
         public void StatusEffectApplied(EId entityId, string effectType)

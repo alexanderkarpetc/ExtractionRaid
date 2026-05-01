@@ -155,6 +155,9 @@ namespace Editor
             DrawSection("Damage Numbers", _config.DamageNumbers);
             DrawSection("Armor", _config.Armor);
             DrawSection("Status Effects", _config.StatusEffects);
+            DrawSection("Hit Pause", _config.HitPause);
+            DrawSection("Hit Flash", _config.HitFlash);
+            DrawSection("Muzzle VFX", _config.MuzzleVfx);
 
             EditorGUILayout.Space(8);
 
@@ -476,6 +479,9 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsDamageNumberSection>(so, "_damageNumbers", folder, "DamageNumbers");
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
             CreateSectionIfMissing<DevCheatsArmorSection>(so, "_armor", folder, "Armor");
+            CreateSectionIfMissing<DevCheatsHitPauseSection>(so, "_hitPause", folder, "HitPause");
+            CreateSectionIfMissing<DevCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
+            CreateSectionIfMissing<DevCheatsMuzzleVfxSection>(so, "_muzzleVfx", folder, "MuzzleVfx");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

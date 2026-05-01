@@ -38,6 +38,14 @@ namespace Adapters
 
         void HitConfirmed(bool isKill, bool isHeadshot = false,
             float absorptionRatio = 0f, bool isRicochet = false);
+
+        /// <summary>
+        /// Per-target hit event for view-layer feedback (hit flash, future blood spray, decal projection).
+        /// Emitted for all hits regardless of projectile owner (HitConfirmed, by contrast,
+        /// fires only for player-owned shots and drives crosshair markers).
+        /// </summary>
+        void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio);
         void StatusEffectApplied(EId entityId, string effectType);
         void StatusEffectRemoved(EId entityId, string effectType);
 

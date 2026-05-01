@@ -1,3 +1,4 @@
+using Dev;
 using UnityEngine;
 
 namespace View
@@ -12,6 +13,16 @@ namespace View
         // Ballistic, emitter cone for Laser). Null on prefabs that don't yet expose one
         // → AttachPayload silently no-ops. Wired explicitly in Inspector per V-Q6.
         [SerializeField] Transform _payloadMount;
+
+        // Gunplay A.5 — optional Point Light child of weapon prefab. If present, pulses
+        // bright at PlayMuzzleFlash and decays to 0 over MuzzleVfx.LightDuration. Null = no pulse.
+        // Wired via Inspector — typical setup: child GO с Light component on muzzle.
+        [SerializeField] Light _muzzleLight;
+
+        // Light pulse state — driven by DevCheats.Config.MuzzleVfx.
+        float _muzzleLightElapsedUnscaled;
+        float _muzzleLightDuration;
+        float _muzzleLightPeak;
 
         // Tier 8 Wave D: delivery body that receives procedural recoil kick on Fire.
         // Mecanim clips authored against the legacy SM_Wep_AssaultRifle_01 transform
@@ -57,16 +68,46 @@ namespace View
 
         public void PlayMuzzleFlash()
         {
-            if (_muzzleFlashPrefab == null || _muzzlePoint == null) return;
-
-            if (_muzzleFlashInstance == null)
+            if (_muzzleFlashPrefab != null && _muzzlePoint != null)
             {
-                _muzzleFlashInstance = Instantiate(_muzzleFlashPrefab, _muzzlePoint);
-                _muzzleFlashInstance.transform.localPosition = Vector3.zero;
-                _muzzleFlashInstance.transform.localRotation = Quaternion.identity;
+                if (_muzzleFlashInstance == null)
+                {
+                    _muzzleFlashInstance = Instantiate(_muzzleFlashPrefab, _muzzlePoint);
+                    _muzzleFlashInstance.transform.localPosition = Vector3.zero;
+                    _muzzleFlashInstance.transform.localRotation = Quaternion.identity;
+                }
+                _muzzleFlashInstance.Play();
             }
 
-            _muzzleFlashInstance.Play();
+            // Gunplay A.5 — light pulse layer on muzzle moment. Per-prefab _muzzleLight
+            // optional; DevCheats config drives intensity/duration/range/color.
+            TriggerMuzzleLightPulse();
+        }
+
+        void TriggerMuzzleLightPulse()
+        {
+            var cfg = DevCheats.Config?.MuzzleVfx;
+            if (cfg == null || !cfg.LightEnabled || cfg.LightDuration <= 0f) return;
+
+            // Auto-create a Point Light child of MuzzlePoint if prefab didn't wire one —
+            // zero-config visible pulse за умовчанням; per-prefab override через Inspector.
+            if (_muzzleLight == null && _muzzlePoint != null)
+            {
+                var lightGO = new GameObject("MuzzleLight (auto)");
+                lightGO.transform.SetParent(_muzzlePoint, false);
+                _muzzleLight = lightGO.AddComponent<Light>();
+                _muzzleLight.type = LightType.Point;
+                _muzzleLight.shadows = LightShadows.None;
+            }
+            if (_muzzleLight == null) return;
+
+            _muzzleLight.color     = cfg.LightColor;
+            _muzzleLight.range     = cfg.LightRange;
+            _muzzleLight.intensity = cfg.LightIntensity;
+            _muzzleLight.enabled   = true;
+            _muzzleLightPeak              = cfg.LightIntensity;
+            _muzzleLightDuration          = cfg.LightDuration;
+            _muzzleLightElapsedUnscaled   = 0f;
         }
 
         // ── Animation triggers ─────────────────────────────────
@@ -101,6 +142,12 @@ namespace View
 
         void Update()
         {
+            UpdateRecoilKick();
+            UpdateMuzzleLightPulse();
+        }
+
+        void UpdateRecoilKick()
+        {
             if (!_bodyRestCached || _kickDuration <= 0f) return;
 
             _kickElapsed += Time.deltaTime;
@@ -114,6 +161,25 @@ namespace View
             float t = _kickElapsed / _kickDuration;
             float eased = (1f - t) * (1f - t); // ease-out quad → snap back
             _deliveryBody.localPosition = _bodyRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance * eased);
+        }
+
+        void UpdateMuzzleLightPulse()
+        {
+            if (_muzzleLight == null || _muzzleLightDuration <= 0f) return;
+
+            // Unscaled — light pulse must remain perceptible during hit pause.
+            _muzzleLightElapsedUnscaled += Time.unscaledDeltaTime;
+            if (_muzzleLightElapsedUnscaled >= _muzzleLightDuration)
+            {
+                _muzzleLight.intensity = 0f;
+                _muzzleLight.enabled = false;
+                _muzzleLightDuration = 0f;
+                return;
+            }
+
+            float t = _muzzleLightElapsedUnscaled / _muzzleLightDuration;
+            float eased = (1f - t) * (1f - t); // ease-out quad
+            _muzzleLight.intensity = _muzzleLightPeak * eased;
         }
 
         /// <summary>

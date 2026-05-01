@@ -60,10 +60,20 @@ namespace Systems
                         if (helmet.IsBroken)
                             context.Events.ArmorBroken(hit.TargetId, isHelmet: true);
 
-                        context.Events.ProjectileRicochet(hit.ProjectileId, hit.HitPoint,
-                            projectile != null ? projectile.Direction : Vector3.forward);
+                        var ricochetDir = projectile != null ? projectile.Direction : Vector3.forward;
+                        context.Events.ProjectileRicochet(hit.ProjectileId, hit.HitPoint, ricochetDir);
 
-                        // Ricochet feedback (player shots only)
+                        // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
+                        context.Events.EntityHit(
+                            targetEid:           hit.TargetId,
+                            hitPoint:            hit.HitPoint,
+                            projectileDirection: ricochetDir,
+                            isHeadshot:          true,
+                            isRicochet:          true,
+                            isKill:              false,
+                            absorptionRatio:     1f);
+
+                        // Ricochet crosshair feedback (player shots only)
                         if (projectile != null && state.PlayerEntity != null
                             && projectile.OwnerId == state.PlayerEntity.Id)
                         {
@@ -124,13 +134,24 @@ namespace Systems
                     context.Events.EntityDied(hit.TargetId,
                         projectile != null ? projectile.OwnerId : default);
 
+                // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
+                var hitDir = projectile != null ? projectile.Direction : Vector3.forward;
+                context.Events.EntityHit(
+                    targetEid:           hit.TargetId,
+                    hitPoint:            hit.HitPoint,
+                    projectileDirection: hitDir,
+                    isHeadshot:          isHeadshot,
+                    isRicochet:          false,
+                    isKill:              !health.IsAlive,
+                    absorptionRatio:     absorptionRatio);
+
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
                 {
                     context.Events.HitConfirmed(isKill: !health.IsAlive, isHeadshot: isHeadshot,
                         absorptionRatio: absorptionRatio);
                     context.Events.DamageNumberSpawned(hit.HitPoint, finalDamage, isHeadshot, !health.IsAlive,
-                        projectile != null ? projectile.Direction : Vector3.forward,
+                        hitDir,
                         absorptionRatio: absorptionRatio);
                 }
 
