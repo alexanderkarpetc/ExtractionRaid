@@ -97,13 +97,14 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
         }
 
-        public void ProjectileHit(EId id, Vector3 position, string hitType = "surface")
+        public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface")
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.ProjectileHit,
                 Id = id,
                 Position = position,
+                Direction = normal,
                 StringPayload = hitType,
             });
         }

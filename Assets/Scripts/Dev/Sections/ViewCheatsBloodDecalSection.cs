@@ -67,5 +67,11 @@ namespace Dev
 
         [Range(0.3f, 2f)] public float WallScaleMin = 0.5f;
         [Range(0.3f, 2f)] public float WallScaleMax = 1f;
+
+        [Tooltip("Random offset along wall 'up' axis (meters). Top-down shots cluster horizontally — vertical jitter breaks trail line.")]
+        [Range(0f, 1f)] public float WallUpJitter = 0.2f;
+
+        [Tooltip("Random offset along wall 'right' axis (meters). Smaller — character movement already adds horizontal scatter.")]
+        [Range(0f, 1f)] public float WallRightJitter = 0.1f;
     }
 }

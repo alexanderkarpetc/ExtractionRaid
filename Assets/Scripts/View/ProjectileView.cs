@@ -46,7 +46,7 @@ namespace View
                     if (hit.collider.GetComponent<ProjectileView>() == null)
                     {
                         _hit = true;
-                        ReportHit(hit.collider, hit.point);
+                        ReportHit(hit.collider, hit.point, hit.normal);
                         return;
                     }
                 }
@@ -55,7 +55,7 @@ namespace View
             transform.position = newPos;
         }
 
-        void ReportHit(Collider other, Vector3 hitPoint)
+        void ReportHit(Collider other, Vector3 hitPoint, Vector3 hitNormal)
         {
             var session = App.Instance.RaidSession;
             if (session == null) return;
@@ -81,6 +81,7 @@ namespace View
                 {
                     ProjectileId = EId,
                     Position = hitPoint,
+                    Normal   = hitNormal,
                 });
             }
         }

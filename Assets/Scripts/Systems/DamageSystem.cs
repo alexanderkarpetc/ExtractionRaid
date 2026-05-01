@@ -164,7 +164,10 @@ namespace Systems
                             && hit.TargetedEntityId.Value != 0
                                 ? "head" : "body";
                         string hitType = $"{hitBase}:{absorptionRatio:F2}";
-                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, hitType);
+                        // Normal not relevant for character hits (presenters skip them — blood
+                        // particles cover via BodyImpact prefab). Pass zero — bullet hole presenter
+                        // filters out non-surface hitTypes.
+                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, Vector3.zero, hitType);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
                         break;

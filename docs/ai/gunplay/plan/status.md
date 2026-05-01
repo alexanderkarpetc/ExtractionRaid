@@ -11,14 +11,16 @@
 Track-wise:
 - ✅ **A.1 Hit Pause / Hitstop** (2026-05-01)
 - ✅ **A.2 Hit Flash on Enemy** (2026-05-01)
-- ⏳ A.3 Camera Shake System
-- ⏳ A.4 Blood Spray on Character Impact
+- ✅ **A.3 Camera Shake System** (2026-05-01)
+- ✅ **A.4 Blood Spray + Floor/Wall Decals** (2026-05-02) — particle layer уже covered ProjectilePresenter+BodyImpact; added floor + wall decals via reusable `DecalProjectorPool`
 - ✅ **A.5 Muzzle Flash + Real-time Light** (2026-05-01)
 - ⏳ A.6 Casing Ejection
 - ⏳ A.7 Material-Specific Impact VFX
-- ⏳ A.8 Bullet Hole Decals
+- ⏳ A.8 Bullet Hole Decals — **DecalProjectorPool ready for reuse**
 - ⏳ A.9 Ragdoll Death + Directional Knockback
-- ⏳ A.10 Blood Pool Decal Under Body
+- ⏳ A.10 Blood Pool Decal Under Body — could merge з A.4 floor decal pipeline
+
+**Phase A halfway** — 5/10 done. Visible "feels visceral" baseline landed (hits register weight, characters glow on damage, weapons kick light, camera punches, blood marks ground). Remaining: physics/persistence layer (casings, decals, ragdoll) + material variation.
 
 Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-feel).
 
@@ -50,6 +52,28 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 ---
 
 ## Decisions log
+
+### 2026-05-02 — A.4 Blood Decals shipped + ViewCheats infrastructure + layer convention
+
+**Standalone commit після A.3 (Camera Shake) landed.** A.4 turned out to require less than planned — particle layer вже existed (ProjectilePresenter spawns BodyImpact/HeadImpact на ProjectileHit event since prior work). Only decal layer needed.
+
+**New code:**
+- `View/DecalProjectorPool.cs` — reusable pool, kind-keyed (FloorBlood=1, WallBlood=2; future BulletHole/BloodPool kinds use same API). Bounded active count (oldest replaced). **Ease-out-cubic scale shrink у last 30% lifetime** замість alpha fade — universal across opaque + transparent shaders.
+- `View/BloodDecalPresenter.cs` — listens `EntityHit`, resolves character center via `RaidState` lookup (PlayerEntity / Bots[]), raycasts down (floor) + forward (wall) using layer mask. Per-target throttle + spawn chance gate prevent decal spam from auto fire.
+- `View/LayerUtils.cs` — runtime-authoritative layer assignment. Constants для project layers (Player=6, Bot=7, FOV=8 etc) + `SetLayerRecursively` helper. PlayerPresenter/BotPresenter override prefab-baked layer per-instance (CharacterBody prefab is shared).
+- `Dev/Sections/ViewCheatsBloodDecalSection.cs` — config (Enabled, MaxFloor=100, MaxWall=30, Lifetime=30s, throttle 0.3s, spawn chance 0.7, FloorRandomRadius 0.4m, scale ranges, layer offsets).
+
+**Tuning landed:**
+- `ViewCheats.CameraShake.GlobalScale` tuned до **0.2** during playtest (1.0 default felt too aggressive for the new blood/hit feedback стек).
+
+**Iterative refinements caught у playtest:**
+1. Decals у початку spawned grey (FBX models import з default Lit material). Switched до authored prefabs at `PolygonApocalypse/Prefabs/Props/SM_Prop_BloodPool_01..05` — proper blood material/texture.
+2. Decals спочатку stuck до characters (fcrer `attachedRigidbody != null` failed for NavMeshAgent-based bots). Replaced runtime filter з layer mask exclusion (Player/Bot/FOV/UI/IgnoreRaycast). Added `LayerUtils.SetLayerRecursively` calls у Player/Bot presenter spawn — runtime authoritative.
+3. Decals slightly tilted + sometimes submerged. Pool's spin rotation was around forward axis (horizontal); fixed by rotating around surface normal через `Quaternion.AngleAxis(angle, surfaceNormal) * Quaternion.FromToRotation(Vector3.up, surfaceNormal)`. Bumped FloorOffset 5mm → 20mm.
+4. Decals popped instantly при cleanup. Pool's alpha fade didn't work bc material is Opaque (URP Simple Lit ignores alpha component). Switched до **scale shrink** (ease-out cubic): visually smooth, shader-agnostic.
+5. Decal spawned at hit point (upper body) — visually weird. Now resolves character center from RaidState + adds random XZ offset (FloorRandomRadius 0.4m default) for organic placement.
+
+**Architecture note: DecalProjectorPool ready для reuse.** A.8 (bullet holes), A.10 (blood pools під трупами), B.6 (bleeding floor trail) — all hookable via same API (`Spawn(kind, prefabs, position, rotation, lifetime, scale)`). Capacity per kind set independently через `SetCapacity(kind, n)`.
 
 ### 2026-05-01 — Phase A bundle 1 shipped: A.1 + A.2 + A.5
 
@@ -113,17 +137,15 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 
 ## Next actions
 
-1. ⏳ **Manual playtest A.1 + A.2 + A.5 у ShootingScene** — verify "feels different" baseline; tune DevCheats values if needed
-2. After playtest signal: continue Phase A:
-   - A.3 Camera Shake System (separate commit, ~2-3h)
-   - A.4 Blood Spray on Character Impact (~3-4h with decal projection)
-   - A.6 Casing Ejection (~3-4h with pool)
-   - A.7 Material-Specific Impact VFX (~4-5h, includes scene tagging pass)
-   - A.8 Bullet Hole Decals (~3-4h)
-   - A.9 Ragdoll Death (~5-7h, biggest single item, own commit)
-   - A.10 Blood Pool Decal (~2-3h)
+Phase A halfway done (5/10). Remaining ranked by **payoff/effort + reuse leverage**:
 
-3. Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
+1. ⭐ **A.8 Bullet Hole Decals** (~1.5-2h) — `DecalProjectorPool` already infrastructure-ready. Listen `ProjectileHit` event for non-character hits, raycast normal for orientation. Smaller code than A.4 because decal pipeline уже існує.
+2. **A.6 Casing Ejection** (~3-4h) — physics shells per shot. Independent track, no infrastructure dependencies.
+3. **A.7 Material-Specific Impact VFX** (~4-5h) — biggest visceral juice multiplier. Requires `MaterialTag.cs` MonoBehaviour scene tagging pass.
+4. **A.10 Blood Pool Under Body** (~1-2h) — extends A.4 floor decal pipeline. Triggers on `EntityDied`. Could bundle з A.9.
+5. **A.9 Ragdoll Death** (~5-7h, biggest) — manual character rigging + RagdollController toggle on death.
+
+Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
 
 ---
 

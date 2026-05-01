@@ -168,7 +168,9 @@ namespace View
             if (Mathf.Abs(Vector3.Dot(hit.normal, Vector3.up)) > 0.7f) return;
 
             float scale = Random.Range(cfg.WallScaleMin, cfg.WallScaleMax);
-            var pos = hit.point + hit.normal * cfg.WallOffset;
+            // Random offset along wall plane breaks "horizontal track" cluster from top-down camera angle.
+            var pos = hit.point + hit.normal * cfg.WallOffset
+                                 + ComputeSurfaceJitter(hit.normal, cfg.WallUpJitter, cfg.WallRightJitter);
             // Wall splat mesh is flat у XY plane (Z=0.006) — local Z is the surface-normal axis.
             // Step 1 — align local Z з wall normal so mesh hugs wall.
             // Step 2 — spin around wall normal for variety.
@@ -176,6 +178,18 @@ namespace View
             var spin          = Quaternion.AngleAxis(Random.Range(0f, 360f), hit.normal);
             var rotation      = spin * alignToNormal;
             _pool.Spawn(WallKind, _wallPrefabs, pos, rotation, cfg.Lifetime, scale);
+        }
+
+        // Random offset along surface plane. Vertical-biased для top-down camera —
+        // shots cluster horizontally, vertical jitter breaks trail line.
+        static Vector3 ComputeSurfaceJitter(Vector3 surfaceNormal, float upJitter, float rightJitter)
+        {
+            var planeUp = Vector3.up - Vector3.Dot(Vector3.up, surfaceNormal) * surfaceNormal;
+            if (planeUp.sqrMagnitude < 0.01f) return Vector3.zero;
+            planeUp.Normalize();
+            var planeRight = Vector3.Cross(surfaceNormal, planeUp).normalized;
+            return planeUp    * Random.Range(-upJitter,    upJitter)
+                 + planeRight * Random.Range(-rightJitter, rightJitter);
         }
 
         // Pick closest valid hit from buffer. Layer mask already filtered character/bot/UI

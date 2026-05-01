@@ -97,6 +97,7 @@ namespace Editor
             // ── Sections (auto-rendered via inline editors) ──
             DrawSection("🎬 Camera Shake", _config.CameraShake);
             DrawSection("🩸 Blood Decals", _config.BloodDecal);
+            DrawSection("🔫 Bullet Holes", _config.BulletHole);
 
             EditorGUILayout.EndScrollView();
             _so.ApplyModifiedProperties();
@@ -240,6 +241,7 @@ namespace Editor
 
             CreateSectionIfMissing<ViewCheatsCameraShakeSection>(so, "_cameraShake", folder, "CameraShake");
             CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
+            CreateSectionIfMissing<ViewCheatsBulletHoleSection>(so, "_bulletHole", folder, "BulletHole");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }
