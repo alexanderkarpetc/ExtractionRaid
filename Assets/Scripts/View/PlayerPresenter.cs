@@ -147,6 +147,10 @@ namespace View
                 }
             }
 
+            // Authoritative layer assignment — overrides any prefab-baked layers (CharacterBody
+            // prefab is shared с bots, тому layer must be set per-instance).
+            LayerUtils.SetLayerRecursively(go, LayerUtils.Player);
+
             _playerView.Initialize(_trackedId, _onMuzzlePointReady, BotConstants.PlayerMaxHp);
 
             var cam = Camera.main;

@@ -18,9 +18,13 @@ namespace Dev
     public class ViewCheatsConfig : ScriptableObject
     {
         [SerializeField] ViewCheatsCameraShakeSection _cameraShake;
+        [SerializeField] ViewCheatsBloodDecalSection _bloodDecal;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public ViewCheatsCameraShakeSection CameraShake =>
             _cameraShake ? _cameraShake : (_cameraShake = CreateInstance<ViewCheatsCameraShakeSection>());
+
+        public ViewCheatsBloodDecalSection BloodDecal =>
+            _bloodDecal ? _bloodDecal : (_bloodDecal = CreateInstance<ViewCheatsBloodDecalSection>());
     }
 }

@@ -113,6 +113,11 @@ namespace View
             view.GizmoVisionRange = config.VisionRange;
             view.GizmoVisionAngle = config.VisionAngle;
 
+            // Authoritative layer assignment — CharacterBody prefab is authored on Player
+            // layer (shared з player); override до Bot per-instance so raycast filters
+            // distinguish player from bots.
+            LayerUtils.SetLayerRecursively(shellGo, LayerUtils.Bot);
+
             // Equip armor visuals from bot config
             if (!string.IsNullOrEmpty(config.HelmetDefinitionId))
             {

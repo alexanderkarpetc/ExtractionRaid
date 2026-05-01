@@ -96,6 +96,7 @@ namespace Editor
 
             // ── Sections (auto-rendered via inline editors) ──
             DrawSection("🎬 Camera Shake", _config.CameraShake);
+            DrawSection("🩸 Blood Decals", _config.BloodDecal);
 
             EditorGUILayout.EndScrollView();
             _so.ApplyModifiedProperties();
@@ -238,6 +239,7 @@ namespace Editor
             var so = new SerializedObject(config);
 
             CreateSectionIfMissing<ViewCheatsCameraShakeSection>(so, "_cameraShake", folder, "CameraShake");
+            CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

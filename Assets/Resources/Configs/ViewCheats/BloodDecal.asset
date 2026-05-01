@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1aa921dc65a74948815c09997c42d34, type: 3}
+  m_Name: BloodDecal
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsBloodDecalSection
+  Enabled: 1
+  MaxActiveFloorDecals: 100
+  MaxActiveWallDecals: 30
+  Lifetime: 30
+  MinTimeBetweenDecalsPerTarget: 0.3
+  SpawnChance: 0.7
+  MinPenetrationFraction: 0.3
+  FloorRaycastMaxDistance: 5
+  FloorOffset: 0.005
+  FloorScaleMin: 0.6
+  FloorScaleMax: 1.2
+  EnableWallSplatter: 1
+  WallRaycastMaxDistance: 5
+  WallOffset: 0.005
+  WallScaleMin: 0.5
+  WallScaleMax: 1

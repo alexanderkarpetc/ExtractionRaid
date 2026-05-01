@@ -50,6 +50,7 @@ namespace ApplicationCore
         readonly HitPausePresenter _hitPausePresenter;
         readonly CameraShakePresenter _cameraShakePresenter;
         public CameraShakePresenter CameraShakePresenter => _cameraShakePresenter;
+        readonly BloodDecalPresenter _bloodDecalPresenter;
 
         App()
         {
@@ -67,6 +68,7 @@ namespace ApplicationCore
             _corpsePresenter = new CorpsePresenter();
             _hitPausePresenter = new HitPausePresenter();
             _cameraShakePresenter = new CameraShakePresenter();
+            _bloodDecalPresenter = new BloodDecalPresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -183,6 +185,7 @@ namespace ApplicationCore
             _corpsePresenter.Dispose();
             _hitPausePresenter.Dispose();
             _cameraShakePresenter.Dispose();
+            _bloodDecalPresenter.Dispose();
         }
 
         public void EndRaid()
@@ -217,6 +220,7 @@ namespace ApplicationCore
             _corpsePresenter.LateTick(RaidSession);
             _hitPausePresenter.LateTick(RaidSession);
             _cameraShakePresenter.LateTick(RaidSession);
+            _bloodDecalPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 
