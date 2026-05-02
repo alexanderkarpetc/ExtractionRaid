@@ -35,6 +35,13 @@ MonoBehaviour:
   JointSpringDamper: 2
   HeadTwistLimit: 15
   HeadSwingLimit: 40
+  DeathTwist: 1.5
+  DeathTumble: 0.5
+  GroundImpactFloorY: 0.2
+  GroundImpactSpeedThreshold: 0.5
+  GroundImpactLinearDamping: 4
+  GroundImpactAngularDamping: 8
+  GroundImpactDuration: 1
   HipsMass: 6
   HeadMass: 1
   UpperArmMass: 0.7

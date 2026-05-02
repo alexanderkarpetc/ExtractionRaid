@@ -45,6 +45,18 @@ namespace View
         float          _headSpringForce;
         float          _headSpringDamper;
 
+        // Ground impact state — bone-touched-floor event triggers temporary damping boost.
+        bool  _groundImpactArmed;
+        bool  _groundImpactActive;
+        float _groundImpactDuration;
+        float _groundImpactEndUnscaledTime;
+        float _groundImpactFloorY;
+        float _groundImpactSpeedSqr;
+        float _baseLinearDamping;
+        float _baseAngularDamping;
+        float _impactLinearDamping;
+        float _impactAngularDamping;
+
         public bool IsActive => _active;
 
         void Awake()
@@ -71,6 +83,18 @@ namespace View
             _peakSpringForce       = p.JointSpringForce * Mathf.Max(1f, p.StaggerSpringMultiplier);
             _peakSpringDamper      = p.JointSpringDamper * Mathf.Max(1f, p.StaggerSpringMultiplier * 0.2f);
             _staggerActive         = p.StaggerDuration > 0.001f && p.StaggerSpringMultiplier > 1f;
+
+            // Cache ground impact params + arm one-shot trigger.
+            _baseLinearDamping             = p.LinearDamping;
+            _baseAngularDamping            = p.AngularDamping;
+            _impactLinearDamping           = p.GroundImpactLinearDamping;
+            _impactAngularDamping          = p.GroundImpactAngularDamping;
+            _groundImpactFloorY            = p.GroundImpactFloorY;
+            _groundImpactSpeedSqr          = p.GroundImpactSpeedThreshold * p.GroundImpactSpeedThreshold;
+            _groundImpactDuration          = p.GroundImpactDuration;
+            _groundImpactArmed             = p.GroundImpactDuration > 0.001f
+                                          && p.GroundImpactLinearDamping > p.LinearDamping;
+            _groundImpactActive            = false;
 
             // ── Capture current bone pose BEFORE killing animator ─────────
             // Setting Animator.runtimeAnimatorController = null on Humanoid rig snaps
@@ -147,7 +171,8 @@ namespace View
             ApplyHeadJointLimits(p.HeadTwistLimit, p.HeadSwingLimit);
 
             // Dual impulse: nearest bone (limb flop) + Hips (whole-body push, profile-scaled).
-            ApplyImpulse(p.HitPoint, p.ImpulseDirection, p.ImpulseMagnitude, p.HipsImpulseScale);
+            ApplyImpulse(p.HitPoint, p.ImpulseDirection, p.ImpulseMagnitude, p.HipsImpulseScale,
+                         p.DeathTwist, p.DeathTumble);
         }
 
         static float ResolveMass(string boneName, float currentMass, in ActivateParams p)
@@ -210,11 +235,10 @@ namespace View
         }
 
         void ApplyImpulse(Vector3 hitPoint, Vector3 impulseDirection, float impulseMagnitude,
-                          float hipsImpulseScale)
+                          float hipsImpulseScale, float deathTwist, float deathTumble)
         {
-            if (impulseMagnitude <= 0f || impulseDirection.sqrMagnitude < 0.0001f) return;
-
-            var dir = impulseDirection.normalized;
+            var dir = impulseDirection.sqrMagnitude > 0.0001f ? impulseDirection.normalized : Vector3.zero;
+            bool applyImpulse = impulseMagnitude > 0f && dir != Vector3.zero;
 
             Rigidbody nearest = null;
             Rigidbody hips    = null;
@@ -244,10 +268,22 @@ namespace View
                 }
             }
 
-            if (nearest != null)
+            if (applyImpulse && nearest != null)
                 nearest.AddForceAtPosition(dir * impulseMagnitude, hitPoint, ForceMode.Impulse);
-            if (hips != null && hipsImpulseScale > 0f)
+            if (applyImpulse && hips != null && hipsImpulseScale > 0f)
                 hips.AddForce(dir * (impulseMagnitude * hipsImpulseScale), ForceMode.Impulse);
+
+            // Random torque on Hips: твist (around Y, vertical) + tumble (around X/Z).
+            // Each death looks різна — body spins/tilts unpredictably as it falls. Без
+            // цього всі smерті look identical (predictable, "sack of potatoes" fall).
+            if (hips != null && (deathTwist > 0f || deathTumble > 0f))
+            {
+                var torque = new Vector3(
+                    Random.Range(-1f, 1f) * deathTumble,
+                    Random.Range(-1f, 1f) * deathTwist,
+                    Random.Range(-1f, 1f) * deathTumble);
+                hips.AddTorque(torque, ForceMode.Impulse);
+            }
         }
 
         void Update()
@@ -268,6 +304,33 @@ namespace View
                 if (t >= 1f) _staggerActive = false;
             }
 
+            // Ground impact: detect first bone-touches-floor event. Once any bone descends
+            // below floorY while moving fast, bump damping for groundImpactDuration → energy
+            // dissipates → body settles solidly без sliding/bouncing. One-shot (armed=false
+            // після trigger), потім reverts до base damping коли timer expires.
+            if (_groundImpactArmed && !_groundImpactActive)
+            {
+                for (int i = 0; i < _rbs.Length; i++)
+                {
+                    var rb = _rbs[i];
+                    if (rb == null) continue;
+                    if (rb.position.y < _groundImpactFloorY
+                        && rb.linearVelocity.sqrMagnitude > _groundImpactSpeedSqr)
+                    {
+                        _groundImpactActive          = true;
+                        _groundImpactArmed           = false;
+                        _groundImpactEndUnscaledTime = Time.unscaledTime + _groundImpactDuration;
+                        ApplyDamping(_impactLinearDamping, _impactAngularDamping);
+                        break;
+                    }
+                }
+            }
+            else if (_groundImpactActive && Time.unscaledTime >= _groundImpactEndUnscaledTime)
+            {
+                _groundImpactActive = false;
+                ApplyDamping(_baseLinearDamping, _baseAngularDamping);
+            }
+
             // Settle phase: zero velocity + freeze kinematic.
             if (!_settled && elapsed >= _settleAfter)
             {
@@ -284,6 +347,17 @@ namespace View
 
             if (elapsed >= _lifetime)
                 Destroy(gameObject);
+        }
+
+        void ApplyDamping(float linearDamping, float angularDamping)
+        {
+            for (int i = 0; i < _rbs.Length; i++)
+            {
+                var rb = _rbs[i];
+                if (rb == null) continue;
+                rb.linearDamping  = linearDamping;
+                rb.angularDamping = angularDamping;
+            }
         }
 
         void ApplyJointSpringsRamp(float springForce, float springDamper)
@@ -324,6 +398,13 @@ namespace View
             public float   HipsMass;
             public float   HeadMass;
             public float   UpperArmMass;
+            public float   DeathTwist;
+            public float   DeathTumble;
+            public float   GroundImpactFloorY;
+            public float   GroundImpactSpeedThreshold;
+            public float   GroundImpactLinearDamping;
+            public float   GroundImpactAngularDamping;
+            public float   GroundImpactDuration;
             public float   SettleAfter;
             public float   Lifetime;
         }

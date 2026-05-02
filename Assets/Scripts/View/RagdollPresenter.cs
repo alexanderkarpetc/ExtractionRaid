@@ -96,6 +96,13 @@ namespace View
                 HipsMass                = cfg.HipsMass,
                 HeadMass                = cfg.HeadMass,
                 UpperArmMass            = cfg.UpperArmMass,
+                DeathTwist                 = cfg.DeathTwist,
+                DeathTumble                = cfg.DeathTumble,
+                GroundImpactFloorY         = cfg.GroundImpactFloorY,
+                GroundImpactSpeedThreshold = cfg.GroundImpactSpeedThreshold,
+                GroundImpactLinearDamping  = cfg.GroundImpactLinearDamping,
+                GroundImpactAngularDamping = cfg.GroundImpactAngularDamping,
+                GroundImpactDuration       = cfg.GroundImpactDuration,
                 SettleAfter             = cfg.SettleAfter,
                 Lifetime                = cfg.Lifetime,
             });

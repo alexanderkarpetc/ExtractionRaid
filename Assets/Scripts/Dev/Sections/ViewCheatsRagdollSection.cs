@@ -111,6 +111,45 @@ namespace Dev
         [Tooltip("Head swing limit (degrees). ~60° humanoid range.")]
         [Range(0f, 90f)] public float HeadSwingLimit = 60f;
 
+        // ── Death twist (random angular impulse) ────────────────
+        // Без torque корпус летить як мішок з картоплі — predictable, all deaths look same.
+        // Random twist на Hips creates rotation variety: body spins slightly, falls на bok
+        // або face-down, не лише flat. Tumble adds small horizontal tilt — accent.
+
+        [Header("Death twist (random)")]
+        [Tooltip("Max random angular impulse magnitude around vertical (twist) axis. " +
+                 "Body spins у horizontal plane on death. 0 = no twist, 2 = mild, 5 = chaotic.")]
+        [Range(0f, 5f)] public float DeathTwist = 1.5f;
+
+        [Tooltip("Max random angular impulse magnitude on horizontal (tumble) axes. " +
+                 "Body tilts forward/back/sideways while falling. Small values для subtle variety.")]
+        [Range(0f, 3f)] public float DeathTumble = 0.5f;
+
+        // ── Ground impact damping ───────────────────────────────
+        // Без цього body може sliding/bouncing після того як впав. Detection: any bone
+        // crosses below floor Y while still moving fast → bump damping for short window
+        // → energy dissipates → body settles solidly. One-shot per ragdoll.
+
+        [Header("Ground impact damping")]
+        [Tooltip("Floor Y level (world space). Any bone descending below this triggers impact " +
+                 "phase. Set трохи вище за актуальну floor — typically 0.15–0.3.")]
+        [Range(-1f, 2f)] public float GroundImpactFloorY = 0.2f;
+
+        [Tooltip("Min linear speed (m/s) для trigger ground impact. Prevents triggering " +
+                 "коли body is already settled near floor without movement.")]
+        [Range(0f, 5f)] public float GroundImpactSpeedThreshold = 0.5f;
+
+        [Tooltip("Linear damping applied during ground impact phase. Slows sliding. " +
+                 "High values (4–8) = solid landing, no slide. 0 = disable system.")]
+        [Range(0f, 10f)] public float GroundImpactLinearDamping = 4f;
+
+        [Tooltip("Angular damping applied during ground impact. Stops body from spinning.")]
+        [Range(0f, 20f)] public float GroundImpactAngularDamping = 8f;
+
+        [Tooltip("Duration (s) of damping boost. After this — reverts to base damping. " +
+                 "Short window (0.5–1.5s) = settles fast then physics resumes normally.")]
+        [Range(0f, 5f)] public float GroundImpactDuration = 1f;
+
         // ── Mass distribution ───────────────────────────────────
         // Heavy hips = stable center of mass для bodyshot push readability.
         // Light head + light arms = trail behind, fall природно. Applied at runtime —
