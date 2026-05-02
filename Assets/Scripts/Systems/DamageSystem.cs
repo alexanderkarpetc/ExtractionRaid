@@ -131,8 +131,12 @@ namespace Systems
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
                 else
-                    context.Events.EntityDied(hit.TargetId,
-                        projectile != null ? projectile.OwnerId : default);
+                    context.Events.EntityDied(
+                        hit.TargetId,
+                        projectile != null ? projectile.OwnerId  : default,
+                        hit.HitPoint,
+                        projectile != null ? projectile.Direction : Vector3.forward,
+                        finalDamage);
 
                 // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
                 var hitDir = projectile != null ? projectile.Direction : Vector3.forward;

@@ -99,6 +99,7 @@ namespace Editor
             DrawSection("🩸 Blood Decals", _config.BloodDecal);
             DrawSection("🔫 Bullet Holes", _config.BulletHole);
             DrawSection("🥃 Casings", _config.Casings);
+            DrawSection("💀 Ragdoll", _config.Ragdoll);
 
             EditorGUILayout.EndScrollView();
             _so.ApplyModifiedProperties();
@@ -244,6 +245,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
             CreateSectionIfMissing<ViewCheatsBulletHoleSection>(so, "_bulletHole", folder, "BulletHole");
             CreateSectionIfMissing<ViewCheatsCasingsSection>(so, "_casings", folder, "Casings");
+            CreateSectionIfMissing<ViewCheatsRagdollSection>(so, "_ragdoll", folder, "Ragdoll");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

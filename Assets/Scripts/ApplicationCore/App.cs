@@ -45,6 +45,7 @@ namespace ApplicationCore
         readonly DestructiblePresenter _destructiblePresenter;
         readonly GroundItemPresenter _groundItemPresenter;
         readonly BotPresenter _botPresenter;
+        public BotPresenter BotPresenter => _botPresenter;
         readonly GrenadePresenter _grenadePresenter;
         readonly CorpsePresenter _corpsePresenter;
         readonly HitPausePresenter _hitPausePresenter;
@@ -53,6 +54,7 @@ namespace ApplicationCore
         readonly BloodDecalPresenter _bloodDecalPresenter;
         readonly BulletHoleDecalPresenter _bulletHoleDecalPresenter;
         readonly CasingEjectorPresenter _casingEjectorPresenter;
+        readonly RagdollPresenter _ragdollPresenter;
 
         App()
         {
@@ -73,6 +75,7 @@ namespace ApplicationCore
             _bloodDecalPresenter = new BloodDecalPresenter();
             _bulletHoleDecalPresenter = new BulletHoleDecalPresenter();
             _casingEjectorPresenter = new CasingEjectorPresenter();
+            _ragdollPresenter = new RagdollPresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -192,6 +195,7 @@ namespace ApplicationCore
             _bloodDecalPresenter.Dispose();
             _bulletHoleDecalPresenter.Dispose();
             _casingEjectorPresenter.Dispose();
+            _ragdollPresenter.Dispose();
         }
 
         public void EndRaid()
@@ -219,6 +223,9 @@ namespace ApplicationCore
         {
             _destructiblePresenter.LateTick(RaidSession);
             _playerPresenter.LateTick(RaidSession);
+            // RagdollPresenter MUST run before BotPresenter — it grabs character body GO
+            // from the bot view before BotDespawned destroys the shell + body together.
+            _ragdollPresenter.LateTick(RaidSession);
             _botPresenter.LateTick(RaidSession);
             _projectilePresenter.LateTick(RaidSession);
             _grenadePresenter.LateTick(RaidSession);

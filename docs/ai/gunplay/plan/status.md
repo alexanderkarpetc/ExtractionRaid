@@ -12,15 +12,15 @@ Track-wise:
 - ✅ **A.1 Hit Pause / Hitstop** (2026-05-01)
 - ✅ **A.2 Hit Flash on Enemy** (2026-05-01)
 - ✅ **A.3 Camera Shake System** (2026-05-01)
-- ✅ **A.4 Blood Spray + Floor/Wall Decals** (2026-05-02) — particle layer уже covered ProjectilePresenter+BodyImpact; added floor + wall decals via reusable `DecalProjectorPool`
+- ✅ **A.4 Blood Spray + Floor/Wall Decals** (2026-05-02)
 - ✅ **A.5 Muzzle Flash + Real-time Light** (2026-05-01)
-- ⏳ A.6 Casing Ejection — `SM_Prop_Bullet_Casing_01..03` prefabs already у Polygon pack
-- ⏳ A.7 Material-Specific Impact VFX
-- ✅ **A.8 Bullet Hole Decals** (2026-05-02) — reused DecalProjectorPool; extended ProjectileHit event з surface normal; surface jitter (vertical-biased) breaks top-down "trail line" cluster
+- ✅ **A.6 Casing Ejection** (2026-05-02) — primitive brass shell з hybrid auto-settle (linear damping ramp + kinematic freeze); player-walks-through after settle. Filtered by payload archetype ("Ballistic" only — laser/foam/rocket get future presenters).
+- ⏸ **A.7 Material-Specific Impact VFX — DEFERRED** (2026-05-02). Scope removed — engaged later when (a) scene має real material variety (concrete/metal/wood/dirt zones), AND (b) per-material impact prefabs authored. Currently scene = uniform ProBuilder geometry, no payoff to taggng + per-material routing prematurely.
+- ✅ **A.8 Bullet Hole Decals** (2026-05-02)
 - ⏳ A.9 Ragdoll Death + Directional Knockback
 - ⏳ A.10 Blood Pool Decal Under Body — could merge з A.4 floor decal pipeline
 
-**Phase A 6/10 done.** Visible "feels visceral" baseline solid: hits register weight, characters glow on damage, weapons kick light + camera, blood marks ground, walls show damage cumulatively. Remaining: physics layer (casings, ragdoll), death feedback (blood pool), material variation (concrete vs metal vs wood impact).
+**Phase A 7/9 effective** (A.7 out of scope). Visible "feels visceral" baseline solid + reactive: hits register weight, characters glow on damage, weapons kick light + camera, blood marks ground/walls, casings tumble + settle. Remaining: A.10 (death pool) + A.9 (ragdoll).
 
 Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-feel).
 
@@ -52,6 +52,36 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 ---
 
 ## Decisions log
+
+### 2026-05-02 — A.7 Material-Specific Impact DEFERRED out of Phase A scope
+
+**Контекст:** після A.6 casings landed, обговорили скоп A.7 (concrete chunks vs metal sparks vs wood splinters per surface material). Conclusion: **engage later, не зараз.**
+
+**Why deferred:**
+- Scene currently uniform — usePlace ProBuilder primitives + Cubes на single default material. No material variety to differentiate.
+- Зеро per-material impact prefab assets authored — would need creating new BulletImpact_Concrete/_Metal/_Wood prefab triplets (or quintuplets) before routing made sense.
+- "Premature optimization" — building MaterialTag.cs scene tagging system + ProjectilePresenter routing without payoff data.
+
+**Re-engage criteria:**
+1. Scene has real material variety зон (e.g., concrete walls + metal sheet panels + wooden crates), AND
+2. Per-material impact VFX prefabs authored (artist track), OR
+3. Polygon pack discovered to уже have differentiated impact prefabs.
+
+**Effort saved:** ~4-5h. Phase A scope shrinks 10 → 9 items; effective progress 7/9 = 78% done.
+
+### 2026-05-02 — A.6 Casing Ejection shipped (with hybrid settle)
+
+**Code:** `View/CasingEjectorPresenter.cs` listens `WeaponFired` event, spawns brass shell prefab `Resources/Prefabs/Casings/Casing.prefab` (primitive cylinder + brass URP Lit material + Rigidbody, scaled 10× for top-down camera visibility — final scale (0.12, 0.18, 0.12)).
+
+**Hybrid settle pattern:**
+- 0..SettleDelay (1.5s default): full juice — bouncy physics, base damping low
+- SettleDelay..SettleDelay+SettleTimeout (1.5..2.5s): linear damping ramp base→max (30) — natural exponential decay
+- After ramp: kinematic + collider disable → casing parked, player walks through without disturbance
+- After Lifetime (6s): scale shrink fade у last 30% → despawn
+
+**Filter:** event `WeaponFired` extended з optional `string payloadArchetype` parameter (filtered up через RaidEventBuffer.StringPayload). CasingEjectorPresenter spawns only on `"Ballistic"` archetype — laser/foam/rocket get future per-archetype ejection presenters (energy crackle, capsule drop, etc.).
+
+**Live tunable у `Window → View Cheats → 🥃 Casings`:** mass, damping (base + max), settle delay/timeout, eject port offset, velocity components (lateral/up/back), spin, lifetime, max active.
 
 ### 2026-05-02 — A.8 Bullet Hole Decals shipped
 
@@ -155,12 +185,12 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 
 ## Next actions
 
-Phase A 6/10 done. Remaining ranked by **payoff/effort + reuse leverage**:
+Phase A 7/9 effective (A.7 deferred). Remaining 2 items:
 
-1. ⭐ **A.6 Casing Ejection** (~3-4h) — physics shells per shot. Bonus: `SM_Prop_Bullet_Casing_01..03` prefabs already у Polygon pack. Pure new sensory layer, no overlap з existing.
-2. **A.10 Blood Pool Under Body** (~1-2h) — extends DecalProjectorPool з new kind. Triggers on `EntityDied`. Death "marker" — distinct від per-hit blood (which is small splashes).
-3. **A.7 Material-Specific Impact VFX** (~4-5h) — biggest visceral juice multiplier. Requires `MaterialTag.cs` MonoBehaviour scene tagging pass.
-4. **A.9 Ragdoll Death** (~5-7h, biggest) — manual character rigging + RagdollController toggle on death.
+1. ⭐ **A.10 Blood Pool Under Body** (~1-2h) — extends `DecalProjectorPool` з new kind. Triggers on `EntityDied`. Larger persistent pool at character feet — death "marker" distinct від A.4 splashes (which are per-hit small splatters).
+2. **A.9 Ragdoll Death** (~5-7h, biggest item) — manual character rigging (Joint setup per Character01 prefab — one-time tedious work) + `RagdollController` toggle on death event. Force-based ragdoll з shot direction.
+
+Recommend A.10 first (quick win), then A.9 (Phase A finale).
 
 Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
 

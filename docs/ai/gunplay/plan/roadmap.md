@@ -124,7 +124,16 @@
 **Effort:** ~3-4h (з pool)
 **Payoff:** 🔥🔥
 
-#### A.7 Material-Specific Impact VFX
+#### A.7 Material-Specific Impact VFX — ⏸ DEFERRED out of Phase A scope (2026-05-02)
+
+**Decision:** не реалізовуємо у Phase A — engage later коли scene має real material variety + per-material impact prefab assets authored. Currently scene = uniform ProBuilder geometry, no payoff to building MaterialTag tagging system + ProjectilePresenter routing prematurely.
+
+**Re-engage criteria:**
+1. Scene має real material variety zones (concrete walls + metal sheet panels + wooden crates), AND
+2. Per-material impact VFX prefabs authored (artist track), OR
+3. Polygon pack discovered to уже have differentiated impact prefabs.
+
+**Original scope (preserved для re-engagement):**
 
 **What:** Bullet hits concrete = chunks + dust; metal = sparks; wood = splinters; dirt = puff. Without this усі стіни feel однаково.
 
@@ -135,7 +144,7 @@
 - DevCheats: `MaterialImpactConfig { EnablePerMaterial, FallbackPrefab }`
 - Manual tagging pass: scan existing scenes for major surfaces → add MaterialTag (~30-60 min).
 
-**Effort:** ~4-5h (включно з manual tagging pass)
+**Effort (when re-engaged):** ~4-5h (включно з manual tagging pass)
 **Payoff:** 🔥🔥🔥
 
 #### A.8 Bullet Hole Decals (persistent)

@@ -34,7 +34,8 @@ namespace Tests.EditMode.Fakes
             EntityDamagedId = id;
         }
 
-        public void EntityDied(EId id, EId killerId = default)
+        public void EntityDied(EId id, EId killerId = default,
+            Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f)
         {
             EntityDiedCalled = true;
             EntityDiedId = id;

@@ -47,6 +47,11 @@ namespace View
             go.transform.position = position + new Vector3(0f, 0.15f, 0f);
             go.transform.localScale = new Vector3(0.8f, 0.15f, 0.8f);
 
+            // Strip collider — corpse is a visual loot marker, not a physical obstacle.
+            // Ragdoll bodies (Gunplay A.9) would land on top + bounce otherwise.
+            var col = go.GetComponent<Collider>();
+            if (col != null) Object.Destroy(col);
+
             var renderer = go.GetComponent<Renderer>();
             if (renderer != null)
                 renderer.material.color = new Color(0.4f, 0.2f, 0.15f);

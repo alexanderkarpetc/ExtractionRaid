@@ -167,6 +167,34 @@ namespace View
             _views.Clear();
         }
 
+        /// <summary>
+        /// Gunplay A.9 — release character body GO from bot's view hierarchy for ragdoll
+        /// transfer. Detaches body from shell, removes BotView from tracking dict, destroys
+        /// shell. Caller (typically <see cref="RagdollPresenter"/>) reparents returned body
+        /// + activates ragdoll. Returns false if bot has no view (already despawned).
+        /// </summary>
+        public bool TryReleaseCharacterBody(EId botId, out GameObject bodyGameObject)
+        {
+            bodyGameObject = null;
+            if (!_views.TryGetValue(botId, out var view) || view == null) return false;
+            if (view.Body == null)
+            {
+                // No body bound — destroy shell only, return false.
+                Object.Destroy(view.gameObject);
+                _views.Remove(botId);
+                return false;
+            }
+
+            bodyGameObject = view.Body.gameObject;
+            // Detach body so subsequent shell destroy doesn't take ragdoll з собою.
+            // Preserve world-space pose — character keeps its current animation pose at moment of death.
+            bodyGameObject.transform.SetParent(null, worldPositionStays: true);
+
+            Object.Destroy(view.gameObject);
+            _views.Remove(botId);
+            return true;
+        }
+
         // Gunplay A.2 — pick flash color per hit kind, route to BotView.
         static void ApplyHitFlash(BotView view, RaidEvent e)
         {

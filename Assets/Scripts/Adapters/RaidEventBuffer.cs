@@ -120,9 +120,18 @@ namespace Adapters
             });
         }
 
-        public void EntityDied(EId id, EId killerId = default)
+        public void EntityDied(EId id, EId killerId = default,
+            Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f)
         {
-            _events.Add(new RaidEvent { Type = RaidEventType.EntityDied, Id = id, KillerId = killerId });
+            _events.Add(new RaidEvent
+            {
+                Type = RaidEventType.EntityDied,
+                Id = id,
+                KillerId = killerId,
+                Position = hitPoint,
+                Direction = hitDirection,
+                Damage = damage,
+            });
         }
 
         public void GroundItemSpawned(EId id, Vector3 position, string definitionId)
