@@ -456,6 +456,15 @@ namespace Session
                     InfiniteAmmo = DevCheats.InfiniteAmmo,
                     MuzzleBlockEnabled = DevCheats.MuzzleBlockEnabled,
                     MuzzleBlockBackoff = DevCheats.MuzzleBlockBackoff,
+                },
+                staggerConfig: new StaggerConfig
+                {
+                    Enabled              = DevCheats.Config.Stagger.Enabled,
+                    DurationLight        = DevCheats.Config.Stagger.DurationLight,
+                    DurationHeavy        = DevCheats.Config.Stagger.DurationHeavy,
+                    DurationHeadshot     = DevCheats.Config.Stagger.DurationHeadshot,
+                    HeavyDamageThreshold = DevCheats.Config.Stagger.HeavyDamageThreshold,
+                    AIShootingLockout    = DevCheats.Config.Stagger.AIShootingLockout,
                 }
             );
 

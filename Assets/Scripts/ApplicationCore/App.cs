@@ -55,6 +55,7 @@ namespace ApplicationCore
         readonly BulletHoleDecalPresenter _bulletHoleDecalPresenter;
         readonly CasingEjectorPresenter _casingEjectorPresenter;
         readonly RagdollPresenter _ragdollPresenter;
+        readonly FlinchPresenter _flinchPresenter;
 
         App()
         {
@@ -76,6 +77,7 @@ namespace ApplicationCore
             _bulletHoleDecalPresenter = new BulletHoleDecalPresenter();
             _casingEjectorPresenter = new CasingEjectorPresenter();
             _ragdollPresenter = new RagdollPresenter();
+            _flinchPresenter = new FlinchPresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -196,6 +198,7 @@ namespace ApplicationCore
             _bulletHoleDecalPresenter.Dispose();
             _casingEjectorPresenter.Dispose();
             _ragdollPresenter.Dispose();
+            _flinchPresenter.Dispose();
         }
 
         public void EndRaid()
@@ -226,6 +229,9 @@ namespace ApplicationCore
             // RagdollPresenter MUST run before BotPresenter — it grabs character body GO
             // from the bot view before BotDespawned destroys the shell + body together.
             _ragdollPresenter.LateTick(RaidSession);
+            // FlinchPresenter consumes EntityHit events to drive spine lean; needs to run
+            // while bot views still exist. Order before BotPresenter (which clears views).
+            _flinchPresenter.LateTick(RaidSession);
             _botPresenter.LateTick(RaidSession);
             _projectilePresenter.LateTick(RaidSession);
             _grenadePresenter.LateTick(RaidSession);

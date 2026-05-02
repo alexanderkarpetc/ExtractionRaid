@@ -24,6 +24,27 @@ namespace View
         [SerializeField] TwoBoneIK _rightHandIK; // optional; solves right hand → weapon RightHandGrip
         [SerializeField] Transform _swaySourceBone; // optional; spine/chest bone to drive weapon sway
 
+        // Stagger / flinch (B.4) — spine chain refs. Resolved lazily on first access если
+        // serialized fields порожні: walk skeleton до bones named "Spine", "Neck", "Head".
+        // Optional — null tolerated (FlinchPresenter degrades gracefully if missing).
+        [SerializeField] Transform _spineBone;
+        [SerializeField] Transform _neckBone;
+        [SerializeField] Transform _headBone;
+        bool _flinchBonesResolved;
+
+        public Transform SpineBone { get { ResolveFlinchBones(); return _spineBone; } }
+        public Transform NeckBone  { get { ResolveFlinchBones(); return _neckBone;  } }
+        public Transform HeadBone  { get { ResolveFlinchBones(); return _headBone;  } }
+
+        void ResolveFlinchBones()
+        {
+            if (_flinchBonesResolved) return;
+            _flinchBonesResolved = true;
+            if (_spineBone == null) _spineBone = FindDeepChild(transform, "Spine");
+            if (_neckBone  == null) _neckBone  = FindDeepChild(transform, "Neck");
+            if (_headBone  == null) _headBone  = FindDeepChild(transform, "Head");
+        }
+
         string _currentWeaponPrefabId;
         GameObject _currentWeaponModel;
         WeaponView _currentWeaponView;

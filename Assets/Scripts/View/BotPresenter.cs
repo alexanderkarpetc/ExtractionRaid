@@ -135,6 +135,19 @@ namespace View
             _views[id] = view;
         }
 
+        /// <summary>
+        /// Look up a bot's <see cref="CharacterBody"/> by EId for cross-presenter access
+        /// (FlinchPresenter уses це для spine IK lean). Returns false якщо no view, no body,
+        /// or already despawned.
+        /// </summary>
+        public bool TryGetCharacterBody(EId botId, out CharacterBody body)
+        {
+            body = null;
+            if (!_views.TryGetValue(botId, out var view) || view == null) return false;
+            body = view.Body;
+            return body != null;
+        }
+
         void DespawnView(EId id)
         {
             if (_views.TryGetValue(id, out var view))

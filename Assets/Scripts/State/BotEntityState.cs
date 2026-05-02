@@ -28,6 +28,11 @@ namespace State
         // Visibility
         public bool IsVisibleToPlayer = true;
 
+        // Stagger (hit reaction). EndTime у scaled Time.time. Bot can't fire while staggered.
+        // Applied by DamageSystem on damage tick; consumed by BotShootingSystem (fire lockout)
+        // and FlinchPresenter (visual spine lean).
+        public float StaggerEndTime;
+
         // Intents (written by BT, consumed by movement/combat systems)
         public Vector3 DesiredVelocity;
         public Vector3 DesiredAimPoint;

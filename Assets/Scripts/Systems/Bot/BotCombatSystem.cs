@@ -22,10 +22,16 @@ namespace Systems.Bot
                 if (bot.WantsToHeal)
                     ProcessHeal(bot, hp, config);
 
-                if (bot.WantsToFire)
+                // Stagger lockout (B.4): bot cannot fire while staggered. Headshots are
+                // longest stagger — gives player meaningful counter-play. AI keeps WantsToFire
+                // intent for next tick after lockout expires.
+                bool staggered = ctx.StaggerConfig.Enabled
+                                 && ctx.StaggerConfig.AIShootingLockout
+                                 && bot.StaggerEndTime > ctx.Time.Time;
+                if (bot.WantsToFire && !staggered)
                     ProcessFire(bot, state, in ctx, in config);
 
-                if (bot.WantsToThrowGrenade)
+                if (bot.WantsToThrowGrenade && !staggered)
                     ProcessThrowGrenade(bot, state, in ctx);
             }
         }

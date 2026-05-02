@@ -117,6 +117,12 @@ namespace Systems
 
                 ApplyDamage(health, finalDamage);
 
+                // Stagger application (B.4 hit reaction). Only on bots that survived;
+                // dead targets handled by ragdoll layer. Tier picked from damage fraction:
+                //   light (default) | heavy (>= threshold × MaxHp) | headshot (always heaviest).
+                if (health.IsAlive && context.StaggerConfig.Enabled)
+                    ApplyStagger(state, hit.TargetId, finalDamage, isHeadshot, in context);
+
                 // Bleed roll (ignores armor, per hit signal = per pellet for shotgun)
                 if (health.IsAlive && hit.BleedChance > 0f)
                 {
@@ -209,6 +215,30 @@ namespace Systems
             }
 
             return false;
+        }
+
+        static void ApplyStagger(RaidState state, EId targetId, float damage, bool isHeadshot,
+                                 in RaidContext context)
+        {
+            BotEntityState bot = null;
+            for (int i = 0; i < state.Bots.Count; i++)
+            {
+                if (state.Bots[i].Id == targetId) { bot = state.Bots[i]; break; }
+            }
+            if (bot == null) return;
+            if (!state.HealthMap.TryGetValue(targetId, out var hp) || hp.MaxHp <= 0f) return;
+
+            float duration;
+            if (isHeadshot)
+                duration = context.StaggerConfig.DurationHeadshot;
+            else if (damage / hp.MaxHp >= context.StaggerConfig.HeavyDamageThreshold)
+                duration = context.StaggerConfig.DurationHeavy;
+            else
+                duration = context.StaggerConfig.DurationLight;
+
+            float candidate = context.Time.Time + duration;
+            if (candidate > bot.StaggerEndTime)
+                bot.StaggerEndTime = candidate;
         }
 
         public static void ApplyDamage(HealthState health, float damage)

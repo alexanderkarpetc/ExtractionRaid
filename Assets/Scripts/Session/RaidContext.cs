@@ -60,6 +60,26 @@ namespace Session
         };
     }
 
+    public struct StaggerConfig
+    {
+        public bool  Enabled;
+        public float DurationLight;
+        public float DurationHeavy;
+        public float DurationHeadshot;
+        public float HeavyDamageThreshold;
+        public bool  AIShootingLockout;
+
+        public static StaggerConfig Default => new StaggerConfig
+        {
+            Enabled              = true,
+            DurationLight        = 0.25f,
+            DurationHeavy        = 0.5f,
+            DurationHeadshot     = 0.6f,
+            HeavyDamageThreshold = 0.3f,
+            AIShootingLockout    = true,
+        };
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -72,13 +92,15 @@ namespace Session
         public readonly ICoreDefinitionRegistry CoreDefinitions;
         public readonly AimConfig AimConfig;
         public readonly ShootingConfig ShootingConfig;
+        public readonly StaggerConfig StaggerConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
             IGrenadePositionAdapter grenadePositions = null,
             ICoreDefinitionRegistry coreDefinitions = null,
             AimConfig? aimConfig = null,
-            ShootingConfig? shootingConfig = null)
+            ShootingConfig? shootingConfig = null,
+            StaggerConfig? staggerConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -90,6 +112,7 @@ namespace Session
             CoreDefinitions = coreDefinitions;
             AimConfig = aimConfig ?? AimConfig.Default;
             ShootingConfig = shootingConfig ?? ShootingConfig.Default;
+            StaggerConfig = staggerConfig ?? StaggerConfig.Default;
         }
     }
 }
