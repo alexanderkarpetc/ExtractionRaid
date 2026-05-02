@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using Quests;
 using State;
 
 namespace View.UI.Tooltip.Builders
@@ -15,7 +16,9 @@ namespace View.UI.Tooltip.Builders
     /// </summary>
     public static class ItemTooltipBuilder
     {
-        public static TooltipModel For(ItemState item, ICoreDefinitionRegistry registry = null)
+        public static TooltipModel For(ItemState item,
+            ICoreDefinitionRegistry registry = null,
+            QuestDatabase questDatabase = null)
         {
             if (item == null) return new TooltipModel(string.Empty);
             if (item.HasWeaponConfiguration) return WeaponTooltipBuilder.For(item, registry);
@@ -64,7 +67,68 @@ namespace View.UI.Tooltip.Builders
                     sections.Add(new TooltipSection("Ammo", rows));
             }
 
-            return new TooltipModel(title, subtitle: null, sections);
+            string subtitle = null;
+            string description = null;
+            if (def != null && def.Category == ItemCategory.Quest)
+            {
+                subtitle = "Quest Item";
+                AppendQuestInfo(item.DefinitionId, questDatabase, sections, out description);
+            }
+
+            return new TooltipModel(title, subtitle, sections, description);
+        }
+
+        static void AppendQuestInfo(string itemId, QuestDatabase database,
+            List<TooltipSection> sections, out string description)
+        {
+            description = null;
+            if (database == null) return;
+
+            var rows = new List<TooltipRow>();
+            string firstDescription = null;
+
+            foreach (var entry in database.Entries)
+            {
+                var quest = entry.Quest;
+                if (quest == null || !QuestReferencesItem(quest, itemId)) continue;
+
+                rows.Add(new TooltipRow(
+                    string.IsNullOrEmpty(quest.DisplayName) ? quest.Id : quest.DisplayName,
+                    string.IsNullOrEmpty(quest.NpcId) ? "" : quest.NpcId));
+
+                if (firstDescription == null && !string.IsNullOrEmpty(quest.Description))
+                    firstDescription = quest.Description;
+            }
+
+            if (rows.Count > 0)
+                sections.Add(new TooltipSection("Used For", rows));
+
+            description = firstDescription;
+        }
+
+        static bool QuestReferencesItem(QuestDefinition quest, string itemId)
+        {
+            if (quest.Tasks != null)
+            {
+                foreach (var task in quest.Tasks)
+                {
+                    switch (task)
+                    {
+                        case FindAndTransferTask t when t.QuestItemId == itemId: return true;
+                        case ProvideSupplyTask t   when t.ItemId == itemId:      return true;
+                        case CraftTask t           when t.ItemId == itemId:      return true;
+                        case FindItemTask t        when t.ItemId == itemId:      return true;
+                    }
+                }
+            }
+
+            if (quest.Rewards != null)
+            {
+                foreach (var reward in quest.Rewards)
+                    if (reward.ItemId == itemId) return true;
+            }
+
+            return false;
         }
     }
 }

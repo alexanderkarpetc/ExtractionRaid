@@ -15,6 +15,8 @@ namespace View.UI
         [Header("Item visuals")]
         [SerializeField] TMP_Text _nameLabel;
         [SerializeField] TMP_Text _resourceText;
+        
+        [SerializeField] GameObject _questMarker;
 
         [Header("Durability (optional)")]
         [SerializeField] GameObject _durabilityRoot;
@@ -37,7 +39,14 @@ namespace View.UI
             UpdateResourceText(item);
             UpdateDurability(item);
             UpdateHotbarBadge(quickSlotKey);
+            UpdateQuestMarker(item);
             ResetHighlight();
+        }
+
+        void UpdateQuestMarker(ItemState item)
+        {
+            if (_questMarker == null) return;
+            _questMarker.SetActive(item?.Definition?.Category == ItemCategory.Quest);
         }
 
         void UpdateResourceText(ItemState item)
@@ -110,7 +119,8 @@ namespace View.UI
         {
             base.OnPointerEnter(eventData);
             if (CurrentItem == null || TooltipController.Instance == null) return;
-            var model = ItemTooltipBuilder.For(CurrentItem, App.Instance?.CoreDefinitions);
+            var model = ItemTooltipBuilder.For(CurrentItem, App.Instance?.CoreDefinitions,
+                App.Instance?.QuestDatabase);
             TooltipController.Instance.Show(model, eventData.position);
         }
 
