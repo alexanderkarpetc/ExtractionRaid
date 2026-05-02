@@ -36,7 +36,7 @@ namespace Tests.EditMode.Fakes
 
         public void EntityDied(EId id, EId killerId = default,
             Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f,
-            bool isHeadshot = false)
+            bool isHeadshot = false, Vector3 victimVelocity = default)
         {
             EntityDiedCalled = true;
             EntityDiedId = id;

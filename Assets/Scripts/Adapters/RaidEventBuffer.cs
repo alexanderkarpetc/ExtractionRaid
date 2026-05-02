@@ -52,6 +52,7 @@ namespace Adapters
         public EId KillerId;
         public Vector3 Position;
         public Vector3 Direction;
+        public Vector3 Velocity;
         public float CurrentHp;
         public float MaxHp;
         public float Damage;
@@ -122,7 +123,7 @@ namespace Adapters
 
         public void EntityDied(EId id, EId killerId = default,
             Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f,
-            bool isHeadshot = false)
+            bool isHeadshot = false, Vector3 victimVelocity = default)
         {
             _events.Add(new RaidEvent
             {
@@ -131,6 +132,7 @@ namespace Adapters
                 KillerId = killerId,
                 Position = hitPoint,
                 Direction = hitDirection,
+                Velocity = victimVelocity,
                 Damage = damage,
                 MaxHp = isHeadshot ? 1f : 0f, // pack — Ragdoll consumes це
             });

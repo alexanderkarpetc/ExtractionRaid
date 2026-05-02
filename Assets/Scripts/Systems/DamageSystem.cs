@@ -131,13 +131,29 @@ namespace Systems
                 if (health.IsAlive)
                     context.Events.EntityDamaged(hit.TargetId, health.CurrentHp, health.MaxHp);
                 else
+                {
+                    // Capture victim's movement velocity so ragdoll inherits momentum.
+                    // Bot is removed from state.Bots later у frame (ProcessDeathEvents),
+                    // so RagdollPresenter LateTick can't read it directly. Pack у event.
+                    Vector3 victimVelocity = Vector3.zero;
+                    for (int i = 0; i < state.Bots.Count; i++)
+                    {
+                        if (state.Bots[i].Id == hit.TargetId)
+                        {
+                            victimVelocity = state.Bots[i].Velocity;
+                            break;
+                        }
+                    }
+
                     context.Events.EntityDied(
                         hit.TargetId,
                         projectile != null ? projectile.OwnerId  : default,
                         hit.HitPoint,
                         projectile != null ? projectile.Direction : Vector3.forward,
                         finalDamage,
-                        isHeadshot);
+                        isHeadshot,
+                        victimVelocity);
+                }
 
                 // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
                 var hitDir = projectile != null ? projectile.Direction : Vector3.forward;

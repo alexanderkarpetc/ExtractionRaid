@@ -14,7 +14,7 @@ namespace Adapters
         void EntityDamaged(EId id, float currentHp, float maxHp);
         void EntityDied(EId id, EId killerId = default,
             Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f,
-            bool isHeadshot = false);
+            bool isHeadshot = false, Vector3 victimVelocity = default);
         void GroundItemSpawned(EId id, Vector3 position, string definitionId);
         void GroundItemDespawned(EId id);
 

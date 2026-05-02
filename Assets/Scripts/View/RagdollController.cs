@@ -121,9 +121,14 @@ namespace View
                 mb.enabled = false;
             }
 
-            // Switch all bones to physics + apply damping + mass overrides.
+            // Switch all bones to physics + apply damping + mass overrides + inherited velocity.
             // Mass distribution drives fall feel: heavy hips = stable knockback center,
             // light head + arms = trail naturally instead of leading the fall.
+            // Movement velocity inheritance: bots use kinematic translation (NavMeshAgent
+            // or BotMovementSystem writes Transform), so RBs have zero linearVelocity
+            // when switched to dynamic. Without inheritance, a running bot would just
+            // stop and drop straight down. Pre-seeding linearVelocity preserves momentum
+            // so the corpse continues into the fall у напрямку bot was moving.
             for (int i = 0; i < _rbs.Length; i++)
             {
                 var rb = _rbs[i];
@@ -133,6 +138,7 @@ namespace View
                 rb.linearDamping   = p.LinearDamping;
                 rb.angularDamping  = p.AngularDamping;
                 rb.mass            = ResolveMass(rb.name, rb.mass, p);
+                rb.linearVelocity  = p.MovementVelocity;
                 rb.WakeUp();
             }
 
@@ -308,6 +314,7 @@ namespace View
             public float   HipsImpulseScale;
             public float   StaggerDuration;
             public float   StaggerSpringMultiplier;
+            public Vector3 MovementVelocity;
             public float   LinearDamping;
             public float   AngularDamping;
             public float   JointSpringForce;

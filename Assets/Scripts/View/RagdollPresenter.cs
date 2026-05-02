@@ -48,6 +48,13 @@ namespace View
         {
             var botPresenter = ApplicationCore.App.Instance?.BotPresenter;
             if (botPresenter == null) return;
+
+            // Bot's movement velocity is packed into the event by DamageSystem at death
+            // time — RaidState.Bots list is cleared у Tick before LateTick runs, so
+            // we can't query it directly. Inheriting it makes corpse continue forward
+            // into the fall у напрямку bot was moving.
+            Vector3 movementVelocity = e.Velocity;
+
             if (!botPresenter.TryReleaseCharacterBody(e.Id, out var bodyGo) || bodyGo == null)
                 return;
 
@@ -79,6 +86,7 @@ namespace View
                 HipsImpulseScale        = profile.HipsImpulseScale,
                 StaggerDuration         = profile.StaggerDuration,
                 StaggerSpringMultiplier = profile.StaggerSpringMultiplier,
+                MovementVelocity        = movementVelocity,
                 LinearDamping           = cfg.LinearDamping,
                 AngularDamping          = cfg.AngularDamping,
                 JointSpringForce        = cfg.JointSpringForce,
