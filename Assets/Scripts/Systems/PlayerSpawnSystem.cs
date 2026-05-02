@@ -17,7 +17,8 @@ namespace Systems
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             var inventory = App.Instance.Player.Inventory;
-            if (levelId == "shooting_range" || IsInventoryEmpty(App.Instance.Player.Inventory))
+            if (levelId == "shooting_range" || levelId == "kill_feel_range"
+                || IsInventoryEmpty(App.Instance.Player.Inventory))
             {
                 ClearInventory(inventory);
                 GiveStartingLoadout(state, inventory);

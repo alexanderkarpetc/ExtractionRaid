@@ -63,6 +63,8 @@ namespace Session
             // SpawnTestBots();
             if (LevelState.LevelId == "shooting_range")
                 SpawnShootingRangeTargets();
+            else if (LevelState.LevelId == "kill_feel_range")
+                SpawnKillFeelTargets();
 
             _eventBuffer.RaidStarted();
         }
@@ -321,6 +323,97 @@ namespace Session
                 var p5 = new UnityEngine.Vector3(8f, 0f, 28f);
                 var wp5 = new[] { new UnityEngine.Vector3(4f, 0f, 28f), new UnityEngine.Vector3(12f, 0f, 28f) };
                 BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p5, wp5, _eventBuffer);
+            }
+        }
+
+        // Kill-feel test layout: many low-HP targets для iterating on death feel + ragdoll.
+        // Targets spawn in groups by HP tier so player can directly compare 1-shot/2-shot/3-shot
+        // kill feedback. Patrol/fast row tests moving-target ragdoll. Helmet row tests headshot
+        // discrimination.
+        void SpawnKillFeelTargets()
+        {
+            // ── Row 1: HP=10 (one-shot pistol/rifle) — close ──
+            for (int i = 0; i < 8; i++)
+            {
+                float x = -14f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 8f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 2: HP=25 ──────────────────────────────────
+            for (int i = 0; i < 8; i++)
+            {
+                float x = -14f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 12f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel25", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 3: HP=50 ──────────────────────────────────
+            for (int i = 0; i < 8; i++)
+            {
+                float x = -14f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 16f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel50", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 4: HP=75 ──────────────────────────────────
+            for (int i = 0; i < 6; i++)
+            {
+                float x = -10f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 20f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel75", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 5: HP=100 (multi-shot rifle, low-end LMG) ─
+            for (int i = 0; i < 6; i++)
+            {
+                float x = -10f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 24f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel100", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 6: Patrol (moving target ragdoll) ─────────
+            for (int i = 0; i < 4; i++)
+            {
+                float cx = 16f + i * 5f;
+                var pos = new UnityEngine.Vector3(cx, 0f, 14f);
+                var wpA = new UnityEngine.Vector3(cx - 3f, 0f, 14f);
+                var wpB = new UnityEngine.Vector3(cx + 3f, 0f, 14f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+            }
+
+            // ── Row 7: Fast (running target — knockback test) ─
+            for (int i = 0; i < 3; i++)
+            {
+                float cx = 16f + i * 6f;
+                var pos = new UnityEngine.Vector3(cx, 0f, 22f);
+                var wpA = new UnityEngine.Vector3(cx - 5f, 0f, 22f);
+                var wpB = new UnityEngine.Vector3(cx + 5f, 0f, 22f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelFast", pos, new[] { wpA, wpB }, _eventBuffer);
+            }
+
+            // ── Row 8: Helmet (headshot vs bodyshot test) ────
+            // Same HP, different death silhouettes depending on aim zone — use to verify
+            // headshot/bodyshot ragdoll profiles diverge visibly.
+            for (int i = 0; i < 6; i++)
+            {
+                float x = -10f + i * 4f;
+                var pos = new UnityEngine.Vector3(x, 0f, 28f);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelHelmet", pos, new[] { pos }, _eventBuffer);
+            }
+
+            // ── Row 9: Cluster (test multi-kill chain) ────────
+            // Tightly packed — for spray/burst kill chains where multiple ragdolls fire
+            // back-to-back. Tests pool overflow + visual chaos handling.
+            for (int i = 0; i < 5; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    float x = -22f + i * 1.5f;
+                    float z = 14f + j * 1.5f;
+                    var pos = new UnityEngine.Vector3(x, 0f, z);
+                    BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer);
+                }
             }
         }
 

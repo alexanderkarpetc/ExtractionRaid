@@ -13,16 +13,30 @@ MonoBehaviour:
   m_Name: Ragdoll
   m_EditorClassIdentifier: Game::Dev.ViewCheatsRagdollSection
   Enabled: 1
-  ImpulseScale: 0.51
-  MinImpulse: 3
-  MaxImpulse: 10
-  HipsImpulseScale: 0.25
-  UpwardImpulseBias: 1
+  Headshot:
+    ImpulseScale: 0.3
+    MinImpulse: 1
+    MaxImpulse: 5
+    HipsImpulseScale: 0
+    UpwardImpulseBias: 0.1
+    StaggerDuration: 0
+    StaggerSpringMultiplier: 0
+  Bodyshot:
+    ImpulseScale: 0.51
+    MinImpulse: 3
+    MaxImpulse: 10
+    HipsImpulseScale: 0.25
+    UpwardImpulseBias: 1
+    StaggerDuration: 0.4
+    StaggerSpringMultiplier: 100
   LinearDamping: 0.5
   AngularDamping: 1.5
   JointSpringForce: 10
   JointSpringDamper: 2
   HeadTwistLimit: 15
   HeadSwingLimit: 40
+  HipsMass: 6
+  HeadMass: 1
+  UpperArmMass: 0.7
   SettleAfter: 5
   Lifetime: 90

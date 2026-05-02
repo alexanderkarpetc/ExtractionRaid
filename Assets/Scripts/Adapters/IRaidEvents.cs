@@ -13,7 +13,8 @@ namespace Adapters
         void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface");
         void EntityDamaged(EId id, float currentHp, float maxHp);
         void EntityDied(EId id, EId killerId = default,
-            Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f);
+            Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f,
+            bool isHeadshot = false);
         void GroundItemSpawned(EId id, Vector3 position, string definitionId);
         void GroundItemDespawned(EId id);
 

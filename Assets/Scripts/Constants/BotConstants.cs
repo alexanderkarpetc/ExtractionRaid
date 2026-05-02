@@ -274,6 +274,75 @@ namespace Constants
             behaviors: BotBehaviorFlags.None
         );
 
+        // --- Kill-feel test targets (ShootingScene_KillFeel) ---
+        // Low-HP variants для testing kill mechanics + ragdoll feedback. HP tiers chosen
+        // so common weapons one-shot or two-shot тhem — fast iteration on death feel.
+
+        public static readonly BotTypeConfig TargetKillFeel10 = new(
+            typeId: "TargetKillFeel10", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 10f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetKillFeel25 = new(
+            typeId: "TargetKillFeel25", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 25f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetKillFeel50 = new(
+            typeId: "TargetKillFeel50", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 50f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetKillFeel75 = new(
+            typeId: "TargetKillFeel75", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 75f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetKillFeel100 = new(
+            typeId: "TargetKillFeel100", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 100f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.None
+        );
+
+        public static readonly BotTypeConfig TargetKillFeelPatrol = new(
+            typeId: "TargetKillFeelPatrol", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 50f, patrolSpeed: 3f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.Patrol
+        );
+
+        public static readonly BotTypeConfig TargetKillFeelFast = new(
+            typeId: "TargetKillFeelFast", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 30f, patrolSpeed: 6f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            behaviors: BotBehaviorFlags.Patrol
+        );
+
+        public static readonly BotTypeConfig TargetKillFeelHelmet = new(
+            typeId: "TargetKillFeelHelmet", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            maxHp: 50f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            reactionTime: 999f, accuracy: 0f, engageRange: 0f,
+            helmetDefinitionId: "Helmet_Basic",
+            behaviors: BotBehaviorFlags.None
+        );
+
         static readonly Dictionary<string, BotTypeConfig> Registry = new()
         {
             { Scav.TypeId, Scav },
@@ -288,6 +357,14 @@ namespace Constants
             { TargetHeavyArmor.TypeId, TargetHeavyArmor },
             { TargetGlassCannon.TypeId, TargetGlassCannon },
             { TargetTank.TypeId, TargetTank },
+            { TargetKillFeel10.TypeId, TargetKillFeel10 },
+            { TargetKillFeel25.TypeId, TargetKillFeel25 },
+            { TargetKillFeel50.TypeId, TargetKillFeel50 },
+            { TargetKillFeel75.TypeId, TargetKillFeel75 },
+            { TargetKillFeel100.TypeId, TargetKillFeel100 },
+            { TargetKillFeelPatrol.TypeId, TargetKillFeelPatrol },
+            { TargetKillFeelFast.TypeId, TargetKillFeelFast },
+            { TargetKillFeelHelmet.TypeId, TargetKillFeelHelmet },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

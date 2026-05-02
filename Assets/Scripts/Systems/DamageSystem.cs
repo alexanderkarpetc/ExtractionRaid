@@ -136,7 +136,8 @@ namespace Systems
                         projectile != null ? projectile.OwnerId  : default,
                         hit.HitPoint,
                         projectile != null ? projectile.Direction : Vector3.forward,
-                        finalDamage);
+                        finalDamage,
+                        isHeadshot);
 
                 // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
                 var hitDir = projectile != null ? projectile.Direction : Vector3.forward;
