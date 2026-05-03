@@ -52,14 +52,17 @@ namespace Tests.EditMode
         [Test]
         public void SpawnBot_CreatesWeaponFromConfig()
         {
+            EditModeTestsUtils.EnsureAppForTests(); // injects test registry з Scatter delivery
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             BotSpawnSystem.SpawnBot(state, "Boss", Vector3.zero, new[] { Vector3.zero }, events);
 
             var bot = state.Bots[0];
+            // Tier 4a: Boss uses Scatter delivery (7 pellets, 30° spread). Weapon composed
+            // через Builder pipeline; test registry includes Scatter (see EditModeTestsUtils).
             Assert.IsNotNull(bot.Weapon);
-            Assert.AreEqual("Weapon_Rifle", bot.Weapon.PrefabId);
+            Assert.AreEqual("Scatter", bot.Weapon.DeliveryDefinition?.Id);
             Assert.AreEqual(7, bot.Weapon.Stats.ProjectilesPerShot);
         }
 

@@ -186,25 +186,6 @@ namespace View
             return _currentWeaponView;
         }
 
-        /// <summary>
-        /// Legacy entrypoint — resolves prefab via <c>Resources.Load("Prefabs/Weapons/" + prefabId)</c>.
-        /// Used by bot weapons (BotView.Initialize) until Tier 4 migrates them to the assembly pipeline.
-        /// New code should pass a <see cref="GameObject"/> directly via the other overload.
-        /// </summary>
-        public WeaponView SwapWeaponModel(string prefabId)
-        {
-            if (string.IsNullOrEmpty(prefabId))
-                return SwapWeaponModel((GameObject)null, null);
-
-            var prefab = Resources.Load<GameObject>("Prefabs/Weapons/" + prefabId);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[CharacterBody] Weapon prefab not found: Prefabs/Weapons/{prefabId}");
-                return SwapWeaponModel((GameObject)null, prefabId);
-            }
-            return SwapWeaponModel(prefab, prefabId);
-        }
-
         public void ClearWeaponModel()
         {
             if (_currentWeaponModel != null)

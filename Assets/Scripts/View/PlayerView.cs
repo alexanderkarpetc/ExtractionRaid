@@ -83,16 +83,13 @@ namespace View
                 {
                     if (state.EquippedWeapon.PrefabId != _body.CurrentWeaponPrefabId)
                     {
-                        // Tier 8 Wave A: prefer direct GameObject reference from Delivery SO.
-                        // Fallback to legacy string path keeps bot weapons working until Tier 4.
-                        // Wave B: payload prefab (optional) attached at WeaponView's PayloadMount.
-                        if (state.EquippedWeapon.WeaponPrefab != null)
-                            _body.SwapWeaponModel(
-                                state.EquippedWeapon.WeaponPrefab,
-                                state.EquippedWeapon.PrefabId,
-                                state.EquippedWeapon.PayloadPrefab);
-                        else
-                            _body.SwapWeaponModel(state.EquippedWeapon.PrefabId);
+                        // Tier 4a: single Builder path. Delivery._weaponPrefab is canonical;
+                        // if it's null, weapon assembly failed — view stays empty (caller
+                        // already saw WeaponAssemblyFailed event).
+                        _body.SwapWeaponModel(
+                            state.EquippedWeapon.WeaponPrefab,
+                            state.EquippedWeapon.PrefabId,
+                            state.EquippedWeapon.PayloadPrefab);
                         _onMuzzlePointChanged?.Invoke(_body.MuzzlePoint);
                     }
 

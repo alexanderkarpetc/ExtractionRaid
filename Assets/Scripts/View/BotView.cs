@@ -45,15 +45,21 @@ namespace View
             _body = body;
         }
 
-        public void Initialize(EId id, string typeId, string weaponPrefabId, float maxHp)
+        /// <summary>
+        /// Tier 4a — bot visual init through Builder pipeline. Weapon мoдель композиться так
+        /// само як player'а: Delivery._weaponPrefab + optional payload attachment, не legacy
+        /// Resources.Load("Prefabs/Weapons/" + prefabId) шлях. Нulls tolerated — weapon може
+        /// fail assembly під час migration або для test bots.
+        /// </summary>
+        public void Initialize(EId id, string typeId, WeaponEntityState weapon, float maxHp)
         {
             EId = id;
             TypeId = typeId;
             _healthBar = WorldHealthBar.Create(transform, maxHp);
             _debugLabel = BotDebugLabel.Create(transform);
 
-            if (!string.IsNullOrEmpty(weaponPrefabId) && _body != null)
-                _body.SwapWeaponModel(weaponPrefabId);
+            if (weapon != null && _body != null && weapon.WeaponPrefab != null)
+                _body.SwapWeaponModel(weapon.WeaponPrefab, weapon.PrefabId, weapon.PayloadPrefab);
         }
 
         public void OnDamaged(float currentHp, float maxHp)

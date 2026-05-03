@@ -53,17 +53,25 @@ namespace Systems
             var id = state.AllocateEId();
             var inventory = new InventoryState();
 
-            var weaponDefId = MapWeaponPrefabToDefinition(config.WeaponPrefabId);
-            if (weaponDefId != null)
+            // Tier 4a — drop bot's actual weapon з current ammo state. Reconstruct
+            // WeaponConfiguration from bot.Weapon fields → ItemState carries that config.
+            // Player can pick up + equip → goes through same WeaponSyncSystem.BuildWeaponForItem.
+            if (bot.Weapon != null)
             {
+                var droppedConfig = new WeaponConfiguration(
+                    payload:        bot.Weapon.PayloadCore,
+                    delivery:       bot.Weapon.DeliveryCore,
+                    exotic:         bot.Weapon.HasExotic ? bot.Weapon.ExoticMod : (ExoticModInstance?)null,
+                    ammoInMagazine: bot.Weapon.AmmoInMagazine);
                 var weaponItemId = state.AllocateEId();
-                inventory.WeaponSlots[0] = WeaponItemFactory.SpawnItem(weaponItemId, weaponDefId);
+                inventory.WeaponSlots[0] = ItemState.CreateWeapon(weaponItemId, "Weapon", droppedConfig);
             }
 
             int backpackSlot = 0;
 
-            var ammoDefId = MapWeaponPrefabToAmmo(config.WeaponPrefabId);
-            if (ammoDefId != null)
+            // Ammo derived з payload's AmmoType (e.g. BallisticRound → "Ammo_Rifle").
+            var ammoDefId = bot.Weapon?.PayloadDefinition?.AmmoType;
+            if (!string.IsNullOrEmpty(ammoDefId))
             {
                 var ammoId = state.AllocateEId();
                 var def = ItemDefinition.Get(ammoDefId);
@@ -253,24 +261,5 @@ namespace Systems
             return true;
         }
 
-        static string MapWeaponPrefabToDefinition(string weaponPrefabId)
-        {
-            return weaponPrefabId switch
-            {
-                "Weapon_Rifle"  => "Rifle",
-                "Weapon_Pistol" => "Pistol",
-                _               => null,
-            };
-        }
-
-        static string MapWeaponPrefabToAmmo(string weaponPrefabId)
-        {
-            return weaponPrefabId switch
-            {
-                "Weapon_Rifle"  => "Ammo_Rifle",
-                "Weapon_Pistol" => "Ammo_Pistol",
-                _               => null,
-            };
-        }
     }
 }

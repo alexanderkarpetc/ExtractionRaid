@@ -24,7 +24,7 @@ namespace View
                 switch (e.Type)
                 {
                     case RaidEventType.BotSpawned:
-                        SpawnView(e.Id, e.Position, e.StringPayload);
+                        SpawnView(e.Id, e.Position, e.StringPayload, session);
                         break;
                     case RaidEventType.BotDespawned:
                         DespawnView(e.Id);
@@ -79,10 +79,23 @@ namespace View
             }
         }
 
-        void SpawnView(EId id, Vector3 position, string typeId)
+        void SpawnView(EId id, Vector3 position, string typeId, RaidSession session)
         {
             if (!BotConstants.TryGetConfig(typeId, out var config))
                 return;
+
+            // Tier 4a: bot weapon entity already built by BotSpawnSystem (Builder pipeline).
+            // Look it up so visual mesh resolves через Delivery._weaponPrefab + payload, not
+            // legacy WeaponPrefabId Resources.Load.
+            WeaponEntityState weapon = null;
+            for (int i = 0; i < session.RaidState.Bots.Count; i++)
+            {
+                if (session.RaidState.Bots[i].Id == id)
+                {
+                    weapon = session.RaidState.Bots[i].Weapon;
+                    break;
+                }
+            }
 
             // 1. Shell (View + Collider)
             var shellPrefab = GetPrefab(config.PrefabId);
@@ -109,7 +122,7 @@ namespace View
                 }
             }
 
-            view.Initialize(id, typeId, config.WeaponPrefabId, config.MaxHp);
+            view.Initialize(id, typeId, weapon, config.MaxHp);
             view.GizmoVisionRange = config.VisionRange;
             view.GizmoVisionAngle = config.VisionAngle;
 

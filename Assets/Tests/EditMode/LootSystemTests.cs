@@ -16,9 +16,13 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
+            EditModeTestsUtils.EnsureAppForTests();
             _state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             _events = new FakeRaidEvents();
         }
+
+        [TearDown]
+        public void TearDown() => EditModeTestsUtils.ResetApp();
 
         BotEntityState CreateBot(string typeId, Vector3 position, int medkits = 0, int grenades = 0)
         {
@@ -32,6 +36,16 @@ namespace Tests.EditMode
             bot.Blackboard.Reset();
             bot.Blackboard.MedkitsRemaining = medkits;
             bot.Blackboard.GrenadesRemaining = grenades;
+
+            // Tier 4a: bot weapon must be composed через Builder pipeline so loot drop
+            // (which reads bot.Weapon) has Payload + Delivery refs to derive ammo + config.
+            if (BotConstants.TryGetConfig(typeId, out var cfg))
+            {
+                var weaponItem = ItemState.CreateWeapon(_state.AllocateEId(), "Weapon", cfg.WeaponConfig);
+                bot.Weapon = Systems.WeaponSyncSystem.BuildWeaponForItem(
+                    weaponItem, ApplicationCore.App.Instance.CoreDefinitions, _events);
+            }
+
             return bot;
         }
 

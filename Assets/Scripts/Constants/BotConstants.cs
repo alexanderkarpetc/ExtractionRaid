@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using State;
 using UnityEngine;
 
 namespace Constants
@@ -21,7 +22,11 @@ namespace Constants
         public readonly string TypeId;
         public readonly string PrefabId;       // shell prefab (View + Collider)
         public readonly string BodyPrefabId;   // visual body prefab (CharacterBody + mesh)
-        public readonly string WeaponPrefabId;
+
+        // Tier 4a — bot weapon composition. Drives BotSpawnSystem → WeaponSyncSystem.BuildWeaponForItem.
+        // Same pipeline as player; bot weapon stats are now derived from Payload + Delivery cores
+        // (full Penetration / ArmorDamage / BleedChance / HeadshotMultiplier support).
+        public readonly WeaponConfiguration WeaponConfig;
 
         // Health
         public readonly float MaxHp;
@@ -59,14 +64,6 @@ namespace Constants
         public readonly float GrenadeCooldown;
         public readonly float GrenadeMinThrowDist;
 
-        // Weapon overrides
-        public readonly float FireInterval;
-        public readonly float ProjectileSpeed;
-        public readonly float ProjectileDamage;
-        public readonly float ProjectileLifetime;
-        public readonly int ProjectilesPerShot;
-        public readonly float SpreadAngle;
-
         // Armor
         public readonly string HelmetDefinitionId;
         public readonly string BodyArmorDefinitionId;
@@ -77,7 +74,7 @@ namespace Constants
         public bool Has(BotBehaviorFlags flag) => (Behaviors & flag) == flag;
 
         public BotTypeConfig(
-            string typeId, string prefabId, string weaponPrefabId,
+            string typeId, string prefabId, WeaponConfiguration weaponConfig,
             string bodyPrefabId = "CharacterBody",
             float maxHp = 100f,
             float healAmount = 0f, float healThreshold = 0f, float healCooldown = 0f,
@@ -89,8 +86,6 @@ namespace Constants
             float hearingRange = 6f, float targetMemoryDuration = 8f,
             float reactionTime = 0.5f, float accuracy = 0.6f, float engageRange = 20f,
             float dodgeCooldown = 0f,
-            float fireInterval = 0.3f, float projectileSpeed = 20f, float projectileDamage = 10f,
-            float projectileLifetime = 3f, int projectilesPerShot = 1, float spreadAngle = 5f,
             int grenadeCount = 0, float grenadeCooldown = 0f, float grenadeMinThrowDist = 5f,
             string helmetDefinitionId = null, string bodyArmorDefinitionId = null,
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot)
@@ -98,7 +93,7 @@ namespace Constants
             TypeId = typeId;
             PrefabId = prefabId;
             BodyPrefabId = bodyPrefabId;
-            WeaponPrefabId = weaponPrefabId;
+            WeaponConfig = weaponConfig;
             MaxHp = maxHp;
             HealAmount = healAmount;
             HealThreshold = healThreshold;
@@ -123,12 +118,6 @@ namespace Constants
             GrenadeCount = grenadeCount;
             GrenadeCooldown = grenadeCooldown;
             GrenadeMinThrowDist = grenadeMinThrowDist;
-            FireInterval = fireInterval;
-            ProjectileSpeed = projectileSpeed;
-            ProjectileDamage = projectileDamage;
-            ProjectileLifetime = projectileLifetime;
-            ProjectilesPerShot = projectilesPerShot;
-            SpreadAngle = spreadAngle;
             HelmetDefinitionId = helmetDefinitionId;
             BodyArmorDefinitionId = bodyArmorDefinitionId;
             Behaviors = behaviors;
@@ -153,27 +142,46 @@ namespace Constants
         public const float WaypointArrivalDistance = 1f;
         public const float PatrolWaitTime = 2f;
 
+        // --- Bot weapon presets (Tier 4a — Builder configurations) ---
+        // Bots inherit от Builder system: Payload + Delivery composition through
+        // WeaponSyncSystem.BuildWeaponForItem. Stats (Damage, FireInterval, Spread,
+        // Penetration, ArmorDamage, BleedChance, Headshot multiplier) all derived from cores.
+
+        static readonly WeaponConfiguration RifleWeapon = new(
+            payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("Auto",          RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 30);
+
+        static readonly WeaponConfiguration PistolWeapon = new(
+            payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 12);
+
+        static readonly WeaponConfiguration ShotgunWeapon = new(
+            payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("Scatter",       RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 5);
+
         // --- Bot type definitions ---
 
         public static readonly BotTypeConfig Scav = new(
-            typeId: "Scav", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "Scav", prefabId: "BotShell", weaponConfig: PistolWeapon,
             maxHp: 80f, moveSpeed: 3.5f, chaseSpeed: 4f,
             visionRange: 25f, visionAngle: 110f,
             targetMemoryDuration: 5f, reactionTime: 0.8f, accuracy: 0.5f,
-            fireInterval: 0.4f, projectileSpeed: 18f, projectileDamage: 8f,
-            spreadAngle: 8f,
             helmetDefinitionId: "Helmet_Basic"
         );
 
         public static readonly BotTypeConfig PMC = new(
-            typeId: "PMC", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "PMC", prefabId: "BotShell", weaponConfig: RifleWeapon,
             healAmount: 30f, healThreshold: 0.5f, healCooldown: 15f,
             moveSpeed: 4.5f, patrolSpeed: 2.5f,
             visionRange: 35f,
             reactionTime: 0.4f, accuracy: 0.75f, engageRange: 28f,
             dodgeCooldown: 5f,
-            fireInterval: 0.25f, projectileSpeed: 22f, projectileDamage: 12f,
-            spreadAngle: 4f,
             grenadeCount: 2, grenadeCooldown: 20f, grenadeMinThrowDist: 5f,
             helmetDefinitionId: "Helmet_Basic", bodyArmorDefinitionId: "Armor_Basic",
             medkitCount: 2,
@@ -183,20 +191,18 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig Boss = new(
-            typeId: "Boss", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "Boss", prefabId: "BotShell", weaponConfig: ShotgunWeapon,
             maxHp: 200f, chaseSpeed: 5.5f,
             visionRange: 40f, visionAngle: 140f,
             targetMemoryDuration: 12f, reactionTime: 0.3f, accuracy: 0.65f,
             engageRange: 15f, dodgeCooldown: 3f,
-            fireInterval: 0.5f, projectileSpeed: 28f, projectileDamage: 7f,
-            projectileLifetime: 2f, projectilesPerShot: 7, spreadAngle: 25f,
             bodyArmorDefinitionId: "Armor_Basic",
             behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.Dodge
         );
 
         public static readonly BotTypeConfig Target = new(
-            typeId: "Target", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "Target", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -204,7 +210,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetWeak = new(
-            typeId: "TargetWeak", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetWeak", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -213,7 +219,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetPatrol = new(
-            typeId: "TargetPatrol", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetPatrol", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f, patrolSpeed: 3f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -221,7 +227,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetFast = new(
-            typeId: "TargetFast", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetFast", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f, patrolSpeed: 6f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -229,7 +235,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetDodge = new(
-            typeId: "TargetDodge", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetDodge", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f, dodgeCooldown: 2f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -239,7 +245,7 @@ namespace Constants
         // --- Armored target types (shooting range) ---
 
         public static readonly BotTypeConfig TargetLightArmor = new(
-            typeId: "TargetLightArmor", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetLightArmor", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -248,7 +254,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetHeavyArmor = new(
-            typeId: "TargetHeavyArmor", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetHeavyArmor", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10000f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -257,7 +263,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetGlassCannon = new(
-            typeId: "TargetGlassCannon", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetGlassCannon", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -266,7 +272,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetTank = new(
-            typeId: "TargetTank", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetTank", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 200f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -279,7 +285,7 @@ namespace Constants
         // so common weapons one-shot or two-shot тhem — fast iteration on death feel.
 
         public static readonly BotTypeConfig TargetKillFeel10 = new(
-            typeId: "TargetKillFeel10", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeel10", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 10f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -287,7 +293,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeel25 = new(
-            typeId: "TargetKillFeel25", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeel25", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 25f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -295,7 +301,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeel50 = new(
-            typeId: "TargetKillFeel50", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeel50", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -303,7 +309,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeel75 = new(
-            typeId: "TargetKillFeel75", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeel75", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 75f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -311,7 +317,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeel100 = new(
-            typeId: "TargetKillFeel100", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeel100", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 100f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -319,7 +325,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeelPatrol = new(
-            typeId: "TargetKillFeelPatrol", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeelPatrol", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 50f, patrolSpeed: 3f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -327,7 +333,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeelFast = new(
-            typeId: "TargetKillFeelFast", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeelFast", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 30f, patrolSpeed: 6f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,
@@ -335,7 +341,7 @@ namespace Constants
         );
 
         public static readonly BotTypeConfig TargetKillFeelHelmet = new(
-            typeId: "TargetKillFeelHelmet", prefabId: "BotShell", weaponPrefabId: "Weapon_Rifle",
+            typeId: "TargetKillFeelHelmet", prefabId: "BotShell", weaponConfig: RifleWeapon,
             maxHp: 50f,
             visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
             reactionTime: 999f, accuracy: 0f, engageRange: 0f,

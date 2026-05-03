@@ -74,12 +74,22 @@ namespace Systems.Bot
                         Random.Range(-accuracySpread, accuracySpread), 0f) * pelletDir;
 
                 var projectileId = state.AllocateEId();
+                // Tier 4a — pass full Builder-derived stats: HeadshotMultiplier, Penetration,
+                // ArmorDamage, BleedChance — так bot shots interact з player armor / headshot
+                // pipeline ідентично як player shots interact з bot armor. Pre-migration bots
+                // had Penetration=0 → завжди absorbed by armor. (No ammo modifiers — bots
+                // не manage AmmoState; стат composer на base values з Payload core.)
                 var projectile = ProjectileEntityState.Create(
                     projectileId, bot.Id, spawnPos, pelletDir.normalized,
                     weapon.Stats.ProjectileSpeed * ctx.ShootingConfig.ProjectileSpeedMultiplier,
                     state.ElapsedTime,
                     weapon.Stats.ProjectileLifetime,
-                    weapon.Stats.Damage * ctx.ShootingConfig.DamageMultiplier);
+                    weapon.Stats.Damage * ctx.ShootingConfig.DamageMultiplier,
+                    headshotDamageMultiplier: weapon.Stats.HeadshotDamageMultiplier,
+                    targetedEntityId: default,
+                    penetration:      weapon.Stats.BasePenetration,
+                    armorDamage:      weapon.Stats.BaseArmorDamage,
+                    bleedChance:      weapon.Stats.BaseBleedChance);
 
                 state.Projectiles.Add(projectile);
                 ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized, weapon.Stats.Damage);

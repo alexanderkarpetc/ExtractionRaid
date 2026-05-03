@@ -79,7 +79,7 @@ namespace Session
             {
                 if (UnityEngine.Random.value > sp.spawnChance) continue;
                 BotSpawnSystem.SpawnBot(RaidState, sp.botTypeId,
-                    sp.transform.position, sp.GetPatrolPositions(), _eventBuffer);
+                    sp.transform.position, sp.GetPatrolPositions(), _eventBuffer, _coreDefinitions);
             }
 
             foreach (var sp in lootPoints)
@@ -203,7 +203,7 @@ namespace Session
                     new UnityEngine.Vector3(15f, 0f, 5f),
                     new UnityEngine.Vector3(20f, 0f, 10f),
                 },
-                _eventBuffer);
+                _eventBuffer, _coreDefinitions);
 
             // BotSpawnSystem.SpawnBot(RaidState, "PMC",
             //     new UnityEngine.Vector3(-10f, 0f, 15f),
@@ -213,7 +213,7 @@ namespace Session
             //         new UnityEngine.Vector3(-5f, 0f, 20f),
             //         new UnityEngine.Vector3(-15f, 0f, 20f),
             //     },
-            //     _eventBuffer);
+            //     _eventBuffer, _coreDefinitions);
         }
 
         void SpawnTestContainers()
@@ -236,7 +236,7 @@ namespace Session
             {
                 float x = -8f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 8f);
-                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 2: Static medium (z=16) ───────────────────
@@ -244,7 +244,7 @@ namespace Session
             {
                 float x = -8f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 16f);
-                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 3: Static far (z=24) ──────────────────────
@@ -252,7 +252,7 @@ namespace Session
             {
                 float x = -8f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 24f);
-                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "Target", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 4: Horizontal patrol (z=20) ───────────────
@@ -262,7 +262,7 @@ namespace Session
                 var pos = new UnityEngine.Vector3(cx, 0f, 20f);
                 var wpA = new UnityEngine.Vector3(cx - 4f, 0f, 20f);
                 var wpB = new UnityEngine.Vector3(cx + 4f, 0f, 20f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 5: Vertical patrol (x=-16, various z) ────
@@ -272,7 +272,7 @@ namespace Session
                 var pos = new UnityEngine.Vector3(-16f, 0f, z);
                 var wpA = new UnityEngine.Vector3(-16f, 0f, 6f);
                 var wpB = new UnityEngine.Vector3(-16f, 0f, 26f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetPatrol", pos, new[] { wpA, wpB }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 6: Fast targets (z=12) ────────────────────
@@ -282,7 +282,7 @@ namespace Session
                 var pos = new UnityEngine.Vector3(cx, 0f, 12f);
                 var wpA = new UnityEngine.Vector3(cx - 6f, 0f, 12f);
                 var wpB = new UnityEngine.Vector3(cx + 6f, 0f, 12f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetFast", pos, new[] { wpA, wpB }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetFast", pos, new[] { wpA, wpB }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 7: Dodge targets (x=-12) ──────────────────
@@ -290,7 +290,7 @@ namespace Session
             {
                 float z = 12f + i * 4f;
                 var pos = new UnityEngine.Vector3(-12f, 0f, z);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetDodge", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetDodge", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 8: Weak/killable (x=36, z=16) ────────────
@@ -298,31 +298,31 @@ namespace Session
             {
                 float x = 36f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 16f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetWeak", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetWeak", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 9: Armored targets (z=28) ────────────────
             {
                 // Helmet only — test ricochet
                 var p1 = new UnityEngine.Vector3(-8f, 0f, 28f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetLightArmor", p1, new[] { p1 }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetLightArmor", p1, new[] { p1 }, _eventBuffer, _coreDefinitions);
 
                 // Full armor — test pen vs protection
                 var p2 = new UnityEngine.Vector3(-4f, 0f, 28f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p2, new[] { p2 }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p2, new[] { p2 }, _eventBuffer, _coreDefinitions);
 
                 // Glass cannon — armor breaks fast, then dies
                 var p3 = new UnityEngine.Vector3(0f, 0f, 28f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetGlassCannon", p3, new[] { p3 }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetGlassCannon", p3, new[] { p3 }, _eventBuffer, _coreDefinitions);
 
                 // Tank — no helmet, body armor only, 200 HP
                 var p4 = new UnityEngine.Vector3(4f, 0f, 28f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetTank", p4, new[] { p4 }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetTank", p4, new[] { p4 }, _eventBuffer, _coreDefinitions);
 
                 // Heavy armor + patrol — moving armored target
                 var p5 = new UnityEngine.Vector3(8f, 0f, 28f);
                 var wp5 = new[] { new UnityEngine.Vector3(4f, 0f, 28f), new UnityEngine.Vector3(12f, 0f, 28f) };
-                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p5, wp5, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetHeavyArmor", p5, wp5, _eventBuffer, _coreDefinitions);
             }
         }
 
@@ -337,7 +337,7 @@ namespace Session
             {
                 float x = -14f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 8f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 2: HP=25 ──────────────────────────────────
@@ -345,7 +345,7 @@ namespace Session
             {
                 float x = -14f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 12f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel25", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel25", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 3: HP=50 ──────────────────────────────────
@@ -353,7 +353,7 @@ namespace Session
             {
                 float x = -14f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 16f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel50", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel50", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 4: HP=75 ──────────────────────────────────
@@ -361,7 +361,7 @@ namespace Session
             {
                 float x = -10f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 20f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel75", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel75", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 5: HP=100 (multi-shot rifle, low-end LMG) ─
@@ -369,7 +369,7 @@ namespace Session
             {
                 float x = -10f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 24f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel100", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel100", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 6: Patrol (moving target ragdoll) ─────────
@@ -379,7 +379,7 @@ namespace Session
                 var pos = new UnityEngine.Vector3(cx, 0f, 14f);
                 var wpA = new UnityEngine.Vector3(cx - 3f, 0f, 14f);
                 var wpB = new UnityEngine.Vector3(cx + 3f, 0f, 14f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelPatrol", pos, new[] { wpA, wpB }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelPatrol", pos, new[] { wpA, wpB }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 7: Fast (running target — knockback test) ─
@@ -389,7 +389,7 @@ namespace Session
                 var pos = new UnityEngine.Vector3(cx, 0f, 22f);
                 var wpA = new UnityEngine.Vector3(cx - 5f, 0f, 22f);
                 var wpB = new UnityEngine.Vector3(cx + 5f, 0f, 22f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelFast", pos, new[] { wpA, wpB }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelFast", pos, new[] { wpA, wpB }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 8: Helmet (headshot vs bodyshot test) ────
@@ -399,7 +399,7 @@ namespace Session
             {
                 float x = -10f + i * 4f;
                 var pos = new UnityEngine.Vector3(x, 0f, 28f);
-                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelHelmet", pos, new[] { pos }, _eventBuffer);
+                BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeelHelmet", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
             }
 
             // ── Row 9: Cluster (test multi-kill chain) ────────
@@ -412,7 +412,7 @@ namespace Session
                     float x = -22f + i * 1.5f;
                     float z = 14f + j * 1.5f;
                     var pos = new UnityEngine.Vector3(x, 0f, z);
-                    BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer);
+                    BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
                 }
             }
         }

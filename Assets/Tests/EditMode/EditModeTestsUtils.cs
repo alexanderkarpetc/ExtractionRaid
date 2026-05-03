@@ -72,15 +72,23 @@ namespace Tests.EditMode
         static ICoreDefinitionRegistry BuildDefaultCoreRegistry()
         {
             var ballistic = WeaponBuilderTestFactory.MakeBallistic("BallisticRound", ammoType: "Ammo_Rifle");
-            var single    = WeaponBuilderTestFactory.MakeDelivery("SingleAction", pattern: FiringPattern.Single);
-            var auto      = WeaponBuilderTestFactory.MakeDelivery("Auto",         pattern: FiringPattern.Auto);
+            // Tier 4a: provide realistic stats у test registry so bot weapons (composed
+            // через same pipeline) have non-zero FireInterval / ProjectilesPerShot. Mirrors
+            // production asset values на Common tier (Auto.asset / SingleAction.asset / Scatter.asset).
+            var single    = WeaponBuilderTestFactory.MakeDelivery("SingleAction", pattern: FiringPattern.Single,
+                                                                  commonStats: new DeliveryStats { FireInterval = 0.4f, ProjectilesPerShot = 1, MagazineSize = 12 });
+            var auto      = WeaponBuilderTestFactory.MakeDelivery("Auto",         pattern: FiringPattern.Auto,
+                                                                  commonStats: new DeliveryStats { FireInterval = 0.2f, ProjectilesPerShot = 1, MagazineSize = 30 });
+            var scatter   = WeaponBuilderTestFactory.MakeDelivery("Scatter",      pattern: FiringPattern.Single,
+                                                                  commonStats: new DeliveryStats { FireInterval = 0.6f, ProjectilesPerShot = 7, SpreadAngle = 30f, MagazineSize = 5 });
             var db        = WeaponBuilderTestFactory.MakeDatabase(
                 payloads:   new[] { (PayloadCoreDefinition)ballistic },
-                deliveries: new[] { single, auto });
+                deliveries: new[] { single, auto, scatter });
 
             _ownedScriptableObjects.Add(ballistic);
             _ownedScriptableObjects.Add(single);
             _ownedScriptableObjects.Add(auto);
+            _ownedScriptableObjects.Add(scatter);
             _ownedScriptableObjects.Add(db);
 
             return WeaponBuilderTestFactory.MakeRegistry(db);

@@ -6,23 +6,45 @@
 
 ## Current phase
 
-**🎯 Phase A — IN PROGRESS.** Foundation impact feel.
+**🎯 Phase B — IN PROGRESS.** Significant juice (depth layer over Phase A).
 
-Track-wise:
+### Phase A — closed (2026-05-03)
+
 - ✅ **A.1 Hit Pause / Hitstop** (2026-05-01)
 - ✅ **A.2 Hit Flash on Enemy** (2026-05-01)
 - ✅ **A.3 Camera Shake System** (2026-05-01)
 - ✅ **A.4 Blood Spray + Floor/Wall Decals** (2026-05-02)
 - ✅ **A.5 Muzzle Flash + Real-time Light** (2026-05-01)
 - ✅ **A.6 Casing Ejection** (2026-05-02) — primitive brass shell з hybrid auto-settle (linear damping ramp + kinematic freeze); player-walks-through after settle. Filtered by payload archetype ("Ballistic" only — laser/foam/rocket get future presenters).
-- ⏸ **A.7 Material-Specific Impact VFX — DEFERRED** (2026-05-02). Scope removed — engaged later when (a) scene має real material variety (concrete/metal/wood/dirt zones), AND (b) per-material impact prefabs authored. Currently scene = uniform ProBuilder geometry, no payoff to taggng + per-material routing prematurely.
+- ⏸ **A.7 Material-Specific Impact VFX — DEFERRED** (2026-05-02). Scope removed — engaged later when (a) scene має real material variety (concrete/metal/wood/dirt zones), AND (b) per-material impact prefabs authored.
 - ✅ **A.8 Bullet Hole Decals** (2026-05-02)
-- ⏳ A.9 Ragdoll Death + Directional Knockback
-- ⏳ A.10 Blood Pool Decal Under Body — could merge з A.4 floor decal pipeline
+- ✅ **A.9 Ragdoll Death + Directional Knockback** (2026-05-02 → polished 2026-05-03). Includes: stagger phase (alive→limp ramp), mass distribution (heavy hips), headshot vs bodyshot profiles, head joint hard limits, movement velocity inheritance, T-pose snap fix (capture/restore), random death twist + tumble torque, ground impact damping, AI flinch lockout (B.4).
+- ⏸ **A.10 Blood Pool Decal Under Body — DEFERRED** (2026-05-03). User chose ragdoll polish over closing decal layer; revisit when persistent world-marks effort triggered (overlaps з B.5).
 
-**Phase A 7/9 effective** (A.7 out of scope). Visible "feels visceral" baseline solid + reactive: hits register weight, characters glow on damage, weapons kick light + camera, blood marks ground/walls, casings tumble + settle. Remaining: A.10 (death pool) + A.9 (ragdoll).
+**Phase A 8/10 effective** (A.7, A.10 deferred). Solid baseline: hits register weight, characters glow on damage, weapons kick light + camera, blood/holes mark world, casings tumble, ragdoll death has personality.
 
-Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-feel).
+### Phase B — closed (2026-05-03, 1/6 active)
+
+- ✅ **B.4 Stagger / Hit Reaction** (2026-05-03) — spine IK lean (procedural, world-space rotation overlay on Spine/Neck/Head за hit-direction; Animator overlay у LateUpdate) + AI fire lockout (BotCombatSystem skips fire while StaggerEndTime active). Tunables у `DevCheats → 💥 Stagger`. Knockback nudge skipped — reserved for future heavy payloads (rockets/shotgun). Hit-zone variation (legshot collapse) skipped — only headshot vs body distinction needed.
+- ⏸ **B.1 Recoil Pattern Polish — TRIED + REVERTED** (2026-05-03). Implemented "Light compounding" variant: per-weapon RecoilCompoundPerShot/Max stats + decay через існуючий RecoilRecoverySpeed + perfect-first-shot pattern. Per-archetype defaults: Auto 0.15/1.0, SingleAction 0.08/0.5, Scatter 0/0. Reverted after playtest — no practical payoff на нашому top-down + cursor aim setup: player не може compensate pull-down patterns як у first-person, sustained fire вже degrades через base random side scatter, додатковий ramp marginal. **Decision recorded — don't revisit без різких camera/aim model changes.**
+- ⏸ **B.2 Tracers / Projectile Trails — DEFERRED** (2026-05-02). Awaiting FX artist deliverables (`fx-brief-weapons.md`); integrate when prefabs land.
+- ⏸ **B.3 HUD Damage Feedback — DEFERRED** (2026-05-03). Player-side feedback gap (no vignette/edge glow/directional indicator); important але user не пріорітетне зараз. Revisit як standalone iteration після Phase C exploration.
+- ⏸ **B.5 Body Persistence + Cumulative World Marks — DEFERRED** (2026-05-02). Just config tweaks (extend ragdoll/decal lifetimes); revisit когда долговічні world marks стане priority.
+- ⏸ **B.6 Bleeding State Visual — DEFERRED** (2026-05-03). Floor trail decals можливі без FX блоку; drip particles wait for artist. Revisit після Phase C.
+
+**Phase B 1/6 effective.** Stagger landed (biggest "alive feel" gap closed). 2 deferred for FX artist (B.2 tracers, B.6 bleeding drips). 2 deferred as priority calls (B.3 HUD, B.5 persistence). 1 tried+reverted (B.1 recoil patterns — confirmed not worth it for top-down).
+
+### Phase C — deferred wholesale (2026-05-03)
+
+User reviewed Phase C items + chose to defer all visual flair / wow-moment work for now. Re-engage trigger: when playtest signal demands more flair OR FX artist deliverables land.
+
+- ⏸ **C.1 Headshot Special VFX — DEFERRED** (FX artist dependency for gore prefab)
+- ⏸ **C.2 Multi-Kill / Streak UI — DEFERRED** (no priority signal yet)
+- ⏸ **C.3 Slow-Mo on Critical Kill — DEFERRED** (no priority signal yet)
+- ⏸ **C.4 Post-Processing Layers — DEFERRED** (no priority signal yet)
+- ⏸ **C.5 Bullet Whiz / Close-Miss Visual — DEFERRED** (FX artist dependency)
+
+Detailed work: [`roadmap.md` Phase A/B/C](./roadmap.md).
 
 ---
 
@@ -52,6 +74,35 @@ Detailed work: [`roadmap.md` Phase A](./roadmap.md#phase-a--foundation-impact-fe
 ---
 
 ## Decisions log
+
+### 2026-05-03 — B.1 Recoil Compounding TRIED + REVERTED
+
+**Контекст:** після B.4 stagger landed, переглядали що з Phase B без FX-artist dependency. B.1 з roadmap пропонував per-archetype recoil patterns + RecoilStandPlateau + weapon rotation kick. Чесна оцінка по факту implementation — для top-down +cursor-aim camera патерни не дають learnable skill ceiling як у first-person (player can't compensate pull-down — cursor stays на цілі).
+
+**What we tried (~1h):** Light-compounding варіант. Per-shot accumulator `RecoilCompound` (state on WeaponEntityState) ramps × kick magnitude on subsequent shots; "perfect first shot" (compound applied BEFORE increment); decay reuses existing `RecoilRecoverySpeed` (single-knob recovery feel); per-archetype defaults Auto 0.15/1.0, SingleAction 0.08/0.5, Scatter 0/0; DevCheats toggle. Compiled clean, integrated end-to-end.
+
+**Why reverted:** Playtest showed marginal practical impact. Base random side scatter вже degrades sustained-fire accuracy organically; додавати multiplicative ramp on top only mildly amplifies без зміни core feel. Not visible at our top-down distance + cursor-aim — player не shifts aim (compound = bullet drift around target, indistinguishable from base scatter).
+
+**Decision:** revert all changes. Don't revisit без різких camera/aim model changes (e.g., switching to first-person/over-shoulder where compound patterns become learnable, OR adding bullet-tracer system that visualizes drift цикли). Keep сcope tight — recoil already 70% there з vertical kick + random side + smooth decay + crosshair bloom + camera kick.
+
+**Effort cost:** ~1h tried, ~30min reverted. Net: zero code, +clarity у docs не повторювати спробу.
+
+### 2026-05-03 — B.4 Stagger / Hit Reaction shipped
+
+**Code:** `BotEntityState.StaggerEndTime` (state) + `DamageSystem.ApplyStagger` (logic, tier picker via damage % MaxHp + headshot flag) + `BotCombatSystem` skip fire/grenade while staggered + `FlinchPresenter` (view, world-space rotation overlay on Spine/Neck/Head bones via `BotPresenter.TryGetCharacterBody(EId)` lookup) + `CharacterBody.SpineBone/NeckBone/HeadBone` lazy-resolved via `FindDeepChild` + `DevCheatsStaggerSection` + `RaidContext.StaggerConfig`.
+
+**Visual approach:** procedural spine IK lean (no animation clip dependency). World-space rotation pre-multiply (`bone.rotation = leanRotation * bone.rotation`) → Unity automatically converts to local rotation respecting parent chain. Avoids bone-local frame pitfalls (chibi rig has bone X along length → rotating around local X = twist, not bend; would look like head turning sideways instead of bending backward).
+
+**Profile defaults:**
+- Light hit (< 30% MaxHp): 6° lean, 0.25s lockout
+- Heavy hit (>= 30% MaxHp): 16° lean, 0.5s lockout
+- Headshot: 20° lean, 0.6s lockout
+- Bone distribution: Spine 0.5 + Neck 0.3 + Head 0.2 = full lean
+- Curve: 0.08s ramp-up + 0.05s hold + 0.2s return
+
+**Skipped sub-features (intentional):**
+- **Knockback nudge** — would punish precision-aim (cursor tracking gets pushed off target). Architectural hook saved for future heavy payloads (rockets/shotgun close-range) where kinetic mass justifies displacement.
+- **Hit-zone variation** — only headshot vs body distinction needed at our gameplay tier. Legshot collapse / chestshot vs armshot are micro-polish, defer.
 
 ### 2026-05-02 — A.7 Material-Specific Impact DEFERRED out of Phase A scope
 

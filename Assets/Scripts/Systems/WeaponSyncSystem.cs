@@ -103,18 +103,13 @@ namespace Systems
                 return null;
             }
 
-            // Tier 8 Wave A: hand prefab comes directly from the Delivery SO. The
-            // string PrefabId is now derived (used as a stable event payload string),
-            // not a Resources.Load key. Legacy ItemDefinition.WeaponPrefabId is honored
-            // as a transitional fallback (full removal — Tier 4, with bot migration).
+            // Tier 4a — single source of truth: Delivery._weaponPrefab. Bot weapons тепер
+            // ходять тим самим pipeline'ом, тому legacy ItemDefinition.WeaponPrefabId
+            // fallback видалений. Якщо Delivery не має prefab — assembly returns null upstream.
             var deliveryPrefab = result.DeliveryDefinition?.WeaponPrefab;
             // Tier 8 Wave B: optional payload mesh attached at PayloadMount socket on equip.
             var payloadPrefab  = result.PayloadDefinition?.AttachmentPrefab;
-#pragma warning disable CS0618 // intentional legacy fallback until Tier 4 bot migration
-            string prefabId = deliveryPrefab != null
-                ? deliveryPrefab.name
-                : invItem.Definition?.WeaponPrefabId;
-#pragma warning restore CS0618
+            string prefabId    = deliveryPrefab != null ? deliveryPrefab.name : null;
 
             return new WeaponEntityState
             {
