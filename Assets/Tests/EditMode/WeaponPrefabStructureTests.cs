@@ -41,14 +41,15 @@ namespace Tests.EditMode
             var animator = prefab.GetComponent<Animator>();
             Assert.IsNotNull(animator, $"{prefabName} must have Animator component на root");
 
-            // Required children
-            AssertChildExists(prefab.transform, "KickGroup",       prefabName);
-            AssertChildExists(prefab.transform, "RightHandGrip",   prefabName);
+            // Top-level KickGroup
+            AssertChildExists(prefab.transform, "KickGroup", prefabName);
 
-            // KickGroup must contain DeliverySocket (where delivery instantiates)
+            // KickGroup must contain DeliverySocket (where delivery instantiates) AND
+            // RightHandGrip (IK target — must kick з weapon, otherwise hand-disconnect).
             var kickGroup = prefab.transform.Find("KickGroup");
             Assert.IsNotNull(kickGroup, $"{prefabName} → KickGroup missing");
             AssertChildExists(kickGroup, "DeliverySocket", prefabName);
+            AssertChildExists(kickGroup, "RightHandGrip",  prefabName);
         }
 
         [TestCase("Module_Payload_BallisticRound")]
@@ -168,8 +169,10 @@ namespace Tests.EditMode
             Assert.IsNotNull(prefab, $"{assetName}.BasePrefab not wired");
 
             Assert.IsNotNull(prefab.GetComponent<WeaponView>(), "BasePrefab must have WeaponView");
-            Assert.IsNotNull(prefab.transform.Find("KickGroup"), "BasePrefab must have KickGroup child");
-            Assert.IsNotNull(prefab.transform.Find("RightHandGrip"), "BasePrefab must have RightHandGrip child");
+            var kickGroup = prefab.transform.Find("KickGroup");
+            Assert.IsNotNull(kickGroup, "BasePrefab must have KickGroup child");
+            Assert.IsNotNull(kickGroup.Find("RightHandGrip"),
+                "BasePrefab → KickGroup must contain RightHandGrip (so hand IK kicks з weapon recoil).");
         }
 
         [TestCase("SingleAction")]

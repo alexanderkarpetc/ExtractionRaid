@@ -22,6 +22,7 @@ namespace Dev
         [SerializeField] ViewCheatsBulletHoleSection _bulletHole;
         [SerializeField] ViewCheatsCasingsSection _casings;
         [SerializeField] ViewCheatsRagdollSection _ragdoll;
+        [SerializeField] ViewCheatsWeaponDropSection _weaponDrop;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public ViewCheatsCameraShakeSection CameraShake =>
@@ -38,5 +39,8 @@ namespace Dev
 
         public ViewCheatsRagdollSection Ragdoll =>
             _ragdoll ? _ragdoll : (_ragdoll = CreateInstance<ViewCheatsRagdollSection>());
+
+        public ViewCheatsWeaponDropSection WeaponDrop =>
+            _weaponDrop ? _weaponDrop : (_weaponDrop = CreateInstance<ViewCheatsWeaponDropSection>());
     }
 }

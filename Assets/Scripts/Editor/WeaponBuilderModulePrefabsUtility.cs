@@ -162,9 +162,10 @@ namespace Game.Editor
             socket.transform.SetParent(kickGroup.transform, false);
             socket.transform.localPosition = new Vector3(0f, 0f, 0.10f); // front face of base mesh
 
-            // RightHandGrip — IK target. Sibling of KickGroup so doesn't kick з recoil.
+            // RightHandGrip — IK target. CHILD of KickGroup so hand follows weapon recoil
+            // kick (otherwise hand stays static while weapon visually recoils → arm-disconnect).
             var grip = new GameObject("RightHandGrip");
-            grip.transform.SetParent(root.transform, false);
+            grip.transform.SetParent(kickGroup.transform, false);
             grip.transform.localPosition = new Vector3(0f, -0.05f, 0.05f);
 
             // Wire WeaponView serialized fields BEFORE saving prefab.

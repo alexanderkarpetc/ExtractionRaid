@@ -28,6 +28,7 @@ namespace View
     public class RagdollPresenter
     {
         Transform _root;
+        Transform _weaponDropRoot;
 
         public void LateTick(RaidSession session)
         {
@@ -77,6 +78,11 @@ namespace View
                 profile.MinImpulse,
                 profile.MaxImpulse);
 
+            // Detach + drop weapon before ragdoll activation. WeaponPivot lives як sibling
+            // of skeleton у CharacterBody, тому без detach зброя зависає у повітрі коли
+            // skeleton goes ragdoll. Drop physics-driven по shot direction + лет lift.
+            TryDropWeapon(bodyGo, horizontalDir, impulseMag);
+
             var controller = bodyGo.AddComponent<RagdollController>();
             controller.Activate(new RagdollController.ActivateParams
             {
@@ -115,12 +121,71 @@ namespace View
             _root = go.transform;
         }
 
+        void EnsureWeaponDropRoot()
+        {
+            if (_weaponDropRoot != null) return;
+            var go = new GameObject("[WeaponDropPool]");
+            _weaponDropRoot = go.transform;
+        }
+
+        void TryDropWeapon(GameObject bodyGo, Vector3 horizontalDir, float impulseMag)
+        {
+            var dropCfg = ViewCheats.Config?.WeaponDrop;
+            if (dropCfg == null || !dropCfg.Enabled) return;
+
+            var charBody = bodyGo.GetComponent<CharacterBody>();
+            var pivot = charBody?.WeaponPivot;
+            if (pivot == null || pivot.childCount == 0) return;
+
+            EnsureWeaponDropRoot();
+
+            // Detach weapon from skeleton hierarchy → reparent у pool, preserve world pose.
+            var weaponGO = pivot.GetChild(0).gameObject;
+            weaponGO.transform.SetParent(_weaponDropRoot, worldPositionStays: true);
+
+            // Disable any animator/IK behaviour on the weapon root that could fight physics.
+            foreach (var mb in weaponGO.GetComponents<MonoBehaviour>())
+                mb.enabled = false;
+            foreach (var anim in weaponGO.GetComponentsInChildren<Animator>(true))
+                anim.enabled = false;
+
+            // Add Rigidbody + optional collider so weapon physics-falls naturally.
+            var rb = weaponGO.AddComponent<Rigidbody>();
+            rb.mass            = dropCfg.Mass;
+            rb.linearDamping   = dropCfg.LinearDamping;
+            rb.angularDamping  = dropCfg.AngularDamping;
+            rb.useGravity      = true;
+
+            if (dropCfg.AddCollider)
+            {
+                var col = weaponGO.AddComponent<BoxCollider>();
+                col.size = dropCfg.ColliderHalfSize * 2f;
+            }
+
+            // Impulse: shot direction × scale, plus upward bias so weapon arcs out of hand.
+            var dropDir = horizontalDir.sqrMagnitude > 0.0001f
+                ? (horizontalDir.normalized + Vector3.up * dropCfg.UpwardImpulseBias).normalized
+                : Vector3.up;
+            rb.AddForce(dropDir * (impulseMag * dropCfg.ImpulseScale), ForceMode.Impulse);
+
+            // Random tumble — weapon spins randomly як falls (looks natural).
+            if (dropCfg.TorqueScale > 0f)
+                rb.AddTorque(Random.insideUnitSphere * dropCfg.TorqueScale, ForceMode.Impulse);
+
+            Object.Destroy(weaponGO, dropCfg.Lifetime);
+        }
+
         public void Dispose()
         {
             if (_root != null)
             {
                 Object.Destroy(_root.gameObject);
                 _root = null;
+            }
+            if (_weaponDropRoot != null)
+            {
+                Object.Destroy(_weaponDropRoot.gameObject);
+                _weaponDropRoot = null;
             }
         }
     }
