@@ -75,6 +75,22 @@ Detailed work: [`roadmap.md` Phase A/B/C](./roadmap.md).
 
 ## Decisions log
 
+### 2026-05-05 — Cross-cutting: weapon architecture rebuild (Tier 8.x*) + weapon drop on death
+
+Driven by accumulated MuzzlePoint position bugs + dual-role muzzle concerns surfaced during gunplay polish. Primary work landed у Weapon Builder track ([details](../../weapon-builder/plan/status.md#2026-05-05--tier-8x-shipped-full-asset-architecture-rebuild)) but has direct gunplay impact:
+- New `ViewCheatsWeaponDropSection` (`Resources/Configs/ViewCheats/WeaponDrop.asset`) + `RagdollPresenter.TryDropWeapon` — coлies weapon-on-death physics drop. WeaponPivot lives як sibling of skeleton у CharacterBody → коли character ragdoll'иться, weapon would hang у воздусі. Now reparents до `[WeaponDropPool]`, adds Rigidbody + impulse у shot direction + random tumble, despawn с ragdoll lifetime. Tunables: Mass, Damping, ImpulseScale, TorqueScale, UpwardImpulseBias, Lifetime, AddCollider, ColliderHalfSize.
+- All 5 weapon module prefabs now have correct MuzzlePoint Y synced з `ProjectileSpawnHeight` (1.014577 default; muzzle flash + light + casing eject + tracer все рендериться у precise bullet origin).
+- Visual muzzle vs gameplay muzzle decoupling considered + DECLINED для top-down — predictability marginal benefit, complexity not justified.
+
+Effect on gunplay backlog:
+- A.5 Muzzle Flash + Real-time Light — still works (uses dynamic MuzzlePoint resolution)
+- A.6 Casing Ejection — still works
+- A.8 Bullet Hole Decals — still works
+- A.9 Ragdoll Death — still works + augmented з weapon drop
+- B.4 Stagger / Hit Reaction — still works (CharacterBody bone refs unchanged)
+
+
+
 ### 2026-05-03 — B.1 Recoil Compounding TRIED + REVERTED
 
 **Контекст:** після B.4 stagger landed, переглядали що з Phase B без FX-artist dependency. B.1 з roadmap пропонував per-archetype recoil patterns + RecoilStandPlateau + weapon rotation kick. Чесна оцінка по факту implementation — для top-down +cursor-aim camera патерни не дають learnable skill ceiling як у first-person (player can't compensate pull-down — cursor stays на цілі).

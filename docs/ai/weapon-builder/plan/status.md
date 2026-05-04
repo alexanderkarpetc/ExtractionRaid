@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> ⏸ **PAUSED 2026-05-01, partial unpause 2026-05-04.** Foundation + Tier 6 + Tier 8 done; Cluster A (player-facing legacy) retired 2026-05-01; **Cluster B (bot weapon migration / Tier 4a) retired 2026-05-04**. Remaining backlog: Tier 8.x (visual coherence pass) → Tier 9 (VFX/SFX) → Tier 10 (feel). Tier 4a finished — closes legacy `Weapon_Rifle`/`Weapon_Pistol` Resources.Load path entirely; bots use Builder pipeline like player.
+> ⏸ **PAUSED 2026-05-01, partial unpause 2026-05-04 → 2026-05-05.** Foundation + Tier 6 + Tier 8 done; Cluster A (player-facing legacy) retired 2026-05-01; **Cluster B (bot weapon migration / Tier 4a) retired 2026-05-04**; **Tier 8.x* (asset architecture rebuild) shipped 2026-05-05** — full inversion of payload/delivery prefab roles, all 5 module prefabs regenerated, weapon-on-death drop physics added, MuzzlePoint dynamic resolution. Remaining backlog: **Tier 9 (VFX/SFX, awaiting FX artist)** → Tier 10 (feel polish, mostly overlap з gunplay). 6 archetypes feel coherent + composable.
 
 > **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F; G7 deferred) + **Tier 8 done** (Waves A-E; F deferred — UI prereq) + **Cluster A retired** (legacy `Rifle`/`Pistol`/`Ammo_Pistol*` player-facing references replaced з Builder content).
 >
@@ -800,6 +800,61 @@ Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі
 ---
 
 ## Decisions log (post-pause)
+
+### 2026-05-05 — Tier 8.x* shipped: full asset architecture rebuild
+
+**Context:** Original Tier 8.x (visual coherence pass — muzzle alignment, animator cleanup, socket tuning) escalated into а full architectural pivot після playtest analysis. Original assumption was "fix MuzzlePoint position bugs"; реальна проблема виявилась що **payload prefab role був перевернутий** — payload had barrel mesh, delivery had body. Counterintuitive: "delivery delivers bullets" means barrel should be ON delivery, not payload. User-driven design call to invert.
+
+**New asset architecture:**
+- **Payload prefab** = weapon BASE (handle, receiver, magazine — held у hand). Owns Animator, WeaponView component, RightHandGrip (IK target inside KickGroup), DeliverySocket (where barrel mounts), KickGroup (recoil mesh container).
+- **Delivery prefab** = BARREL insert (короткий для Pistol, longer для Rifle/Shotgun). Owns mesh + MuzzlePoint child. No MonoBehaviours.
+- 5 prefabs total: 2 payloads (BallisticRound, LaserCharge) × 3 deliveries (SingleAction, Auto, Scatter).
+
+**Code renames (no legacy aliases):**
+- `PayloadCoreDefinition._attachmentPrefab` → `_basePrefab` (semantic role inverted)
+- `DeliveryCoreDefinition._weaponPrefab` → `_barrelPrefab`
+- `WeaponEntityState.WeaponPrefab` → `BasePrefab`; `PayloadPrefab` → `BarrelPrefab`
+- `WeaponView._deliveryBody` → `_recoilKickTarget`
+- `WeaponView.AttachPayload(...)` → `AttachDelivery(GameObject barrelPrefab)` — instantiates barrel as child of `_deliverySocket`, resolves `_resolvedMuzzlePoint` через `FindDeepChild("MuzzlePoint")`
+- `CharacterBody.SwapWeaponModel(GameObject prefab, ...)` → `SwapWeaponModel(GameObject basePrefab, GameObject barrelPrefab, string idForTracking)` — instantiates payload root, calls `weaponView.AttachDelivery(barrelPrefab)`
+- `CharacterBody.SwapWeaponModel(string)` overload deleted (no Resources.Load fallback)
+
+**Prefab generation:**
+- `WeaponBuilderModulePrefabsUtility.cs` rewritten для new architecture. Creates payload з {Animator, WeaponView, KickGroup → {PayloadBaseMesh, DeliverySocket, RightHandGrip}, root-level just structure}. Delivery з {DeliveryBarrelMesh, MuzzlePoint at projectile spawn height}. Persistent .mat assets под `Resources/Prefabs/Modules/Materials/` (5 placeholder materials, gunmetal/cool-blue tint).
+- Animator wires `Resources/Animation/Weapon_Base.controller` automatically (clips animate root euler angles → work без per-prefab override controllers).
+- MuzzlePoint Y synced з `DevCheats.Config.Parallax.ProjectileSpawnHeight` so visual flash + bullet origin align.
+
+**Bug fixes after manual playtest:**
+- Stale prefabs (utility ran з cached old code) — wipe + regenerate with recompile checkpoint
+- Magenta materials (orphan `new Material(...)` references) — saved as persistent .mat assets
+- Animator controller missing → Equip/Unequip silent — wired Weapon_Base.controller у utility
+- WeaponView._animator field unwired → PlayClip no-op — wired через SerializedObject у utility
+- RightHandGrip outside KickGroup → hand stayed static during weapon recoil → moved INTO KickGroup so IK target kicks з weapon
+- WeaponPivot sibling of skeleton → weapon hung у воздусі коли character ragdoll'иться → **Option A weapon drop**: new `ViewCheatsWeaponDropSection` + `RagdollPresenter.TryDropWeapon` reparents weapon to `[WeaponDropPool]`, adds Rigidbody + collider + impulse, despawns с ragdoll lifetime
+
+**Legacy deletions (no compat shim):**
+- `Resources/Prefabs/Weapons/` directory — Weapon_Pistol/Rifle/Shotgun.prefab gone
+- `Resources/Prefabs/Modules/Module_Payload_BallisticBarrel.prefab` (old role)
+- `Resources/Prefabs/Modules/Module_Payload_LaserEmitter.prefab` (old role)
+- `Resources/Animation/_Pistol/_Rifle/_Shotgun/` directories with override controllers
+
+**Test infrastructure:**
+- New `WeaponPrefabStructureTests.cs` (22 cases) — validates prefab hierarchy, WeaponView serialized refs wired, Animator controller present, MuzzlePoint Y aligned з ProjectileSpawnHeight (±0.1m tolerance), SO `BasePrefab`/`BarrelPrefab` references valid + point до prefabs з required children
+- `WeaponBuilderTestFactory.MakeStubWeaponPrefab` → split into `MakeStubBasePrefab` + `MakeStubBarrelPrefab`
+- 455/455 tests passing
+
+**Original Tier 8.x sub-items resolution:**
+- 8x.1 (muzzle to payload) — replaced by full architecture refactor; muzzle тепер lives на delivery prefab з dynamic resolution post-attach
+- 8x.2 (procedural reload/equip) — not needed; Weapon_Base.controller clips animate root euler angles via empty paths, work з new structure
+- 8x.3 (strip animator overrides) — done as part of legacy cleanup
+- 8x.4 (PayloadMount Inspector tuning) — N/A; PayloadMount socket replaced з DeliverySocket on payload (architectural shift)
+
+**Decoupling gameplay/visual muzzle decision:**
+- User concern: barrel-length variation per weapon → inconsistent wall-flush behavior
+- Analysis: real bug exists, but marginal у current 6 archetypes (~25cm max barrel diff). Top-down camera doesn't show barrel obstruction → predictability vs realism trade not critical для arcade-ish extraction tone.
+- Decision: **NOT decouple зараз**. Keep coupled (visual muzzle = gameplay muzzle). Revisit якщо weapon library expands sharply, OR camera shifts perspective, OR playtests reveal frequent "WTF moments" з збройного wall-flush.
+
+**Effort:** ~6h migration + ~2h bug fix iteration. Net delta: +1 architectural test file (22 cases), +1 ViewCheats section (WeaponDrop), 5 regenerated prefabs, 5 placeholder materials, ~-200 LOC (legacy paths + override controllers + obsolete fields).
 
 ### 2026-05-04 — Tier 4a shipped: bot weapon migration to Builder pipeline
 
