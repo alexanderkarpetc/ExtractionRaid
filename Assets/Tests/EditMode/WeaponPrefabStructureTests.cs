@@ -1,3 +1,4 @@
+using Dev;
 using NUnit.Framework;
 using State;
 using UnityEditor;
@@ -103,6 +104,33 @@ namespace Tests.EditMode
 
             var muzzle = FindDeepChild(prefab.transform, "MuzzlePoint");
             Assert.IsNotNull(muzzle, $"{prefabName} must contain MuzzlePoint child Transform");
+        }
+
+        [TestCase("Module_Delivery_SingleAction")]
+        [TestCase("Module_Delivery_Auto")]
+        [TestCase("Module_Delivery_Scatter")]
+        public void DeliveryPrefab_MuzzlePointAlignsWithSpawnHeight(string prefabName)
+        {
+            // Visual MuzzlePoint Y must align з projectile gameplay-spawn Y so flash + light
+            // pulse + casing eject + tracer render at the actual bullet trajectory line.
+            // Catches authoring drift коли DevCheats.Config.Parallax.ProjectileSpawnHeight
+            // вupdated але delivery prefabs не regenerated. Tolerance 0.1m — accommodates
+            // minor per-archetype asthetic offsets без losing visual coherence.
+            var prefab = LoadPrefab($"{PayloadFolder}/{prefabName}.prefab");
+            var muzzle = FindDeepChild(prefab.transform, "MuzzlePoint");
+            Assert.IsNotNull(muzzle, $"{prefabName} → MuzzlePoint missing");
+
+            var config = DevCheats.Config;
+            Assert.IsNotNull(config, "DevCheats.Config not loaded — Resources/Configs/DevCheatsConfig missing?");
+            float expectedY = config.Parallax.ProjectileSpawnHeight;
+
+            // Delivery prefab is a root asset → muzzle.position.y == its accumulated local Y
+            // у the prefab subtree (no external parents у asset context).
+            float actualY = muzzle.position.y;
+            float diff = Mathf.Abs(actualY - expectedY);
+            Assert.LessOrEqual(diff, 0.1f,
+                $"{prefabName} → MuzzlePoint Y ({actualY:F3}) drifts {diff:F3}m from " +
+                $"ProjectileSpawnHeight ({expectedY:F3}). Run 'Tools → Weapon Builder → Create Module Prefabs' to regenerate.");
         }
 
         // ── SO asset wiring ───────────────────────────────────────

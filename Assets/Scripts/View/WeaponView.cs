@@ -79,7 +79,23 @@ namespace View
 
             _resolvedMuzzlePoint = FindDeepChild(_attachedDelivery.transform, "MuzzlePoint");
             if (_resolvedMuzzlePoint == null)
+            {
                 Debug.LogWarning($"[WeaponView] Attached delivery '{barrelPrefab.name}' has no MuzzlePoint child — VFX disabled.");
+                return;
+            }
+
+            // Sync MuzzlePoint world Y з projectile spawn height — flash, light pulse, casing
+            // eject, tracer all anchor here, але bullet world spawn position has fixed Y per
+            // ShootingSystem (cfg.ProjectileSpawnHeight). Aligning них one-shot at attach так
+            // VFX renders at exact bullet trajectory line. Top-down camera: player Y constant,
+            // WeaponPivot Y constant → MuzzlePoint world Y stays correct у naступних frames.
+            var cfg = DevCheats.Config?.Parallax;
+            if (cfg != null)
+            {
+                var worldPos = _resolvedMuzzlePoint.position;
+                worldPos.y = cfg.ProjectileSpawnHeight;
+                _resolvedMuzzlePoint.position = worldPos;
+            }
         }
 
         public void PlayMuzzleFlash()

@@ -208,10 +208,14 @@ namespace Game.Editor
             Object.DestroyImmediate(barrel.GetComponent<Collider>());
             ApplyPlaceholderTint(barrel, id);
 
-            // MuzzlePoint at barrel tip (end of barrel, slightly forward).
+            // MuzzlePoint at barrel tip — Y synced з DevCheats.Config.Parallax.ProjectileSpawnHeight
+            // so visual flash/light/casing align з actual projectile spawn position. Test
+            // DeliveryPrefab_MuzzlePointAlignsWithSpawnHeight catches drift якщо config changes
+            // або prefab manually edited.
+            float spawnY = Dev.DevCheats.Config?.Parallax?.ProjectileSpawnHeight ?? 0f;
             var muzzle = new GameObject("MuzzlePoint");
             muzzle.transform.SetParent(root.transform, false);
-            muzzle.transform.localPosition = new Vector3(0f, 0f, barrelLength + 0.01f);
+            muzzle.transform.localPosition = new Vector3(0f, spawnY, barrelLength + 0.01f);
 
             var saved = PrefabUtility.SaveAsPrefabAsset(root, path);
             Object.DestroyImmediate(root);
