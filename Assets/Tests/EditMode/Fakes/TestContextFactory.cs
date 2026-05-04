@@ -21,6 +21,9 @@ namespace Tests.EditMode.Fakes
             IPhysicsAdapter physics = null,
             ShootingConfig? shootingConfig = null,
             AimConfig? aimConfig = null,
+            ArmorConfig? armorConfig = null,
+            FOVConfig? fovConfig = null,
+            MovementConfig? movementConfig = null,
             float deltaTime = 1f / 60f)
         {
             return new RaidContext(
@@ -31,7 +34,10 @@ namespace Tests.EditMode.Fakes
                 navMesh: new FakeNavMeshAdapter(),
                 physics: physics,
                 shootingConfig: shootingConfig,
-                aimConfig: aimConfig);
+                aimConfig: aimConfig,
+                armorConfig: armorConfig,
+                fovConfig: fovConfig,
+                movementConfig: movementConfig);
         }
     }
 }

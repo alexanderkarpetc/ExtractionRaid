@@ -465,6 +465,27 @@ namespace Session
                     DurationHeadshot     = DevCheats.Config.Stagger.DurationHeadshot,
                     HeavyDamageThreshold = DevCheats.Config.Stagger.HeavyDamageThreshold,
                     AIShootingLockout    = DevCheats.Config.Stagger.AIShootingLockout,
+                },
+                armorConfig: new ArmorConfig
+                {
+                    ForceNoArmor     = DevCheats.ForceNoArmor,
+                    ForceMaxArmor    = DevCheats.ForceMaxArmor,
+                    DamageReductionK = DevCheats.ArmorK,
+                    RicochetChance   = DevCheats.ArmorRicochetChance,
+                },
+                fovConfig: new FOVConfig
+                {
+                    Enabled          = DevCheats.FOVEnabled,
+                    ForceShowAllBots = DevCheats.ForceShowAllBots,
+                    NearRadius       = DevCheats.FOVNearRadius,
+                    FarRadius        = DevCheats.FOVFarRadius,
+                    Angle            = DevCheats.FOVAngle,
+                    OcclusionEnabled = DevCheats.FOVOcclusionEnabled,
+                },
+                movementConfig: new MovementConfig
+                {
+                    MoveSpeedMultiplier    = DevCheats.MoveSpeedMultiplier,
+                    AdsMoveSpeedMultiplier = DevCheats.AdsMoveSpeedMultiplier,
                 }
             );
 

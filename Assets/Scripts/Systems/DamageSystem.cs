@@ -51,7 +51,7 @@ namespace Systems
                 {
                     var helmet = ricoSlots.Helmet;
                     float ricochetRoll = randomProvider != null ? randomProvider() : Random.value;
-                    if (ArmorSystem.ShouldRicochet(helmet, hit.Penetration, ricochetRoll, DevCheats.ArmorRicochetChance))
+                    if (ArmorSystem.ShouldRicochet(helmet, hit.Penetration, ricochetRoll, context.ArmorConfig.RicochetChance))
                     {
                         // Ricochet: 0 HP damage, full durability damage (absorptionRatio = 1)
                         float armorDurDmg = ArmorSystem.CalcArmorDurabilityDamage(hit.ArmorDamage, 1f);
@@ -101,7 +101,7 @@ namespace Systems
                 if (state.ArmorMap.TryGetValue(hit.TargetId, out var armorSlots))
                 {
                     var result = ArmorSystem.Calculate(damage, hit.Penetration, hit.ArmorDamage,
-                        armorSlots, isHeadshot);
+                        armorSlots, isHeadshot, in context.ArmorConfig);
                     finalDamage = result.HpDamage;
                     absorptionRatio = result.AbsorptionRatio;
 

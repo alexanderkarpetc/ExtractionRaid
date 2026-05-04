@@ -75,6 +75,22 @@ Detailed work: [`roadmap.md` Phase A/B/C](./roadmap.md).
 
 ## Decisions log
 
+### 2026-05-05 — Polish backlog deferral confirmed (B.5 / A.10 / pure-code visual polish)
+
+**User call after Tier 8.x* landed + 455/455 green:** explicit pass on remaining gunplay polish items. Quote: *"B.5 Body Persistence — прибираємо, нам це не треба зараз. Pure-code polish та A.10 Blood Pool Decal — поки не робимо, зараз не актуально."*
+
+**Items confirmed deferred (not just deprioritized — strong "don't pick this up speculatively" signal):**
+- A.10 Blood Pool Decal Under Body
+- B.3 HUD Damage Feedback (vignette / edge glow / directional indicator)
+- B.5 Body Persistence (extend ragdoll/decal lifetimes)
+- C.2 Multi-Kill / Streak UI
+- C.3 Slow-Mo on Critical Kill
+- C.4 Post-Processing Layers
+
+**Re-engage trigger:** explicit user request OR playtest signal demands feedback layer change. Don't surface these in next-session option menus until that signal lands.
+
+**Direction picked instead:** P0-1 DevCheats → Config refactor (architecture debt, see [`tests-review.md` §P0-1](../../tests-review.md)). Routes ArmorSystem / PlayerFOVSystem / MovementSystem through `RaidContext.*Config` per CLAUDE.md §6.7.
+
 ### 2026-05-05 — Cross-cutting: weapon architecture rebuild (Tier 8.x*) + weapon drop on death
 
 Driven by accumulated MuzzlePoint position bugs + dual-role muzzle concerns surfaced during gunplay polish. Primary work landed у Weapon Builder track ([details](../../weapon-builder/plan/status.md#2026-05-05--tier-8x-shipped-full-asset-architecture-rebuild)) but has direct gunplay impact:
@@ -252,12 +268,12 @@ Effect on gunplay backlog:
 
 ## Next actions
 
-Phase A 7/9 effective (A.7 deferred). Remaining 2 items:
+**Gunplay epic paused (2026-05-05).** Phase A 8/10 effective + Phase B 1/6 effective + Phase C wholesale deferred. Active work pivoted off this epic to architecture debt (P0-1 DevCheats refactor) per user call.
 
-1. ⭐ **A.10 Blood Pool Under Body** (~1-2h) — extends `DecalProjectorPool` з new kind. Triggers on `EntityDied`. Larger persistent pool at character feet — death "marker" distinct від A.4 splashes (which are per-hit small splatters).
-2. **A.9 Ragdoll Death** (~5-7h, biggest item) — manual character rigging (Joint setup per Character01 prefab — one-time tedious work) + `RagdollController` toggle on death event. Force-based ragdoll з shot direction.
-
-Recommend A.10 first (quick win), then A.9 (Phase A finale).
+Re-engage criteria for gunplay items:
+- FX artist deliverables land (unblocks B.2 tracers, B.6 bleeding drips, C.1 headshot gore, C.5 close-miss whiz)
+- Explicit user request to revisit a deferred item
+- Playtest signal demands a feedback layer change
 
 Phase A exit criteria — see [`roadmap.md`](./roadmap.md#phase-a-exit-criteria).
 

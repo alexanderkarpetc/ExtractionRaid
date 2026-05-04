@@ -1,5 +1,6 @@
 using Constants;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems;
 
@@ -171,7 +172,7 @@ namespace Tests.EditMode
         [Test]
         public void Calculate_NoArmor_FullDamage()
         {
-            var result = ArmorSystem.Calculate(50f, 30f, 10f, null, false);
+            var result = ArmorSystem.Calculate(50f, 30f, 10f, null, false, ArmorConfig.Default);
             Assert.AreEqual(50f, result.HpDamage, 0.001f);
             Assert.IsFalse(result.ArmorHit);
         }
@@ -182,7 +183,7 @@ namespace Tests.EditMode
             var slots = new ArmorSlotState { BodyArmor = ArmorState.Create(60f, 100f) };
             slots.BodyArmor.CurrentDurability = 0f;
 
-            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, false);
+            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, false, ArmorConfig.Default);
             Assert.AreEqual(50f, result.HpDamage, 0.001f);
             Assert.IsFalse(result.ArmorHit);
         }
@@ -192,7 +193,7 @@ namespace Tests.EditMode
         {
             // 60 armor, 30 pen → diff=30, multi=30/(30+30)=0.5 → 50*0.5=25
             var slots = new ArmorSlotState { BodyArmor = ArmorState.Create(60f, 100f) };
-            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, false);
+            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, false, ArmorConfig.Default);
 
             Assert.AreEqual(25f, result.HpDamage, 0.5f);
             Assert.IsTrue(result.ArmorHit);
@@ -208,7 +209,7 @@ namespace Tests.EditMode
                 BodyArmor = ArmorState.Create(40f, 120f),
             };
             // Headshot uses helmet (80 pts), pen 30 → diff=50, multi=30/80=0.375
-            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, isHeadshot: true);
+            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, isHeadshot: true, ArmorConfig.Default);
             Assert.AreEqual(50f * 0.375f, result.HpDamage, 0.5f);
         }
 
@@ -221,7 +222,7 @@ namespace Tests.EditMode
                 BodyArmor = ArmorState.Create(40f, 120f),
             };
             // Bodyshot uses vest (40 pts), pen 30 → diff=10, multi=30/40=0.75
-            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, isHeadshot: false);
+            var result = ArmorSystem.Calculate(50f, 30f, 10f, slots, isHeadshot: false, ArmorConfig.Default);
             Assert.AreEqual(50f * 0.75f, result.HpDamage, 0.5f);
         }
 

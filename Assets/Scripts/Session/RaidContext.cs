@@ -80,6 +80,54 @@ namespace Session
         };
     }
 
+    public struct ArmorConfig
+    {
+        public bool  ForceNoArmor;
+        public bool  ForceMaxArmor;
+        public float DamageReductionK;
+        public float RicochetChance;
+
+        public static ArmorConfig Default => new ArmorConfig
+        {
+            ForceNoArmor     = false,
+            ForceMaxArmor    = false,
+            DamageReductionK = 30f,
+            RicochetChance   = 0.4f,
+        };
+    }
+
+    public struct FOVConfig
+    {
+        public bool  Enabled;
+        public bool  ForceShowAllBots;
+        public float NearRadius;
+        public float FarRadius;
+        public float Angle;
+        public bool  OcclusionEnabled;
+
+        public static FOVConfig Default => new FOVConfig
+        {
+            Enabled          = true,
+            ForceShowAllBots = false,
+            NearRadius       = 6f,
+            FarRadius        = 25f,
+            Angle            = 130f,
+            OcclusionEnabled = true,
+        };
+    }
+
+    public struct MovementConfig
+    {
+        public float MoveSpeedMultiplier;
+        public float AdsMoveSpeedMultiplier;
+
+        public static MovementConfig Default => new MovementConfig
+        {
+            MoveSpeedMultiplier    = 1f,
+            AdsMoveSpeedMultiplier = 0.7f,
+        };
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -93,6 +141,9 @@ namespace Session
         public readonly AimConfig AimConfig;
         public readonly ShootingConfig ShootingConfig;
         public readonly StaggerConfig StaggerConfig;
+        public readonly ArmorConfig ArmorConfig;
+        public readonly FOVConfig FOVConfig;
+        public readonly MovementConfig MovementConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -100,7 +151,10 @@ namespace Session
             ICoreDefinitionRegistry coreDefinitions = null,
             AimConfig? aimConfig = null,
             ShootingConfig? shootingConfig = null,
-            StaggerConfig? staggerConfig = null)
+            StaggerConfig? staggerConfig = null,
+            ArmorConfig? armorConfig = null,
+            FOVConfig? fovConfig = null,
+            MovementConfig? movementConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -113,6 +167,9 @@ namespace Session
             AimConfig = aimConfig ?? AimConfig.Default;
             ShootingConfig = shootingConfig ?? ShootingConfig.Default;
             StaggerConfig = staggerConfig ?? StaggerConfig.Default;
+            ArmorConfig = armorConfig ?? ArmorConfig.Default;
+            FOVConfig = fovConfig ?? FOVConfig.Default;
+            MovementConfig = movementConfig ?? MovementConfig.Default;
         }
     }
 }

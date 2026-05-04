@@ -1,6 +1,6 @@
 using Adapters;
-using Dev;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems;
 using Systems.Bot;
@@ -12,46 +12,8 @@ namespace Tests.EditMode
     [TestFixture]
     public class PlayerFOVSystemTests
     {
-        // NOTE: PlayerFOVSystem reads DevCheats.* directly (see tests-review.md P4-α).
-        // Until that's refactored into a Config struct on RaidContext, we own the
-        // DevCheats state for the duration of each test and restore defaults in TearDown
-        // so later test fixtures aren't polluted with our values.
-
-        bool _savedFovEnabled;
-        bool _savedForceShowAllBots;
-        bool _savedFovOcclusion;
-        float _savedNearRadius;
-        float _savedFarRadius;
-        float _savedAngle;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _savedFovEnabled       = DevCheats.FOVEnabled;
-            _savedForceShowAllBots = DevCheats.ForceShowAllBots;
-            _savedFovOcclusion     = DevCheats.FOVOcclusionEnabled;
-            _savedNearRadius       = DevCheats.FOVNearRadius;
-            _savedFarRadius        = DevCheats.FOVFarRadius;
-            _savedAngle            = DevCheats.FOVAngle;
-
-            DevCheats.FOVEnabled          = true;
-            DevCheats.ForceShowAllBots    = false;
-            DevCheats.FOVOcclusionEnabled = true;
-            DevCheats.FOVNearRadius       = 5f;
-            DevCheats.FOVFarRadius        = 25f;
-            DevCheats.FOVAngle            = 130f;
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            DevCheats.FOVEnabled          = _savedFovEnabled;
-            DevCheats.ForceShowAllBots    = _savedForceShowAllBots;
-            DevCheats.FOVOcclusionEnabled = _savedFovOcclusion;
-            DevCheats.FOVNearRadius       = _savedNearRadius;
-            DevCheats.FOVFarRadius        = _savedFarRadius;
-            DevCheats.FOVAngle            = _savedAngle;
-        }
+        // Per-test FOVConfig replaces former DevCheats SetUp/TearDown — fixture is now
+        // self-contained and cannot pollute later test runs (P0-1 refactor).
 
         static RaidState CreateStateWithBot(Vector3 playerPos, Vector3 playerFacing, Vector3 botPos)
         {
@@ -123,9 +85,10 @@ namespace Tests.EditMode
         [Test]
         public void FOVDisabled_AllBotsVisible()
         {
-            DevCheats.FOVEnabled = false;
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -50f));
-            var ctx = TestContextFactory.Create();
+            var fov = FOVConfig.Default;
+            fov.Enabled = false;
+            var ctx = TestContextFactory.Create(fovConfig: fov);
 
             PlayerFOVSystem.Tick(state, in ctx);
 
@@ -135,9 +98,10 @@ namespace Tests.EditMode
         [Test]
         public void ForceShowAllBots_AllVisible()
         {
-            DevCheats.ForceShowAllBots = true;
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, -50f));
-            var ctx = TestContextFactory.Create();
+            var fov = FOVConfig.Default;
+            fov.ForceShowAllBots = true;
+            var ctx = TestContextFactory.Create(fovConfig: fov);
 
             PlayerFOVSystem.Tick(state, in ctx);
 
@@ -223,10 +187,11 @@ namespace Tests.EditMode
         [Test]
         public void OcclusionDisabledViaCheats_OccludedBotStillVisible()
         {
-            DevCheats.FOVOcclusionEnabled = false;
             var state = CreateStateWithBot(Vector3.zero, Vector3.forward, new Vector3(0, 0, 15f));
             var physics = new FakePhysicsAdapter { Blocked = true };
-            var ctx = TestContextFactory.Create(physics: physics);
+            var fov = FOVConfig.Default;
+            fov.OcclusionEnabled = false;
+            var ctx = TestContextFactory.Create(physics: physics, fovConfig: fov);
 
             PlayerFOVSystem.Tick(state, in ctx);
 

@@ -1,6 +1,5 @@
 using Adapters;
 using Constants;
-using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -14,20 +13,22 @@ namespace Systems
             var player = state.PlayerEntity;
             if (player == null) return;
 
+            var fov = ctx.FOVConfig;
+
             // FOV disabled or force-show — all bots visible
-            if (!DevCheats.FOVEnabled || DevCheats.ForceShowAllBots)
+            if (!fov.Enabled || fov.ForceShowAllBots)
             {
                 for (int i = 0; i < state.Bots.Count; i++)
                     state.Bots[i].IsVisibleToPlayer = true;
                 return;
             }
 
-            float nearR = DevCheats.FOVNearRadius;
-            float farR = DevCheats.FOVFarRadius;
-            float halfAngle = DevCheats.FOVAngle * 0.5f;
+            float nearR = fov.NearRadius;
+            float farR = fov.FarRadius;
+            float halfAngle = fov.Angle * 0.5f;
             var facing = player.FacingDirection;
             bool hasFacing = facing.sqrMagnitude > 0.001f;
-            bool checkOcclusion = DevCheats.FOVOcclusionEnabled;
+            bool checkOcclusion = fov.OcclusionEnabled;
 
             var eyePos = player.Position + Vector3.up * BotConstants.PlayerEyeHeight;
 

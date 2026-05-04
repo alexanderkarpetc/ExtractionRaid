@@ -1,5 +1,4 @@
 using Constants;
-using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -30,9 +29,10 @@ namespace Systems
                 if (moveDirection.sqrMagnitude > 1f)
                     moveDirection.Normalize();
 
+                var move = context.MovementConfig;
                 float sprintScale = player.IsSprinting ? StaminaConstants.SprintSpeedMultiplier : 1f;
-                float adsMoveScale = Mathf.Lerp(1f, DevCheats.AdsMoveSpeedMultiplier, player.AdsBlend);
-                player.Velocity = moveDirection * (MoveSpeed * DevCheats.MoveSpeedMultiplier * adsMoveScale * sprintScale);
+                float adsMoveScale = Mathf.Lerp(1f, move.AdsMoveSpeedMultiplier, player.AdsBlend);
+                player.Velocity = moveDirection * (MoveSpeed * move.MoveSpeedMultiplier * adsMoveScale * sprintScale);
             }
 
             var candidatePos = player.Position + player.Velocity * context.DeltaTime;
