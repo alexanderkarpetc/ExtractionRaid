@@ -41,22 +41,22 @@ namespace State
         /// <summary>
         /// Stable string identifier for this weapon's hand prefab. Used as event payload
         /// (WeaponDryFired/WeaponReloadStarted/...) and by Raid State Debugger UI.
-        /// For builder-assembled weapons mirrors <see cref="WeaponPrefab"/>.name; for legacy
-        /// bot weapons set directly from <c>BotConstants.WeaponPrefabId</c>.
+        /// Tier 8.x* — mirrors <see cref="BasePrefab"/>.name (payload prefab name).
+        /// Used as event payload string (WeaponDryFired/Reload/...) and Raid State Debugger UI.
         /// </summary>
         public string PrefabId;
         /// <summary>
-        /// Direct reference to the hand prefab spawned by <c>CharacterBody.SwapWeaponModel</c>.
-        /// Tier 8 Wave A: builder weapons resolve this from <see cref="DeliveryDefinition"/>.WeaponPrefab;
-        /// legacy bot path leaves it null and falls back on the string <see cref="PrefabId"/> Resources.Load.
+        /// Tier 8.x* — payload base prefab (weapon root). Instantiated як child of
+        /// CharacterBody.WeaponPivot at equip time. Resolved from
+        /// <see cref="PayloadDefinition"/>.BasePrefab.
         /// </summary>
-        public UnityEngine.GameObject WeaponPrefab;
+        public UnityEngine.GameObject BasePrefab;
         /// <summary>
-        /// Optional payload mesh attached to the weapon's PayloadMount socket on equip.
-        /// Tier 8 Wave B: resolved from <see cref="PayloadDefinition"/>.AttachmentPrefab.
-        /// Null = no payload mesh for this archetype (silently skipped by view layer).
+        /// Tier 8.x* — delivery barrel prefab (ствол / emitter). Instantiated як child of
+        /// payload's DeliverySocket at equip time. Resolved from
+        /// <see cref="DeliveryDefinition"/>.BarrelPrefab.
         /// </summary>
-        public UnityEngine.GameObject PayloadPrefab;
+        public UnityEngine.GameObject BarrelPrefab;
 
         // ── Composition (identity) ─────────────────────────
         public PayloadCoreInstance  PayloadCore;

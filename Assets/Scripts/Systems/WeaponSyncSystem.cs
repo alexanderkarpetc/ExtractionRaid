@@ -103,20 +103,19 @@ namespace Systems
                 return null;
             }
 
-            // Tier 4a — single source of truth: Delivery._weaponPrefab. Bot weapons тепер
-            // ходять тим самим pipeline'ом, тому legacy ItemDefinition.WeaponPrefabId
-            // fallback видалений. Якщо Delivery не має prefab — assembly returns null upstream.
-            var deliveryPrefab = result.DeliveryDefinition?.WeaponPrefab;
-            // Tier 8 Wave B: optional payload mesh attached at PayloadMount socket on equip.
-            var payloadPrefab  = result.PayloadDefinition?.AttachmentPrefab;
-            string prefabId    = deliveryPrefab != null ? deliveryPrefab.name : null;
+            // Tier 8.x* — Payload = weapon BASE (root, hand-held), Delivery = BARREL (insert).
+            // Composition flow: instantiate basePrefab → insert barrelPrefab into its DeliverySocket.
+            // PrefabId mirrors basePrefab.name (event payload string + identity tracking).
+            var basePrefab   = result.PayloadDefinition?.BasePrefab;
+            var barrelPrefab = result.DeliveryDefinition?.BarrelPrefab;
+            string prefabId  = basePrefab != null ? basePrefab.name : null;
 
             return new WeaponEntityState
             {
                 Id             = invItem.Id,
                 PrefabId       = prefabId,
-                WeaponPrefab   = deliveryPrefab,
-                PayloadPrefab  = payloadPrefab,
+                BasePrefab     = basePrefab,
+                BarrelPrefab   = barrelPrefab,
 
                 PayloadCore        = config.Payload,
                 DeliveryCore       = config.Delivery,

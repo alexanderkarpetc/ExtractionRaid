@@ -27,7 +27,9 @@ namespace Tests.EditMode
         BallisticPayloadDefinition _ballistic;
         DeliveryCoreDefinition     _singleAction;
         DeliveryCoreDefinition     _auto;
-        // Tier 8 Wave A: stub weapon prefabs whose .name drives runtime PrefabId.
+        // Tier 8.x*: stub base prefab (payload) drives runtime PrefabId; barrel stubs are
+        // visual references only (delivered through Delivery._barrelPrefab).
+        GameObject                 _ballisticBaseStub;
         GameObject                 _pistolPrefabStub;
         GameObject                 _riflePrefabStub;
         ICoreDefinitionRegistry    _registry;
@@ -40,6 +42,7 @@ namespace Tests.EditMode
         [SetUp]
         public void SetUp()
         {
+            _ballisticBaseStub = WeaponBuilderTestFactory.MakeStubBasePrefab("Module_Payload_Ballistic");
             _ballistic = WeaponBuilderTestFactory.MakeBallistic(
                 "BallisticRound", displayName: "Ballistic", ammoType: "Ammo_Rifle",
                 commonStats: new CommonPayloadStats
@@ -50,9 +53,10 @@ namespace Tests.EditMode
                     HeadshotDamageMultiplier = 2.0f,
                     BasePenetration          = 15f,
                     BaseArmorDamage          = 5f,
-                });
-            _pistolPrefabStub = WeaponBuilderTestFactory.MakeStubWeaponPrefab("Weapon_Pistol");
-            _riflePrefabStub  = WeaponBuilderTestFactory.MakeStubWeaponPrefab("Weapon_Rifle");
+                },
+                basePrefab: _ballisticBaseStub);
+            _pistolPrefabStub = WeaponBuilderTestFactory.MakeStubBarrelPrefab("Module_Delivery_Pistol");
+            _riflePrefabStub  = WeaponBuilderTestFactory.MakeStubBarrelPrefab("Module_Delivery_Rifle");
 
             _singleAction = WeaponBuilderTestFactory.MakeDelivery(
                 "SingleAction", formFactor: "Pistol", pattern: FiringPattern.Single,
@@ -65,7 +69,7 @@ namespace Tests.EditMode
                     ReloadTime         = 1.5f,
                     EquipTime          = 0.2f,
                 },
-                weaponPrefab: _pistolPrefabStub);
+                barrelPrefab: _pistolPrefabStub);
             _auto = WeaponBuilderTestFactory.MakeDelivery(
                 "Auto", formFactor: "Rifle", pattern: FiringPattern.Auto,
                 commonStats: new DeliveryStats
@@ -77,7 +81,7 @@ namespace Tests.EditMode
                     ReloadTime         = 2.0f,
                     EquipTime          = 0.3f,
                 },
-                weaponPrefab: _riflePrefabStub);
+                barrelPrefab: _riflePrefabStub);
 
             _db = WeaponBuilderTestFactory.MakeDatabase(
                 payloads:   new PayloadCoreDefinition[]  { _ballistic },
@@ -92,7 +96,7 @@ namespace Tests.EditMode
         public void TearDown() =>
             WeaponBuilderTestFactory.DestroyAll(
                 _ballistic, _singleAction, _auto, _db,
-                _pistolPrefabStub, _riflePrefabStub);
+                _ballisticBaseStub, _pistolPrefabStub, _riflePrefabStub);
 
         /// <summary>Places payload + delivery module items into free backpack slots
         /// so TryBuild's module-consumption check passes (Tier 6 G6).</summary>
@@ -156,7 +160,7 @@ namespace Tests.EditMode
             Assert.AreEqual("Ammo_Rifle",     runtime.AmmoType, "AmmoType from payload definition");
             Assert.AreEqual(12,               runtime.AmmoInMagazine, "Magazine starts full");
             Assert.AreEqual(WeaponPhase.Ready, runtime.Phase);
-            Assert.AreEqual("Weapon_Pistol",  runtime.PrefabId, "Prefab resolved from Delivery FormFactor");
+            Assert.AreEqual("Module_Payload_Ballistic", runtime.PrefabId, "PrefabId mirrors PayloadDefinition.BasePrefab.name");
         }
 
         [Test]
@@ -175,25 +179,24 @@ namespace Tests.EditMode
             Assert.AreEqual("Ballistic Rifle", WeaponArchetypeLabel.Compose(_ballistic, _auto));
             Assert.AreEqual(30,  runtime.Stats.MagazineSize);
             Assert.AreEqual(0.2f, runtime.Stats.FireInterval);
-            Assert.AreEqual("Weapon_Rifle", runtime.PrefabId);
+            Assert.AreEqual("Module_Payload_Ballistic", runtime.PrefabId);
         }
 
         // ── Tier 8 Wave B: payload prefab attachment ──────────────────
 
         [Test]
-        public void Assembly_PropagatesPayloadAttachmentPrefab_ToRuntimeState()
+        public void Assembly_PropagatesPayloadBasePrefab_ToRuntimeState()
         {
-            // Setup a separate payload that carries an AttachmentPrefab. Ensures
-            // WeaponSyncSystem reads PayloadDefinition.AttachmentPrefab and stores
-            // it on WeaponEntityState.PayloadPrefab for the view layer to consume.
-            var attachmentStub = WeaponBuilderTestFactory.MakeStubWeaponPrefab("StubBarrel");
-            var ballisticWithBarrel = WeaponBuilderTestFactory.MakeBallistic(
-                id: "BallisticWithBarrel",
+            // Tier 8.x*: payload SO carries _basePrefab (weapon root). WeaponSyncSystem
+            // reads PayloadDefinition.BasePrefab → WeaponEntityState.BasePrefab for view.
+            var baseStub = WeaponBuilderTestFactory.MakeStubBasePrefab("Module_Payload_Ballistic");
+            var ballisticWithBase = WeaponBuilderTestFactory.MakeBallistic(
+                id: "BallisticWithBase",
                 ammoType: "Ammo_Rifle",
                 commonStats: new CommonPayloadStats { Damage = 10f },
-                attachmentPrefab: attachmentStub);
+                basePrefab: baseStub);
             var db2 = WeaponBuilderTestFactory.MakeDatabase(
-                payloads:   new PayloadCoreDefinition[]  { ballisticWithBarrel },
+                payloads:   new PayloadCoreDefinition[]  { ballisticWithBase },
                 deliveries: new[] { _auto });
             var registry2 = new DatabaseCoreDefinitionRegistry(db2);
 
@@ -201,7 +204,7 @@ namespace Tests.EditMode
                 AllocateEId(),
                 "Weapon",
                 new WeaponConfiguration(
-                    payload:  new PayloadCoreInstance("BallisticWithBarrel", RarityTier.Common),
+                    payload:  new PayloadCoreInstance("BallisticWithBase", RarityTier.Common),
                     delivery: new DeliveryCoreInstance("Auto", RarityTier.Common),
                     exotic:   null,
                     ammoInMagazine: 30));
@@ -209,29 +212,14 @@ namespace Tests.EditMode
             var runtime = WeaponSyncSystem.BuildWeaponForItem(item, registry2, _events);
 
             Assert.IsNotNull(runtime);
-            Assert.IsNotNull(runtime.PayloadPrefab,    "PayloadPrefab must propagate from PayloadDefinition.AttachmentPrefab");
-            Assert.AreSame(attachmentStub, runtime.PayloadPrefab);
+            Assert.IsNotNull(runtime.BasePrefab, "BasePrefab must propagate from PayloadDefinition.BasePrefab");
+            Assert.AreSame(baseStub, runtime.BasePrefab);
 
-            WeaponBuilderTestFactory.DestroyAll(ballisticWithBarrel, db2, attachmentStub);
+            WeaponBuilderTestFactory.DestroyAll(ballisticWithBase, db2, baseStub);
         }
 
-        [Test]
-        public void Assembly_LeavesPayloadPrefabNull_WhenPayloadHasNoAttachment()
-        {
-            // Default _ballistic in SetUp has no AttachmentPrefab — runtime field stays null.
-            // This is the graceful path for archetypes that haven't yet got a payload mesh.
-            PutModulesInBackpack("BallisticRound", "Auto");
-            var presenter = new WeaponBuilderPresenter(_registry, _inventory, AllocateEId);
-            presenter.SelectPayload("BallisticRound");
-            presenter.SelectDelivery("Auto");
-            Assert.IsTrue(presenter.TryBuild(out _));
-
-            var runtime = WeaponSyncSystem.BuildWeaponForItem(_inventory.Backpack[0], _registry, _events);
-
-            Assert.IsNotNull(runtime);
-            Assert.IsNull(runtime.PayloadPrefab,
-                "Payload without AttachmentPrefab → runtime PayloadPrefab is null (graceful no-attachment).");
-        }
+        // Test "Assembly_LeavesBasePrefabNull_WhenPayloadHasNoBase" removed (Tier 8.x*) —
+        // production payloads MUST carry BasePrefab; null path was defensive-only.
 
         // ── Multiple builds coexist ───────────────────────────
 
@@ -303,7 +291,7 @@ namespace Tests.EditMode
             var runtime = WeaponSyncSystem.BuildWeaponForItem(pickedUp, _registry, _events);
             Assert.IsNotNull(runtime);
             Assert.AreEqual("BallisticRound", runtime.PayloadCore.DefinitionId);
-            Assert.AreEqual("Weapon_Rifle",   runtime.PrefabId);
+            Assert.AreEqual("Module_Payload_Ballistic", runtime.PrefabId);
         }
 
         // ── Presenter preview drives stats that match runtime ─

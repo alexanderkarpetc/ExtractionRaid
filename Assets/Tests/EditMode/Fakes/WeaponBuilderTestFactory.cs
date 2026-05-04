@@ -32,10 +32,10 @@ namespace Tests.EditMode.Fakes
             string ammoType = null,
             CommonPayloadStats? commonStats = null,
             RarityTier statsTier = RarityTier.Common,
-            GameObject attachmentPrefab = null)
+            GameObject basePrefab = null)
         {
             return MakePayload<BallisticPayloadDefinition>(
-                id, displayName, ammoType, commonStats, statsTier, attachmentPrefab);
+                id, displayName, ammoType, commonStats, statsTier, basePrefab);
         }
 
         /// <summary>
@@ -49,9 +49,9 @@ namespace Tests.EditMode.Fakes
             CommonPayloadStats? commonStats = null,
             float chargeTime = 1f,
             RarityTier statsTier = RarityTier.Common,
-            GameObject attachmentPrefab = null)
+            GameObject basePrefab = null)
         {
-            var def = MakePayload<LaserPayloadDefinition>(id, displayName, ammoType, commonStats, statsTier, attachmentPrefab);
+            var def = MakePayload<LaserPayloadDefinition>(id, displayName, ammoType, commonStats, statsTier, basePrefab);
             var specific = new LaserSpecificStats[5];
             specific[(int)statsTier] = new LaserSpecificStats { ChargeTime = chargeTime };
             SetPrivateField(def, "_specificByTier", specific);
@@ -68,14 +68,14 @@ namespace Tests.EditMode.Fakes
             string ammoType = null,
             CommonPayloadStats? commonStats = null,
             RarityTier statsTier = RarityTier.Common,
-            GameObject attachmentPrefab = null)
+            GameObject basePrefab = null)
             where T : PayloadCoreDefinition
         {
             var def = ScriptableObject.CreateInstance<T>();
             SetPrivateField(def, "_id", id);
-            if (displayName      != null) SetPrivateField(def, "_displayName",      displayName);
-            if (ammoType         != null) SetPrivateField(def, "_ammoType",         ammoType);
-            if (attachmentPrefab != null) SetPrivateField(def, "_attachmentPrefab", attachmentPrefab);
+            if (displayName != null) SetPrivateField(def, "_displayName", displayName);
+            if (ammoType    != null) SetPrivateField(def, "_ammoType",    ammoType);
+            if (basePrefab  != null) SetPrivateField(def, "_basePrefab",  basePrefab);
 
             var array = new CommonPayloadStats[5];
             array[(int)statsTier] = commonStats ?? default;
@@ -91,12 +91,12 @@ namespace Tests.EditMode.Fakes
             FiringPattern pattern = FiringPattern.Single,
             DeliveryStats? commonStats = null,
             RarityTier statsTier = RarityTier.Common,
-            GameObject weaponPrefab = null)
+            GameObject barrelPrefab = null)
         {
             var def = ScriptableObject.CreateInstance<DeliveryCoreDefinition>();
             SetPrivateField(def, "_id", id);
-            if (formFactor != null)   SetPrivateField(def, "_formFactor", formFactor);
-            if (weaponPrefab != null) SetPrivateField(def, "_weaponPrefab", weaponPrefab);
+            if (formFactor   != null) SetPrivateField(def, "_formFactor",   formFactor);
+            if (barrelPrefab != null) SetPrivateField(def, "_barrelPrefab", barrelPrefab);
             SetPrivateField(def, "_pattern", pattern);
 
             var array = new DeliveryStats[5];
@@ -106,12 +106,19 @@ namespace Tests.EditMode.Fakes
         }
 
         /// <summary>
-        /// Creates a stub <see cref="GameObject"/> for use as a Delivery's <c>WeaponPrefab</c>
-        /// in EditMode tests. The GO's <c>.name</c> drives <see cref="WeaponEntityState.PrefabId"/>
-        /// after assembly — pass e.g. "Weapon_Pistol" to mirror production prefab naming.
-        /// Caller is responsible for cleanup via <see cref="DestroyAll"/> in TearDown.
+        /// Tier 8.x* stub PAYLOAD base prefab — bare GameObject used як SO `_basePrefab` ref.
+        /// PrefabId derives from this name. Caller is responsible for cleanup via
+        /// <see cref="DestroyAll"/> у TearDown.
         /// </summary>
-        public static GameObject MakeStubWeaponPrefab(string name)
+        public static GameObject MakeStubBasePrefab(string name)
+        {
+            return new GameObject(name);
+        }
+
+        /// <summary>
+        /// Tier 8.x* stub DELIVERY barrel prefab. Bare GameObject used як SO `_barrelPrefab` ref.
+        /// </summary>
+        public static GameObject MakeStubBarrelPrefab(string name)
         {
             return new GameObject(name);
         }

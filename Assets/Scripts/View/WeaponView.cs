@@ -3,20 +3,24 @@ using UnityEngine;
 
 namespace View
 {
+    /// <summary>
+    /// Tier 8.x* — lives on PAYLOAD prefab root (weapon "base"). Owns Animator, animation
+    /// triggers, recoil kick, muzzle flash/light. Delivery prefab (barrel) attaches as child
+    /// of <see cref="_deliverySocket"/> at equip time via <see cref="AttachDelivery"/>.
+    /// MuzzlePoint resolves dynamically — comes from inside the attached delivery's hierarchy.
+    /// </summary>
     public class WeaponView : MonoBehaviour
     {
-        [SerializeField] Transform _muzzlePoint;
         [SerializeField] ParticleSystem _muzzleFlashPrefab;
         [SerializeField] Animator _animator;
 
-        // Tier 8 Wave B: optional socket for payload mesh attachment (e.g., barrel for
-        // Ballistic, emitter cone for Laser). Null on prefabs that don't yet expose one
-        // → AttachPayload silently no-ops. Wired explicitly in Inspector per V-Q6.
-        [SerializeField] Transform _payloadMount;
+        // Tier 8.x* — socket where delivery (barrel) prefab instantiates at equip time.
+        // Resolved dynamically. MuzzlePoint comes from inside the attached delivery.
+        [SerializeField] Transform _deliverySocket;
 
-        // Gunplay A.5 — optional Point Light child of weapon prefab. If present, pulses
-        // bright at PlayMuzzleFlash and decays to 0 over MuzzleVfx.LightDuration. Null = no pulse.
-        // Wired via Inspector — typical setup: child GO с Light component on muzzle.
+        // Gunplay A.5 — optional Point Light child of muzzle. If present, pulses bright
+        // at PlayMuzzleFlash and decays to 0 over MuzzleVfx.LightDuration. Null = no pulse.
+        // Auto-created on attached delivery's MuzzlePoint якщо missing.
         [SerializeField] Light _muzzleLight;
 
         // Light pulse state — driven by DevCheats.Config.MuzzleVfx.
@@ -24,63 +28,74 @@ namespace View
         float _muzzleLightDuration;
         float _muzzleLightPeak;
 
-        // Tier 8 Wave D: delivery body that receives procedural recoil kick on Fire.
-        // Mecanim clips authored against the legacy SM_Wep_AssaultRifle_01 transform
-        // paths went stale after Wave B/C symmetric pivot — code-driven kick replaces
-        // them across all archetypes without per-prefab clip authoring. Optional;
-        // null = no procedural feedback. Real animator-driven anim is Tier 9 polish.
-        [SerializeField] Transform _deliveryBody;
+        // Tier 8.x*: child Transform that receives procedural recoil kick on Fire. Lives
+        // inside payload prefab (KickGroup containing PayloadBaseMesh + DeliverySocket).
+        // Kicking the group keeps RightHandGrip stationary (no IK weirdness) while visual
+        // mesh recoils. Code-driven kick replaces stale Mecanim clips. Optional; null = no
+        // procedural feedback.
+        [SerializeField] Transform _recoilKickTarget;
         [SerializeField] float     _recoilKickDistance = 0.04f;
 
         ParticleSystem _muzzleFlashInstance;
-        GameObject _attachedPayload;
+
+        // Attached delivery state — resolved at AttachDelivery() and cached.
+        GameObject _attachedDelivery;
+        Transform  _resolvedMuzzlePoint;
 
         // Procedural recoil state — local (not RaidState): purely visual feedback.
-        Vector3 _bodyRestLocalPos;
-        bool    _bodyRestCached;
+        Vector3 _kickRestLocalPos;
+        bool    _kickRestCached;
         float   _kickElapsed;
         float   _kickDuration;
 
         static readonly int SpeedParam = Animator.StringToHash("Speed");
 
-        public Transform MuzzlePoint  => _muzzlePoint;
-        public Transform PayloadMount => _payloadMount;
+        /// <summary>
+        /// MuzzlePoint resolved через attached delivery. Null коли no delivery attached
+        /// (e.g., assembly failed) — view-side VFX gracefully no-op.
+        /// </summary>
+        public Transform MuzzlePoint => _resolvedMuzzlePoint;
 
         /// <summary>
-        /// Spawns <paramref name="payloadPrefab"/> as a child of <see cref="PayloadMount"/>.
-        /// Replaces any previously attached payload. No-op if either side is null.
+        /// Tier 8.x* — instantiates delivery (barrel) prefab as child of <see cref="_deliverySocket"/>.
+        /// Resolves MuzzlePoint child within the attached delivery for VFX usage.
+        /// Call after weapon equip / on barrel swap. Replaces previous delivery atomically.
         /// </summary>
-        public void AttachPayload(GameObject payloadPrefab)
+        public void AttachDelivery(GameObject barrelPrefab)
         {
-            if (_attachedPayload != null)
+            if (_attachedDelivery != null)
             {
-                Destroy(_attachedPayload);
-                _attachedPayload = null;
+                Destroy(_attachedDelivery);
+                _attachedDelivery = null;
+                _resolvedMuzzlePoint = null;
             }
 
-            if (payloadPrefab == null || _payloadMount == null)
+            if (barrelPrefab == null || _deliverySocket == null)
                 return;
 
-            _attachedPayload = Instantiate(payloadPrefab, _payloadMount);
-            _attachedPayload.transform.localPosition = Vector3.zero;
-            _attachedPayload.transform.localRotation = Quaternion.identity;
+            _attachedDelivery = Instantiate(barrelPrefab, _deliverySocket);
+            _attachedDelivery.transform.localPosition = Vector3.zero;
+            _attachedDelivery.transform.localRotation = Quaternion.identity;
+
+            _resolvedMuzzlePoint = FindDeepChild(_attachedDelivery.transform, "MuzzlePoint");
+            if (_resolvedMuzzlePoint == null)
+                Debug.LogWarning($"[WeaponView] Attached delivery '{barrelPrefab.name}' has no MuzzlePoint child — VFX disabled.");
         }
 
         public void PlayMuzzleFlash()
         {
-            if (_muzzleFlashPrefab != null && _muzzlePoint != null)
+            if (_muzzleFlashPrefab != null && _resolvedMuzzlePoint != null)
             {
                 if (_muzzleFlashInstance == null)
                 {
-                    _muzzleFlashInstance = Instantiate(_muzzleFlashPrefab, _muzzlePoint);
+                    _muzzleFlashInstance = Instantiate(_muzzleFlashPrefab, _resolvedMuzzlePoint);
                     _muzzleFlashInstance.transform.localPosition = Vector3.zero;
                     _muzzleFlashInstance.transform.localRotation = Quaternion.identity;
                 }
                 _muzzleFlashInstance.Play();
             }
 
-            // Gunplay A.5 — light pulse layer on muzzle moment. Per-prefab _muzzleLight
-            // optional; DevCheats config drives intensity/duration/range/color.
+            // Gunplay A.5 — light pulse layer on muzzle moment.
             TriggerMuzzleLightPulse();
         }
 
@@ -89,12 +104,11 @@ namespace View
             var cfg = DevCheats.Config?.MuzzleVfx;
             if (cfg == null || !cfg.LightEnabled || cfg.LightDuration <= 0f) return;
 
-            // Auto-create a Point Light child of MuzzlePoint if prefab didn't wire one —
-            // zero-config visible pulse за умовчанням; per-prefab override через Inspector.
-            if (_muzzleLight == null && _muzzlePoint != null)
+            // Auto-create a Point Light on resolved muzzle if prefab didn't wire one.
+            if (_muzzleLight == null && _resolvedMuzzlePoint != null)
             {
                 var lightGO = new GameObject("MuzzleLight (auto)");
-                lightGO.transform.SetParent(_muzzlePoint, false);
+                lightGO.transform.SetParent(_resolvedMuzzlePoint, false);
                 _muzzleLight = lightGO.AddComponent<Light>();
                 _muzzleLight.type = LightType.Point;
                 _muzzleLight.shadows = LightShadows.None;
@@ -126,18 +140,15 @@ namespace View
 
         void TriggerRecoilKick(float fireDuration)
         {
-            if (_deliveryBody == null || _recoilKickDistance <= 0f) return;
-            if (!_bodyRestCached)
+            if (_recoilKickTarget == null || _recoilKickDistance <= 0f) return;
+            if (!_kickRestCached)
             {
-                _bodyRestLocalPos = _deliveryBody.localPosition;
-                _bodyRestCached = true;
+                _kickRestLocalPos = _recoilKickTarget.localPosition;
+                _kickRestCached = true;
             }
-            // Recovery scaled to fire interval — fast cadence (Auto, FireInterval=0.2)
-            // gets snappy short kicks; slow cadence (Single, 0.4) gets longer kicks.
-            // Floored so very fast cadences still feel a kick.
             _kickDuration = Mathf.Max(0.06f, fireDuration * 0.4f);
             _kickElapsed  = 0f;
-            _deliveryBody.localPosition = _bodyRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance);
+            _recoilKickTarget.localPosition = _kickRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance);
         }
 
         void Update()
@@ -148,26 +159,25 @@ namespace View
 
         void UpdateRecoilKick()
         {
-            if (!_bodyRestCached || _kickDuration <= 0f) return;
+            if (!_kickRestCached || _kickDuration <= 0f) return;
 
             _kickElapsed += Time.deltaTime;
             if (_kickElapsed >= _kickDuration)
             {
-                _deliveryBody.localPosition = _bodyRestLocalPos;
+                _recoilKickTarget.localPosition = _kickRestLocalPos;
                 _kickDuration = 0f;
                 return;
             }
 
             float t = _kickElapsed / _kickDuration;
             float eased = (1f - t) * (1f - t); // ease-out quad → snap back
-            _deliveryBody.localPosition = _bodyRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance * eased);
+            _recoilKickTarget.localPosition = _kickRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance * eased);
         }
 
         void UpdateMuzzleLightPulse()
         {
             if (_muzzleLight == null || _muzzleLightDuration <= 0f) return;
 
-            // Unscaled — light pulse must remain perceptible during hit pause.
             _muzzleLightElapsedUnscaled += Time.unscaledDeltaTime;
             if (_muzzleLightElapsedUnscaled >= _muzzleLightDuration)
             {
@@ -178,14 +188,12 @@ namespace View
             }
 
             float t = _muzzleLightElapsedUnscaled / _muzzleLightDuration;
-            float eased = (1f - t) * (1f - t); // ease-out quad
+            float eased = (1f - t) * (1f - t);
             _muzzleLight.intensity = _muzzleLightPeak * eased;
         }
 
         /// <summary>
         /// Plays an animation clip at adjusted speed so it finishes in exactly <paramref name="duration"/> seconds.
-        /// Uses the Animator "Speed" float parameter as Speed Multiplier on action states.
-        /// Idle state should NOT use Speed parameter (multiplier = 1).
         /// </summary>
         void PlayClip(string triggerName, float duration)
         {
@@ -202,12 +210,23 @@ namespace View
 
         float GetClipLength(string clipName)
         {
-            if (_animator.runtimeAnimatorController == null) return 0f;
+            if (_animator == null || _animator.runtimeAnimatorController == null) return 0f;
 
             foreach (var clip in _animator.runtimeAnimatorController.animationClips)
                 if (clip.name == clipName) return clip.length;
 
             return 0f;
+        }
+
+        static Transform FindDeepChild(Transform parent, string name)
+        {
+            if (parent.name == name) return parent;
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                var found = FindDeepChild(parent.GetChild(i), name);
+                if (found != null) return found;
+            }
+            return null;
         }
     }
 }

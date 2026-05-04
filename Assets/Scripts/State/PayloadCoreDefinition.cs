@@ -22,12 +22,14 @@ namespace State
         [SerializeField] string _ammoType;
         [SerializeField] CommonPayloadStats[] _statsByTier = new CommonPayloadStats[RarityTierCount];
 
-        // ── Visualization (Tier 8 Wave B) ─────────────────────────────────
+        // ── Visualization (Tier 8.x* — payload as weapon root) ─────────────
         [Header("Visualization")]
-        [Tooltip("Optional payload mesh attached as a child of the weapon's PayloadMount socket. " +
-                 "Null = no attachment (e.g. Tier 1 archetypes before Wave C). " +
-                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8 Wave B.")]
-        [SerializeField] GameObject _attachmentPrefab;
+        [Tooltip("Weapon BASE prefab (handle / receiver / magazine / battery — the half held " +
+                 "у character's right hand). Instantiated як weapon root у CharacterBody.WeaponPivot. " +
+                 "Must contain WeaponView component, DeliverySocket transform, RightHandGrip transform. " +
+                 "Delivery (barrel) attaches inside DeliverySocket runtime. " +
+                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.")]
+        [SerializeField] GameObject _basePrefab;
 
         public string Id          => _id;
         public string Archetype   => _archetype;
@@ -35,10 +37,11 @@ namespace State
         public string DisplayName => _displayName;
         public string AmmoType    => _ammoType;
         /// <summary>
-        /// Visual prefab spawned as a child of the weapon's PayloadMount socket on equip.
-        /// Null = no attachment for this payload (graceful skip in <c>CharacterBody.SwapWeaponModel</c>).
+        /// Weapon base prefab — instantiated як root коли weapon equipped. Owns the body/handle
+        /// mesh, RightHandGrip IK target, DeliverySocket where barrel mounts at runtime.
+        /// Null = invalid configuration; weapon assembly fails з WeaponAssemblyFailed event.
         /// </summary>
-        public GameObject AttachmentPrefab => _attachmentPrefab;
+        public GameObject BasePrefab => _basePrefab;
 
         /// <summary>Common payload stats for the given rarity tier.</summary>
         public CommonPayloadStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

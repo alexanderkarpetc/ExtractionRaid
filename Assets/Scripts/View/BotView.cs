@@ -58,8 +58,8 @@ namespace View
             _healthBar = WorldHealthBar.Create(transform, maxHp);
             _debugLabel = BotDebugLabel.Create(transform);
 
-            if (weapon != null && _body != null && weapon.WeaponPrefab != null)
-                _body.SwapWeaponModel(weapon.WeaponPrefab, weapon.PrefabId, weapon.PayloadPrefab);
+            if (weapon != null && _body != null && weapon.BasePrefab != null)
+                _body.SwapWeaponModel(weapon.BasePrefab, weapon.BarrelPrefab, weapon.PrefabId);
         }
 
         public void OnDamaged(float currentHp, float maxHp)

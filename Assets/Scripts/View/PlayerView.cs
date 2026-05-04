@@ -83,13 +83,12 @@ namespace View
                 {
                     if (state.EquippedWeapon.PrefabId != _body.CurrentWeaponPrefabId)
                     {
-                        // Tier 4a: single Builder path. Delivery._weaponPrefab is canonical;
-                        // if it's null, weapon assembly failed — view stays empty (caller
-                        // already saw WeaponAssemblyFailed event).
+                        // Tier 8.x*: payload = weapon base (root), delivery = barrel insert.
+                        // Both required for valid weapon; if either null → assembly failed.
                         _body.SwapWeaponModel(
-                            state.EquippedWeapon.WeaponPrefab,
-                            state.EquippedWeapon.PrefabId,
-                            state.EquippedWeapon.PayloadPrefab);
+                            state.EquippedWeapon.BasePrefab,
+                            state.EquippedWeapon.BarrelPrefab,
+                            state.EquippedWeapon.PrefabId);
                         _onMuzzlePointChanged?.Invoke(_body.MuzzlePoint);
                     }
 

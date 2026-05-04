@@ -1,6 +1,6 @@
 # Weapon Builder — Status
 
-> ⏸ **PAUSED 2026-05-01.** Foundation + Tier 6 + Tier 8 done; Cluster A legacy retirement done. Dev focus shifted до **Better Feel Gunplay** epic ([`../../gunplay/`](../../gunplay/README.md)). Re-engage цього roadmap (Tier 8.x → 4a → 9 → 10) коли gunplay polish converges. See [decisions log](#2026-05-01--paused-pivot-to-gunplay-epic) for full pause rationale.
+> ⏸ **PAUSED 2026-05-01, partial unpause 2026-05-04.** Foundation + Tier 6 + Tier 8 done; Cluster A (player-facing legacy) retired 2026-05-01; **Cluster B (bot weapon migration / Tier 4a) retired 2026-05-04**. Remaining backlog: Tier 8.x (visual coherence pass) → Tier 9 (VFX/SFX) → Tier 10 (feel). Tier 4a finished — closes legacy `Weapon_Rifle`/`Weapon_Pistol` Resources.Load path entirely; bots use Builder pipeline like player.
 
 > **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F; G7 deferred) + **Tier 8 done** (Waves A-E; F deferred — UI prereq) + **Cluster A retired** (legacy `Rifle`/`Pistol`/`Ammo_Pistol*` player-facing references replaced з Builder content).
 >
@@ -781,12 +781,50 @@ Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі
 - [x] ~~Tier 2 (core breadth)~~ ✅ complete (2026-04-23)
 - [x] ~~UX Pass 1 (clarity + inventory + tooltip + D&D)~~ ✅ complete (2026-04-27)
 
-**Next: Tier 6 — Loot / Inventory integration.** Затим Tier 8 (3D viz) → 3 → 4 → 5 → 9 → 10. Повне rationale у [Pause summary](#pause-summary--session-resumption-guide) на початку файлу.
+**Closed since pause:**
+- ✅ Tier 4a — bot weapon migration (2026-05-04). All bots (Scav/PMC/Boss/Targets/KillFeel*) спавняться з `WeaponConfiguration` (Payload + Delivery), pass через WeaponSyncSystem.BuildWeaponForItem. Bot projectiles тепер з повним stat set (HeadshotMultiplier, Penetration, ArmorDamage, BleedChance). Bot loot drops actual weapon з current ammo state. `ItemDefinition.WeaponPrefabId` field видалено; legacy `CharacterBody.SwapWeaponModel(string)` overload видалено; `LootSystem.MapWeaponPrefabToDefinition/Ammo` lookups знесено. 434/434 tests passing. See decision log entry below.
 
-Коли береться тier — кроки:
+**Remaining backlog (when ready to resume):**
+- Tier 8.x — visual coherence pass (muzzle alignment, pivot tuning across 6 archetypes)
+- Tier 9 — VFX/SFX language (cross-cuts з gunplay FX brief — можна координувати з art track)
+- Tier 10 — Weapon Feel Polish (cross-cuts з gunplay polish epic — більшість вже зроблено)
+- Tier 3 / 5 — content expansion + Exotic mods, defer sine die
+
+Якщо беремо tier — steps:
+
+Якщо беремо tier — steps:
 1. Прочитати декомпозицію потрібного tier у [roadmap.md](./roadmap.md)
 2. Розписати у `tasks.md` конкретні T-N.NN задачі (як робили для 0b/1/2)
 3. Код по кластерах з чекбоксами
+
+---
+
+## Decisions log (post-pause)
+
+### 2026-05-04 — Tier 4a shipped: bot weapon migration to Builder pipeline
+
+**Context:** Bots used legacy `WeaponPrefabId = "Weapon_Rifle"` + 6 hardcoded combat stat fields у `BotTypeConfig` (FireInterval, ProjectileSpeed/Damage/Lifetime, ProjectilesPerShot, SpreadAngle). `BotSpawnSystem` constructed `WeaponEntityState` manually — bypassed Builder composition. Bot projectiles missing Penetration / ArmorDamage / BleedChance / HeadshotMultiplier — pre-migration bot shots завжди absorbed by player armor regardless of damage tier.
+
+**Migration scope:**
+- `BotConstants.BotTypeConfig` — replaced `WeaponPrefabId` + 6 stat fields з single `WeaponConfiguration WeaponConfig`. 3 weapon presets: `RifleWeapon` (Auto), `PistolWeapon` (SingleAction), `ShotgunWeapon` (Scatter). 20 bot configs migrated.
+- `BotSpawnSystem.SpawnBot` — bot weapon goes through `WeaponSyncSystem.BuildWeaponForItem` (transient ItemState wraps WeaponConfiguration). Falls back на `App.Instance.CoreDefinitions` if registry not passed (matches PlayerSpawnSystem pattern).
+- `BotCombatSystem.ProcessFire` — passes full Builder-derived stats до projectile create.
+- `BotView.Initialize` — accepts `WeaponEntityState` (not string id); visual goes through `Delivery._weaponPrefab` + payload mount, як player.
+- `BotPresenter.SpawnView` — looks up bot from session.RaidState to get composed weapon.
+- `LootSystem.CreateLootable(bot)` — drops bot's actual `WeaponConfiguration` з current ammo state. Ammo derived from `PayloadDefinition.AmmoType`.
+- `WeaponSyncSystem.BuildWeaponForItem` — removed `#pragma warning disable CS0618` legacy fallback на `ItemDefinition.WeaponPrefabId`.
+- `ItemDefinition.WeaponPrefabId` — field видалено повністю. `Rifle`/`Pistol` entries залишаються як preset labels для loot drops.
+- `CharacterBody.SwapWeaponModel(string)` — legacy `Resources.Load<GameObject>("Prefabs/Weapons/" + id)` overload видалено. Single Builder path: `SwapWeaponModel(GameObject prefab, string idForTracking, GameObject payload)`.
+- `RaidSession` — 24 `BotSpawnSystem.SpawnBot` callsites threaded `_coreDefinitions`.
+
+**Tests:** 434/434 passing. `EditModeTestsUtils.BuildDefaultCoreRegistry` додано Scatter delivery + realistic FireInterval/MagazineSize у test deliveries (Auto 0.2s/30, SingleAction 0.4s/12, Scatter 0.6s/5). `LootSystemTests.CreateBot` builds weapon via Builder. `BotSpawnSystemTests.SpawnBot_CreatesWeaponFromConfig` updated assertions (now checks `DeliveryDefinition.Id == "Scatter"` для Boss).
+
+**Beneficial gameplay impacts:**
+- Bot shots мають правильний armor pen interaction (BasePenetration from Payload).
+- Bot headshot multiplier працює.
+- Bots with bleed-causing payloads → bleed effect applied.
+- Boss bot використовує Scatter delivery → 7 pellets, 30° spread (composition-driven, не hardcoded).
+- Loot drop preserves bot's actual weapon config (Pistol drops Pistol + Pistol ammo, не hardcoded "Rifle" mapping).
 
 ---
 

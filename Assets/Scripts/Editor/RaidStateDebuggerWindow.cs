@@ -572,10 +572,9 @@ namespace Editor
         {
             Field("Id", w.Id);
             Field("PrefabId", w.PrefabId);
-            // Tier 8 Wave A: direct prefab reference (null for legacy bot weapons until Tier 4)
-            Field("WeaponPrefab", w.WeaponPrefab != null ? w.WeaponPrefab.name : "<null — legacy/bot path>");
-            // Tier 8 Wave B: optional payload mesh attached at PayloadMount socket
-            Field("PayloadPrefab", w.PayloadPrefab != null ? w.PayloadPrefab.name : "<none>");
+            // Tier 8.x*: payload = weapon base (root), delivery = barrel insert (child).
+            Field("BasePrefab",   w.BasePrefab   != null ? w.BasePrefab.name   : "<null — assembly failed>");
+            Field("BarrelPrefab", w.BarrelPrefab != null ? w.BarrelPrefab.name : "<null — assembly failed>");
 
             // Phase status with remaining timer
             string phaseStatus;

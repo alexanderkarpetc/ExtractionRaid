@@ -24,12 +24,14 @@ namespace State
         [SerializeField] FiringPattern _pattern;
         [SerializeField] DeliveryStats[] _statsByTier = new DeliveryStats[RarityTierCount];
 
-        // ── Visualization (Tier 8 Wave A) ─────────────────────────────────
+        // ── Visualization (Tier 8.x* — delivery as barrel insert) ───────────
         [Header("Visualization")]
-        [Tooltip("Prefab spawned in the player's hand for any weapon built on this Delivery. " +
-                 "Owns the Animator (Fire/Reload/Equip triggers) and MuzzlePoint. " +
-                 "Payload meshes are attached as children of this prefab via the PayloadMount socket (Wave B).")]
-        [SerializeField] GameObject _weaponPrefab;
+        [Tooltip("Delivery BARREL prefab (the actual ствол / emitter — short for Pistol, longer for " +
+                 "Rifle, longest for Shotgun). Instantiated як child of payload's DeliverySocket " +
+                 "at equip time. Must contain MuzzlePoint child Transform at the barrel tip. " +
+                 "Не carries Animator or WeaponView — those live on payload. " +
+                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.")]
+        [SerializeField] GameObject _barrelPrefab;
 
         // ── Pattern-specific params (only meaningful for the corresponding Pattern) ──
         [Header("Rotary (ignored unless Pattern == Rotary)")]
@@ -45,10 +47,12 @@ namespace State
         public string        FormFactor => _formFactor;
         public FiringPattern Pattern    => _pattern;
         /// <summary>
-        /// Weapon hand prefab (3D model + Animator + MuzzlePoint). Spawned at equip time.
-        /// May be null in tests; production assets must wire this. See docs/ai/weapon-builder/plan/roadmap.md Tier 8 Wave A.
+        /// Delivery barrel prefab (3D model + MuzzlePoint child). Instantiated як child of
+        /// payload's DeliverySocket at equip time. Animator + WeaponView live on payload, не
+        /// here. May be null у tests; production assets must wire this.
+        /// See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.
         /// </summary>
-        public GameObject    WeaponPrefab => _weaponPrefab;
+        public GameObject    BarrelPrefab => _barrelPrefab;
 
         /// <summary>Delivery stats for the given rarity tier.</summary>
         public DeliveryStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];

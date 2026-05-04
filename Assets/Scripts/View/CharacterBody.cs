@@ -156,29 +156,30 @@ namespace View
         // ── Weapon ─────────────────────────────────────────
 
         /// <summary>
-        /// Equip weapon model from a direct prefab reference (Tier 8 Wave A path).
-        /// Used by builder-assembled weapons whose Delivery SO carries the prefab ref.
-        /// Optional <paramref name="payloadPrefab"/> (Wave B) is attached at the
-        /// WeaponView's PayloadMount socket; null = no payload attachment.
-        /// Returns the new WeaponView (or null).
+        /// Tier 8.x* — equip composed weapon. Two prefabs:
+        ///   <paramref name="basePrefab"/> = payload (weapon root, hand-held base)
+        ///   <paramref name="barrelPrefab"/> = delivery (barrel insert)
+        /// Pipeline: instantiate base as weapon root → WeaponView.AttachDelivery(barrel) →
+        /// barrel становиться child of base's DeliverySocket. RightHandGrip resolves on base.
+        /// Returns the new WeaponView (or null if assembly failed).
         /// </summary>
-        public WeaponView SwapWeaponModel(GameObject prefab, string prefabIdForTracking = null, GameObject payloadPrefab = null)
+        public WeaponView SwapWeaponModel(GameObject basePrefab, GameObject barrelPrefab, string prefabIdForTracking = null)
         {
             if (_currentWeaponModel != null)
                 Destroy(_currentWeaponModel);
 
-            _currentWeaponPrefabId = prefabIdForTracking ?? prefab?.name;
+            _currentWeaponPrefabId = prefabIdForTracking ?? basePrefab?.name;
             _currentWeaponView = null;
 
-            if (prefab == null || _weaponPivot == null)
+            if (basePrefab == null || _weaponPivot == null)
                 return null;
 
-            _currentWeaponModel = Instantiate(prefab, _weaponPivot);
+            _currentWeaponModel = Instantiate(basePrefab, _weaponPivot);
             _currentWeaponModel.transform.localPosition = Vector3.zero;
             _currentWeaponModel.transform.localRotation = Quaternion.identity;
 
             _currentWeaponView = _currentWeaponModel.GetComponent<WeaponView>();
-            _currentWeaponView?.AttachPayload(payloadPrefab);
+            _currentWeaponView?.AttachDelivery(barrelPrefab);
 
             if (_rightHandIK != null)
                 _rightHandIK.SetTarget(FindDeepChild(_currentWeaponModel.transform, "RightHandGrip"));
