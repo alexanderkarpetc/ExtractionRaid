@@ -141,7 +141,6 @@ namespace Editor
             DrawSection("🛡 Armor", _config.Armor);
             DrawSection("💉 Status Effects", _config.StatusEffects);
             DrawSection("⏸ Hit Pause", _config.HitPause);
-            DrawSection("⚡ Hit Flash", _config.HitFlash);
             DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
             DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
 
@@ -598,7 +597,6 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
             CreateSectionIfMissing<DevCheatsArmorSection>(so, "_armor", folder, "Armor");
             CreateSectionIfMissing<DevCheatsHitPauseSection>(so, "_hitPause", folder, "HitPause");
-            CreateSectionIfMissing<DevCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
             CreateSectionIfMissing<DevCheatsMuzzleVfxSection>(so, "_muzzleVfx", folder, "MuzzleVfx");
             CreateSectionIfMissing<DevCheatsStaggerSection>(so, "_stagger", folder, "Stagger");
 

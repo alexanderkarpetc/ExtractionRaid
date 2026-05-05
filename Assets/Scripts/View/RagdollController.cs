@@ -139,9 +139,12 @@ namespace View
 
             // Disable ALL other behaviours on the root GO — TwoBoneIK + CharacterBody (and
             // anything else) write to bone transforms у LateUpdate, fighting physics.
+            // CharacterHitFx survives — it pushes per-bone decal positions to MPB, which
+            // physics-driven bones now update; without it decals freeze in world space.
             foreach (var mb in GetComponents<MonoBehaviour>())
             {
                 if (mb == this) continue;
+                if (mb is CharacterHitFx) continue;
                 mb.enabled = false;
             }
 

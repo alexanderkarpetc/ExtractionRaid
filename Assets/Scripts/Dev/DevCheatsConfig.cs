@@ -25,7 +25,6 @@ namespace Dev
         [SerializeField] DevCheatsStatusEffectsSection _statusEffects;
         [SerializeField] DevCheatsArmorSection _armor;
         [SerializeField] DevCheatsHitPauseSection _hitPause;
-        [SerializeField] DevCheatsHitFlashSection _hitFlash;
         [SerializeField] DevCheatsMuzzleVfxSection _muzzleVfx;
         [SerializeField] DevCheatsStaggerSection _stagger;
 
@@ -45,7 +44,6 @@ namespace Dev
         public DevCheatsStatusEffectsSection StatusEffects => _statusEffects ? _statusEffects : (_statusEffects = CreateInstance<DevCheatsStatusEffectsSection>());
         public DevCheatsArmorSection Armor => _armor ? _armor : (_armor = CreateInstance<DevCheatsArmorSection>());
         public DevCheatsHitPauseSection HitPause => _hitPause ? _hitPause : (_hitPause = CreateInstance<DevCheatsHitPauseSection>());
-        public DevCheatsHitFlashSection HitFlash => _hitFlash ? _hitFlash : (_hitFlash = CreateInstance<DevCheatsHitFlashSection>());
         public DevCheatsMuzzleVfxSection MuzzleVfx => _muzzleVfx ? _muzzleVfx : (_muzzleVfx = CreateInstance<DevCheatsMuzzleVfxSection>());
         public DevCheatsStaggerSection Stagger => _stagger ? _stagger : (_stagger = CreateInstance<DevCheatsStaggerSection>());
     }

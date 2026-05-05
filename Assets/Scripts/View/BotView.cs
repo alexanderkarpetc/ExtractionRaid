@@ -12,28 +12,10 @@ namespace View
         WorldHealthBar _healthBar;
         BotDebugLabel _debugLabel;
 
-        // Gunplay A.2 — Hit flash state. Tints character renderers via MaterialPropertyBlock.
-        // Project's character shader (ExtractShaders/MainBase) computes emission as
-        //   Emission = _ColorEmission.rgb * _BrightnessEmission
-        // so we drive both. _BaseColor / _Color / _EmissionColor are written too для
-        // future-compat з URP Lit / Standard / shaders що exposing them — MPB silently
-        // skips properties that don't exist on the shader.
-        static readonly int BaseColorId          = Shader.PropertyToID("_BaseColor");
-        static readonly int ColorId              = Shader.PropertyToID("_Color");
-        static readonly int EmissionColorId      = Shader.PropertyToID("_EmissionColor");
-        static readonly int ColorEmissionId      = Shader.PropertyToID("_ColorEmission");
-        static readonly int BrightnessEmissionId = Shader.PropertyToID("_BrightnessEmission");
-        Renderer[]                _flashRenderers;
-        Color[]                   _flashOriginalEmissionColor;       // _EmissionColor original
-        Color[]                   _flashOriginalColorEmission;       // _ColorEmission original
-        float[]                   _flashOriginalBrightnessEmission;  // _BrightnessEmission original
-        MaterialPropertyBlock     _flashMpb;
-        Color                     _flashColor;
-        float                     _flashIntensity;
-        float                     _flashEmissionBoost;
-        float                     _flashDuration;
-        float                     _flashElapsedUnscaled;
-        bool                      _flashActive;
+        // ── Hit feedback delegation ──────────────────────────────────
+        // Lives on CharacterBody so it survives ragdoll detach (BotView gets
+        // destroyed when bot dies; body GO continues into ragdoll).
+        CharacterHitFx _hitFx;
 
         public EId EId { get; private set; }
         public string TypeId { get; private set; }
@@ -114,105 +96,34 @@ namespace View
             GizmoPatrolIndex = bb.PatrolWaypointIndex;
         }
 
-        // ── Hit flash (Gunplay A.2) ──────────────────────────
+        // ── Hit feedback (delegates to CharacterHitFx on body) ──────
 
         /// <summary>
-        /// Briefly tints character renderers via MaterialPropertyBlock — universal
-        /// "this thing took a hit" feedback. Stack rule: incoming flash overrides ongoing
-        /// (latest win) — kill on top of headshot still flashes red.
+        /// Routes rim flash to the body's CharacterHitFx component. Lives on body
+        /// so MPB drives survive ragdoll detach (BotView destroyed but body GO
+        /// continues — CharacterHitFx Update keeps pushing per-bone decal positions).
+        /// emissionBoost parameter retained для signature compat — unused.
         /// </summary>
         public void TriggerHitFlash(Color color, float intensity, float durationUnscaled, float emissionBoost)
         {
-            if (durationUnscaled <= 0f || (intensity <= 0f && emissionBoost <= 0f)) return;
-
-            CacheFlashRenderers();
-            _flashColor = color;
-            _flashIntensity = Mathf.Clamp01(intensity);
-            _flashEmissionBoost = Mathf.Max(0f, emissionBoost);
-            _flashDuration  = durationUnscaled;
-            _flashElapsedUnscaled = 0f;
-            _flashActive = true;
+            ResolveHitFx()?.TriggerRimFlash(color, intensity, durationUnscaled);
         }
 
-        void CacheFlashRenderers()
+        /// <summary>
+        /// Records a bullet impact at the given world position. CharacterHitFx
+        /// finds the closest skeleton bone and stores the impact у that bone's
+        /// local space, so decals follow live animation AND ragdoll physics.
+        /// </summary>
+        public void AddHitDecal(Vector3 worldPos)
         {
-            if (_flashRenderers != null) return;
-            _flashRenderers = GetComponentsInChildren<Renderer>(true);
-            int n = _flashRenderers.Length;
-            _flashOriginalEmissionColor      = new Color[n];
-            _flashOriginalColorEmission      = new Color[n];
-            _flashOriginalBrightnessEmission = new float[n];
-            _flashMpb = new MaterialPropertyBlock();
-            for (int i = 0; i < n; i++)
-            {
-                var r = _flashRenderers[i];
-                if (r == null || r.sharedMaterial == null) continue;
-                var mat = r.sharedMaterial;
-                if (mat.HasProperty(EmissionColorId))      _flashOriginalEmissionColor[i]      = mat.GetColor(EmissionColorId);
-                if (mat.HasProperty(ColorEmissionId))      _flashOriginalColorEmission[i]      = mat.GetColor(ColorEmissionId);
-                if (mat.HasProperty(BrightnessEmissionId)) _flashOriginalBrightnessEmission[i] = mat.GetFloat(BrightnessEmissionId);
-            }
+            ResolveHitFx()?.AddHitDecal(worldPos);
         }
 
-        void Update()
+        CharacterHitFx ResolveHitFx()
         {
-            if (!_flashActive) return;
-
-            // Use unscaled deltaTime so hit pause (Time.timeScale slowdown) doesn't
-            // freeze the flash decay — flash should still be perceptible during pause.
-            _flashElapsedUnscaled += Time.unscaledDeltaTime;
-            float t = _flashElapsedUnscaled / _flashDuration;
-            if (t >= 1f)
-            {
-                ClearFlashTint();
-                _flashActive = false;
-                return;
-            }
-
-            // Ease-out quad — perceived faster than linear; matches procedural recoil convention.
-            float eased = (1f - t) * (1f - t);
-            ApplyFlashTint(_flashColor, _flashIntensity * eased, _flashEmissionBoost * eased);
-        }
-
-        void ApplyFlashTint(Color color, float tintStrength, float emissionStrength)
-        {
-            if (_flashRenderers == null) return;
-            // Tint: blends white → color (URP Lit / Standard / built-in via _BaseColor + _Color).
-            // Emission #1: _EmissionColor as HDR — used by URP Lit / Standard.
-            // Emission #2: _ColorEmission * _BrightnessEmission — used by custom
-            //   ExtractShaders/MainBase. Drive BOTH so flash visible across shader variants.
-            var tint = Color.Lerp(Color.white, color, tintStrength);
-            for (int i = 0; i < _flashRenderers.Length; i++)
-            {
-                var r = _flashRenderers[i];
-                if (r == null) continue;
-                r.GetPropertyBlock(_flashMpb);
-                _flashMpb.SetColor(BaseColorId, tint);
-                _flashMpb.SetColor(ColorId,     tint);
-                _flashMpb.SetColor(EmissionColorId,
-                    _flashOriginalEmissionColor[i] + color * emissionStrength);
-                _flashMpb.SetColor(ColorEmissionId, color);                  // tint
-                _flashMpb.SetFloat(BrightnessEmissionId, emissionStrength);  // HDR multiplier
-                r.SetPropertyBlock(_flashMpb);
-            }
-        }
-
-        void ClearFlashTint()
-        {
-            if (_flashRenderers == null) return;
-            // Restore originals — tint to white + emission props back to per-renderer baseline.
-            for (int i = 0; i < _flashRenderers.Length; i++)
-            {
-                var r = _flashRenderers[i];
-                if (r == null) continue;
-                r.GetPropertyBlock(_flashMpb);
-                _flashMpb.SetColor(BaseColorId,          Color.white);
-                _flashMpb.SetColor(ColorId,              Color.white);
-                _flashMpb.SetColor(EmissionColorId,      _flashOriginalEmissionColor[i]);
-                _flashMpb.SetColor(ColorEmissionId,      _flashOriginalColorEmission[i]);
-                _flashMpb.SetFloat(BrightnessEmissionId, _flashOriginalBrightnessEmission[i]);
-                r.SetPropertyBlock(_flashMpb);
-            }
+            if (_hitFx == null && _body != null)
+                _hitFx = _body.GetComponent<CharacterHitFx>();
+            return _hitFx;
         }
 
         // ── Armor delegation ────────────────────────────────

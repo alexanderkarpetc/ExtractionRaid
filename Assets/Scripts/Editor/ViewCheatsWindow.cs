@@ -101,6 +101,7 @@ namespace Editor
             DrawSection("🥃 Casings", _config.Casings);
             DrawSection("💀 Ragdoll", _config.Ragdoll);
             DrawSection("🔻 Weapon Drop", _config.WeaponDrop);
+            DrawSection("⚡ Hit Flash", _config.HitFlash);
 
             EditorGUILayout.EndScrollView();
             _so.ApplyModifiedProperties();
@@ -248,6 +249,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsCasingsSection>(so, "_casings", folder, "Casings");
             CreateSectionIfMissing<ViewCheatsRagdollSection>(so, "_ragdoll", folder, "Ragdoll");
             CreateSectionIfMissing<ViewCheatsWeaponDropSection>(so, "_weaponDrop", folder, "WeaponDrop");
+            CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7059124108777992235}
   - component: {fileID: 9205513861454217505}
   - component: {fileID: 5557728838561940099}
+  - component: {fileID: 2956944582282548507}
   m_Layer: 6
   m_Name: CharacterBody
   m_TagString: Untagged
@@ -54,6 +55,9 @@ MonoBehaviour:
   _animator: {fileID: 4400004602721436305}
   _rightHandIK: {fileID: 5557728838561940099}
   _swaySourceBone: {fileID: 8086024777637090389}
+  _spineBone: {fileID: 0}
+  _neckBone: {fileID: 0}
+  _headBone: {fileID: 0}
 --- !u!114 &5557728838561940099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,6 +76,18 @@ MonoBehaviour:
   _poleHint: {fileID: 3482392294001111959}
   _matchEndRotation: 1
   _weight: 1
+--- !u!114 &2956944582282548507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1612062852821883575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f958463e971142e2bf39442b3c6150f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.CharacterHitFx
 --- !u!1 &1960313733654573354
 GameObject:
   m_ObjectHideFlags: 0

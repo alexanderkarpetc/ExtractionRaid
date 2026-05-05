@@ -221,16 +221,19 @@ namespace View
             return true;
         }
 
-        // Gunplay A.2 — pick flash color per hit kind, route to BotView.
+        // Gunplay A.2 + 2026-05-05 VibeCharacterShader — pick flash color per hit kind,
+        // route rim flash + bullet decal to BotView. Ricochet skips decal: bullet bounced
+        // off helmet, no flesh wound to mark.
         static void ApplyHitFlash(BotView view, RaidEvent e)
         {
-            var cfg = DevCheats.Config?.HitFlash;
+            var cfg = ViewCheats.Config?.HitFlash;
             if (cfg == null || !cfg.Enabled) return;
 
             // RaidEventBuffer.EntityHit packs:
             //   CurrentHp = isHeadshot ? 1 : 0
             //   MaxHp     = isKill     ? 1 : 0
             //   KillerId.Value = isRicochet ? 1 : 0
+            //   Position  = hitPoint (world space)
             bool isHeadshot = e.CurrentHp > 0.5f;
             bool isKill     = e.MaxHp     > 0.5f;
             bool isRicochet = e.KillerId.Value == 1;
@@ -244,6 +247,9 @@ namespace View
             else                 color = cfg.NormalColor;
 
             view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration, cfg.EmissionBoost);
+
+            if (!isRicochet)
+                view.AddHitDecal(e.Position);
         }
     }
 }
