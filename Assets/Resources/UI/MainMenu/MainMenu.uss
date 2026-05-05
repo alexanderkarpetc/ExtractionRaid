@@ -1,0 +1,132 @@
+.root {
+    flex-grow: 1;
+    background-color: rgb(14, 17, 23);
+    align-items: center;
+    justify-content: center;
+}
+
+.backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgb(10, 12, 17);
+}
+
+.panel {
+    width: 480px;
+    padding: 36px;
+    background-color: rgba(22, 27, 38, 0.95);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(45, 55, 75);
+    border-radius: 6px;
+    align-items: stretch;
+}
+
+.title {
+    color: rgb(220, 230, 245);
+    font-size: 28px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+    letter-spacing: 4px;
+}
+
+.subtitle {
+    color: rgb(140, 150, 170);
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+    margin-bottom: 28px;
+}
+
+.buttons {
+    flex-direction: column;
+}
+
+.menu-btn {
+    height: 44px;
+    margin-top: 8px;
+    background-color: rgb(34, 42, 58);
+    color: rgb(220, 230, 245);
+    border-color: rgb(60, 72, 96);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 3px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.menu-btn:hover {
+    background-color: rgb(48, 60, 82);
+    border-color: rgb(95, 130, 180);
+}
+
+.menu-btn:active {
+    background-color: rgb(28, 36, 50);
+}
+
+.menu-btn:disabled {
+    color: rgb(90, 100, 115);
+    background-color: rgb(24, 30, 42);
+}
+
+.confirm-overlay {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-dialog {
+    width: 420px;
+    padding: 24px;
+    background-color: rgb(28, 34, 48);
+    border-color: rgb(70, 85, 115);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 6px;
+}
+
+.confirm-title {
+    color: rgb(220, 230, 245);
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.confirm-message {
+    color: rgb(190, 200, 215);
+    font-size: 13px;
+    white-space: normal;
+    margin-bottom: 20px;
+}
+
+.confirm-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.confirm-btn {
+    width: 130px;
+    margin-left: 8px;
+    margin-top: 0;
+}
+
+.confirm-btn--danger {
+    background-color: rgb(120, 40, 50);
+    border-color: rgb(170, 70, 80);
+}
+
+.confirm-btn--danger:hover {
+    background-color: rgb(150, 55, 65);
+    border-color: rgb(210, 100, 110);
+}
