@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using ApplicationCore;
 using Cysharp.Threading.Tasks;
 using Dev;
+using State;
 using Systems;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using View.UI.CraftingMockup;
 using View.UI.WeaponBuilder;
@@ -30,35 +33,11 @@ namespace Editor
             ("Scatter",        "Scatter (Delivery)"),
         };
 
-        // "Give Hideout Items" devcheat — bundle of items that lands directly in
-        // Player.Stash so the hideout container has something to display when
-        // testing inventory UI in the hideout scene.
-        // Cluster A (2026-05-01): legacy "Rifle"/"Pistol" weapons + Pistol-caliber
-        // ammo retired (no payload uses Ammo_Pistol). Modules dropped instead so
-        // player can build at Workbench from the hideout stash.
-        static readonly (string Id, int Count)[] HideoutGiftItems =
-        {
-            ("Medkit", 5),
-            ("Bandage", 5),
-            ("Grenade", 3),
-            ("Ammo_Rifle", 60),
-            ("Ammo_Rifle_AP", 30),
-            ("Adhesive", 10),
-            ("Metal_Parts", 20),
-            ("Mechanical_Parts", 10),
-            ("Electronics", 8),
-            ("Chemicals", 10),
-            ("Cloth", 15),
-            ("Gunpowder", 15),
-            ("Helmet_Basic", 1),
-            ("Armor_Basic", 1),
-            // Weapon Builder modules — 1× of each so player can assemble any current archetype.
-            ("BallisticRound", 1),
-            ("LaserCharge",    1),
-            ("SingleAction",   1),
-            ("Auto",           1),
-            ("Scatter",        1),
-        };
+        // "Give Item" devcheat state — picker chooses an ItemDefinition.Id, qty
+        // controls stack count. Lands directly in Player.Inventory.Backpack so it's
+        // testable both in hideout and in raid.
+        string _giveItemId;
+        int _giveItemCount = 1;
 
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
@@ -309,11 +288,10 @@ namespace Editor
             }
 
             EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Hideout Stash", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Give Item", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(!appReady))
             {
-                if (GUILayout.Button("Give Hideout Items") && appReady)
-                    GiveHideoutItems();
+                DrawGiveItemRow();
             }
 
             if (!appReady)
@@ -324,23 +302,113 @@ namespace Editor
             EditorGUI.indentLevel--;
         }
 
-        static void GiveHideoutItems()
+        void DrawGiveItemRow()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var def = string.IsNullOrEmpty(_giveItemId) ? null : ItemDefinition.Get(_giveItemId);
+                string label = def != null
+                    ? $"{def.DisplayName}  ({def.Id})"
+                    : "Select item…";
+
+                var btnRect = GUILayoutUtility.GetRect(new GUIContent(label), EditorStyles.popup,
+                    GUILayout.MinWidth(220), GUILayout.ExpandWidth(true));
+                if (EditorGUI.DropdownButton(btnRect, new GUIContent(label), FocusType.Keyboard))
+                {
+                    var dropdown = new ItemPickerDropdown(new AdvancedDropdownState(), id =>
+                    {
+                        _giveItemId = id;
+                        Repaint();
+                    });
+                    dropdown.Show(btnRect);
+                }
+
+                EditorGUILayout.LabelField("Qty", GUILayout.Width(28));
+                _giveItemCount = Mathf.Max(1, EditorGUILayout.IntField(_giveItemCount, GUILayout.Width(60)));
+
+                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_giveItemId)))
+                {
+                    if (GUILayout.Button("Give", GUILayout.Width(70)))
+                        GiveItem(_giveItemId, _giveItemCount);
+                }
+            }
+        }
+
+        static void GiveItem(string defId, int count)
         {
             var player = App.Instance?.Player;
             if (player == null)
             {
-                Debug.LogWarning("[DevCheats] Cannot give hideout items — Player not ready.");
+                Debug.LogWarning("[DevCheats] Cannot give item — Player not ready.");
                 return;
             }
 
-            int added = 0;
-            foreach (var (defId, count) in HideoutGiftItems)
+            var def = ItemDefinition.Get(defId);
+            if (def == null)
             {
-                var eid = App.Instance.AllocateEId();
-                player.Stash.Add(State.ItemState.Create(eid, defId, count));
-                added++;
+                Debug.LogWarning($"[DevCheats] Unknown item id '{defId}'.");
+                return;
             }
-            Debug.Log($"[DevCheats] Added {added} item stack(s) to hideout stash. Stash size = {player.Stash.Count}.");
+
+            int slot = player.Inventory.FindFreeBackpackSlot();
+            if (slot < 0)
+            {
+                Debug.LogWarning($"[DevCheats] Cannot give '{defId}' — backpack is full.");
+                return;
+            }
+
+            var eid = App.Instance.AllocateEId();
+            player.Inventory.Backpack[slot] = ItemState.Create(eid, defId, count);
+            Debug.Log($"[DevCheats] Gave {count}× {def.DisplayName} ({defId}) to backpack slot {slot}.");
+        }
+
+        // AdvancedDropdown picker over ItemDefinition.Registry, grouped by ItemCategory.
+        // Built-in search bar handles fuzzy lookup so we never type/copy raw ids.
+        class ItemPickerDropdown : AdvancedDropdown
+        {
+            readonly System.Action<string> _onPick;
+
+            public ItemPickerDropdown(AdvancedDropdownState state, System.Action<string> onPick)
+                : base(state)
+            {
+                _onPick = onPick;
+                minimumSize = new Vector2(320, 420);
+            }
+
+            protected override AdvancedDropdownItem BuildRoot()
+            {
+                var root = new AdvancedDropdownItem("Items");
+
+                var byCategory = ItemDefinition.Registry.Values
+                    .GroupBy(d => d.Category)
+                    .OrderBy(g => g.Key.ToString());
+
+                foreach (var group in byCategory)
+                {
+                    var groupItem = new AdvancedDropdownItem(group.Key.ToString());
+                    foreach (var def in group.OrderBy(d => d.DisplayName))
+                        groupItem.AddChild(new ItemEntry(def));
+                    root.AddChild(groupItem);
+                }
+
+                return root;
+            }
+
+            protected override void ItemSelected(AdvancedDropdownItem item)
+            {
+                if (item is ItemEntry entry)
+                    _onPick?.Invoke(entry.ItemId);
+            }
+
+            class ItemEntry : AdvancedDropdownItem
+            {
+                public string ItemId { get; }
+                public ItemEntry(ItemDefinition def)
+                    : base($"{def.DisplayName}  ({def.Id})")
+                {
+                    ItemId = def.Id;
+                }
+            }
         }
 
         /// <summary>
