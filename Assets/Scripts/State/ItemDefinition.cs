@@ -40,8 +40,10 @@ namespace State
         public float MaxDurability;
         public string ArmorPrefabId; // visual mesh in Resources/Prefabs/Armor/{ArmorPrefabId}
 
-        // Combat stats (ammo items)
+        // Combat stats (ammo items) — modifiers added to weapon base at fire time.
+        // DamageModifier can be negative (AP trade-off: better pen, less flesh damage).
         public float Penetration;
+        public float DamageModifier;
         public float ArmorDamage;
         public float BleedChance;
 
@@ -300,6 +302,7 @@ namespace State
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol_AP",
                     Penetration = 30f,
+                    DamageModifier = -5f,
                     ArmorDamage = 7f,
                 },
                 ["Ammo_Rifle_AP"] = new()
@@ -311,10 +314,11 @@ namespace State
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle_AP",
                     Penetration = 35f,
+                    DamageModifier = -5f,
                     ArmorDamage = 8f,
                 },
 
-                // --- HP Ammo (Hollow Point — high bleed, no pen) ---
+                // --- HP Ammo (Hollow Point — flesh shredder, no pen, no armor damage) ---
                 ["Ammo_Rifle_HP"] = new()
                 {
                     Id = "Ammo_Rifle_HP",
@@ -324,6 +328,7 @@ namespace State
                     MaxStackSize = 60,
                     AmmoType = "Ammo_Rifle_HP",
                     Penetration = 0f,
+                    DamageModifier = 10f,
                     ArmorDamage = 0f,
                     BleedChance = 0.30f,
                 },
@@ -336,6 +341,7 @@ namespace State
                     MaxStackSize = 36,
                     AmmoType = "Ammo_Pistol_HP",
                     Penetration = 0f,
+                    DamageModifier = 10f,
                     ArmorDamage = 0f,
                     BleedChance = 0.25f,
                 },

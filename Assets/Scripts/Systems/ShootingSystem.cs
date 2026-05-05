@@ -194,18 +194,20 @@ namespace Systems
             if (dir.sqrMagnitude < 0.001f) return;
 
             // Compose combat stats: WeaponBase + Ammo (+ WeaponMod + CharTree placeholders)
-            float ammoPen = 0f, ammoArmorDmg = 0f, ammoBleedChance = 0f;
+            float ammoPen = 0f, ammoDmg = 0f, ammoArmorDmg = 0f, ammoBleedChance = 0f;
             if (!string.IsNullOrEmpty(weapon.AmmoType))
             {
                 var ammoDef = ItemDefinition.Get(weapon.AmmoType);
                 if (ammoDef != null)
                 {
                     ammoPen = ammoDef.Penetration;
+                    ammoDmg = ammoDef.DamageModifier;
                     ammoArmorDmg = ammoDef.ArmorDamage;
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
             float totalPen = weapon.Stats.BasePenetration + ammoPen; // + weaponMod + charTree (future)
+            float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative
             float totalArmorDmg = weapon.Stats.BaseArmorDamage + ammoArmorDmg;
             float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
@@ -223,7 +225,7 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.Stats.ProjectileLifetime,
-                    weapon.Stats.Damage * cfg.DamageMultiplier,
+                    totalDamage * cfg.DamageMultiplier,
                     weapon.Stats.HeadshotDamageMultiplier,
                     targetedEntityId,
                     penetration: totalPen,
@@ -231,7 +233,7 @@ namespace Systems
                     bleedChance: totalBleedChance);
 
                 state.Projectiles.Add(projectile);
-                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, weapon.Stats.Damage);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage);
             }
 
             context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype);

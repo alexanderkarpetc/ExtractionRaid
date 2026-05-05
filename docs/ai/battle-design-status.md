@@ -1,7 +1,7 @@
 # Battle Design — Current Status
 
 > Living document. Updated as decisions are made.
-> Last updated: 2026-04-01
+> Last updated: 2026-05-05
 
 ## Reference Documents
 - `docs/ai/rpg-modifier-system.md` — base modifier architecture (3-source additive, caps, UI)
@@ -135,16 +135,18 @@ It changes meta: elite helmet = "aim for the body instead" — tactical depth.
 
 Each caliber (Rifle, Shotgun, Pistol, future...) has ammo variants:
 
-| Type | Pen | DMG | Bleed | ArmorDmg (flat pts) | Role |
-|------|-----|-----|-------|---------------------|------|
-| Standard | +10 | +0 | 0% | +0 | Cheap, baseline |
-| AP | +35 | -5 | 0% | +5 | Anti-armor, less flesh |
-| HP (Hollow Point) | +0 | +10 | +30% | +0 | Flesh shredder, useless vs armor |
-| Shredder | +10 | +0 | 0% | +25 | Destroys armor durability |
-| Incendiary | +0 | +5 | 0% | +0 | Burn status (+40%) |
+| Type | Pen | DMG | Bleed | ArmorDmg (flat pts) | Role | Status |
+|------|-----|-----|-------|---------------------|------|--------|
+| Standard | +10 (Rifle) / +12 (Pistol) | +0 | 0% | +5 (Rifle) / +6 (Pistol) | Cheap, baseline | ✅ impl |
+| AP | +35 (Rifle) / +30 (Pistol) | -5 | 0% | +8 (Rifle) / +7 (Pistol) | Anti-armor, less flesh | ✅ impl 2026-05-05 |
+| HP (Hollow Point) | +0 | +10 | +30% (Rifle) / +25% (Pistol) | +0 | Flesh shredder, useless vs armor | ✅ impl 2026-05-05 |
+| Shredder | +10 | +0 | 0% | +25 | Destroys armor durability | ⏸ deferred |
+| Incendiary | +0 | +5 | 0% | +0 | Burn status (+40%) | ⏸ deferred (no Burn system) |
 
 **Design intent**: every ammo type has a clear tactical niche. No "best ammo" — only "best ammo for this situation."
-*Note: concrete values are placeholder, will be tuned via DevCheats.*
+*Note: concrete values playtest-tunable. Composition pipeline у `ShootingSystem`: `WeaponBase + Ammo (+ WeaponMod + CharTree placeholders)`.*
+
+**2026-05-05 impl note**: payload `BaseArmorDamage = 0` (canonical source = ammo). This means ArmorDmg differential lives entirely у ammo choice, не у weapon archetype. AP rifle effective ArmorDmg = 0 + 8 = 8.
 
 ### 7. Combat Visual Feedback — Continuous Proportional System
 
@@ -272,7 +274,30 @@ mix of blood, sparks, sound, and number size.
 
 ## ❓ OPEN QUESTIONS
 
-No open questions at this time. See DEFERRED section for topics pending design.
+Surfaced 2026-05-05 audit (impl drift after a month of work).
+
+### Implementation drift / gaps from current design
+
+- [ ] **Penetration cap enforcement.** `DevCheatsArmorSection.PenetrationCap = 100` documented but no code clamps `totalPen` у `ShootingSystem`. Current AP rifle stack (WeaponBase 15 + Ammo 35 + future mods + char) can over-cap silently.
+- [ ] **ArmorPoints / ArmorDamage cap enforcement.** Same shape — caps documented (100 / 30) but unenforced.
+- [ ] **Char skill tree structure.** Concept-level only. Stat budget confirmed (10-15%) але tree topology / node count / progression curve TBD.
+- [ ] **WeaponMod system.** Architectural placeholder (Tier 5 Exotic mods deferred sine die). Need design pass: which slots, how many per weapon, balance budget.
+- [ ] **Weight / mobility coupling.** Design says `weight = f(ArmorPts + MaxDur)` impacts movement speed. Not impl'd. Currently `MoveSpeedMultiplier` тільки DevCheats. Without this, "wear best armor everywhere" loop has no trade-off.
+
+### Concrete value tuning (not architectural — playtest-driven)
+
+- [ ] **HeadshotMulti per archetype.** Currently 2.0x flat for Pistol/Rifle/Shotgun (Ballistic & Laser). Design: sniper > rifle > pistol — defer differentiation until Sniper archetype lands.
+- [ ] **Bleed L2 DPS values.** L1/L2 architecture exists, concrete tick rate / DPS scaling TBD.
+- [ ] **Burn DPS / duration.** Incendiary ammo + Burn status — deferred, not implemented.
+
+### Deferred ammo archetypes (architecture present, content gap)
+
+- [ ] **Shredder ammo** (+25 ArmorDmg, anti-armor durability spec). Defer until Standard/AP/HP feel-tested.
+- [ ] **Incendiary ammo** + Burn status system. Same defer trigger.
+
+### Open economy/content questions
+
+See DEFERRED section.
 
 ---
 
@@ -339,3 +364,8 @@ No open questions at this time. See DEFERRED section for topics pending design.
 | 2026-03-29 | Defender HUD: armor silhouette with color zones (WoW-style) | Green/yellow/red + pulse on hit + zone transition alert sound |
 | 2026-03-29 | ALL shot stats use full modifier pipeline (WeaponBase+Ammo+Mod+Char) | Pen, DMG, ArmorDmg, Bleed, HSMulti, Burn — all consistent |
 | 2026-03-29 | Looted armor keeps current durability | Core extraction loop: kill → loot armor → repair |
+| 2026-05-05 | Ammo carries DamageModifier (AP -5, HP +10, Standard 0) | Closes design table → impl gap. AP becomes proper trade-off (better pen, less flesh DMG). HP becomes flesh shredder. Floor at 0 prevents negative damage from compounded penalties. |
+| 2026-05-05 | Payload BaseArmorDamage = 0 (was 5/8) | Removes WeaponBase + Ammo double-count. Ammo is canonical ArmorDmg source — consistent з ammo-carries-modifier pattern. Standard rifle effective ArmorDmg drops 10 → 5 (closer to design intent). |
+| 2026-05-05 | Bot ammo scaling deferred (all bots use Standard) | No PMC AP / Boss specials yet. Adds simplicity для playtest baseline; revisit when raid difficulty curve becomes a design pass. |
+| 2026-05-05 | HSMulti per-archetype differentiation deferred | All ranged weapons currently 2.0x flat. Wait for Sniper archetype (Tier 3 deferred) before differentiating. |
+| 2026-05-05 | Shredder + Incendiary ammo deferred | Architecture supports them (DamageModifier already wired). Defer until Standard/AP/HP feel-tested first. |
