@@ -206,9 +206,13 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            float totalPen = weapon.Stats.BasePenetration + ammoPen; // + weaponMod + charTree (future)
+            // Hard caps documented у battle-design-status.md §4. Without these, future
+            // WeaponMod + CharTree additive sources can over-stack.
+            float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
+                weapon.Stats.BasePenetration + ammoPen); // + weaponMod + charTree (future)
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative
-            float totalArmorDmg = weapon.Stats.BaseArmorDamage + ammoArmorDmg;
+            float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
+                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
             float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);

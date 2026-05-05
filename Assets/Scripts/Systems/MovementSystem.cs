@@ -32,7 +32,9 @@ namespace Systems
                 var move = context.MovementConfig;
                 float sprintScale = player.IsSprinting ? StaminaConstants.SprintSpeedMultiplier : 1f;
                 float adsMoveScale = Mathf.Lerp(1f, move.AdsMoveSpeedMultiplier, player.AdsBlend);
-                player.Velocity = moveDirection * (MoveSpeed * move.MoveSpeedMultiplier * adsMoveScale * sprintScale);
+                state.ArmorMap.TryGetValue(player.Id, out var playerArmor);
+                float armorScale = ArmorSystem.ComputeArmorSpeedMultiplier(playerArmor);
+                player.Velocity = moveDirection * (MoveSpeed * move.MoveSpeedMultiplier * adsMoveScale * sprintScale * armorScale);
             }
 
             var candidatePos = player.Position + player.Velocity * context.DeltaTime;

@@ -240,9 +240,17 @@ mix of blood, sparks, sound, and number size.
 
 ### 11. Weight / Mobility
 - Heavier armor = **movement speed penalty** (%)
-- Weight = f(ArmorPoints + MaxDurability) — both protection and sturdiness add weight
-  - Can be overridden per armor piece if needed (e.g., special lightweight elite armor)
-- Concrete formula and values TBD
+- Weight = `(ArmorPoints + MaxDurability)` summed across both equipped slots
+- Speed multiplier = `max(WeightSpeedFloor, 1 - totalWeight × WeightSpeedFactor)`
+- Constants ([`ArmorConstants.cs`](../../Assets/Scripts/Constants/ArmorConstants.cs)):
+  - `WeightSpeedFactor = 0.0005f` (0.05% per weight unit)
+  - `WeightSpeedFloor = 0.5f` (max 50% slowdown — god-gear edge case clamp)
+- Tuning at 2026-05-05:
+  - Basic kit (Helmet 30/100 + Armor 40/120 = 290 weight) → 14.5% slowdown
+  - Mid-tier kit (~400 weight) → 20% slowdown
+  - Elite kit (~550 weight) → 27.5% slowdown
+- Per-piece weight override TBD (deferred — no special lightweight items yet)
+- Multiplied у `MovementSystem.Tick` after sprint + ADS scales
 
 ### 12. Defender Feedback (own armor status)
 - **HUD armor scheme**: visual diagram of helmet + vest on character silhouette (WoW-style)
@@ -278,11 +286,11 @@ Surfaced 2026-05-05 audit (impl drift after a month of work).
 
 ### Implementation drift / gaps from current design
 
-- [ ] **Penetration cap enforcement.** `DevCheatsArmorSection.PenetrationCap = 100` documented but no code clamps `totalPen` у `ShootingSystem`. Current AP rifle stack (WeaponBase 15 + Ammo 35 + future mods + char) can over-cap silently.
-- [ ] **ArmorPoints / ArmorDamage cap enforcement.** Same shape — caps documented (100 / 30) but unenforced.
+- [x] ~~Penetration cap enforcement~~ — ✅ shipped 2026-05-05 (`ArmorConstants.PenetrationCap`).
+- [x] ~~ArmorPoints / ArmorDamage cap enforcement~~ — ✅ shipped 2026-05-05.
+- [x] ~~Weight / mobility coupling~~ — ✅ shipped 2026-05-05 (linear, see §11).
 - [ ] **Char skill tree structure.** Concept-level only. Stat budget confirmed (10-15%) але tree topology / node count / progression curve TBD.
 - [ ] **WeaponMod system.** Architectural placeholder (Tier 5 Exotic mods deferred sine die). Need design pass: which slots, how many per weapon, balance budget.
-- [ ] **Weight / mobility coupling.** Design says `weight = f(ArmorPts + MaxDur)` impacts movement speed. Not impl'd. Currently `MoveSpeedMultiplier` тільки DevCheats. Without this, "wear best armor everywhere" loop has no trade-off.
 
 ### Concrete value tuning (not architectural — playtest-driven)
 
@@ -369,3 +377,5 @@ See DEFERRED section.
 | 2026-05-05 | Bot ammo scaling deferred (all bots use Standard) | No PMC AP / Boss specials yet. Adds simplicity для playtest baseline; revisit when raid difficulty curve becomes a design pass. |
 | 2026-05-05 | HSMulti per-archetype differentiation deferred | All ranged weapons currently 2.0x flat. Wait for Sniper archetype (Tier 3 deferred) before differentiating. |
 | 2026-05-05 | Shredder + Incendiary ammo deferred | Architecture supports them (DamageModifier already wired). Defer until Standard/AP/HP feel-tested first. |
+| 2026-05-05 | Pen/Armor/ArmorDmg caps enforced via `ArmorConstants` | Was documented invariant only. Hardcoded constants (no DevCheats config layer) — future-proofs additive stack for WeaponMod/CharTree. Zero behavior change today (current values under caps). |
+| 2026-05-05 | Weight → speed: linear, hardcoded constants | `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Constants in `ArmorConstants` (no config — won't change often). Per-piece override deferred. Applies in MovementSystem after sprint/ADS scales. |

@@ -33,7 +33,10 @@ namespace Systems
             if (armor == null || armor.IsBroken)
                 return 0f;
 
-            return armor.ArmorPoints * EffectiveDurabilityMultiplier(armor.DurabilityPercent);
+            // Hard cap (battle-design-status.md §4) — guards against future additive
+            // armor mod sources stacking past intended ceiling.
+            float cappedPoints = Mathf.Min(ArmorConstants.ArmorPointsCap, armor.ArmorPoints);
+            return cappedPoints * EffectiveDurabilityMultiplier(armor.DurabilityPercent);
         }
 
         public static float CalcDamageMultiplier(float effectiveArmor, float penetration,
@@ -86,7 +89,7 @@ namespace Systems
             }
 
             float effectiveArmor = cfg.ForceMaxArmor
-                ? armor.ArmorPoints  // ignore durability degradation
+                ? Mathf.Min(ArmorConstants.ArmorPointsCap, armor.ArmorPoints)  // ignore durability degradation, still apply hard cap
                 : EffectiveArmorPoints(armor);
             float multiplier = CalcDamageMultiplier(effectiveArmor, penetration, cfg.DamageReductionK);
             float absorptionRatio = 1f - multiplier;
@@ -117,6 +120,22 @@ namespace Systems
         {
             if (armor == null) return;
             armor.CurrentDurability = Mathf.Max(0f, armor.CurrentDurability - durDamage);
+        }
+
+        // battle-design-status.md §11: weight = ArmorPoints + MaxDurability per piece.
+        // Returns 1.0 (no slowdown) when no armor equipped, down to WeightSpeedFloor for god-gear.
+        public static float ComputeArmorSpeedMultiplier(ArmorSlotState slots)
+        {
+            if (slots == null) return 1f;
+            float weight = SlotWeight(slots.Helmet) + SlotWeight(slots.BodyArmor);
+            return Mathf.Max(ArmorConstants.WeightSpeedFloor,
+                1f - weight * ArmorConstants.WeightSpeedFactor);
+        }
+
+        static float SlotWeight(ArmorState armor)
+        {
+            if (armor == null || armor.IsBroken) return 0f;
+            return armor.ArmorPoints + armor.MaxDurability;
         }
     }
 }
