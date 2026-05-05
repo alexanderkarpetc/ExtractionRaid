@@ -1,0 +1,29 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="NpcDialogue.uss"/>
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
+        <ui:VisualElement name="anchor" class="anchor" picking-mode="Position">
+
+            <ui:VisualElement name="portrait" class="portrait" picking-mode="Ignore">
+                <ui:VisualElement class="portrait-glow" picking-mode="Ignore"/>
+                <ui:VisualElement class="portrait-head" picking-mode="Ignore"/>
+                <ui:VisualElement class="portrait-shoulders" picking-mode="Ignore"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="panel" class="panel">
+                <ui:VisualElement name="nameplate" class="nameplate">
+                    <ui:VisualElement class="nameplate-dot" picking-mode="Ignore"/>
+                    <ui:Label name="speakerName" text="NPC" class="nameplate-text"/>
+                </ui:VisualElement>
+
+                <ui:Label name="textBox" text="" class="text-box"/>
+
+                <ui:VisualElement name="choicesBox" class="choices"/>
+
+                <ui:VisualElement class="hint-row" picking-mode="Ignore">
+                    <ui:Label text="Click — select" class="hint"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

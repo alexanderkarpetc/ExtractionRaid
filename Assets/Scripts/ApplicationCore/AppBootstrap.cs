@@ -2,6 +2,7 @@ using UnityEngine;
 using View;
 using View.UI;
 using View.UI.CraftingMockup;
+using View.UI.Dialogue;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
 
@@ -34,6 +35,13 @@ namespace ApplicationCore
             }
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<QuestPresenter>();
+            gameObject.AddComponent<NpcDialoguePresenter>();
+
+            // Dialogue UIDocument host — must be its own GO because NpcDialogueWindow
+            // requires a UIDocument component (panel settings owned by the window).
+            var dialogueHost = new GameObject("NpcDialogueWindow");
+            dialogueHost.transform.SetParent(transform, false);
+            dialogueHost.AddComponent<NpcDialogueWindow>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
