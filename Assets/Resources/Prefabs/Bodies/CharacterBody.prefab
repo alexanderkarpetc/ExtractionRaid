@@ -50,7 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::View.CharacterBody
   _weaponPivot: {fileID: 8176120130737003416}
   _helmetSlot: {fileID: 4934103830547851383}
-  _armorSlot: {fileID: 0}
+  _armorSlot: {fileID: 5888000686405076559}
   _capsuleVisual: {fileID: 8785479282720217872}
   _animator: {fileID: 4400004602721436305}
   _rightHandIK: {fileID: 5557728838561940099}
@@ -119,6 +119,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7059124108777992235}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2817004839049259828
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5888000686405076559}
+  m_Layer: 0
+  m_Name: ArmorSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5888000686405076559
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2817004839049259828}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: -0.067, y: 0.039, z: -0}
+  m_LocalScale: {x: 1.75, y: 1.75, z: 1.75}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2961797370039470637}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!1 &6304542206925665961
 GameObject:
   m_ObjectHideFlags: 0
@@ -144,8 +175,8 @@ Transform:
   m_GameObject: {fileID: 6304542206925665961}
   serializedVersion: 2
   m_LocalRotation: {x: -0.4485579, y: 0.552169, z: 0.5475194, w: 0.4405992}
-  m_LocalPosition: {x: -0.05590992, y: -0.052728407, z: -0.06909861}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalPosition: {x: -0.263, y: 0.006, z: -0.034}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6640960992850506621}
@@ -243,6 +274,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6786020307393651196, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
       insertIndex: 0
       addedObject: {fileID: 8176120130737003416}
+    - targetCorrespondingSourceObject: {fileID: 1070423344248860865, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5888000686405076559}
     - targetCorrespondingSourceObject: {fileID: 8928928931500444049, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4934103830547851383}
@@ -656,6 +690,11 @@ CharacterJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!4 &2961797370039470637 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1070423344248860865, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
+  m_PrefabInstance: {fileID: 2864433777807899372}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3471956651808067211 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1724418467816125543, guid: 4d409a49e9761974fa16858a7a658e1f, type: 3}
