@@ -199,15 +199,15 @@ Shader "ExtractShaders/VibeCharacterShader"
                 return _HitFlashColor.rgb * rim * _HitFlashIntensity;
             }
 
-            // Sum of red blobs at world-space hit positions. Each entry's .w
-            // multiplies brightness so C# can fade individual decals over time.
-            // Iterates full capacity unconditionally (compiler-friendly) and uses
-            // life > 0 as the per-entry gate.
-            half3 ComputeHitDecals(float3 positionWS)
+            // Returns coverage [0..1] для current fragment — combined opacity з
+            // ALL active decals (max blend, не sum so overlapping не over-saturates).
+            // Coverage не залежить від decal color, тому темний колір тінтить
+            // albedo з тією самою силою як яскравий.
+            half ComputeHitDecalCoverage(float3 positionWS)
             {
-                if (_HitDecalCount < 0.5) return half3(0, 0, 0);
+                if (_HitDecalCount < 0.5) return 0.0h;
 
-                half3 acc = half3(0, 0, 0);
+                half coverage = 0.0h;
                 half innerR = _HitDecalRadius * (1.0h - saturate(_HitDecalSoftness));
                 half outerR = _HitDecalRadius;
 
@@ -220,10 +220,10 @@ Shader "ExtractShaders/VibeCharacterShader"
                     {
                         half d    = (half)distance(positionWS, entry.xyz);
                         half mask = 1.0h - smoothstep(innerR, outerR, d);
-                        acc += _HitDecalColor.rgb * mask * life;
+                        coverage = max(coverage, mask * life);
                     }
                 }
-                return acc;
+                return saturate(coverage);
             }
 
             half4 Frag(Varyings IN) : SV_Target
@@ -231,11 +231,12 @@ Shader "ExtractShaders/VibeCharacterShader"
                 half4 tex = SAMPLE_TEXTURE2D(_Texture, sampler_Texture, IN.uv);
                 half3 stylized = ComputeStylizedBase(tex);
 
-                // Tint base color toward decal color — gives "blood soaked into
-                // material" look so impact marks survive even in shadow.
-                half3 decalGlow = ComputeHitDecals(IN.positionWS);
-                half  decalLum  = saturate(dot(decalGlow, half3(1, 1, 1)));
-                half3 albedo    = lerp(stylized, _HitDecalColor.rgb, saturate(decalLum * 1.2h));
+                // Decal stain — pure albedo replacement at coverage [0..1]. Decal
+                // does NOT glow (no emission contribution); behaves як кров на шкірі.
+                // Coverage independent of color, тому dark colors тінтять так само
+                // visible як bright.
+                half  decalCoverage = ComputeHitDecalCoverage(IN.positionWS);
+                half3 albedo        = lerp(stylized, _HitDecalColor.rgb, decalCoverage);
 
                 half3 N = normalize(IN.normalWS);
                 half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
@@ -253,8 +254,7 @@ Shader "ExtractShaders/VibeCharacterShader"
                 half3 ambient = albedo * SampleSH(N);
 
                 half3 emission = (_ColorEmission.rgb * _BrightnessEmission)
-                               + ComputeRimFlash(N, V)
-                               + decalGlow;
+                               + ComputeRimFlash(N, V);
 
                 half3 final = directDiffuse + ambient + emission;
                 final = MixFog(final, IN.fogCoord);

@@ -67,7 +67,7 @@ namespace View
                         break;
                     }
                     case RaidEventType.ProjectileHit:
-                        SpawnImpactVfx(e.Position, e.StringPayload);
+                        SpawnImpactVfx(e.Position, e.Direction, e.StringPayload);
                         break;
                     case RaidEventType.ProjectileRicochet:
                         SpawnRicochetVfx(e.Position);
@@ -109,7 +109,7 @@ namespace View
             _views[id] = view;
         }
 
-        void SpawnImpactVfx(Vector3 position, string hitType)
+        void SpawnImpactVfx(Vector3 position, Vector3 bulletDirection, string hitType)
         {
             // Parse hitType format: "body:0.45" or "head:0.00" or legacy "body"/"head"/"surface"
             string baseType = hitType;
@@ -124,6 +124,13 @@ namespace View
                     out absorption);
             }
 
+            // Orient impact prefab so its local +Z faces back toward the shooter —
+            // particle systems' cones emit along +Z, so droplets spray outward
+            // у напрямку звідки прилетіла куля. Surface hits keep identity rotation.
+            Quaternion impactRotation = Quaternion.identity;
+            if ((baseType == "body" || baseType == "head") && bulletDirection.sqrMagnitude > 0.001f)
+                impactRotation = Quaternion.LookRotation(-bulletDirection, Vector3.up);
+
             // Flesh VFX (blood) — spawned when absorption < 1
             if (absorption < 0.95f)
             {
@@ -135,7 +142,7 @@ namespace View
                 };
                 if (fleshPrefab != null)
                 {
-                    var go = Object.Instantiate(fleshPrefab, position, Quaternion.identity);
+                    var go = Object.Instantiate(fleshPrefab, position, impactRotation);
                     // Scale down blood when armor absorbs most damage
                     if (absorption > 0.1f)
                         go.transform.localScale *= (1f - absorption * 0.7f);
@@ -146,7 +153,7 @@ namespace View
             // Armor VFX (sparks) — spawned when absorption > 0.1
             if (absorption > 0.1f && _armorImpactPrefab != null)
             {
-                var go = Object.Instantiate(_armorImpactPrefab, position, Quaternion.identity);
+                var go = Object.Instantiate(_armorImpactPrefab, position, impactRotation);
                 // Scale up sparks with more absorption
                 go.transform.localScale *= (0.3f + absorption * 0.7f);
                 Object.Destroy(go, 2f);

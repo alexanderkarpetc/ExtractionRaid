@@ -191,10 +191,11 @@ namespace Systems
                             && hit.TargetedEntityId.Value != 0
                                 ? "head" : "body";
                         string hitType = $"{hitBase}:{absorptionRatio:F2}";
-                        // Normal not relevant for character hits (presenters skip them — blood
-                        // particles cover via BodyImpact prefab). Pass zero — bullet hole presenter
-                        // filters out non-surface hitTypes.
-                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, Vector3.zero, hitType);
+                        // Pass projectile direction (not surface normal) so blood VFX can
+                        // orient splash back toward the shooter. BulletHoleDecalPresenter
+                        // still filters out body/head hits via StringPayload, тому передача
+                        // non-zero direction here безпечна для wall decal logic.
+                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, proj.Direction, hitType);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
                         break;
