@@ -289,8 +289,8 @@ Surfaced 2026-05-05 audit (impl drift after a month of work).
 - [x] ~~Penetration cap enforcement~~ — ✅ shipped 2026-05-05 (`ArmorConstants.PenetrationCap`).
 - [x] ~~ArmorPoints / ArmorDamage cap enforcement~~ — ✅ shipped 2026-05-05.
 - [x] ~~Weight / mobility coupling~~ — ✅ shipped 2026-05-05 (linear, see §11).
-- [ ] **Char skill tree structure.** Concept-level only. Stat budget confirmed (10-15%) але tree topology / node count / progression curve TBD.
-- [ ] **WeaponMod system.** Architectural placeholder (Tier 5 Exotic mods deferred sine die). Need design pass: which slots, how many per weapon, balance budget.
+
+**No open architectural items for V0.1.** Char skill tree та WeaponMod system пере'хали у DEFERRED — не V0.1 scope (decision 2026-05-05).
 
 ### Concrete value tuning (not architectural — playtest-driven)
 
@@ -313,12 +313,18 @@ See DEFERRED section.
 
 | Topic | Status | Notes |
 |-------|--------|-------|
-| Weapon Mod Tree / Weapon Builder | Separate system | Will have its own design doc |
-| Character Skill Tree structure | Will exist, details TBD | Budget confirmed: 10-15% of stat caps |
-| Concrete stat values | TBD | Base DMG, Protection tiers, cap numbers, bleed DPS, headshot multi values |
+| **Character Skill Tree** | 🚫 **Out of V0.1 scope** (2026-05-05) | May not ship at all для V0.1. Stat budget reserved (10-15%) but не реалізується. Composition pipeline ready коли захочеться додати |
+| **WeaponMod system** | 🚫 **Deferred indefinitely** (2026-05-05) | Mod items already exist in inventory/craft DB (Basic_Scope, Long_Barrel, Suppressor, тощо) як lootable objects but they don't modify weapon stats. Wiring stat impact = "колись, не зараз" |
+| Concrete stat values | TBD playtest-tuned | Base DMG, Protection tiers, cap numbers, bleed DPS, headshot multi values |
 | Armor crafting/repair economy | TBD | Materials, costs, repair stations |
 | ~~Armor damage formula~~ | ✅ Resolved | ArmorDmg = flat pts × (1 + absorptionRatio) |
 | Economy feel | TBD | Early=swap often, mid=rare armor, late=mid is base, high is precious |
+| Per-piece weight override | TBD | Special lightweight elite armor — needed when content tier expands |
+| Bleed L2 DPS values | TBD playtest | L1/L2 architecture present, concrete numbers not tuned |
+| Burn status + Incendiary ammo | Deferred | Architecture supports (DamageModifier wired). Defer until Standard/AP/HP feel-tested |
+| Shredder ammo | Deferred | Same as above |
+| HSMulti per archetype | Deferred | All ranged weapons 2.0x flat. Wait for Sniper archetype |
+| Bot ammo scaling | Deferred | All bots use Standard. Revisit when raid difficulty curve becomes a design pass |
 
 ---
 
@@ -379,3 +385,5 @@ See DEFERRED section.
 | 2026-05-05 | Shredder + Incendiary ammo deferred | Architecture supports them (DamageModifier already wired). Defer until Standard/AP/HP feel-tested first. |
 | 2026-05-05 | Pen/Armor/ArmorDmg caps enforced via `ArmorConstants` | Was documented invariant only. Hardcoded constants (no DevCheats config layer) — future-proofs additive stack for WeaponMod/CharTree. Zero behavior change today (current values under caps). |
 | 2026-05-05 | Weight → speed: linear, hardcoded constants | `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Constants in `ArmorConstants` (no config — won't change often). Per-piece override deferred. Applies in MovementSystem after sprint/ADS scales. |
+| 2026-05-05 | **Char skill tree out of V0.1 scope** | May not even ship у V0.1 release. Composition pipeline (`+ CharTreeMod` placeholder) залишається architectural, but no impl planned. Re-engage post-V0.1 if scope opens. |
+| 2026-05-05 | **WeaponMod system deferred indefinitely** | Mod items already exist as lootable inventory objects (Scope/Barrel/Suppressor/Mag/Grip/Stock у Items+Craft DB), but stat composition wiring deferred to "колись". V0.1 ships з `WeaponBase + Ammo` only. |

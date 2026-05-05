@@ -71,30 +71,47 @@ namespace Systems
 
         static void GiveStartingLoadout(RaidState state, InventoryState inventory)
         {
-            // Single Ballistic Rifle assembled via the Builder pipeline. Module
-            // composition lives in WeaponConfiguration so the starting weapon goes
-            // through the same flow as anything player crafts at Workbench.
-            // Legacy "Rifle" ItemDefinition path retired у Cluster A (2026-05-01).
-            var weaponId = state.AllocateEId();
-            var startingConfig = new WeaponConfiguration(
-                payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
-                delivery:       new DeliveryCoreInstance("Auto",          RarityTier.Common),
-                exotic:         null,
-                ammoInMagazine: 30);
-            inventory.WeaponSlots[0] = ItemState.CreateWeapon(weaponId, "Weapon", startingConfig);
+            // CHEAT loadout (2026-05-05): all 6 weapon variants assembled via Builder
+            // pipeline (2 payloads × 3 deliveries) + equipped armor + minimal consumables.
+            // Used for testing weapon/combat permutations on test scenes; normal raid
+            // flow preserves player inventory across sessions.
+            var combos = new (string payload, string delivery, int magSize)[]
+            {
+                ("BallisticRound", "Auto",         30),
+                ("BallisticRound", "SingleAction", 12),
+                ("BallisticRound", "Scatter",      5),
+                ("LaserCharge",    "Auto",         30),
+                ("LaserCharge",    "SingleAction", 12),
+                ("LaserCharge",    "Scatter",      5),
+            };
 
-            inventory.Backpack[0] = ItemState.Create(state.AllocateEId(), "Ammo_Rifle", 60);
+            // First 2 weapons go into hotbar slots (HotbarSize = 2)
+            inventory.WeaponSlots[0] = MakeWeapon(state, combos[0]);
+            inventory.WeaponSlots[1] = MakeWeapon(state, combos[1]);
 
-            for (int i = 0; i < GrenadeConstants.StartingCount; i++)
-                inventory.Backpack[2 + i] = ItemState.Create(state.AllocateEId(), "Grenade");
+            // Remaining 4 weapons into backpack (slots 0-3)
+            for (int i = 2; i < combos.Length; i++)
+                inventory.Backpack[i - 2] = MakeWeapon(state, combos[i]);
 
-            inventory.Backpack[5] = ItemState.Create(state.AllocateEId(), "Medkit",
+            // Armor equipped directly (HelmetSlot + BodyArmorSlot — not backpack)
+            inventory.HelmetSlot = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
+            inventory.BodyArmorSlot = ItemState.Create(state.AllocateEId(), "Armor_Basic");
+
+            // Minimal consumables: 1 grenade, 1 medkit, 1 bandage
+            inventory.Backpack[5] = ItemState.Create(state.AllocateEId(), "Grenade");
+            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit",
                 (int)MedConstants.TotalHealAmount);
-            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Bandage");
             inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
+        }
 
-            inventory.Backpack[9] = ItemState.Create(state.AllocateEId(), "Helmet_Basic");
-            inventory.Backpack[10] = ItemState.Create(state.AllocateEId(), "Armor_Basic");
+        static ItemState MakeWeapon(RaidState state, (string payload, string delivery, int magSize) combo)
+        {
+            var config = new WeaponConfiguration(
+                payload:        new PayloadCoreInstance(combo.payload, RarityTier.Common),
+                delivery:       new DeliveryCoreInstance(combo.delivery, RarityTier.Common),
+                exotic:         null,
+                ammoInMagazine: combo.magSize);
+            return ItemState.CreateWeapon(state.AllocateEId(), "Weapon", config);
         }
     }
 }

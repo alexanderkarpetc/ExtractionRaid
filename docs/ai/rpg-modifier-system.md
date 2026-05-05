@@ -1,7 +1,9 @@
 # RPG Modifier System — Base Architecture
 
+> **Status (2026-05-05):** Post-V0.1 design doc. Foundation architecture only. **Char skill tree is out of V0.1 scope.** **WeaponMod system is deferred indefinitely** (mod items exist у inventory/craft DB but не модифікують weapon stats). Today's combat uses `WeaponBase + Ammo` composition only — see [`battle-design-status.md`](./battle-design-status.md). Re-engage this doc when post-V0.1 scope opens.
+
 ## Overview
-ExtractionRaid uses a **multi-source additive modifier system** where stats are composed from 3 independent sources: Character Tree, Weapon Mods, and Ammunition. All sources stack **additively** with **hard caps** per stat.
+ExtractionRaid uses a **multi-source additive modifier system** where stats are composed from independent sources: Character Tree, Weapon Mods, and Ammunition. All sources stack **additively** with **hard caps** per stat.
 
 This document defines the BASE rules that apply to ALL game stats — damage, penetration, bleeding, and any future parameters.
 

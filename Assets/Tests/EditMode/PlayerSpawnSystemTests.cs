@@ -67,16 +67,16 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void SpawnPlayer_SecondHotbarSlotEmpty()
+        public void SpawnPlayer_BothHotbarSlotsFilled()
         {
-            // Starting loadout cleaned up 2026-04-28: only single Ballistic Rifle
-            // у slot 0; slot 1 is empty. Weapon variety тепер через Builder + loot.
+            // Cheat loadout (2026-05-05): all 6 weapon variants — first 2 у hotbar.
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            Assert.IsNull(state.PlayerEntity.Hotbar[1]);
+            Assert.IsNotNull(state.PlayerEntity.Hotbar[0]);
+            Assert.IsNotNull(state.PlayerEntity.Hotbar[1]);
         }
 
         [Test]
@@ -98,37 +98,35 @@ namespace Tests.EditMode
         // ── Armor ─────────────────────────────────────────────
 
         [Test]
-        public void SpawnPlayer_EmptyInventory_GetsStartingArmorInBackpack()
+        public void SpawnPlayer_EmptyInventory_GetsStartingArmorEquipped()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            // Armor starts in backpack (not equipped) — player must equip manually
-            bool hasHelmet = false, hasArmor = false;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-            {
-                var item = App.Instance.Player.Inventory.Backpack[i];
-                if (item?.DefinitionId == "Helmet_Basic") hasHelmet = true;
-                if (item?.DefinitionId == "Armor_Basic") hasArmor = true;
-            }
-            Assert.IsTrue(hasHelmet, "Backpack should contain Helmet_Basic");
-            Assert.IsTrue(hasArmor, "Backpack should contain Armor_Basic");
+            // Cheat loadout 2026-05-05: armor goes directly into equip slots, not backpack.
+            var inv = App.Instance.Player.Inventory;
+            Assert.AreEqual("Helmet_Basic", inv.HelmetSlot?.DefinitionId,
+                "HelmetSlot should be pre-equipped with Helmet_Basic");
+            Assert.AreEqual("Armor_Basic", inv.BodyArmorSlot?.DefinitionId,
+                "BodyArmorSlot should be pre-equipped with Armor_Basic");
         }
 
         [Test]
-        public void SpawnPlayer_ArmorInBackpack_NotInArmorMap()
+        public void SpawnPlayer_StartingArmorInArmorMap()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            // Armor is in backpack, not equipped — ArmorMap should be empty
+            // Cheat loadout equips armor → ArmorMap contains player entry з both slots.
             var playerId = state.PlayerEntity.Id;
-            Assert.IsFalse(state.ArmorMap.ContainsKey(playerId),
-                "ArmorMap should be empty when armor is in backpack, not equipped");
+            Assert.IsTrue(state.ArmorMap.TryGetValue(playerId, out var slots),
+                "ArmorMap should contain player when armor is pre-equipped");
+            Assert.IsNotNull(slots.Helmet, "Helmet should be in ArmorMap");
+            Assert.IsNotNull(slots.BodyArmor, "BodyArmor should be in ArmorMap");
         }
     }
 }

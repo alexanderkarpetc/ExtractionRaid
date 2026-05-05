@@ -193,7 +193,8 @@ namespace Systems
 
             if (dir.sqrMagnitude < 0.001f) return;
 
-            // Compose combat stats: WeaponBase + Ammo (+ WeaponMod + CharTree placeholders)
+            // Compose combat stats: WeaponBase + Ammo. WeaponMod / CharTree sources
+            // are architecturally documented (battle-design §1) but out of V0.1 scope.
             float ammoPen = 0f, ammoDmg = 0f, ammoArmorDmg = 0f, ammoBleedChance = 0f;
             if (!string.IsNullOrEmpty(weapon.AmmoType))
             {
@@ -206,10 +207,10 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            // Hard caps documented у battle-design-status.md §4. Without these, future
-            // WeaponMod + CharTree additive sources can over-stack.
+            // Hard caps documented у battle-design-status.md §4 — guards documented
+            // invariant even though only WeaponBase + Ammo currently contribute (V0.1).
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
-                weapon.Stats.BasePenetration + ammoPen); // + weaponMod + charTree (future)
+                weapon.Stats.BasePenetration + ammoPen);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative
             float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
                 weapon.Stats.BaseArmorDamage + ammoArmorDmg);
