@@ -3,6 +3,7 @@ using View;
 using View.UI;
 using View.UI.CraftingMockup;
 using View.UI.Dialogue;
+using View.UI.Hotbar;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
 
@@ -56,6 +57,13 @@ namespace ApplicationCore
             var tooltipHost = new GameObject("TooltipController");
             tooltipHost.transform.SetParent(transform, false);
             tooltipHost.AddComponent<TooltipController>();
+
+            // Hotbar HUD strip — UI Toolkit replacement for the legacy uGUI hotbar.
+            // Display-only; activation continues to flow through QuickSlotSystem keys 3-9.
+            // Bind UX: right-click an inventory item → context menu offers "Bind to N".
+            var hotbarHost = new GameObject("HotbarOverlay");
+            hotbarHost.transform.SetParent(transform, false);
+            hotbarHost.AddComponent<HotbarOverlay>();
 
             // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
             var craftingMockupHost = new GameObject("CraftingMockupWindow");

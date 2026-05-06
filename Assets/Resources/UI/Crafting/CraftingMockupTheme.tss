@@ -1,1 +1,25 @@
+/* Project-wide UI Toolkit theme.
+ *
+ * This file is the active themeStyleSheet on every runtime PanelSettings in
+ * the project (WeaponBuilder / Tooltip / MainMenu / Dialogue / CraftingMockup).
+ * Originally created for the crafting mockup; repurposed as the shared theme
+ * orchestrator. Path is preserved to keep existing PanelSettings GUID
+ * references intact — moving the asset is a separate cleanup task.
+ *
+ * Sources:
+ *   - unity-theme://default — Unity built-in (Button/ScrollView/etc baseline)
+ *   - _tokens.uss            — ExtractionRaid design tokens (colors, sizes,
+ *                              spacing). Single source of truth, mirrored in
+ *                              docs/ai/ui-styling.md.
+ *
+ * Usage in panel USS:
+ *   .my-window {
+ *       background-color: var(--color-window-bg);
+ *       padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+ *   }
+ *
+ * Don't hardcode rgb() / px in panel USS — see docs/ai/ui-styling.md.
+ */
+
 @import url("unity-theme://default");
+@import url("project:///Assets/Resources/UI/Theme/_tokens.uss");

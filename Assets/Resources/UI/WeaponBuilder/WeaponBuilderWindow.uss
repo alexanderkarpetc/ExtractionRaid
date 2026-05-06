@@ -7,7 +7,12 @@
  *     topRow:  [palette ───────────] [buildPanel ─────────────]
  *   footer
  *
- * Sizes follow Tier A scale — see docs/ai/ui-styling.md. */
+ * This stylesheet is the canonical Tier A reference. All shared values pull
+ * from `Assets/Resources/UI/Theme/_tokens.uss` via `var(--*)` — colors, fonts,
+ * spacing, sizing. Only weapon-builder-specific layout (palette width, drag
+ * ghost positioning) lives as literals here.
+ *
+ * See docs/ai/ui-styling.md for the token catalogue + naming rules. */
 
 .wb-backdrop {
     position: absolute;
@@ -28,17 +33,17 @@
 }
 
 .wb-window {
-    width: 1280px;
+    width: var(--size-window-width);
     /* Hard cap at the reference panel height (1080 ref px). With
      * ScaleWithScreenSize this fits 16:9 screens at any resolution because the
      * panel layout space is always 1920×1080 ref. C# UpdateWindowMaxHeight
      * tightens this further at runtime for non-16:9 aspects (ultrawide) where
      * panel ref height drops below 1080. */
     max-height: 1080px;
-    background-color: rgb(26, 28, 34);
-    border-color: rgb(70, 75, 85);
-    border-width: 2px;
-    border-radius: 12px;
+    background-color: var(--color-window-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-window);
     padding: 0;
     opacity: 1;
     transition-property: opacity;
@@ -59,15 +64,15 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 32px;
-    border-bottom-width: 2px;
-    border-bottom-color: rgb(50, 55, 65);
-    background-color: rgb(30, 33, 40);
+    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    border-bottom-width: var(--border-window);
+    border-bottom-color: var(--color-border-inset);
+    background-color: var(--color-header-bg);
 }
 
 .wb-title {
-    font-size: 26px;
-    color: rgb(235, 240, 250);
+    font-size: var(--font-window-title);
+    color: var(--color-text-title);
     -unity-font-style: bold;
 }
 
@@ -76,21 +81,21 @@
     height: 52px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(200, 205, 215);
+    color: var(--color-text-button-cancel);
     font-size: 36px;
     -unity-font-style: bold;
     padding: 0;
 }
 
 .wb-close-btn:hover {
-    background-color: rgb(55, 60, 70);
-    border-radius: 8px;
+    background-color: var(--color-btn-cancel-bg);
+    border-radius: var(--radius-inset);
 }
 
 /* ── Body ───────────────────────────────────────────── */
 
 .wb-body {
-    padding: 24px 32px;
+    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
     /* ScrollView fills the space between header and footer; content scrolls when
      * the natural content height exceeds the viewport. */
     flex-grow: 1;
@@ -102,9 +107,9 @@
 }
 
 .wb-section-heading {
-    font-size: 18px;
+    font-size: var(--font-section-heading);
     -unity-font-style: bold;
-    color: rgb(140, 175, 210);
+    color: var(--color-section-heading);
     margin-bottom: 12px;
 }
 
@@ -114,15 +119,15 @@
     width: 580px;
     margin-right: 24px;
     padding: 20px;
-    background-color: rgb(22, 24, 30);
-    border-color: rgb(50, 55, 65);
-    border-width: 1px;
-    border-radius: 8px;
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border-inset);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
 }
 
 .wb-palette-group-label {
-    font-size: 14px;
-    color: rgb(150, 155, 165);
+    font-size: var(--font-group-label);
+    color: var(--color-text-muted);
     margin-top: 10px;
     margin-bottom: 6px;
 }
@@ -133,26 +138,26 @@
 }
 
 .wb-card {
-    width: 144px;
-    height: 80px;
+    width: var(--size-card-width);
+    height: var(--size-card-height);
     margin: 0 8px 8px 0;
-    padding: 10px 12px;
-    background-color: rgb(38, 42, 52);
-    border-color: rgb(70, 75, 85);
-    border-width: 2px;
-    border-radius: 8px;
+    padding: var(--space-card-pad-y) var(--space-card-pad-x);
+    background-color: var(--color-card-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-inset);
     flex-direction: column;
     justify-content: space-between;
 }
 
 .wb-card:hover {
-    background-color: rgb(48, 54, 66);
-    border-color: rgb(120, 195, 235);
+    background-color: var(--color-card-bg-hover);
+    border-color: var(--color-hint);
 }
 
 .wb-card-selected {
-    border-color: rgb(230, 200, 140);
-    background-color: rgb(48, 44, 36);
+    border-color: var(--color-accent);
+    background-color: var(--color-card-bg-selected);
 }
 
 /* Tier 6 G4: dimmed look for modules player doesn't currently own у backpack.
@@ -160,25 +165,25 @@
  * (CanBuild + DisabledReason gate the actual Build). */
 .wb-card-unavailable {
     opacity: 0.45;
-    border-color: rgb(50, 55, 65);
-    background-color: rgb(28, 30, 36);
+    border-color: var(--color-border-inset);
+    background-color: var(--color-card-bg-disabled);
 }
 
 .wb-card-unavailable:hover {
-    background-color: rgb(28, 30, 36);
-    border-color: rgb(50, 55, 65);
+    background-color: var(--color-card-bg-disabled);
+    border-color: var(--color-border-inset);
 }
 
 .wb-card-title {
-    font-size: 18px;
+    font-size: var(--font-card-title);
     -unity-font-style: bold;
-    color: rgb(235, 240, 250);
+    color: var(--color-text-title);
     white-space: normal;
 }
 
 .wb-card-kind {
-    font-size: 14px;
-    color: rgb(190, 200, 215);
+    font-size: var(--font-card-kind);
+    color: var(--color-text-secondary);
     -unity-text-align: middle-left;
 }
 
@@ -187,10 +192,10 @@
 .wb-build-panel {
     flex-grow: 1;
     padding: 20px;
-    background-color: rgb(22, 24, 30);
-    border-color: rgb(50, 55, 65);
-    border-width: 1px;
-    border-radius: 8px;
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border-inset);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
 }
 
 .wb-slots-host {
@@ -199,19 +204,19 @@
 }
 
 .wb-slot {
-    height: 72px;
+    height: var(--size-slot-height);
     margin-bottom: 10px;
-    padding: 12px 16px;
-    background-color: rgb(30, 33, 40);
-    border-color: rgb(70, 75, 85);
-    border-width: 2px;
-    border-radius: 8px;
+    padding: var(--space-slot-pad-y) var(--space-slot-pad-x);
+    background-color: var(--color-header-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-inset);
     justify-content: center;
 }
 
 .wb-slot-empty {
-    font-size: 16px;
-    color: rgb(120, 130, 145);
+    font-size: var(--font-empty-placeholder);
+    color: var(--color-text-empty);
     -unity-text-align: middle-center;
     -unity-font-style: italic;
 }
@@ -223,19 +228,19 @@
 }
 
 .wb-slot-filled-state {
-    border-color: rgb(120, 195, 235);
-    background-color: rgb(34, 42, 54);
+    border-color: var(--color-state-fill-border);
+    background-color: var(--color-state-fill-bg);
 }
 
 .wb-slot-filled-title {
-    font-size: 18px;
+    font-size: var(--font-card-title);
     -unity-font-style: bold;
-    color: rgb(235, 240, 250);
+    color: var(--color-text-title);
 }
 
 .wb-slot-filled-kind {
-    font-size: 14px;
-    color: rgb(190, 200, 215);
+    font-size: var(--font-card-kind);
+    color: var(--color-text-secondary);
     flex-grow: 1;
     margin-left: 10px;
 }
@@ -245,7 +250,7 @@
     height: 30px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(200, 205, 215);
+    color: var(--color-text-button-cancel);
     font-size: 22px;
     -unity-font-style: bold;
     padding: 0;
@@ -257,36 +262,36 @@
 }
 
 .wb-slot-drag-valid {
-    border-color: rgb(80, 200, 120);
-    background-color: rgb(28, 44, 34);
+    border-color: var(--color-drag-valid-border);
+    background-color: var(--color-drag-valid-bg);
 }
 
 .wb-slot-drag-invalid {
-    border-color: rgb(200, 80, 80);
-    background-color: rgb(50, 28, 28);
+    border-color: var(--color-drag-invalid-border);
+    background-color: var(--color-drag-invalid-bg);
 }
 
 /* ── Preview ────────────────────────────────────────── */
 
 .wb-preview {
     padding: 16px;
-    background-color: rgb(30, 33, 40);
-    border-color: rgb(50, 55, 65);
-    border-width: 1px;
-    border-radius: 8px;
+    background-color: var(--color-header-bg);
+    border-color: var(--color-border-inset);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
 }
 
 .wb-archetype {
-    font-size: 22px;
+    font-size: var(--font-preview-archetype);
     -unity-font-style: bold;
-    color: rgb(230, 200, 140);
+    color: var(--color-accent);
     margin-bottom: 4px;
 }
 
 .wb-archetype-flavor {
-    font-size: 14px;
+    font-size: var(--font-tooltip-flavor);
     -unity-font-style: italic;
-    color: rgb(170, 175, 185);
+    color: var(--color-text-flavor);
     margin-bottom: 10px;
     white-space: normal;
 }
@@ -296,17 +301,17 @@
 }
 
 .wb-hint {
-    font-size: 14px;
+    font-size: var(--font-tooltip-flavor);
     -unity-font-style: italic;
-    color: rgb(120, 195, 235);
+    color: var(--color-hint);
     margin-bottom: 12px;
     white-space: normal;
 }
 
 .wb-stat-group-heading {
-    font-size: 14px;
+    font-size: var(--font-tooltip-flavor);
     -unity-font-style: bold;
-    color: rgb(140, 175, 210);
+    color: var(--color-section-heading);
     margin-top: 8px;
     margin-bottom: 3px;
 }
@@ -322,27 +327,27 @@
 .wb-stat-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 2px 0;
+    padding: var(--space-row-pad-y) 0;
     /* Belt-and-suspenders against text overlap if anything else in the layout
      * misbehaves: rows refuse to shrink below their natural reading size. */
-    min-height: 22px;
+    min-height: var(--size-stat-row-mh);
     flex-shrink: 0;
 }
 
 .wb-stat-label {
-    color: rgb(180, 190, 205);
-    font-size: 16px;
+    color: var(--color-text-stat-label);
+    font-size: var(--font-stat-label);
 }
 
 .wb-stat-value {
-    color: rgb(230, 235, 245);
-    font-size: 16px;
+    color: var(--color-text-body-strong);
+    font-size: var(--font-stat-value);
     -unity-font-style: bold;
 }
 
 .wb-error {
-    color: rgb(220, 100, 100);
-    font-size: 14px;
+    color: var(--color-error);
+    font-size: var(--font-tooltip-flavor);
     margin-top: 10px;
     white-space: normal;
 }
@@ -352,46 +357,46 @@
 .wb-footer {
     flex-direction: row;
     justify-content: flex-end;
-    padding: 24px 32px;
-    border-top-width: 2px;
-    border-top-color: rgb(50, 55, 65);
-    background-color: rgb(30, 33, 40);
+    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    border-top-width: var(--border-window);
+    border-top-color: var(--color-border-inset);
+    background-color: var(--color-header-bg);
 }
 
 .wb-btn {
-    min-width: 160px;
-    height: 44px;
+    min-width: var(--size-button-min-width);
+    height: var(--size-button-height);
     margin-left: 14px;
-    border-radius: 8px;
-    border-width: 1px;
-    font-size: 18px;
+    border-radius: var(--radius-inset);
+    border-width: var(--border-inset);
+    font-size: var(--font-button);
     -unity-font-style: bold;
 }
 
 .wb-btn-cancel {
-    background-color: rgb(55, 60, 70);
-    border-color: rgb(70, 75, 85);
-    color: rgb(200, 205, 215);
+    background-color: var(--color-btn-cancel-bg);
+    border-color: var(--color-btn-cancel-border);
+    color: var(--color-text-button-cancel);
 }
 
 .wb-btn-cancel:hover {
-    background-color: rgb(65, 70, 80);
+    background-color: var(--color-btn-cancel-bg-hover);
 }
 
 .wb-btn-build {
-    background-color: rgb(60, 130, 90);
-    border-color: rgb(80, 160, 110);
-    color: rgb(240, 250, 245);
+    background-color: var(--color-btn-build-bg);
+    border-color: var(--color-btn-build-border);
+    color: var(--color-btn-build-text);
 }
 
 .wb-btn-build:hover {
-    background-color: rgb(70, 150, 105);
+    background-color: var(--color-btn-build-bg-hover);
 }
 
 .wb-btn-build:disabled {
-    background-color: rgb(45, 55, 50);
-    border-color: rgb(55, 65, 60);
-    color: rgb(130, 140, 135);
+    background-color: var(--color-btn-build-bg-disabled);
+    border-color: var(--color-btn-build-border-disabled);
+    color: var(--color-btn-build-text-disabled);
 }
 
 /* ── Drag ghost (lives directly on the document root during drag) ── */

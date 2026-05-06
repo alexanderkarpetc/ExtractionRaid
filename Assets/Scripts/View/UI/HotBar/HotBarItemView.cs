@@ -6,6 +6,13 @@ using UnityEngine.UI;
 
 namespace View.UI.HotBar
 {
+    /// <summary>
+    /// DEPRECATED 2026-05-07. Replaced by <c>View.UI.Hotbar.HotbarOverlay</c>
+    /// (UI Toolkit). Component is still referenced by legacy slot GameObjects
+    /// in <c>UI.prefab</c> (m_IsActive: 0). File is kept so the prefab doesn't
+    /// develop a missing-script warning. Safe to delete once the legacy
+    /// GameObjects are removed from <c>UI.prefab</c>.
+    /// </summary>
     public class HotBarItemView : MonoBehaviour, IDropHandler
     {
         [SerializeField] InventorySlotView _slotView;

@@ -1,7 +1,7 @@
 # Battle Design — Current Status
 
 > Living document. Updated as decisions are made.
-> Last updated: 2026-05-05
+> Last updated: 2026-05-06
 
 ## Reference Documents
 - `docs/ai/rpg-modifier-system.md` — base modifier architecture (3-source additive, caps, UI)
@@ -387,3 +387,6 @@ See DEFERRED section.
 | 2026-05-05 | Weight → speed: linear, hardcoded constants | `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Constants in `ArmorConstants` (no config — won't change often). Per-piece override deferred. Applies in MovementSystem after sprint/ADS scales. |
 | 2026-05-05 | **Char skill tree out of V0.1 scope** | May not even ship у V0.1 release. Composition pipeline (`+ CharTreeMod` placeholder) залишається architectural, but no impl planned. Re-engage post-V0.1 if scope opens. |
 | 2026-05-05 | **WeaponMod system deferred indefinitely** | Mod items already exist as lootable inventory objects (Scope/Barrel/Suppressor/Mag/Grip/Stock у Items+Craft DB), but stat composition wiring deferred to "колись". V0.1 ships з `WeaponBase + Ammo` only. |
+| 2026-05-06 | Laser charge mechanic (HL Tau cannon) | Hold-to-charge, fire-on-release. Damage scales `lerp(0.3, 1.0, chargeRatio)`. Quick tap = weak, full hold = full damage. Replaces auto-fire-on-full-charge behavior. Differentiates laser vs ballistic feel значно. |
+| 2026-05-06 | Laser rifle burst (laser + Auto delivery) | After release, fires `lerp(1, 6, chargeRatio)` shots auto-paced (interval 0.07s). All burst shots use cached BurstChargeRatio for damage + VFX. Quick tap = 1 shot, full hold = 6-shot burst. Rifle тепер distinct від laser pistol/shotgun behavior. |
+| 2026-05-06 | Laser hitscan migration explicitly DECLINED | Recon analysis: top-down + cursor aim makes hitscan vs fast-projectile near-indistinguishable on 95% engagement distances. ZERO Sievert (reference) uses projectiles for lasers. Effort 4-6h not worth marginal gain. Re-engage если camera/aim model changes. |

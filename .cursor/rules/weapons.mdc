@@ -32,11 +32,26 @@ Stats live in SO assets at `Assets/Resources/WeaponBuilder/*` (Payloads/, Delive
 | Phase | Trigger → next | Notes |
 |-------|---------------|-------|
 | `Ready` | AttackPressed → `Charging` (Laser payload) or `Firing`; ReloadPressed → `Reloading` | Idle, accepts input |
-| `Charging` | ChargeTime elapsed → `Firing`; AttackJustReleased → `Ready` (cancel); PendingSwap → `Unequipping` | Tier 2: charge-up payloads |
+| `Charging` | AttackJustReleased → `Firing` / `Bursting` with charge-scaled stats; PendingSwap → `Unequipping` | Tier 2 + Tau-cannon mechanic (2026-05-06): hold-to-charge, fire-on-release |
 | `Firing` | Next tick → `Cooldown` | 1-tick marker; ShootingSystem spawned projectiles |
+| `Bursting` | LaserBurstInterval-paced auto-fire; BurstShotsRemaining=0 → `Cooldown`; PendingSwap → `Unequipping` | 2026-05-06 — laser+Auto delivery після release fires 1..6 shots scaled з chargeRatio |
 | `Cooldown` | FireInterval elapsed → `Ready` | Inter-shot gap |
 | `Equipping` / `Unequipping` | EquipTime/UnequipTime elapsed → `Ready` / swap | Weapon draw/holster |
 | `Reloading` | ReloadTime elapsed → `Ready` + fill mag | `AmmoSystem.CompleteReload` |
+
+**Laser charge-up mechanic** (2026-05-06, HL Tau cannon style):
+- AttackPressed on laser → `Charging`, ChargeStartTime = elapsed
+- Holding past ChargeTime keeps weapon in Charging at chargeRatio = 1.0 (no auto-fire — must release)
+- AttackJustReleased → fires charged shot at clamp((elapsed - chargeStart) / chargeTime, 0, 1)
+- Damage scaling: damage *= lerp(0.3, 1.0, chargeRatio)
+- VFX scaling: BeamFlashPresenter reads chargeRatio from ProjectileSpawned.CurrentHp
+
+**Laser rifle burst** (laser + Auto delivery only):
+- After release-fire, burstCount = round(lerp(1, 6, chargeRatio))
+- If burstCount > 1 → enter Bursting phase, ShootingSystem.TickBurst auto-fires every LaserBurstInterval = 0.07s
+- Each burst shot uses cached BurstChargeRatio, recomputes muzzle/aim (tracks rotation)
+- Out of ammo mid-burst → terminates early → Cooldown
+- Other laser deliveries (SingleAction/Scatter) → single charged shot, no burst
 
 Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → ...`
 

@@ -11,8 +11,6 @@ namespace View.UI
 {
     public class LootPopupView : PopupBase
     {
-        static readonly HashSet<string> QuickSlotAssignable = new() { "Medkit", "Bandage", "Grenade" };
-
         static readonly Key[] QuickSlotKeys =
         {
             Key.Digit3, Key.Digit4, Key.Digit5,
@@ -246,7 +244,7 @@ namespace View.UI
                 var hovered = FindHoveredPlayerBackpackSlot();
                 if (hovered == null) continue;
                 if (hovered.CurrentItem == null) continue;
-                if (!QuickSlotAssignable.Contains(hovered.CurrentItem.DefinitionId)) continue;
+                if (!QuickSlotRules.IsAssignable(hovered.CurrentItem.DefinitionId)) continue;
 
                 int backpackIndex = hovered.SlotRef.Index;
                 for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
@@ -602,7 +600,7 @@ namespace View.UI
             Refresh();
         }
 
-        // Called by external drop targets (e.g. HotBarItemView) after they handle the drop,
+        // Called by external drop targets (e.g. legacy HotBarItemView) after they handle the drop,
         // so the drag is cancelled cleanly instead of dropping the item to the floor.
         public void OnExternalDropHandled()
         {
@@ -697,9 +695,49 @@ namespace View.UI
             var state = session?.RaidState;
             if (state == null) return;
 
+            var options = new List<string>();
+            var hints = new List<string>();
+            var actions = new List<System.Action>();
+
+            // Bind-to-quickslot — only consumables (Medkit/Bandage/Grenade) match
+            // QuickSlotSystem; other items would just be inert. Same filter the
+            // hover+key bind path uses in HandleQuickSlotKeys.
+            bool isConsumableInBackpack =
+                slot.SlotRef.Type == SlotType.Backpack
+                && slot.CurrentItem != null
+                && QuickSlotRules.IsAssignable(slot.CurrentItem.DefinitionId);
+            if (isConsumableInBackpack)
+            {
+                var inv = App.Instance.Player.Inventory;
+                int currentBoundSlot = -1;
+                for (int qi = 0; qi < inv.QuickSlotBindings.Length; qi++)
+                    if (inv.QuickSlotBindings[qi] == slot.SlotRef.Index)
+                    { currentBoundSlot = qi; break; }
+
+                int backpackIndex = slot.SlotRef.Index;
+                for (int qi = 0; qi < inv.QuickSlotBindings.Length; qi++)
+                {
+                    int keyNum = qi + InventoryState.QuickSlotKeyOffset;
+                    int qiCap = qi;
+                    bool isCurrent = qi == currentBoundSlot;
+                    options.Add(isCurrent ? $"Unbind {keyNum}" : $"Bind to {keyNum}");
+                    hints.Add(keyNum.ToString());
+                    actions.Add(() =>
+                    {
+                        for (int j = 0; j < inv.QuickSlotBindings.Length; j++)
+                            if (inv.QuickSlotBindings[j] == backpackIndex)
+                                inv.QuickSlotBindings[j] = -1;
+                        if (!isCurrent)
+                            inv.QuickSlotBindings[qiCap] = backpackIndex;
+                    });
+                }
+            }
+
             if (App.Instance.IsInHideout && _activeHideoutContainer != null)
             {
-                _contextMenu.Show(eventData.position, new[] { "Stash" }, new[] { "" }, _ =>
+                options.Add("Stash");
+                hints.Add("");
+                actions.Add(() =>
                 {
                     var playerInv = App.Instance.Player.Inventory;
                     var item = playerInv.GetSlot(slot.SlotRef);
@@ -708,15 +746,19 @@ namespace View.UI
                         playerInv.SetSlot(slot.SlotRef, null);
                         App.Instance.Player.Stash.Add(item);
                     }
-                    SyncArmorAfterTransfer();
-                    Refresh();
                 });
-                return;
+            }
+            else
+            {
+                options.Add("Drop");
+                hints.Add("Del");
+                actions.Add(() => DropToFloor(state, session, slot.SlotRef));
             }
 
-            _contextMenu.Show(eventData.position, new[] { "Drop" }, new[] { "Del" }, _ =>
+            _contextMenu.Show(eventData.position, options.ToArray(), hints.ToArray(), idx =>
             {
-                DropToFloor(state, session, slot.SlotRef);
+                if (idx >= 0 && idx < actions.Count)
+                    actions[idx]?.Invoke();
                 SyncArmorAfterTransfer();
                 Refresh();
             });

@@ -33,11 +33,27 @@ Key files:
 | Phase | Trigger → next | Notes |
 |-------|---------------|-------|
 | `Ready` | AttackPressed → `Charging` (Laser) або `Firing` (other); ReloadPressed → `Reloading` | Idle, accepts input |
-| `Charging` | ChargeTime elapsed → `Firing`; AttackJustReleased → `Ready` (cancel); PendingSwap → `Unequipping` | Tier 2: charge-up payloads (Laser) |
+| `Charging` | AttackJustReleased → `Firing` / `Bursting` з charge-scaled stats; PendingSwap → `Unequipping` | Tier 2 + Tau-cannon mechanic (2026-05-06): hold-to-charge, fire-on-release |
 | `Firing` | Next tick → `Cooldown` | 1-tick marker, ShootingSystem spawned projectiles |
+| `Bursting` | LaserBurstInterval-paced auto-fire; BurstShotsRemaining=0 → `Cooldown`; PendingSwap → `Unequipping` | 2026-05-06 — laser+Auto delivery після release fires 1..6 shots scaled з chargeRatio |
 | `Cooldown` | FireInterval elapsed → `Ready` | Inter-shot gap |
 | `Equipping` / `Unequipping` | EquipTime/UnequipTime elapsed → `Ready` / swap | Weapon draw/holster |
 | `Reloading` | ReloadTime elapsed → `Ready` + fill mag from inventory | AmmoSystem.CompleteReload |
+
+**Laser charge-up mechanic** (2026-05-06, HL Tau cannon style):
+- `AttackPressed` on laser → `Charging`, `ChargeStartTime = elapsed`
+- Holding past `ChargeTime` keeps weapon у Charging at chargeRatio = 1.0 (no auto-fire — must release)
+- `AttackJustReleased` → fires charged shot, `chargeRatio = clamp((elapsed - chargeStartTime) / chargeTime, 0, 1)`
+- Damage scaling: `damage *= lerp(0.3, 1.0, chargeRatio)` (quick tap = 30%, full charge = 100%)
+- VFX scaling: `BeamFlashPresenter` reads chargeRatio from `ProjectileSpawned.CurrentHp` → scales rim width / lifetime / jagged amplitude / color brightness
+
+**Laser rifle burst** (laser + `Auto` delivery only):
+- After release-fire, `burstCount = round(lerp(LaserBurstCountMin=1, LaserBurstCountMax=6, chargeRatio))`
+- If burstCount > 1 → enter `Bursting` phase, `BurstShotsRemaining = burstCount - 1` (first shot fired immediately)
+- `ShootingSystem.TickBurst` fires next shot every `LaserBurstInterval = 0.07s`, recomputes spawn/dir from current muzzle/aim (burst tracks player rotation)
+- Each shot uses cached `BurstChargeRatio` for damage + VFX
+- Out of ammo mid-burst → terminates early → Cooldown
+- Other laser deliveries (SingleAction/Scatter) → single charged shot, no burst
 
 Tick order: `Movement → WeaponEquip → WeaponStateMachine → Aiming → Shooting → …`
 

@@ -1,0 +1,117 @@
+/* ExtractionRaid — UI Toolkit design tokens.
+ *
+ * Single source of truth for runtime panel sizing and theme.
+ * Mirrors docs/ai/ui-styling.md (Tier A modal + Tier B compact tier).
+ * Pulled in by Theme.tss → attached to every runtime PanelSettings.
+ *
+ * Conventions:
+ *  - Tokens live on :root and cascade to all panel children.
+ *  - Names use semantic role (--color-window-bg), NOT visual hue (--gray-1).
+ *    Visual updates change the right-hand side; usages keep meaning.
+ *  - Two-value shorthand (e.g. padding "24px 32px") is split per axis to
+ *    avoid USS variable parser edge cases on shorthand expansion.
+ *
+ * When adding a new panel:
+ *  - Reuse existing tokens; only add a new role if the existing list
+ *    genuinely lacks one (then update docs/ai/ui-styling.md too).
+ *  - Don't hardcode rgb() / px in panel USS — use var(--token).
+ */
+
+:root {
+    /* ── Background surfaces ──────────────────────────── */
+    --color-window-bg:        rgb(26, 28, 34);
+    --color-header-bg:        rgb(30, 33, 40);
+    --color-inset-bg:         rgb(22, 24, 30);
+    --color-card-bg:          rgb(38, 42, 52);
+    --color-card-bg-hover:    rgb(48, 54, 66);
+    --color-card-bg-selected: rgb(48, 44, 36);
+    --color-card-bg-disabled: rgb(28, 30, 36);
+
+    /* ── Borders ──────────────────────────────────────── */
+    --color-border:           rgb(70, 75, 85);
+    --color-border-inset:     rgb(50, 55, 65);
+
+    /* ── Text ─────────────────────────────────────────── */
+    --color-text-title:         rgb(235, 240, 250);
+    --color-text-body:          rgb(210, 215, 225);
+    --color-text-body-strong:   rgb(230, 235, 245);
+    --color-text-muted:         rgb(150, 155, 165);
+    --color-text-secondary:     rgb(190, 200, 215);
+    --color-text-stat-label:    rgb(180, 190, 205);
+    --color-text-empty:         rgb(120, 130, 145);
+    --color-text-flavor:        rgb(170, 175, 185);
+    --color-text-button-cancel: rgb(200, 205, 215);
+
+    /* ── Accents ──────────────────────────────────────── */
+    --color-accent:           rgb(230, 200, 140); /* gold — titles, archetype */
+    --color-hint:             rgb(120, 195, 235); /* energy blue — hint, fill state */
+    --color-section-heading:  rgb(140, 175, 210);
+
+    /* ── Buttons — Build (primary action) ─────────────── */
+    --color-btn-build-bg:              rgb(60, 130, 90);
+    --color-btn-build-bg-hover:        rgb(70, 150, 105);
+    --color-btn-build-bg-disabled:     rgb(45, 55, 50);
+    --color-btn-build-border:          rgb(80, 160, 110);
+    --color-btn-build-border-disabled: rgb(55, 65, 60);
+    --color-btn-build-text:            rgb(240, 250, 245);
+    --color-btn-build-text-disabled:   rgb(130, 140, 135);
+
+    /* ── Buttons — Cancel (secondary action) ──────────── */
+    --color-btn-cancel-bg:        rgb(55, 60, 70);
+    --color-btn-cancel-bg-hover:  rgb(65, 70, 80);
+    --color-btn-cancel-border:    rgb(70, 75, 85);
+
+    /* ── State (drag, error, slot fill) ───────────────── */
+    --color-state-fill-border:    rgb(120, 195, 235);
+    --color-state-fill-bg:        rgb(34, 42, 54);
+    --color-drag-valid-border:    rgb(80, 200, 120);
+    --color-drag-valid-bg:        rgb(28, 44, 34);
+    --color-drag-invalid-border:  rgb(200, 80, 80);
+    --color-drag-invalid-bg:      rgb(50, 28, 28);
+    --color-error:                rgb(220, 100, 100);
+
+    /* ══ Sizing — fonts ═══════════════════════════════════ */
+    --font-window-title:      26px;
+    --font-section-heading:   18px;
+    --font-card-title:        18px;
+    --font-card-kind:         14px;
+    --font-group-label:       14px;
+    --font-stat-label:        16px;
+    --font-stat-value:        16px;
+    --font-button:            18px;
+    --font-tooltip-title:     20px;
+    --font-tooltip-row:       15px;
+    --font-tooltip-flavor:    14px; /* also: stat-group heading, hint, archetype-flavor */
+    --font-preview-archetype: 22px;
+    --font-empty-placeholder: 16px;
+
+    /* ══ Sizing — spacing (split per-axis) ════════════════ */
+    --space-modal-pad-x:   32px;
+    --space-modal-pad-y:   24px;
+    --space-tooltip-pad-x: 20px;
+    --space-tooltip-pad-y: 16px;
+    --space-card-pad-x:    12px;
+    --space-card-pad-y:    10px;
+    --space-slot-pad-x:    16px;
+    --space-slot-pad-y:    12px;
+    --space-row-pad-y:      2px;
+
+    /* ══ Sizing — geometry ════════════════════════════════ */
+    --size-window-width:      1280px;
+    --size-button-height:     44px;
+    --size-button-min-width:  160px;
+    --size-card-width:        144px;
+    --size-card-height:       80px;
+    --size-slot-height:       72px;
+    --size-stat-row-mh:       22px;
+    --size-tooltip-min-width: 280px;
+    --size-tooltip-max-width: 460px;
+
+    /* ══ Sizing — radius / border width ═══════════════════ */
+    --radius-window:    12px;
+    --radius-inset:      8px;
+    --radius-tooltip:    8px;
+    --border-window:     2px;
+    --border-inset:      1px;
+    --border-tooltip:    2px;
+}

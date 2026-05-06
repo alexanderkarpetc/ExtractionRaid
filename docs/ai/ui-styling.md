@@ -86,73 +86,88 @@ content that legitimately exceeds reference height).
 
 ---
 
-## Scale tiers
+## Design tokens (single source of truth)
 
-The project uses two tiers for runtime UI Toolkit panels.
+All canonical sizes and colors live as USS custom properties in:
 
-### Tier A — Modal (Weapon Builder, future inventory rebuild, Crafting)
+> **[`Assets/Resources/UI/Theme/_tokens.uss`](../../Assets/Resources/UI/Theme/_tokens.uss)**
 
-Reference file: `Assets/Resources/UI/WeaponBuilder/WeaponBuilderWindow.{uxml,uss}`.
+Pulled into every runtime PanelSettings via the shared theme:
 
-| Element | Size |
-|---|---|
-| Window width | `1280px` |
-| Header padding | `24px 32px` |
-| Body padding | `24px 32px` |
-| Window title (header) | `26px` bold |
-| Section heading (column header — "AVAILABLE MODULES") | `18px` bold |
-| Inline group label (e.g. "Payload"/"Delivery") | `14px` |
-| Card | `144×80`, padding `10/12`, title `18px` bold, kind `14px` |
-| Slot | height `72px`, padding `12/16`, title `18px` bold, kind `14px`, empty placeholder `16px` italic |
-| Preview archetype label | `22px` bold |
-| Preview flavor / hint | `14px` italic |
-| Preview stat group heading | `14px` bold |
-| Inline stat label | `16px` |
-| Inline stat value | `16px` bold |
-| Inline stat row padding | `2px 0`, min-height `22px` |
-| Backpack tile | `130×72`, padding `8/10`, name `14px` bold, count `12px` |
-| Button | height `44px`, min-width `160px`, font `18px` bold |
-| Border radius | `8–12px` |
-| Border width | `2px` (window) / `1px` (inset boxes) |
+> **[`Assets/Resources/UI/Crafting/CraftingMockupTheme.tss`](../../Assets/Resources/UI/Crafting/CraftingMockupTheme.tss)**
+> *(file path is legacy — repurposed as project-wide theme; preserved to keep
+> existing PanelSettings GUID references intact)*
 
-### Tier B — Compact panel (Tooltip overlay, popovers)
+**Rules:**
 
-Reference file: `Assets/Resources/UI/Tooltip/TooltipOverlay.{uxml,uss}`.
+1. **Don't hardcode `rgb()` or `px` values in panel USS.** Use `var(--token)`.
+   Hard-coding silently drifts the design system — every magic number is a
+   future merge conflict between panels.
+2. **If you need a value that has no token**, add the token to `_tokens.uss`
+   first (with a semantic name — `--color-window-bg`, not `--gray-1`), then
+   use it. Update the relevant Tier section below.
+3. **Two-value shorthand split per axis** (`--space-modal-pad-x`,
+   `--space-modal-pad-y`) — avoids USS variable parser edge cases.
+4. **Naming:** semantic role > visual hue. The right-hand side may change;
+   token names should remain stable.
 
-| Element | Size |
-|---|---|
-| Card padding | `16px 20px` |
-| Card min-width | `280px` |
-| Card max-width | `460px` |
-| Title | `20px` bold accent |
-| Subtitle | `14px` muted |
-| Description (flavor) | `14px` italic |
-| Section heading | `14px` bold |
-| Row label | `15px` |
-| Row value | `15px` bold |
-| Row padding | `2px 0` |
-| Border radius | `8px` |
-| Border width | `2px` |
+**Canonical reference panels:**
+
+| Tier | Panel | Files |
+|---|---|---|
+| A — Modal | Weapon Builder | [`WeaponBuilderWindow.uss`](../../Assets/Resources/UI/WeaponBuilder/WeaponBuilderWindow.uss) |
+| B — Compact | Tooltip overlay | [`TooltipOverlay.uss`](../../Assets/Resources/UI/Tooltip/TooltipOverlay.uss) |
+| HUD strip | Hotbar overlay | [`HotbarOverlay.uss`](../../Assets/Resources/UI/Hotbar/HotbarOverlay.uss) |
+
+When uncertain how to style a new panel: open one of these two and copy the
+patterns. They are kept token-clean on purpose.
+
+> Note: `MainMenu.uss`, `NpcDialogue.uss`, `CraftingMockupWindow.uss` are not
+> yet token-migrated — they live in their own visual contexts (in-game
+> dialogue bubble, mockup, splash menu) and use private color sets. They
+> read tokens from the same shared theme but don't currently consume them;
+> migrate opportunistically when those panels get their next polish pass.
 
 ---
 
-## Color palette (UI Toolkit panels)
+## Scale tiers (semantic guidance)
 
-| Role | Color |
+### Tier A — Modal (Weapon Builder, future inventory rebuild, Crafting)
+
+Use for full-screen modal windows that take user focus.
+
+| Concern | Tokens |
 |---|---|
-| Window background | `rgb(26, 28, 34)` |
-| Header / footer background | `rgb(30, 33, 40)` |
-| Inset / preview background | `rgb(22, 24, 30)` |
-| Border | `rgb(70, 75, 85)` |
-| Sub-border / inset border | `rgb(50, 55, 65)` |
-| Title text | `rgb(235, 240, 250)` |
-| Body text | `rgb(210, 215, 225)` |
-| Muted text | `rgb(150, 155, 165)` |
-| Accent (gold — titles) | `rgb(230, 200, 140)` |
-| Hint / energy blue | `rgb(120, 195, 235)` |
-| Section heading blue | `rgb(140, 175, 210)` |
-| Action button (Build) | `rgb(60, 130, 90)` bg / `rgb(80, 160, 110)` border |
-| Cancel button | `rgb(55, 60, 70)` bg / `rgb(70, 75, 85)` border |
+| Window width | `--size-window-width` |
+| Window background / border / radius | `--color-window-bg`, `--color-border`, `--border-window`, `--radius-window` |
+| Header / footer | `--color-header-bg`, `--space-modal-pad-x`/`-y`, `--color-border-inset` |
+| Window title | `--font-window-title`, `--color-text-title` |
+| Section heading (column header) | `--font-section-heading`, `--color-section-heading` |
+| Inline group label ("Payload"/"Delivery") | `--font-group-label`, `--color-text-muted` |
+| Card | `--size-card-width`/`-height`, `--space-card-pad-x`/`-y`, `--color-card-bg`, `--color-card-bg-hover`, `--color-card-bg-selected`, `--color-card-bg-disabled`, `--font-card-title`, `--font-card-kind` |
+| Slot | `--size-slot-height`, `--space-slot-pad-x`/`-y`, `--color-state-fill-border`/`-bg` |
+| Slot empty placeholder | `--font-empty-placeholder`, `--color-text-empty` |
+| Drag-target state | `--color-drag-valid-border`/`-bg`, `--color-drag-invalid-border`/`-bg` |
+| Preview archetype label | `--font-preview-archetype`, `--color-accent` |
+| Preview flavor / hint | `--font-tooltip-flavor`, `--color-text-flavor` / `--color-hint` |
+| Inline stat row | `--space-row-pad-y`, `--size-stat-row-mh`, `--font-stat-label`, `--font-stat-value`, `--color-text-stat-label`, `--color-text-body-strong` |
+| Error message | `--color-error` |
+| Button (primary "Build") | `--size-button-height`, `--size-button-min-width`, `--font-button`, `--color-btn-build-bg`, `--color-btn-build-bg-hover`, `--color-btn-build-bg-disabled`, `--color-btn-build-border`, `--color-btn-build-border-disabled`, `--color-btn-build-text`, `--color-btn-build-text-disabled` |
+| Button (secondary "Cancel") | `--color-btn-cancel-bg`, `--color-btn-cancel-bg-hover`, `--color-btn-cancel-border`, `--color-text-button-cancel` |
+| Inset boxes (palette / build panel / preview) | `--color-inset-bg`, `--border-inset`, `--radius-inset` |
+
+### Tier B — Compact panel (Tooltip overlay, popovers)
+
+Use for floating, non-blocking panels.
+
+| Concern | Tokens |
+|---|---|
+| Card | `--size-tooltip-min-width`, `--size-tooltip-max-width`, `--space-tooltip-pad-x`/`-y`, `--color-inset-bg`, `--color-border`, `--border-tooltip`, `--radius-tooltip` |
+| Title | `--font-tooltip-title`, `--color-accent` |
+| Subtitle | `--font-tooltip-flavor`, `--color-text-muted` |
+| Description (flavor) | `--font-tooltip-flavor`, `--color-text-secondary` |
+| Section heading | `--font-tooltip-flavor`, `--color-section-heading` |
+| Row | `--space-row-pad-y`, `--font-tooltip-row`, `--color-text-stat-label`, `--color-text-body-strong` |
 
 ---
 
@@ -163,27 +178,25 @@ so panels stack predictably:
 
 | Panel | Sort order | File |
 |---|---|---|
+| Hotbar HUD | `50` | `Assets/Resources/UI/Hotbar/HotbarPanelSettings.asset` |
 | Crafting mockup | `100` | `Assets/Resources/UI/Crafting/CraftingMockupPanelSettings.asset` |
 | Weapon Builder modal | `110` | `Assets/Resources/UI/WeaponBuilder/WeaponBuilderPanelSettings.asset` |
 | Tooltip overlay | `1000` | `Assets/Resources/UI/Tooltip/TooltipPanelSettings.asset` |
 
 Tooltip is always on top — it must float over every other UI Toolkit surface,
-including the open modal.
+including the open modal. Hotbar sits below modals so opening the Builder
+visually covers the HUD strip.
 
 ---
 
 ## When adding a new UI surface
 
-1. Pick the closest tier (Modal vs Compact). Do not introduce a third tier.
-2. Reuse the color palette above; add a new role only if the existing list
-   genuinely doesn't cover it.
-3. Use `picking-mode="Ignore"` on overlay layers that should pass clicks
-   through to underlying UI (tooltips, hint badges, decorative elements).
-4. New `PanelSettings` assets should be auto-provisioned by an editor
-   bootstrap (`InitializeOnLoad`) so the runtime never errors on a missing
-   asset. Mirror `WeaponBuilderAssetsBootstrap.cs` / `TooltipAssetsBootstrap.cs`.
-5. If you genuinely need a different size, propose updating this doc rather
-   than diverging silently.
+1. **Read [`_tokens.uss`](../../Assets/Resources/UI/Theme/_tokens.uss) first.** Your USS should consume `var(--token)` references — never hardcode `rgb()` or `px` for shared design concerns (colors, type scale, padding, radius).
+2. Pick the closest tier (Modal vs Compact). Do not introduce a third tier.
+3. Reuse existing tokens; add a new token only if the existing list genuinely doesn't cover the role. New tokens land in `_tokens.uss` AND get listed in the Tier table above in this doc.
+4. Use `picking-mode="Ignore"` on overlay layers that should pass clicks through to underlying UI (tooltips, hint badges, decorative elements).
+5. New `PanelSettings` assets should be auto-provisioned by an editor bootstrap (`InitializeOnLoad`) so the runtime never errors on a missing asset. Mirror `WeaponBuilderAssetsBootstrap.cs` / `TooltipAssetsBootstrap.cs`. The shared theme (`CraftingMockupTheme.tss`) is already wired into existing PanelSettings via `themeUss`; new ones should follow the same pattern.
+6. If you genuinely need a different size or color, propose updating `_tokens.uss` + this doc rather than diverging silently.
 
 ---
 

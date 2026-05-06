@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="HotbarOverlay.uss" />
+    <ui:VisualElement name="root" picking-mode="Ignore" class="hb-root">
+        <!-- Slot strip: bottom-center anchored. Slots are spawned at runtime by
+             HotbarOverlay.cs (count = InventoryState.QuickSlotCount = 7), so a
+             change to slot count needs only a constant edit, not a UXML edit. -->
+        <ui:VisualElement name="strip" class="hb-strip" />
+    </ui:VisualElement>
+</ui:UXML>

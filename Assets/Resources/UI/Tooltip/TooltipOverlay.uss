@@ -2,9 +2,9 @@
  * picking-mode is Ignore everywhere so the tooltip never steals pointer events
  * from the inventory / Builder underneath it.
  *
- * Sizes follow the project's UI Toolkit scale — see docs/ai/ui-styling.md.
- * Tooltip is the "compact panel" tier (one notch smaller than the modal tier
- * used by Weapon Builder). */
+ * Tier B (compact panel) reference. Sizes / colors pull from
+ * `Assets/Resources/UI/Theme/_tokens.uss` via var(--*).
+ * See docs/ai/ui-styling.md for the token catalogue. */
 
 .tt-root {
     position: absolute;
@@ -16,26 +16,26 @@
 
 .tt-card {
     position: absolute;
-    min-width: 280px;
-    max-width: 460px;
-    padding: 16px 20px;
-    background-color: rgb(22, 24, 30);
-    border-color: rgb(70, 75, 85);
-    border-width: 2px;
-    border-radius: 8px;
+    min-width: var(--size-tooltip-min-width);
+    max-width: var(--size-tooltip-max-width);
+    padding: var(--space-tooltip-pad-y) var(--space-tooltip-pad-x);
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-tooltip);
+    border-radius: var(--radius-tooltip);
 }
 
 .tt-title {
-    font-size: 20px;
+    font-size: var(--font-tooltip-title);
     -unity-font-style: bold;
-    color: rgb(230, 200, 140);
+    color: var(--color-accent);
     white-space: normal;
     margin-bottom: 3px;
 }
 
 .tt-subtitle {
-    font-size: 14px;
-    color: rgb(150, 155, 165);
+    font-size: var(--font-tooltip-flavor);
+    color: var(--color-text-muted);
     white-space: normal;
     margin-bottom: 8px;
 }
@@ -45,9 +45,9 @@
 }
 
 .tt-description {
-    font-size: 14px;
+    font-size: var(--font-tooltip-flavor);
     -unity-font-style: italic;
-    color: rgb(190, 200, 215);
+    color: var(--color-text-secondary);
     white-space: normal;
     margin-bottom: 8px;
 }
@@ -65,9 +65,9 @@
 }
 
 .tt-section-heading {
-    font-size: 14px;
+    font-size: var(--font-tooltip-flavor);
     -unity-font-style: bold;
-    color: rgb(140, 175, 210);
+    color: var(--color-section-heading);
     -unity-text-align: middle-left;
     margin-bottom: 3px;
 }
@@ -79,16 +79,16 @@
 .tt-row {
     flex-direction: row;
     justify-content: space-between;
-    padding: 2px 0;
+    padding: var(--space-row-pad-y) 0;
 }
 
 .tt-row-label {
-    font-size: 15px;
-    color: rgb(180, 190, 205);
+    font-size: var(--font-tooltip-row);
+    color: var(--color-text-stat-label);
 }
 
 .tt-row-value {
-    font-size: 15px;
+    font-size: var(--font-tooltip-row);
     -unity-font-style: bold;
-    color: rgb(230, 235, 245);
+    color: var(--color-text-body-strong);
 }

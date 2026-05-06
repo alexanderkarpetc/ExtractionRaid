@@ -1,0 +1,171 @@
+/* Hotbar overlay — bottom-center strip of QuickSlot bindings.
+ *
+ * State source: InventoryState.QuickSlotBindings[7] (medkit/bandage/grenade
+ * shortcuts), keys 3-9. NOT to be confused with PlayerEntityState.Hotbar[2]
+ * which holds equipped weapons (separate system, no UI today).
+ *
+ * Tier: compact "always-on" HUD strip — neither modal (Tier A) nor
+ * popover (Tier B); shares the same token palette via _tokens.uss.
+ * Sizes / colors pull from the project tokens — see docs/ai/ui-styling.md. */
+
+.hb-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.hb-strip {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    translate: -50% 0;
+    flex-direction: row;
+}
+
+/* ── Slot ──────────────────────────────────────────── */
+/* Size matches the uGUI inventory slot (102×102 in SlotItemView.prefab) so the
+ * hotbar reads as the same visual family as the inventory grid. */
+
+.hb-slot {
+    width: 102px;
+    height: 102px;
+    margin-right: 10px;
+    padding: 10px;
+    background-color: var(--color-header-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-inset);
+}
+
+.hb-slot:last-child {
+    margin-right: 0;
+}
+
+.hb-slot:hover {
+    border-color: var(--color-hint);
+}
+
+/* Empty slot — dimmer surface so the eye reads "nothing bound here". */
+.hb-slot.is-empty {
+    background-color: var(--color-card-bg-disabled);
+    border-color: var(--color-border-inset);
+}
+
+/* Active state — fired while the player holds the bound key (QuickSlotHeld). */
+.hb-slot.is-active {
+    border-color: var(--color-accent);
+    background-color: var(--color-card-bg-selected);
+}
+
+/* ── Slot children ─────────────────────────────────── */
+
+.hb-slot__key {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: var(--font-card-kind);
+    color: var(--color-text-muted);
+    -unity-font-style: bold;
+}
+
+.hb-slot.is-active .hb-slot__key {
+    color: var(--color-accent);
+}
+
+.hb-slot__count {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: var(--font-card-kind);
+    color: var(--color-text-body-strong);
+    -unity-font-style: bold;
+}
+
+.hb-slot__name {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    font-size: var(--font-stat-label);
+    -unity-font-style: bold;
+    color: var(--color-text-body);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hb-slot.is-empty .hb-slot__name {
+    color: var(--color-text-empty);
+    -unity-font-style: italic;
+    font-size: var(--font-card-kind);
+}
+
+/* ── Bind picker (click on empty slot → choose item from backpack) ── */
+
+/* Fullscreen click-catcher behind the picker. Picking-mode Position so it
+ * intercepts clicks anywhere on screen — clicking it closes the picker.
+ * Background fully transparent (no dim) — the hotbar is HUD, not modal. */
+.hb-picker-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.hb-picker {
+    position: absolute;
+    min-width: 220px;
+    max-width: 320px;
+    padding: var(--space-tooltip-pad-y) var(--space-tooltip-pad-x);
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-tooltip);
+    border-radius: var(--radius-tooltip);
+    flex-direction: column;
+}
+
+.hb-picker__title {
+    font-size: var(--font-tooltip-flavor);
+    -unity-font-style: bold;
+    color: var(--color-section-heading);
+    margin-bottom: 6px;
+}
+
+.hb-picker__row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    margin-top: 2px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.hb-picker__row:hover {
+    background-color: var(--color-card-bg-hover);
+}
+
+.hb-picker__row-label {
+    font-size: var(--font-tooltip-row);
+    color: var(--color-text-body);
+    flex-grow: 1;
+}
+
+.hb-picker__row-count {
+    font-size: var(--font-tooltip-flavor);
+    color: var(--color-text-muted);
+    -unity-font-style: bold;
+}
+
+.hb-picker__empty {
+    font-size: var(--font-tooltip-flavor);
+    -unity-font-style: italic;
+    color: var(--color-text-empty);
+    padding: 8px 0;
+    -unity-text-align: middle-center;
+}
