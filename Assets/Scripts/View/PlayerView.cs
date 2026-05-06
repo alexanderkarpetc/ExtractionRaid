@@ -167,6 +167,27 @@ namespace View
         public void ClearArmorModel() => _body?.ClearArmorModel();
         public GameObject DetachHelmetModel() => _body?.DetachHelmetModel();
 
+        // ── Hit feedback delegation (CharacterHitFx on body) ──
+
+        CharacterHitFx _hitFx;
+
+        public void TriggerHitFlash(Color color, float intensity, float durationUnscaled)
+        {
+            ResolveHitFx()?.TriggerRimFlash(color, intensity, durationUnscaled);
+        }
+
+        public void AddHitDecal(Vector3 worldPos)
+        {
+            ResolveHitFx()?.AddHitDecal(worldPos);
+        }
+
+        CharacterHitFx ResolveHitFx()
+        {
+            if (_hitFx == null && _body != null)
+                _hitFx = _body.GetComponent<CharacterHitFx>();
+            return _hitFx;
+        }
+
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {

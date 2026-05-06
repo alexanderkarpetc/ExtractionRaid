@@ -8,7 +8,8 @@ namespace Adapters
         void RaidStarted();
         void RaidEnded();
         void PlayerSpawned(EId id);
-        void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage);
+        void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage,
+            string payloadArchetype = null, float chargeRatio = 1f);
         void ProjectileDespawned(EId id);
         void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface");
         void EntityDamaged(EId id, float currentHp, float maxHp);
@@ -20,7 +21,8 @@ namespace Adapters
 
         void BotSpawned(EId id, Vector3 position, string typeId);
         void BotDespawned(EId id);
-        void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null);
+        void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
+            float chargeRatio = 1f);
         void WeaponEquipStarted(string prefabId);
         void WeaponUnequipStarted(string prefabId);
         void WeaponEquipFinished(string prefabId);

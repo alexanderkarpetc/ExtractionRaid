@@ -459,8 +459,10 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_LaserPayload_ChargingWithTimeElapsed_FiresAndEmitsCompleted()
+        public void Tick_LaserPayload_ChargingWithTimeElapsed_StaysChargedUntilRelease()
         {
+            // Tau-cannon mechanic (2026-05-06): full charge no longer auto-fires —
+            // user must release. Charging + AttackPressed → still waiting.
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var weapon = state.PlayerEntity.EquippedWeapon;
@@ -477,7 +479,36 @@ namespace Tests.EditMode
 
                 ShootingSystem.Tick(state, in context);
 
-                Assert.AreEqual(WeaponPhase.Firing, weapon.Phase, "Fire pipeline sets Firing");
+                Assert.AreEqual(WeaponPhase.Charging, weapon.Phase, "Stays charging until release");
+                Assert.AreEqual(0, state.Projectiles.Count, "No fire while still holding");
+            }
+            finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_LaserPayload_ChargingWithAttackJustReleased_FiresAtCurrentChargeAndEmitsCompleted()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 1.1f; // past charge time → ratio clamped to 1.0
+                var events = new RaidEventBuffer();
+                var input = new FakeInputAdapter
+                {
+                    AttackPressed = false,
+                    AttackJustReleased = true,
+                };
+                var context = TestContextFactory.Create(input, events: events);
+
+                ShootingSystem.Tick(state, in context);
+
+                Assert.AreEqual(WeaponPhase.Firing, weapon.Phase, "Release fires the charged shot");
                 Assert.AreEqual(1, state.Projectiles.Count);
                 Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCompleted));
             }

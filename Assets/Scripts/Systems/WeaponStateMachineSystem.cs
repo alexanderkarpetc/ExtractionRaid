@@ -56,14 +56,11 @@ namespace Systems
                         break;
                     }
 
-                    // Early release before charge completes → cancel, no shot, back to Ready.
-                    if (context.Input != null && context.Input.AttackJustReleased)
-                    {
-                        weapon.Phase = WeaponPhase.Ready;
-                        weapon.PhaseStartTime = elapsed;
-                        context.Events.WeaponChargeCancelled(weapon.PrefabId);
-                    }
-                    // Charge completion is driven by ShootingSystem (owns the fire pipeline).
+                    // Tau-cannon-style: AttackJustReleased fires a charged shot at the
+                    // current charge level (handled by ShootingSystem). Don't cancel here —
+                    // ShootingSystem reads the release input and emits the fire pipeline.
+                    // Charge completion (full charge auto-fire) лишається disabled — user
+                    // must release to discharge, holding past max stays clamped at 1.0.
                     break;
 
                 case WeaponPhase.Cooldown:

@@ -409,8 +409,12 @@ namespace Tests.EditMode
         // ── Charging phase (Tier 2) ───────────────────────────
 
         [Test]
-        public void Tick_ChargingWithAttackJustReleased_CancelsToReady()
+        public void Tick_ChargingWithAttackJustReleased_StaysChargingForShootingSystemFire()
         {
+            // Tau-cannon mechanic (2026-05-06): release no longer cancels — it triggers
+            // a charged-shot fire path handled by ShootingSystem. WeaponStateMachineSystem
+            // leaves phase at Charging; ShootingSystem reads release input, fires, and
+            // transitions to Firing/Cooldown.
             var (state, weapon) = Setup(phase: WeaponPhase.Charging, phaseStart: 0.5f,
                 elapsedTime: 0.7f /* half-way through charge */);
             var laserSO = WeaponBuilderTestFactory.MakeLaser(chargeTime: 1.0f);
@@ -424,9 +428,10 @@ namespace Tests.EditMode
 
                 WeaponStateMachineSystem.Tick(state, in context);
 
-                Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
-                Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled),
-                    "Cancelled event should fire on early release");
+                Assert.AreEqual(WeaponPhase.Charging, weapon.Phase,
+                    "WSMS leaves charging intact — ShootingSystem handles fire-on-release");
+                Assert.IsFalse(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled),
+                    "No cancel event — release fires partial-charge shot instead");
             }
             finally { Object.DestroyImmediate(laserSO); }
         }

@@ -143,68 +143,84 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void ShootingSystem_LaserPistolBuild_AfterChargeElapsed_FiresSingleProjectile()
+        public void ShootingSystem_LaserPistolBuild_FiresOnReleaseAfterFullCharge()
         {
+            // Tau-cannon mechanic (2026-05-06): full charge no longer auto-fires —
+            // user releases fire button to discharge. Holding past ChargeTime keeps
+            // weapon у Charging at chargeRatio = 1.0.
             var state = BootstrapRaidWithBuiltLaser("SingleAction");
             var weapon = state.PlayerEntity.EquippedWeapon;
 
-            // Tick 1: enter Charging
-            var input  = new FakeInputAdapter { AttackPressed = true };
+            // Tick 1: enter Charging via press
+            var pressInput  = new FakeInputAdapter { AttackPressed = true };
             var events = new RaidEventBuffer();
-            var context = TestContextFactory.Create(input, events);
+            var pressCtx = TestContextFactory.Create(pressInput, events);
             state.ElapsedTime = 0f;
-            ShootingSystem.Tick(state, in context);
+            ShootingSystem.Tick(state, in pressCtx);
             Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
 
-            // Tick 2: charge elapsed — same input, advance time past ChargeTime
+            // Tick 2: still holding past charge time — STAYS Charging.
             state.ElapsedTime = LaserChargeTime + 0.01f;
-            ShootingSystem.Tick(state, in context);
+            ShootingSystem.Tick(state, in pressCtx);
+            Assert.AreEqual(WeaponPhase.Charging, weapon.Phase, "Holds at full charge");
+            Assert.AreEqual(0, state.Projectiles.Count);
 
-            Assert.AreEqual(WeaponPhase.Firing, weapon.Phase, "Fire after charge");
+            // Tick 3: release fires the shot.
+            var releaseInput = new FakeInputAdapter { AttackPressed = false, AttackJustReleased = true };
+            var releaseCtx   = TestContextFactory.Create(releaseInput, events);
+            ShootingSystem.Tick(state, in releaseCtx);
+
+            Assert.AreEqual(WeaponPhase.Firing, weapon.Phase, "Release fires charged shot");
             Assert.AreEqual(1, state.Projectiles.Count);
             Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCompleted));
         }
 
         [Test]
-        public void ShootingSystem_LaserShotgunBuild_AfterChargeElapsed_SpawnsSevenPellets()
+        public void ShootingSystem_LaserShotgunBuild_FiresOnReleaseSpawnsSevenPellets()
         {
             var state = BootstrapRaidWithBuiltLaser("Scatter");
             var weapon = state.PlayerEntity.EquippedWeapon;
 
-            var input = new FakeInputAdapter { AttackPressed = true };
-            var context = TestContextFactory.Create(input);
+            var pressInput = new FakeInputAdapter { AttackPressed = true };
+            var pressCtx = TestContextFactory.Create(pressInput);
             state.ElapsedTime = 0f;
-            ShootingSystem.Tick(state, in context); // Charging
+            ShootingSystem.Tick(state, in pressCtx);
 
             state.ElapsedTime = LaserChargeTime + 0.01f;
-            ShootingSystem.Tick(state, in context); // Fire
+            var releaseInput = new FakeInputAdapter { AttackPressed = false, AttackJustReleased = true };
+            var releaseCtx   = TestContextFactory.Create(releaseInput);
+            ShootingSystem.Tick(state, in releaseCtx);
 
             Assert.AreEqual(WeaponPhase.Firing, weapon.Phase);
-            Assert.AreEqual(7, state.Projectiles.Count, "Scatter payload fires 7 pellets after charge");
+            Assert.AreEqual(7, state.Projectiles.Count, "Scatter payload fires 7 pellets on release");
         }
 
         [Test]
-        public void StateMachine_LaserCharging_CancelOnRelease_ReturnsToReady()
+        public void StateMachine_LaserCharging_EarlyReleaseFiresPartialChargeNotCancel()
         {
+            // Tau-cannon mechanic: early release no longer cancels — it fires a
+            // partial-charge shot з reduced damage. Verifies WeaponStateMachineSystem
+            // не cancels (its old behaviour); ShootingSystem owns the fire path.
             var state = BootstrapRaidWithBuiltLaser("SingleAction");
             var weapon = state.PlayerEntity.EquippedWeapon;
 
             // Start charge
             var startInput = new FakeInputAdapter { AttackPressed = true };
-            var ctx  = TestContextFactory.Create(startInput);
-            ShootingSystem.Tick(state, in ctx);
+            var startCtx   = TestContextFactory.Create(startInput);
+            ShootingSystem.Tick(state, in startCtx);
             Assert.AreEqual(WeaponPhase.Charging, weapon.Phase);
 
-            // Now release
-            state.ElapsedTime = 0.4f; // 40% into the 1s charge — release before completion
+            // Release at 40% charge
+            state.ElapsedTime = 0.4f;
             var releaseInput = new FakeInputAdapter { AttackPressed = false, AttackJustReleased = true };
             var events = new RaidEventBuffer();
-            ctx = TestContextFactory.Create(releaseInput, events);
-            WeaponStateMachineSystem.Tick(state, in ctx);
+            var releaseCtx = TestContextFactory.Create(releaseInput, events);
+            WeaponStateMachineSystem.Tick(state, in releaseCtx);
 
-            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
-            Assert.AreEqual(0, state.Projectiles.Count);
-            Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled));
+            Assert.AreEqual(WeaponPhase.Charging, weapon.Phase,
+                "WSMS leaves charging — ShootingSystem fires the partial-charge shot");
+            Assert.IsFalse(events.All.Any(e => e.Type == RaidEventType.WeaponChargeCancelled),
+                "No cancel event — release is now a fire trigger");
         }
 
         // ── Helpers ───────────────────────────────────────────

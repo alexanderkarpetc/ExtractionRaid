@@ -92,7 +92,8 @@ namespace Systems.Bot
                     bleedChance:      weapon.Stats.BaseBleedChance);
 
                 state.Projectiles.Add(projectile);
-                ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized, weapon.Stats.Damage);
+                ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized,
+                    weapon.Stats.Damage, weapon.PayloadDefinition?.Archetype);
             }
 
             weapon.LastFireTime = state.ElapsedTime;

@@ -18,7 +18,8 @@ namespace Tests.EditMode.Fakes
             SpawnedId = id;
         }
 
-        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage) { }
+        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage,
+            string payloadArchetype = null, float chargeRatio = 1f) { }
         public void ProjectileDespawned(EId id) { }
         public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface") { }
 
@@ -64,7 +65,8 @@ namespace Tests.EditMode.Fakes
             BotDespawnedCalled = true;
             BotDespawnedId = id;
         }
-        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null) { }
+        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
+            float chargeRatio = 1f) { }
 
         public bool WeaponEquipStartedCalled;
         public string WeaponEquipStartedPrefabId;

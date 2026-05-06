@@ -9,6 +9,7 @@ namespace View
     public class ProjectilePresenter
     {
         readonly GameObject _projectilePrefab;
+        readonly GameObject _laserTrailPrefab;
         readonly GameObject _surfaceImpactPrefab;
         readonly GameObject _bodyImpactPrefab;
         readonly GameObject _headImpactPrefab;
@@ -19,6 +20,7 @@ namespace View
         public ProjectilePresenter()
         {
             _projectilePrefab = Resources.Load<GameObject>("Prefabs/Projectile");
+            _laserTrailPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Weapons/TrailBullet02");
             _surfaceImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BulletImpact");
             _bodyImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/BodyImpact");
             _headImpactPrefab = Resources.Load<GameObject>("Vfx/Prefabs/Impacts/HeadImpact");
@@ -63,7 +65,7 @@ namespace View
                                 break;
                             }
                         }
-                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage, bleedChance);
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage, bleedChance, e.StringPayload);
                         break;
                     }
                     case RaidEventType.ProjectileHit:
@@ -95,7 +97,7 @@ namespace View
 
         void SpawnView(EId id, Vector3 position, Vector3 direction, float damage,
             EId targetedEntityId = default, float penetration = 0f, float armorDamage = 0f,
-            float bleedChance = 0f)
+            float bleedChance = 0f, string payloadArchetype = null)
         {
             if (_projectilePrefab == null) return;
 
@@ -107,6 +109,17 @@ namespace View
             var view = go.GetComponent<ProjectileView>();
             view.Initialize(id, damage, targetedEntityId, penetration, armorDamage, bleedChance);
             _views[id] = view;
+
+            // Per-archetype trail swap: laser uses TrailBullet02 (energy beam look),
+            // ballistic keeps prefab default (TrailBullet).
+            if (payloadArchetype == "Laser" && _laserTrailPrefab != null)
+            {
+                var existingTrail = go.transform.Find("TrailBullet");
+                if (existingTrail != null) Object.Destroy(existingTrail.gameObject);
+                var newTrail = Object.Instantiate(_laserTrailPrefab, go.transform);
+                newTrail.transform.localPosition = Vector3.zero;
+                newTrail.transform.localRotation = Quaternion.identity;
+            }
         }
 
         void SpawnImpactVfx(Vector3 position, Vector3 bulletDirection, string hitType)

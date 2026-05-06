@@ -2,6 +2,7 @@ using System;
 using Adapters;
 using ApplicationCore;
 using Constants;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -94,6 +95,11 @@ namespace View
                             ArmorBreakHelmetFlyOff(_playerView);
                         else
                             _playerView.ClearArmorModel();
+                        break;
+                    }
+                    case RaidEventType.EntityHit when e.Id == _trackedId && _playerView != null:
+                    {
+                        ApplyHitFlash(_playerView, e);
                         break;
                     }
                 }
@@ -193,6 +199,34 @@ namespace View
             var helmet = view.DetachHelmetModel();
             if (helmet == null) return;
             ArmorBreakHelper.FlyOffHelmet(helmet);
+        }
+
+        // Mirrors BotPresenter.ApplyHitFlash — picks rim color per hit kind, routes
+        // to PlayerView. Ricochet skips bullet decal (helmet bounced, no flesh wound).
+        static void ApplyHitFlash(PlayerView view, RaidEvent e)
+        {
+            var cfg = ViewCheats.Config?.HitFlash;
+            if (cfg == null || !cfg.Enabled) return;
+
+            // EntityHit packs:
+            //   CurrentHp = isHeadshot ? 1 : 0
+            //   MaxHp     = isKill     ? 1 : 0
+            //   KillerId.Value = isRicochet ? 1 : 0
+            //   Position  = hitPoint (world space)
+            bool isHeadshot = e.CurrentHp > 0.5f;
+            bool isKill     = e.MaxHp     > 0.5f;
+            bool isRicochet = e.KillerId.Value == 1;
+
+            Color color;
+            if      (isRicochet) color = cfg.RicochetColor;
+            else if (isKill)     color = cfg.KillColor;
+            else if (isHeadshot) color = cfg.HeadshotColor;
+            else                 color = cfg.NormalColor;
+
+            view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration);
+
+            if (!isRicochet)
+                view.AddHitDecal(e.Position);
         }
 
         public void Dispose()

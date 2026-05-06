@@ -81,7 +81,8 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.PlayerSpawned, Id = id });
         }
 
-        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage)
+        public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage,
+            string payloadArchetype = null, float chargeRatio = 1f)
         {
             _events.Add(new RaidEvent
             {
@@ -90,6 +91,8 @@ namespace Adapters
                 Position = position,
                 Direction = direction,
                 Damage = damage,
+                CurrentHp = chargeRatio, // Charge level (0..1) — read by BeamFlashPresenter for VFX scaling
+                StringPayload = payloadArchetype,
             });
         }
 
@@ -170,13 +173,15 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.BotDespawned, Id = id });
         }
 
-        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null)
+        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
+            float chargeRatio = 1f)
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.WeaponFired,
                 Position = position,
                 Direction = direction,
+                Damage = chargeRatio, // 0..1 charge level — used by BeamFlashPresenter for VFX scaling
                 StringPayload = payloadArchetype,
             });
         }

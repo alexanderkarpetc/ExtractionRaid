@@ -21,11 +21,15 @@ namespace Systems
             var input = context.Input;
             if (input == null) return;
 
-            if (!input.AttackPressed) return;
+            // Two attack triggers:
+            //   * AttackPressed — start charge (Ready) OR keep charging (Charging).
+            //   * AttackJustReleased while Charging — fires a charged shot at current
+            //     level (Tau cannon mechanic — quick tap = weak, hold = strong).
+            bool releaseFire = weapon.Phase == WeaponPhase.Charging && input.AttackJustReleased;
+            if (!input.AttackPressed && !releaseFire) return;
 
             // Phase gate: Ready starts a new shot (or charge); Charging waits for
-            // the charge-up to complete. Cancel (AttackJustReleased) is handled by
-            // WeaponStateMachineSystem. Other phases ignore attack input.
+            // release. Other phases ignore attack input.
             if (weapon.Phase != WeaponPhase.Ready && weapon.Phase != WeaponPhase.Charging)
                 return;
 
@@ -44,9 +48,11 @@ namespace Systems
             }
 
             // Charge gate. Laser payload requires a Charging window before every shot.
-            //   - Ready + requires charge → transition to Charging, no fire this tick.
-            //   - Charging + time elapsed → emit Completed, fall through to fire.
-            //   - Charging + time remaining → return and wait.
+            //   * Ready + AttackPressed + needs charge → transition to Charging, no fire.
+            //   * Charging + AttackPressed → keep charging (return).
+            //   * Charging + AttackJustReleased → fire at current charge ratio.
+            //   * Non-charge weapon (ballistic) → chargeRatio = 1, normal flow.
+            float chargeRatio = 1f;
             if (weapon.Phase == WeaponPhase.Ready && WeaponChargeResolver.RequiresChargeUp(weapon))
             {
                 weapon.Phase = WeaponPhase.Charging;
@@ -58,9 +64,11 @@ namespace Systems
 
             if (weapon.Phase == WeaponPhase.Charging)
             {
+                if (!releaseFire) return; // still holding — wait for release
                 float chargeTime = WeaponChargeResolver.GetChargeTime(weapon);
-                if (chargeTime > 0f && (state.ElapsedTime - weapon.ChargeStartTime) < chargeTime)
-                    return;
+                chargeRatio = chargeTime > 0f
+                    ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
+                    : 1f;
                 context.Events.WeaponChargeCompleted(weapon.PrefabId);
                 // Fall through to fire pipeline.
             }
@@ -216,6 +224,12 @@ namespace Systems
                 weapon.Stats.BaseArmorDamage + ammoArmorDmg);
             float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
+            // Charge multiplier — quick tap = MinChargeMultiplier × dmg, full charge = 1.0×.
+            // ballistic chargeRatio is always 1 → multiplier 1, no behavior change.
+            const float MinChargeMultiplier = 0.3f;
+            float chargeMul = Mathf.Lerp(MinChargeMultiplier, 1f, chargeRatio);
+            totalDamage *= chargeMul;
+
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
             var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
 
@@ -238,10 +252,11 @@ namespace Systems
                     bleedChance: totalBleedChance);
 
                 state.Projectiles.Add(projectile);
-                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage,
+                    weapon.PayloadDefinition?.Archetype, chargeRatio);
             }
 
-            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype);
+            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio);
             weapon.Phase = WeaponPhase.Firing;
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
