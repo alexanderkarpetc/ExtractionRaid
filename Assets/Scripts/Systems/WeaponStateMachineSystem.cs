@@ -63,6 +63,20 @@ namespace Systems
                     // must release to discharge, holding past max stays clamped at 1.0.
                     break;
 
+                case WeaponPhase.Bursting:
+                    // Swap during burst → cancel remaining shots + start unequip.
+                    if (player.PendingHotbarSlot >= 0)
+                    {
+                        weapon.BurstShotsRemaining = 0;
+                        weapon.Phase = WeaponPhase.Unequipping;
+                        weapon.PhaseStartTime = elapsed;
+                        context.Events.WeaponUnequipStarted(weapon.PrefabId);
+                        break;
+                    }
+                    // Auto-fire driven by ShootingSystem.TickBurst — no input handling here.
+                    // ShootingSystem transitions Bursting → Cooldown when shots exhaust.
+                    break;
+
                 case WeaponPhase.Cooldown:
                     float effectiveInterval = weapon.Stats.FireInterval / DevCheats.FireRateMultiplier;
                     if (phaseDuration >= effectiveInterval)

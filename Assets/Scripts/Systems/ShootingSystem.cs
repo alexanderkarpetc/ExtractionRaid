@@ -8,6 +8,14 @@ namespace Systems
 {
     public static class ShootingSystem
     {
+        // Burst params (laser + Auto delivery only). Hardcoded for first iteration —
+        // expose via DevCheats якщо потрібно tuning.
+        // Burst length scales з chargeRatio: quick tap → 1 shot (no follow-up),
+        // full hold → LaserBurstCountMax shots fired у sequence.
+        const int   LaserBurstCountMin = 1;
+        const int   LaserBurstCountMax = 6;
+        const float LaserBurstInterval = 0.07f;
+
         public static void Tick(RaidState state, in RaidContext context)
         {
             var player = state.PlayerEntity;
@@ -20,6 +28,15 @@ namespace Systems
 
             var input = context.Input;
             if (input == null) return;
+
+            // Burst auto-fire: when у Bursting phase, ShootingSystem ticks shots at
+            // fixed interval until shots remaining = 0. No input required — burst
+            // self-completes after release-fire kicked it off below.
+            if (weapon.Phase == WeaponPhase.Bursting)
+            {
+                TickBurst(state, weapon, player, in context);
+                return;
+            }
 
             // Two attack triggers:
             //   * AttackPressed — start charge (Ready) OR keep charging (Charging).
@@ -257,7 +274,27 @@ namespace Systems
             }
 
             context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio);
-            weapon.Phase = WeaponPhase.Firing;
+
+            // Burst entry: laser + Auto delivery → Bursting phase queues N-1 follow-up
+            // shots, fired automatically by TickBurst at fixed interval. Burst length
+            // scales з chargeRatio: tap = 1 shot, full hold = LaserBurstCountMax shots.
+            // Other weapons (single laser, all ballistic) → standard Firing → Cooldown.
+            bool isLaserAuto = weapon.PayloadDefinition is LaserPayloadDefinition
+                            && weapon.DeliveryDefinition?.Pattern == FiringPattern.Auto;
+            int burstCount = isLaserAuto
+                ? Mathf.RoundToInt(Mathf.Lerp(LaserBurstCountMin, LaserBurstCountMax, chargeRatio))
+                : 1;
+            if (burstCount > 1)
+            {
+                weapon.Phase = WeaponPhase.Bursting;
+                weapon.BurstShotsRemaining = burstCount - 1; // first shot fired now
+                weapon.BurstChargeRatio    = chargeRatio;     // captured for whole burst
+                weapon.LastBurstShotTime   = state.ElapsedTime;
+            }
+            else
+            {
+                weapon.Phase = WeaponPhase.Firing;
+            }
             weapon.PhaseStartTime = state.ElapsedTime;
             weapon.LastFireTime = state.ElapsedTime;
 
@@ -284,6 +321,132 @@ namespace Systems
             {
                 weapon.AmmoInMagazine -= 1;
             }
+        }
+
+        // Auto-fire successive burst shots at fixed interval. Each shot reuses the
+        // captured BurstChargeRatio (same damage + VFX intensity throughout burst).
+        // Out-of-ammo terminates burst early. Burst exhaustion → Cooldown.
+        static void TickBurst(RaidState state, WeaponEntityState weapon,
+            PlayerEntityState player, in RaidContext context)
+        {
+            if (weapon.BurstShotsRemaining <= 0)
+            {
+                weapon.Phase = WeaponPhase.Cooldown;
+                weapon.PhaseStartTime = state.ElapsedTime;
+                return;
+            }
+            if (state.ElapsedTime - weapon.LastBurstShotTime < LaserBurstInterval) return;
+
+            bool usesAmmo = !string.IsNullOrEmpty(weapon.AmmoType);
+            if (usesAmmo && weapon.AmmoInMagazine <= 0)
+            {
+                // End burst early — out of ammo mid-burst.
+                weapon.BurstShotsRemaining = 0;
+                weapon.Phase = WeaponPhase.Cooldown;
+                weapon.PhaseStartTime = state.ElapsedTime;
+                return;
+            }
+
+            FireBurstShot(state, weapon, player, in context);
+
+            weapon.LastBurstShotTime = state.ElapsedTime;
+            weapon.BurstShotsRemaining--;
+            if (weapon.BurstShotsRemaining <= 0)
+            {
+                weapon.Phase = WeaponPhase.Cooldown;
+                weapon.PhaseStartTime = state.ElapsedTime;
+            }
+        }
+
+        static void FireBurstShot(RaidState state, WeaponEntityState weapon,
+            PlayerEntityState player, in RaidContext context)
+        {
+            var cfg = context.ShootingConfig;
+            var input = context.Input;
+            if (input == null) return;
+
+            // Recompute spawn + direction from current muzzle/aim — burst tracks
+            // player rotation during the volley.
+            var spawnPos = input.MuzzleWorldPoint;
+            spawnPos.y = cfg.ProjectileSpawnHeight;
+            var aimPoint = player.WeaponAimPoint;
+            aimPoint.y = cfg.ProjectileSpawnHeight;
+            var toAim = aimPoint - spawnPos;
+            if (toAim.sqrMagnitude < 0.001f) return;
+            var dir = toAim.normalized;
+
+            // Compose stats (mirrors initial fire flow — chargeRatio from cached burst value).
+            float ammoPen = 0f, ammoDmg = 0f, ammoArmorDmg = 0f, ammoBleedChance = 0f;
+            if (!string.IsNullOrEmpty(weapon.AmmoType))
+            {
+                var ammoDef = ItemDefinition.Get(weapon.AmmoType);
+                if (ammoDef != null)
+                {
+                    ammoPen = ammoDef.Penetration;
+                    ammoDmg = ammoDef.DamageModifier;
+                    ammoArmorDmg = ammoDef.ArmorDamage;
+                    ammoBleedChance = ammoDef.BleedChance;
+                }
+            }
+            float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
+                weapon.Stats.BasePenetration + ammoPen);
+            float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg);
+            float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
+                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
+            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
+
+            const float MinChargeMultiplier = 0.3f;
+            float chargeMul = Mathf.Lerp(MinChargeMultiplier, 1f, weapon.BurstChargeRatio);
+            totalDamage *= chargeMul;
+
+            var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
+            var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
+
+            for (int i = 0; i < count; i++)
+            {
+                var pelletDir = halfSpread > 0f
+                    ? Quaternion.Euler(0f, Random.Range(-halfSpread, halfSpread), 0f) * dir
+                    : dir;
+
+                var projectileId = state.AllocateEId();
+                var projectile = ProjectileEntityState.Create(
+                    projectileId, player.Id, spawnPos, pelletDir,
+                    weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
+                    state.ElapsedTime, weapon.Stats.ProjectileLifetime,
+                    totalDamage * cfg.DamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier,
+                    targetedEntityId: default,
+                    penetration: totalPen,
+                    armorDamage: totalArmorDmg,
+                    bleedChance: totalBleedChance);
+
+                state.Projectiles.Add(projectile);
+                context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage,
+                    weapon.PayloadDefinition?.Archetype, weapon.BurstChargeRatio);
+            }
+
+            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype,
+                weapon.BurstChargeRatio);
+            weapon.LastFireTime = state.ElapsedTime;
+
+            // Recoil per burst shot.
+            if (!cfg.NoRecoil
+                && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
+            {
+                float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
+                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
+                var aimDir = (player.WeaponAimPoint - player.Position).normalized;
+                weapon.RecoilOffset += aimDir
+                    * (weapon.Stats.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);
+                var right = new Vector3(aimDir.z, 0f, -aimDir.x);
+                float sideAmount = Random.Range(-weapon.Stats.RecoilKickSide, weapon.Stats.RecoilKickSide);
+                weapon.RecoilOffset += right * (sideAmount * recoilMul * cfg.RecoilSideMultiplier);
+            }
+
+            // Consume one round per burst shot.
+            bool usesAmmo = !string.IsNullOrEmpty(weapon.AmmoType);
+            if (usesAmmo && !cfg.InfiniteAmmo)
+                weapon.AmmoInMagazine -= 1;
         }
     }
 }

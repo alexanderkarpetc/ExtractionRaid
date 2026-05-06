@@ -17,6 +17,13 @@ namespace State
         /// See docs/ai/weapon-builder/architecture.md §D2.
         /// </summary>
         Charging,
+
+        /// <summary>
+        /// Burst fire window — used by laser+Auto delivery. After release-fire спалює
+        /// N projectiles at fixed interval, then transitions до Cooldown. Player can't
+        /// re-trigger fire during burst — locked until burst exhausts.
+        /// </summary>
+        Bursting,
     }
 
     /// <summary>
@@ -91,5 +98,21 @@ namespace State
         /// Meaningful only while Phase == Charging; otherwise untouched.
         /// </summary>
         public float       ChargeStartTime;
+
+        /// <summary>
+        /// Burst state (laser+Auto). Number of shots remaining in current burst —
+        /// decrements per shot; transitions to Cooldown коли reaches 0.
+        /// Meaningful only while Phase == Bursting.
+        /// </summary>
+        public int         BurstShotsRemaining;
+        /// <summary>
+        /// Charge ratio captured at burst trigger time — все shots у burst use this
+        /// value for damage scaling + VFX intensity. Меaningful only while Bursting.
+        /// </summary>
+        public float       BurstChargeRatio;
+        /// <summary>
+        /// Time of last burst shot — driver for inter-shot interval pacing within Bursting.
+        /// </summary>
+        public float       LastBurstShotTime;
     }
 }
