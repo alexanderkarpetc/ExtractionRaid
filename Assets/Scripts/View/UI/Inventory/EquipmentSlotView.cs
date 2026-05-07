@@ -41,14 +41,20 @@ namespace View.UI
 
         void UpdateDurability(ItemState item)
         {
-            if (item?.Definition == null)
-            {
-                SetDurabilityVisuals(0f);
-                if (_durabilityText != null) _durabilityText.text = "";
-                return;
-            }
+            // Durability widget is for armor only — weapons share this slot prefab
+            // (WeaponSlots use EquipmentSlotView too) but have ArmorPoints=0, so
+            // showing a bar would always read as 0/0. Hide the slider + text for
+            // non-armor items; same intent as InventorySlotView.UpdateDurability.
+            var def = item?.Definition;
+            bool show = def != null && def.ArmorPoints > 0f;
 
-            var def = item.Definition;
+            if (_durabilitySlider != null)
+                _durabilitySlider.gameObject.SetActive(show);
+            if (_durabilityText != null)
+                _durabilityText.gameObject.SetActive(show);
+
+            if (!show) return;
+
             float max = item.HasCustomDurability ? item.MaxDurability : def.MaxDurability;
             float cur = item.HasCustomDurability ? item.CurrentDurability : max;
 
