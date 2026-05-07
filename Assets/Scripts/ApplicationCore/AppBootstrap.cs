@@ -2,6 +2,7 @@ using UnityEngine;
 using View;
 using View.UI;
 using View.UI.CraftingMockup;
+using View.UI.Death;
 using View.UI.Dialogue;
 using View.UI.Hotbar;
 using View.UI.Tooltip;
@@ -64,6 +65,12 @@ namespace ApplicationCore
             var hotbarHost = new GameObject("HotbarOverlay");
             hotbarHost.transform.SetParent(transform, false);
             hotbarHost.AddComponent<HotbarOverlay>();
+
+            // Death screen — full-screen "You died" overlay, polls HealthMap each frame.
+            // V1 ships with a single action (Respawn full equip) implemented as scene reload + StartRaid.
+            var deathScreenHost = new GameObject("DeathScreen");
+            deathScreenHost.transform.SetParent(transform, false);
+            deathScreenHost.AddComponent<DeathScreen>();
 
             // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
             var craftingMockupHost = new GameObject("CraftingMockupWindow");

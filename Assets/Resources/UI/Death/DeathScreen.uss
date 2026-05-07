@@ -1,0 +1,86 @@
+/* Death screen — fullscreen "You died" overlay with respawn options.
+ *
+ * Tier: full overlay. Dim semi-transparent backdrop covers the whole viewport;
+ * a centered panel carries the title + action buttons. No bordered window —
+ * the title carries the visual weight. Tokens from _tokens.uss; the giant
+ * "YOU DIED" font-size is hardcoded (one-off display scale, doesn't fit any
+ * reusable tier). */
+
+.ds-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    /* Hidden by default — runtime DeathScreen.Show() flips to display:flex via
+     * inline style. USS default keeps the overlay invisible in Edit mode too,
+     * where Awake/HideImmediate never fire (UIDocument re-creates rootVisualElement
+     * from the UXML and would otherwise show the overlay over a stopped Game view). */
+    display: none;
+}
+
+.ds-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+.ds-panel {
+    align-items: center;
+    justify-content: center;
+}
+
+.ds-title {
+    font-size: 96px;
+    -unity-font-style: bold;
+    color: var(--color-error);
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+    letter-spacing: 8px;
+}
+
+.ds-subtitle {
+    font-size: var(--font-tooltip-row);
+    -unity-font-style: italic;
+    color: var(--color-text-muted);
+    -unity-text-align: middle-center;
+    margin-bottom: 36px;
+}
+
+.ds-actions {
+    flex-direction: column;
+    align-items: center;
+}
+
+.ds-btn {
+    min-width: 280px;
+    height: var(--size-button-height);
+    margin-top: 8px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: var(--radius-inset);
+    border-width: var(--border-inset);
+    font-size: var(--font-button);
+    -unity-font-style: bold;
+}
+
+.ds-btn-primary {
+    background-color: var(--color-btn-build-bg);
+    border-color: var(--color-btn-build-border);
+    color: var(--color-btn-build-text);
+}
+
+.ds-btn-primary:hover {
+    background-color: var(--color-btn-build-bg-hover);
+}
+
+.ds-btn-primary:disabled {
+    background-color: var(--color-btn-build-bg-disabled);
+    border-color: var(--color-btn-build-border-disabled);
+    color: var(--color-btn-build-text-disabled);
+}

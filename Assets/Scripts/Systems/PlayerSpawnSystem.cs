@@ -49,7 +49,14 @@ namespace Systems
             events.PlayerSpawned(playerId);
         }
 
-        static void ClearInventory(InventoryState inv)
+        /// <summary>
+        /// Wipes weapons / armor / backpack. Quick-slot bindings are also reset
+        /// so the hotbar doesn't keep references to vanished backpack indices.
+        /// Called by <see cref="SpawnPlayer"/> on test scenes (or on first-spawn
+        /// with empty inventory) and by death-screen respawn to force the
+        /// "full equip" path even on production maps.
+        /// </summary>
+        public static void ClearInventory(InventoryState inv)
         {
             for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
                 inv.WeaponSlots[i] = null;
@@ -57,6 +64,8 @@ namespace Systems
             inv.BodyArmorSlot = null;
             for (int i = 0; i < InventoryState.BackpackSize; i++)
                 inv.Backpack[i] = null;
+            for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                inv.QuickSlotBindings[i] = -1;
         }
 
         static bool IsInventoryEmpty(InventoryState inv)
