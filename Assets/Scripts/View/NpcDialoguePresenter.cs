@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ApplicationCore;
 using State;
+using Systems;
 using UnityEngine;
 using View.UI;
 using View.UI.Dialogue;
@@ -80,21 +81,74 @@ namespace View
 
         void ShowDialogue(string displayName, string npcId, string introLine)
         {
-            var choices = new List<NpcDialogueWindow.Choice>
+            var choices = new List<NpcDialogueWindow.Choice>();
+
+            // Hand-over choices: one per active transfer-style task on this NPC's quests
+            // for which the player has at least one matching item. Inserted before the
+            // generic actions so they read as the "obvious thing to do right now".
+            var app = App.Instance;
+            var inventory = app?.Player?.Inventory;
+            var progress = app?.Player?.QuestProgress;
+            var db = app?.QuestDatabase;
+            if (inventory != null && progress != null && db != null)
             {
-                new()
+                var ops = QuestSystem.GetHandoverOpportunities(progress, db, inventory, npcId);
+                foreach (var op in ops)
                 {
-                    Label = "Open Quests",
-                    OnClick = () => OpenQuests(npcId, displayName),
-                },
-                new()
-                {
-                    Label = "Exit",
-                    OnClick = ExitDialogue,
-                },
-            };
+                    var def = ItemDefinition.Get(op.ItemId);
+                    string itemName = def?.DisplayName ?? op.ItemId;
+
+                    int current = 0;
+                    var p = progress.GetProgress(op.QuestId);
+                    if (p != null && op.TaskIndex < p.Tasks.Count)
+                        current = p.Tasks[op.TaskIndex].CurrentCount;
+                    int required = current + op.RequiredRemaining;
+
+                    string label = $"Hand over {op.DeliverableNow}× {itemName}  ({current}/{required})";
+
+                    var captured = op;
+                    string capturedNpcId = npcId;
+                    string capturedDisplayName = displayName;
+                    string capturedIntro = introLine;
+                    choices.Add(new NpcDialogueWindow.Choice
+                    {
+                        Label = label,
+                        OnClick = () => OnHandoverClicked(captured, capturedNpcId, capturedDisplayName, capturedIntro),
+                    });
+                }
+            }
+
+            choices.Add(new NpcDialogueWindow.Choice
+            {
+                Label = "Open Quests",
+                OnClick = () => OpenQuests(npcId, displayName),
+            });
+            choices.Add(new NpcDialogueWindow.Choice
+            {
+                Label = "Exit",
+                OnClick = ExitDialogue,
+            });
 
             _window.Show(displayName, introLine, choices);
+        }
+
+        void OnHandoverClicked(QuestSystem.HandoverOpportunity op, string npcId,
+            string displayName, string introLine)
+        {
+            var app = App.Instance;
+            var inventory = app?.Player?.Inventory;
+            var progress = app?.Player?.QuestProgress;
+            var db = app?.QuestDatabase;
+            if (inventory == null || progress == null || db == null) return;
+
+            int delivered = QuestSystem.HandOver(progress, db, inventory, op);
+            if (delivered <= 0) return;
+
+            var def = ItemDefinition.Get(op.ItemId);
+            Debug.Log($"[NpcDialogue] Handed over {delivered}× {def?.DisplayName ?? op.ItemId} for quest '{op.QuestId}'.");
+
+            // Re-render dialogue so the choice list reflects new task progress / inventory.
+            ShowDialogue(displayName, npcId, introLine);
         }
 
         void OpenQuests(string npcId, string displayName)

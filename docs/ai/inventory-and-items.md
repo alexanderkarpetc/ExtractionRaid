@@ -434,9 +434,9 @@ Currently only `StatusEffectType.Bleeding`.
 | FindAndTransfer | `FindAndTransferTask` | `QuestItemId` |
 | KillEnemy | `KillEnemyTask` | `EnemyType` (enum: Any/Local/PMC/Boss), `HeadshotsOnly` |
 | FindPlace | `FindPlaceTask` | `PlaceId` |
-| ProvideSupply | `ProvideSupplyTask` | `ItemId` |
 | Extract | `ExtractTask` | `LevelId` |
 | Craft | `CraftTask` | `ItemId` |
+| FindItem | `FindItemTask` | `ItemId`, `Coordinates`, `Map` |
 
 All tasks share: `Description`, `RequiredCount`, `InOneRaid` (must complete in single raid).
 

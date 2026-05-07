@@ -282,6 +282,151 @@ namespace Systems
             }
         }
 
+        /// <summary>
+        /// One pending hand-in for a FindAndTransfer / FindItem task on an active
+        /// quest owned by the given NPC, where the player has at least one of the
+        /// required item in their backpack. <see cref="DeliverableNow"/> is what would
+        /// actually transfer this click — capped by both the remaining task count and
+        /// what's in the inventory, so partial hand-ins work when the player is short.
+        /// </summary>
+        public struct HandoverOpportunity
+        {
+            public string QuestId;
+            public int TaskIndex;
+            public string ItemId;
+            public int RequiredRemaining; // task RequiredCount - CurrentCount
+            public int Available;          // total of ItemId in backpack
+            public int DeliverableNow;     // min(RequiredRemaining, Available)
+        }
+
+        /// <summary>
+        /// Scans every active quest belonging to <paramref name="npcId"/> for transfer-style
+        /// tasks (FindAndTransfer / FindItem) that aren't fully complete and where the
+        /// player has at least one matching item in their backpack. Used by the NPC dialogue
+        /// to surface a "Hand over X" choice per task without the player having to open the
+        /// quest journal.
+        /// </summary>
+        public static List<HandoverOpportunity> GetHandoverOpportunities(
+            QuestProgressState progress, QuestDatabase db, InventoryState inventory, string npcId)
+        {
+            var result = new List<HandoverOpportunity>();
+            if (progress == null || db == null || inventory == null || string.IsNullOrEmpty(npcId))
+                return result;
+
+            foreach (var entry in db.Entries)
+            {
+                var quest = entry.Quest;
+                if (quest == null || string.IsNullOrEmpty(quest.Id)) continue;
+                if (quest.NpcId != npcId) continue;
+
+                var p = progress.GetProgress(quest.Id);
+                if (p == null || p.Status != QuestStatus.Active) continue;
+                if (quest.Tasks == null) continue;
+
+                for (int i = 0; i < quest.Tasks.Count && i < p.Tasks.Count; i++)
+                {
+                    string itemId = ExtractHandoverItemId(quest.Tasks[i]);
+                    if (string.IsNullOrEmpty(itemId)) continue;
+
+                    int remainingTask = quest.Tasks[i].RequiredCount - p.Tasks[i].CurrentCount;
+                    if (remainingTask <= 0) continue;
+
+                    int available = CountItemInBackpack(inventory, itemId);
+                    if (available <= 0) continue;
+
+                    int deliverable = remainingTask < available ? remainingTask : available;
+                    result.Add(new HandoverOpportunity
+                    {
+                        QuestId = quest.Id,
+                        TaskIndex = i,
+                        ItemId = itemId,
+                        RequiredRemaining = remainingTask,
+                        Available = available,
+                        DeliverableNow = deliverable,
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Consumes up to <see cref="HandoverOpportunity.DeliverableNow"/> items from
+        /// the backpack and increments the corresponding task's progress by the same
+        /// amount. Re-resolves remaining counts against current inventory to stay safe
+        /// if state shifted between detection and click. Returns the number actually
+        /// transferred (0 on failure).
+        /// </summary>
+        public static int HandOver(
+            QuestProgressState progress, QuestDatabase db, InventoryState inventory,
+            HandoverOpportunity opportunity)
+        {
+            if (progress == null || db == null || inventory == null) return 0;
+            if (string.IsNullOrEmpty(opportunity.QuestId) || string.IsNullOrEmpty(opportunity.ItemId)) return 0;
+
+            var p = progress.GetProgress(opportunity.QuestId);
+            if (p == null || p.Status != QuestStatus.Active) return 0;
+            if (opportunity.TaskIndex < 0 || opportunity.TaskIndex >= p.Tasks.Count) return 0;
+
+            if (!db.TryGet(opportunity.QuestId, out var entry) || entry.Quest?.Tasks == null) return 0;
+            var task = entry.Quest.Tasks[opportunity.TaskIndex];
+            if (task == null) return 0;
+
+            int remainingTask = task.RequiredCount - p.Tasks[opportunity.TaskIndex].CurrentCount;
+            if (remainingTask <= 0) return 0;
+
+            int available = CountItemInBackpack(inventory, opportunity.ItemId);
+            int amount = Mathf.Min(remainingTask, available);
+            if (amount <= 0) return 0;
+
+            ConsumeFromBackpack(inventory, opportunity.ItemId, amount);
+            p.Tasks[opportunity.TaskIndex].CurrentCount += amount;
+            return amount;
+        }
+
+        static string ExtractHandoverItemId(QuestTask task)
+        {
+            switch (task)
+            {
+                case FindAndTransferTask t: return t.QuestItemId;
+                case FindItemTask        t: return t.ItemId;
+                default: return null;
+            }
+        }
+
+        static int CountItemInBackpack(InventoryState inventory, string itemId)
+        {
+            int count = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var slot = inventory.Backpack[i];
+                if (slot != null && slot.DefinitionId == itemId)
+                    count += slot.StackCount;
+            }
+            return count;
+        }
+
+        static void ConsumeFromBackpack(InventoryState inventory, string itemId, int amount)
+        {
+            int remaining = amount;
+            for (int i = 0; i < InventoryState.BackpackSize && remaining > 0; i++)
+            {
+                var slot = inventory.Backpack[i];
+                if (slot == null || slot.DefinitionId != itemId) continue;
+
+                if (slot.StackCount <= remaining)
+                {
+                    remaining -= slot.StackCount;
+                    inventory.Backpack[i] = null;
+                }
+                else
+                {
+                    slot.StackCount -= remaining;
+                    remaining = 0;
+                }
+            }
+        }
+
         static HashSet<string> BuildCompletedSet(QuestProgressState progress)
         {
             var completed = new HashSet<string>();

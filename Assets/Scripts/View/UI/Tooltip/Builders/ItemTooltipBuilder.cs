@@ -115,7 +115,6 @@ namespace View.UI.Tooltip.Builders
                     switch (task)
                     {
                         case FindAndTransferTask t when t.QuestItemId == itemId: return true;
-                        case ProvideSupplyTask t   when t.ItemId == itemId:      return true;
                         case CraftTask t           when t.ItemId == itemId:      return true;
                         case FindItemTask t        when t.ItemId == itemId:      return true;
                     }

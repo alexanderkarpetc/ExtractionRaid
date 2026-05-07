@@ -9,7 +9,6 @@ namespace Quests
         FindAndTransfer,
         KillEnemy,
         FindPlace,
-        ProvideSupply,
         Extract,
         Craft,
         FindItem
@@ -83,13 +82,6 @@ namespace Quests
     {
         public override QuestTaskType TaskType => QuestTaskType.FindPlace;
         public string PlaceId;
-    }
-
-    [Serializable]
-    public class ProvideSupplyTask : QuestTask
-    {
-        public override QuestTaskType TaskType => QuestTaskType.ProvideSupply;
-        public string ItemId;
     }
 
     [Serializable]

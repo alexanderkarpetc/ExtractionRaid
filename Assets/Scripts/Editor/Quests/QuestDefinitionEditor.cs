@@ -14,7 +14,6 @@ namespace Editor.Quests
             ("Find and Transfer", () => new FindAndTransferTask()),
             ("Kill Enemy", () => new KillEnemyTask()),
             ("Find Place", () => new FindPlaceTask()),
-            ("Provide Supply", () => new ProvideSupplyTask()),
             ("Extract", () => new ExtractTask()),
             ("Craft", () => new CraftTask()),
             ("Find Item", () => new FindItemTask()),
