@@ -244,7 +244,7 @@ namespace Editor
                 if (GUILayout.Button("Extract to Hideout"))
                 {
                     if (appReady)
-                        App.Instance.ExtractToHideout().Forget();
+                        App.Instance.RequestExtraction();
                 }
             }
 

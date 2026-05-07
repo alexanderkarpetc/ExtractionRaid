@@ -101,6 +101,13 @@ namespace View
             var session = App.Instance?.RaidSession;
             if (session == null) return;
 
+            // While the end-of-raid screen is up the session is still live (the dead
+            // body keeps ticking) but we must not run any IMGUI here — IMGUI processes
+            // pointer events ahead of UI Toolkit and would swallow clicks on the
+            // result-screen Next button. Same gate also covers extraction-from-screen,
+            // where the session is already null so this check is a no-op.
+            if (App.Instance.LastRaidOutcome != RaidOutcome.None) return;
+
             var state = session.RaidState;
             var player = state?.PlayerEntity;
             if (player == null) return;

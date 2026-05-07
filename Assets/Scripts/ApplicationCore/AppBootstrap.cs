@@ -4,6 +4,7 @@ using View.UI;
 using View.UI.CraftingMockup;
 using View.UI.Death;
 using View.UI.Dialogue;
+using View.UI.EndOfRaid;
 using View.UI.Hotbar;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
@@ -44,6 +45,13 @@ namespace ApplicationCore
             var dialogueHost = new GameObject("NpcDialogueWindow");
             dialogueHost.transform.SetParent(transform, false);
             dialogueHost.AddComponent<NpcDialogueWindow>();
+
+            // End-of-raid result screen — separate UIDocument host (own panel settings,
+            // own sort order so it lands above HUD overlays).
+            gameObject.AddComponent<EndOfRaidPresenter>();
+            var endOfRaidHost = new GameObject("EndOfRaidWindow");
+            endOfRaidHost.transform.SetParent(transform, false);
+            endOfRaidHost.AddComponent<EndOfRaidWindow>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();

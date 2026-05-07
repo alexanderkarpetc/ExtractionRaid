@@ -642,6 +642,8 @@ namespace Session
 
                 if (RaidState.PlayerEntity != null && RaidState.PlayerEntity.Id == e.Id)
                 {
+                    if (App.IsInitialized)
+                        App.Instance.LastRaidOutcome = RaidOutcome.KIA;
                     End();
                 }
 

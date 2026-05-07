@@ -1,0 +1,99 @@
+.root {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 10, 18, 0.78);
+}
+
+.card {
+    width: 520px;
+    padding: 36px 40px 28px 40px;
+    background-color: rgba(22, 27, 38, 0.96);
+    border-color: rgb(50, 60, 84);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 8px;
+    align-items: stretch;
+}
+
+/* Outcome accents — applied at runtime via card--success / card--failure */
+.card--success {
+    border-color: rgb(80, 180, 130);
+}
+
+.card--failure {
+    border-color: rgb(180, 70, 70);
+}
+
+.title {
+    color: rgb(220, 230, 245);
+    font-size: 32px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+    margin-bottom: 6px;
+}
+
+.card--success .title {
+    color: rgb(155, 235, 190);
+}
+
+.card--failure .title {
+    color: rgb(235, 145, 145);
+}
+
+.subtitle {
+    color: rgb(160, 175, 200);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    margin-bottom: 22px;
+    white-space: normal;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.08);
+    margin-bottom: 22px;
+}
+
+.actions {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.next-btn {
+    width: 220px;
+    height: 48px;
+    background-color: rgb(34, 42, 58);
+    color: rgb(220, 230, 245);
+    border-color: rgb(60, 72, 96);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 4px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+}
+
+.next-btn:hover {
+    background-color: rgb(48, 60, 82);
+    border-color: rgb(95, 130, 180);
+}
+
+.next-btn:active {
+    background-color: rgb(28, 36, 50);
+}
+
+.next-btn:disabled {
+    color: rgb(90, 100, 115);
+    background-color: rgb(24, 30, 42);
+}

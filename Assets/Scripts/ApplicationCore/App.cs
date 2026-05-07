@@ -27,6 +27,11 @@ namespace ApplicationCore
         public CoreDefinitionDatabase CoreDefinitionDatabase { get; private set; }
         public ICoreDefinitionRegistry CoreDefinitions { get; private set; }
 
+        // Set when a raid ends (death from ProcessDeathEvents, or RequestExtraction).
+        // Consumed by the end-of-raid screen; reset to None once the player returns
+        // to the hideout via ReturnToHideout().
+        public RaidOutcome LastRaidOutcome { get; internal set; }
+
         int _nextEIdValue;
 
         public EId AllocateEId()
@@ -169,11 +174,27 @@ namespace ApplicationCore
         }
 
         /// <summary>
-        /// Ends the current raid and returns the player to the hideout scene.
-        /// Used by both cheat-extract and real extraction flows.
+        /// Ends the current raid and marks the outcome as Extracted. Does NOT swap
+        /// scenes — the end-of-raid screen takes over and routes the user to the
+        /// hideout via <see cref="ReturnToHideout"/> when the player clicks Next.
         /// </summary>
-        public async UniTask ExtractToHideout()
+        public void RequestExtraction()
         {
+            LastRaidOutcome = RaidOutcome.Extracted;
+            EndRaid();
+        }
+
+        /// <summary>
+        /// Disposes raid presenters, loads the hideout scene, and re-enters hideout.
+        /// Called by the end-of-raid screen's Next button after the player has seen
+        /// the extraction/KIA result. Resets <see cref="LastRaidOutcome"/> on the
+        /// way out so the screen doesn't re-trigger.
+        /// </summary>
+        public async UniTask ReturnToHideout()
+        {
+            // EndRaid is a no-op if RaidSession was already cleared (e.g. extraction
+            // path nulls it; KIA path leaves the session live so the dead body still
+            // ticks while the screen is up).
             EndRaid();
             DisposePresenters();
             await SceneManager.LoadSceneAsync("HideoutScene");
@@ -183,6 +204,7 @@ namespace ApplicationCore
                 _inputAdapter.SetCamera(cam);
 
             EnterHideout();
+            LastRaidOutcome = RaidOutcome.None;
         }
 
         void DisposePresenters()
