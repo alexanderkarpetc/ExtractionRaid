@@ -118,7 +118,6 @@ Pulled into every runtime PanelSettings via the shared theme:
 | A — Modal | Weapon Builder | [`WeaponBuilderWindow.uss`](../../Assets/Resources/UI/WeaponBuilder/WeaponBuilderWindow.uss) |
 | B — Compact | Tooltip overlay | [`TooltipOverlay.uss`](../../Assets/Resources/UI/Tooltip/TooltipOverlay.uss) |
 | HUD strip | Hotbar overlay | [`HotbarOverlay.uss`](../../Assets/Resources/UI/Hotbar/HotbarOverlay.uss) |
-| Full overlay | Death screen | [`DeathScreen.uss`](../../Assets/Resources/UI/Death/DeathScreen.uss) |
 
 When uncertain how to style a new panel: open one of these two and copy the
 patterns. They are kept token-clean on purpose.
@@ -182,12 +181,10 @@ so panels stack predictably:
 | Hotbar HUD | `50` | `Assets/Resources/UI/Hotbar/HotbarPanelSettings.asset` |
 | Crafting mockup | `100` | `Assets/Resources/UI/Crafting/CraftingMockupPanelSettings.asset` |
 | Weapon Builder modal | `110` | `Assets/Resources/UI/WeaponBuilder/WeaponBuilderPanelSettings.asset` |
-| Death screen | `500` | `Assets/Resources/UI/Death/DeathScreenPanelSettings.asset` |
 | Tooltip overlay | `1000` | `Assets/Resources/UI/Tooltip/TooltipPanelSettings.asset` |
 
 Tooltip is always on top — it must float over every other UI Toolkit surface,
-including the open modal. Death screen sits above gameplay HUD + modals so it
-reads as terminal state. Hotbar sits below modals so opening the Builder
+including the open modal. Hotbar sits below modals so opening the Builder
 visually covers the HUD strip.
 
 ---

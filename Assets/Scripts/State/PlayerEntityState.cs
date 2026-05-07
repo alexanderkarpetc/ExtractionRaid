@@ -53,7 +53,6 @@ namespace State
 
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
         public bool IsQuestLogOpen;
-        public bool IsDeathScreenOpen; // set by DeathScreen overlay — blocks gameplay input + frees cursor
 
         public float Stamina;
         public float MaxStamina;
@@ -61,9 +60,9 @@ namespace State
         public float LastSprintStopTime;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
-        public bool IsInMenu => IsInventoryOpen || IsQuestLogOpen || IsDeathScreenOpen
-            || LootTargetId != EId.None || CraftTargetId != EId.None || DeployTargetId != EId.None
-            || NpcTargetId != EId.None || BuilderTargetId != EId.None;
+        public bool IsInMenu => IsInventoryOpen || IsQuestLogOpen || LootTargetId != EId.None
+            || CraftTargetId != EId.None || DeployTargetId != EId.None || NpcTargetId != EId.None
+            || BuilderTargetId != EId.None;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

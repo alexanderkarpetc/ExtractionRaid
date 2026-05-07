@@ -173,7 +173,6 @@ namespace Editor
             Field("DeployTargetId", p.DeployTargetId != EId.None ? p.DeployTargetId.ToString() : "None");
             Field("NpcTargetId", p.NpcTargetId != EId.None ? p.NpcTargetId.ToString() : "None");
             Field("IsQuestLogOpen", p.IsQuestLogOpen);
-            Field("IsDeathScreenOpen", p.IsDeathScreenOpen);
             Field("IsInMenu", p.IsInMenu);
             Field("Sprinting", p.IsSprinting);
             Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");
