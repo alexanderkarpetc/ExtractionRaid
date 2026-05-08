@@ -41,7 +41,8 @@ namespace Systems.Bot
                 ));
             }
 
-            if (config.Has(BotBehaviorFlags.Shoot) || config.Has(BotBehaviorFlags.Chase))
+            if (config.Has(BotBehaviorFlags.Shoot) || config.Has(BotBehaviorFlags.Chase)
+                || config.Has(BotBehaviorFlags.MeleeAttack))
             {
                 var combatBranches = new List<IBTNode>();
 
@@ -56,6 +57,16 @@ namespace Systems.Bot
                 }
 
                 var engageBranch = new List<IBTNode>();
+
+                // Melee comes first — when target is in contact range we want to
+                // attack instead of chase past or shoot at point-blank.
+                if (config.Has(BotBehaviorFlags.MeleeAttack))
+                    engageBranch.Add(new BTCooldown("Melee CD",
+                        new MeleeAttackNode(),
+                        config.MeleeAttackCooldown,
+                        bb => bb.MeleeAttackCooldownTimer,
+                        (bb, v) => bb.MeleeAttackCooldownTimer = v
+                    ));
 
                 if (config.Has(BotBehaviorFlags.Shoot))
                     engageBranch.Add(new ShootNode());

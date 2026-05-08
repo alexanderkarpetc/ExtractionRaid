@@ -15,6 +15,7 @@ namespace Constants
         Heal         = 1 << 4,
         Dodge        = 1 << 5,
         ThrowGrenade = 1 << 6,
+        MeleeAttack  = 1 << 7,
     }
 
     public readonly struct BotTypeConfig
@@ -64,6 +65,13 @@ namespace Constants
         public readonly float GrenadeCooldown;
         public readonly float GrenadeMinThrowDist;
 
+        // Melee attack (Horde-mode zombie behaviour). Direct HP damage on cooldown
+        // when a target enters MeleeAttackRadius. No projectile, no armor pipeline —
+        // simple contact damage for crowd-shooting tests.
+        public readonly float MeleeAttackRadius;
+        public readonly float MeleeAttackDamage;
+        public readonly float MeleeAttackCooldown;
+
         // Armor
         public readonly string HelmetDefinitionId;
         public readonly string BodyArmorDefinitionId;
@@ -87,6 +95,7 @@ namespace Constants
             float reactionTime = 0.5f, float accuracy = 0.6f, float engageRange = 20f,
             float dodgeCooldown = 0f,
             int grenadeCount = 0, float grenadeCooldown = 0f, float grenadeMinThrowDist = 5f,
+            float meleeAttackRadius = 1.5f, float meleeAttackDamage = 10f, float meleeAttackCooldown = 1f,
             string helmetDefinitionId = null, string bodyArmorDefinitionId = null,
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot)
         {
@@ -118,6 +127,9 @@ namespace Constants
             GrenadeCount = grenadeCount;
             GrenadeCooldown = grenadeCooldown;
             GrenadeMinThrowDist = grenadeMinThrowDist;
+            MeleeAttackRadius = meleeAttackRadius;
+            MeleeAttackDamage = meleeAttackDamage;
+            MeleeAttackCooldown = meleeAttackCooldown;
             HelmetDefinitionId = helmetDefinitionId;
             BodyArmorDefinitionId = bodyArmorDefinitionId;
             Behaviors = behaviors;
@@ -349,6 +361,20 @@ namespace Constants
             behaviors: BotBehaviorFlags.None
         );
 
+        // --- Horde-mode zombie ---
+        // Always sees player (vision 999 / 360°), chases relentlessly, no ranged fire.
+        // Carries PistolWeapon as a visual placeholder so WeaponPivot has something
+        // mounted — swap mesh для pipe look later. weaponConfig can't be null without
+        // touching BotSpawnSystem's Builder pipeline.
+        public static readonly BotTypeConfig Zombie = new(
+            typeId: "Zombie", prefabId: "BotShell", weaponConfig: PistolWeapon,
+            maxHp: 70f, chaseSpeed: 2.8f,
+            visionRange: 999f, visionAngle: 360f, hearingRange: 999f,
+            targetMemoryDuration: 999f, reactionTime: 0.1f, accuracy: 0f, engageRange: 0f,
+            meleeAttackRadius: 1.6f, meleeAttackDamage: 12f, meleeAttackCooldown: 1.0f,
+            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.MeleeAttack
+        );
+
         static readonly Dictionary<string, BotTypeConfig> Registry = new()
         {
             { Scav.TypeId, Scav },
@@ -371,6 +397,7 @@ namespace Constants
             { TargetKillFeelPatrol.TypeId, TargetKillFeelPatrol },
             { TargetKillFeelFast.TypeId, TargetKillFeelFast },
             { TargetKillFeelHelmet.TypeId, TargetKillFeelHelmet },
+            { Zombie.TypeId, Zombie },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

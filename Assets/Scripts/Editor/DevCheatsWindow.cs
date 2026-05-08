@@ -143,6 +143,7 @@ namespace Editor
             DrawSection("⏸ Hit Pause", _config.HitPause);
             DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
             DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
+            DrawSection("🧟 Horde", _config.Horde);
 
             EditorGUILayout.Space(8);
 
@@ -599,6 +600,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsHitPauseSection>(so, "_hitPause", folder, "HitPause");
             CreateSectionIfMissing<DevCheatsMuzzleVfxSection>(so, "_muzzleVfx", folder, "MuzzleVfx");
             CreateSectionIfMissing<DevCheatsStaggerSection>(so, "_stagger", folder, "Stagger");
+            CreateSectionIfMissing<DevCheatsHordeSection>(so, "_horde", folder, "Horde");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

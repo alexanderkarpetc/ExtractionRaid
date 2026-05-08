@@ -33,7 +33,28 @@ namespace Systems.Bot
 
                 if (bot.WantsToThrowGrenade && !staggered)
                     ProcessThrowGrenade(bot, state, in ctx);
+
+                if (bot.WantsToMeleeAttack && !staggered)
+                    ProcessMeleeAttack(bot, state, in ctx, in config);
             }
+        }
+
+        static void ProcessMeleeAttack(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
+        {
+            // BTCooldown around MeleeAttackNode owns rate-limiting; here we just
+            // resolve the swing into damage on whatever the bot's current target is.
+            var targetId = bot.Blackboard.TargetEId;
+            if (targetId == default) return;
+            if (!state.HealthMap.TryGetValue(targetId, out var hp) || !hp.IsAlive) return;
+
+            var hitPoint = Vector3.Lerp(bot.Position, bot.Blackboard.LastKnownTargetPos, 0.5f);
+            var hitDir   = (bot.Blackboard.LastKnownTargetPos - bot.Position);
+            hitDir.y = 0f;
+            if (hitDir.sqrMagnitude < 0.0001f) hitDir = bot.FacingDirection;
+            hitDir.Normalize();
+
+            DamageSystem.ApplyMeleeDamage(state, targetId, config.MeleeAttackDamage,
+                attackerId: bot.Id, hitPoint: hitPoint, hitDirection: hitDir, in ctx);
         }
 
         static void ProcessHeal(BotEntityState bot, HealthState hp, in BotTypeConfig config)

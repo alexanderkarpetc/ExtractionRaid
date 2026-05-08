@@ -19,6 +19,10 @@ namespace State
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
         public Dictionary<EId, ArmorSlotState> ArmorMap;
 
+        // Horde test scene scheduling — populated only when LevelId == "horde_range".
+        // 0 = uninitialised; HordeSpawnSystem seeds it on the first post-grace tick.
+        public float HordeNextSpawnTime;
+
         System.Func<EId> _allocateEId;
 
         public EId AllocateEId() => _allocateEId();

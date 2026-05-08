@@ -251,5 +251,56 @@ namespace Systems
             if (health.CurrentHp <= 0f)
                 health.IsAlive = false;
         }
+
+        /// <summary>
+        /// Direct contact damage entrypoint for melee attacks (Horde-mode zombies).
+        /// Skips the projectile / armor / bleed pipeline — raw HP delta + matching
+        /// view-feedback events. Bypasses GodMode на attackers тому що GodMode у
+        /// projectile path checks player as victim only; we mirror that здесь.
+        /// </summary>
+        public static void ApplyMeleeDamage(RaidState state, EId targetId, float damage,
+            EId attackerId, Vector3 hitPoint, Vector3 hitDirection, in RaidContext context)
+        {
+            if (damage <= 0f) return;
+            if (!state.HealthMap.TryGetValue(targetId, out var health)) return;
+            if (!health.IsAlive) return;
+
+            if (DevCheats.GodMode && state.PlayerEntity != null && targetId == state.PlayerEntity.Id)
+                return;
+
+            ApplyDamage(health, damage);
+
+            // Stagger surviving targets symmetrically с проектильною гілкою.
+            if (health.IsAlive && context.StaggerConfig.Enabled)
+                ApplyStagger(state, targetId, damage, isHeadshot: false, in context);
+
+            if (health.IsAlive)
+                context.Events.EntityDamaged(targetId, health.CurrentHp, health.MaxHp);
+            else
+            {
+                Vector3 victimVelocity = Vector3.zero;
+                for (int i = 0; i < state.Bots.Count; i++)
+                {
+                    if (state.Bots[i].Id == targetId)
+                    {
+                        victimVelocity = state.Bots[i].Velocity;
+                        break;
+                    }
+                }
+                context.Events.EntityDied(
+                    targetId, attackerId, hitPoint, hitDirection, damage,
+                    isHeadshot: false, victimVelocity);
+            }
+
+            // Per-target view feedback — flash, blood decal route through this event.
+            context.Events.EntityHit(
+                targetEid:           targetId,
+                hitPoint:            hitPoint,
+                projectileDirection: hitDirection,
+                isHeadshot:          false,
+                isRicochet:          false,
+                isKill:              !health.IsAlive,
+                absorptionRatio:     0f);
+        }
     }
 }

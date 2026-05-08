@@ -18,6 +18,7 @@ namespace Systems
 
             var inventory = App.Instance.Player.Inventory;
             if (levelId == "shooting_range" || levelId == "kill_feel_range"
+                || levelId == "horde_range"
                 || IsInventoryEmpty(App.Instance.Player.Inventory))
             {
                 ClearInventory(inventory);

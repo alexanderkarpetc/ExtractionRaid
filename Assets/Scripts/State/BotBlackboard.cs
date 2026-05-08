@@ -33,6 +33,7 @@ namespace State
         public int   GrenadesRemaining;
         public float GrenadeCooldownTimer;
         public float GrenadeThrowDelayTimer = -1;   // -1 = idle; counts down to 0 then fires
+        public float MeleeAttackCooldownTimer;
 
         // Alerts
         public bool WasDamaged;
@@ -66,6 +67,7 @@ namespace State
             GrenadesRemaining = 0;
             GrenadeCooldownTimer = 0f;
             GrenadeThrowDelayTimer = -1f;
+            MeleeAttackCooldownTimer = 0f;
             WasDamaged = false;
             LastDamageTime = -999f;
             RunningNodeId = -1;

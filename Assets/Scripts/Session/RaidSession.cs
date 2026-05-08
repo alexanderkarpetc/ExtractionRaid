@@ -65,6 +65,7 @@ namespace Session
                 SpawnShootingRangeTargets();
             else if (LevelState.LevelId == "kill_feel_range")
                 SpawnKillFeelTargets();
+            // horde_range: no static spawn — HordeSpawnSystem.Tick drives waves.
 
             _eventBuffer.RaidStarted();
         }
@@ -524,6 +525,9 @@ namespace Session
             BotBrainSystem.Tick(RaidState, in context);
             BotMovementSystem.Tick(RaidState, in context);
             BotCombatSystem.Tick(RaidState, in context);
+
+            if (LevelState.LevelId == "horde_range")
+                HordeSpawnSystem.Tick(RaidState, in context, _eventBuffer, _coreDefinitions);
 
             ProjectileSystem.Tick(RaidState, in context);
             GrenadeSystem.TickExplosions(RaidState, in context);
