@@ -148,6 +148,15 @@ namespace View
                 mb.enabled = false;
             }
 
+            // Move all ragdoll colliders to the Ragdoll layer. Physics matrix
+            // (configured in LayerUtils.InitCollisionMatrix) ignores Ragdoll vs
+            // Player/Bot, so walking characters don't push the corpse around.
+            // Gravity + Default-layer ground still apply: the body falls + lands.
+            LayerUtils.SetLayerRecursively(gameObject, LayerUtils.Ragdoll);
+
+            // Freeze hit decals — corpses keep all bullet marks for ragdoll lifetime.
+            GetComponent<CharacterHitFx>()?.FreezeDecals();
+
             // Switch all bones to physics + apply damping + mass overrides + inherited velocity.
             // Mass distribution drives fall feel: heavy hips = stable knockback center,
             // light head + arms = trail naturally instead of leading the fall.

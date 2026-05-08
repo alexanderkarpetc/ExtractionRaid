@@ -10,6 +10,7 @@ namespace View
     /// <item>6 — Player (player character body + colliders)</item>
     /// <item>7 — Bot (bot character body + colliders)</item>
     /// <item>8 — FOV (fog-of-war geometry)</item>
+    /// <item>9 — Ragdoll (active corpses; collisions vs Player/Bot disabled at runtime)</item>
     /// </list>
     ///
     /// Player + Bot share the same CharacterBody prefab; layer is authored as "Player"
@@ -26,6 +27,21 @@ namespace View
         public const int Player      = 6;
         public const int Bot         = 7;
         public const int FOV         = 8;
+        public const int Ragdoll     = 9;
+
+        /// <summary>
+        /// Configure layer collision matrix at runtime. Called once from
+        /// <c>App.Initialize</c>. Keeps the project's Physics matrix self-documenting
+        /// у code instead of relying on a binary-edited DynamicsManager.asset.
+        /// </summary>
+        public static void InitCollisionMatrix()
+        {
+            // Active ragdolls must not be pushed by walking characters — they exist for
+            // visual death feedback only. Gravity + Default-layer ground still apply,
+            // so the body still falls and lands naturally.
+            Physics.IgnoreLayerCollision(Ragdoll, Player, true);
+            Physics.IgnoreLayerCollision(Ragdoll, Bot,    true);
+        }
 
         /// <summary>
         /// Sets the layer на GameObject + усіх його дітей recursively. Use after

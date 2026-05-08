@@ -116,6 +116,8 @@ namespace ApplicationCore
 
             _instance = new App();
 
+            LayerUtils.InitCollisionMatrix();
+
 #if UNITY_EDITOR
             // Editor-only convenience: "Raid → Remove Save On Start" menu toggle wipes
             // the save file before load so Play Mode starts with a fresh player. Default

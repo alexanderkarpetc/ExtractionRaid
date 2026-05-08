@@ -13,6 +13,14 @@ namespace View
         readonly Dictionary<EId, BotView> _views = new();
         readonly Dictionary<string, GameObject> _prefabCache = new();
 
+        // CharacterHitFx of bodies handed off to ragdoll. EntityHit + EntityDied for a
+        // one-shot kill arrive in the same tick; RagdollPresenter (which runs first)
+        // releases the body before BotPresenter sees the EntityHit, so _views lookup
+        // misses. We keep the surviving CharacterHitFx here so the kill still leaves
+        // a decal on the corpse. Entries become null when the body GO is destroyed
+        // after ragdoll Lifetime — pruned lazily on lookup.
+        readonly Dictionary<EId, CharacterHitFx> _releasedHitFx = new();
+
         public void LateTick(RaidSession session)
         {
             if (session == null) return;
@@ -51,7 +59,15 @@ namespace View
                         break;
                     case RaidEventType.EntityHit:
                         if (_views.TryGetValue(e.Id, out var hitView))
+                        {
                             ApplyHitFlash(hitView, e);
+                        }
+                        else if (_releasedHitFx.TryGetValue(e.Id, out var releasedFx))
+                        {
+                            // Body just handed off to ragdoll this tick (one-shot kill).
+                            if (releasedFx == null) _releasedHitFx.Remove(e.Id);
+                            else ApplyHitFlash(releasedFx, e);
+                        }
                         break;
                 }
             }
@@ -216,6 +232,11 @@ namespace View
             // Preserve world-space pose — character keeps its current animation pose at moment of death.
             bodyGameObject.transform.SetParent(null, worldPositionStays: true);
 
+            // Stash the surviving hit-fx so any EntityHit emitted in the same tick
+            // (e.g. the killing shot itself) still routes a decal onto the corpse.
+            var hitFx = bodyGameObject.GetComponent<CharacterHitFx>();
+            if (hitFx != null) _releasedHitFx[botId] = hitFx;
+
             Object.Destroy(view.gameObject);
             _views.Remove(botId);
             return true;
@@ -228,28 +249,40 @@ namespace View
         {
             var cfg = ViewCheats.Config?.HitFlash;
             if (cfg == null || !cfg.Enabled) return;
+            if (!ResolveHitKind(e, cfg, out var color, out var isRicochet)) return;
+            view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration, cfg.EmissionBoost);
+            if (!isRicochet) view.AddHitDecal(e.Position);
+        }
 
-            // RaidEventBuffer.EntityHit packs:
-            //   CurrentHp = isHeadshot ? 1 : 0
-            //   MaxHp     = isKill     ? 1 : 0
-            //   KillerId.Value = isRicochet ? 1 : 0
-            //   Position  = hitPoint (world space)
+        // Direct path for bodies already released to ragdoll (one-shot kills) — bypasses
+        // the destroyed BotView and writes straight into the surviving CharacterHitFx.
+        static void ApplyHitFlash(CharacterHitFx fx, RaidEvent e)
+        {
+            var cfg = ViewCheats.Config?.HitFlash;
+            if (cfg == null || !cfg.Enabled) return;
+            if (!ResolveHitKind(e, cfg, out var color, out var isRicochet)) return;
+            fx.TriggerRimFlash(color, cfg.Intensity, cfg.Duration);
+            if (!isRicochet) fx.AddHitDecal(e.Position);
+        }
+
+        // RaidEventBuffer.EntityHit packs:
+        //   CurrentHp = isHeadshot ? 1 : 0
+        //   MaxHp     = isKill     ? 1 : 0
+        //   KillerId.Value = isRicochet ? 1 : 0
+        //   Position  = hitPoint (world space)
+        // Priority: Ricochet > Kill > Headshot > Normal — ricochet ловиться першим
+        // бо there's no damage taken (different kind of feedback).
+        static bool ResolveHitKind(RaidEvent e, ViewCheatsHitFlashSection cfg,
+                                   out Color color, out bool isRicochet)
+        {
             bool isHeadshot = e.CurrentHp > 0.5f;
             bool isKill     = e.MaxHp     > 0.5f;
-            bool isRicochet = e.KillerId.Value == 1;
-
-            // Priority: Ricochet > Kill > Headshot > Normal — ricochet ловиться першим
-            // бо there's no damage taken (different kind of feedback).
-            Color color;
+            isRicochet      = e.KillerId.Value == 1;
             if      (isRicochet) color = cfg.RicochetColor;
             else if (isKill)     color = cfg.KillColor;
             else if (isHeadshot) color = cfg.HeadshotColor;
             else                 color = cfg.NormalColor;
-
-            view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration, cfg.EmissionBoost);
-
-            if (!isRicochet)
-                view.AddHitDecal(e.Position);
+            return true;
         }
     }
 }

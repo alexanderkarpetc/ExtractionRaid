@@ -51,6 +51,11 @@ namespace View
         int         _activeCount;
         bool        _dirty;
 
+        // Decals stop fading once frozen (RagdollController flips this on death).
+        // Per-frame TransformPoint still runs so marks track the ragdoll's bones
+        // as physics tumbles them. Permanent on corpses == "world remembers your impact".
+        bool        _decalsFrozen;
+
         void Awake()
         {
             CacheRenderersAndBones();
@@ -86,6 +91,8 @@ namespace View
             _flashElapsed       = 0f;
             _flashActive        = true;
         }
+
+        public void FreezeDecals() => _decalsFrozen = true;
 
         public void AddHitDecal(Vector3 worldPos)
         {
@@ -142,7 +149,7 @@ namespace View
             if (_activeCount > 0)
             {
                 float lifetime = Mathf.Max(0.5f, ViewCheats.Config?.HitFlash?.DecalLifetime ?? 8f);
-                float decay = dt / lifetime;
+                float decay = _decalsFrozen ? 0f : dt / lifetime;
                 for (int i = 0; i < HitDecalCapacity; i++)
                 {
                     if (_intensity[i] <= 0f)
