@@ -6,6 +6,10 @@ namespace View
 {
     public class ProjectileView : MonoBehaviour
     {
+        // Shared buffer for the start-overlap probe. Size 8 covers worst-case overlap
+        // count (character capsule + own armor + nearby props) without GC alloc.
+        static readonly Collider[] OverlapBuffer = new Collider[8];
+
         public EId EId { get; private set; }
         float _damage;
         float _penetration;
@@ -31,6 +35,31 @@ namespace View
 
             var oldPos = transform.position;
             var newPos = state.Position;
+            float hitRadius = Dev.DevCheats.ProjectileHitRadius;
+
+            // Start-overlap probe. SphereCast skips colliders the sphere already overlaps
+            // at the start (Unity behaviour — backfaces don't generate hits by default).
+            // At point-blank, CharacterBody pullback can retract the muzzle inside an enemy
+            // capsule, so the bullet spawns inside its target and the SphereCast below
+            // would silently miss. Resolve the damageable hit directly.
+            int overlapCount = Physics.OverlapSphereNonAlloc(oldPos, hitRadius, OverlapBuffer,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < overlapCount; i++)
+            {
+                var col = OverlapBuffer[i];
+                if (col == null) continue;
+                if (col.GetComponent<ProjectileView>() != null) continue;
+                if (col.GetComponent<IDamageableView>() == null) continue;
+
+                _hit = true;
+                var startDelta = newPos - oldPos;
+                var startNormal = startDelta.sqrMagnitude > 0.0001f
+                    ? -startDelta.normalized
+                    : Vector3.up;
+                ReportHit(col, oldPos, startNormal);
+                return;
+            }
+
             var delta = newPos - oldPos;
             float dist = delta.magnitude;
 
@@ -38,7 +67,6 @@ namespace View
             {
                 // SphereCast along movement path — small radius compensates for
                 // camera-angle parallax between crosshair and bullet trajectory
-                float hitRadius = Dev.DevCheats.ProjectileHitRadius;
                 if (Physics.SphereCast(oldPos, hitRadius, delta / dist, out var hit, dist,
                         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
                 {

@@ -420,8 +420,14 @@ namespace View
 
                     // SphereCast — robust vs Raycast: catches walls even when pivot is inside a collider,
                     // and the small radius provides a "barrel width" tolerance for edge cases.
+                    // Mask = walls (VisionBlockingMask) + live character shells (Player/Bot layers) so the
+                    // barrel also retracts when pressed against another character — bullet then spawns at
+                    // their front, not past, and projectile collision lands the hit at point-blank.
+                    int pullbackMask = BotConstants.VisionBlockingMask
+                                       | (1 << LayerUtils.Player)
+                                       | (1 << LayerUtils.Bot);
                     int count = Physics.SphereCastNonAlloc(origin, radius, rayDir, PullbackHitBuffer,
-                        castDist, BotConstants.VisionBlockingMask);
+                        castDist, pullbackMask);
 
                     float closest = float.PositiveInfinity;
                     Vector3 closestPoint = default;
@@ -432,11 +438,9 @@ namespace View
                         // Hierarchy filter: ignore own character (shell + body + armor).
                         // Tiled-wall safe (position-based filter would misclassify bricks near the player).
                         if (hitRoot == selfRoot) continue;
-                        // Also ignore OTHER characters — bots/players are not walls: the weapon
-                        // should not retract when passing over/through another character's capsule
-                        // (their capsule collider is on Default layer and would otherwise match).
-                        if (hitRoot.GetComponent<PlayerView>() != null) continue;
-                        if (hitRoot.GetComponent<BotView>() != null) continue;
+                        // Skip ragdolls — running over a corpse shouldn't twitch the barrel back.
+                        // Live characters (PlayerView/BotView) are intentionally treated as blockers.
+                        if (hitRoot.GetComponent<RagdollController>() != null) continue;
 
                         if (PullbackHitBuffer[i].distance < closest)
                         {
