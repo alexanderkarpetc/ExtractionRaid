@@ -64,7 +64,7 @@ If the bridge is down, **stop and ask the user to start Unity / the bridge** —
 | Tool | Purpose |
 |---|---|
 | `manage_editor` | Play / pause / stop, tags & layers, undo/redo, deploy/restore MCP package, telemetry status. |
-| `execute_menu_item` | Click any Editor menu item by path (e.g. `Window/Dev Cheats`). |
+| `execute_menu_item` | Click any Editor menu item by path (e.g. `Raid/Dev Cheats`). |
 | `execute_code` | Run arbitrary C# in the Editor — escape hatch for anything not covered above. |
 | `batch_execute` | Sequence multiple MCP calls atomically. |
 | `refresh_unity` | Force `AssetDatabase.Refresh()`. |

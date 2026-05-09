@@ -24,7 +24,7 @@ namespace Dev
                 if (_cfg == null)
                 {
                     Debug.LogWarning("[ViewCheats] ViewCheatsConfig asset not found in Resources. Using in-memory defaults. " +
-                                     "Run Window → View Cheats → \"Create Section Assets\" to materialize.");
+                                     "Run Raid → Dev Cheats — Create Section Assets to materialize.");
                     _cfg = ScriptableObject.CreateInstance<ViewCheatsConfig>();
                 }
 #endif

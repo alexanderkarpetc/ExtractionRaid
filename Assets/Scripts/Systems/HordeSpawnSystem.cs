@@ -11,7 +11,7 @@ namespace Systems
     /// <summary>
     /// Continuous wave spawner для the Horde test level. Drops zombies onto a
     /// ring around the player at a fixed cadence, capped by a max-alive count.
-    /// Tunable у <see cref="DevCheatsHordeSection"/> (Window → Dev Cheats → 🧟 Horde):
+    /// Tunable у <see cref="DevCheatsHordeSection"/> (Raid → Dev Cheats → 🧟 Horde):
     /// grace period, interval, batch size, cap, ring radius/jitter, arc.
     ///
     /// Stateless system — internal cadence stored on <see cref="RaidState"/>

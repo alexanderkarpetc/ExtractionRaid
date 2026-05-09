@@ -57,6 +57,6 @@ Build fast without spaghetti. Multiple entry points (Menu, direct Raid/Level, te
 - Each section is a **separate ScriptableObject class in its own file** (`Assets/Scripts/Dev/Sections/`). Unity requires one SO per file, filename = classname.
 - Section assets live in `Assets/Resources/Configs/DevCheats/`.
 - Adding a new section: create SO class file → add `[SerializeField]` + property in `DevCheatsConfig` → add accessors in `DevCheats` → add `CreateSectionIfMissing` in `DevCheatsWindow.CreateSectionAssets()` → add UI in `DevCheatsWindow.OnGUI()`.
-- After adding sections, run `Window → Dev Cheats — Create Section Assets`.
+- After adding sections, run `Raid → Dev Cheats — Create Section Assets`.
 - All gameplay-tunable parameters go through DevCheats, not hardcoded constants.
 - **Systems must not read `DevCheats.X` directly.** Tunable values go through `RaidContext.*Config` structs (`AimConfig`, `ShootingConfig`, …); `RaidSession.Tick` populates them from DevCheats. See `testing-workflow.mdc` for rationale. Known latent violations (2026-04-24, flagged for refactor): `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem`.

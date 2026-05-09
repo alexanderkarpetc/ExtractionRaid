@@ -4,7 +4,7 @@ namespace Dev
 {
     /// <summary>
     /// Runtime tuning для Horde test scene (level <c>"horde_range"</c>).
-    /// HordeSpawnSystem reads these every tick — change values у Window → Dev Cheats
+    /// HordeSpawnSystem reads these every tick — change values у Raid → Dev Cheats
     /// while playing щоб calibrate without recompile.
     /// </summary>
     public class DevCheatsHordeSection : ScriptableObject

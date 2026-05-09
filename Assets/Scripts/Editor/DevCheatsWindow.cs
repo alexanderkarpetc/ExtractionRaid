@@ -45,7 +45,7 @@ namespace Editor
         // Cached inline editors per section SO (recreated when config changes)
         readonly Dictionary<string, UnityEditor.Editor> _sectionEditors = new();
 
-        [MenuItem("Window/Dev Cheats")]
+        [MenuItem("Raid/Dev Cheats")]
         static void Open()
         {
             GetWindow<DevCheatsWindow>();
@@ -145,6 +145,23 @@ namespace Editor
             DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
             DrawSection("🧟 Horde", _config.Horde);
 
+            // ── View-layer sections (mirrored from ViewCheats) ──
+            // Single window over both configs — assets stay split on disk for
+            // organisation, but tuning happens in one place. The dedicated
+            // "View Cheats" window remains as a focused alias.
+            DrawViewCheatsBanner();
+            var view = ViewCheats.Config;
+            if (view != null)
+            {
+                DrawSection("🎬 Camera Shake", view.CameraShake);
+                DrawSection("🩸 Blood Decals", view.BloodDecal);
+                DrawSection("🔫 Bullet Holes", view.BulletHole);
+                DrawSection("🥃 Casings", view.Casings);
+                DrawSection("💀 Ragdoll", view.Ragdoll);
+                DrawSection("🔻 Weapon Drop", view.WeaponDrop);
+                DrawSection("⚡ Hit Flash", view.HitFlash);
+            }
+
             EditorGUILayout.Space(8);
 
             // ── Raid (custom — runtime actions) ───────────────
@@ -196,9 +213,36 @@ namespace Editor
                 fontStyle = FontStyle.Italic,
             };
             var subRect = new Rect(rect.x + 60, rect.y + 28, rect.width - 70, 28);
-            GUI.Label(subRect, "Gameplay balance, cheats, runtime actions. View polish lives у View Cheats.", subStyle);
+            GUI.Label(subRect, "Gameplay + view tuning, all in one place. Assets remain split on disk.", subStyle);
 
             EditorGUILayout.Space(4);
+        }
+
+        // ── View-layer banner ─────────────────────────────────
+        // Dim cool-blue strip mirrors the ViewCheats window palette so the boundary
+        // between gameplay and view sections is obvious при scroll.
+
+        static readonly Color ViewBannerColor  = new(0.18f, 0.32f, 0.48f, 1f);
+        static readonly Color ViewBannerAccent = new(0.36f, 0.62f, 0.92f, 1f);
+
+        void DrawViewCheatsBanner()
+        {
+            EditorGUILayout.Space(10);
+            const float bannerHeight = 28f;
+            var rect = EditorGUILayout.GetControlRect(false, bannerHeight);
+
+            EditorGUI.DrawRect(rect, ViewBannerColor);
+            var accentRect = new Rect(rect.x, rect.yMax - 2, rect.width, 2);
+            EditorGUI.DrawRect(accentRect, ViewBannerAccent);
+
+            var titleStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 12,
+                normal   = { textColor = Color.white },
+            };
+            var titleRect = new Rect(rect.x + 10, rect.y + 5, rect.width - 20, 20);
+            GUI.Label(titleRect, "🎨 View polish (mirrored from ViewCheats — assets in Resources/Configs/ViewCheats/)", titleStyle);
+            EditorGUILayout.Space(2);
         }
 
         void DrawSection(string title, ScriptableObject section)
@@ -213,7 +257,7 @@ namespace Editor
             if (section == null)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.HelpBox($"Section asset missing. Run Window → Dev Cheats — Create Section Assets.", MessageType.Warning);
+                EditorGUILayout.HelpBox($"Section asset missing. Run Raid → Dev Cheats — Create Section Assets.", MessageType.Warning);
                 EditorGUI.indentLevel--;
                 return;
             }
@@ -554,7 +598,7 @@ namespace Editor
             Debug.Log("[DevCheats] Created config + section assets");
         }
 
-        [MenuItem("Window/Dev Cheats — Create Section Assets")]
+        [MenuItem("Raid/Dev Cheats — Create Section Assets")]
         static void CreateSectionAssetsMenu()
         {
             var config = DevCheats.Config;

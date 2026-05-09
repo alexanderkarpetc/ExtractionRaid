@@ -121,7 +121,7 @@ All go through `GameLauncher.Launch(LaunchOptions)`. Do not rely on directly loa
 - **Rule**: when adding new fields to any state class, add corresponding display in the debugger window
 
 ### Dev Cheats (EditorWindow + ScriptableObject)
-- `Assets/Scripts/Editor/DevCheatsWindow.cs` — **Window → Dev Cheats**
+- `Assets/Scripts/Editor/DevCheatsWindow.cs` — **Raid → Dev Cheats**
 - SO-based: `DevCheats.cs` (static accessor) → `DevCheatsConfig.cs` (root SO) → 14 section SOs
 - Sections: Cheats, Weapon, Recoil, Aim, Player, FOV, Fog, Crosshair, ADS, HealthBar, Parallax, DamageNumbers, StatusEffects, Armor
 

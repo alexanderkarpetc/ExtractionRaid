@@ -313,7 +313,7 @@ Do not rely on directly loading arbitrary scenes.
 
 ### Dev Cheats (EditorWindow + ScriptableObject)
 - `Assets/Scripts/Editor/DevCheatsWindow.cs`
-- Opens via **Window → Dev Cheats**
+- Opens via **Raid → Dev Cheats**
 - SO-based architecture: `DevCheats.cs` (static accessor) → `DevCheatsConfig.cs` (root SO) → section SOs
 - Root asset at `Resources/Configs/DevCheatsConfig.asset`
 - Section assets at `Assets/Resources/Configs/DevCheats/`

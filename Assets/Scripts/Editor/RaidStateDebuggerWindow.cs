@@ -32,7 +32,7 @@ namespace Editor
         readonly Dictionary<int, bool> _grenadeFolds = new();
         readonly Dictionary<int, bool> _lootableFolds = new();
 
-        [MenuItem("Window/Raid State Debugger")]
+        [MenuItem("Raid/Raid State Debugger")]
         static void Open()
         {
             GetWindow<RaidStateDebuggerWindow>("Raid State Debugger");

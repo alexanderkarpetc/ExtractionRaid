@@ -36,7 +36,7 @@ namespace Editor
         static GUIStyle _typeStyle;
         static GUIStyle _legendStyle;
 
-        [MenuItem("Window/BT Debugger")]
+        [MenuItem("Raid/BT Debugger")]
         static void Open() => GetWindow<BotBTDebuggerWindow>("BT Debugger");
 
         void Update()
