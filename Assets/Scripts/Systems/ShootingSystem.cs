@@ -166,6 +166,15 @@ namespace Systems
             var groundAim = player.WeaponAimPoint;
             var convergence = input.ConvergencePoint;
 
+            // Resolve targeted damageable up-front — used both для targetedEntityId
+            // у projectile state та для blend-override below.
+            var hitCollider = convergence.HasValue ? input.ConvergenceCollider : null;
+            var targetDamageable = hitCollider != null
+                ? hitCollider.GetComponentInParent<View.IDamageableView>()
+                : null;
+
+            var targetedEntityId = targetDamageable != null ? targetDamageable.EId : default;
+
             // 1. Parallax-corrected direction (visual: trail through crosshair)
             var toAimParallax = new Vector3(groundAim.x - spawnPos.x, 0f, groundAim.z - spawnPos.z);
             if (cfg.ParallaxCorrection && spawnPos.y > 0.01f)
@@ -189,22 +198,26 @@ namespace Systems
                 blend = cfg.ConvergenceBlend;
             }
 
-            // 3. Blend: 0 = full parallax (visual), 1 = full convergence (accuracy)
+            // 3. Blend: 0 = full parallax (visual), 1 = full convergence (accuracy).
+            //
+            // Lock-on override: when the cursor is sitting on a damageable (= player
+            // explicitly aiming at an enemy), force blend = 1 so the bullet flies
+            // toward the actual 3D capsule hit point. The mid-blend value (~0.3) gives
+            // a pleasant "trail through cursor" feel for ground/wall shots, but at
+            // certain camera-tilt + side-angle combinations XZ-only blend lands the
+            // trajectory just past the capsule edge — bullet visually looks correct
+            // but misses у 3D. Forcing convergence here trades a sub-pixel trail-end
+            // shift on screen for guaranteed hits on point-and-click targets.
+            // Non-damageable cases (ground, walls, empty space) keep the user-tuned
+            // blend so the visual feel is preserved.
+            if (convergence.HasValue && targetDamageable != null)
+                blend = 1f;
+
             var toAim = Vector3.Lerp(toAimParallax, toAimConv, blend);
 
             var dir = toAim.sqrMagnitude > 0.001f
                 ? toAim.normalized
                 : player.AimDirection;
-
-            // Determine if convergence hit a character (for targeted shots + AimUp)
-            var targetedEntityId = default(EId);
-            var hitCollider = convergence.HasValue ? input.ConvergenceCollider : null;
-            var targetDamageable = hitCollider != null
-                ? hitCollider.GetComponentInParent<View.IDamageableView>()
-                : null;
-
-            if (targetDamageable != null)
-                targetedEntityId = targetDamageable.EId;
 
             // When convergence hit a CHARACTER and AimUp is enabled,
             // angle the bullet slightly upward so it intersects the upper body of the target.
