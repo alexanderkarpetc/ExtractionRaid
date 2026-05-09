@@ -46,6 +46,14 @@ namespace Systems
                 var pos    = PickSpawnPosition(origin, cfg);
                 BotSpawnSystem.SpawnBot(state, cfg.ZombieTypeId, pos,
                     new[] { origin }, events, coreDefinitions);
+
+                // Override HP from runtime config — lets us tune sponge feel without
+                // touching BotConstants. The just-spawned bot is at the tail of the list.
+                if (state.Bots.Count > 0 && cfg.ZombieMaxHp > 0f)
+                {
+                    var fresh = state.Bots[state.Bots.Count - 1];
+                    state.HealthMap[fresh.Id] = HealthState.Create(cfg.ZombieMaxHp);
+                }
             }
 
             state.HordeNextSpawnTime = state.ElapsedTime + cfg.SpawnInterval;

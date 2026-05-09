@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::Dev.DevCheatsHordeSection
   Enabled: 1
   ZombieTypeId: Zombie
+  ZombieMaxHp: 90
   GracePeriod: 5
   SpawnInterval: 1.5
   SpawnBatchSize: 1
   MaxAlive: 25
-  SpawnRingRadius: 18
-  SpawnRingJitter: 3
+  SpawnRingRadius: 10
+  SpawnRingJitter: 0
   SpawnArc: 360

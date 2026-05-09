@@ -21,6 +21,7 @@ namespace Tests.EditMode
         float _origInterval;
         int _origBatch;
         int _origCap;
+        float _origHp;
 
         [SetUp]
         public void SetUp()
@@ -33,12 +34,14 @@ namespace Tests.EditMode
             _origInterval = _cfg.SpawnInterval;
             _origBatch    = _cfg.SpawnBatchSize;
             _origCap      = _cfg.MaxAlive;
+            _origHp       = _cfg.ZombieMaxHp;
 
             _cfg.Enabled = true;
             _cfg.GracePeriod = 5f;
             _cfg.SpawnInterval = 1f;
             _cfg.SpawnBatchSize = 1;
             _cfg.MaxAlive = 3;
+            _cfg.ZombieMaxHp = 70f;
         }
 
         [TearDown]
@@ -49,6 +52,7 @@ namespace Tests.EditMode
             _cfg.SpawnInterval = _origInterval;
             _cfg.SpawnBatchSize = _origBatch;
             _cfg.MaxAlive = _origCap;
+            _cfg.ZombieMaxHp = _origHp;
         }
 
         [Test]
@@ -121,6 +125,23 @@ namespace Tests.EditMode
             HordeSpawnSystem.Tick(state, in ctx, events, null);
 
             Assert.AreEqual(0, state.Bots.Count);
+        }
+
+        [Test]
+        public void Tick_HpOverride_AppliedFromConfig()
+        {
+            _cfg.ZombieMaxHp = 13f;
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.ElapsedTime = 10f;
+            var ctx    = TestContextFactory.Create();
+            var events = new FakeRaidEvents();
+
+            HordeSpawnSystem.Tick(state, in ctx, events, null);
+
+            var zombie = state.Bots[0];
+            var hp = state.HealthMap[zombie.Id];
+            Assert.AreEqual(13f, hp.MaxHp,     0.001f);
+            Assert.AreEqual(13f, hp.CurrentHp, 0.001f);
         }
 
         [Test]

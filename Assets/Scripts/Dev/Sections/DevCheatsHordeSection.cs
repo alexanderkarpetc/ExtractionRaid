@@ -15,6 +15,10 @@ namespace Dev
         [Tooltip("Bot type ID spawned by the horde system. Must exist in BotConstants.Registry.")]
         public string ZombieTypeId = "Zombie";
 
+        [Tooltip("Override MaxHp applied to each zombie at spawn time. Replaces the value " +
+                 "baked into BotTypeConfig — change live to test 1-shot vs sponge feel.")]
+        [Range(1f, 1000f)] public float ZombieMaxHp = 70f;
+
         [Header("Wave timing")]
         [Tooltip("Grace period at raid start before spawning begins (seconds). Lets player set up.")]
         [Range(0f, 30f)] public float GracePeriod = 5f;
