@@ -160,6 +160,7 @@ namespace Editor
                 DrawSection("💀 Ragdoll", view.Ragdoll);
                 DrawSection("🔻 Weapon Drop", view.WeaponDrop);
                 DrawSection("⚡ Hit Flash", view.HitFlash);
+                DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
             }
 
             EditorGUILayout.Space(8);
@@ -609,8 +610,45 @@ namespace Editor
             }
             CreateSectionAssets(config);
             EditorUtility.SetDirty(config);
+
+            // ViewCheats sections live in the same window — bootstrap them here too
+            // so a single menu materializes everything (the standalone ViewCheatsWindow
+            // was retired when sections moved into this unified window).
+            var viewConfig = ViewCheats.Config;
+            if (viewConfig != null)
+            {
+                CreateViewSectionAssets(viewConfig);
+                EditorUtility.SetDirty(viewConfig);
+            }
+
             AssetDatabase.SaveAssets();
-            Debug.Log("[DevCheats] Section assets created/linked. Existing values preserved.");
+            Debug.Log("[DevCheats] Dev + View section assets created/linked. Existing values preserved.");
+        }
+
+        static void CreateViewSectionAssets(ViewCheatsConfig config)
+        {
+            const string folder = "Assets/Resources/Configs/ViewCheats";
+            if (!AssetDatabase.IsValidFolder(folder))
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                    AssetDatabase.CreateFolder("Assets", "Resources");
+                if (!AssetDatabase.IsValidFolder("Assets/Resources/Configs"))
+                    AssetDatabase.CreateFolder("Assets/Resources", "Configs");
+                AssetDatabase.CreateFolder("Assets/Resources/Configs", "ViewCheats");
+            }
+
+            var so = new SerializedObject(config);
+
+            CreateSectionIfMissing<ViewCheatsCameraShakeSection>(so, "_cameraShake", folder, "CameraShake");
+            CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
+            CreateSectionIfMissing<ViewCheatsBulletHoleSection>(so, "_bulletHole", folder, "BulletHole");
+            CreateSectionIfMissing<ViewCheatsCasingsSection>(so, "_casings", folder, "Casings");
+            CreateSectionIfMissing<ViewCheatsRagdollSection>(so, "_ragdoll", folder, "Ragdoll");
+            CreateSectionIfMissing<ViewCheatsWeaponDropSection>(so, "_weaponDrop", folder, "WeaponDrop");
+            CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
+            CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
+
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void CreateSectionAssets(DevCheatsConfig config)

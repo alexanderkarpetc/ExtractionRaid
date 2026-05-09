@@ -1,3 +1,4 @@
+using System.Text;
 using Dev;
 using State;
 using UnityEngine;
@@ -10,10 +11,9 @@ namespace View
         const float CharSize = 0.08f;
         const int FontSize = 32;
 
-        public static bool Enabled = true;
-
         TextMesh _textMesh;
         MeshRenderer _renderer;
+        readonly StringBuilder _sb = new(64);
 
         public static BotDebugLabel Create(Transform parent)
         {
@@ -37,8 +37,17 @@ namespace View
 
         public void UpdateLabel(BotEntityState bot, float currentHp, float maxHp)
         {
-            bool hidden = !Enabled
-                          || (DevCheats.FOVEnabled && !DevCheats.ForceShowAllBots && !bot.IsVisibleToPlayer);
+            var dbg       = ViewCheats.Config?.BotDebug;
+            bool showHp     = dbg != null && dbg.ShowHpText;
+            bool showStatus = dbg != null && dbg.ShowStatus;
+
+            // Defensive corpse-hide: BotView shell should die with the bot, but if a
+            // path drops out (ragdoll disabled, despawn order edge case) the label
+            // would otherwise freeze on the corpse with stale HP. 0 HP → never show.
+            bool dead   = currentHp <= 0f;
+            bool fovOff = DevCheats.FOVEnabled && !DevCheats.ForceShowAllBots && !bot.IsVisibleToPlayer;
+
+            bool hidden = dead || fovOff || (!showHp && !showStatus);
 
             if (hidden)
             {
@@ -48,12 +57,23 @@ namespace View
 
             if (!_renderer.enabled) _renderer.enabled = true;
 
-            var bb = bot.Blackboard;
-            var status = bb.DebugStatus ?? "Idle";
-            var distText = bb.HasTarget ? $"Dist: {bb.DistanceToTarget:F1}" : "";
-            var seeText = bb.CanSeeTarget ? " [SEE]" : "";
+            _sb.Clear();
+            if (showStatus)
+            {
+                var bb = bot.Blackboard;
+                var status = bb.DebugStatus ?? "Idle";
+                _sb.Append('[').Append(bot.TypeId).Append("] ").Append(status);
+                if (bb.CanSeeTarget) _sb.Append(" [SEE]");
+                if (bb.HasTarget) _sb.Append("  Dist: ").Append(bb.DistanceToTarget.ToString("F1"));
+                if (showHp) _sb.Append('\n');
+            }
+            if (showHp)
+            {
+                _sb.Append("HP: ").Append(currentHp.ToString("F0"))
+                   .Append('/').Append(maxHp.ToString("F0"));
+            }
 
-            _textMesh.text = $"[{bot.TypeId}] {status}{seeText}\nHP: {currentHp:F0}/{maxHp:F0}  {distText}";
+            _textMesh.text = _sb.ToString();
         }
 
         void LateUpdate()

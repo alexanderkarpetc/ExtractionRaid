@@ -216,6 +216,20 @@ namespace View
             }
         }
 
+        /// <summary>
+        /// Toggle world-space visibility — drives the entire bar (fill, armor stripe,
+        /// flash). Used by BotView для FOV-occlusion: when the 3D character is hidden
+        /// because outside the player's FOV, its bar follows. Cheap idempotent setter
+        /// (CanvasGroup.alpha + interactable) — avoids GO SetActive churn each tick.
+        /// </summary>
+        public void SetVisible(bool visible)
+        {
+            if (_canvasGroup == null) return;
+            float target = visible ? 1f : 0f;
+            if (!Mathf.Approximately(_canvasGroup.alpha, target))
+                _canvasGroup.alpha = target;
+        }
+
         public void UpdateHealth(float current, float max)
         {
             float newFill = max > 0f ? Mathf.Clamp01(current / max) : 0f;

@@ -66,10 +66,17 @@ namespace View
 
         public void SyncFromState(BotEntityState state, float currentHp, float maxHp)
         {
-            // FOV visibility toggle
+            // FOV visibility toggle. Renderer-based gating covers character meshes
+            // (MeshRenderer / SkinnedMeshRenderer). The world health bar uses a Canvas
+            // (CanvasRenderer, не Renderer) і не потрапляє у GetComponentsInChildren —
+            // тягнемо її окремим SetVisible на CanvasGroup. BotDebugLabel — TextMesh +
+            // MeshRenderer, ловиться loop'ом, але має власний FOV-gate з більш точними
+            // умовами (показ DevCheats flags); тут шум не нашкодить.
             bool shouldShow = state.IsVisibleToPlayer || !DevCheats.FOVEnabled || DevCheats.ForceShowAllBots;
             foreach (var r in GetComponentsInChildren<Renderer>(true))
                 r.enabled = shouldShow;
+            if (_healthBar != null)
+                _healthBar.SetVisible(shouldShow);
 
             transform.position = state.Position;
 
