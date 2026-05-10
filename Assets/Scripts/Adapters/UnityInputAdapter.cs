@@ -41,6 +41,7 @@ namespace Adapters
         public Vector2 MoveInput => BlockGameplayInput ? Vector2.zero : _actions.Player.Move.ReadValue<Vector2>();
         public bool SprintPressed => !BlockGameplayInput && _actions.Player.Sprint.IsPressed();
         public bool AttackPressed => !BlockGameplayInput && _actions.Player.Attack.IsPressed();
+        public bool AttackJustPressed => !BlockGameplayInput && _actions.Player.Attack.WasPressedThisFrame();
 
         void UpdateConvergence()
         {

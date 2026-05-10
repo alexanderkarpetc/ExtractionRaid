@@ -8,6 +8,7 @@ namespace Tests.EditMode.Fakes
         public Vector2 MoveInput { get; set; }
         public bool SprintPressed { get; set; }
         public bool AttackPressed { get; set; }
+        public bool AttackJustPressed { get; set; }
         public Vector3 AimWorldPoint { get; set; }
         public Vector3 MuzzleWorldPoint { get; set; }
         public Transform IgnoreCollisionRoot { get; set; }

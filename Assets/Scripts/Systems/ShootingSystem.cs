@@ -114,6 +114,16 @@ namespace Systems
                     return;
             }
 
+            // Semi-auto gate: Single / Scatter require a rising-edge trigger press.
+            // The outer phase gate (Ready → Cooldown → Ready) already rate-limits via
+            // FireInterval, but it doesn't observe trigger state — holding LMB through a
+            // Cooldown would auto-fire on the next Ready frame. This check enforces
+            // "one click = one shot" for pistol / shotgun while keeping full-auto (Auto)
+            // and laser-charge (releaseFire path) paths untouched.
+            bool semiAuto = pattern == FiringPattern.Single || pattern == FiringPattern.Scatter;
+            if (semiAuto && !releaseFire && !input.AttackJustPressed)
+                return;
+
             var cfg = context.ShootingConfig;
 
             var spawnPos = input.MuzzleWorldPoint;

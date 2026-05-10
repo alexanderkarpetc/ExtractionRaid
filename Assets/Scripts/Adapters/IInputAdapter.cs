@@ -7,6 +7,12 @@ namespace Adapters
         Vector2 MoveInput { get; }
         bool SprintPressed { get; }
         bool AttackPressed { get; }
+        /// <summary>
+        /// True only on the frame the attack action transitions held → not-held → held
+        /// (rising edge of the trigger). Used by Single / Scatter firing patterns to
+        /// enforce one-press-per-shot semantics; Auto keeps reading <see cref="AttackPressed"/>.
+        /// </summary>
+        bool AttackJustPressed { get; }
         Vector3 AimWorldPoint { get; }
         Vector3 MuzzleWorldPoint { get; }
 
