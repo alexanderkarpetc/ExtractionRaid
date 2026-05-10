@@ -361,6 +361,20 @@ namespace Constants
             behaviors: BotBehaviorFlags.None
         );
 
+        // --- Ranged-combat test target ---
+        // Streamlined PMC variant — pure ranged engagement without grenade/heal/dodge
+        // noise. Long vision (70m) + engage (50m) so the bot opens fire from anywhere
+        // on the ranged_range scene. Helmet Basic — gives ricochet feedback. Used by
+        // ShootingScene_RangedRange to isolate range/cover combat behaviour.
+        public static readonly BotTypeConfig RangedTarget = new(
+            typeId: "RangedTarget", prefabId: "BotShell", weaponConfig: RifleWeapon,
+            maxHp: 80f, moveSpeed: 3f, chaseSpeed: 3.5f, patrolSpeed: 0f,
+            visionRange: 70f, visionAngle: 120f, hearingRange: 30f,
+            targetMemoryDuration: 8f, reactionTime: 0.5f, accuracy: 0.6f, engageRange: 50f,
+            helmetDefinitionId: "Helmet_Basic",
+            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
+        );
+
         // --- Horde-mode zombie ---
         // Always sees player (vision 999 / 360°), chases relentlessly, no ranged fire.
         // Carries PistolWeapon as a visual placeholder so WeaponPivot has something
@@ -398,6 +412,7 @@ namespace Constants
             { TargetKillFeelFast.TypeId, TargetKillFeelFast },
             { TargetKillFeelHelmet.TypeId, TargetKillFeelHelmet },
             { Zombie.TypeId, Zombie },
+            { RangedTarget.TypeId, RangedTarget },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

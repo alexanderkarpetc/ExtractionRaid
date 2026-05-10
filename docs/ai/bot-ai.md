@@ -64,20 +64,22 @@ Tree structure is driven by `BotBehaviorFlags` on the config:
 
 ```
 Root (Selector)
- +-- [if Heal]       HealNode
- +-- [if Dodge]      Sequence "Dodge"
- |                     Condition "Damaged?" -> WasDamaged || IsRolling
- |                     Cooldown (DodgeCooldown)
- |                       DodgeNode
- +-- [if Shoot|Chase] Sequence "Combat"
- |                     Condition "HasTarget?"
- |                     Selector "Tactics"
- |                       [if ThrowGrenade] Cooldown (GrenadeCooldown)
- |                                           ThrowGrenadeNode
- |                       Selector "Engage"
- |                         [if Shoot] ShootNode
- |                         [if Chase] ChaseNode
- +-- [if Patrol]     PatrolNode
+ +-- [if Heal]                       HealNode
+ +-- [if Dodge]                      Sequence "Dodge"
+ |                                     Condition "Damaged?" -> WasDamaged || IsRolling
+ |                                     Cooldown (DodgeCooldown)
+ |                                       DodgeNode
+ +-- [if Shoot|Chase|MeleeAttack]    Sequence "Combat"
+ |                                     Condition "HasTarget?"
+ |                                     Selector "Tactics"
+ |                                       [if ThrowGrenade] Cooldown (GrenadeCooldown)
+ |                                                           ThrowGrenadeNode
+ |                                       Selector "Engage"
+ |                                         [if MeleeAttack] Cooldown (MeleeAttackCooldown)
+ |                                                            MeleeAttackNode
+ |                                         [if Shoot]       ShootNode
+ |                                         [if Chase]       ChaseNode
+ +-- [if Patrol]                     PatrolNode
 ```
 
 **BotBehaviorFlags** (bitmask):
@@ -90,6 +92,7 @@ Root (Selector)
 | Heal          | 4   |
 | Dodge         | 5   |
 | ThrowGrenade  | 6   |
+| MeleeAttack   | 7   |
 
 Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
 
@@ -117,6 +120,15 @@ Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
 - **Conditions**: `HasTarget && CanSeeTarget && DistanceToTarget <= EngageRange`. Fails otherwise.
 - **Behavior**: First waits `ReactionTime` seconds (returns Running). Then sets fire intent. Returns Success.
 - **Intents**: Sets `DesiredAimPoint` to `LastKnownTargetPos`, sets `WantsToFire = true`.
+
+### MeleeAttackNode (2026-05-10)
+
+- **Purpose**: Contact damage for melee-only enemies (zombies). Sits BEFORE `ShootNode`/`ChaseNode` in the Engage selector — when target is within melee range, attack instead of chasing past or shooting at point-blank.
+- **Conditions**: `HasTarget && DistanceToTarget <= MeleeAttackRadius`. Fails otherwise → falls through to Chase.
+- **Behavior**: Sets `WantsToMeleeAttack = true`, plants feet (`DesiredVelocity = zero`), aims at target. Returns Success → wrapping `BTCooldown` resets `MeleeAttackCooldownTimer`.
+- **Intents**: Sets `DesiredAimPoint`, `DesiredVelocity = zero`, `WantsToMeleeAttack = true`.
+- **Dispatch**: `BotCombatSystem.ProcessMeleeAttack` reads the intent → `DamageSystem.ApplyMeleeDamage(state, targetId, MeleeAttackDamage, attackerId, hitPoint, hitDir, ctx)`. Direct HP damage (no projectile pipeline, no armor reduction for V0.1) + emits `EntityDamaged` / `EntityDied` / `EntityHit` for view feedback.
+- **Config (per-type):** `MeleeAttackRadius`, `MeleeAttackDamage`, `MeleeAttackCooldown` on `BotTypeConfig`.
 
 ### DodgeNode
 
@@ -312,7 +324,35 @@ All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never
 | `Assets/Scripts/Systems/Bot/Nodes/DodgeNode.cs` | Lateral dodge roll |
 | `Assets/Scripts/Systems/Bot/Nodes/HealNode.cs` | Emergency / safe heal logic |
 | `Assets/Scripts/Systems/Bot/Nodes/ThrowGrenadeNode.cs` | Delayed grenade throw at cover targets |
+| `Assets/Scripts/Systems/Bot/Nodes/MeleeAttackNode.cs` | Contact attack — raises `WantsToMeleeAttack` when target in range |
+| `Assets/Scripts/Systems/HordeSpawnSystem.cs` | Wave spawner for `horde_range` test scene (zombie crowd) |
 | `Assets/Scripts/Constants/BotConstants.cs` | All bot type configs + global tuning |
 | `Assets/Scripts/State/BotEntityState.cs` | Bot entity: position, weapon, intents, roll state |
 | `Assets/Scripts/State/BotBlackboard.cs` | Per-bot AI working memory |
 | `Assets/Scripts/State/BTTrace.cs` | Trace recording for debug visualization |
+
+---
+
+## 12. Horde Spawn System (test scene, 2026-05-10)
+
+Runtime wave spawner active only when `LevelState.LevelId == "horde_range"`. Lets us test crowd-shooting feel without authoring static `BotSpawnPoint`s in the scene.
+
+**Flow:**
+1. `RaidSession.Tick` calls `HordeSpawnSystem.Tick(state, ctx, events, coreDefinitions)` when level is `horde_range`.
+2. System reads `DevCheats.Config.Horde` (see below) every tick.
+3. Grace period (`GracePeriod` seconds, default 5) — no spawns at raid start.
+4. After grace: spawn batches of `SpawnBatchSize` zombies on a ring of radius `SpawnRingRadius ± SpawnRingJitter` around the player. Arc-limited via `SpawnArc` degrees (360 = all sides).
+5. Cap at `MaxAlive` live zombies of `ZombieTypeId`.
+6. HP override: each spawned zombie's `HealthState` is rewritten with `ZombieMaxHp` from the config, replacing the value baked into `BotTypeConfig` — keeps zombie HP runtime-tunable.
+
+**Zombie type config** (`BotConstants.Zombie`):
+- Behaviors: `Chase | MeleeAttack` only — no `Shoot`. Carries `PistolWeapon` as a visual placeholder (swap mesh later for a pipe).
+- `visionRange = 999`, `visionAngle = 360`, `hearingRange = 999` — always sees player.
+- `chaseSpeed = 2.8`, `meleeAttackRadius = 1.6`, `meleeAttackDamage = 12`, `meleeAttackCooldown = 1.0`.
+
+**DevCheats section** `DevCheatsHordeSection` (lives under DevCheats — controls gameplay spawn cadence + zombie HP, not a visual concern):
+- `Enabled`, `ZombieTypeId`, `ZombieMaxHp`
+- `GracePeriod`, `SpawnInterval`, `SpawnBatchSize`, `MaxAlive`
+- `SpawnRingRadius`, `SpawnRingJitter`, `SpawnArc`
+
+**Scene:** `Assets/Scenes/ShootingScenes/ShootingScene_Horde.unity` — clone of KillFeel with `AppBootstrap._defaultLevelId = "horde_range"`. NavMesh baked on the Plane so chase paths resolve.

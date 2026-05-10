@@ -65,6 +65,8 @@ namespace Session
                 SpawnShootingRangeTargets();
             else if (LevelState.LevelId == "kill_feel_range")
                 SpawnKillFeelTargets();
+            else if (LevelState.LevelId == "ranged_range")
+                SpawnRangedRangeTargets();
             // horde_range: no static spawn — HordeSpawnSystem.Tick drives waves.
 
             _eventBuffer.RaidStarted();
@@ -416,6 +418,43 @@ namespace Session
                     BotSpawnSystem.SpawnBot(RaidState, "TargetKillFeel10", pos, new[] { pos }, _eventBuffer, _coreDefinitions);
                 }
             }
+        }
+
+        // Ranged-combat playtest layout — 7 RangedTarget bots arranged in 4 zones at
+        // escalating distance from player spawn (0,0,0). Each zone has its own cover
+        // configuration so we can iterate on engagement scenarios:
+        //   Zone A (z~12-14): close — minimal cover, bots in open
+        //   Zone B (z~30):    mid — walls per side, central pillar splits lanes
+        //   Zone C (z~50):    mid-far — L-corner + wall, cover-vs-cover trades
+        //   Zone D (z~75):    long range — long central wall forces flank
+        // Positions deliberately offset from the static cover cubes authored у scene
+        // (ShootingScene_RangedRange.unity) so spawners never sit inside colliders.
+        void SpawnRangedRangeTargets()
+        {
+            // Zone A — close (instant aggro on raid start)
+            var a1 = new UnityEngine.Vector3(-3f, 0f, 13f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", a1, new[] { a1 }, _eventBuffer, _coreDefinitions);
+
+            var a2 = new UnityEngine.Vector3(5f, 0f, 12f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", a2, new[] { a2 }, _eventBuffer, _coreDefinitions);
+
+            // Zone B — mid range, lane-split layout
+            var b1 = new UnityEngine.Vector3(-9f, 0f, 30f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", b1, new[] { b1 }, _eventBuffer, _coreDefinitions);
+
+            var b2 = new UnityEngine.Vector3(10f, 0f, 30f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", b2, new[] { b2 }, _eventBuffer, _coreDefinitions);
+
+            // Zone C — mid-far with corner cover
+            var c1 = new UnityEngine.Vector3(-11f, 0f, 50f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", c1, new[] { c1 }, _eventBuffer, _coreDefinitions);
+
+            var c2 = new UnityEngine.Vector3(13f, 0f, 50f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", c2, new[] { c2 }, _eventBuffer, _coreDefinitions);
+
+            // Zone D — long range, behind big wall
+            var d1 = new UnityEngine.Vector3(0f, 0f, 75f);
+            BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", d1, new[] { d1 }, _eventBuffer, _coreDefinitions);
         }
 
         public void Tick()

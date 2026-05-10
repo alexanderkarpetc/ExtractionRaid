@@ -59,6 +59,26 @@ Events: `WeaponFired`, `WeaponEquipStarted/Finished`, `WeaponUnequipStarted`, `W
 
 Bots do NOT use this FSM — they remain on `LastFireTime` cooldown in `BotCombatSystem`.
 
+### Trigger semantics — semi-auto vs full-auto (2026-05-10)
+
+Player input is gated per `FiringPattern` after the pattern dispatch in `ShootingSystem.Tick`:
+
+| Pattern | Trigger | Behaviour |
+|---|---|---|
+| `Auto` (Rifle) | `AttackPressed` (held) | Full-auto — fires every `FireInterval` while LMB held |
+| `Single` (Pistol) | `AttackJustPressed` (rising edge) | One click = one shot. Holding LMB through Cooldown does NOT re-fire — must release + press |
+| `Scatter` (Shotgun) | `AttackJustPressed` (rising edge) | Same as Single — single blast per click |
+| Any + Laser payload | `AttackJustReleased` (release) | Charge-release path; semi-auto gate bypassed via `releaseFire` flag |
+
+Implementation: `IInputAdapter.AttackJustPressed` (rising-edge, `WasPressedThisFrame()`). In `ShootingSystem`:
+
+```csharp
+bool semiAuto = pattern == FiringPattern.Single || pattern == FiringPattern.Scatter;
+if (semiAuto && !releaseFire && !input.AttackJustPressed) return;
+```
+
+Bots run the legacy `LastFireTime` cooldown path — not affected.
+
 ## Ammo & Reload
 
 Magazine ammo + reserve ammo (from player inventory backpack).
@@ -83,6 +103,30 @@ totalBleedChance = weapon.Stats.BaseBleedChance + ammoDef.BleedChance
 
 Damage and projectile speed scaled additionally by `ShootingConfig.DamageMultiplier` / `ProjectileSpeedMultiplier` (DevCheats). Result lands in `ProjectileEntityState` + emits `ProjectileSpawned`.
 
+## Projectile Collision (hit detection)
+
+`View/ProjectileView.SyncFromState` resolves hits per-frame in two stages:
+
+1. **Start-overlap probe** (2026-05-09) — `Physics.OverlapSphereNonAlloc(oldPos, hitRadius)`. Unity's `SphereCast` returns no hit when the sphere already overlaps a collider at the start. At point-blank distances `CharacterBody.LateUpdate` weapon pullback (see below) retracts the muzzle **inside** the target capsule — without the probe the bullet would silently fly through. Probe registers the damageable immediately, hit point = `oldPos`, normal = `-direction`.
+2. **SphereCast** along movement path (`oldPos → newPos`, `DefaultRaycastLayers`, `Collide`). Existing flight path.
+
+On hit: `IDamageableView` lookup → `RaidSession.ReportHit(HitSignal)` for characters, `ReportCollision(CollisionSignal)` for walls.
+
+## Weapon Barrel Pullback (2026-05-09)
+
+When the player's barrel pokes into a wall or another character, the WeaponPivot retracts smoothly along `-forward` so the muzzle (and projectile spawn) stays clear. Without this, bullets would spawn behind cover or past an enemy at point-blank.
+
+`View/CharacterBody.LateUpdate` (execution order 2000, after presenters rotate the pivot):
+- **Cast:** `Physics.SphereCastNonAlloc` from body-XZ at `ProjectileSpawnHeight` toward `MuzzlePoint`, distance = body→muzzle + `WeaponLength`
+- **Mask:** `BotConstants.VisionBlockingMask | (1 << LayerUtils.Player) | (1 << LayerUtils.Bot)` — walls + live character shells. Ragdoll layer (9) excluded → corpses don't twitch the barrel
+- **Filter:** skip self root + skip any root with `RagdollController`
+- **Retract:** `WeaponPullbackMath.ComputeRetract` (pure math, fully unit-tested) = `1 - distFromPivot/weaponLength`, clamped 0..1
+- **Apply:** lerps pivot.localPosition toward `rest + back × Amount × retract`. Muzzle is a grandchild → retracts automatically
+
+Combined with the ProjectileView overlap probe: point-blank into a character spawns the bullet inside the enemy capsule, probe registers the hit on first sync → reliable point-blank kills.
+
+DevCheats (`Weapon` section): `WeaponPullbackEnabled`, `WeaponLength`, `WeaponPullbackAmount`, `WeaponPullbackSpeed`, `WeaponPullbackRadius`, `BotPullbackCheckRateHz` (12 Hz for bots), `BotPullbackLodDistance`.
+
 ## Convergence & Parallax Correction
 
 Projectile direction blends two sources in `ShootingSystem`:
@@ -91,6 +135,8 @@ Projectile direction blends two sources in `ShootingSystem`:
 3. **Blend** — `Lerp(parallax, convergence, ConvergenceBlend)`
 
 **AimUp:** when convergence hits a character, projectile angles slightly up (`AimUpHeightRatio`) to intersect upper body — enables headshot detection from top-down camera.
+
+**Lock-on override (2026-05-10):** when `convergence` hits a damageable (`IDamageableView` in hierarchy of hit collider), `blend` is forced to `1.0` — full convergence, 3D-accurate direction. Without override, at top-down + side-angle configurations the mid-blend (~0.3) would land trajectory past the capsule edge. Non-damageable cases (ground, walls, empty space) keep the user-tuned `ConvergenceBlend` so visual "trail through cursor" feel is preserved.
 
 Spawn Y forced to `cfg.ProjectileSpawnHeight` to reduce parallax.
 
