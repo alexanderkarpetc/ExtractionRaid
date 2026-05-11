@@ -1,118 +1,93 @@
-# Better Feel Gunplay — Epic
+# Combat Polish — Shipped State
 
-> Make moment-to-moment combat **feel visceral and impactful**. Кожний постріл повинен фізично відчуватись на gravity & inertia level — не просто number tick. Game feel без ваги — найшвидший шлях до "shooter feels like cardboard".
-
-> 🎯 **Active 2026-05-01.** Поточний focus dev'у. Weapon Builder polish track ([`../weapon-builder/`](../weapon-builder/README.md)) paused до re-engage коли gunplay phase A-B converged.
+> Living summary of the combat-feel layer. Original "Better Feel Gunplay" epic (2026-05-01..05-11) converged — most of what makes shooting feel weighty is shipped. This doc tracks what's live, what was tried-and-reverted, and what remains in backlog.
 
 ---
 
-## Vision
+## Vision (carried over)
 
-Top-down extraction shooter (reference: Escape from Duckov) живе або помирає на feel of every shot. У нашого проекту вже є solid foundation:
-- Composition-based weapons (Weapon Builder Tier 0-2)
-- 6 archetypes з distinct visual + mechanical profile (Tier 8)
-- Real loot economy (Tier 6)
-- Armor system з penetration / ricochet / bleeding feedback
-- Crosshair + hit markers + damage numbers + helmet fly-off
+Top-down extraction shooter. Every shot must register physically — weight, hits, deaths, world-marks. AAA-quality moment-to-moment combat over a graybox playable.
 
-Цей epic не додає нових систем — він **прокачує feel layer над existing gameplay** так, щоб гра відчувалась AAA-quality за моменти стрільби. Без звуку (deferred у наступну сесію).
-
-**Hard goals:**
-- Player feels physical weight per shot (camera, hitstop, reactions)
-- Hits register visually на target (flash, blood, stagger)
-- Death is satisfying (ragdoll, gibs, persistence)
-- World remembers your impact (decals, blood pools, dust)
-- Each archetype має distinct kinetic personality
-
-**Hard non-goals (для цього epic):**
-- Sound design — окремий epic
-- New weapons / archetypes — Weapon Builder Tier 3 deferred
-- New game mechanics — це pure polish, не feature
-- AAA-quality art assets — primitive VFX OK поки artist drop-in pipeline reusable
+**Architectural constraints (per [CLAUDE.md](../CLAUDE.md)):**
+- VFX dispatched via `IRaidEvents`, never direct Unity API from systems
+- Tunables live in `DevCheatsConfig` / `ViewCheatsConfig` SOs, read via `RaidContext.*Config` structs
+- Systems stateless, view layer owns Unity refs
+- No new singletons
 
 ---
 
-## Quick resume для нової сесії
+## Shipped
 
-1. **Цей файл** — vision + current state
-2. [`plan/roadmap.md`](./plan/roadmap.md) — phase structure (A-D), work items, effort/payoff per item
-3. [`plan/status.md`](./plan/status.md) — decisions log, open questions, blockers
+### Hit feedback layer
+- ✅ Crosshair hit/kill/headshot/ricochet X markers ([`crosshair.md`](../crosshair.md))
+- ✅ Floating damage numbers with size-by-magnitude + flight direction + absorption tint
+- ✅ Character rim flash (per hit kind: normal / headshot / kill / ricochet) — `View/CharacterHitFx.cs`
+- ✅ Per-bone bullet decals on character body (survive ragdoll detach) — `CharacterHitFx`
+- ✅ Hit pause / hitstop (`HitPausePresenter`, scaled per hit kind)
+- ✅ Camera shake on fire + take-damage (`CameraShakePresenter`)
+- ✅ Blood VFX (directional splash + mist + flash, ~14 particles/hit)
+- ✅ Blood decals on floor / wall (`BloodDecalPresenter` + `DecalProjectorPool`)
+- ✅ Bullet hole decals on walls (200 active cap, 90s lifetime)
+- ✅ Helmet fly-off on armor break (`ArmorBreakHelper`)
+- ✅ Defender armor HUD + healthbar armor stripe
 
----
+### Weapon visual layer
+- ✅ Procedural recoil kick on fire (`WeaponView.TriggerRecoilKick`)
+- ✅ Multi-stage muzzle flash + real-time light pulse
+- ✅ Casing ejection with hybrid auto-settle (linear damping ramp → kinematic freeze) — `CasingEjectorPresenter`
+- ✅ Tau-style beam flash for Laser archetype (per-pellet electric flicker LineRenderer)
+- ✅ Modular weapon visualization (payload base + delivery barrel composition — Tier 8.x*)
+- ✅ Weapon drop on ragdoll death (physics + impulse along shot direction)
 
-## Current state (2026-05-01) — what already works
+### Death + reaction
+- ✅ Full ragdoll with mass distribution (heavy hips), head joint limits, velocity inheritance, ground impact damping, random death twist
+- ✅ Ragdoll layer isolation — corpses don't get pushed by walking characters
+- ✅ Headshot vs bodyshot profile differentiation (impulse magnitude, hips scale, stagger window)
+- ✅ Hit decals freeze on death + route to ragdoll body even on one-shot kills
 
-### Hit feedback (basic)
-- ✅ `Adapters/IRaidEvents.HitConfirmed(isKill, isHeadshot, absorptionRatio, isRicochet, hitPoint, targetedEntityId)` event pipeline
-- ✅ `View/AimCursorOverlay.cs` — IMGUI crosshair з hit markers (white X), kill markers (red X), headshot (gold double-X), ricochet (blue spark). Bloom + reload ring. Charge dot ring (Laser).
-- ✅ `View/DamageNumberOverlay.cs` — floating damage numbers з flight direction, headshot/kill flags, absorption ratio scaling
-- ✅ `Systems/DamageSystem.cs` — emits `HitConfirmed` events with full context
+### Combat dynamics
+- ✅ Spine IK lean stagger + AI fire lockout (`FlinchPresenter` + `BotEntityState.StaggerEndTime`)
+- ✅ Weapon barrel pullback on walls AND characters (`CharacterBody.LateUpdate` SphereCast)
+- ✅ Projectile start-overlap probe (point-blank reliability when spawn inside enemy capsule)
+- ✅ Lock-on convergence override (3D-accurate hits when cursor on damageable)
+- ✅ Semi-auto trigger gate (Single / Scatter = one-press one-shot; Auto = held)
 
-### Impact VFX (assets exist, partially wired)
-- ✅ Prefabs: `Assets/Resources/Vfx/Prefabs/Impacts/` — `ArmorImpact`, `BodyImpact`, `BulletImpact`, `HeadImpact`, `RicochetSpark`
-- ✅ Decal model assets: `SM_Prop_BulletHoles_*.fbx`, `SM_Prop_BloodPool_*.fbx` (geometry exists, not yet projected as decals)
-
-### Armor break feedback
-- ✅ `View/ArmorBreakHelper.FlyOffHelmet` — physics-based helmet fly-off
-- ✅ Proportional blood/sparks particles per armor absorption ratio
-- ✅ Defender HUD + armor bar on healthbar + tooltip
-
-### Recoil
-- ✅ `WeaponView` procedural recoil kick (Tier 8 Wave D — body kicks back -Z, ease-out-quad recovery scaled to fire interval)
-- ✅ Per-prefab `_recoilKickDistance` `[SerializeField]` — Inspector tunable
-
-### What's missing (this epic builds it)
-- ❌ Camera shake system (no impl)
-- ❌ Hit pause / hitstop
-- ❌ Hit flash on character (shader-based)
-- ❌ Blood spray live impact (only armor break has particles)
-- ❌ Casing ejection
-- ❌ Material-specific impact VFX (single BulletImpact prefab — not material-aware)
-- ❌ Bullet hole decal projection (assets exist but not used as decals)
-- ❌ Ragdoll death system
-- ❌ Stagger/flinch enemy animation на hit
-- ❌ HUD damage feedback (vignette pulse, directional damage indicator, edge red glow)
-- ❌ Real-time muzzle light
-- ❌ Tracer / projectile trail VFX
-- ❌ Recoil pattern polish (per-archetype tuning + DevCheats)
-- ❌ Headshot special VFX (gibs, screen flash)
-- ❌ Multi-kill / streak UI
-- ❌ Slow-mo on critical kill
-- ❌ Post-processing layers (chromatic aberration spike, vignette polish)
-- ❌ Bleeding state visual (blood drips while alive, floor trail)
-- ❌ Environment destruction (glass shatter, wood splinters, exploding barrels)
+### Test infrastructure
+- ✅ 4 test scenes: `ShootingScene` (armored targets), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover)
 
 ---
 
-## Phase progress
+## Tried + Reverted
 
-| Phase | Scope | Status |
-|------|-------|--------|
-| **A** Foundation impact feel | Hit pause, hit flash, camera shake, blood spray, muzzle polish, casings, world impact, ragdoll death, decals | ⏳ NEXT |
-| **B** Significant juice | Recoil polish, tracers, HUD hit feedback, enemy stagger, decal persistence, bleeding visual | ⏳ planned |
-| **C** Wow moments | Headshot special, multi-kill streaks, slow-mo, post-processing, close-miss visual | ⏳ planned |
-| **D** Advanced polish | Environment destruction, advanced physics, weapon heat states, pen dual-impact | ⏳ planned |
+### B.1 Recoil pattern polish (2026-05-03)
+**What:** Per-archetype recoil compounding (per-shot accumulator × kick magnitude, perfect-first-shot pattern, archetype defaults Auto 0.15/1.0 / SingleAction 0.08/0.5 / Scatter 0/0).
 
-Detailed work items per phase: [`plan/roadmap.md`](./plan/roadmap.md).
+**Why reverted:** No learnable skill ceiling at our top-down + cursor-aim setup. Player can't compensate pull-down patterns — cursor stays on target. Base random side scatter already organically degrades sustained accuracy. Multiplicative ramp invisible.
+
+**Recorded decision:** Don't revisit without camera/aim model change (first-person, over-shoulder, OR tracer system that visualizes drift cycles).
+
+### Weapon heat haze (2026-05-11)
+**What:** Billboarded refraction quad over MuzzlePoint, procedural noise UV-offset of `_CameraOpaqueTexture`, heat accumulator with cool decay.
+
+**Why reverted:** Refraction reads poorly at top-down camera angle on graybox scenes (no high-contrast backgrounds). Plume rises 30-50 screen pixels, competes with muzzle flash + casing eject for screen attention. Marginal feel contribution.
+
+**Recorded decision:** Don't revisit. Future barrel-hot feedback should prefer material emission glow on the barrel mesh, not screen-space refraction.
 
 ---
 
-## Архітектурні constraints (per CLAUDE.md)
+## Backlog (active candidates)
 
-- **VFX dispatch via events** (`IRaidEvents`) — не direct Unity API calls з systems. Events feed view layer які instantiate particles / shake camera / etc.
-- **DevCheats parameterization** — кожна tunable величина (camera shake intensity, hit pause duration, recoil curves, blood spray amount) живе у `DevCheatsConfig` SO. View systems read через `RaidContext.*Config` structs (per CLAUDE.md §6).
-- **Stateless systems** — gunplay systems (e.g. `CameraShakeSystem`, `HitFeedbackSystem`) — pure static. State (current shake offset, pending hitstop end-time) зберігається у `RaidState` чи view-local.
-- **State не зберігає Unity refs** — particle instances, ragdoll bones — у view layer (`MonoBehaviour` containers), referenced by `EId` mapping.
-- **No new singletons** — all coordination через `App.Instance.RaidSession` flows.
-- **Test coverage** — pure-logic systems unit-tested. View polish — verified manually (це iterative tune work).
+- **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side feedback gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
+- **Magazine drop physics** — reload drops magazine GO with physics. Visual flair, ~2-3h.
+
+Both are pure additive — no architectural risk if/when picked up.
 
 ---
 
 ## Related docs
 
-- [`plan/roadmap.md`](./plan/roadmap.md) — phase decomposition, work items, effort/payoff matrix
-- [`plan/status.md`](./plan/status.md) — decisions log, open questions, blockers
-- [`../weapon-builder/README.md`](../weapon-builder/README.md) — paused parent feature
-- [`../battle-design-status.md`](../battle-design-status.md) — armor system + bleeding mechanics (already implemented)
-- [`../crosshair.md`](../crosshair.md) — existing crosshair / hit marker / recoil visuals
-- [`../weapons.md`](../weapons.md) — runtime weapon FSM, ADS, dual-layer aiming
+- [`../weapons.md`](../weapons.md) — runtime weapon FSM, trigger semantics, aiming, pullback, projectile collision
+- [`../crosshair.md`](../crosshair.md) — crosshair / hit markers / recoil visuals
+- [`../battle-design-status.md`](../battle-design-status.md) — armor system + bleeding mechanics
+- [`../bot-ai.md`](../bot-ai.md) — bot AI (BT + melee + horde)
+- [`../weapon-builder/README.md`](../weapon-builder/README.md) — weapon composition + content

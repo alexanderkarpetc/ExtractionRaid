@@ -8,7 +8,6 @@ alwaysApply: false
 > Living document. Updated as decisions are made.
 
 ## Reference Documents
-- `docs/ai/rpg-modifier-system.md` / `.cursor/rules/rpg-modifier-system.mdc` — base modifier architecture
 - `docs/ai/armor-research.md` / `.cursor/rules/armor-research.mdc` — competitor analysis
 - `docs/ai/weapons.md` / `.cursor/rules/weapons.mdc` — existing weapon FSM, ammo types, aiming
 
@@ -16,14 +15,14 @@ alwaysApply: false
 
 ## DECIDED
 
-### 1. RPG Modifier System (BASE)
+### 1. Stat Composition (V0.1 — shipped)
 ```
-FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
+FinalStat = WeaponBase + AmmoMod
 ```
-- All additive, hard caps per stat
-- Budget: Ammo (50-60%) > Weapon Mods (25-35%) > Char Tree (10-15%)
-- Weapon mods always have trade-offs (no pure upgrades)
-- UI: color-coded breakdown per source (Ammo=yellow / Weapon=blue / Character=green / Base=white)
+- Additive, hard caps per stat
+- WeaponBase = weapon identity stat from `WeaponEntityState.Stats`
+- AmmoMod = per-ammo modifier from `ItemDefinition` (Penetration, ArmorDamage, BleedChance, DamageModifier)
+- Caps enforced via `ArmorConstants.PenetrationCap` / `ArmorDamageCap`
 
 ### 2. Armor — 2 Slots
 - **Helmet** — head hitbox protection
@@ -44,7 +43,7 @@ FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
 
 ### 4. Penetration — Differential Table (Duckov-inspired)
 ```
-EffectivePen = AmmoPen + WeaponPenMod + CharPenMod    (hard cap: 6)
+EffectivePen = WeaponBasePen + AmmoPen    (hard cap: 100)
 ArmorProt    = ArmorTier (degraded by durability below 50%)
 Differential = ArmorProt - EffectivePen
 ```
@@ -59,7 +58,7 @@ Differential = ArmorProt - EffectivePen
 
 ### 5. Damage Formula
 ```
-RawDMG   = WeaponBaseDMG + AmmoDmgMod + WeaponDmgMod + CharDmgMod
+RawDMG   = WeaponBaseDMG + AmmoDmgMod
 FinalDMG = RawDMG × PenMultiplier × HeadshotMultiplier
 ```
 
@@ -94,9 +93,8 @@ FinalDMG = RawDMG × PenMultiplier × HeadshotMultiplier
 
 ### 9. Headshot Multiplier
 - Headshot multiplier is a **stat in the modifier system**
-- `HeadshotMulti = BaseMulti + AmmoMod + WeaponMod + CharTreeMod`
-- Follows same additive rules, same 3-source budget, has hard cap
-- Concrete values TBD
+- `HeadshotMulti = WeaponBaseHSMulti + AmmoMod`
+- Hard cap; concrete values TBD playtest
 
 ### 10. Weight / Mobility
 - Heavier armor = **movement speed penalty** (%)
@@ -108,11 +106,6 @@ FinalDMG = RawDMG × PenMultiplier × HeadshotMultiplier
 
 ---
 
-## DEFERRED (will design later)
+## Concrete value tuning (playtest-driven)
 
-| Topic | Notes |
-|-------|-------|
-| Weapon Mod Tree / Weapon Builder | Separate system, own design doc |
-| Character Skill Tree structure | Budget confirmed: 10-15% of stat caps |
-| Concrete stat values | Base DMG, Protection tiers, cap numbers, bleed DPS, headshot multi values |
-| Armor crafting/repair economy | Materials, costs, repair stations |
+- Bleed L2 DPS values — L1/L2 architecture exists, concrete tick rate / DPS scaling TBD

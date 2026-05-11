@@ -858,4 +858,3 @@ Ballistic+Scatter = 7 звичайних куль. Laser+Scatter = 7 лазер�
 - [design.md](./design.md) — дизайн-спека фічі
 - [../weapons.md](../weapons.md) — поточна система зброї
 - [../architecture.md](../architecture.md) — загальна архітектура проекту
-- [../rpg-modifier-system.md](../rpg-modifier-system.md) — існуюча система модифікаторів (reference)

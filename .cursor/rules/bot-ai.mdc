@@ -1,0 +1,166 @@
+---
+description: Bot AI — Behavior Tree framework, action nodes, perception, combat dispatch, test scenes. Use for bot AI / BT changes.
+alwaysApply: false
+---
+
+# Bot AI System
+
+## 1. Overview
+
+Bot AI uses a **Behavior Tree (BT)** architecture with an intent-based execution model. Each frame:
+
+1. `BotPerceptionSystem` — updates target detection (vision / hearing / damage alerts)
+2. `BotBrainSystem` — ticks the BT, which writes *intents* to `BotEntityState`
+3. `BotMovementSystem` — reads `DesiredVelocity`, applies NavMesh clamping
+4. `BotCombatSystem` — reads `WantsToFire / Heal / ThrowGrenade / MeleeAttack` and dispatches
+
+BTs composed per bot type in `BotTreeBuilder`, cached after first build. Bot type configs live in `BotConstants` as `readonly BotTypeConfig` structs.
+
+All systems stateless static, iterate `RaidState.Bots`.
+
+---
+
+## 2. BT Framework
+
+### BTStatus
+```
+Success | Failure | Running
+```
+
+### IBTNode
+```csharp
+interface IBTNode {
+    string Name { get; }
+    BTStatus Tick(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config);
+}
+```
+
+### Composites
+- **BTSelector** (priority fallback) — first non-Failure child wins
+- **BTSequence** (all-must-succeed) — first non-Success child stops
+- **BTCondition** — predicate gate
+- **BTCooldown** — rate-limit decorator; on Success resets timer, returns Failure while timer > 0
+
+---
+
+## 3. Tree Builder
+
+`BotTreeBuilder.GetOrBuild(config)` returns cached `IBTNode` per `TypeId`. Tree driven by `BotBehaviorFlags`:
+
+```
+Root (Selector)
+ +-- [if Heal]                       HealNode
+ +-- [if Dodge]                      Sequence "Dodge"
+ |                                     Condition "Damaged?" -> WasDamaged || IsRolling
+ |                                     Cooldown (DodgeCooldown) -> DodgeNode
+ +-- [if Shoot|Chase|MeleeAttack]    Sequence "Combat"
+ |                                     Condition "HasTarget?"
+ |                                     Selector "Tactics"
+ |                                       [if ThrowGrenade] Cooldown (GrenadeCooldown) -> ThrowGrenadeNode
+ |                                       Selector "Engage"
+ |                                         [if MeleeAttack] Cooldown (MeleeAttackCooldown) -> MeleeAttackNode
+ |                                         [if Shoot]       ShootNode
+ |                                         [if Chase]       ChaseNode
+ +-- [if Patrol]                     PatrolNode
+```
+
+**BotBehaviorFlags** (bitmask): Patrol=0, Chase=1, Shoot=2, Heal=4, Dodge=5, ThrowGrenade=6, MeleeAttack=7.
+
+Priority order: Heal > Dodge > Combat (Grenade > Engage{Melee > Shoot > Chase}) > Patrol.
+
+---
+
+## 4. Action Nodes
+
+- **PatrolNode** — walks waypoints, waits `PatrolWaitTime` (2s) at each. Always Running.
+- **ChaseNode** — moves at `ChaseSpeed` toward `LastKnownTargetPos`. Success at <1m, Running otherwise.
+- **ShootNode** — gated by `HasTarget && CanSeeTarget && DistanceToTarget <= EngageRange`. Waits `ReactionTime` (Running), then sets `WantsToFire`.
+- **MeleeAttackNode** (2026-05-10) — sits before Shoot/Chase in Engage selector. Success when in `MeleeAttackRadius`; plants feet, raises `WantsToMeleeAttack`. Dispatch: `BotCombatSystem.ProcessMeleeAttack` → `DamageSystem.ApplyMeleeDamage` (direct HP, no projectile/armor pipeline).
+- **DodgeNode** — random lateral dodge perpendicular to player. Guarded by BTCondition + BTCooldown.
+- **HealNode** — emergency (HP < 30%, 8s cooldown) or safe (HP < threshold, no target visible, distance > 10m, 15s cooldown). Sets `WantsToHeal`; CombatSystem fills HP + decrements medkit count.
+- **ThrowGrenadeNode** — fires only on `HasTarget && !CanSeeTarget && GrenadesRemaining > 0`. Random 1-2s delay before throw.
+
+---
+
+## 5. Perception System
+
+Fixed interval `PerceptionTickInterval` (0.2s) per bot.
+
+Detection sources:
+| Source | Condition |
+|---|---|
+| Vision | dist <= VisionRange AND angle <= VisionAngle/2 AND linecast clear (eye 1.5y → target 1.0y) |
+| Hearing | dist <= HearingRange AND player velocity > 0.1 |
+| Damage alert | `WasDamaged` flag (set when bot takes damage) |
+
+Detection = vision OR hearing OR damage alert. `TargetMemoryDuration` keeps target locked after losing sight.
+
+---
+
+## 6. Bot Types (BotConstants)
+
+| Type | Behaviors | Notes |
+|---|---|---|
+| Scav | Patrol+Chase+Shoot | Pistol, 80HP, vision 25m, Helmet_Basic |
+| PMC | Patrol+Chase+Shoot+Heal+Dodge+ThrowGrenade | Rifle, full kit (helmet+armor), 100HP, vision 35m |
+| Boss | Chase+Shoot+Dodge | Shotgun, 200HP, vision 40m, body armor |
+| Target / TargetWeak / TargetPatrol / TargetFast / TargetDodge | None / Patrol / Dodge | 10000HP test dummies (or 50HP TargetWeak), vision 0 |
+| TargetLightArmor / TargetHeavyArmor / TargetGlassCannon / TargetTank | None | Armored test dummies |
+| TargetKillFeel{10/25/50/75/100} | None / Patrol / Fast / Helmet | Low-HP for ragdoll iteration |
+| **Zombie** | Chase+MeleeAttack | 70HP, vision 999/360°, melee 12dmg/1.6m/1s. Pistol mesh placeholder |
+| **RangedTarget** | Chase+Shoot | Streamlined PMC — vision 70m, engage 50m, no grenade/heal/dodge. Helmet_Basic |
+
+---
+
+## 7. Blackboard (BotEntityState.Blackboard, 24 fields)
+
+Target: `TargetEId`, `LastKnownTargetPos`, `HasTarget`, `CanSeeTarget`, `DistanceToTarget`, `TimeSinceTargetSeen`. Patrol: `PatrolWaypoints`, `PatrolWaypointIndex`, `PatrolWaitTimer`. Timers: `ReactionTimer`, `DodgeCooldownTimer`, `HealCooldownTimer`, `GrenadeCooldownTimer`, `MeleeAttackCooldownTimer`, `PerceptionTimer`, `GrenadeThrowDelayTimer`. State: `IsDodging`, `DodgeDirection`, `DodgeTimer`. Consumables: `MedkitsRemaining`, `GrenadesRemaining`. Alerts: `WasDamaged`, `LastDamageTime`. Debug: `RunningNodeId`, `DebugStatus`, `Trace`.
+
+---
+
+## 8. Horde Spawn System (2026-05-10, level `"horde_range"`)
+
+Runtime wave spawner — only when `LevelState.LevelId == "horde_range"`. Drops Zombie bots on a ring around the player at fixed cadence.
+
+- `RaidSession.Tick` calls `HordeSpawnSystem.Tick` per frame
+- Grace period (`GracePeriod`, default 5s) — no spawns
+- After grace: batch spawn `SpawnBatchSize` zombies on ring `SpawnRingRadius ± SpawnRingJitter` within `SpawnArc` degrees
+- Cap at `MaxAlive`
+- HP override per spawn: `ZombieMaxHp` from config
+
+Driver: `DevCheatsHordeSection`. Scene: `ShootingScene_Horde.unity`.
+
+---
+
+## 9. Ranged-Combat Test Scene (2026-05-12, level `"ranged_range"`)
+
+Static 7-bot layout (`RangedTarget` type) across 4 distance zones — for testing ranged combat with cover usage.
+
+Zones:
+- A (z~12-13): 2 bots in open — instant aggro
+- B (z~30): 2 bots behind side walls, central pillar splits lanes
+- C (z~50): asymmetric — left in L-corner, right behind straight wall
+- D (z~75): 1 bot behind 10m central wall, must flank
+
+13 cover cubes authored statically. NavMesh baked on 200×200 Plane. Spawn positions deliberately offset from cube colliders.
+
+Spawned by `RaidSession.SpawnRangedRangeTargets()`. Scene: `ShootingScene_RangedRange.unity`.
+
+---
+
+## Key Files
+
+| File | Purpose |
+|---|---|
+| `Systems/Bot/BotBrainSystem.cs` | Main tick |
+| `Systems/Bot/BotPerceptionSystem.cs` | Vision/hearing/damage detection |
+| `Systems/Bot/BotMovementSystem.cs` | NavMesh-clamped velocity |
+| `Systems/Bot/BotCombatSystem.cs` | Fire / heal / grenade / melee dispatch |
+| `Systems/Bot/BotSpawnSystem.cs` | Bot creation with weapon / HP / armor |
+| `Systems/Bot/BotTreeBuilder.cs` | BT composition per type |
+| `Systems/Bot/BT/*.cs` | Composites + status enum + trace |
+| `Systems/Bot/Nodes/*.cs` | Patrol / Chase / Shoot / Dodge / Heal / ThrowGrenade / MeleeAttack |
+| `Systems/HordeSpawnSystem.cs` | Wave spawner for `horde_range` |
+| `Constants/BotConstants.cs` | All bot type configs |
+| `State/BotEntityState.cs` | Bot entity: pos, weapon, intents, roll state |
+| `State/BotBlackboard.cs` | Per-bot AI working memory |

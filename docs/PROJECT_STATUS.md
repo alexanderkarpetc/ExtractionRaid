@@ -286,10 +286,7 @@ HitSignal → Skip checks (self/dead/roll/god) → Headshot detect → HS multip
 
 | Фіча | Статус дизайну |
 |-------|---------------|
-| Weapon Mod Tree | RPG modifier system задокументований, budget 25-35% |
-| Character Skill Tree | Budget 10-15% визначений |
-| Concrete stat values | Armor tiers, bleed DPS, HS multi — TBD |
-| Armor crafting/repair | Economy design відкладений |
+| Bleed L2 DPS | L1/L2 architecture present, concrete numbers not tuned |
 
 ---
 
@@ -309,8 +306,7 @@ HitSignal → Skip checks (self/dead/roll/god) → Headshot detect → HS multip
 | **bot-ai.md** | Tech | BT framework, 6 nodes, perception, 12 bot types, blackboard (24 fields) |
 | **inventory-and-items.md** | Tech | 38+ items, slots, stacking, equipment, crafting (21 recipes), loot, status effects, stamina, quests |
 | **armor-research.md** | Design | Аналіз 15+ ігор, bleeding systems, top-down feedback patterns |
-| **rpg-modifier-system.md** | Design | 3-source additive modifiers, hard caps, UI breakdown |
-| **battle-design-status.md** | Design | Living doc: 14 decided + deferred + 33 dated decisions |
+| **battle-design-status.md** | Design | Living doc: decided + deferred + dated decisions |
 | **testing-and-workflow.md** | Process | Test strategy, DevCheats isolation rule, feature flow |
 | **fx-artist-guide.md** | Art | 5 impact VFX prefabs, proportional scaling, art direction |
 
@@ -318,10 +314,10 @@ HitSignal → Skip checks (self/dead/roll/god) → Headshot detect → HS multip
 
 | Статус | Файли |
 |--------|-------|
-| Синхронізовано | entity-lifecycle, testing-workflow |
-| Потребує оновлення | architecture-details, weapons, crosshair (оновлені .md, .mdc відстають) |
-| Сильно застарілі | battle-design-status (step-function vs parabolic), armor-research (42%), rpg-modifier-system (51%) |
-| Немає .mdc | armor-system, bot-ai, inventory-and-items, fx-artist-guide |
+| Синхронізовано | entity-lifecycle, testing-workflow, weapons |
+| Потребує оновлення | architecture-details, crosshair (оновлені .md, .mdc відстають) |
+| Сильно застарілі | battle-design-status (step-function vs parabolic), armor-research (42%) |
+| Немає .mdc | armor-system, inventory-and-items, fx-artist-guide, handoff |
 
 ---
 

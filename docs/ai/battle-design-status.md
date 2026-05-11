@@ -4,7 +4,6 @@
 > Last updated: 2026-05-06
 
 ## Reference Documents
-- `docs/ai/rpg-modifier-system.md` — base modifier architecture (3-source additive, caps, UI)
 - `docs/ai/armor-research.md` — competitor analysis (15+ games), bleeding systems
 - `docs/ai/weapons.md` — existing weapon FSM, ammo types, aiming
 
@@ -12,21 +11,17 @@
 
 ## ✅ DECIDED
 
-### 1. RPG Modifier System (BASE)
+### 1. Stat Composition (V0.1 — shipped)
 ```
-FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
+FinalStat = WeaponBase + AmmoMod
 ```
-- All additive, hard caps per stat
-- Budget: Ammo (50-60%) > Weapon Mods (25-35%) > Char Tree (10-15%)
-- Weapon mods always have trade-offs (no pure upgrades)
-- UI: color-coded breakdown per source (🟡Ammo / 🔵Weapon / 🟢Character / ⬜Base)
-- **All shot-related stats** use full modifier pipeline: `WeaponBase + Ammo + WeaponMod + CharTree`
-  - This applies to: Penetration, Damage, ArmorDmg, BleedChance, HeadshotMulti, BurnChance
-  - WeaponBase = weapon identity stat (sniper base pen > pistol base pen)
+- Additive, hard caps per stat
+- WeaponBase = weapon identity stat (sniper base pen > pistol base pen) — from `WeaponEntityState.Stats`
+- AmmoMod = per-ammo modifier from `ItemDefinition` (Penetration, ArmorDamage, BleedChance, DamageModifier)
+- Caps enforced via `ArmorConstants.PenetrationCap` / `ArmorDamageCap`
 
 **Why additive**: multiplicative creates mandatory builds (Warframe, Division 2 evidence)
 **Why ammo largest**: consumable = extraction economy risk/reward
-**Why char tree smallest**: Tarkov removed Recoil Control skill due to veteran gap
 
 ### 2. Armor — 2 Slots, 2 Hitboxes ONLY
 - **Helmet** — head hitbox protection
@@ -51,7 +46,7 @@ FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
   - "Sturdy but weak" armor (low ArmorPts, high MaxDur) = viable build
   - "Fragile but strong" armor (high ArmorPts, low MaxDur) = glass cannon
 - **ArmorDmg follows full modifier system** (like all shot-related stats):
-  `TotalArmorDmg = WeaponBaseArmorDmg + AmmoArmorDmg + WeaponModArmorDmg + CharArmorDmg`
+  `TotalArmorDmg = WeaponBaseArmorDmg + AmmoArmorDmg`
 - **Then scales with absorption**: `FinalArmorDmg = TotalArmorDmg × (1 + absorptionRatio)`
   - absorptionRatio = 1.0 - DamageMultiplier (from pen curve)
   - Full pen (multi=1.0): ArmorDmg × 1.0 (base damage to durability)
@@ -79,7 +74,7 @@ FinalStat = Base + AmmoMod + WeaponMod + CharTreeMod
 
 ### 4. Penetration — Continuous Hyperbolic Curve
 ```
-EffectivePen  = WeaponBasePen + AmmoPen + WeaponMod + CharTreeMod    (hard cap: 100)
+EffectivePen  = WeaponBasePen + AmmoPen                              (hard cap: 100)
 EffectiveArmor = ArmorPoints (degraded by durability curve)
 
 diff = EffectiveArmor - EffectivePen
@@ -116,16 +111,14 @@ With K=30 (tunable via DevCheats):
 
 ### 5. Damage Formula
 ```
-EffectivePen = WeaponBasePen + AmmoPen + WeaponPenMod + CharPenMod
-RawDMG       = WeaponBaseDMG + AmmoDmgMod + WeaponDmgMod + CharDmgMod
+EffectivePen = WeaponBasePen + AmmoPen
+RawDMG       = WeaponBaseDMG + AmmoDmgMod
 FinalDMG     = RawDMG × PenMultiplier × HeadshotMultiplier
 ```
 
-**Penetration sources (4 now, not 3):**
+**Penetration sources:**
 - WeaponBasePen — inherent to weapon (sniper > rifle > pistol)
 - AmmoPen — ammo type (AP > Standard > HP)
-- WeaponPenMod — from weapon attachments (barrel, etc.)
-- CharPenMod — from character skill tree
 
 **Headshot order of operations**: HeadshotMultiplier applies AFTER PenMultiplier.
 This means elite helmets CAN make headshots weaker than bodyshots — this is a FEATURE.
@@ -140,11 +133,9 @@ Each caliber (Rifle, Shotgun, Pistol, future...) has ammo variants:
 | Standard | +10 (Rifle) / +12 (Pistol) | +0 | 0% | +5 (Rifle) / +6 (Pistol) | Cheap, baseline | ✅ impl |
 | AP | +35 (Rifle) / +30 (Pistol) | -5 | 0% | +8 (Rifle) / +7 (Pistol) | Anti-armor, less flesh | ✅ impl 2026-05-05 |
 | HP (Hollow Point) | +0 | +10 | +30% (Rifle) / +25% (Pistol) | +0 | Flesh shredder, useless vs armor | ✅ impl 2026-05-05 |
-| Shredder | +10 | +0 | 0% | +25 | Destroys armor durability | ⏸ deferred |
-| Incendiary | +0 | +5 | 0% | +0 | Burn status (+40%) | ⏸ deferred (no Burn system) |
 
 **Design intent**: every ammo type has a clear tactical niche. No "best ammo" — only "best ammo for this situation."
-*Note: concrete values playtest-tunable. Composition pipeline у `ShootingSystem`: `WeaponBase + Ammo (+ WeaponMod + CharTree placeholders)`.*
+*Note: concrete values playtest-tunable. Composition pipeline у `ShootingSystem`: `WeaponBase + Ammo`.*
 
 **2026-05-05 impl note**: payload `BaseArmorDamage = 0` (canonical source = ammo). This means ArmorDmg differential lives entirely у ammo choice, не у weapon archetype. AP rifle effective ArmorDmg = 0 + 8 = 8.
 
@@ -229,14 +220,12 @@ mix of blood, sparks, sound, and number size.
 - Level 2 activates same way as Level 1 — new bleed roll while already bleeding upgrades to Level 2
 - Level 2: different icon, more blood decals, more DPS (concrete values TBD)
 - **Treatment**: bandage per level (1 bandage = remove 1 level, Level 2 → Level 1 → clear)
-- HP ammo = primary bleed source, weapon mods and char tree add smaller amounts
+- HP ammo = primary bleed source
 
 ### 10. Headshot Multiplier
-- Headshot multiplier is a **stat in the modifier system** (like Pen, DMG, Bleed)
-- `HeadshotMulti = WeaponBaseHSMulti + AmmoMod + WeaponMod + CharTreeMod`
+- `HeadshotMulti = WeaponBaseHSMulti + AmmoMod`
 - **WeaponBaseHSMulti is per-weapon**: sniper has higher base HS multi than pistol
-- Follows same additive rules, same 3-source budget, has hard cap
-- Concrete values TBD
+- Hard cap; concrete values TBD playtest
 
 ### 11. Weight / Mobility
 - Heavier armor = **movement speed penalty** (%)
@@ -249,7 +238,6 @@ mix of blood, sparks, sound, and number size.
   - Basic kit (Helmet 30/100 + Armor 40/120 = 290 weight) → 14.5% slowdown
   - Mid-tier kit (~400 weight) → 20% slowdown
   - Elite kit (~550 weight) → 27.5% slowdown
-- Per-piece weight override TBD (deferred — no special lightweight items yet)
 - Multiplied у `MovementSystem.Tick` after sprint + ADS scales
 
 ### 12. Defender Feedback (own armor status)
@@ -290,41 +278,19 @@ Surfaced 2026-05-05 audit (impl drift after a month of work).
 - [x] ~~ArmorPoints / ArmorDamage cap enforcement~~ — ✅ shipped 2026-05-05.
 - [x] ~~Weight / mobility coupling~~ — ✅ shipped 2026-05-05 (linear, see §11).
 
-**No open architectural items for V0.1.** Char skill tree та WeaponMod system пере'хали у DEFERRED — не V0.1 scope (decision 2026-05-05).
+**No open architectural items for V0.1.**
 
 ### Concrete value tuning (not architectural — playtest-driven)
 
-- [ ] **HeadshotMulti per archetype.** Currently 2.0x flat for Pistol/Rifle/Shotgun (Ballistic & Laser). Design: sniper > rifle > pistol — defer differentiation until Sniper archetype lands.
 - [ ] **Bleed L2 DPS values.** L1/L2 architecture exists, concrete tick rate / DPS scaling TBD.
-- [ ] **Burn DPS / duration.** Incendiary ammo + Burn status — deferred, not implemented.
-
-### Deferred ammo archetypes (architecture present, content gap)
-
-- [ ] **Shredder ammo** (+25 ArmorDmg, anti-armor durability spec). Defer until Standard/AP/HP feel-tested.
-- [ ] **Incendiary ammo** + Burn status system. Same defer trigger.
-
-### Open economy/content questions
-
-See DEFERRED section.
 
 ---
 
-## 🔜 DEFERRED (will design later)
+## 🔜 DEFERRED (resolved)
 
 | Topic | Status | Notes |
 |-------|--------|-------|
-| **Character Skill Tree** | 🚫 **Out of V0.1 scope** (2026-05-05) | May not ship at all для V0.1. Stat budget reserved (10-15%) but не реалізується. Composition pipeline ready коли захочеться додати |
-| **WeaponMod system** | 🚫 **Deferred indefinitely** (2026-05-05) | Mod items already exist in inventory/craft DB (Basic_Scope, Long_Barrel, Suppressor, тощо) як lootable objects but they don't modify weapon stats. Wiring stat impact = "колись, не зараз" |
-| Concrete stat values | TBD playtest-tuned | Base DMG, Protection tiers, cap numbers, bleed DPS, headshot multi values |
-| Armor crafting/repair economy | TBD | Materials, costs, repair stations |
 | ~~Armor damage formula~~ | ✅ Resolved | ArmorDmg = flat pts × (1 + absorptionRatio) |
-| Economy feel | TBD | Early=swap often, mid=rare armor, late=mid is base, high is precious |
-| Per-piece weight override | TBD | Special lightweight elite armor — needed when content tier expands |
-| Bleed L2 DPS values | TBD playtest | L1/L2 architecture present, concrete numbers not tuned |
-| Burn status + Incendiary ammo | Deferred | Architecture supports (DamageModifier wired). Defer until Standard/AP/HP feel-tested |
-| Shredder ammo | Deferred | Same as above |
-| HSMulti per archetype | Deferred | All ranged weapons 2.0x flat. Wait for Sniper archetype |
-| Bot ammo scaling | Deferred | All bots use Standard. Revisit when raid difficulty curve becomes a design pass |
 
 ---
 
@@ -333,7 +299,6 @@ See DEFERRED section.
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2026-03-28 | Additive-only modifiers, no multiplicative | Prevents mandatory builds (Warframe/Div2 evidence) |
-| 2026-03-28 | 3 sources: Ammo > Weapon > CharTree | Extraction economy + anti-veteran-gap |
 | 2026-03-28 | Hard caps per stat | Prevents god-builds, encourages diversification |
 | 2026-03-28 | ~~Duckov-style pen table~~ → replaced by hyperbolic curve | Superseded 2026-03-29 |
 | 2026-03-28 | 2 armor slots only (helmet + vest) | Simplicity, no plate management |
@@ -341,11 +306,10 @@ See DEFERRED section.
 | 2026-03-28 | Full visual feedback per shot result | MUST HAVE: player always understands what happened |
 | 2026-03-28 | Bleeding: 2 levels, re-roll upgrades severity | Tarkov-inspired (light/heavy), simple escalation |
 | 2026-03-28 | Bleeding treatment: bandage per level | 1 bandage = -1 level. Simple, consumable-based |
-| 2026-03-28 | Headshot multiplier in modifier system | Same 3-source additive rules as other stats |
+| 2026-03-28 | Headshot multiplier in modifier system | Additive rules same as other stats |
 | 2026-03-28 | Weight → movement speed penalty | Higher tier = heavier = slower. Values TBD |
 | 2026-03-28 | Armor visually rendered on characters | Readable at top-down camera distance |
 | 2026-03-28 | Weapon builder = separate system | Deferred, own design doc later |
-| 2026-03-28 | Char skill tree will exist, details later | Budget: 10-15% of stat caps confirmed |
 | 2026-03-28 | ~~Durability: step-function~~ → replaced by parabolic curve | Superseded 2026-03-29 |
 | 2026-03-29 | No armor materials — only tier/quality matters | Simplicity, no hidden stats |
 | 2026-03-29 | Only 2 hitboxes EVER (head + body) | No limbs, no complexity creep |
@@ -361,7 +325,7 @@ See DEFERRED section.
 | 2026-03-29 | Floating damage size = magnitude | Bigger hit = bigger number (Synthetik pattern) |
 | 2026-03-29 | No "blocked" state for body — only ricochet (helmet) | Continuous curve never reaches 0, feedback is proportional |
 | 2026-03-29 | Continuous proportional feedback (blood/sparks ratio) | fleshRatio + absorptionRatio blend particles, sound, numbers |
-| 2026-03-29 | Pen has 4 sources: WeaponBasePen + Ammo + Mod + Char | Sniper inherently pens more than pistol |
+| 2026-03-29 | Pen has 2 sources: WeaponBasePen + AmmoPen | Sniper inherently pens more than pistol |
 | 2026-03-29 | Headshot after armor = FEATURE that elite helmet changes meta | "Aim for body" vs elite helmet is tactical depth |
 | 2026-03-29 | Enemy armor: visual mesh classes + on-hit feedback | 3-4 visual appearances + blood/sparks ratio confirms |
 | 2026-03-29 | Bleed ignores armor (roll independent of pen result) | HP ammo niche vs armor = attrition via bleeding |
@@ -376,17 +340,12 @@ See DEFERRED section.
 | 2026-03-29 | ArmorDmg scales with absorptionRatio: ×(1+absRatio) | Armor that protects = degrades faster. Max 2x on ricochet |
 | 2026-03-29 | Weight = f(ArmorPts + MaxDur), overridable per item | Both protection and sturdiness contribute to weight |
 | 2026-03-29 | Defender HUD: armor silhouette with color zones (WoW-style) | Green/yellow/red + pulse on hit + zone transition alert sound |
-| 2026-03-29 | ALL shot stats use full modifier pipeline (WeaponBase+Ammo+Mod+Char) | Pen, DMG, ArmorDmg, Bleed, HSMulti, Burn — all consistent |
+| 2026-03-29 | ALL shot stats use full modifier pipeline (WeaponBase + Ammo) | Pen, DMG, ArmorDmg, Bleed, HSMulti — all consistent |
 | 2026-03-29 | Looted armor keeps current durability | Core extraction loop: kill → loot armor → repair |
 | 2026-05-05 | Ammo carries DamageModifier (AP -5, HP +10, Standard 0) | Closes design table → impl gap. AP becomes proper trade-off (better pen, less flesh DMG). HP becomes flesh shredder. Floor at 0 prevents negative damage from compounded penalties. |
 | 2026-05-05 | Payload BaseArmorDamage = 0 (was 5/8) | Removes WeaponBase + Ammo double-count. Ammo is canonical ArmorDmg source — consistent з ammo-carries-modifier pattern. Standard rifle effective ArmorDmg drops 10 → 5 (closer to design intent). |
-| 2026-05-05 | Bot ammo scaling deferred (all bots use Standard) | No PMC AP / Boss specials yet. Adds simplicity для playtest baseline; revisit when raid difficulty curve becomes a design pass. |
-| 2026-05-05 | HSMulti per-archetype differentiation deferred | All ranged weapons currently 2.0x flat. Wait for Sniper archetype (Tier 3 deferred) before differentiating. |
-| 2026-05-05 | Shredder + Incendiary ammo deferred | Architecture supports them (DamageModifier already wired). Defer until Standard/AP/HP feel-tested first. |
-| 2026-05-05 | Pen/Armor/ArmorDmg caps enforced via `ArmorConstants` | Was documented invariant only. Hardcoded constants (no DevCheats config layer) — future-proofs additive stack for WeaponMod/CharTree. Zero behavior change today (current values under caps). |
-| 2026-05-05 | Weight → speed: linear, hardcoded constants | `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Constants in `ArmorConstants` (no config — won't change often). Per-piece override deferred. Applies in MovementSystem after sprint/ADS scales. |
-| 2026-05-05 | **Char skill tree out of V0.1 scope** | May not even ship у V0.1 release. Composition pipeline (`+ CharTreeMod` placeholder) залишається architectural, but no impl planned. Re-engage post-V0.1 if scope opens. |
-| 2026-05-05 | **WeaponMod system deferred indefinitely** | Mod items already exist as lootable inventory objects (Scope/Barrel/Suppressor/Mag/Grip/Stock у Items+Craft DB), but stat composition wiring deferred to "колись". V0.1 ships з `WeaponBase + Ammo` only. |
+| 2026-05-05 | Pen/Armor/ArmorDmg caps enforced via `ArmorConstants` | Hardcoded constants. Zero behavior change today (current values under caps). |
+| 2026-05-05 | Weight → speed: linear, hardcoded constants | `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Constants in `ArmorConstants`. Applies in MovementSystem after sprint/ADS scales. |
 | 2026-05-06 | Laser charge mechanic (HL Tau cannon) | Hold-to-charge, fire-on-release. Damage scales `lerp(0.3, 1.0, chargeRatio)`. Quick tap = weak, full hold = full damage. Replaces auto-fire-on-full-charge behavior. Differentiates laser vs ballistic feel значно. |
 | 2026-05-06 | Laser rifle burst (laser + Auto delivery) | After release, fires `lerp(1, 6, chargeRatio)` shots auto-paced (interval 0.07s). All burst shots use cached BurstChargeRatio for damage + VFX. Quick tap = 1 shot, full hold = 6-shot burst. Rifle тепер distinct від laser pistol/shotgun behavior. |
 | 2026-05-06 | Laser hitscan migration explicitly DECLINED | Recon analysis: top-down + cursor aim makes hitscan vs fast-projectile near-indistinguishable on 95% engagement distances. ZERO Sievert (reference) uses projectiles for lasers. Effort 4-6h not worth marginal gain. Re-engage если camera/aim model changes. |

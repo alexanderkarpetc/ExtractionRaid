@@ -474,7 +474,7 @@ Workbench interact (E key) тепер відкриває **Builder modal на п
 
 **Out-of-scope (свідомо deferred):** edit-existing-weapon mode, build feedback toast, fade-in/out animations, rarity tint, decision support callouts, drag-from-backpack у Builder.
 
-**Див.:** [`ux-improvements.md`](./ux-improvements.md), [`docs/ai/ui-styling.md`](../../ui-styling.md).
+**Див.:** [`docs/ai/ui-styling.md`](../../ui-styling.md).
 
 ### 2026-04-17 — v0.7 approved, Hidden Budget removed
 **Було:** Hidden Budget як невидимий ліміт проти "все найкраще одразу".
@@ -791,10 +791,8 @@ Foundation (Tiers 0a/0b/1/2) + UX Pass 1 завершені (2026-04-27). Усі
 - Tier 3 / 5 — content expansion + Exotic mods, defer sine die
 
 Якщо беремо tier — steps:
-
-Якщо беремо tier — steps:
 1. Прочитати декомпозицію потрібного tier у [roadmap.md](./roadmap.md)
-2. Розписати у `tasks.md` конкретні T-N.NN задачі (як робили для 0b/1/2)
+2. Розкласти на конкретні задачі inline у роботі (більше не використовуємо окремий tasks.md — він був релевантний тільки для Tier 0a)
 3. Код по кластерах з чекбоксами
 
 ---

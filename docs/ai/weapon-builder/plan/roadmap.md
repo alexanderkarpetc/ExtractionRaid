@@ -94,7 +94,7 @@
 - UI track оновлений (для Wave F)
 - Decision на content scope reset — based on what we learn from polishing 2×3
 
-**Parallel tracks possible:** Tier 9 (artist + sound designer) і Tier 10 (designer balance) можуть йти паралельно з програмер track Tier 8.x → 4a. Якщо artist/sound designer відсутній — programmer-only path is 8.x → 4a → (block on art for 9 → 10).
+**Parallel tracks possible:** Tier 9 (artist) і Tier 10 (designer balance) можуть йти паралельно з програмер track Tier 8.x → 4a. Якщо artist відсутній — programmer-only path is 8.x → 4a → (block on art for 9 → 10).
 
 ---
 
@@ -683,11 +683,10 @@ Tier 8 done (✅). Tier 8.x follow-ups + Tier 4a recommended before Tier 9 — �
 - X2 (per-Payload VFX) — Ballistic + Laser only (Foam/Rocket — defer)
 - X3 (per-Delivery VFX) — Single/Auto/Scatter only (Rotary/Swarm — defer)
 - X4 (per-Exotic VFX) — DEFER entirely (Tier 5 deferred)
-- X5 (SFX library) — current 2×3 + general reload/charge
 - X6 (hit feedback polish) — full
 
 ### Parallel tracks
-Most of цього tier — artist + sound designer work. Programmer-side: hooks plumbing (~3-5 days).
+Most of цього tier — artist work. Programmer-side: hooks plumbing (~3-5 days).
 
 ---
 
@@ -708,7 +707,6 @@ Iterative tuning over current **2×3 archetypes** (6 weapons). Re-scope коли
 - [ ] Charge-up timing (Laser) — 1.0s OK чи треба 0.7-1.3?
 - [ ] Reload pace per archetype (Pistol fast, Shotgun slow shell-by-shell?)
 - [ ] Hit feedback timing — screen shake duration, hit pause length, damage number flight
-- [ ] Sound design integration — every audio cue tuned to gameplay moment
 - [ ] Animation polish — chamber/eject timing, idle pose, transition smoothness
 - [ ] Damage curves vs armor (DPS targets per archetype role)
 - [ ] Comprehensive balance pass — no archetype дominantні / dead-on-arrival

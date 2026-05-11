@@ -356,3 +356,21 @@ Runtime wave spawner active only when `LevelState.LevelId == "horde_range"`. Let
 - `SpawnRingRadius`, `SpawnRingJitter`, `SpawnArc`
 
 **Scene:** `Assets/Scenes/ShootingScenes/ShootingScene_Horde.unity` — clone of KillFeel with `AppBootstrap._defaultLevelId = "horde_range"`. NavMesh baked on the Plane so chase paths resolve.
+
+---
+
+## 13. Ranged-Combat Test Scene (2026-05-12)
+
+`ShootingScene_RangedRange.unity` (level id `"ranged_range"`) is a static-spawn scene for testing ranged-combat against shooting bots with cover usage. Unlike Horde (waves) — this is a deterministic 7-bot layout.
+
+**Bot type:** `BotConstants.RangedTarget` — streamlined PMC clone. Vision 70m / engage 50m / Chase+Shoot only (no Heal, Dodge, Grenade — pure ranged behaviour). Helmet Basic for ricochet feedback.
+
+**Layout** (player spawn at `(0, 0, 0)` facing +Z; spawned in `RaidSession.SpawnRangedRangeTargets()`):
+- Zone A — close (z~12-13): 2 RangedTargets in open. Instant aggro on raid start (within vision).
+- Zone B — mid (z~30): 2 RangedTargets behind side walls. Central pillar at z=22 splits lanes.
+- Zone C — mid-far (z~50): asymmetric — left RangedTarget in L-corner, right behind straight wall.
+- Zone D — long range (z~75): 1 RangedTarget behind a 10m central wall, must approach via flanks.
+
+Scene authored statically (13 cover cubes spawned via `execute_code` at scene-build time). NavMesh baked on a 200×200 Plane covering z=-60..140.
+
+Code-spawn deliberately offsets bot positions from cube colliders so spawners never sit inside walls. Adjust positions in `SpawnRangedRangeTargets()` if scene cover layout changes.

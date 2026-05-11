@@ -14,13 +14,11 @@
 
 Якщо ти повертаєшся до фічі, читай у цьому порядку:
 
-1. **Цей файл** — стан, що працює, що зроблено (UX Pass 1 outcome зафіксовано нижче)
+1. **Цей файл** — стан, що працює, що зроблено
 2. [plan/status.md](./plan/status.md) — decisions log, pause summary, наступні tier'и
-3. [plan/ux-improvements.md](./plan/ux-improvements.md) — completed UX pass record (acceptance gate done)
-4. [architecture.md](./architecture.md) — якщо потрібно глибше у код: rationale Q1-7 / D1-14
-5. [design.md](./design.md) — design intent
-6. [plan/roadmap.md](./plan/roadmap.md) — повний tier roadmap (Tier 3-7)
-7. [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (історичний reference)
+3. [architecture.md](./architecture.md) — якщо потрібно глибше у код: rationale Q1-7 / D1-14
+4. [design.md](./design.md) — design intent
+5. [plan/roadmap.md](./plan/roadmap.md) — повний tier roadmap (Tier 3+)
 
 **Короткий entry point:** `Tools → Weapon Builder → Create Stub Assets` у Unity Editor відновлює всі SO assets, якщо їх немає локально.
 
@@ -300,8 +298,6 @@ Detailed: [roadmap.md Tier 4a](./plan/roadmap.md#tier-4a--bot-weapon-migration-s
 ### План та статус
 - [plan/status.md](./plan/status.md) — decisions log, pause summary, next-tier guidance
 - [plan/roadmap.md](./plan/roadmap.md) — tier structure + exit criteria
-- [plan/tasks.md](./plan/tasks.md) — Tier 0-2 task records (historical)
-- [plan/ux-improvements.md](./plan/ux-improvements.md) — UX Pass 1 record (completed 2026-04-27)
 
 ### UI styling
 - [docs/ai/ui-styling.md](../ui-styling.md) — Tier A/B sizing, color palette, sort orders (created у UX Pass 1)

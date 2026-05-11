@@ -1,20 +1,49 @@
-# Handoff — 2026-05-11
+# Handoff — current state
 
-> Snapshot for next-session agent. State + recent landings (2026-05-09..11) + backlog. Read after `handoff-2026-05-06.md` for full chain.
+> Snapshot for next-session agent. Combined state + recent landings (last ~2 weeks). Updated 2026-05-12.
 
 ## Context
 
 Top-down extraction shooter (Unity 6000.3.10f1, URP 17.3). 5-layer architecture (App → Session → Systems → Adapters → View/Presenter) per [`CLAUDE.md`](./CLAUDE.md). Ukrainian-language collaboration, tight iterations.
 
-Prior chain:
-- [`handoff-2026-05-05.md`](./handoff-2026-05-05.md) — Tier 4a + Tier 8.x* weapon architecture rebuild
-- [`handoff-2026-05-06.md`](./handoff-2026-05-06.md) — combat polish (rim flash, decals, Tau cannon, laser burst)
+---
 
-This session block (3 sessions, 2026-05-09..11) was **point-blank combat + crowd-shooting test infrastructure**.
+## Earlier landings (2026-05-04..06) — feature-level summary
+
+**Tier 4a — bot weapon migration (2026-05-04):** All bots (Scav/PMC/Boss/Target*) go through Builder pipeline. `BotConstants.BotTypeConfig.WeaponConfig` (struct) replaces 7 legacy fields + `WeaponPrefabId` string. Bot projectiles carry full stat set (Penetration, ArmorDamage, BleedChance, HeadshotMultiplier). Bot kills drop weapons with current ammo state.
+
+**Tier 8.x* — weapon asset architecture rebuild (2026-05-05):** Payload/delivery prefab roles inverted from original intuition. New shape:
+```
+Module_Payload_*.prefab (root has Animator + WeaponView)
+├── KickGroup
+│   ├── PayloadBaseMesh
+│   ├── DeliverySocket (delivery instantiates here at runtime)
+│   └── RightHandGrip
+Module_Delivery_*.prefab (no MonoBehaviours)
+├── DeliveryBarrelMesh
+└── MuzzlePoint (Y synced with ProjectileSpawnHeight)
+```
+5 prefabs total (2 payloads × 3 deliveries via `Tools → Weapon Builder → Create Module Prefabs`). + Weapon-on-death drop physics: `RagdollPresenter.TryDropWeapon` reparents to `[WeaponDropPool]` with Rigidbody + impulse along shot direction.
+
+**P0-1 — DevCheats → Config refactor (2026-05-05):** `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem` no longer read `DevCheats.X` directly. Tunables flow through `RaidContext.*Config` structs populated in `RaidSession.Tick`. Per CLAUDE.md §6.7.
+
+**Cap enforcement (2026-05-05):** `ArmorConstants.PenetrationCap` / `ArmorDamageCap`. Hardcoded constants, no config layer (won't change often).
+
+**Weight → mobility coupling (2026-05-05):** `weight = ArmorPts + MaxDur` per slot summed; multiplier = `max(0.5, 1 - weight × 0.0005)`. Applies in MovementSystem after sprint/ADS scales.
+
+**Combat polish day (2026-05-06):**
+- VibeCharacterShader (~330 LOC hand-written URP, replaces Amplify-generated MainBase) — 4 passes + rim flash + bullet decals via MaterialPropertyBlock
+- `CharacterHitFx` — survives ragdoll detach; rim flash + per-bone bullet decals (ring buffer 8, follows live animation AND ragdoll physics)
+- Blood VFX rework — 4 sub-emitters (center splat / cone splash / mist / wound flash), `DamageSystem` passes `proj.Direction`, ~14 particles/hit
+- Tau cannon charge mechanic: AttackPressed → Charging; AttackJustReleased → fires at `chargeRatio = clamp((elapsed - chargeStart) / chargeTime, 0, 1)`; damage scales `lerp(0.3, 1.0, chargeRatio)`
+- Laser rifle burst (Laser + Auto): `burstCount = round(lerp(1, 6, chargeRatio))`, interval 0.07s; `WeaponPhase.Bursting`
+- `BeamFlashPresenter` — Tau-style electric LineRenderer per pellet (laser shotgun gets 7 beams), 10-vertex jagged path + sin envelope + per-frame re-randomization
+- Laser trail swap — `TrailBullet02` for archetype `"Laser"`
+- Cheat starting loadout — all 6 archetypes equipped + helmet/armor + grenade/medkit/bandage
 
 ---
 
-## Recent landings (2026-05-09..11)
+## Recent landings (2026-05-09..12)
 
 ### Weapon pullback extended to characters (2026-05-09)
 
@@ -105,6 +134,16 @@ User pain: knowing which window has a given tunable. Decision: keep on-disk asse
 
 Files: `Editor/DevCheatsWindow.cs`, `Editor/RaidStateDebuggerWindow.cs`, `Editor/BotBTDebuggerWindow.cs`, `Editor/ViewCheatsWindow.cs` (deleted), plus stale-path string fixups across docs.
 
+### Ranged-combat test scene (2026-05-12)
+
+New `RangedTarget` bot type (streamlined PMC — vision 70m, engage 50m, Chase+Shoot only, no grenade/heal/dodge). `RaidSession.SpawnRangedRangeTargets()` spawns 7 bots across 4 distance zones at level id `"ranged_range"`. Scene `Assets/Scenes/ShootingScenes/ShootingScene_RangedRange.unity` — Plane 200×200, NavMesh baked, 13 cover cubes for varied combat scenarios (close open / mid lane-split / mid-far corner / long range with central wall).
+
+Files: `BotConstants.cs` (`RangedTarget` config + Registry entry), `Session/RaidSession.cs` (Spawn method + level branch), `Systems/PlayerSpawnSystem.cs` (starting-loadout gate).
+
+### Doc consolidation (2026-05-12)
+
+Removed all references to indefinitely-deferred backlog items per user call: Char skill tree, WeaponMod stat composition, Sound design, and gunplay items A.7/A.10/B.2/B.5/B.6/C.1-5/D.3. Deleted `docs/ai/rpg-modifier-system.md` (file's purpose was the 4-source modifier pipeline = deferred). `gunplay/plan/roadmap.md` + `status.md` deleted; content collapsed into `gunplay/README.md` as state summary. Battle-design formulas simplified to actual `WeaponBase + AmmoMod` shipped path.
+
 ### Bot debug overlay split (2026-05-10)
 
 `BotDebugLabel` floating text "[Type] Status [SEE] Dist: X / HP: x/y" was monolithic. Split into two ViewCheats toggles:
@@ -118,16 +157,6 @@ HP bar (`WorldHealthBar`) now follows FOV visibility too — `SetVisible(bool)` 
 
 Files: `View/BotDebugLabel.cs`, `View/WorldHealthBar.cs`, `View/BotView.cs`, `Dev/Sections/ViewCheatsBotDebugSection.cs`, `Dev/ViewCheatsConfig.cs`.
 
-### Weapon heat haze — tried + REVERTED (2026-05-11)
-
-Implemented a billboarded refraction quad (procedural 2-octave noise → UV offset of `_CameraOpaqueTexture`) anchored at MuzzlePoint, heat accumulator with cool decay, full ViewCheats section.
-
-**Why reverted:** user feedback "не сподобався ефект". Refraction effect is hard to read at the top-down camera angle on graybox sceneswithout high-contrast backgrounds. Heat plume rises ~30-50 screen pixels above muzzle and competes with muzzle flash + casing eject for screen attention. Marginal addition to feel.
-
-**Decision recorded — don't revisit.** Heat-haze-as-refraction is not worth the effort for our camera setup. If future iteration wants barrel-hot feedback, prefer stylized (semi-transparent wavy sprite, no refraction) or material emission glow on the barrel mesh.
-
-Files: shader + section + overlay all removed; `DevCheatsWindow`, `ViewCheatsConfig`, `WeaponView` reverted to clean state.
-
 ---
 
 ## Current state
@@ -135,7 +164,7 @@ Files: shader + section + overlay all removed; `DevCheatsWindow`, `ViewCheatsCon
 - **469/469 EditMode tests green.** (+13 since 2026-05-06: 6 MeleeAttackTests + 7 HordeSpawnSystemTests.)
 - Compile clean (only pre-existing warnings — `FindObjectOfType` obsolete API, QuestDefinition missing type).
 - 6 weapon archetypes feel coherent (Ballistic/Laser × Pistol/Rifle/Shotgun); semi-auto pistol/shotgun, full-auto rifle, laser charge-release.
-- 3 test scenes: `ShootingScene` (armored targets), `ShootingScene_KillFeel` (low-HP targets), `ShootingScene_Horde` (NEW — zombie waves).
+- 4 test scenes: `ShootingScene` (armored), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover).
 - All landings committed.
 
 ---
@@ -143,17 +172,10 @@ Files: shader + section + overlay all removed; `DevCheatsWindow`, `ViewCheatsCon
 ## What's deferred / open
 
 ### Gunplay backlog
-Same as `handoff-2026-05-06.md` — Phase A 8/10, Phase B 1/6, Phase C deferred wholesale, Phase D backlog. Plus:
-- **D.3 Weapon heat visual — DON'T REVISIT** unless camera/aim model changes (see this session's decision).
+See [`gunplay/README.md`](./gunplay/README.md) — combat-polish epic converged. Remaining active candidates: HUD damage feedback, magazine drop physics.
 
-### Battle design open (unchanged)
-- Per-piece armor weight override
-- Concrete stat tuning (playtest-driven)
-- Bot ammo scaling (PMC AP / Scav Standard)
-- HSMulti per archetype (defer until Sniper)
-- Bleed L2 DPS values
-- Burn + Incendiary ammo
-- Shredder ammo
+### Battle design open
+- Bleed L2 DPS values (playtest-driven)
 
 ### Test debt (unchanged)
 - BT primitives 0 tests
@@ -162,13 +184,14 @@ Same as `handoff-2026-05-06.md` — Phase A 8/10, Phase B 1/6, Phase C deferred 
 
 ### Architecture debt
 - ✅ DevCheats/ViewCheats UI fragmentation — resolved (unified window)
-- ⚠️ `.cursor/rules/bot-ai.mdc` mirror missing — `bot-ai.md` exists since the bot AI epic but its `.mdc` counterpart was never created. CLAUDE.md §8 mandates mirroring. Low priority — bot-ai.md fully covers it.
+- ✅ `.cursor/rules/bot-ai.mdc` mirror — created 2026-05-12
 
 ### Test scenes available
 - `Assets/Scenes/HideoutScene.unity` — main hub
 - `Assets/Scenes/ShootingScenes/ShootingScene.unity` — armored targets (10000 HP)
 - `Assets/Scenes/ShootingScenes/ShootingScene_KillFeel.unity` — low-HP targets (10/25/50/75/100)
-- `Assets/Scenes/ShootingScenes/ShootingScene_Horde.unity` — **NEW** — zombie wave spawner, 5s grace, 360° ring spawn
+- `Assets/Scenes/ShootingScenes/ShootingScene_Horde.unity` — zombie wave spawner, 5s grace, 360° ring spawn
+- `Assets/Scenes/ShootingScenes/ShootingScene_RangedRange.unity` — 7 RangedTarget bots across 4 zones with 13 cover cubes, NavMesh baked
 
 ---
 
@@ -177,7 +200,7 @@ Same as `handoff-2026-05-06.md` — Phase A 8/10, Phase B 1/6, Phase C deferred 
 - Ukrainian communication, terse iterations
 - Quick tweak → playtest loop. Commits frequently.
 - Wants "feel" iteration with many recursive micro-tweaks
-- Will revert speculative complexity readily (B.1 recoil, D.3 heat haze — both tried-and-reverted this and prior sessions)
+- Will revert speculative complexity readily (recoil patterns, heat haze — both tried-and-reverted in prior sessions; recorded in gunplay/README.md "Tried + Reverted")
 - Pragmatic — accepts hardcoded constants where DevCheats overhead doesn't pay
 - DOES NOT want speculative tests for non-feature work
 - Wants to know cost+value before agreeing to architecturally-large items
@@ -187,14 +210,13 @@ Same as `handoff-2026-05-06.md` — Phase A 8/10, Phase B 1/6, Phase C deferred 
 
 ## How to start the next session
 
-1. Read this + linked status.md files.
+1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
 3. Verify `mcp__unityMCP__run_tests` EditMode → 469/469.
 4. Sync with user on direction. Likely candidates:
-   - Battle design balancing pass (bot ammo scaling, HSMulti per archetype)
-   - Level design (research stage — first map MVP)
-   - Sound design epic (explicit defer from gunplay README — needs explicit opt-in)
-   - More gunplay polish (only if user signals — most of the active C/D items are FX-artist-blocked or speculative)
+   - Remaining gunplay backlog (HUD damage feedback, magazine drop physics)
+   - Bleed L2 DPS tuning (playtest-driven)
+   - Test debt closure (P0-2/3/4/5 — see `tests-review.md`)
 5. Doc sync: `docs/ai/*.md` mirrors `.cursor/rules/*.mdc` per CLAUDE.md §8.
 
 ---
