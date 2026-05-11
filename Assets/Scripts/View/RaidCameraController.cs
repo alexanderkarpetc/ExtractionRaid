@@ -31,10 +31,12 @@ namespace View
 
         // Gunplay A.3 — additive shake offset, layered after main follow lerp.
         CameraShake _shake;
+        CameraObstacleHider _obstacleHider;
 
         public void SetTarget(Transform target)
         {
             _target = target;
+            _obstacleHider?.SetTarget(target);
 
             if (_target != null)
                 transform.position = _target.position + _offset;
@@ -57,6 +59,11 @@ namespace View
             if (_shake == null)
                 _shake = gameObject.AddComponent<CameraShake>();
             ApplicationCore.App.Instance?.CameraShakePresenter?.SetTarget(_shake);
+
+            _obstacleHider = GetComponent<CameraObstacleHider>();
+            if (_obstacleHider == null)
+                _obstacleHider = gameObject.AddComponent<CameraObstacleHider>();
+            _obstacleHider.SetTarget(_target);
         }
 
         void LateUpdate()
@@ -124,6 +131,8 @@ namespace View
                 _vignette.intensity.value = Mathf.Lerp(
                     _baseVignetteIntensity, DevCheats.AdsVignetteIntensity, _adsAmount);
             }
+
+            _obstacleHider?.Refresh();
         }
     }
 }
