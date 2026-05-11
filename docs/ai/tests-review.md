@@ -60,10 +60,10 @@ Grouped by priority and logical bundle. Items inside a bundle share setup cost �
 - Tests use `*Config.Default` — truly deterministic.
 - Covers: P3-α, P4-α, P5-α. Also unlocks P3-J (cap tests), P4-N (DevCheats pollution), P5-E/P5-G (ADS blend tests).
 
-**[P0-2] Test factory consolidation** (~0.5 day)
-- `WeaponBuilderTestFactory` (P1-A) — move SO factories from 9 files into one.
-- `TestContextFactory.Create(...)` (P2-B) — single RaidContext builder used by all test files.
-- Covers: P1-A, P2-B, P2-C, P3-B, P4-A, P5-β. Unlocks faster future test authoring.
+**[P0-2] Test factory consolidation — ✅ SHIPPED**
+- `Assets/Tests/EditMode/Fakes/TestContextFactory.cs` — single RaidContext builder (replaces 15+ ad-hoc `CreateContext` helpers).
+- `Assets/Tests/EditMode/Fakes/WeaponBuilderTestFactory.cs` — single SO factory (replaces 9 per-file copies).
+- All P1-A / P2-B / P2-C / P3-B / P4-A / P5-β references in this doc were closed by these consolidations.
 
 **[P0-3] BT framework primitives tests** (P4-C, ~0.5 day)
 - New `BT/BTSelectorTests.cs`, `BT/BTSequenceTests.cs`, `BT/BTConditionTests.cs`, `BT/BTCooldownTests.cs`.
@@ -145,17 +145,16 @@ Grouped by priority and logical bundle. Items inside a bundle share setup cost �
 ### Recommended execution order
 
 ```
-1. P0-2 (factories consolidation) — unblocks everything else, no risk
+✅ P0-1 (DevCheats refactor)         — shipped 2026-05-05
+✅ P0-2 (factories consolidation)   — shipped (TestContextFactory + WeaponBuilderTestFactory у Fakes/)
    ↓
-2. P0-1 (DevCheats refactor) — unblocks 6 gap tests (caps, ADS blends)
+1. P0-3 (BT primitives) + P0-4 (priority order) — close biggest coverage debt
+2. P0-5 (WriteBackDurability) — critical persistence gap
    ↓
-3. P0-3 (BT primitives) + P0-4 (priority order) — close biggest coverage debt
-4. P0-5 (WriteBackDurability) — critical persistence gap
+3. P1-* in any order, bundled by file for locality
    ↓
-5. P1-* in any order, bundled by file for locality
-   ↓
-6. P2-1 (drop weak tests) — after new coverage in, safe to prune
-7. P2-2, P2-3 — polish
+4. P2-1 (drop weak tests) — after new coverage in, safe to prune
+5. P2-2, P2-3 — polish
 ```
 
 **Rough total effort:** ~6 working days if done sequentially. But most P1 items are independent — can be parallelized or spread over multiple sessions.

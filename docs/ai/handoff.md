@@ -172,15 +172,21 @@ Files: `View/BotDebugLabel.cs`, `View/WorldHealthBar.cs`, `View/BotView.cs`, `De
 ## What's deferred / open
 
 ### Gunplay backlog
-See [`gunplay/README.md`](./gunplay/README.md) — combat-polish epic converged. Remaining active candidates: HUD damage feedback, magazine drop physics.
+See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation shipped. Active candidates:
+- **Floating damage numbers v2** — typography / motion / hierarchy polish (competitor research first)
+- **Aim cursor v2** — variants per archetype / readability / dynamics (competitor research first)
+- **Maximal archetype differentiation** — every Builder combo mechanically unique, not just stat reskin (design pass needed before code)
+- **Bots must enter the screen before firing** — gate `WantsToFire` on camera-frustum visibility (avoids off-screen cheap shots)
+- HUD damage feedback, magazine drop physics
 
 ### Battle design open
 - Bleed L2 DPS values (playtest-driven)
 
-### Test debt (unchanged)
-- BT primitives 0 tests
-- Burst tests deferred
-- P0-2 test factory consolidation
+### Test debt
+- P0-3 BT primitives 0 tests (BTSelector / BTSequence / BTCondition / BTCooldown)
+- P0-4 Priority-order tests (Heal > Dodge > Combat > Patrol)
+- P0-5 WriteBackDurability coverage
+- Burst tests (`WeaponPhase.Bursting`) deferred
 
 ### Architecture debt
 - ✅ DevCheats/ViewCheats UI fragmentation — resolved (unified window)
@@ -214,9 +220,13 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish epic converged.
 2. `git log -15` for recent commits.
 3. Verify `mcp__unityMCP__run_tests` EditMode → 469/469.
 4. Sync with user on direction. Likely candidates:
-   - Remaining gunplay backlog (HUD damage feedback, magazine drop physics)
+   - Floating damage numbers v2 (typography + motion + hierarchy)
+   - Aim cursor v2 (per-archetype variants + readability)
+   - Maximal archetype differentiation (design pass + impl)
+   - Bots-only-shoot-when-visible (camera-frustum gate)
+   - HUD damage feedback / magazine drop physics
    - Bleed L2 DPS tuning (playtest-driven)
-   - Test debt closure (P0-2/3/4/5 — see `tests-review.md`)
+   - Test debt closure (P0-3/4/5 — see `tests-review.md`)
 5. Doc sync: `docs/ai/*.md` mirrors `.cursor/rules/*.mdc` per CLAUDE.md §8.
 
 ---

@@ -77,10 +77,35 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 
 ## Backlog (active candidates)
 
-- **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side feedback gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
+### Visual feedback / readability
+
+- **Floating damage numbers v2** — current `DamageNumberOverlay` шипи size-by-magnitude + absorption tint, але візуально базовий. Покращити: typography (custom font?), motion (animated reveal / arc trajectory / pop scale), hierarchy (crit vs normal vs kill), color language refined. Research competitors first: Borderlands / Helldivers 2 / Synthetik / Returnal — see what reads at top-down speed.
+- **Aim cursor v2** — current `AimCursorOverlay` має state-based 4-line crosshair + bloom + reload ring + hit markers. Покращити: cursor variants (per-archetype shapes? per-situation indicators?), readability (контраст vs busy backgrounds), dynamics (smoother transitions, predictive feedback). Research competitor cursors (Tarkov, Hunt, Synthetik, Returnal), then design preset system + optional player toggle.
+- **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
 - **Magazine drop physics** — reload drops magazine GO with physics. Visual flair, ~2-3h.
 
-Both are pure additive — no architectural risk if/when picked up.
+### Weapon identity
+
+- **Maximal archetype differentiation** — each Weapon Builder combination must feel mechanically distinct, not just stat reskin. Today differentiation lives у Stats + 3D visualization + Tau charge (laser-only) + laser rifle burst. Need to push further:
+  - Unique fire mechanics per archetype (charge curves, burst counts, spread patterns, alt-fire?)
+  - Unique reload behaviour (per-shell vs full-mag vs energy cell vent)
+  - Unique hit pause / camera shake / recoil signature
+  - Distinct screen-shake direction by archetype
+  - Possibly signature impact VFX per payload type
+  - Goal: blindfolded test — player names the archetype from feel alone
+  - Design pass needed before implementation: build a matrix of "what makes each of 6 archetypes mechanically unique"
+  - Overlap з weapon-builder Tier 10 (Weapon Feel Polish) — track here as it's primarily a feel concern, not composition
+
+### AI behaviour
+
+- **Bots must enter the screen before firing at the player** — bots currently engage on vision-range basis (RangedTarget=70m, PMC=35m). Player can take damage from off-screen sources — bad UX (cheap shots, no telegraph). Solution sketch:
+  - Gate `WantsToFire` on "bot visible in player camera frustum" (Camera.WorldToViewportPoint within 0-1 bounds + some margin)
+  - Alternative: bot must be within X distance of camera center, OR within FOV-aware screen-edge buffer
+  - Edge case: bot ducks behind cover then re-emerges off-screen — still gated. Acceptable.
+  - Could combine з bullet whiz / close-miss sound layer later (audio epic) so off-screen threats still telegraph
+  - Implementation hook: `BotCombatSystem.ProcessFire` early-out, OR `ShootNode` condition. Likely needs `RaidContext.CameraConfig` (frustum bounds passed in)
+
+All above are pure additive — no architectural risk if/when picked up.
 
 ---
 
