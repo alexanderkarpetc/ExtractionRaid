@@ -144,6 +144,7 @@ namespace Editor
             DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
             DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
             DrawSection("🧟 Horde", _config.Horde);
+            DrawSection("🎯 Bot Engagement Gate", _config.BotEngagement);
 
             // ── View-layer sections (mirrored from ViewCheats) ──
             // Single window over both configs — assets stay split on disk for
@@ -685,6 +686,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsMuzzleVfxSection>(so, "_muzzleVfx", folder, "MuzzleVfx");
             CreateSectionIfMissing<DevCheatsStaggerSection>(so, "_stagger", folder, "Stagger");
             CreateSectionIfMissing<DevCheatsHordeSection>(so, "_horde", folder, "Horde");
+            CreateSectionIfMissing<DevCheatsBotEngagementSection>(so, "_botEngagement", folder, "BotEngagement");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

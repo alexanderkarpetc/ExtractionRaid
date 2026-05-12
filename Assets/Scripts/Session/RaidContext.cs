@@ -128,6 +128,24 @@ namespace Session
         };
     }
 
+    /// <summary>
+    /// Player-centric global cap on bot fire range. Closes "off-screen damage without telegraph"
+    /// UX gap — bots whose distance to player exceeds <see cref="MaxEngagementRadius"/> won't
+    /// emit <c>WantsToFire</c> even if their per-type <c>EngageRange</c> allows it.
+    /// Default = disabled (0) so unit tests + legacy paths keep working unchanged.
+    /// </summary>
+    public struct BotEngagementConfig
+    {
+        public bool  Enabled;
+        public float MaxEngagementRadius;
+
+        public static BotEngagementConfig Default => new BotEngagementConfig
+        {
+            Enabled = false,
+            MaxEngagementRadius = 0f,
+        };
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -144,6 +162,7 @@ namespace Session
         public readonly ArmorConfig ArmorConfig;
         public readonly FOVConfig FOVConfig;
         public readonly MovementConfig MovementConfig;
+        public readonly BotEngagementConfig BotEngagementConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -154,7 +173,8 @@ namespace Session
             StaggerConfig? staggerConfig = null,
             ArmorConfig? armorConfig = null,
             FOVConfig? fovConfig = null,
-            MovementConfig? movementConfig = null)
+            MovementConfig? movementConfig = null,
+            BotEngagementConfig? botEngagementConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -170,6 +190,7 @@ namespace Session
             ArmorConfig = armorConfig ?? ArmorConfig.Default;
             FOVConfig = fovConfig ?? FOVConfig.Default;
             MovementConfig = movementConfig ?? MovementConfig.Default;
+            BotEngagementConfig = botEngagementConfig ?? BotEngagementConfig.Default;
         }
     }
 }

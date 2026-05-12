@@ -526,6 +526,11 @@ namespace Session
                 {
                     MoveSpeedMultiplier    = DevCheats.MoveSpeedMultiplier,
                     AdsMoveSpeedMultiplier = DevCheats.AdsMoveSpeedMultiplier,
+                },
+                botEngagementConfig: new BotEngagementConfig
+                {
+                    Enabled             = DevCheats.Config.BotEngagement.Enabled,
+                    MaxEngagementRadius = DevCheats.Config.BotEngagement.MaxEngagementRadius,
                 }
             );
 

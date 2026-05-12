@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -99,5 +100,77 @@ namespace Tests.EditMode
         }
 
         // (Scav_CannotHeal covered by BotHealTests.Scav_CannotHeal)
+
+        // Scav default EngageRange = 20m. Tests pick distances that exercise gate without
+        // tripping per-type EngageRange — gate effect is isolated.
+
+        [Test]
+        public void Tick_EngagementGate_OutsideRadius_BotDoesNotFire()
+        {
+            // Bot inside per-type EngageRange (20) but outside global player-screen radius (15) → no fire.
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 18f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 18f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 999f;
+            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
+            {
+                Enabled = true,
+                MaxEngagementRadius = 15f,
+            });
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bot.WantsToFire, "Bot outside gate radius should not fire even з visible target");
+        }
+
+        [Test]
+        public void Tick_EngagementGate_InsideRadius_BotFires()
+        {
+            // Bot inside global radius → gate doesn't trigger, fires normally.
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 999f;
+            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
+            {
+                Enabled = true,
+                MaxEngagementRadius = 15f,
+            });
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(bot.WantsToFire, "Bot inside gate radius should fire normally");
+        }
+
+        [Test]
+        public void Tick_EngagementGate_Disabled_FiresAtAnyDistanceWithinEngageRange()
+        {
+            // Gate disabled — fall through to per-type EngageRange only. Bot at 18m (within Scav's 20m).
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 18f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 18f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 999f;
+            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
+            {
+                Enabled = false,
+                MaxEngagementRadius = 15f, // irrelevant — gate off
+            });
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(bot.WantsToFire, "Gate disabled = per-type EngageRange is the only check");
+        }
     }
 }

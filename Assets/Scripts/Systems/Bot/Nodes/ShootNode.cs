@@ -18,6 +18,13 @@ namespace Systems.Bot.Nodes
             if (bb.DistanceToTarget > config.EngageRange)
                 return this.Traced(bot, BTStatus.Failure);
 
+            // Player-centric off-screen gate: even якщо EngageRange дозволяє, bots мусять бути
+            // в межах screen-aligned radius до гравця, інакше player ловить damage без telegraph.
+            // Орthogonal to EngageRange (per-bot identity) — це camera-driven UX rule.
+            var maxR = ctx.BotEngagementConfig.MaxEngagementRadius;
+            if (ctx.BotEngagementConfig.Enabled && maxR > 0f && bb.DistanceToTarget > maxR)
+                return this.Traced(bot, BTStatus.Failure);
+
             if (bb.ReactionTimer < config.ReactionTime)
             {
                 bb.DebugStatus = "Reacting...";
