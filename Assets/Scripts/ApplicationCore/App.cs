@@ -59,6 +59,7 @@ namespace ApplicationCore
         readonly BloodDecalPresenter _bloodDecalPresenter;
         readonly BulletHoleDecalPresenter _bulletHoleDecalPresenter;
         readonly CasingEjectorPresenter _casingEjectorPresenter;
+        readonly MagazineDropPresenter _magazineDropPresenter;
         readonly RagdollPresenter _ragdollPresenter;
         readonly FlinchPresenter _flinchPresenter;
         readonly BeamFlashPresenter _beamFlashPresenter;
@@ -82,6 +83,7 @@ namespace ApplicationCore
             _bloodDecalPresenter = new BloodDecalPresenter();
             _bulletHoleDecalPresenter = new BulletHoleDecalPresenter();
             _casingEjectorPresenter = new CasingEjectorPresenter();
+            _magazineDropPresenter = new MagazineDropPresenter();
             _ragdollPresenter = new RagdollPresenter();
             _flinchPresenter = new FlinchPresenter();
             _beamFlashPresenter = new BeamFlashPresenter();
@@ -223,6 +225,7 @@ namespace ApplicationCore
             _bloodDecalPresenter.Dispose();
             _bulletHoleDecalPresenter.Dispose();
             _casingEjectorPresenter.Dispose();
+            _magazineDropPresenter.Dispose();
             _ragdollPresenter.Dispose();
             _flinchPresenter.Dispose();
             _beamFlashPresenter.Dispose();
@@ -269,6 +272,7 @@ namespace ApplicationCore
             _bloodDecalPresenter.LateTick(RaidSession);
             _bulletHoleDecalPresenter.LateTick(RaidSession);
             _casingEjectorPresenter.LateTick(RaidSession);
+            _magazineDropPresenter.LateTick(RaidSession);
             _beamFlashPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }

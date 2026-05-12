@@ -21,6 +21,7 @@ namespace Dev
         [SerializeField] ViewCheatsBloodDecalSection _bloodDecal;
         [SerializeField] ViewCheatsBulletHoleSection _bulletHole;
         [SerializeField] ViewCheatsCasingsSection _casings;
+        [SerializeField] ViewCheatsMagazineSection _magazine;
         [SerializeField] ViewCheatsRagdollSection _ragdoll;
         [SerializeField] ViewCheatsWeaponDropSection _weaponDrop;
         [SerializeField] ViewCheatsHitFlashSection _hitFlash;
@@ -38,6 +39,9 @@ namespace Dev
 
         public ViewCheatsCasingsSection Casings =>
             _casings ? _casings : (_casings = CreateInstance<ViewCheatsCasingsSection>());
+
+        public ViewCheatsMagazineSection Magazine =>
+            _magazine ? _magazine : (_magazine = CreateInstance<ViewCheatsMagazineSection>());
 
         public ViewCheatsRagdollSection Ragdoll =>
             _ragdoll ? _ragdoll : (_ragdoll = CreateInstance<ViewCheatsRagdollSection>());

@@ -35,6 +35,7 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 - ✅ Procedural recoil kick on fire (`WeaponView.TriggerRecoilKick`)
 - ✅ Multi-stage muzzle flash + real-time light pulse
 - ✅ Casing ejection with hybrid auto-settle (linear damping ramp → kinematic freeze) — `CasingEjectorPresenter`
+- ✅ Magazine drop on reload (ballistic-only physics drop with DropDelay + hybrid settle) — `MagazineDropPresenter`. Laser uses a different visual (TBD — energy cell vent).
 - ✅ Tau-style beam flash for Laser archetype (per-pellet electric flicker LineRenderer)
 - ✅ Modular weapon visualization (payload base + delivery barrel composition — Tier 8.x*)
 - ✅ Weapon drop on ragdoll death (physics + impulse along shot direction)
@@ -82,7 +83,7 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 - **Floating damage numbers v2** — current `DamageNumberOverlay` шипи size-by-magnitude + absorption tint, але візуально базовий. Покращити: typography (custom font?), motion (animated reveal / arc trajectory / pop scale), hierarchy (crit vs normal vs kill), color language refined. Research competitors first: Borderlands / Helldivers 2 / Synthetik / Returnal — see what reads at top-down speed.
 - **Aim cursor v2** — current `AimCursorOverlay` має state-based 4-line crosshair + bloom + reload ring + hit markers. Покращити: cursor variants (per-archetype shapes? per-situation indicators?), readability (контраст vs busy backgrounds), dynamics (smoother transitions, predictive feedback). Research competitor cursors (Tarkov, Hunt, Synthetik, Returnal), then design preset system + optional player toggle.
 - **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
-- **Magazine drop physics** — reload drops magazine GO with physics. Visual flair, ~2-3h.
+- **Laser reload feedback** — counterpart to ballistic magazine drop. Likely energy cell vent (steam/heat burst at battery port) + ejected spent cell with different physics/lifetime. Reuse `WeaponReloadStarted` event filter on archetype="Laser".
 
 ### Weapon identity
 

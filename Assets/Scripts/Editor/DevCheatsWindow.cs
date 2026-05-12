@@ -157,6 +157,7 @@ namespace Editor
                 DrawSection("🩸 Blood Decals", view.BloodDecal);
                 DrawSection("🔫 Bullet Holes", view.BulletHole);
                 DrawSection("🥃 Casings", view.Casings);
+                DrawSection("📦 Magazine Drop", view.Magazine);
                 DrawSection("💀 Ragdoll", view.Ragdoll);
                 DrawSection("🔻 Weapon Drop", view.WeaponDrop);
                 DrawSection("⚡ Hit Flash", view.HitFlash);
@@ -643,6 +644,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsBloodDecalSection>(so, "_bloodDecal", folder, "BloodDecal");
             CreateSectionIfMissing<ViewCheatsBulletHoleSection>(so, "_bulletHole", folder, "BulletHole");
             CreateSectionIfMissing<ViewCheatsCasingsSection>(so, "_casings", folder, "Casings");
+            CreateSectionIfMissing<ViewCheatsMagazineSection>(so, "_magazine", folder, "Magazine");
             CreateSectionIfMissing<ViewCheatsRagdollSection>(so, "_ragdoll", folder, "Ragdoll");
             CreateSectionIfMissing<ViewCheatsWeaponDropSection>(so, "_weaponDrop", folder, "WeaponDrop");
             CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
