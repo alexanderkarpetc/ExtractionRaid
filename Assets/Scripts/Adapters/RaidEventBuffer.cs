@@ -58,6 +58,9 @@ namespace Adapters
         public float Damage;
         public string StringPayload;
         public string StringPayload2;
+        // Delivery firing pattern для WeaponFired event — let CameraShakePresenter and other
+        // view consumers dispatch per-archetype без читання WeaponEntityState.
+        public FiringPattern DeliveryPattern;
     }
 
     public class RaidEventBuffer : IRaidEvents
@@ -174,7 +177,7 @@ namespace Adapters
         }
 
         public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
-            float chargeRatio = 1f)
+            float chargeRatio = 1f, FiringPattern deliveryPattern = FiringPattern.Single)
         {
             _events.Add(new RaidEvent
             {
@@ -183,6 +186,7 @@ namespace Adapters
                 Direction = direction,
                 Damage = chargeRatio, // 0..1 charge level — used by BeamFlashPresenter for VFX scaling
                 StringPayload = payloadArchetype,
+                DeliveryPattern = deliveryPattern,
             });
         }
 

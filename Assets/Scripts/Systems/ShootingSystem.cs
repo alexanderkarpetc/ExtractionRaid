@@ -316,7 +316,8 @@ namespace Systems
                     weapon.PayloadDefinition?.Archetype, chargeRatio);
             }
 
-            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio);
+            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio,
+                weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
 
             // Ballistic Rifle signature (B1): increment barrel heat. Decay runs continuously
             // in WeaponHeatSystem, so sustained fire pushes net upward; tap-burst lets decay catch up.
@@ -475,7 +476,8 @@ namespace Systems
             }
 
             context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype,
-                weapon.BurstChargeRatio);
+                weapon.BurstChargeRatio,
+                weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
             weapon.LastFireTime = state.ElapsedTime;
 
             // Recoil per burst shot.

@@ -43,17 +43,37 @@ namespace View
                 {
                     case RaidEventType.WeaponFired:
                         // RaidEventBuffer.WeaponFired packs:
-                        //   Position  = origin
-                        //   Direction = fire direction
-                        // Kick pushes camera AGAINST shot direction (recoil feel).
-                        _shake.Kick(
-                            direction:        -e.Direction,
-                            magnitude:        cfg.FireKickMagnitude * scale,
-                            durationUnscaled: cfg.FireKickDuration);
-                        _shake.Tremor(
-                            magnitude:        cfg.FireTremorMagnitude * scale,
-                            durationUnscaled: cfg.FireTremorDuration,
-                            frequency:        cfg.TremorFrequency);
+                        //   Position        = origin
+                        //   Direction       = fire direction
+                        //   StringPayload   = "Ballistic"/"Laser"
+                        //   DeliveryPattern = Single/Auto/Scatter
+                        // A1 — per-archetype path composes shape × modifier; fallback to legacy
+                        // FireKick*/FireTremor* fields if disabled.
+                        if (cfg.PerArchetypeEnabled)
+                        {
+                            var r = ArchetypeShakeResolver.Resolve(cfg, e.StringPayload, e.DeliveryPattern);
+                            var kickDir = (-e.Direction + r.KickDirOffset).normalized;
+                            _shake.Kick(
+                                direction:        kickDir,
+                                magnitude:        r.KickMagnitude * scale,
+                                durationUnscaled: r.KickDuration);
+                            _shake.Tremor(
+                                magnitude:        r.TremorMagnitude * scale,
+                                durationUnscaled: r.TremorDuration,
+                                frequency:        r.TremorFrequency);
+                        }
+                        else
+                        {
+                            // Legacy single-profile path. Kick pushes camera AGAINST shot direction.
+                            _shake.Kick(
+                                direction:        -e.Direction,
+                                magnitude:        cfg.FireKickMagnitude * scale,
+                                durationUnscaled: cfg.FireKickDuration);
+                            _shake.Tremor(
+                                magnitude:        cfg.FireTremorMagnitude * scale,
+                                durationUnscaled: cfg.FireTremorDuration,
+                                frequency:        cfg.TremorFrequency);
+                        }
                         break;
 
                     case RaidEventType.EntityDamaged:

@@ -32,7 +32,7 @@ Bland dimensions (shared across all 6):
 
 | # | Item | Scope | Status |
 |---|---|---|---|
-| A1 | Per-archetype camera shake profiles | `ViewCheatsCameraShakeSection` → matrix or 6 profiles. Magnitude + direction + duration. | Planned, 3-4h |
+| A1 | Per-archetype camera shake profiles | 3 delivery shapes × 2 payload modifiers → 6 effective combos. World-space `KickDirOffset` shapes recoil direction (pistol snap-up, rifle climb, shotgun lateral shove). Payload modifies kick scale + tremor frequency (ballistic sharp/30Hz, laser smooth/18Hz). | ✅ shipped 2026-05-13 |
 | A2 | Per-payload impact VFX signature | Ballistic = current blood/spark. Laser = burn mark + smoke + glow. Swap у `ProjectilePresenter` / `CharacterHitFx`. | Planned, 4-5h (needs new VFX asset) |
 | A3 | Per-delivery recoil shape | Direction curve: pistol = snap+rebound, rifle = climb up, shotgun = horizontal shove. | Planned, 5-7h |
 | A4 | Per-archetype charge curve (Laser) | Pistol fast/low, rifle medium, shotgun slow/high. Tuning-only. | Planned, 2-3h |

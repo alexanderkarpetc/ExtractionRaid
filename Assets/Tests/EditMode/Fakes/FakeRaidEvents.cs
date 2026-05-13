@@ -66,7 +66,7 @@ namespace Tests.EditMode.Fakes
             BotDespawnedId = id;
         }
         public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
-            float chargeRatio = 1f) { }
+            float chargeRatio = 1f, FiringPattern deliveryPattern = FiringPattern.Single) { }
 
         public bool WeaponEquipStartedCalled;
         public string WeaponEquipStartedPrefabId;
