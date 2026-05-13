@@ -58,6 +58,22 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &4198339443846251051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c804fd55bb8442878d8bfe6dd6bb0c42, type: 3}
+  m_Name: CharacterXRayFeature
+  m_EditorClassIdentifier: Game::View.CharacterXRayFeature
+  m_Active: 1
+  characterLayerMask:
+    serializedVersion: 2
+    m_Bits: 4288
 --- !u!114 &5524263701378201010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -74,22 +90,6 @@ MonoBehaviour:
   blurMaterial: {fileID: 2100000, guid: 55146e11c386a4ebd806ecb71510c65a, type: 2}
   temporalBlendMaterial: {fileID: 2100000, guid: e800ff8fd3af940d0a556cdedb782832, type: 2}
   compositeMaterial: {fileID: 2100000, guid: 7740a8a9a783840408590e3264f50c8b, type: 2}
---- !u!114 &4198339443846251051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c804fd55bb8442878d8bfe6dd6bb0c42, type: 3}
-  m_Name: CharacterXRayFeature
-  m_EditorClassIdentifier: Game::View.CharacterXRayFeature
-  m_Active: 1
-  characterLayerMask:
-    serializedVersion: 2
-    m_Bits: 192
 --- !u!114 &7040413888796215543
 MonoBehaviour:
   m_ObjectHideFlags: 0
