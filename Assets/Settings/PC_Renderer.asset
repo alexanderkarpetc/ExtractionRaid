@@ -27,7 +27,9 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
   - {fileID: 5524263701378201010}
-  m_RendererFeatureMap: ad6b866f10d7b46cb2753b4e9120aa4c
+  - {fileID: 4198339443846251051}
+  - {fileID: 7040413888796215543}
+  m_RendererFeatureMap: ad6b866f10d7b46cb2753b4e9120aa4c2b82f7fc7a7f433af7c86c512193b461
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -72,6 +74,38 @@ MonoBehaviour:
   blurMaterial: {fileID: 2100000, guid: 55146e11c386a4ebd806ecb71510c65a, type: 2}
   temporalBlendMaterial: {fileID: 2100000, guid: e800ff8fd3af940d0a556cdedb782832, type: 2}
   compositeMaterial: {fileID: 2100000, guid: 7740a8a9a783840408590e3264f50c8b, type: 2}
+--- !u!114 &4198339443846251051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c804fd55bb8442878d8bfe6dd6bb0c42, type: 3}
+  m_Name: CharacterXRayFeature
+  m_EditorClassIdentifier: Game::View.CharacterXRayFeature
+  m_Active: 1
+  characterLayerMask:
+    serializedVersion: 2
+    m_Bits: 192
+--- !u!114 &7040413888796215543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ec79294221d4e54bdc7f73303806bea, type: 3}
+  m_Name: NonXRayFeature
+  m_EditorClassIdentifier: Game::View.NonXRayFeature
+  m_Active: 1
+  nonXRayLayerMask:
+    serializedVersion: 2
+    m_Bits: 2048
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0

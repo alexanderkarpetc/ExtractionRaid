@@ -24,6 +24,8 @@ namespace View
         [SerializeField] TwoBoneIK _rightHandIK; // optional; solves right hand → weapon RightHandGrip
         [SerializeField] Transform _swaySourceBone; // optional; spine/chest bone to drive weapon sway
 
+        const int CharacterEquipmentRenderQueue = 2999; // Transparent-1: after x-ray, before normal transparents.
+
         // Stagger / flinch (B.4) — spine chain refs. Resolved lazily on first access если
         // serialized fields порожні: walk skeleton до bones named "Spine", "Neck", "Head".
         // Optional — null tolerated (FlinchPresenter degrades gracefully if missing).
@@ -239,6 +241,24 @@ namespace View
             return null;
         }
 
+        static void ConfigureEquipmentXRayIgnore(GameObject root)
+        {
+            if (root == null) return;
+
+            LayerUtils.SetLayerRecursively(root, LayerUtils.CharacterEquipment);
+
+            var renderers = root.GetComponentsInChildren<Renderer>(true);
+            foreach (var renderer in renderers)
+            {
+                var materials = renderer.materials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    if (materials[i] != null)
+                        materials[i].renderQueue = CharacterEquipmentRenderQueue;
+                }
+            }
+        }
+
         public string CurrentWeaponPrefabId => _currentWeaponPrefabId;
 
         // ── Helmet ─────────────────────────────────────────
@@ -260,6 +280,7 @@ namespace View
             _currentHelmetModel = Instantiate(prefab, _helmetSlot);
             _currentHelmetModel.transform.localPosition = Vector3.zero;
             _currentHelmetModel.transform.localRotation = Quaternion.identity;
+            ConfigureEquipmentXRayIgnore(_currentHelmetModel);
         }
 
         public void ClearHelmetModel()
@@ -298,6 +319,7 @@ namespace View
             _currentArmorModel = Instantiate(prefab, _armorSlot);
             _currentArmorModel.transform.localPosition = Vector3.zero;
             _currentArmorModel.transform.localRotation = Quaternion.identity;
+            ConfigureEquipmentXRayIgnore(_currentArmorModel);
         }
 
         public void ClearArmorModel()

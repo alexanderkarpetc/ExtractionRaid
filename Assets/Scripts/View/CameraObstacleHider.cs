@@ -10,16 +10,12 @@ namespace View
     public class CameraObstacleHider : MonoBehaviour
     {
         const int HitBufferSize = 64;
-        static readonly int DitherId = Shader.PropertyToID("Dither");
-        static readonly int UnderscoreDitherId = Shader.PropertyToID("_Dither");
 
         [SerializeField] string _hideTag = "CameraHide";
         [SerializeField] Vector3 _targetOffset = new Vector3(0f, 1.2f, 0f);
         [SerializeField] LayerMask _raycastMask = Physics.DefaultRaycastLayers;
         [SerializeField] QueryTriggerInteraction _triggerInteraction = QueryTriggerInteraction.Ignore;
-        [SerializeField, Range(0f, 1f)] float _visibleDither = 0f;
-        [SerializeField, Range(0f, 1f)] float _hiddenDither = 1f;
-        [SerializeField, Min(0.01f)] float _fadeSpeed = 4f;
+        [SerializeField] CameraObstacleHiderSettings _settings;
 
         readonly RaycastHit[] _hitBuffer = new RaycastHit[HitBufferSize];
         readonly Dictionary<Transform, DitherState> _tracked = new();
@@ -28,6 +24,17 @@ namespace View
         MaterialPropertyBlock _propertyBlock;
 
         Transform _target;
+
+        CameraObstacleHiderSettings Settings
+        {
+            get
+            {
+                if (_settings == null)
+                    _settings = Resources.Load<CameraObstacleHiderSettings>(CameraObstacleHiderSettings.ResourcePath);
+
+                return _settings;
+            }
+        }
 
         public void SetTarget(Transform target)
         {
@@ -77,13 +84,6 @@ namespace View
                 Track(hideRoot);
             }
 
-            foreach (var kvp in _tracked)
-            {
-                kvp.Value.Target = _blockedThisFrame.Contains(kvp.Key)
-                    ? _hiddenDither
-                    : _visibleDither;
-            }
-
             UpdateDither(Time.deltaTime);
         }
 
@@ -106,26 +106,35 @@ namespace View
             if (_tracked.ContainsKey(root))
                 return;
 
+            var settings = Settings;
             var renderers = root.GetComponentsInChildren<Renderer>(true);
-            var state = new DitherState(renderers, _visibleDither, _hiddenDither);
+            var state = new DitherState(renderers, VisibleDither(settings));
+            state.SetTarget(HiddenDither(settings), DissolveDuration(settings));
             ApplyDither(state, state.Current);
             _tracked.Add(root, state);
         }
 
         void UpdateDither(float deltaTime)
         {
-            float step = Mathf.Max(0.01f, _fadeSpeed) * deltaTime;
-
             _removeBuffer.Clear();
             foreach (var kvp in _tracked)
             {
                 var state = kvp.Value;
-                state.Current = Mathf.MoveTowards(state.Current, state.Target, step);
+                var settings = Settings;
+                float visibleDither = VisibleDither(settings);
+                float hiddenDither = HiddenDither(settings);
+                float desiredTarget = _blockedThisFrame.Contains(kvp.Key) ? hiddenDither : visibleDither;
+                float duration = Mathf.Approximately(desiredTarget, hiddenDither)
+                    ? DissolveDuration(settings)
+                    : RestoreDuration(settings);
+
+                state.SetTarget(desiredTarget, duration);
+                state.Tick(deltaTime, CurveFor(settings, desiredTarget, hiddenDither));
                 ApplyDither(state, state.Current);
 
                 if (kvp.Key == null ||
-                    Mathf.Approximately(state.Target, _visibleDither) &&
-                    Mathf.Approximately(state.Current, _visibleDither))
+                    Mathf.Approximately(state.Target, visibleDither) &&
+                    Mathf.Approximately(state.Current, visibleDither))
                 {
                     _removeBuffer.Add(kvp.Key);
                 }
@@ -135,7 +144,7 @@ namespace View
             {
                 var root = _removeBuffer[i];
                 if (root != null && _tracked.TryGetValue(root, out var state))
-                    ApplyDither(state, _visibleDither);
+                    ApplyDither(state, VisibleDither(Settings));
 
                 _tracked.Remove(root);
             }
@@ -156,8 +165,11 @@ namespace View
 
                 _propertyBlock.Clear();
                 renderer.GetPropertyBlock(_propertyBlock);
-                _propertyBlock.SetFloat(DitherId, dither);
-                _propertyBlock.SetFloat(UnderscoreDitherId, dither);
+
+                var settings = Settings;
+                SetDitherFloat(_propertyBlock, settings != null ? settings.DitherPropertyName : "Dither", dither);
+                SetDitherFloat(_propertyBlock, settings != null ? settings.FallbackDitherPropertyName : "_Dither", dither);
+
                 renderer.SetPropertyBlock(_propertyBlock);
             }
         }
@@ -172,7 +184,7 @@ namespace View
             {
                 var root = _removeBuffer[i];
                 if (root != null && _tracked.TryGetValue(root, out var state))
-                    ApplyDither(state, _visibleDither);
+                    ApplyDither(state, VisibleDither(Settings));
             }
 
             _tracked.Clear();
@@ -188,17 +200,90 @@ namespace View
             ResetAll();
         }
 
+        static void SetDitherFloat(MaterialPropertyBlock block, string propertyName, float value)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+                return;
+
+            block.SetFloat(Shader.PropertyToID(propertyName), value);
+        }
+
+        static float VisibleDither(CameraObstacleHiderSettings settings)
+        {
+            return settings != null ? settings.VisibleDither : 0f;
+        }
+
+        static float HiddenDither(CameraObstacleHiderSettings settings)
+        {
+            return settings != null ? settings.HiddenDither : 1f;
+        }
+
+        static float DissolveDuration(CameraObstacleHiderSettings settings)
+        {
+            return settings != null ? Mathf.Max(0f, settings.DissolveDuration) : 0.25f;
+        }
+
+        static float RestoreDuration(CameraObstacleHiderSettings settings)
+        {
+            return settings != null ? Mathf.Max(0f, settings.RestoreDuration) : 0.2f;
+        }
+
+        static AnimationCurve CurveFor(CameraObstacleHiderSettings settings, float target, float hiddenDither)
+        {
+            if (settings == null)
+                return null;
+
+            return Mathf.Approximately(target, hiddenDither)
+                ? settings.DissolveCurve
+                : settings.RestoreCurve;
+        }
+
         sealed class DitherState
         {
             public readonly Renderer[] Renderers;
             public float Current;
             public float Target;
+            float _start;
+            float _elapsed;
+            float _duration;
 
-            public DitherState(Renderer[] renderers, float current, float target)
+            public DitherState(Renderer[] renderers, float current)
             {
                 Renderers = renderers;
                 Current = current;
+                Target = current;
+                _start = current;
+            }
+
+            public void SetTarget(float target, float duration)
+            {
+                if (Mathf.Approximately(Target, target))
+                    return;
+
+                _start = Current;
                 Target = target;
+                _elapsed = 0f;
+                _duration = duration;
+            }
+
+            public void Tick(float deltaTime, AnimationCurve curve)
+            {
+                if (Mathf.Approximately(Current, Target))
+                    return;
+
+                if (_duration <= 0f)
+                {
+                    Current = Target;
+                    return;
+                }
+
+                _elapsed += deltaTime;
+                float t = Mathf.Clamp01(_elapsed / _duration);
+                float shapedT = curve != null ? curve.Evaluate(t) : t;
+                Current = Mathf.LerpUnclamped(_start, Target, shapedT);
+
+                if (t >= 1f)
+                    Current = Target;
             }
         }
     }

@@ -28,6 +28,8 @@ namespace View
         public const int Bot         = 7;
         public const int FOV         = 8;
         public const int Ragdoll     = 9;
+        public const int CharacterEquipment = 10;
+        public const int NonXRay     = 11;
 
         /// <summary>
         /// Configure layer collision matrix at runtime. Called once from

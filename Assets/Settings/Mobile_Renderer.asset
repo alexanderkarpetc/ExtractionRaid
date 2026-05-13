@@ -26,8 +26,10 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: 0}
     probeSamplingDebugTexture: {fileID: 0}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
+  m_RendererFeatures:
+  - {fileID: 6199410369371382517}
+  - {fileID: 6645721988341740123}
+  m_RendererFeatureMap: f5224193e2ba08565bb21c17f0583a5c
   m_UseNativeRenderPass: 1
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 2
@@ -50,3 +52,35 @@ MonoBehaviour:
   m_CopyDepthMode: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &6199410369371382517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c804fd55bb8442878d8bfe6dd6bb0c42, type: 3}
+  m_Name: CharacterXRayFeature
+  m_EditorClassIdentifier: Game::View.CharacterXRayFeature
+  m_Active: 1
+  characterLayerMask:
+    serializedVersion: 2
+    m_Bits: 192
+--- !u!114 &6645721988341740123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ec79294221d4e54bdc7f73303806bea, type: 3}
+  m_Name: NonXRayFeature
+  m_EditorClassIdentifier: Game::View.NonXRayFeature
+  m_Active: 1
+  nonXRayLayerMask:
+    serializedVersion: 2
+    m_Bits: 2048

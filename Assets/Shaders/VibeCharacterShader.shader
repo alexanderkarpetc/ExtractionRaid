@@ -54,6 +54,12 @@ Shader "ExtractShaders/VibeCharacterShader"
         _HitDecalRadius("Hit Decal Radius", Float) = 0.35
         _HitDecalSoftness("Hit Decal Softness", Range(0.05, 1)) = 0.55
 
+        [Header(XRay Occluded Silhouette)]
+        _XRayColor("X-Ray Color", Color) = (0.1, 0.85, 1, 1)
+        _XRayAlpha("X-Ray Alpha", Range(0, 1)) = 0.35
+        _XRayRimPower("X-Ray Rim Power", Range(0.5, 8)) = 2.5
+        _XRayRimStrength("X-Ray Rim Strength", Range(0, 4)) = 1.5
+
         [HideInInspector] _Cull("__cull", Float) = 2.0
     }
 
@@ -62,8 +68,8 @@ Shader "ExtractShaders/VibeCharacterShader"
         Tags
         {
             "RenderPipeline" = "UniversalPipeline"
-            "RenderType" = "Opaque"
-            "Queue" = "Geometry"
+            "RenderType" = "Transparent"
+            "Queue" = "Transparent-1"
             "UniversalMaterialType" = "Lit"
         }
         LOD 200
@@ -88,6 +94,10 @@ Shader "ExtractShaders/VibeCharacterShader"
             float4 _HitDecalColor;
             float  _HitDecalRadius;
             float  _HitDecalSoftness;
+            float4 _XRayColor;
+            float  _XRayAlpha;
+            float  _XRayRimPower;
+            float  _XRayRimStrength;
             float  _Cull;
         CBUFFER_END
 
@@ -259,6 +269,65 @@ Shader "ExtractShaders/VibeCharacterShader"
                 half3 final = directDiffuse + ambient + emission;
                 final = MixFog(final, IN.fogCoord);
                 return half4(final, 1.0h);
+            }
+            ENDHLSL
+        }
+
+        // Shadow caster — boilerplate position-only pass.
+        // Draws only the fragments hidden behind already-rendered geometry.
+        Pass
+        {
+            Name "XRayOccluded"
+            Tags { "LightMode" = "VibeXRay" }
+
+            Cull [_Cull]
+            ZWrite Off
+            ZTest Greater
+            Blend SrcAlpha OneMinusSrcAlpha
+            ColorMask RGBA
+
+            HLSLPROGRAM
+            #pragma target 3.5
+            #pragma vertex   XRayVert
+            #pragma fragment XRayFrag
+            #pragma multi_compile_fog
+
+            struct Attributes
+            {
+                float3 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+            };
+
+            struct Varyings
+            {
+                float4 positionHCS : SV_POSITION;
+                float3 normalWS    : TEXCOORD0;
+                float3 positionWS  : TEXCOORD1;
+                float  fogCoord     : TEXCOORD2;
+            };
+
+            Varyings XRayVert(Attributes IN)
+            {
+                Varyings OUT;
+                VertexPositionInputs vp = GetVertexPositionInputs(IN.positionOS);
+                VertexNormalInputs vn = GetVertexNormalInputs(IN.normalOS);
+
+                OUT.positionHCS = vp.positionCS;
+                OUT.positionWS = vp.positionWS;
+                OUT.normalWS = vn.normalWS;
+                OUT.fogCoord = ComputeFogFactor(vp.positionCS.z);
+                return OUT;
+            }
+
+            half4 XRayFrag(Varyings IN) : SV_Target
+            {
+                half3 N = normalize(IN.normalWS);
+                half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
+                half rim = pow(saturate(1.0h - dot(N, V)), _XRayRimPower);
+                half glow = saturate(_XRayAlpha + rim * _XRayRimStrength);
+                half3 color = _XRayColor.rgb * glow;
+                color = MixFog(color, IN.fogCoord);
+                return half4(color, saturate(_XRayAlpha));
             }
             ENDHLSL
         }
