@@ -538,5 +538,148 @@ namespace Tests.EditMode
 
         static LaserPayloadDefinition MakeLaserPayloadSO(float chargeTime)
             => WeaponBuilderTestFactory.MakeLaser(chargeTime: chargeTime);
+
+        // ── Parabolic charge → damage curve (B3) ─────────────────
+
+        [Test]
+        public void LaserConfig_ChargeDamageMultiplier_ZeroCharge_ReturnsMin()
+        {
+            var cfg = LaserConfig.Default; // Min=0.1, Power=2
+            Assert.AreEqual(0.1f, cfg.ChargeDamageMultiplier(0f), 1e-4f);
+        }
+
+        [Test]
+        public void LaserConfig_ChargeDamageMultiplier_FullCharge_ReturnsOne()
+        {
+            var cfg = LaserConfig.Default;
+            Assert.AreEqual(1f, cfg.ChargeDamageMultiplier(1f), 1e-4f);
+        }
+
+        [Test]
+        public void LaserConfig_ChargeDamageMultiplier_HalfCharge_IsParabolic()
+        {
+            // min + (1-min) * 0.5² = 0.1 + 0.9 * 0.25 = 0.325 (vs old linear 0.65)
+            var cfg = LaserConfig.Default;
+            Assert.AreEqual(0.325f, cfg.ChargeDamageMultiplier(0.5f), 1e-4f);
+        }
+
+        [Test]
+        public void LaserConfig_ChargeDamageMultiplier_LinearPower_MatchesLerp()
+        {
+            // Power=1 → reproduces linear behavior. Validates curve gen.
+            var cfg = new LaserConfig
+            {
+                ChargeDamageMin = 0.3f,
+                ChargeDamagePower = 1f,
+            };
+            Assert.AreEqual(0.65f, cfg.ChargeDamageMultiplier(0.5f), 1e-4f);
+        }
+
+        // ── Laser Shotgun: charge controls projectile lifetime (B2) ──
+
+        [Test]
+        public void Tick_LaserShotgun_FullCharge_FiresLongerLifetimeProjectiles()
+        {
+            // Laser+Scatter with full charge — projectile lifetime should be base × ShotgunMaxLifetimeMult.
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            var scatterSO = WeaponBuilderTestFactory.MakeDelivery(id: "Scatter",
+                pattern: FiringPattern.Scatter);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.DeliveryDefinition = scatterSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 1.1f; // past charge → ratio = 1.0
+                var input = new FakeInputAdapter
+                {
+                    AttackPressed = false,
+                    AttackJustReleased = true,
+                };
+                var ctx = TestContextFactory.Create(input);
+
+                ShootingSystem.Tick(state, in ctx);
+
+                Assert.Greater(state.Projectiles.Count, 0, "Laser shotgun should fire pellets");
+                float baseLifetime = weapon.Stats.ProjectileLifetime;
+                float maxLifetime  = baseLifetime * LaserConfig.Default.ShotgunMaxLifetimeMult;
+                Assert.AreEqual(maxLifetime, state.Projectiles[0].Lifetime, 1e-3f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(laserSO);
+                Object.DestroyImmediate(scatterSO);
+            }
+        }
+
+        [Test]
+        public void Tick_LaserShotgun_ZeroCharge_FiresShorterLifetimeProjectiles()
+        {
+            // Quick tap (chargeRatio ≈ 0) → projectile lifetime shrinks to base × ShotgunMinLifetimeMult.
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var laserSO = MakeLaserPayloadSO(chargeTime: 1f);
+            var scatterSO = WeaponBuilderTestFactory.MakeDelivery(id: "Scatter",
+                pattern: FiringPattern.Scatter);
+            try
+            {
+                weapon.PayloadDefinition = laserSO;
+                weapon.DeliveryDefinition = scatterSO;
+                weapon.Phase = WeaponPhase.Charging;
+                weapon.ChargeStartTime = 0f;
+                state.ElapsedTime = 0f; // ratio = 0
+                var input = new FakeInputAdapter
+                {
+                    AttackPressed = false,
+                    AttackJustReleased = true,
+                };
+                var ctx = TestContextFactory.Create(input);
+
+                ShootingSystem.Tick(state, in ctx);
+
+                Assert.Greater(state.Projectiles.Count, 0);
+                float baseLifetime = weapon.Stats.ProjectileLifetime;
+                float minLifetime  = baseLifetime * LaserConfig.Default.ShotgunMinLifetimeMult;
+                Assert.AreEqual(minLifetime, state.Projectiles[0].Lifetime, 1e-3f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(laserSO);
+                Object.DestroyImmediate(scatterSO);
+            }
+        }
+
+        [Test]
+        public void Tick_NonLaserShotgun_NotAffectedByShotgunMultipliers()
+        {
+            // Ballistic+Scatter (regular shotgun) — must not have lifetime modulation.
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            var scatterSO = WeaponBuilderTestFactory.MakeDelivery(id: "Scatter",
+                pattern: FiringPattern.Scatter);
+            try
+            {
+                weapon.DeliveryDefinition = scatterSO; // payload stays default (non-laser)
+                var input = new FakeInputAdapter
+                {
+                    AttackPressed = true,
+                    AttackJustPressed = true, // Scatter is semi-auto gate
+                };
+                var ctx = TestContextFactory.Create(input);
+
+                ShootingSystem.Tick(state, in ctx);
+
+                Assert.Greater(state.Projectiles.Count, 0);
+                Assert.AreEqual(weapon.Stats.ProjectileLifetime,
+                    state.Projectiles[0].Lifetime, 1e-3f,
+                    "Ballistic shotgun must retain baseline lifetime");
+            }
+            finally { Object.DestroyImmediate(scatterSO); }
+        }
     }
 }

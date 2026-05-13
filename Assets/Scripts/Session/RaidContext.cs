@@ -1,4 +1,5 @@
 using Adapters;
+using UnityEngine;
 
 namespace Session
 {
@@ -146,6 +147,40 @@ namespace Session
         };
     }
 
+    /// <summary>
+    /// Laser-archetype tunables. Two concerns:
+    /// 1. Parabolic charge → damage curve (all lasers): <c>dmg = min + (1-min) × chargeRatio^power</c>.
+    /// 2. Laser+Scatter signature mechanic: charge ratio modulates both spread cone and projectile
+    ///    lifetime (range) — low charge = wide cone + short range, full charge = narrow cone + long range.
+    /// </summary>
+    public struct LaserConfig
+    {
+        public float ChargeDamageMin;        // 0 → multiplier at zero charge (default 0.1)
+        public float ChargeDamagePower;      // curve exponent — 1 = linear, 2 = parabolic (default 2.0)
+        public float ShotgunMinSpreadMult;   // multiplier on SpreadAngle at full charge (default 0.15)
+        public float ShotgunMaxSpreadMult;   // multiplier on SpreadAngle at zero charge (default 1.5)
+        public float ShotgunMinLifetimeMult; // multiplier on lifetime at zero charge (default 0.3)
+        public float ShotgunMaxLifetimeMult; // multiplier on lifetime at full charge (default 1.5)
+
+        public static LaserConfig Default => new LaserConfig
+        {
+            ChargeDamageMin        = 0.1f,
+            ChargeDamagePower      = 2f,
+            ShotgunMinSpreadMult   = 0.15f,
+            ShotgunMaxSpreadMult   = 1.5f,
+            ShotgunMinLifetimeMult = 0.3f,
+            ShotgunMaxLifetimeMult = 1.5f,
+        };
+
+        /// <summary>Parabolic charge → damage multiplier. Computes once; safe for all archetypes (ballistic chargeRatio=1 → returns 1).</summary>
+        public float ChargeDamageMultiplier(float chargeRatio)
+        {
+            float r = Mathf.Clamp01(chargeRatio);
+            float curve = Mathf.Pow(r, ChargeDamagePower);
+            return ChargeDamageMin + (1f - ChargeDamageMin) * curve;
+        }
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -163,6 +198,7 @@ namespace Session
         public readonly FOVConfig FOVConfig;
         public readonly MovementConfig MovementConfig;
         public readonly BotEngagementConfig BotEngagementConfig;
+        public readonly LaserConfig LaserConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -174,7 +210,8 @@ namespace Session
             ArmorConfig? armorConfig = null,
             FOVConfig? fovConfig = null,
             MovementConfig? movementConfig = null,
-            BotEngagementConfig? botEngagementConfig = null)
+            BotEngagementConfig? botEngagementConfig = null,
+            LaserConfig? laserConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -191,6 +228,7 @@ namespace Session
             FOVConfig = fovConfig ?? FOVConfig.Default;
             MovementConfig = movementConfig ?? MovementConfig.Default;
             BotEngagementConfig = botEngagementConfig ?? BotEngagementConfig.Default;
+            LaserConfig = laserConfig ?? LaserConfig.Default;
         }
     }
 }

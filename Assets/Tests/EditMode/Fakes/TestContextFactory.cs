@@ -25,6 +25,7 @@ namespace Tests.EditMode.Fakes
             FOVConfig? fovConfig = null,
             MovementConfig? movementConfig = null,
             BotEngagementConfig? botEngagementConfig = null,
+            LaserConfig? laserConfig = null,
             float deltaTime = 1f / 60f)
         {
             return new RaidContext(
@@ -39,7 +40,8 @@ namespace Tests.EditMode.Fakes
                 armorConfig: armorConfig,
                 fovConfig: fovConfig,
                 movementConfig: movementConfig,
-                botEngagementConfig: botEngagementConfig);
+                botEngagementConfig: botEngagementConfig,
+                laserConfig: laserConfig);
         }
     }
 }

@@ -264,14 +264,25 @@ namespace Systems
                 weapon.Stats.BaseArmorDamage + ammoArmorDmg);
             float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
-            // Charge multiplier — quick tap = MinChargeMultiplier × dmg, full charge = 1.0×.
-            // ballistic chargeRatio is always 1 → multiplier 1, no behavior change.
-            const float MinChargeMultiplier = 0.3f;
-            float chargeMul = Mathf.Lerp(MinChargeMultiplier, 1f, chargeRatio);
-            totalDamage *= chargeMul;
+            // Charge multiplier — parabolic curve через LaserConfig (default min=0.1, power=2).
+            // Ballistic chargeRatio is always 1 → multiplier = 1, no behavior change.
+            totalDamage *= context.LaserConfig.ChargeDamageMultiplier(chargeRatio);
+
+            // Laser+Scatter signature: chargeRatio modulates BOTH spread cone width AND
+            // projectile lifetime. Low charge → wide cone × short range (buckshot). Full charge →
+            // narrow cone × long range (focused beam-cluster). Other archetypes unchanged.
+            bool isLaserShotgun = weapon.PayloadDefinition is LaserPayloadDefinition
+                                && weapon.DeliveryDefinition?.Pattern == FiringPattern.Scatter;
+            float spreadMult   = isLaserShotgun
+                ? Mathf.Lerp(context.LaserConfig.ShotgunMaxSpreadMult, context.LaserConfig.ShotgunMinSpreadMult, chargeRatio)
+                : 1f;
+            float lifetimeMult = isLaserShotgun
+                ? Mathf.Lerp(context.LaserConfig.ShotgunMinLifetimeMult, context.LaserConfig.ShotgunMaxLifetimeMult, chargeRatio)
+                : 1f;
 
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
-            var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
+            var halfSpread = weapon.Stats.SpreadAngle * 0.5f * spreadMult;
+            var lifetime   = weapon.Stats.ProjectileLifetime * lifetimeMult;
 
             for (int i = 0; i < count; i++)
             {
@@ -283,7 +294,7 @@ namespace Systems
                 var projectile = ProjectileEntityState.Create(
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
-                    state.ElapsedTime, weapon.Stats.ProjectileLifetime,
+                    state.ElapsedTime, lifetime,
                     totalDamage * cfg.DamageMultiplier,
                     weapon.Stats.HeadshotDamageMultiplier,
                     targetedEntityId,
@@ -418,9 +429,10 @@ namespace Systems
                 weapon.Stats.BaseArmorDamage + ammoArmorDmg);
             float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
-            const float MinChargeMultiplier = 0.3f;
-            float chargeMul = Mathf.Lerp(MinChargeMultiplier, 1f, weapon.BurstChargeRatio);
-            totalDamage *= chargeMul;
+            // Same parabolic curve as initial fire — burst inherits cached chargeRatio.
+            // No spread/lifetime modulation here: burst only triggers for Laser+Auto (single
+            // pellet per shot), not Laser+Scatter. If that ever changes — mirror the modulation.
+            totalDamage *= context.LaserConfig.ChargeDamageMultiplier(weapon.BurstChargeRatio);
 
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
             var halfSpread = weapon.Stats.SpreadAngle * 0.5f;

@@ -531,6 +531,15 @@ namespace Session
                 {
                     Enabled             = DevCheats.Config.BotEngagement.Enabled,
                     MaxEngagementRadius = DevCheats.Config.BotEngagement.MaxEngagementRadius,
+                },
+                laserConfig: new LaserConfig
+                {
+                    ChargeDamageMin        = DevCheats.Config.Laser.ChargeDamageMin,
+                    ChargeDamagePower      = DevCheats.Config.Laser.ChargeDamagePower,
+                    ShotgunMinSpreadMult   = DevCheats.Config.Laser.ShotgunMinSpreadMult,
+                    ShotgunMaxSpreadMult   = DevCheats.Config.Laser.ShotgunMaxSpreadMult,
+                    ShotgunMinLifetimeMult = DevCheats.Config.Laser.ShotgunMinLifetimeMult,
+                    ShotgunMaxLifetimeMult = DevCheats.Config.Laser.ShotgunMaxLifetimeMult,
                 }
             );
 
