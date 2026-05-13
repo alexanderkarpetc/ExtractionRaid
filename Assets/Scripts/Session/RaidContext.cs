@@ -181,6 +181,40 @@ namespace Session
         }
     }
 
+    /// <summary>
+    /// Ballistic Rifle signature mechanic (B1). Sustained Ballistic+Auto fire grows weapon heat,
+    /// heat multiplies spread (parabolic curve). Heat decays continuously via WeaponHeatSystem.
+    /// Only Ballistic+Auto path increments — other archetypes have no contribution.
+    /// </summary>
+    public struct BarrelHeatConfig
+    {
+        public bool  Enabled;
+        public int   MaxHeatShots;        // saturation point (shots to reach heat=1)
+        public float DecayPerSecond;      // heat decay (1 → 0 over 1/decay seconds)
+        public float HeatCurvePower;      // curve exponent for heat → spread mult
+        public float MaxSpreadMultiplier; // spread multiplier at heat=1
+
+        public static BarrelHeatConfig Default => new BarrelHeatConfig
+        {
+            Enabled             = false, // disabled у tests by default — opt-in
+            MaxHeatShots        = 12,
+            DecayPerSecond      = 0.5f,
+            HeatCurvePower      = 1.8f,
+            MaxSpreadMultiplier = 3f,
+        };
+
+        /// <summary>Effective spread multiplier за heat. <c>1 + curve × (max-1)</c>.</summary>
+        public float SpreadMultiplier(float heatLevel)
+        {
+            float h = Mathf.Clamp01(heatLevel);
+            float curve = Mathf.Pow(h, HeatCurvePower);
+            return 1f + curve * (MaxSpreadMultiplier - 1f);
+        }
+
+        /// <summary>Heat increment per shot. <c>1/MaxHeatShots</c>.</summary>
+        public float HeatPerShot => MaxHeatShots > 0 ? 1f / MaxHeatShots : 0f;
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -199,6 +233,7 @@ namespace Session
         public readonly MovementConfig MovementConfig;
         public readonly BotEngagementConfig BotEngagementConfig;
         public readonly LaserConfig LaserConfig;
+        public readonly BarrelHeatConfig BarrelHeatConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -211,7 +246,8 @@ namespace Session
             FOVConfig? fovConfig = null,
             MovementConfig? movementConfig = null,
             BotEngagementConfig? botEngagementConfig = null,
-            LaserConfig? laserConfig = null)
+            LaserConfig? laserConfig = null,
+            BarrelHeatConfig? barrelHeatConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -229,6 +265,7 @@ namespace Session
             MovementConfig = movementConfig ?? MovementConfig.Default;
             BotEngagementConfig = botEngagementConfig ?? BotEngagementConfig.Default;
             LaserConfig = laserConfig ?? LaserConfig.Default;
+            BarrelHeatConfig = barrelHeatConfig ?? BarrelHeatConfig.Default;
         }
     }
 }

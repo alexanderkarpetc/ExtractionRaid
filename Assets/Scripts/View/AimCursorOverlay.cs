@@ -159,25 +159,42 @@ namespace View
             float adsGap = Mathf.Lerp(BaseGap, DevCheats.AdsBaseGap, _adsAmount);
             float adsBloomExtra = Mathf.Lerp(BloomExtraGap, DevCheats.AdsBloomExtraGap, _adsAmount);
 
+            // Ballistic Rifle heat telegraph (B1): grow crosshair gap + tint warm color
+            // proportional to weapon.HeatLevel via parabolic curve. Other archetypes have
+            // HeatLevel = 0 → no effect.
+            var heatCfg = DevCheats.Config?.BarrelHeat;
+            float heatCurve = 0f;
+            Color heatTint  = Color.white;
+            if (heatCfg != null && heatCfg.Enabled && weapon.HeatLevel > 0f)
+            {
+                heatCurve = Mathf.Pow(weapon.HeatLevel, heatCfg.HeatCurvePower);
+                heatTint  = heatCfg.HotTintColor;
+            }
+            // Extra gap scales bloom by heat — at heat=1 crosshair fully bloomed.
+            float heatGapExtra = adsBloomExtra * heatCurve;
+
             switch (weapon.Phase)
             {
                 case WeaponPhase.Ready:
                     var readyColor = HasAmmo(weapon, state) ? NormalColor : WarningColor;
-                    DrawCrosshairLines(pos, adsGap, readyColor, alphaMul, _adsAmount);
+                    DrawCrosshairLines(pos, adsGap + heatGapExtra,
+                        Color.Lerp(readyColor, heatTint, heatCurve), alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Firing:
                     // Max bloom — Firing lasts 1 tick before becoming Cooldown
-                    DrawCrosshairLines(pos, adsGap + adsBloomExtra, BloomColor, alphaMul, _adsAmount);
+                    DrawCrosshairLines(pos, adsGap + adsBloomExtra + heatGapExtra,
+                        Color.Lerp(BloomColor, heatTint, heatCurve), alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Cooldown:
                     float cooldownT = weapon.Stats.FireInterval > 0f
                         ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.Stats.FireInterval))
                         : 1f;
-                    float bloomGap = adsGap + adsBloomExtra * (1f - cooldownT);
+                    float bloomGap = adsGap + adsBloomExtra * (1f - cooldownT) + heatGapExtra;
                     var bloomLerp = Color.Lerp(BloomColor, NormalColor, cooldownT);
-                    DrawCrosshairLines(pos, bloomGap, bloomLerp, alphaMul, _adsAmount);
+                    DrawCrosshairLines(pos, bloomGap,
+                        Color.Lerp(bloomLerp, heatTint, heatCurve), alphaMul, _adsAmount);
                     break;
 
                 case WeaponPhase.Reloading:

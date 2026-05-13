@@ -146,6 +146,7 @@ namespace Editor
             DrawSection("🧟 Horde", _config.Horde);
             DrawSection("🎯 Bot Engagement Gate", _config.BotEngagement);
             DrawSection("🔬 Laser (charge + shotgun)", _config.Laser);
+            DrawSection("🔥 Barrel Heat (rifle)", _config.BarrelHeat);
 
             // ── View-layer sections (mirrored from ViewCheats) ──
             // Single window over both configs — assets stay split on disk for
@@ -689,6 +690,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsHordeSection>(so, "_horde", folder, "Horde");
             CreateSectionIfMissing<DevCheatsBotEngagementSection>(so, "_botEngagement", folder, "BotEngagement");
             CreateSectionIfMissing<DevCheatsLaserSection>(so, "_laser", folder, "Laser");
+            CreateSectionIfMissing<DevCheatsBarrelHeatSection>(so, "_barrelHeat", folder, "BarrelHeat");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

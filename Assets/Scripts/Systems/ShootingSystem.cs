@@ -280,8 +280,17 @@ namespace Systems
                 ? Mathf.Lerp(context.LaserConfig.ShotgunMinLifetimeMult, context.LaserConfig.ShotgunMaxLifetimeMult, chargeRatio)
                 : 1f;
 
+            // Ballistic Rifle signature (B1): sustained Ballistic+Auto fire heats barrel,
+            // heat multiplies spread по parabolic curve. Decay paths через WeaponHeatSystem.
+            // Other archetypes leave HeatLevel = 0 → multiplier = 1.
+            bool isBallisticAuto = weapon.PayloadDefinition is BallisticPayloadDefinition
+                                && weapon.DeliveryDefinition?.Pattern == FiringPattern.Auto;
+            float heatSpreadMult = (isBallisticAuto && context.BarrelHeatConfig.Enabled)
+                ? context.BarrelHeatConfig.SpreadMultiplier(weapon.HeatLevel)
+                : 1f;
+
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
-            var halfSpread = weapon.Stats.SpreadAngle * 0.5f * spreadMult;
+            var halfSpread = weapon.Stats.SpreadAngle * 0.5f * spreadMult * heatSpreadMult;
             var lifetime   = weapon.Stats.ProjectileLifetime * lifetimeMult;
 
             for (int i = 0; i < count; i++)
@@ -308,6 +317,11 @@ namespace Systems
             }
 
             context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio);
+
+            // Ballistic Rifle signature (B1): increment barrel heat. Decay runs continuously
+            // in WeaponHeatSystem, so sustained fire pushes net upward; tap-burst lets decay catch up.
+            if (isBallisticAuto && context.BarrelHeatConfig.Enabled)
+                weapon.HeatLevel = Mathf.Min(1f, weapon.HeatLevel + context.BarrelHeatConfig.HeatPerShot);
 
             // Burst entry: laser + Auto delivery → Bursting phase queues N-1 follow-up
             // shots, fired automatically by TickBurst at fixed interval. Burst length

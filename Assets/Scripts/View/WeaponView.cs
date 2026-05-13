@@ -42,6 +42,14 @@ namespace View
         GameObject _attachedDelivery;
         Transform  _resolvedMuzzlePoint;
 
+        // B1 — barrel heat glow. Renderers cached at AttachDelivery time; MPB applied per-frame
+        // by SetHeat. URP Lit needs _EMISSION keyword enabled — we force it per-instance via
+        // material clone (renderer.materials triggers Unity's auto-instance).
+        Renderer[] _barrelRenderers;
+        MaterialPropertyBlock _heatMpb;
+        static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
+        float _appliedHeat = -1f; // track to avoid redundant MPB writes
+
         // Procedural recoil state — local (not RaidState): purely visual feedback.
         Vector3 _kickRestLocalPos;
         bool    _kickRestCached;
@@ -96,6 +104,42 @@ namespace View
                 worldPos.y = cfg.ProjectileSpawnHeight;
                 _resolvedMuzzlePoint.position = worldPos;
             }
+
+            // B1 — cache barrel renderers + enable emission keyword per-instance. Auto-instances
+            // material via .materials accessor — keyword change isolated to this weapon view.
+            _barrelRenderers = _attachedDelivery.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < _barrelRenderers.Length; i++)
+            {
+                var mats = _barrelRenderers[i].materials; // triggers instance clone
+                for (int m = 0; m < mats.Length; m++)
+                    if (mats[m] != null) mats[m].EnableKeyword("_EMISSION");
+            }
+            _heatMpb = new MaterialPropertyBlock();
+            _appliedHeat = -1f;
+        }
+
+        /// <summary>
+        /// B1 — push <see cref="WeaponEntityState.HeatLevel"/> from state each frame.
+        /// Drives barrel emission color glow (quadratic ramp — early heat ≈ no visible glow,
+        /// late heat = bright). Called by <c>PlayerPresenter.LateTick</c>.
+        /// </summary>
+        public void SetHeat(float heatLevel)
+        {
+            if (_barrelRenderers == null || _barrelRenderers.Length == 0 || _heatMpb == null) return;
+            // Skip writes коли heat didn't change meaningfully — cheap optimization for cold-barrel idle.
+            if (Mathf.Abs(heatLevel - _appliedHeat) < 0.005f) return;
+            _appliedHeat = heatLevel;
+
+            var cfg = DevCheats.Config?.BarrelHeat;
+            if (cfg == null) return;
+
+            // Quadratic ramp — visible glow only у upper half of heat.
+            float t = heatLevel * heatLevel;
+            var color = cfg.BarrelEmissionColor * (cfg.BarrelEmissionIntensity * t);
+            _heatMpb.SetColor(EmissionColorId, color);
+
+            for (int i = 0; i < _barrelRenderers.Length; i++)
+                if (_barrelRenderers[i] != null) _barrelRenderers[i].SetPropertyBlock(_heatMpb);
         }
 
         public void PlayMuzzleFlash()

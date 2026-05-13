@@ -114,5 +114,14 @@ namespace State
         /// Time of last burst shot — driver for inter-shot interval pacing within Bursting.
         /// </summary>
         public float       LastBurstShotTime;
+
+        /// <summary>
+        /// Ballistic Rifle signature mechanic (B1) — sustained-fire "barrel heat" 0..1.
+        /// Each Ballistic+Auto shot increments; <see cref="Systems.WeaponHeatSystem"/> decays
+        /// continuously. Heat multiplies spread via parabolic curve у ShootingSystem. Persists
+        /// across reload + weapon swap (only decays through time). 0 for non-Ballistic+Auto
+        /// archetypes (no increment path).
+        /// </summary>
+        public float       HeatLevel;
     }
 }

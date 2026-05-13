@@ -40,12 +40,14 @@ Bland dimensions (shared across all 6):
 
 ### Track B — Per-combo signature mechanic
 
-**Status (2026-05-13):** brainstorm complete, 2 new mechanics + 1 cross-cutting tweak locked. B2 + B3 **shipped**; B1 remaining.
+**Status (2026-05-13):** all 3 work items **shipped**. Track B complete.
 
 **Work items:**
-- B1: Ballistic Rifle heat-up spread (with smooth telegraph) — **TODO**
+- B1: Ballistic Rifle heat-up spread (parabolic curve + crosshair bloom/tint + barrel emission glow) — ✅ shipped 2026-05-13
 - B2: Laser Shotgun charge → focus + range — ✅ shipped 2026-05-13
 - B3: Cross-cutting parabolic Laser charge damage curve — ✅ shipped 2026-05-13
+
+Heat persists across reload + weapon swap (decay only via `WeaponHeatSystem.Tick` — no hard reset, per user decision Q8).
 
 ### Sequencing
 

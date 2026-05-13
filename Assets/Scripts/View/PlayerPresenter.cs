@@ -122,6 +122,10 @@ namespace View
                     float vestDur = armorSlots.BodyArmor?.DurabilityPercent ?? 0f;
                     _playerView.UpdateArmor(helmetDur, vestDur);
                 }
+
+                // B1 — push barrel heat into WeaponView for emission glow telegraph.
+                var equipped = session.RaidState.PlayerEntity.EquippedWeapon;
+                _playerView.WeaponView?.SetHeat(equipped?.HeatLevel ?? 0f);
             }
         }
 

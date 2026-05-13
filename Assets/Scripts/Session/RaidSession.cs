@@ -540,6 +540,14 @@ namespace Session
                     ShotgunMaxSpreadMult   = DevCheats.Config.Laser.ShotgunMaxSpreadMult,
                     ShotgunMinLifetimeMult = DevCheats.Config.Laser.ShotgunMinLifetimeMult,
                     ShotgunMaxLifetimeMult = DevCheats.Config.Laser.ShotgunMaxLifetimeMult,
+                },
+                barrelHeatConfig: new BarrelHeatConfig
+                {
+                    Enabled             = DevCheats.Config.BarrelHeat.Enabled,
+                    MaxHeatShots        = DevCheats.Config.BarrelHeat.MaxHeatShots,
+                    DecayPerSecond      = DevCheats.Config.BarrelHeat.DecayPerSecond,
+                    HeatCurvePower      = DevCheats.Config.BarrelHeat.HeatCurvePower,
+                    MaxSpreadMultiplier = DevCheats.Config.BarrelHeat.MaxSpreadMultiplier,
                 }
             );
 
@@ -571,6 +579,9 @@ namespace Session
             MedkitSystem.Tick(RaidState, in context);
             StatusEffectSystem.Tick(RaidState, in context);
             BandageSystem.Tick(RaidState, in context);
+            // Heat decay BEFORE ShootingSystem — same-frame increment net positive під час
+            // sustained fire, decay leads коли player не стріляє.
+            WeaponHeatSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
             PlayerFOVSystem.Tick(RaidState, in context);
