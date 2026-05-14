@@ -9,15 +9,16 @@ Shader "ExtractShaders/MainBase"
 		_Texture( "Texture", 2D ) = "white" {}
 		_Saturate( "Saturate", Float ) = 0
 		_ColorEmission( "ColorEmission", Color ) = ( 1, 1, 1, 0 )
-		_BrightnessEmission( "BrightnessEmission", Float ) = 0
+		_Emission( "Emission", Float ) = 0
 		_Color2( "Color2", Color ) = ( 1, 1, 1, 0 )
 		[Toggle( _USEALPHA_ON )] _UseAlpha( "UseAlpha", Float ) = 0
 		_ColorStreng( "ColorStreng", Float ) = 0
 		_Dither( "Dither", Float ) = 0
-		_Noise( "Noise", 2D ) = "white" {}
+		_NoiseDither( "NoiseDither", 2D ) = "white" {}
 		[Toggle( _VERTEX_COORD_ON )] _Vertex_Coord( "Vertex_Coord", Float ) = 0
 		[Toggle( _FRENSEL_ON )] _Frensel( "Frensel", Float ) = 0
 		_Bias_Scale_PowerFrensel( "Bias_Scale_Power Frensel", Vector ) = ( 0, 1, 5, 0 )
+		_NosieEmission( "NosieEmission", 2D ) = "white" {}
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 
 
@@ -321,11 +322,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -358,7 +360,8 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			sampler2D _Texture;
-			sampler2D _Noise;
+			sampler2D _NosieEmission;
+			sampler2D _NoiseDither;
 
 
 			
@@ -591,6 +594,7 @@ Shader "ExtractShaders/MainBase"
 				float3 lerpResult43 = lerp( ( ( 1.0 - staticSwitch35 ) * tex2DNode1.rgb ) , (lerpResult22).xyz , 0.5);
 				
 				float2 texCoord57 = input.ase_texcoord7.xy * float2( 1,1 ) + float2( 0,0 );
+				
 				#ifdef _VERTEX_COORD_ON
 				float3 staticSwitch59 = input.ase_texcoord8.xyz;
 				#else
@@ -604,9 +608,9 @@ Shader "ExtractShaders/MainBase"
 				float Metallic = 0.0;
 				float Smoothness = 0.0;
 				float Occlusion = 1;
-				float3 Emission = ( _ColorEmission.rgb * _BrightnessEmission * temp_output_63_0 );
+				float3 Emission = ( _ColorEmission.rgb * _Emission * temp_output_63_0 * tex2D( _NosieEmission, ( (texCoord57*_NosieEmission_ST.xy + 0.0) + ( _NosieEmission_ST.zw * _TimeParameters.x ) ) ).r );
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 				float AlphaClipThresholdShadow = 0.5;
 				float3 BakedGI = 0;
 				float3 RefractionColor = 1;
@@ -937,11 +941,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -973,7 +978,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			float3 _LightDirection;
@@ -1142,7 +1147,7 @@ Shader "ExtractShaders/MainBase"
 				
 
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 				float AlphaClipThresholdShadow = 0.5;
 
 				#if defined( ASE_DEPTH_WRITE_ON )
@@ -1253,11 +1258,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -1289,7 +1295,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -1444,7 +1450,7 @@ Shader "ExtractShaders/MainBase"
 				
 
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#if defined( ASE_DEPTH_WRITE_ON )
 					float DeviceDepth = input.positionCS.z;
@@ -1549,11 +1555,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -1586,7 +1593,8 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			sampler2D _Texture;
-			sampler2D _Noise;
+			sampler2D _NosieEmission;
+			sampler2D _NoiseDither;
 
 
 			
@@ -1759,6 +1767,7 @@ Shader "ExtractShaders/MainBase"
 				float3 lerpResult43 = lerp( ( ( 1.0 - staticSwitch35 ) * tex2DNode1.rgb ) , (lerpResult22).xyz , 0.5);
 				
 				float2 texCoord57 = input.ase_texcoord3.xy * float2( 1,1 ) + float2( 0,0 );
+				
 				#ifdef _VERTEX_COORD_ON
 				float3 staticSwitch59 = input.ase_texcoord5.xyz;
 				#else
@@ -1767,9 +1776,9 @@ Shader "ExtractShaders/MainBase"
 				
 
 				float3 BaseColor = lerpResult43;
-				float3 Emission = ( _ColorEmission.rgb * _BrightnessEmission * temp_output_63_0 );
+				float3 Emission = ( _ColorEmission.rgb * _Emission * temp_output_63_0 * tex2D( _NosieEmission, ( (texCoord57*_NosieEmission_ST.xy + 0.0) + ( _NosieEmission_ST.zw * _TimeParameters.x ) ) ).r );
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#ifdef _ALPHATEST_ON
 					clip(Alpha - AlphaClipThreshold);
@@ -1866,11 +1875,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -1903,7 +1913,7 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			sampler2D _Texture;
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -2080,7 +2090,7 @@ Shader "ExtractShaders/MainBase"
 
 				float3 BaseColor = lerpResult43;
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				half4 color = half4(BaseColor, Alpha );
 
@@ -2182,11 +2192,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -2218,7 +2229,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -2386,7 +2397,7 @@ Shader "ExtractShaders/MainBase"
 
 				float3 Normal = float3(0, 0, 1);
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#if defined( ASE_DEPTH_WRITE_ON )
 					float DeviceDepth = input.positionCS.z;
@@ -2570,11 +2581,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -2607,7 +2619,8 @@ Shader "ExtractShaders/MainBase"
 			#endif
 
 			sampler2D _Texture;
-			sampler2D _Noise;
+			sampler2D _NosieEmission;
+			sampler2D _NoiseDither;
 
 
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
@@ -2839,6 +2852,7 @@ Shader "ExtractShaders/MainBase"
 				float3 lerpResult43 = lerp( ( ( 1.0 - staticSwitch35 ) * tex2DNode1.rgb ) , (lerpResult22).xyz , 0.5);
 				
 				float2 texCoord57 = input.ase_texcoord7.xy * float2( 1,1 ) + float2( 0,0 );
+				
 				#ifdef _VERTEX_COORD_ON
 				float3 staticSwitch59 = input.ase_texcoord8.xyz;
 				#else
@@ -2852,9 +2866,9 @@ Shader "ExtractShaders/MainBase"
 				float Metallic = 0.0;
 				float Smoothness = 0.0;
 				float Occlusion = 1;
-				float3 Emission = ( _ColorEmission.rgb * _BrightnessEmission * temp_output_63_0 );
+				float3 Emission = ( _ColorEmission.rgb * _Emission * temp_output_63_0 * tex2D( _NosieEmission, ( (texCoord57*_NosieEmission_ST.xy + 0.0) + ( _NosieEmission_ST.zw * _TimeParameters.x ) ) ).r );
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 				float AlphaClipThresholdShadow = 0.5;
 				float3 BakedGI = 0;
 				float3 RefractionColor = 1;
@@ -3056,11 +3070,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -3092,7 +3107,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -3245,7 +3260,7 @@ Shader "ExtractShaders/MainBase"
 				
 
 				surfaceDescription.Alpha = 1;
-				surfaceDescription.AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				surfaceDescription.AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#if defined( ASE_DEPTH_WRITE_ON )
 					float DeviceDepth = input.positionCS.z;
@@ -3349,11 +3364,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -3385,7 +3401,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -3538,7 +3554,7 @@ Shader "ExtractShaders/MainBase"
 				
 
 				surfaceDescription.Alpha = 1;
-				surfaceDescription.AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				surfaceDescription.AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#if defined( ASE_DEPTH_WRITE_ON )
 					float DeviceDepth = input.positionCS.z;
@@ -3651,11 +3667,12 @@ Shader "ExtractShaders/MainBase"
 			float4 _Texture_ST;
 			float4 _Color2;
 			float4 _ColorEmission;
-			float4 _Noise_ST;
+			float4 _NosieEmission_ST;
+			float4 _NoiseDither_ST;
 			float3 _Bias_Scale_PowerFrensel;
 			float _ColorStreng;
 			float _Saturate;
-			float _BrightnessEmission;
+			float _Emission;
 			float _Dither;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
@@ -3687,7 +3704,7 @@ Shader "ExtractShaders/MainBase"
 				int _PassValue;
 			#endif
 
-			sampler2D _Noise;
+			sampler2D _NoiseDither;
 
 
 			
@@ -3771,7 +3788,7 @@ Shader "ExtractShaders/MainBase"
 				
 
 				float Alpha = 1;
-				float AlphaClipThreshold = ( _Dither + tex2D( _Noise, (staticSwitch59*float3( _Noise_ST.xy ,  0.0 ) + float3( _Noise_ST.zw ,  0.0 )).xy ).r );
+				float AlphaClipThreshold = ( _Dither + tex2D( _NoiseDither, (staticSwitch59*float3( _NoiseDither_ST.xy ,  0.0 ) + float3( _NoiseDither_ST.zw ,  0.0 )).xy ).r );
 
 				#if defined( ASE_DEPTH_WRITE_ON )
 					float DeviceDepth = input.positionCS.z;
@@ -3818,11 +3835,11 @@ Shader "ExtractShaders/MainBase"
 Version=19901
 Node;AmplifyShaderEditor.PosVertexDataNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;53;-320,-208;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.TextureCoordinatesNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;57;-448,-48;Inherit;False;0;-1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;59;-48,-192;Inherit;False;Property;_Vertex_Coord;Vertex_Coord;9;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT3;0,0,0;False;0;FLOAT3;0,0,0;False;2;FLOAT3;0,0,0;False;3;FLOAT3;0,0,0;False;4;FLOAT3;0,0,0;False;5;FLOAT3;0,0,0;False;6;FLOAT3;0,0,0;False;7;FLOAT3;0,0,0;False;8;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.TextureTransformNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;56;-208,80;Inherit;False;54;False;1;0;SAMPLER2D;;False;2;FLOAT2;0;FLOAT2;1
-Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;59;-48,-192;Inherit;False;Property;_Vertex_Coord;Vertex_Coord;10;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT3;0,0,0;False;0;FLOAT3;0,0,0;False;2;FLOAT3;0,0,0;False;3;FLOAT3;0,0,0;False;4;FLOAT3;0,0,0;False;5;FLOAT3;0,0,0;False;6;FLOAT3;0,0,0;False;7;FLOAT3;0,0,0;False;8;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.ScaleAndOffsetNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;55;80,-48;Inherit;False;3;0;FLOAT3;0,0,0;False;1;FLOAT3;1,0,0;False;2;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;51;576,-304;Inherit;False;Property;_Dither;Dither;7;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;54;368,-208;Inherit;True;Property;_Noise;Noise;9;0;Create;True;0;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
+Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;54;368,-208;Inherit;True;Property;_NoiseDither;NoiseDither;8;0;Create;True;0;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.LerpOp, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;43;752,-544;Inherit;False;3;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT;0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;41;-160,-816;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT3;0,0,0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;1;-1712,-864;Inherit;True;Property;_Texture;Texture;0;0;Create;True;0;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
@@ -3839,19 +3856,23 @@ Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, 
 Node;AmplifyShaderEditor.SimpleAddOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;52;790.5637,-259.4033;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;14;1024,512;Inherit;False;Constant;_Metall;Metall;1;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;15;1056,608;Inherit;False;Constant;_Smooth;Smooth;2;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;50;-592,384;Inherit;False;Property;_NoiseTilling;NoiseTilling;8;0;Create;True;0;0;0;False;0;False;50;50;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.NoiseGeneratorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;48;-352,256;Inherit;True;Simplex2D;True;False;2;0;FLOAT2;0,0;False;1;FLOAT;1;False;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;46;-1248,-256;Inherit;False;Property;_ColorStreng;ColorStreng;6;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;37;-1280,-480;Inherit;False;Property;_Color2;Color2;4;0;Create;True;0;0;0;False;0;False;1,1,1,0;1,1,1,0;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
 Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;35;-1168,-944;Inherit;False;Property;_UseAlpha;UseAlpha;5;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;29;608,288;Inherit;False;3;3;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;1;FLOAT3;0
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;29;608,288;Inherit;False;4;4;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT3;0
 Node;AmplifyShaderEditor.ColorNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;28;336,192;Inherit;False;Property;_ColorEmission;ColorEmission;2;0;Create;True;0;0;0;False;0;False;1,1,1,0;0,0,0,0;True;True;0;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
-Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;32;336,544;Inherit;False;Property;_BrightnessEmission;BrightnessEmission;3;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;64;-1700.073,-288.7426;Inherit;False;Constant;_Float2;Float 2;13;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;61;-1296,-128;Inherit;False;Property;_Frensel;Frensel;11;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.StaticSwitch, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;61;-1296,-128;Inherit;False;Property;_Frensel;Frensel;10;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.FresnelNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;60;-1824,-64;Inherit;True;Standard;WorldNormal;ViewDir;False;False;5;0;FLOAT3;0,0,1;False;4;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT;1;False;3;FLOAT;5;False;1;FLOAT;0
-Node;AmplifyShaderEditor.Vector3Node, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;62;-2240,-64;Inherit;False;Property;_Bias_Scale_PowerFrensel;Bias_Scale_Power Frensel;12;0;Create;True;0;0;0;False;0;False;0,1,5;0,0,0;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
+Node;AmplifyShaderEditor.Vector3Node, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;62;-2240,-64;Inherit;False;Property;_Bias_Scale_PowerFrensel;Bias_Scale_Power Frensel;11;0;Create;True;0;0;0;False;0;False;0,1,5;0,0,0;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
 Node;AmplifyShaderEditor.SaturateNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;63;-1072,-144;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.TextureTransformNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;66;-544,448;Inherit;False;65;False;1;0;SAMPLER2D;;False;2;FLOAT2;0;FLOAT2;1
+Node;AmplifyShaderEditor.ScaleAndOffsetNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;67;-192,432;Inherit;True;3;0;FLOAT2;0,0;False;1;FLOAT2;1,0;False;2;FLOAT;0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.SamplerNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;65;256,416;Inherit;True;Property;_NosieEmission;NosieEmission;12;0;Create;True;0;0;0;False;0;False;-1;None;None;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;6;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT3;5
+Node;AmplifyShaderEditor.SimpleAddOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;71;124.7589,585.6399;Inherit;False;2;2;0;FLOAT2;0,0;False;1;FLOAT2;0,0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;68;-112,672;Inherit;True;2;2;0;FLOAT2;0,0;False;1;FLOAT;0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.SimpleTimeNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;70;-304,768;Inherit;False;1;0;FLOAT;1;False;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;32;384,704;Inherit;False;Property;_Emission;Emission;3;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;3;1104,-432;Float;False;True;-1;3;UnityEditor.ShaderGraphLitGUI;0;12;ExtractShaders/MainBase;94348b07e5e8bab40bd6c8a1e3df54cd;True;Forward;0;1;Forward;21;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=UniversalForward;False;False;0;;0;0;Standard;48;Lighting Model;0;0;Workflow;1;0;Surface;0;0;  Refraction Model;0;0;  Blend;0;0;Two Sided;1;0;Alpha Clipping;1;0;  Use Shadow Threshold;0;0;Fragment Normal Space,InvertActionOnDeselection;0;0;Forward Only;0;0;Transmission;0;0;  Transmission Shadow;0.5,False,;0;Translucency;0;0;  Translucency Strength;1,False,;0;  Normal Distortion;0.5,False,;0;  Scattering;2,False,;0;  Direct;0.9,False,;0;  Ambient;0.1,False,;0;  Shadow;0.5,False,;0;Cast Shadows;1;0;Receive Shadows;1;0;Receive SSAO;1;0;Specular Highlights;1;0;Environment Reflections;1;0;Motion Vectors;1;0;  Add Precomputed Velocity;0;0;  XR Motion Vectors;0;0;GPU Instancing;1;0;LOD CrossFade;1;0;Built-in Fog;1;0;_FinalColorxAlpha;0;0;Meta Pass;1;0;Override Baked GI;0;0;Extra Pre Pass;0;0;Tessellation;0;0;  Phong;0;0;  Strength;0.5,False,;0;  Type;0;0;  Tess;16,False,;0;  Min;10,False,;0;  Max;25,False,;0;  Edge Length;16,False,;0;  Max Displacement;25,False,;0;Write Depth;0;0;  Early Z;0;0;Vertex Position,InvertActionOnDeselection;1;0;Debug Display;0;0;Clear Coat;0;0;0;12;False;True;True;True;True;True;True;True;True;True;True;False;False;;False;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;4;272,-192;Float;False;False;-1;3;UnityEditor.ShaderGraphLitGUI;0;12;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=ShadowCaster;False;False;0;;0;0;Standard;0;False;0
 Node;AmplifyShaderEditor.TemplateMultiPassMasterNode, AmplifyShaderEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null;5;272,-192;Float;False;False;-1;3;UnityEditor.ShaderGraphLitGUI;0;12;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;4;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;UniversalMaterialType=Lit;True;5;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;True;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;False;False;True;1;LightMode=DepthOnly;False;False;0;;0;0;Standard;0;False;0
@@ -3892,23 +3913,29 @@ WireConnection;38;3;35;0
 WireConnection;38;4;63;0
 WireConnection;52;0;51;0
 WireConnection;52;1;54;1
-WireConnection;48;0;57;0
-WireConnection;48;1;50;0
 WireConnection;35;1;47;0
 WireConnection;35;0;1;4
 WireConnection;29;0;28;5
 WireConnection;29;1;32;0
 WireConnection;29;2;63;0
+WireConnection;29;3;65;1
 WireConnection;61;1;64;0
 WireConnection;61;0;60;0
 WireConnection;60;1;62;1
 WireConnection;60;2;62;2
 WireConnection;60;3;62;3
 WireConnection;63;0;61;0
+WireConnection;67;0;57;0
+WireConnection;67;1;66;0
+WireConnection;65;1;71;0
+WireConnection;71;0;67;0
+WireConnection;71;1;68;0
+WireConnection;68;0;66;1
+WireConnection;68;1;70;0
 WireConnection;3;0;43;0
 WireConnection;3;3;14;0
 WireConnection;3;4;15;0
 WireConnection;3;2;29;0
 WireConnection;3;7;52;0
 ASEEND*/
-//CHKSM=FD13A850F4738346B9CD8C5B0129A3599B973130
+//CHKSM=549889A46C12333C5B346AE002ED9261C7A550E3

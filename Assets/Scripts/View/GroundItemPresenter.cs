@@ -32,6 +32,7 @@ namespace View
                         break;
                 }
             }
+
         }
 
         void SpawnView(EId id, Vector3 position, string displayName)
@@ -47,6 +48,7 @@ namespace View
                 renderer.material.color = new Color(0.3f, 0.8f, 0.4f);
 
             var view = go.AddComponent<GroundItemView>();
+            go.AddComponent<InteractableOutlineTarget>();
             view.Initialize(id, displayName);
             _views[id] = view;
         }

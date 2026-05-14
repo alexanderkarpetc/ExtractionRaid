@@ -128,6 +128,7 @@ Read extra docs depending on the task:
 - **Combat polish (shipped state — hit feedback, camera shake, blood, ragdoll, decals)** -> `docs/ai/gunplay/`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
+- Interactable outline/highlight and material-property tweening -> `docs/ai/interactable-highlight.md`
 - Armor system, penetration, durability, bleeding, feedback -> `docs/ai/battle-design-status.md`
 - Armor research (competitor analysis) -> `docs/ai/armor-research.md`
 - Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`

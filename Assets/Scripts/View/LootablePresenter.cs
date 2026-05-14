@@ -43,6 +43,7 @@ namespace View
                         break;
                 }
             }
+
         }
 
         void SpawnCorpseView(EId id, Vector3 position, string typeId)
@@ -64,6 +65,7 @@ namespace View
                 renderer.material.color = new Color(0.4f, 0.2f, 0.15f);
 
             AttachLabel(go, typeId, new Color(0.9f, 0.7f, 0.5f));
+            go.AddComponent<InteractableOutlineTarget>();
             _views[id] = go;
         }
 
@@ -82,6 +84,7 @@ namespace View
             {
                 var go = Object.Instantiate(overridePrefab, position, Quaternion.identity);
                 go.name = $"Container_{typeId}_{id}";
+                go.AddComponent<InteractableOutlineTarget>();
                 _views[id] = go;
                 return;
             }
@@ -96,6 +99,7 @@ namespace View
                 renderer.material.color = GetContainerColor(typeId);
 
             AttachLabel(fallback, displayName, new Color(0.7f, 0.9f, 1f));
+            fallback.AddComponent<InteractableOutlineTarget>();
             _views[id] = fallback;
         }
 

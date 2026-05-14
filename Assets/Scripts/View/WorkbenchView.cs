@@ -29,9 +29,13 @@ namespace View
 
         GameObject _promptGo;
         TextMesh _promptText3D;
+        InteractableOutlineTarget _outlineTarget;
 
         void Awake()
         {
+            _outlineTarget = GetComponent<InteractableOutlineTarget>();
+            if (_outlineTarget == null)
+                _outlineTarget = gameObject.AddComponent<InteractableOutlineTarget>();
             BuildPrompt();
         }
 

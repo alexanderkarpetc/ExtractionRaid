@@ -11,7 +11,10 @@ GameObject:
   - component: {fileID: 5233592099471847104}
   - component: {fileID: 7969848263349287767}
   - component: {fileID: 4175570730912898020}
-  m_Layer: 0
+  - component: {fileID: -7231100525603232154}
+  - component: {fileID: -7134160730981659069}
+  - component: {fileID: 7862508269771973424}
+  m_Layer: 11
   m_Name: MCrate01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26,13 +29,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7963652145635290188}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 477.457, y: -0.006, z: 0.348}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &7969848263349287767
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -90,3 +93,116 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &-7231100525603232154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7963652145635290188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 551a40f91b618ce49aa6a4d39dd45a27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.InteractableOutlineTarget
+  _highlighted: 1
+  _includeInactiveChildren: 0
+  _hideWhilePlayerInMenu: 1
+  _activationRadius: 6
+  _fadeSeconds: 0.18
+  _opacityFrom: 0
+  _opacityTo: 0.5
+  _opacityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _proximityTweeners:
+  - {fileID: 7862508269771973424}
+  _activationTweeners: []
+  _deactivationTweeners: []
+--- !u!208 &-7134160730981659069
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7963652145635290188}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.261, y: 0.18100001, z: 0.499}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.179, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!114 &7862508269771973424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7963652145635290188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee19d22d42727f8439fe920f5b364147, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.MaterialPropertyTweener
+  _targetRenderer: {fileID: 4175570730912898020}
+  _materialIndex: 0
+  _duration: 0.5
+  _playOnEnable: 0
+  _useUnscaledTime: 0
+  _tracks:
+  - PropertyName: _Emission
+    Type: 0
+    Curve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    FloatFrom: 0
+    FloatTo: 1
+    ColorFrom: {r: 0, g: 0, b: 0, a: 0}
+    ColorTo: {r: 1, g: 1, b: 1, a: 1}
+    VectorFrom: {x: 0, y: 0, z: 0, w: 0}
+    VectorTo: {x: 1, y: 1, z: 1, w: 1}
