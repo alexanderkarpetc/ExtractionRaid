@@ -81,7 +81,7 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 
 ### Visual feedback / readability
 
-- **Floating damage numbers v2** — current `DamageNumberOverlay` шипи size-by-magnitude + absorption tint, але візуально базовий. Покращити: typography (custom font?), motion (animated reveal / arc trajectory / pop scale), hierarchy (crit vs normal vs kill), color language refined. Research competitors first: Borderlands / Helldivers 2 / Synthetik / Returnal — see what reads at top-down speed.
+- ~~**Floating damage numbers v2**~~ — ✅ shipped 2026-05-14. uGUI + TextMeshPro World-Space Canvas, Oswald-Bold SDF, 6 per-tier material presets (Normal/Headshot/Kill/Bleed/Absorbed/Ricochet). Same-target 200ms consolidation (Hades-style anti-spam). Bleed tick emits popup, ricochet emits "RICOCHET" word, kill prefixed with ☠ icon. Restrained-tactical tone per Destiny 2 reference. Live-tunable via `🔢 Damage Numbers v2 (TMP)` section. Legacy IMGUI overlay kept as `UseV1Fallback` toggle.
 - **Aim cursor v2** — current `AimCursorOverlay` має state-based 4-line crosshair + bloom + reload ring + hit markers. Покращити: cursor variants (per-archetype shapes? per-situation indicators?), readability (контраст vs busy backgrounds), dynamics (smoother transitions, predictive feedback). Research competitor cursors (Tarkov, Hunt, Synthetik, Returnal), then design preset system + optional player toggle.
 - **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
 

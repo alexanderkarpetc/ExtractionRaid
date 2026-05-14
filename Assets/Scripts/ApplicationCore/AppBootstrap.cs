@@ -52,7 +52,6 @@ namespace ApplicationCore
             endOfRaidHost.transform.SetParent(transform, false);
             endOfRaidHost.AddComponent<EndOfRaidWindow>();
             gameObject.AddComponent<AimCursorOverlay>();
-            gameObject.AddComponent<DamageNumberOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftPresenter>();
             gameObject.AddComponent<StaminaBarOverlay>();

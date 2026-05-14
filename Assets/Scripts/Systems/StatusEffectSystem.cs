@@ -47,10 +47,25 @@ namespace Systems
                 : StatusEffectConstants.BleedL1DamagePerTick;
             DamageSystem.ApplyDamage(health, dmg);
 
+            // v2 damage-number: emit bleed-tick popup at entity world position.
+            var bleedPos = ResolveEntityPosition(state, entityId) + Vector3.up * 1f;
+            context.Events.DamageNumberSpawned(bleedPos, dmg,
+                isHeadshot: false, isKill: !health.IsAlive,
+                bulletDir: Vector3.up, absorptionRatio: 0f, isBleed: true);
+
             if (health.IsAlive)
                 context.Events.EntityDamaged(entityId, health.CurrentHp, health.MaxHp);
             else
                 context.Events.EntityDied(entityId);
+        }
+
+        static Vector3 ResolveEntityPosition(RaidState state, EId entityId)
+        {
+            if (state.PlayerEntity != null && state.PlayerEntity.Id == entityId)
+                return state.PlayerEntity.Position;
+            for (int i = 0; i < state.Bots.Count; i++)
+                if (state.Bots[i].Id == entityId) return state.Bots[i].Position;
+            return Vector3.zero;
         }
 
         static void HandleCheatBleed(RaidState state)

@@ -335,7 +335,7 @@ namespace Adapters
         }
 
         public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
-            float absorptionRatio = 0f)
+            float absorptionRatio = 0f, bool isRicochet = false, bool isBleed = false)
         {
             _events.Add(new RaidEvent
             {
@@ -348,6 +348,8 @@ namespace Adapters
                 Direction = new Vector3(bulletDir.x, bulletDir.y, bulletDir.z),
                 // Pack absorptionRatio into Id.Value (reuse unused field for DamageNumber events)
                 Id = new EId(Mathf.RoundToInt(absorptionRatio * 1000f)),
+                // Bit-pack v2 flags into KillerId.Value: bit 0 = ricochet, bit 1 = bleed.
+                KillerId = new EId((isRicochet ? 1 : 0) | (isBleed ? 2 : 0)),
             });
         }
 

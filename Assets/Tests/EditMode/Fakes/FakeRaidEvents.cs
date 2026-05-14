@@ -216,7 +216,7 @@ namespace Tests.EditMode.Fakes
         }
 
         public void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
-            float absorptionRatio = 0f) { }
+            float absorptionRatio = 0f, bool isRicochet = false, bool isBleed = false) { }
 
         public bool ArmorBrokenCalled;
         public EId ArmorBrokenEntityId;

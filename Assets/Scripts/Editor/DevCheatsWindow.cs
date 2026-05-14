@@ -137,7 +137,6 @@ namespace Editor
             DrawSection("🔍 ADS", _config.ADS);
             DrawSection("❤ Health Bar", _config.HealthBar);
             DrawSection("🌐 Parallax", _config.Parallax);
-            DrawSection("🔢 Damage Numbers", _config.DamageNumbers);
             DrawSection("🛡 Armor", _config.Armor);
             DrawSection("💉 Status Effects", _config.StatusEffects);
             DrawSection("⏸ Hit Pause", _config.HitPause);
@@ -165,6 +164,7 @@ namespace Editor
                 DrawSection("🔻 Weapon Drop", view.WeaponDrop);
                 DrawSection("⚡ Hit Flash", view.HitFlash);
                 DrawSection("💥 Impact VFX (per-archetype)", view.ImpactVfx);
+                DrawSection("🔢 Damage Numbers v2 (TMP)", view.DamageNumberV2);
                 DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
             }
 
@@ -653,6 +653,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsWeaponDropSection>(so, "_weaponDrop", folder, "WeaponDrop");
             CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
             CreateSectionIfMissing<ViewCheatsImpactVfxSection>(so, "_impactVfx", folder, "ImpactVfx");
+            CreateSectionIfMissing<ViewCheatsDamageNumberSection>(so, "_damageNumberV2", folder, "DamageNumberV2");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
 
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -683,7 +684,6 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsADSSection>(so, "_ads", folder, "ADS");
             CreateSectionIfMissing<DevCheatsHealthBarSection>(so, "_healthBar", folder, "HealthBar");
             CreateSectionIfMissing<DevCheatsParallaxSection>(so, "_parallax", folder, "Parallax");
-            CreateSectionIfMissing<DevCheatsDamageNumberSection>(so, "_damageNumbers", folder, "DamageNumbers");
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");
             CreateSectionIfMissing<DevCheatsArmorSection>(so, "_armor", folder, "Armor");
             CreateSectionIfMissing<DevCheatsHitPauseSection>(so, "_hitPause", folder, "HitPause");
