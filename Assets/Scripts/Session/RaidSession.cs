@@ -99,11 +99,19 @@ namespace Session
                 _eventBuffer.GroundItemSpawned(id, sp.transform.position, defId);
             }
 
+            // Clear any leftover visual overrides from a previous raid before re-registering.
+            ContainerVisualRegistry.Clear();
             foreach (var sp in containerPoints)
             {
                 if (UnityEngine.Random.value > sp.spawnChance) continue;
                 if (ContainerConstants.TryGetConfig(sp.containerType, out var config))
+                {
+                    // Register the per-instance visual override (if any) BEFORE firing the
+                    // LootableSpawned event so LootablePresenter can consume it in the same tick.
+                    if (sp.visualPrefab != null)
+                        ContainerVisualRegistry.Register(sp.transform.position, sp.visualPrefab);
                     LootSystem.CreateContainer(RaidState, in config, sp.transform.position, _eventBuffer);
+                }
             }
 
             var workbenchPoints = Object.FindObjectsByType<WorkbenchSpawnPoint>(FindObjectsSortMode.None);

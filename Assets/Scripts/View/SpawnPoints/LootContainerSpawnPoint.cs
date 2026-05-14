@@ -11,6 +11,10 @@ namespace View.SpawnPoints
 
         public ContainerType containerType = ContainerType.RandomLootBox;
 
+        [Tooltip("Optional visual prefab instantiated by LootablePresenter when this " +
+                 "container spawns. If empty, falls back to the procedural cube.")]
+        public GameObject visualPrefab;
+
         public string ContainerTypeId => containerType.ToString();
 
 #if UNITY_EDITOR

@@ -52,7 +52,7 @@ namespace ApplicationCore
         readonly BotPresenter _botPresenter;
         public BotPresenter BotPresenter => _botPresenter;
         readonly GrenadePresenter _grenadePresenter;
-        readonly CorpsePresenter _corpsePresenter;
+        readonly LootablePresenter _lootablePresenter;
         readonly HitPausePresenter _hitPausePresenter;
         readonly CameraShakePresenter _cameraShakePresenter;
         public CameraShakePresenter CameraShakePresenter => _cameraShakePresenter;
@@ -77,7 +77,7 @@ namespace ApplicationCore
             _groundItemPresenter = new GroundItemPresenter();
             _botPresenter = new BotPresenter();
             _grenadePresenter = new GrenadePresenter(_grenadePositionAdapter);
-            _corpsePresenter = new CorpsePresenter();
+            _lootablePresenter = new LootablePresenter();
             _hitPausePresenter = new HitPausePresenter();
             _cameraShakePresenter = new CameraShakePresenter();
             _bloodDecalPresenter = new BloodDecalPresenter();
@@ -219,7 +219,7 @@ namespace ApplicationCore
             _groundItemPresenter.Dispose();
             _botPresenter.Dispose();
             _grenadePresenter.Dispose();
-            _corpsePresenter.Dispose();
+            _lootablePresenter.Dispose();
             _hitPausePresenter.Dispose();
             _cameraShakePresenter.Dispose();
             _bloodDecalPresenter.Dispose();
@@ -266,7 +266,7 @@ namespace ApplicationCore
             _projectilePresenter.LateTick(RaidSession);
             _grenadePresenter.LateTick(RaidSession);
             _groundItemPresenter.LateTick(RaidSession);
-            _corpsePresenter.LateTick(RaidSession);
+            _lootablePresenter.LateTick(RaidSession);
             _hitPausePresenter.LateTick(RaidSession);
             _cameraShakePresenter.LateTick(RaidSession);
             _bloodDecalPresenter.LateTick(RaidSession);

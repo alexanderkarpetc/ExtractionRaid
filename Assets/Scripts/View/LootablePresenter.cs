@@ -5,10 +5,17 @@ using Session;
 using State;
 using Systems;
 using UnityEngine;
+using View.SpawnPoints;
 
 namespace View
 {
-    public class CorpsePresenter
+    /// <summary>
+    /// Spawns view GameObjects for lootables — bot corpses AND scene containers.
+    /// Both flow through the same <see cref="Adapters.RaidEventType.LootableSpawned"/>
+    /// event from <see cref="Systems.LootSystem"/>; this presenter dispatches on
+    /// <c>LootableState.IsContainer</c> to pick the corpse vs container visual.
+    /// </summary>
+    public class LootablePresenter
     {
         readonly Dictionary<EId, GameObject> _views = new();
 
@@ -64,21 +71,32 @@ namespace View
         {
             if (_views.ContainsKey(id)) return;
 
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             string displayName = typeId;
             if (ContainerConstants.TryGetConfig(typeId, out var cfg))
                 displayName = cfg.DisplayName;
 
-            go.name = $"Container_{typeId}_{id}";
-            go.transform.position = position + new Vector3(0f, 0.3f, 0f);
-            go.transform.localScale = new Vector3(0.6f, 0.5f, 0.4f);
+            // Per-spawn-point override registered by RaidSession. If present, just
+            // instantiate that prefab and keep the procedural cube path off.
+            var overridePrefab = ContainerVisualRegistry.Consume(position);
+            if (overridePrefab != null)
+            {
+                var go = Object.Instantiate(overridePrefab, position, Quaternion.identity);
+                go.name = $"Container_{typeId}_{id}";
+                _views[id] = go;
+                return;
+            }
 
-            var renderer = go.GetComponent<Renderer>();
+            var fallback = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            fallback.name = $"Container_{typeId}_{id}";
+            fallback.transform.position = position + new Vector3(0f, 0.3f, 0f);
+            fallback.transform.localScale = new Vector3(0.6f, 0.5f, 0.4f);
+
+            var renderer = fallback.GetComponent<Renderer>();
             if (renderer != null)
                 renderer.material.color = GetContainerColor(typeId);
 
-            AttachLabel(go, displayName, new Color(0.7f, 0.9f, 1f));
-            _views[id] = go;
+            AttachLabel(fallback, displayName, new Color(0.7f, 0.9f, 1f));
+            _views[id] = fallback;
         }
 
         static Color GetContainerColor(string typeId)
