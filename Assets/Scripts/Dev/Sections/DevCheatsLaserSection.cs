@@ -1,3 +1,4 @@
+using State;
 using UnityEngine;
 
 namespace Dev
@@ -32,5 +33,23 @@ namespace Dev
 
         [Tooltip("Multiplier on ProjectileLifetime at full charge. Higher = longer-reaching beam cluster.")]
         [Range(1f, 3f)] public float ShotgunMaxLifetimeMult = 1.5f;
+
+        [Header("Per-delivery charge time multiplier (A4)")]
+        [Tooltip("Multiplier on payload ChargeTime when delivery = Single (pistol). Lower = lighter sidearm winds up faster.")]
+        [Range(0.1f, 3f)] public float SingleActionChargeMult = 0.6f;
+
+        [Tooltip("Multiplier when delivery = Auto (rifle). Baseline 1.0 = unchanged from payload value.")]
+        [Range(0.1f, 3f)] public float AutoChargeMult = 1.0f;
+
+        [Tooltip("Multiplier when delivery = Scatter (shotgun). Higher = heavy weapon winds up slower (commitment).")]
+        [Range(0.1f, 3f)] public float ScatterChargeMult = 1.5f;
+
+        /// <summary>Charge-time multiplier за <see cref="FiringPattern"/>. Single/unknown → SingleActionChargeMult.</summary>
+        public float ChargeTimeMultiplierFor(FiringPattern pattern) => pattern switch
+        {
+            FiringPattern.Auto    => AutoChargeMult,
+            FiringPattern.Scatter => ScatterChargeMult,
+            _                     => SingleActionChargeMult,
+        };
     }
 }

@@ -82,7 +82,10 @@ namespace Systems
             if (weapon.Phase == WeaponPhase.Charging)
             {
                 if (!releaseFire) return; // still holding — wait for release
-                float chargeTime = WeaponChargeResolver.GetChargeTime(weapon);
+                // A4 — apply per-delivery charge multiplier (pistol fast, rifle baseline, shotgun slow).
+                float deliveryMult = context.LaserConfig.ChargeTimeMultiplierFor(
+                    weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
+                float chargeTime = WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
                 chargeRatio = chargeTime > 0f
                     ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
                     : 1f;

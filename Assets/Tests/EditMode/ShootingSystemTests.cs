@@ -593,7 +593,9 @@ namespace Tests.EditMode
                 weapon.DeliveryDefinition = scatterSO;
                 weapon.Phase = WeaponPhase.Charging;
                 weapon.ChargeStartTime = 0f;
-                state.ElapsedTime = 1.1f; // past charge → ratio = 1.0
+                // Full charge for Scatter: base 1s × ScatterChargeMult 1.5 = 1.5s effective.
+                // ElapsedTime must exceed it for clamp(1.0).
+                state.ElapsedTime = 2f;
                 var input = new FakeInputAdapter
                 {
                     AttackPressed = false,

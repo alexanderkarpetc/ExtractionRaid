@@ -26,13 +26,26 @@ namespace Systems
         /// <summary>
         /// Charge duration (seconds) sourced from the weapon's payload-specific stats
         /// at the selected rarity. Returns 0 for non-charge-up payloads — caller should
-        /// check <see cref="RequiresChargeUp"/> first.
+        /// check <see cref="RequiresChargeUp"/> first. This is the RAW payload value
+        /// without delivery modulation (A4 archetype differentiation) — see
+        /// <see cref="GetChargeTime(WeaponEntityState, float)"/> for the gameplay-effective time.
         /// </summary>
         public static float GetChargeTime(WeaponEntityState weapon)
         {
             if (weapon?.PayloadDefinition is LaserPayloadDefinition laser)
                 return laser.SpecificByTier(weapon.PayloadCore.Rarity).ChargeTime;
             return 0f;
+        }
+
+        /// <summary>
+        /// A4 — Effective charge time після applying per-delivery multiplier
+        /// (pistol fast, rifle baseline, shotgun slow). Caller passes the multiplier
+        /// resolved from <c>LaserConfig.ChargeTimeMultiplierFor(pattern)</c> or
+        /// <c>DevCheatsLaserSection.ChargeTimeMultiplierFor(pattern)</c>.
+        /// </summary>
+        public static float GetChargeTime(WeaponEntityState weapon, float deliveryMultiplier)
+        {
+            return GetChargeTime(weapon) * deliveryMultiplier;
         }
 
         /// <summary>

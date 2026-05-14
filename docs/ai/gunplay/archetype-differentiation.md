@@ -35,7 +35,7 @@ Bland dimensions (shared across all 6):
 | A1 | Per-archetype camera shake profiles | 3 delivery shapes × 2 payload modifiers → 6 effective combos. World-space `KickDirOffset` shapes recoil direction (pistol snap-up, rifle climb, shotgun lateral shove). Payload modifies kick scale + tremor frequency (ballistic sharp/30Hz, laser smooth/18Hz). | ✅ shipped 2026-05-13 |
 | A2 | Per-payload impact VFX signature | Laser branch у `ProjectilePresenter` swaps to programmatic `LaserBodyImpact` / `LaserHeadImpact` prefabs (flash + smoke + embers, created via MCP). `BloodDecalPresenter` suppresses blood pool на laser hits. `CharacterHitFx` rim flash blends toward warm orange. Wall decals untouched (deferred). | ✅ shipped 2026-05-14 |
 | A3 | Per-delivery recoil shape | Direction curve: pistol = snap+rebound, rifle = climb up, shotgun = horizontal shove. | Planned, 5-7h |
-| A4 | Per-archetype charge curve (Laser) | Pistol fast/low, rifle medium, shotgun slow/high. Tuning-only. | Planned, 2-3h |
+| A4 | Per-archetype charge curve (Laser) | Per-delivery multiplier (Pistol 0.6, Rifle 1.0, Shotgun 1.5) on payload ChargeTime via `LaserConfig.ChargeTimeMultiplierFor(pattern)`. Runtime-tunable in DevCheats. Crosshair charge ring matches gameplay-effective time. | ✅ shipped 2026-05-14 |
 | ~~A5~~ | ~~Per-archetype hit pause~~ | **Cut** — keep one global kill-feel pattern. | — |
 
 ### Track B — Per-combo signature mechanic

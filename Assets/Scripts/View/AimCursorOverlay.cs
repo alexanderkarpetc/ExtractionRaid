@@ -207,7 +207,12 @@ namespace View
                 case WeaponPhase.Charging:
                     // Charge progress ring (Laser & other charge-up payloads). Uses the same
                     // dot-ring layout as reload but in energy-blue to visually distinguish.
-                    float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon);
+                    // A4 — apply per-delivery charge multiplier so ring matches gameplay-effective time.
+                    var laserCfg = DevCheats.Config?.Laser;
+                    float deliveryMult = laserCfg != null
+                        ? laserCfg.ChargeTimeMultiplierFor(weapon.DeliveryDefinition?.Pattern ?? State.FiringPattern.Single)
+                        : 1f;
+                    float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
                     float chargeProgress = chargeTime > 0f
                         ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
                         : 1f;

@@ -540,6 +540,9 @@ namespace Session
                     ShotgunMaxSpreadMult   = DevCheats.Config.Laser.ShotgunMaxSpreadMult,
                     ShotgunMinLifetimeMult = DevCheats.Config.Laser.ShotgunMinLifetimeMult,
                     ShotgunMaxLifetimeMult = DevCheats.Config.Laser.ShotgunMaxLifetimeMult,
+                    SingleActionChargeMult = DevCheats.Config.Laser.SingleActionChargeMult,
+                    AutoChargeMult         = DevCheats.Config.Laser.AutoChargeMult,
+                    ScatterChargeMult      = DevCheats.Config.Laser.ScatterChargeMult,
                 },
                 barrelHeatConfig: new BarrelHeatConfig
                 {

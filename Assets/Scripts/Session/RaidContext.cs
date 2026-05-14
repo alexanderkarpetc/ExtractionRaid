@@ -1,4 +1,5 @@
 using Adapters;
+using State;
 using UnityEngine;
 
 namespace Session
@@ -161,6 +162,10 @@ namespace Session
         public float ShotgunMaxSpreadMult;   // multiplier on SpreadAngle at zero charge (default 1.5)
         public float ShotgunMinLifetimeMult; // multiplier on lifetime at zero charge (default 0.3)
         public float ShotgunMaxLifetimeMult; // multiplier on lifetime at full charge (default 1.5)
+        // A4 — per-delivery charge time multipliers. Effective time = payload.ChargeTime × mult.
+        public float SingleActionChargeMult; // Pistol — fast (default 0.6)
+        public float AutoChargeMult;         // Rifle — baseline (default 1.0)
+        public float ScatterChargeMult;      // Shotgun — slow (default 1.5)
 
         public static LaserConfig Default => new LaserConfig
         {
@@ -170,6 +175,9 @@ namespace Session
             ShotgunMaxSpreadMult   = 1.5f,
             ShotgunMinLifetimeMult = 0.3f,
             ShotgunMaxLifetimeMult = 1.5f,
+            SingleActionChargeMult = 0.6f,
+            AutoChargeMult         = 1.0f,
+            ScatterChargeMult      = 1.5f,
         };
 
         /// <summary>Parabolic charge → damage multiplier. Computes once; safe for all archetypes (ballistic chargeRatio=1 → returns 1).</summary>
@@ -179,6 +187,14 @@ namespace Session
             float curve = Mathf.Pow(r, ChargeDamagePower);
             return ChargeDamageMin + (1f - ChargeDamageMin) * curve;
         }
+
+        /// <summary>Charge-time multiplier за delivery <see cref="FiringPattern"/>. Single/unknown → pistol.</summary>
+        public float ChargeTimeMultiplierFor(FiringPattern pattern) => pattern switch
+        {
+            FiringPattern.Auto    => AutoChargeMult,
+            FiringPattern.Scatter => ScatterChargeMult,
+            _                     => SingleActionChargeMult,
+        };
     }
 
     /// <summary>
