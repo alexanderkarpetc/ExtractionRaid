@@ -21,7 +21,8 @@ namespace Tests.EditMode.Fakes
         public void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage,
             string payloadArchetype = null, float chargeRatio = 1f) { }
         public void ProjectileDespawned(EId id) { }
-        public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface") { }
+        public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface",
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic) { }
 
         public bool EntityDamagedCalled;
         public EId EntityDamagedId;
@@ -173,7 +174,8 @@ namespace Tests.EditMode.Fakes
             bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)> EntityHits = new();
 
         public void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
-            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio,
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
         {
             EntityHits.Add((targetEid, hitPoint, projectileDirection,
                 isHeadshot, isRicochet, isKill, absorptionRatio));

@@ -164,6 +164,7 @@ namespace Editor
                 DrawSection("💀 Ragdoll", view.Ragdoll);
                 DrawSection("🔻 Weapon Drop", view.WeaponDrop);
                 DrawSection("⚡ Hit Flash", view.HitFlash);
+                DrawSection("💥 Impact VFX (per-archetype)", view.ImpactVfx);
                 DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
             }
 
@@ -651,6 +652,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsRagdollSection>(so, "_ragdoll", folder, "Ragdoll");
             CreateSectionIfMissing<ViewCheatsWeaponDropSection>(so, "_weaponDrop", folder, "WeaponDrop");
             CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
+            CreateSectionIfMissing<ViewCheatsImpactVfxSection>(so, "_impactVfx", folder, "ImpactVfx");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
 
             so.ApplyModifiedPropertiesWithoutUndo();

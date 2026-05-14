@@ -176,9 +176,9 @@ namespace View
             ResolveHitFx()?.TriggerRimFlash(color, intensity, durationUnscaled);
         }
 
-        public void AddHitDecal(Vector3 worldPos)
+        public void AddHitDecal(Vector3 worldPos, Color tint = default)
         {
-            ResolveHitFx()?.AddHitDecal(worldPos);
+            ResolveHitFx()?.AddHitDecal(worldPos, tint);
         }
 
         CharacterHitFx ResolveHitFx()

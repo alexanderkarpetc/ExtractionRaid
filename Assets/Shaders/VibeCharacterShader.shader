@@ -140,7 +140,8 @@ Shader "ExtractShaders/VibeCharacterShader"
             #define VIBE_HIT_DECAL_MAX 8
             float  _HitFlashIntensity;
             float  _HitDecalCount;
-            float4 _HitDecals[VIBE_HIT_DECAL_MAX]; // xyz = world pos, w = intensity (0..1)
+            float4 _HitDecals[VIBE_HIT_DECAL_MAX];       // xyz = world pos, w = intensity (0..1)
+            float4 _HitDecalColors[VIBE_HIT_DECAL_MAX];  // rgb = per-decal tint; a > 0 = use this color, a = 0 = use _HitDecalColor
 
             struct Attributes
             {
@@ -213,11 +214,18 @@ Shader "ExtractShaders/VibeCharacterShader"
             // ALL active decals (max blend, не sum so overlapping не over-saturates).
             // Coverage не залежить від decal color, тому темний колір тінтить
             // albedo з тією самою силою як яскравий.
-            half ComputeHitDecalCoverage(float3 positionWS)
+            //
+            // Per-decal color (A2 — archetype impact differentiation): if a decal has
+            // its own color (entry alpha > 0), it wins the fragment's tint when dominant.
+            // Otherwise fallback to material's _HitDecalColor.
+            // outColor.rgb = chosen tint, outColor.a = coverage.
+            half4 ComputeHitDecal(float3 positionWS)
             {
-                if (_HitDecalCount < 0.5) return 0.0h;
+                if (_HitDecalCount < 0.5) return half4(0.0h, 0.0h, 0.0h, 0.0h);
 
                 half coverage = 0.0h;
+                half bestWeight = 0.0h;
+                half3 bestColor = (half3)_HitDecalColor.rgb;
                 half innerR = _HitDecalRadius * (1.0h - saturate(_HitDecalSoftness));
                 half outerR = _HitDecalRadius;
 
@@ -230,10 +238,18 @@ Shader "ExtractShaders/VibeCharacterShader"
                     {
                         half d    = (half)distance(positionWS, entry.xyz);
                         half mask = 1.0h - smoothstep(innerR, outerR, d);
-                        coverage = max(coverage, mask * life);
+                        half w    = mask * life;
+                        coverage  = max(coverage, w);
+                        if (w > bestWeight)
+                        {
+                            bestWeight = w;
+                            float4 perDecal = _HitDecalColors[i];
+                            // Per-decal color override active when its alpha > 0.
+                            bestColor = perDecal.a > 0.001 ? (half3)perDecal.rgb : (half3)_HitDecalColor.rgb;
+                        }
                     }
                 }
-                return saturate(coverage);
+                return half4(bestColor, saturate(coverage));
             }
 
             half4 Frag(Varyings IN) : SV_Target
@@ -244,9 +260,10 @@ Shader "ExtractShaders/VibeCharacterShader"
                 // Decal stain — pure albedo replacement at coverage [0..1]. Decal
                 // does NOT glow (no emission contribution); behaves як кров на шкірі.
                 // Coverage independent of color, тому dark colors тінтять так само
-                // visible як bright.
-                half  decalCoverage = ComputeHitDecalCoverage(IN.positionWS);
-                half3 albedo        = lerp(stylized, _HitDecalColor.rgb, decalCoverage);
+                // visible як bright. Per-decal color picks dominant decal's tint
+                // (laser dark scorch vs ballistic red blood) at this fragment.
+                half4 decalInfo     = ComputeHitDecal(IN.positionWS);
+                half3 albedo        = lerp(stylized, decalInfo.rgb, decalInfo.a);
 
                 half3 N = normalize(IN.normalWS);
                 half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));

@@ -227,10 +227,26 @@ namespace View
             else if (isHeadshot) color = cfg.HeadshotColor;
             else                 color = cfg.NormalColor;
 
+            // A2 — blend toward laser tint якщо archetype = Laser.
+            var impactCfg = ViewCheats.Config?.ImpactVfx;
+            if (e.Archetype == State.PayloadArchetypeKey.Laser
+                && impactCfg != null && impactCfg.Enabled)
+                color = Color.Lerp(color, impactCfg.LaserRimFlashTint, impactCfg.LaserRimFlashBlend);
+
             view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration);
 
             if (!isRicochet)
-                view.AddHitDecal(e.Position);
+            {
+                // Per-decal tint — Laser sends a scorch tint у shader's _HitDecalColors array.
+                Color decalTint = default;
+                if (e.Archetype == State.PayloadArchetypeKey.Laser
+                    && impactCfg != null && impactCfg.Enabled)
+                {
+                    decalTint   = impactCfg.LaserDecalTint;
+                    decalTint.a = 1f;
+                }
+                view.AddHitDecal(e.Position, decalTint);
+            }
         }
 
         public void Dispose()

@@ -11,7 +11,8 @@ namespace Adapters
         void ProjectileSpawned(EId id, Vector3 position, Vector3 direction, float damage,
             string payloadArchetype = null, float chargeRatio = 1f);
         void ProjectileDespawned(EId id);
-        void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface");
+        void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface",
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic);
         void EntityDamaged(EId id, float currentHp, float maxHp);
         void EntityDied(EId id, EId killerId = default,
             Vector3 hitPoint = default, Vector3 hitDirection = default, float damage = 0f,
@@ -49,7 +50,8 @@ namespace Adapters
         /// fires only for player-owned shots and drives crosshair markers).
         /// </summary>
         void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
-            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio);
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio,
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic);
         void StatusEffectApplied(EId entityId, string effectType);
         void StatusEffectRemoved(EId entityId, string effectType);
 

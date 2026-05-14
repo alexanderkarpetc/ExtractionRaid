@@ -23,6 +23,7 @@ namespace View
         static readonly int HitFlashRimPowerId  = Shader.PropertyToID("_HitFlashRimPower");
         static readonly int HitFlashRimWidthId  = Shader.PropertyToID("_HitFlashRimWidth");
         static readonly int HitDecalsId         = Shader.PropertyToID("_HitDecals");
+        static readonly int HitDecalColorsId    = Shader.PropertyToID("_HitDecalColors");
         static readonly int HitDecalCountId     = Shader.PropertyToID("_HitDecalCount");
         static readonly int HitDecalColorId     = Shader.PropertyToID("_HitDecalColor");
         static readonly int HitDecalRadiusId    = Shader.PropertyToID("_HitDecalRadius");
@@ -43,10 +44,12 @@ namespace View
         //   _localPositions[i] = decal's position у local space of bone _decalBones[i]
         //   _intensity[i]      = current decal strength (0..1, fades over time)
         //   _worldDecals[i]    = per-frame computed world position (sent to shader)
+        //   _decalColors[i]    = per-decal tint (a > 0 = override; a == 0 = use material's _HitDecalColor)
         Vector3[]   _localPositions = new Vector3[HitDecalCapacity];
         Transform[] _decalBones     = new Transform[HitDecalCapacity];
         float[]     _intensity      = new float[HitDecalCapacity];
         Vector4[]   _worldDecals    = new Vector4[HitDecalCapacity];
+        Vector4[]   _decalColors    = new Vector4[HitDecalCapacity];
         int         _nextSlot;
         int         _activeCount;
         bool        _dirty;
@@ -94,7 +97,12 @@ namespace View
 
         public void FreezeDecals() => _decalsFrozen = true;
 
-        public void AddHitDecal(Vector3 worldPos)
+        /// <summary>
+        /// Add a hit decal. <paramref name="tint"/> з alpha > 0 overrides material's
+        /// <c>_HitDecalColor</c> at this decal's fragment (laser scorch vs ballistic blood).
+        /// Default <c>tint = clear</c> → use material's color (legacy ballistic look).
+        /// </summary>
+        public void AddHitDecal(Vector3 worldPos, Color tint = default)
         {
             if (_bones == null || _bones.Length == 0) return;
 
@@ -124,6 +132,7 @@ namespace View
             _decalBones[slot]     = closest;
             _localPositions[slot] = closest.InverseTransformPoint(worldPos);
             _intensity[slot]      = 1f;
+            _decalColors[slot]    = new Vector4(tint.r, tint.g, tint.b, tint.a);
 
             _nextSlot = (_nextSlot + 1) % HitDecalCapacity;
             if (_activeCount < HitDecalCapacity) _activeCount++;
@@ -161,6 +170,7 @@ namespace View
                     if (_intensity[i] <= 0f)
                     {
                         _worldDecals[i] = Vector4.zero;
+                        _decalColors[i] = Vector4.zero;
                         _decalBones[i]  = null;
                         _activeCount = Mathf.Max(0, _activeCount - 1);
                         continue;
@@ -194,8 +204,9 @@ namespace View
                 r.GetPropertyBlock(_mpb);
                 _mpb.SetColor(HitFlashColorId,     _flashColor);
                 _mpb.SetFloat(HitFlashIntensityId, rimIntensity);
-                _mpb.SetVectorArray(HitDecalsId,   _worldDecals);
-                _mpb.SetFloat(HitDecalCountId,     anyDecal ? HitDecalCapacity : 0f);
+                _mpb.SetVectorArray(HitDecalsId,      _worldDecals);
+                _mpb.SetVectorArray(HitDecalColorsId, _decalColors);
+                _mpb.SetFloat(HitDecalCountId,        anyDecal ? HitDecalCapacity : 0f);
                 if (cfg != null)
                 {
                     _mpb.SetFloat(HitFlashRimPowerId, cfg.RimPower);

@@ -17,12 +17,14 @@ namespace State
         public float ArmorDamage;
         public float BleedChance;
         public EId TargetedEntityId; // EId of the character the player aimed at (convergence), default = not targeted
+        public PayloadArchetypeKey Archetype; // A2 — drives per-payload impact VFX dispatch.
 
         public static ProjectileEntityState Create(
             EId id, EId ownerId, Vector3 position, Vector3 direction,
             float speed, float spawnTime, float lifetime,
             float damage, float headshotDamageMultiplier = 1f, EId targetedEntityId = default,
-            float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f)
+            float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f,
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
         {
             return new ProjectileEntityState
             {
@@ -39,6 +41,7 @@ namespace State
                 ArmorDamage = armorDamage,
                 BleedChance = bleedChance,
                 TargetedEntityId = targetedEntityId,
+                Archetype = archetype,
             };
         }
     }

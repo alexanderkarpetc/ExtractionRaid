@@ -309,7 +309,8 @@ namespace Systems
                     targetedEntityId,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
-                    bleedChance: totalBleedChance);
+                    bleedChance: totalBleedChance,
+                    archetype: PayloadArchetypeKeyExt.FromArchetypeString(weapon.PayloadDefinition?.Archetype));
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage,
@@ -468,7 +469,8 @@ namespace Systems
                     targetedEntityId: default,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
-                    bleedChance: totalBleedChance);
+                    bleedChance: totalBleedChance,
+                    archetype: PayloadArchetypeKeyExt.FromArchetypeString(weapon.PayloadDefinition?.Archetype));
 
                 state.Projectiles.Add(projectile);
                 context.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir, totalDamage,

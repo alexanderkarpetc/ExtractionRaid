@@ -71,7 +71,8 @@ namespace Systems
                             isHeadshot:          true,
                             isRicochet:          true,
                             isKill:              false,
-                            absorptionRatio:     1f);
+                            absorptionRatio:     1f,
+                            archetype:           projectile?.Archetype ?? PayloadArchetypeKey.Ballistic);
 
                         // Ricochet crosshair feedback (player shots only)
                         if (projectile != null && state.PlayerEntity != null
@@ -163,6 +164,7 @@ namespace Systems
 
                 // Per-target view feedback (flash, future blood/decal). Fires regardless of owner.
                 var hitDir = projectile != null ? projectile.Direction : Vector3.forward;
+                var hitArchetype = projectile?.Archetype ?? PayloadArchetypeKey.Ballistic;
                 context.Events.EntityHit(
                     targetEid:           hit.TargetId,
                     hitPoint:            hit.HitPoint,
@@ -170,7 +172,8 @@ namespace Systems
                     isHeadshot:          isHeadshot,
                     isRicochet:          false,
                     isKill:              !health.IsAlive,
-                    absorptionRatio:     absorptionRatio);
+                    absorptionRatio:     absorptionRatio,
+                    archetype:           hitArchetype);
 
                 if (projectile != null && state.PlayerEntity != null
                     && projectile.OwnerId == state.PlayerEntity.Id)
@@ -195,7 +198,7 @@ namespace Systems
                         // orient splash back toward the shooter. BulletHoleDecalPresenter
                         // still filters out body/head hits via StringPayload, тому передача
                         // non-zero direction here безпечна для wall decal logic.
-                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, proj.Direction, hitType);
+                        context.Events.ProjectileHit(hit.ProjectileId, hit.HitPoint, proj.Direction, hitType, proj.Archetype);
                         context.Events.ProjectileDespawned(hit.ProjectileId);
                         state.Projectiles.RemoveAt(i);
                         break;

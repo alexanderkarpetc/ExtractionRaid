@@ -250,8 +250,9 @@ namespace View
             var cfg = ViewCheats.Config?.HitFlash;
             if (cfg == null || !cfg.Enabled) return;
             if (!ResolveHitKind(e, cfg, out var color, out var isRicochet)) return;
+            color = TintForArchetype(color, e.Archetype);
             view.TriggerHitFlash(color, cfg.Intensity, cfg.Duration, cfg.EmissionBoost);
-            if (!isRicochet) view.AddHitDecal(e.Position);
+            if (!isRicochet) view.AddHitDecal(e.Position, DecalTintForArchetype(e.Archetype));
         }
 
         // Direct path for bodies already released to ragdoll (one-shot kills) — bypasses
@@ -261,8 +262,32 @@ namespace View
             var cfg = ViewCheats.Config?.HitFlash;
             if (cfg == null || !cfg.Enabled) return;
             if (!ResolveHitKind(e, cfg, out var color, out var isRicochet)) return;
+            color = TintForArchetype(color, e.Archetype);
             fx.TriggerRimFlash(color, cfg.Intensity, cfg.Duration);
-            if (!isRicochet) fx.AddHitDecal(e.Position);
+            if (!isRicochet) fx.AddHitDecal(e.Position, DecalTintForArchetype(e.Archetype));
+        }
+
+        // A2 — blend rim flash toward laser tint при laser hit. Keeps kill/headshot/ricochet
+        // hierarchy intact (priority colors still readable), просто додає payload character.
+        static Color TintForArchetype(Color baseColor, State.PayloadArchetypeKey archetype)
+        {
+            if (archetype != State.PayloadArchetypeKey.Laser) return baseColor;
+            var cfg = ViewCheats.Config?.ImpactVfx;
+            if (cfg == null || !cfg.Enabled) return baseColor;
+            return Color.Lerp(baseColor, cfg.LaserRimFlashTint, cfg.LaserRimFlashBlend);
+        }
+
+        // Per-decal tint pushed into shader's _HitDecalColors array. Ballistic returns
+        // clear (alpha=0) → shader uses material _HitDecalColor (red blood). Laser returns
+        // ImpactVfx.LaserDecalTint with alpha=1 → shader uses per-decal scorch color.
+        static Color DecalTintForArchetype(State.PayloadArchetypeKey archetype)
+        {
+            if (archetype != State.PayloadArchetypeKey.Laser) return default;
+            var cfg = ViewCheats.Config?.ImpactVfx;
+            if (cfg == null || !cfg.Enabled) return default;
+            // Force alpha = 1 so shader recognizes "use this color" вибір.
+            var c = cfg.LaserDecalTint; c.a = 1f;
+            return c;
         }
 
         // RaidEventBuffer.EntityHit packs:

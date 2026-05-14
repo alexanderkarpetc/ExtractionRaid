@@ -73,6 +73,12 @@ namespace View
             bool isRicochet = e.KillerId.Value == 1;
             if (isRicochet) return; // armor deflected — no blood
 
+            // A2 — laser cauterizes, no blood. Toggle тримається у ImpactVfx section.
+            var impactCfg = Dev.ViewCheats.Config?.ImpactVfx;
+            if (e.Archetype == PayloadArchetypeKey.Laser
+                && impactCfg != null && impactCfg.Enabled && impactCfg.SuppressBloodDecalForLaser)
+                return;
+
             float absorption = e.Damage;
             float penetrationFraction = 1f - absorption;
             if (penetrationFraction < cfg.MinPenetrationFraction) return;

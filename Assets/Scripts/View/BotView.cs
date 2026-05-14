@@ -121,9 +121,9 @@ namespace View
         /// finds the closest skeleton bone and stores the impact у that bone's
         /// local space, so decals follow live animation AND ragdoll physics.
         /// </summary>
-        public void AddHitDecal(Vector3 worldPos)
+        public void AddHitDecal(Vector3 worldPos, Color tint = default)
         {
-            ResolveHitFx()?.AddHitDecal(worldPos);
+            ResolveHitFx()?.AddHitDecal(worldPos, tint);
         }
 
         CharacterHitFx ResolveHitFx()

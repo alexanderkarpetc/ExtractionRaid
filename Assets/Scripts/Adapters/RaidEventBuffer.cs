@@ -61,6 +61,9 @@ namespace Adapters
         // Delivery firing pattern для WeaponFired event — let CameraShakePresenter and other
         // view consumers dispatch per-archetype без читання WeaponEntityState.
         public FiringPattern DeliveryPattern;
+        // Payload archetype (A2) для ProjectileHit + EntityHit events — drives per-payload
+        // impact VFX swap, blood-decal suppression, rim-flash tint.
+        public PayloadArchetypeKey Archetype;
     }
 
     public class RaidEventBuffer : IRaidEvents
@@ -104,7 +107,8 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.ProjectileDespawned, Id = id });
         }
 
-        public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface")
+        public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface",
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
         {
             _events.Add(new RaidEvent
             {
@@ -113,6 +117,7 @@ namespace Adapters
                 Position = position,
                 Direction = normal,
                 StringPayload = hitType,
+                Archetype = archetype,
             });
         }
 
@@ -393,7 +398,8 @@ namespace Adapters
         }
 
         public void EntityHit(EId targetEid, Vector3 hitPoint, Vector3 projectileDirection,
-            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio)
+            bool isHeadshot, bool isRicochet, bool isKill, float absorptionRatio,
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
         {
             // Packing convention для EntityHit:
             //   Id           = targetEid
@@ -403,6 +409,7 @@ namespace Adapters
             //   CurrentHp    = isHeadshot ? 1 : 0
             //   MaxHp        = isKill ? 1 : 0
             //   KillerId.Value = isRicochet ? 1 : 0
+            //   Archetype    = payload (Ballistic/Laser) for rim-flash tint + decal swap
             _events.Add(new RaidEvent
             {
                 Type      = RaidEventType.EntityHit,
@@ -412,6 +419,7 @@ namespace Adapters
                 Damage    = absorptionRatio,
                 CurrentHp = isHeadshot ? 1f : 0f,
                 MaxHp     = isKill     ? 1f : 0f,
+                Archetype = archetype,
                 KillerId  = new EId(isRicochet ? 1 : 0),
             });
         }

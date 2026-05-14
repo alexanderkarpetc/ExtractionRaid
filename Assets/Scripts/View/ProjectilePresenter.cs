@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Adapters;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -69,7 +70,7 @@ namespace View
                         break;
                     }
                     case RaidEventType.ProjectileHit:
-                        SpawnImpactVfx(e.Position, e.Direction, e.StringPayload);
+                        SpawnImpactVfx(e.Position, e.Direction, e.StringPayload, e.Archetype);
                         break;
                     case RaidEventType.ProjectileRicochet:
                         SpawnRicochetVfx(e.Position);
@@ -122,7 +123,8 @@ namespace View
             }
         }
 
-        void SpawnImpactVfx(Vector3 position, Vector3 bulletDirection, string hitType)
+        void SpawnImpactVfx(Vector3 position, Vector3 bulletDirection, string hitType,
+            PayloadArchetypeKey archetype)
         {
             // Parse hitType format: "body:0.45" or "head:0.00" or legacy "body"/"head"/"surface"
             string baseType = hitType;
@@ -144,21 +146,53 @@ namespace View
             if ((baseType == "body" || baseType == "head") && bulletDirection.sqrMagnitude > 0.001f)
                 impactRotation = Quaternion.LookRotation(-bulletDirection, Vector3.up);
 
-            // Flesh VFX (blood) — spawned when absorption < 1
+            // A2 — Laser archetype: prefer authored LaserBodyImpact/LaserHeadImpact prefab,
+            // otherwise fall back to ballistic prefab з runtime recolor (Approach C hybrid).
+            var impactCfg = ViewCheats.Config?.ImpactVfx;
+            bool isLaser = archetype == PayloadArchetypeKey.Laser
+                           && impactCfg != null && impactCfg.Enabled;
+
+            // Flesh VFX — spawned when absorption < 1. For laser hits, blood spray is replaced
+            // entirely by laser-flavor flash+smoke+embers (no red splatter — cauterize identity).
             if (absorption < 0.95f)
             {
-                var fleshPrefab = baseType switch
+                GameObject fleshPrefab;
+                if (isLaser)
                 {
-                    "head" => _headImpactPrefab,
-                    "body" => _bodyImpactPrefab,
-                    _ => _surfaceImpactPrefab,
-                };
+                    fleshPrefab = baseType switch
+                    {
+                        "head" => impactCfg.LaserHeadImpactPrefab != null
+                                    ? impactCfg.LaserHeadImpactPrefab : _headImpactPrefab,
+                        "body" => impactCfg.LaserBodyImpactPrefab != null
+                                    ? impactCfg.LaserBodyImpactPrefab : _bodyImpactPrefab,
+                        _      => _surfaceImpactPrefab,
+                    };
+                }
+                else
+                {
+                    fleshPrefab = baseType switch
+                    {
+                        "head" => _headImpactPrefab,
+                        "body" => _bodyImpactPrefab,
+                        _      => _surfaceImpactPrefab,
+                    };
+                }
+
                 if (fleshPrefab != null)
                 {
                     var go = Object.Instantiate(fleshPrefab, position, impactRotation);
-                    // Scale down blood when armor absorbs most damage
+                    // Scale down blood/spray when armor absorbs most damage
                     if (absorption > 0.1f)
                         go.transform.localScale *= (1f - absorption * 0.7f);
+
+                    // Programmatic fallback: laser hit using ballistic prefab → recolor particle
+                    // systems to laser flash tint. Used when authored Laser*ImpactPrefab is null.
+                    bool usingLaserAuthoredPrefab = isLaser
+                        && ((baseType == "head" && impactCfg.LaserHeadImpactPrefab != null)
+                         || (baseType == "body" && impactCfg.LaserBodyImpactPrefab != null));
+                    if (isLaser && !usingLaserAuthoredPrefab)
+                        ApplyLaserTint(go, impactCfg.LaserFlashColor);
+
                     Object.Destroy(go, 2f);
                 }
             }
@@ -170,6 +204,19 @@ namespace View
                 // Scale up sparks with more absorption
                 go.transform.localScale *= (0.3f + absorption * 0.7f);
                 Object.Destroy(go, 2f);
+            }
+        }
+
+        // Walk all ParticleSystems on a spawned impact GO and recolor main.startColor.
+        // Used коли authored LaserImpactPrefab is null — fallback "tint everything orange"
+        // approximation of laser flavor.
+        static void ApplyLaserTint(GameObject root, Color tint)
+        {
+            var systems = root.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var main = systems[i].main;
+                main.startColor = tint;
             }
         }
 

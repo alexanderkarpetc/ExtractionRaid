@@ -34,8 +34,10 @@ namespace Tests.EditMode.Fakes
             RarityTier statsTier = RarityTier.Common,
             GameObject basePrefab = null)
         {
-            return MakePayload<BallisticPayloadDefinition>(
+            var def = MakePayload<BallisticPayloadDefinition>(
                 id, displayName, ammoType, commonStats, statsTier, basePrefab);
+            SetPrivateField(def, "_archetype", "Ballistic");
+            return def;
         }
 
         /// <summary>
@@ -55,6 +57,7 @@ namespace Tests.EditMode.Fakes
             var specific = new LaserSpecificStats[5];
             specific[(int)statsTier] = new LaserSpecificStats { ChargeTime = chargeTime };
             SetPrivateField(def, "_specificByTier", specific);
+            SetPrivateField(def, "_archetype", "Laser");
             return def;
         }
 
