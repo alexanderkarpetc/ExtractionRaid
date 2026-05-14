@@ -59,7 +59,7 @@ namespace Adapters
         void LootableDespawned(EId id);
 
         void DamageNumberSpawned(Vector3 worldPos, float damage, bool isHeadshot, bool isKill, Vector3 bulletDir,
-            float absorptionRatio = 0f);
+            float absorptionRatio = 0f, bool isRicochet = false, bool isBleed = false);
 
         void ArmorBroken(EId entityId, bool isHelmet);
         void ProjectileRicochet(EId projectileId, Vector3 position, Vector3 direction);

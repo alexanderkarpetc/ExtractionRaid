@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44e75be2e28eb431cad3d1450af75a66, type: 3}
+  m_Name: DamageNumberV2
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsDamageNumberSection
+  Enabled: 1
+  PoolSize: 50
+  WorldScale: 0.01
+  NormalSize: 1
+  HeadshotSize: 1.1
+  KillSize: 1.3
+  BleedSize: 0.8
+  AbsorbedSize: 0.85
+  RicochetSize: 1
+  SpawnMs: 70
+  HoldMs: 150
+  HoldMsKill: 250
+  DecayMs: 580
+  BleedTotalMs: 1200
+  RicochetTotalMs: 500
+  DriftUpWorld: 0.5
+  SpawnYOffset: 0
+  NormalTrajectory: 2
+  HeadshotTrajectory: 2
+  KillTrajectory: 3
+  BleedTrajectory: 0
+  AbsorbedTrajectory: 0
+  RicochetTrajectory: 1
+  DriftBiasFactor: 0.3
+  KnockbackDistance: 1
+  KnockbackUpRatio: 0.3
+  ArcInitialHorizontal: 1.5
+  ArcInitialUp: 2
+  ArcGravity: 6
+  EndScale: 0.85
+  ConsolidationWindowMs: 200
+  FontSize: 36
+  HeadshotLabel: HEAD
+  KillLabel: 
+  RicochetLabel: RICOCHET
+  SubLabelLineHeight: 60
+  SubLabelSizePct: 55

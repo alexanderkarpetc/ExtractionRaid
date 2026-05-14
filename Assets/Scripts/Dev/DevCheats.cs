@@ -479,22 +479,6 @@ namespace Dev
             set => Config.Parallax.ProjectileHitRadius = value;
         }
 
-        // ── Damage Numbers ─────────────────────────────────
-        public static bool DmgNumEnabled { get => Config.DamageNumbers.Enabled; set => Config.DamageNumbers.Enabled = value; }
-        public static int DmgNumTrajectoryMode { get => Config.DamageNumbers.TrajectoryMode; set => Config.DamageNumbers.TrajectoryMode = value; }
-        public static float DmgNumDuration { get => Config.DamageNumbers.Duration; set => Config.DamageNumbers.Duration = value; }
-        public static float DmgNumFlySpeed { get => Config.DamageNumbers.FlySpeed; set => Config.DamageNumbers.FlySpeed = value; }
-        public static float DmgNumGravityAccel { get => Config.DamageNumbers.GravityAccel; set => Config.DamageNumbers.GravityAccel = value; }
-        public static float DmgNumPopDuration { get => Config.DamageNumbers.PopDuration; set => Config.DamageNumbers.PopDuration = value; }
-        public static float DmgNumPopOvershoot { get => Config.DamageNumbers.PopOvershoot; set => Config.DamageNumbers.PopOvershoot = value; }
-        public static float DmgNumBaseFontSize { get => Config.DamageNumbers.BaseFontSize; set => Config.DamageNumbers.BaseFontSize = value; }
-        public static float DmgNumDamageScaleFactor { get => Config.DamageNumbers.DamageScaleFactor; set => Config.DamageNumbers.DamageScaleFactor = value; }
-        public static float DmgNumRandomSpread { get => Config.DamageNumbers.RandomSpread; set => Config.DamageNumbers.RandomSpread = value; }
-        public static Color DmgNumNormalColor { get => Config.DamageNumbers.NormalColor; set => Config.DamageNumbers.NormalColor = value; }
-        public static Color DmgNumHeadshotColor { get => Config.DamageNumbers.HeadshotColor; set => Config.DamageNumbers.HeadshotColor = value; }
-        public static Color DmgNumKillColor { get => Config.DamageNumbers.KillColor; set => Config.DamageNumbers.KillColor = value; }
-        public static Color DmgNumArmorAbsorbColor { get => Config.DamageNumbers.ArmorAbsorbColor; set => Config.DamageNumbers.ArmorAbsorbColor = value; }
-
         // ── Status Effects ──────────────────────────────────
         public static bool ForceBleedPlayer
         {

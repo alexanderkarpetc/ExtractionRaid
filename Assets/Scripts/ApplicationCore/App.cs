@@ -63,6 +63,7 @@ namespace ApplicationCore
         readonly RagdollPresenter _ragdollPresenter;
         readonly FlinchPresenter _flinchPresenter;
         readonly BeamFlashPresenter _beamFlashPresenter;
+        readonly DamageNumberPresenter _damageNumberPresenter;
 
         App()
         {
@@ -87,6 +88,7 @@ namespace ApplicationCore
             _ragdollPresenter = new RagdollPresenter();
             _flinchPresenter = new FlinchPresenter();
             _beamFlashPresenter = new BeamFlashPresenter();
+            _damageNumberPresenter = new DamageNumberPresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -229,6 +231,7 @@ namespace ApplicationCore
             _ragdollPresenter.Dispose();
             _flinchPresenter.Dispose();
             _beamFlashPresenter.Dispose();
+            _damageNumberPresenter.Dispose();
         }
 
         public void EndRaid()
@@ -274,6 +277,7 @@ namespace ApplicationCore
             _casingEjectorPresenter.LateTick(RaidSession);
             _magazineDropPresenter.LateTick(RaidSession);
             _beamFlashPresenter.LateTick(RaidSession);
+            _damageNumberPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 

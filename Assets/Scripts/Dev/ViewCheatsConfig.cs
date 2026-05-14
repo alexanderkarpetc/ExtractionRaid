@@ -27,6 +27,7 @@ namespace Dev
         [SerializeField] ViewCheatsHitFlashSection _hitFlash;
         [SerializeField] ViewCheatsBotDebugSection _botDebug;
         [SerializeField] ViewCheatsImpactVfxSection _impactVfx;
+        [SerializeField] ViewCheatsDamageNumberSection _damageNumberV2;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public ViewCheatsCameraShakeSection CameraShake =>
@@ -58,5 +59,8 @@ namespace Dev
 
         public ViewCheatsImpactVfxSection ImpactVfx =>
             _impactVfx ? _impactVfx : (_impactVfx = CreateInstance<ViewCheatsImpactVfxSection>());
+
+        public ViewCheatsDamageNumberSection DamageNumberV2 =>
+            _damageNumberV2 ? _damageNumberV2 : (_damageNumberV2 = CreateInstance<ViewCheatsDamageNumberSection>());
     }
 }

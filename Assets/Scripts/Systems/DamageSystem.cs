@@ -80,6 +80,10 @@ namespace Systems
                         {
                             context.Events.HitConfirmed(isKill: false, isHeadshot: true,
                                 absorptionRatio: 1f, isRicochet: true);
+                            // v2 damage-number: ricochet word popup (no damage value).
+                            context.Events.DamageNumberSpawned(hit.HitPoint, damage: 0f,
+                                isHeadshot: false, isKill: false, bulletDir: ricochetDir,
+                                absorptionRatio: 1f, isRicochet: true);
                         }
 
                         // Remove projectile
