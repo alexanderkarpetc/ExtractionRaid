@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="ExtractionHud.uss"/>
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
+
+        <ui:VisualElement name="widget" class="extraction-widget is-progress" picking-mode="Ignore">
+
+            <ui:VisualElement name="ringWrap" class="ring-wrap" picking-mode="Ignore">
+                <ui:VisualElement name="ringCanvas" class="ring-canvas" picking-mode="Ignore"/>
+                <ui:VisualElement name="ringCore" class="ring-core" picking-mode="Ignore">
+                    <ui:Label name="seconds" text="10" class="seconds"/>
+                    <ui:Label name="secondsSuffix" text="seconds" class="seconds-suffix"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="labels" class="widget-label" picking-mode="Ignore">
+                <ui:Label name="stateLabel" text="Extracting" class="state"/>
+                <ui:Label name="zoneName" text="" class="zone-name"/>
+                <ui:Label name="hint" text="Hold position — leaving resets the timer." class="hint"/>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -137,6 +137,14 @@ namespace Session
                 var npc = NpcState.Create(id, sp.transform.position, sp.npcId);
                 RaidState.Npcs.Add(npc);
             }
+
+            var extractionPoints = Object.FindObjectsByType<ExtractionPointSpawnPoint>(FindObjectsSortMode.None);
+            foreach (var sp in extractionPoints)
+            {
+                var id = RaidState.AllocateEId();
+                var ep = ExtractionPointState.Create(id, sp.transform.position, sp.radius, sp.label);
+                RaidState.ExtractionPoints.Add(ep);
+            }
         }
 
         void SpawnActiveQuestItems()
@@ -608,6 +616,7 @@ namespace Session
 
             ProjectileSystem.Tick(RaidState, in context);
             GrenadeSystem.TickExplosions(RaidState, in context);
+            ExtractionSystem.Tick(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
             ProcessCollisions(in context);

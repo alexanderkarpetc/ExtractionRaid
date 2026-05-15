@@ -16,6 +16,7 @@ namespace State
         public List<WorkbenchState> Workbenches;
         public List<DeployPointState> DeployPoints;
         public List<NpcState> Npcs;
+        public List<ExtractionPointState> ExtractionPoints;
         public Dictionary<EId, List<StatusEffectInstance>> StatusEffects;
         public Dictionary<EId, ArmorSlotState> ArmorMap;
 
@@ -43,6 +44,7 @@ namespace State
                 Workbenches = new List<WorkbenchState>(),
                 DeployPoints = new List<DeployPointState>(),
                 Npcs = new List<NpcState>(),
+                ExtractionPoints = new List<ExtractionPointState>(),
                 StatusEffects = new Dictionary<EId, List<StatusEffectInstance>>(),
                 ArmorMap = new Dictionary<EId, ArmorSlotState>(),
             };

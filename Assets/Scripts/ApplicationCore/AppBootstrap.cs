@@ -4,6 +4,7 @@ using View.UI;
 using View.UI.CraftingMockup;
 using View.UI.Dialogue;
 using View.UI.EndOfRaid;
+using View.UI.Extraction;
 using View.UI.Hotbar;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
@@ -51,6 +52,14 @@ namespace ApplicationCore
             var endOfRaidHost = new GameObject("EndOfRaidWindow");
             endOfRaidHost.transform.SetParent(transform, false);
             endOfRaidHost.AddComponent<EndOfRaidWindow>();
+
+            // Extraction HUD — radial timer widget driven by PlayerEntityState
+            // extraction fields; ExtractionSystem ticks the progress, this presenter
+            // shows the visual state and triggers RequestExtraction on completion.
+            gameObject.AddComponent<ExtractionHudPresenter>();
+            var extractionHudHost = new GameObject("ExtractionHudWindow");
+            extractionHudHost.transform.SetParent(transform, false);
+            extractionHudHost.AddComponent<ExtractionHudWindow>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<CraftPresenter>();

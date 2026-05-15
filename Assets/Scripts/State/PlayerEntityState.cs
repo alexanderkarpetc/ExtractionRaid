@@ -45,6 +45,13 @@ namespace State
         public EId NpcTargetId;
         public EId BuilderTargetId;
 
+        // Extraction state — ExtractionSystem owns these. ActiveExtractionPointId is None
+        // while the player is outside every zone; entering a zone sets it and ticks
+        // ExtractionProgress01 from 0 → 1 over ExtractionConstants.ExtractDurationSeconds.
+        // Leaving the zone resets both. The HUD presenter polls these each frame.
+        public EId ActiveExtractionPointId;
+        public float ExtractionProgress01;
+
         public int ActiveQuickSlot = -1;
         public bool QuickSlotHeld;
 
