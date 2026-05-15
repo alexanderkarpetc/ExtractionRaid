@@ -125,61 +125,127 @@ namespace Editor
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
-            // ── Sections (auto-rendered via inline editors) ──
-            DrawSection("💀 Cheats", _config.Cheats);
-            DrawSection("🔫 Weapon", _config.Weapon);
-            DrawSection("💢 Recoil", _config.Recoil);
-            DrawSection("🎯 Aim", _config.Aim);
-            DrawSection("🏃 Player", _config.Player);
-            DrawSection("👁 FOV", _config.FOV);
-            DrawSection("🌫 Fog", _config.Fog);
-            DrawSection("✛ Crosshair", _config.Crosshair);
-            DrawSection("🔍 ADS", _config.ADS);
-            DrawSection("❤ Health Bar", _config.HealthBar);
-            DrawSection("🌐 Parallax", _config.Parallax);
-            DrawSection("🛡 Armor", _config.Armor);
-            DrawSection("💉 Status Effects", _config.StatusEffects);
-            DrawSection("⏸ Hit Pause", _config.HitPause);
-            DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
-            DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
-            DrawSection("🧟 Horde", _config.Horde);
-            DrawSection("🎯 Bot Engagement Gate", _config.BotEngagement);
-            DrawSection("🔬 Laser (charge + shotgun)", _config.Laser);
-            DrawSection("🔥 Barrel Heat (rifle)", _config.BarrelHeat);
-
-            // ── View-layer sections (mirrored from ViewCheats) ──
-            // Single window over both configs — assets stay split on disk for
-            // organisation, but tuning happens in one place. The dedicated
-            // "View Cheats" window remains as a focused alias.
-            DrawViewCheatsBanner();
+            // Sections are grouped into 5 macro buckets by topic, not by source. ViewCheats
+            // entries (cosmetic polish) sit alongside DevCheats entries (gameplay tuning)
+            // when they affect the same player-facing concern (e.g. Crosshair + Crosshair v2,
+            // Damage Numbers v2 next to Combat). Underlying SO assets stay split on disk.
             var view = ViewCheats.Config;
-            if (view != null)
+
+            DrawMacroGroup("💀 Tools & Cheats", ToolsTone, defaultExpanded: true, () =>
             {
-                DrawSection("🎬 Camera Shake", view.CameraShake);
-                DrawSection("🩸 Blood Decals", view.BloodDecal);
-                DrawSection("🔫 Bullet Holes", view.BulletHole);
-                DrawSection("🥃 Casings", view.Casings);
-                DrawSection("📦 Magazine Drop", view.Magazine);
-                DrawSection("💀 Ragdoll", view.Ragdoll);
-                DrawSection("🔻 Weapon Drop", view.WeaponDrop);
-                DrawSection("⚡ Hit Flash", view.HitFlash);
-                DrawSection("💥 Impact VFX (per-archetype)", view.ImpactVfx);
-                DrawSection("🔢 Damage Numbers v2 (TMP)", view.DamageNumberV2);
-                DrawSection("✛ Crosshair v2 (SDF)", view.CrosshairV2);
-                DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
-            }
+                DrawSection("💀 Cheats", _config.Cheats);
+                DrawRaidSection();
+                DrawQuestsSection();
+            });
 
-            EditorGUILayout.Space(8);
+            DrawMacroGroup("🎮 Combat", CombatTone, defaultExpanded: false, () =>
+            {
+                DrawSection("🔫 Weapon", _config.Weapon);
+                DrawSection("💢 Recoil", _config.Recoil);
+                DrawSection("🎯 Aim", _config.Aim);
+                DrawSection("🔍 ADS", _config.ADS);
+                DrawSection("✛ Crosshair", _config.Crosshair);
+                if (view != null) DrawSection("✛ Crosshair v2 (SDF)", view.CrosshairV2);
+                DrawSection("🛡 Armor", _config.Armor);
+                if (view != null) DrawSection("🔢 Damage Numbers v2 (TMP)", view.DamageNumberV2);
+                DrawSection("⏸ Hit Pause", _config.HitPause);
+                DrawSection("💥 Stagger / Hit Reaction", _config.Stagger);
+                DrawSection("🔬 Laser (charge + shotgun)", _config.Laser);
+                DrawSection("🔥 Barrel Heat (rifle)", _config.BarrelHeat);
+            });
 
-            // ── Raid (custom — runtime actions) ───────────────
-            DrawRaidSection();
+            DrawMacroGroup("🏃 Player & World", PlayerTone, defaultExpanded: false, () =>
+            {
+                DrawSection("🏃 Player", _config.Player);
+                DrawSection("👁 FOV", _config.FOV);
+                DrawSection("💉 Status Effects", _config.StatusEffects);
+                DrawSection("❤ Health Bar", _config.HealthBar);
+                DrawSection("🌫 Fog", _config.Fog);
+                DrawSection("🌐 Parallax", _config.Parallax);
+            });
 
-            // ── Quests (custom — needs runtime App access) ────
-            DrawQuestsSection();
+            DrawMacroGroup("🧟 AI", AiTone, defaultExpanded: false, () =>
+            {
+                DrawSection("🧟 Horde", _config.Horde);
+                DrawSection("🎯 Bot Engagement Gate", _config.BotEngagement);
+                if (view != null) DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
+            });
+
+            DrawMacroGroup("✨ FX & Feel", FxTone, defaultExpanded: false, () =>
+            {
+                DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
+                if (view != null)
+                {
+                    DrawSection("🎬 Camera Shake", view.CameraShake);
+                    DrawSection("⚡ Hit Flash", view.HitFlash);
+                    DrawSection("💥 Impact VFX (per-archetype)", view.ImpactVfx);
+                    DrawSection("🩸 Blood Decals", view.BloodDecal);
+                    DrawSection("🔫 Bullet Holes", view.BulletHole);
+                    DrawSection("🥃 Casings", view.Casings);
+                    DrawSection("📦 Magazine Drop", view.Magazine);
+                    DrawSection("🔻 Weapon Drop", view.WeaponDrop);
+                    DrawSection("💀 Ragdoll", view.Ragdoll);
+                }
+            });
 
             EditorGUILayout.EndScrollView();
 
             _so.ApplyModifiedProperties();
+        }
+
+        // ── Macro group banner palette ────────────────────────
+        // Each tone is (bar background, bottom accent line). Picked to be distinct
+        // at-a-glance without becoming a clown parade — warm hues for player-facing,
+        // cool hues for systems and view polish.
+        static readonly (Color bg, Color accent) ToolsTone  = (new(0.42f, 0.16f, 0.16f, 1f), new(0.92f, 0.32f, 0.32f, 1f));
+        static readonly (Color bg, Color accent) CombatTone = (new(0.45f, 0.28f, 0.12f, 1f), new(0.92f, 0.55f, 0.18f, 1f));
+        static readonly (Color bg, Color accent) PlayerTone = (new(0.16f, 0.34f, 0.22f, 1f), new(0.36f, 0.80f, 0.50f, 1f));
+        static readonly (Color bg, Color accent) AiTone     = (new(0.28f, 0.20f, 0.44f, 1f), new(0.62f, 0.50f, 0.92f, 1f));
+        static readonly (Color bg, Color accent) FxTone     = (new(0.18f, 0.32f, 0.48f, 1f), new(0.36f, 0.62f, 0.92f, 1f));
+
+        void DrawMacroGroup(string title, (Color bg, Color accent) tone, bool defaultExpanded,
+            System.Action body)
+        {
+            EditorGUILayout.Space(10);
+
+            // Foldout state — distinct key namespace from per-section foldouts so the
+            // two layers don't collide. First-launch default is per-group.
+            string key = "macro_" + title;
+            if (!_foldouts.ContainsKey(key))
+                _foldouts[key] = EditorPrefs.GetBool("DevCheats_fold_" + key, defaultExpanded);
+            bool fold = _foldouts[key];
+
+            const float bannerHeight = 30f;
+            var rect = EditorGUILayout.GetControlRect(false, bannerHeight);
+            EditorGUI.DrawRect(rect, tone.bg);
+            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 2, rect.width, 2), tone.accent);
+
+            // Whole bar is a click target — cheaper than a tiny foldout arrow.
+            if (Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
+            {
+                fold = !fold;
+                _foldouts[key] = fold;
+                EditorPrefs.SetBool("DevCheats_fold_" + key, fold);
+                Event.current.Use();
+                Repaint();
+            }
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+
+            var labelStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 13,
+                normal   = { textColor = Color.white },
+            };
+            string arrow = fold ? "▼" : "▶";
+            GUI.Label(new Rect(rect.x + 10, rect.y + 6, rect.width - 20, 20),
+                $"{arrow}  {title}", labelStyle);
+
+            if (!fold) return;
+
+            EditorGUILayout.Space(2);
+            EditorGUI.indentLevel++;
+            body?.Invoke();
+            EditorGUI.indentLevel--;
         }
 
         // ── Header banner ─────────────────────────────────────
@@ -223,33 +289,6 @@ namespace Editor
             GUI.Label(subRect, "Gameplay + view tuning, all in one place. Assets remain split on disk.", subStyle);
 
             EditorGUILayout.Space(4);
-        }
-
-        // ── View-layer banner ─────────────────────────────────
-        // Dim cool-blue strip mirrors the ViewCheats window palette so the boundary
-        // between gameplay and view sections is obvious при scroll.
-
-        static readonly Color ViewBannerColor  = new(0.18f, 0.32f, 0.48f, 1f);
-        static readonly Color ViewBannerAccent = new(0.36f, 0.62f, 0.92f, 1f);
-
-        void DrawViewCheatsBanner()
-        {
-            EditorGUILayout.Space(10);
-            const float bannerHeight = 28f;
-            var rect = EditorGUILayout.GetControlRect(false, bannerHeight);
-
-            EditorGUI.DrawRect(rect, ViewBannerColor);
-            var accentRect = new Rect(rect.x, rect.yMax - 2, rect.width, 2);
-            EditorGUI.DrawRect(accentRect, ViewBannerAccent);
-
-            var titleStyle = new GUIStyle(EditorStyles.boldLabel)
-            {
-                fontSize = 12,
-                normal   = { textColor = Color.white },
-            };
-            var titleRect = new Rect(rect.x + 10, rect.y + 5, rect.width - 20, 20);
-            GUI.Label(titleRect, "🎨 View polish (mirrored from ViewCheats — assets in Resources/Configs/ViewCheats/)", titleStyle);
-            EditorGUILayout.Space(2);
         }
 
         void DrawSection(string title, ScriptableObject section)
