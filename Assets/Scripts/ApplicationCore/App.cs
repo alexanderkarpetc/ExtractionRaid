@@ -243,6 +243,7 @@ namespace ApplicationCore
 
             RaidSession.End();
             IsInHideout = false;
+            Systems.QuestSystem.OnRaidEnded(Player.QuestProgress, QuestDatabase);
             SavePlayer();
             Debug.Log("[App] Raid ended.");
             RaidSession = null;
