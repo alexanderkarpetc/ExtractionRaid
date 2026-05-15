@@ -11,7 +11,8 @@ namespace Quests
         FindPlace,
         Extract,
         Craft,
-        FindItem
+        FindItem,
+        SellItems,
     }
 
     /// <summary>
@@ -59,7 +60,6 @@ namespace Quests
         public abstract QuestTaskType TaskType { get; }
         public string Description;
         public int RequiredCount = 1;
-        public bool InOneRaid;
     }
 
     [Serializable]
@@ -75,6 +75,15 @@ namespace Quests
         public override QuestTaskType TaskType => QuestTaskType.KillEnemy;
         public EnemyType EnemyType = EnemyType.Any;
         public bool HeadshotsOnly;
+
+        /// <summary>
+        /// When true, the kill counter resets on raid end (extract or KIA) — the
+        /// player must reach <see cref="QuestTask.RequiredCount"/> kills inside a
+        /// single raid. Default false: progress carries across raids.
+        /// Only meaningful on KillEnemyTask in v1; other task types either complete
+        /// instantly or aren't time-bounded by raid lifecycle.
+        /// </summary>
+        public bool InOneRaid;
     }
 
     [Serializable]
@@ -105,5 +114,18 @@ namespace Quests
         public string ItemId;
         public Vector3 Coordinates;
         public MapId Map;
+    }
+
+    /// <summary>
+    /// "Sell items totalling X currency" objective. <see cref="QuestTask.RequiredCount"/>
+    /// is the cumulative monetary value the player must earn from sales — progress ticks
+    /// up by the sale price each time the player completes a transaction. v1 has no
+    /// item-category filter (every sale credits the quest); later versions can layer on
+    /// an allowed category list / item-tag filter.
+    /// </summary>
+    [Serializable]
+    public class SellItemsTask : QuestTask
+    {
+        public override QuestTaskType TaskType => QuestTaskType.SellItems;
     }
 }

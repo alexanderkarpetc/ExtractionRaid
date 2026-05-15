@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01f7b830b6b19b348a074d28ea82e4c4, type: 3}
+  m_Name: GoodBusinessQuest
+  m_EditorClassIdentifier: Game::Quests.QuestDefinition
+  Id: good_for_business
+  DisplayName: Good for Business
+  Description: "\u201CYou want to survive here? Then learn one thing fast \u2014
+    junk keeps people alive.\nAmmo, tools, scrap, broken electronics\u2026 somebody
+    always pays for something.\n\nMost rookies hoard everything until they die with
+    a backpack full of garbage. Smart ones know when to sell.\n\nBring me anything
+    valuable you find out there and sell goods worth at least 1,500 Credits. I don\u2019t
+    care what it is, as long as it\u2019s worth something and not covered in fresh
+    blood.\n\nThink of this as your first lesson in trade: gear comes and goes, but
+    steady profit keeps you breathing.\u201D"
+  RequiredLevel: 0
+  NpcId: AL
+  Tasks: []
+  Rewards: []
+  references:
+    version: 2
+    RefIds: []

@@ -137,6 +137,84 @@ namespace Systems
             return any;
         }
 
+        /// <summary>
+        /// Credits sale value to every active <see cref="SellItemsTask"/>. Called by the
+        /// vendor/sell flow once a transaction commits — pass the total currency the
+        /// player just earned (sum of per-item prices for the batch). v1 has no item
+        /// filter, so every sale ticks every active SellItemsTask. Returns true if any
+        /// task progressed; values above the remaining-required cap are capped so a
+        /// single huge sale doesn't over-fill the bar.
+        /// </summary>
+        public static bool OnItemSold(
+            QuestProgressState progress, QuestDatabase db, int currencyEarned)
+        {
+            if (progress == null || db == null || currencyEarned <= 0) return false;
+
+            bool any = false;
+
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not SellItemsTask sell) continue;
+
+                    var tp = qp.Tasks[i];
+                    int remaining = sell.RequiredCount - tp.CurrentCount;
+                    if (remaining <= 0) continue;
+
+                    int credit = currencyEarned < remaining ? currencyEarned : remaining;
+                    tp.CurrentCount += credit;
+                    any = true;
+                }
+            }
+
+            return any;
+        }
+
+        /// <summary>
+        /// Called from <see cref="ApplicationCore.App.EndRaid"/> at the end of every
+        /// raid (extract or KIA). Resets <see cref="KillEnemyTask"/> progress on every
+        /// active quest where the task has <c>InOneRaid = true</c> and the player
+        /// hadn't yet reached the kill count — they must do it in a single raid.
+        /// Tasks already at <see cref="QuestTask.RequiredCount"/> are preserved so the
+        /// player can still claim the reward at the NPC after returning to hideout.
+        /// Returns true if any task was reset.
+        /// </summary>
+        public static bool OnRaidEnded(QuestProgressState progress, QuestDatabase db)
+        {
+            if (progress == null || db == null) return false;
+
+            bool any = false;
+
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not KillEnemyTask kill) continue;
+                    if (!kill.InOneRaid) continue;
+
+                    var tp = qp.Tasks[i];
+                    if (tp.CurrentCount <= 0) continue;
+                    if (tp.CurrentCount >= kill.RequiredCount) continue; // already satisfied — keep it
+
+                    tp.CurrentCount = 0;
+                    any = true;
+                }
+            }
+
+            return any;
+        }
+
         public static bool AreAllTasksDone(QuestDefinition quest, QuestProgress p)
         {
             if (quest.Tasks == null || quest.Tasks.Count == 0) return true;

@@ -432,13 +432,14 @@ Currently only `StatusEffectType.Bleeding`.
 | Type | Class | Key Fields |
 |---|---|---|
 | FindAndTransfer | `FindAndTransferTask` | `QuestItemId` |
-| KillEnemy | `KillEnemyTask` | `EnemyType` (enum: Any/Local/PMC/Boss), `HeadshotsOnly` |
+| KillEnemy | `KillEnemyTask` | `EnemyType` (enum: Any/Local/PMC/Boss), `HeadshotsOnly`, `InOneRaid` (must reach kill count in single raid) |
 | FindPlace | `FindPlaceTask` | `PlaceId` |
 | Extract | `ExtractTask` | `LevelId` |
 | Craft | `CraftTask` | `ItemId` |
 | FindItem | `FindItemTask` | `ItemId`, `Coordinates`, `Map` |
+| SellItems | `SellItemsTask` | *(none yet — v1 has no category filter)* — `RequiredCount` = total currency to earn |
 
-All tasks share: `Description`, `RequiredCount`, `InOneRaid` (must complete in single raid).
+All tasks share: `Description`, `RequiredCount`.
 
 ### Quest Flow (QuestSystem)
 
