@@ -37,7 +37,10 @@ Shader "Crosshair/SDF"
         _RingRadius ("Ring Radius px", Float) = 42
         _RingThickness ("Ring Thickness px", Float) = 3
         _ChargeFill ("Charge Fill (0..1)", Range(0,1)) = 0
-        _ChargeColor ("Charge Color", Color) = (0.3, 0.8, 1, 1)
+        _ChargeColorCold ("Charge Cold (inner / just-lit)", Color) = (1, 1, 1, 1)
+        _ChargeColorMid ("Charge Mid (yellow)", Color) = (1, 0.85, 0.2, 1)
+        _ChargeColorHot ("Charge Hot (outer / overheating)", Color) = (1, 0.3, 0.1, 1)
+        _ChargeBarThicknessRatio ("Charge Bar Thickness × LineThickness", Range(0.2, 2)) = 0.7
         _EdgeSoftness ("Edge Softness px", Range(0.1, 4)) = 1
         _OutlineColor ("Outline Color", Color) = (0, 0, 0, 0.85)
         _OutlineWidth ("Outline Width px", Range(0, 6)) = 1.5
@@ -83,7 +86,10 @@ Shader "Crosshair/SDF"
             float _RingRadius;
             float _RingThickness;
             float _ChargeFill;
-            float4 _ChargeColor;
+            float4 _ChargeColorCold;
+            float4 _ChargeColorMid;
+            float4 _ChargeColorHot;
+            float _ChargeBarThicknessRatio;
             float _EdgeSoftness;
             float4 _OutlineColor;
             float _OutlineWidth;
@@ -195,8 +201,39 @@ Shader "Crosshair/SDF"
                 float dRing = sdRingArc(px, center, _RingRadius, _RingThickness, _RingFill);
                 dMain = min(dMain, dRing);
 
-                // ── Charge ring (separate color)
-                float dCharge = sdRingArc(px, center, _RingRadius * 0.7, _RingThickness, _ChargeFill);
+                // ── Charge fill — overlay on the 4 crosshair arm segments themselves.
+                // Bar starts at arm inner edge (_Gap) and grows outward toward _Gap + _LineLength
+                // proportional to chargeRatio. Same path as main arms — overlays them з flame color.
+                // Top arm respects _TopArmAlpha (ADS hides it consistently).
+                float dCharge = 1e6;
+                half3 chargeGradient = (half3)_ChargeColorCold.rgb;
+                if (_ChargeFill > 0.001)
+                {
+                    float fillLen = _LineLength * _ChargeFill;
+                    float halfThick = _LineThickness * 0.5 * _ChargeBarThicknessRatio;
+
+                    // 4 cardinal bars matching main arms (anchored at _Gap, length scales з chargeRatio)
+                    if (_TopArmAlpha > 0.5)
+                        dCharge = min(dCharge, sdSegment(px, center + float2(0,  _Gap), center + float2(0,  _Gap + fillLen), halfThick));
+                    dCharge = min(dCharge, sdSegment(px, center + float2(0, -_Gap), center + float2(0, -_Gap - fillLen), halfThick));
+                    dCharge = min(dCharge, sdSegment(px, center + float2( _Gap, 0), center + float2( _Gap + fillLen, 0), halfThick));
+                    dCharge = min(dCharge, sdSegment(px, center + float2(-_Gap, 0), center + float2(-_Gap - fillLen, 0), halfThick));
+
+                    // Along position: 0 at arm inner edge (cold), 1 at arm outer edge (hot)
+                    float2 toPx = px - center;
+                    float along;
+                    if (abs(toPx.y) > abs(toPx.x))
+                        along = (abs(toPx.y) - _Gap) / max(0.001, _LineLength);
+                    else
+                        along = (abs(toPx.x) - _Gap) / max(0.001, _LineLength);
+                    along = saturate(along);
+
+                    // Flame gradient: white (inner, near gap) → yellow (mid) → red (outer tip, hot)
+                    if (along < 0.5)
+                        chargeGradient = lerp((half3)_ChargeColorCold.rgb, (half3)_ChargeColorMid.rgb, along * 2.0);
+                    else
+                        chargeGradient = lerp((half3)_ChargeColorMid.rgb, (half3)_ChargeColorHot.rgb, (along - 0.5) * 2.0);
+                }
 
                 // ── Hit pulse — 4 diagonal stubs з 3-phase animation:
                 //   1) Burst (0..BurstPhaseEnd): scale-up from inner anchor, full alpha
@@ -281,9 +318,9 @@ Shader "Crosshair/SDF"
                 col.rgb = lerp(col.rgb, _Color.rgb, faceMain);
                 col.a   = max(col.a, faceMain * _Color.a);
 
-                // Charge face (cyan)
-                col.rgb = lerp(col.rgb, _ChargeColor.rgb, faceCharge);
-                col.a   = max(col.a, faceCharge * _ChargeColor.a);
+                // Charge face — flame gradient (white inner → yellow → red outer)
+                col.rgb = lerp(col.rgb, chargeGradient, faceCharge);
+                col.a   = max(col.a, faceCharge);
 
                 // Hit pulse face — last layer, on top of everything.
                 col.rgb = lerp(col.rgb, _HitPulseColor.rgb, facePulse);

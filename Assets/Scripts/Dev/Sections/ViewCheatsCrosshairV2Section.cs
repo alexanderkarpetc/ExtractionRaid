@@ -82,7 +82,24 @@ namespace Dev
         public Color NormalColor   = Color.white;
         public Color BloomColor    = new Color(1f, 0.9f, 0.4f, 1f);
         public Color WarningColor  = new Color(1f, 0.4f, 0.3f, 1f); // dry-fire / out of ammo
-        public Color ChargeColor   = new Color(0.3f, 0.85f, 1f, 1f); // laser charge cyan
+
+        [Header("Charge — flame fill inside crosshair gap (white→yellow→red gradient)")]
+        [Tooltip("Inner segment color — close to dot, 'just-lit' tip of flame.")]
+        public Color ChargeColorCold = Color.white;
+        [Tooltip("Middle segment color — warming up.")]
+        public Color ChargeColorMid  = new Color(1f, 0.85f, 0.2f, 1f);
+        [Tooltip("Outer segment color — overheating, near arm edge.")]
+        public Color ChargeColorHot  = new Color(1f, 0.3f, 0.1f, 1f);
+        [Tooltip("Bar thickness as ratio of LineThickness. 0.7 = slightly thinner than main arms.")]
+        [Range(0.2f, 2f)] public float ChargeBarThicknessRatio = 0.7f;
+
+        [Header("Charge — overheat tremble (near max charge)")]
+        [Tooltip("ChargeFill above this triggers cursor tremble. 0.85 = activates у last 15% of charge.")]
+        [Range(0.5f, 1f)] public float ChargeOverheatThreshold = 0.85f;
+        [Tooltip("Maximum cursor tremble offset (px) at ChargeFill = 1.0. Scales linearly з overheat fraction.")]
+        [Range(0f, 8f)] public float ChargeOverheatTremblePx = 2.5f;
+        [Tooltip("Tremble noise frequency (Hz). Higher = more jittery / vibrating.")]
+        [Range(5f, 80f)] public float ChargeOverheatTrembleFreq = 35f;
 
         [Header("Rolling / fading")]
         [Range(0f, 1f)] public float RollingAlpha = 0.3f;

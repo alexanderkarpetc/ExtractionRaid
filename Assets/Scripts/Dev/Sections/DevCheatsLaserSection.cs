@@ -13,6 +13,19 @@ namespace Dev
     /// </summary>
     public class DevCheatsLaserSection : ScriptableObject
     {
+        [Header("Charge duration (seconds, before delivery multiplier)")]
+        [Tooltip("Base charge time override (seconds). 0 = use payload asset value (per-rarity from LaserPayloadDefinition). " +
+                 ">0 = override all rarities. Delivery multiplier (Single/Auto/Scatter) still applies on top.")]
+        [Range(0f, 5f)] public float ChargeTimeOverrideSeconds = 0f;
+
+        [Header("Charge time → ratio shape")]
+        [Tooltip("Exponent on linear t (elapsed/chargeTime) → chargeRatio. 1 = linear (legacy). " +
+                 ">1 = ease-in (slow start, fast finish — feels like building tension; reward for full commitment). " +
+                 "<1 = ease-out (fast start, slow finish — quick-tap players get more bang for short holds). " +
+                 "Examples з t=0.3: power=0.2 → ratio≈0.79; power=0.5 → ratio≈0.55; power=2 → ratio≈0.09. " +
+                 "Drives BOTH gameplay damage/burst/spread AND cursor charge fill in sync.")]
+        [Range(0.1f, 6f)] public float ChargeRatioPower = 1f;
+
         [Header("Charge → damage (parabolic curve, all lasers)")]
         [Tooltip("Damage multiplier at 0 charge. Linear was 0.3 — parabolic lets us start lower.")]
         [Range(0f, 1f)] public float ChargeDamageMin = 0.1f;
@@ -51,5 +64,17 @@ namespace Dev
             FiringPattern.Scatter => ScatterChargeMult,
             _                     => SingleActionChargeMult,
         };
+
+        /// <summary>
+        /// Map linear charge time t (elapsed / chargeTime, clamped to [0,1]) to a curved chargeRatio
+        /// via <c>ratio = t^ChargeRatioPower</c>. Drives gameplay AND cursor fill in sync.
+        /// Power=1 → linear identity (backward compat). >1 = ease-in (slow start). &lt;1 = ease-out (fast start).
+        /// </summary>
+        public float EvaluateChargeRatio(float linearT)
+        {
+            float t = Mathf.Clamp01(linearT);
+            float power = Mathf.Max(0.01f, ChargeRatioPower);
+            return Mathf.Pow(t, power);
+        }
     }
 }

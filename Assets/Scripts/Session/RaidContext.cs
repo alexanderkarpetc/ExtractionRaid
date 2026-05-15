@@ -156,6 +156,8 @@ namespace Session
     /// </summary>
     public struct LaserConfig
     {
+        public float ChargeTimeOverrideSeconds; // 0 = use payload asset value, >0 = override all rarities (delivery mult still applies)
+        public float ChargeRatioPower;       // shape of linear-t → chargeRatio (default 1 = linear). >1 ease-in, <1 ease-out.
         public float ChargeDamageMin;        // 0 → multiplier at zero charge (default 0.1)
         public float ChargeDamagePower;      // curve exponent — 1 = linear, 2 = parabolic (default 2.0)
         public float ShotgunMinSpreadMult;   // multiplier on SpreadAngle at full charge (default 0.15)
@@ -169,7 +171,9 @@ namespace Session
 
         public static LaserConfig Default => new LaserConfig
         {
-            ChargeDamageMin        = 0.1f,
+            ChargeTimeOverrideSeconds = 0f,
+            ChargeRatioPower          = 1f,
+            ChargeDamageMin           = 0.1f,
             ChargeDamagePower      = 2f,
             ShotgunMinSpreadMult   = 0.15f,
             ShotgunMaxSpreadMult   = 1.5f,
@@ -179,6 +183,18 @@ namespace Session
             AutoChargeMult         = 1.0f,
             ScatterChargeMult      = 1.5f,
         };
+
+        /// <summary>
+        /// Map linear charge time t (elapsed / chargeTime, clamped to [0,1]) to curved chargeRatio
+        /// via <c>ratio = t^ChargeRatioPower</c>. Default power=1 → identity (backward compat).
+        /// Drives gameplay damage/burst/spread; CrosshairPresenter uses the section copy with same math.
+        /// </summary>
+        public float EvaluateChargeRatio(float linearT)
+        {
+            float t = Mathf.Clamp01(linearT);
+            float power = Mathf.Max(0.01f, ChargeRatioPower);
+            return Mathf.Pow(t, power);
+        }
 
         /// <summary>Parabolic charge → damage multiplier. Computes once; safe for all archetypes (ballistic chargeRatio=1 → returns 1).</summary>
         public float ChargeDamageMultiplier(float chargeRatio)

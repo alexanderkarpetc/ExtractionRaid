@@ -542,6 +542,8 @@ namespace Session
                 },
                 laserConfig: new LaserConfig
                 {
+                    ChargeTimeOverrideSeconds = DevCheats.Config.Laser.ChargeTimeOverrideSeconds,
+                    ChargeRatioPower       = DevCheats.Config.Laser.ChargeRatioPower,
                     ChargeDamageMin        = DevCheats.Config.Laser.ChargeDamageMin,
                     ChargeDamagePower      = DevCheats.Config.Laser.ChargeDamagePower,
                     ShotgunMinSpreadMult   = DevCheats.Config.Laser.ShotgunMinSpreadMult,

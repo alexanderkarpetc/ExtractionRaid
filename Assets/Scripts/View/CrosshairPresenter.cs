@@ -37,8 +37,11 @@ namespace View
         static readonly int _RingFill      = Shader.PropertyToID("_RingFill");
         static readonly int _RingRadius    = Shader.PropertyToID("_RingRadius");
         static readonly int _RingThickness = Shader.PropertyToID("_RingThickness");
-        static readonly int _ChargeFill    = Shader.PropertyToID("_ChargeFill");
-        static readonly int _ChargeColor   = Shader.PropertyToID("_ChargeColor");
+        static readonly int _ChargeFill         = Shader.PropertyToID("_ChargeFill");
+        static readonly int _ChargeColorCold    = Shader.PropertyToID("_ChargeColorCold");
+        static readonly int _ChargeColorMid     = Shader.PropertyToID("_ChargeColorMid");
+        static readonly int _ChargeColorHot     = Shader.PropertyToID("_ChargeColorHot");
+        static readonly int _ChargeBarThicknessRatio = Shader.PropertyToID("_ChargeBarThicknessRatio");
         static readonly int _EdgeSoftness  = Shader.PropertyToID("_EdgeSoftness");
         static readonly int _OutlineColor  = Shader.PropertyToID("_OutlineColor");
         static readonly int _OutlineWidth  = Shader.PropertyToID("_OutlineWidth");
@@ -241,14 +244,20 @@ namespace View
                     case WeaponPhase.Charging:
                     {
                         // Apply per-delivery charge multiplier so ring matches actual gameplay time.
+                        // DevCheats override (>0) replaces payload-asset baseline — must mirror ShootingSystem.
                         var laserCfg = DevCheats.Config?.Laser;
                         float deliveryMult = laserCfg != null
                             ? laserCfg.ChargeTimeMultiplierFor(weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single)
                             : 1f;
-                        float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
-                        chargeFill = chargeTime > 0f
+                        float overrideSeconds = laserCfg != null ? laserCfg.ChargeTimeOverrideSeconds : 0f;
+                        float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(
+                            weapon, deliveryMult, overrideSeconds);
+                        // Linear t → shaped chargeRatio via DevCheatsLaserSection.EvaluateChargeRatio.
+                        // Mirrors ShootingSystem so cursor fill matches gameplay charge in lockstep.
+                        float linearT = chargeTime > 0f
                             ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
                             : 1f;
+                        chargeFill = laserCfg != null ? laserCfg.EvaluateChargeRatio(linearT) : linearT;
                         color = cfg.NormalColor;
                         break;
                     }
@@ -276,11 +285,23 @@ namespace View
             // Rolling — lower alpha
             if (player.IsRolling) alpha *= cfg.RollingAlpha;
 
+            // Overheat tremble — perlin-driven jitter on cursor center при near-max charge.
+            Vector2 trembleOffset = Vector2.zero;
+            if (chargeFill >= cfg.ChargeOverheatThreshold && cfg.ChargeOverheatTremblePx > 0f)
+            {
+                float intensity = Mathf.InverseLerp(cfg.ChargeOverheatThreshold, 1f, chargeFill);
+                float t = Time.unscaledTime * cfg.ChargeOverheatTrembleFreq;
+                // 2-axis perlin noise (offset y sampling so x/y decorrelated)
+                float jx = Mathf.PerlinNoise(t, 0.37f) * 2f - 1f;
+                float jy = Mathf.PerlinNoise(7.91f, t) * 2f - 1f;
+                trembleOffset = new Vector2(jx, jy) * cfg.ChargeOverheatTremblePx * intensity;
+            }
+
             // Push to shader via per-instance material.
             if (_reticleMat == null) _reticleMat = _reticle.material;
             _reticleMat.SetColor(_Color, color);
             _reticleMat.SetFloat(_Alpha, alpha);
-            _reticleMat.SetVector(_CenterPx, new Vector4(sp.x, sp.y, Screen.width, Screen.height));
+            _reticleMat.SetVector(_CenterPx, new Vector4(sp.x + trembleOffset.x, sp.y + trembleOffset.y, Screen.width, Screen.height));
             _reticleMat.SetFloat(_Gap, gap);
             _reticleMat.SetFloat(_LineLength, cfg.LineLength);
             _reticleMat.SetFloat(_LineThickness, cfg.LineThickness);
@@ -290,7 +311,10 @@ namespace View
             _reticleMat.SetFloat(_RingRadius, cfg.RingRadius);
             _reticleMat.SetFloat(_RingThickness, cfg.RingThickness);
             _reticleMat.SetFloat(_ChargeFill, chargeFill);
-            _reticleMat.SetColor(_ChargeColor, cfg.ChargeColor);
+            _reticleMat.SetColor(_ChargeColorCold, cfg.ChargeColorCold);
+            _reticleMat.SetColor(_ChargeColorMid,  cfg.ChargeColorMid);
+            _reticleMat.SetColor(_ChargeColorHot,  cfg.ChargeColorHot);
+            _reticleMat.SetFloat(_ChargeBarThicknessRatio, cfg.ChargeBarThicknessRatio);
             _reticleMat.SetFloat(_EdgeSoftness, cfg.EdgeSoftness);
             _reticleMat.SetColor(_OutlineColor, cfg.OutlineColor);
             _reticleMat.SetFloat(_OutlineWidth, cfg.OutlineWidth);

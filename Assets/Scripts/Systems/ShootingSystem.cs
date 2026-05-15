@@ -83,12 +83,17 @@ namespace Systems
             {
                 if (!releaseFire) return; // still holding — wait for release
                 // A4 — apply per-delivery charge multiplier (pistol fast, rifle baseline, shotgun slow).
+                // DevCheats override (>0) replaces payload-asset baseline for runtime tuning.
                 float deliveryMult = context.LaserConfig.ChargeTimeMultiplierFor(
                     weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
-                float chargeTime = WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
-                chargeRatio = chargeTime > 0f
+                float chargeTime = WeaponChargeResolver.GetChargeTime(
+                    weapon, deliveryMult, context.LaserConfig.ChargeTimeOverrideSeconds);
+                // Linear progression in time (elapsed/chargeTime), then shaped by ChargeRatioPower.
+                // Power=1 → identity (backward compat). >1 = ease-in, <1 = ease-out.
+                float linearT = chargeTime > 0f
                     ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
                     : 1f;
+                chargeRatio = context.LaserConfig.EvaluateChargeRatio(linearT);
                 context.Events.WeaponChargeCompleted(weapon.PrefabId);
                 // Fall through to fire pipeline.
             }

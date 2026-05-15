@@ -1,7 +1,7 @@
 # Aim Cursor v2 — Status Doc
 
 > Living spec + plan for the v2 aim cursor pass started 2026-05-14.
-> **Status**: Stage 1 shipped 2026-05-15 (tech foundation + 1:1 IMGUI port). **Ready for playtest validation → Stage 2 (recoil kick)**.
+> **Status**: Stage 1 SHIPPED + polished (2026-05-15). Tech foundation + 1:1 IMGUI port + ADS top arm cutoff + outline + EFD-style hit pulse (4 per-type profiles) + flame-gradient charge fill on arms + overheat tremble. Toggle Y in Play for A/B with IMGUI. **Ready for Stage 2 (directional recoil kick)**.
 > Pickup point if context resets — read this doc top-to-bottom, then start Stage 1.
 
 ---
@@ -363,4 +363,9 @@ After all stages validated + locked:
 | Date | Stage | Notes |
 |---|---|---|
 | 2026-05-14 | spec | Locked all design decisions. Plan approved. Ready for Stage 1. |
-| 2026-05-15 | Stage 1 | Shipped tech foundation + 1:1 IMGUI port. SDF shader (`CrosshairSDF.shader`) + Crosshair.mat + Crosshair.prefab + HitMarker.prefab + `CrosshairPresenter.cs` + `HitMarkerInstance.cs` + `ViewCheatsCrosshairV2Section.cs` (`UseV2Crosshair=false` default). All 10 phase states wired (Ready/Charging/Firing/Cooldown/Bursting/Reloading/Equipping/Unequipping/Unarmed/DryFire). Hit markers (4 kinds) pooled. AimCursorOverlay guards on toggle. 506/506 tests pass. **Validation pending — toggle ON у DevCheats, manual playtest.** |
+| 2026-05-15 | Stage 1 | Shipped tech foundation + 1:1 IMGUI port. SDF shader (`CrosshairSDF.shader`) + Crosshair.mat + Crosshair.prefab + `CrosshairPresenter.cs` + `ViewCheatsCrosshairV2Section.cs` (`UseV2Crosshair=false` default → toggled on by user). All 10 phase states wired. AimCursorOverlay guards on toggle. 506/506 tests pass. |
+| 2026-05-15 | Stage 1.1 (dev tool) | Added **Y hotkey toggle** в `CrosshairPresenter.LateTick` via `Keyboard.current.yKey.wasPressedThisFrame` for A/B compare у Play. Removed at Stage 7. |
+| 2026-05-15 | Stage 1.2 (ADS) | Top arm hide on ADS — `_TopArmAlpha` shader prop, binary cutoff via `_adsAmount >= AdsTopArmFadeStart` (default 0.5). Matches v1 legacy behavior. |
+| 2026-05-15 | Stage 1.3 (outline) | Black outline ring on all reticle shapes — `_OutlineColor` + `_OutlineWidth` shader props. **Critical fix**: HDR alpha matters — pure 1.0 face white renders gray after URP tonemap; HDR-boost face colors (×2.0) restore visible white. Default outline 1.8px black solid. |
+| 2026-05-15 | Stage 1.4 (hit pulse) | Replaced flying X markers (deleted `HitMarkerInstance.cs` + `HitMarker.prefab`) з **EFD-style 4 diagonal stubs spreading outward + alpha fade**. SDF segment math (`sdSegment`) у same shader. Single-slot animation (latest hit restarts). 3-phase envelope: burst → hold → decay з ease-out outward spread (fix from earlier ease-in bug where spread happened during fade). **Per-event-type profiles** (`HitPulseProfile` struct): Normal/Kill/Headshot/Ricochet. Each profile snapshotted at trigger (immune to mid-pulse tweaks). Priority: Ricochet > Kill > Headshot > Normal. Color unpack fix: `e.Damage`=kill, `e.Direction.x`=headshot, `e.MaxHp`=ricochet (HitConfirmed packing ≠ EntityHit packing). |
+| 2026-05-15 | Stage 1.5 (charge) | **Replaced** ring-based charge (which collided з reload ring) з **flame-gradient overlay on the 4 arm segments themselves**. Fill grows along arm length from inner edge (`_Gap`) toward outer edge (`_Gap + _LineLength`) as chargeRatio. Color gradient along bar: white (cold, inner) → yellow (mid) → red (hot, outer tip). `_ChargeBarThicknessRatio` (default 0.7) controls if flame inset inside arm or full overlay. **Overheat tremble**: Perlin noise jitter on cursor `_CenterPx` when chargeFill ≥ 0.85, scales linearly з overheat fraction. Default 2.5px @ 35Hz. Industry research validated — Warframe / Destiny 2 both migrated away from ring-on-ring after community complaints. |

@@ -49,6 +49,18 @@ namespace Systems
         }
 
         /// <summary>
+        /// Override-aware variant. If <paramref name="baseOverrideSeconds"/> &gt; 0, замінює
+        /// payload-asset baseline (used by DevCheats Laser tuning for runtime knob). Delivery
+        /// multiplier still applies on top so pistol/rifle/shotgun A4 differentiation survives.
+        /// Pass 0 for the override to fall back to <see cref="GetChargeTime(WeaponEntityState)"/>.
+        /// </summary>
+        public static float GetChargeTime(WeaponEntityState weapon, float deliveryMultiplier, float baseOverrideSeconds)
+        {
+            float baseTime = baseOverrideSeconds > 0f ? baseOverrideSeconds : GetChargeTime(weapon);
+            return baseTime * deliveryMultiplier;
+        }
+
+        /// <summary>
         /// Definition-level overload for callers that don't yet have a built
         /// <see cref="WeaponEntityState"/> (e.g. Weapon Builder preview pane).
         /// </summary>

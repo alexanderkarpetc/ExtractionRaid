@@ -211,14 +211,18 @@ namespace View
                     // Charge progress ring (Laser & other charge-up payloads). Uses the same
                     // dot-ring layout as reload but in energy-blue to visually distinguish.
                     // A4 — apply per-delivery charge multiplier so ring matches gameplay-effective time.
+                    // DevCheats override (>0) replaces payload-asset baseline — must mirror ShootingSystem.
                     var laserCfg = DevCheats.Config?.Laser;
                     float deliveryMult = laserCfg != null
                         ? laserCfg.ChargeTimeMultiplierFor(weapon.DeliveryDefinition?.Pattern ?? State.FiringPattern.Single)
                         : 1f;
-                    float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
-                    float chargeProgress = chargeTime > 0f
+                    float overrideSeconds = laserCfg != null ? laserCfg.ChargeTimeOverrideSeconds : 0f;
+                    float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon, deliveryMult, overrideSeconds);
+                    float linearT = chargeTime > 0f
                         ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
                         : 1f;
+                    // Apply same ratio shape as gameplay so legacy ring fills in lockstep with v2 + ShootingSystem.
+                    float chargeProgress = laserCfg != null ? laserCfg.EvaluateChargeRatio(linearT) : linearT;
                     DrawChargeRing(pos, chargeProgress, alphaMul);
                     break;
 
