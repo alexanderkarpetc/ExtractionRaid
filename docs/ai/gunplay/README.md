@@ -81,21 +81,13 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 
 ### Visual feedback / readability
 
-- ~~**Floating damage numbers v2**~~ — ✅ shipped 2026-05-14. uGUI + TextMeshPro World-Space Canvas, Oswald-Bold SDF, 6 per-tier material presets (Normal/Headshot/Kill/Bleed/Absorbed/Ricochet). Same-target 200ms consolidation (Hades-style anti-spam). Bleed tick emits popup, ricochet emits "RICOCHET" word, kill prefixed with ☠ icon. Restrained-tactical tone per Destiny 2 reference. Live-tunable via `🔢 Damage Numbers v2 (TMP)` section. Legacy IMGUI overlay kept as `UseV1Fallback` toggle.
-- **Aim cursor v2** — current `AimCursorOverlay` має state-based 4-line crosshair + bloom + reload ring + hit markers. Покращити: cursor variants (per-archetype shapes? per-situation indicators?), readability (контраст vs busy backgrounds), dynamics (smoother transitions, predictive feedback). Research competitor cursors (Tarkov, Hunt, Synthetik, Returnal), then design preset system + optional player toggle.
+- ~~**Floating damage numbers v2**~~ — ✅ shipped 2026-05-14. uGUI + TextMeshPro World-Space Canvas (Distance Field Overlay shader → renders over geometry), Oswald-Bold SDF, 6 per-tier HDR-boosted material presets. Per-tier trajectory modes (FloatUp / FloatUpDrift / Knockback / ArcGravity — kill defaults to ArcGravity for cinematic punctuation, ricochet to FloatUpDrift). Same-target 200ms consolidation (Hades-style anti-spam). Sub-label format `30\nHEAD/KILL` для headshot/kill, "RICOCHET" word для deflections, bleed tick emits popup. Legacy IMGUI overlay fully removed. Live-tunable via `🔢 Damage Numbers v2 (TMP)` section.
+- **Aim cursor v2** — 🚧 in progress, spec locked 2026-05-14. EFD-style directional recoil kick + focus blur + 3-tier range color + same-pixel UI swap. Hybrid uGUI + SDF shader (no UI artist needed). 7-stage incremental plan. **Status doc**: [`aim-cursor-v2.md`](aim-cursor-v2.md) — fully self-contained handoff doc.
 - **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
 
 ### Weapon identity
 
-- **Maximal archetype differentiation** — each Weapon Builder combination must feel mechanically distinct, not just stat reskin. Today differentiation lives у Stats + 3D visualization + Tau charge (laser-only) + laser rifle burst. Need to push further:
-  - Unique fire mechanics per archetype (charge curves, burst counts, spread patterns, alt-fire?)
-  - Unique reload behaviour (per-shell vs full-mag vs energy cell vent)
-  - Unique hit pause / camera shake / recoil signature
-  - Distinct screen-shake direction by archetype
-  - Possibly signature impact VFX per payload type
-  - Goal: blindfolded test — player names the archetype from feel alone
-  - Design pass needed before implementation: build a matrix of "what makes each of 6 archetypes mechanically unique"
-  - Overlap з weapon-builder Tier 10 (Weapon Feel Polish) — track here as it's primarily a feel concern, not composition
+- ~~**Maximal archetype differentiation**~~ — ✅ shipped 2026-05-13/14. Two-track pass closed. Track B (mechanic uniqueness): Ballistic Rifle heat-up spread, Laser Shotgun charge → focus+range, parabolic laser charge damage curve. Track A (view polish): per-archetype camera shake profiles, per-payload impact VFX, per-archetype charge time multiplier. A3 (per-delivery recoil shape) cut — camera shake + crosshair sufficient. See [`archetype-differentiation.md`](archetype-differentiation.md).
 
 All above are pure additive — no architectural risk if/when picked up.
 

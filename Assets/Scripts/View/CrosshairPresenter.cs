@@ -1,0 +1,330 @@
+using Adapters;
+using ApplicationCore;
+using Dev;
+using Session;
+using State;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
+
+namespace View
+{
+    /// <summary>
+    /// v2 aim cursor presenter (uGUI + SDF shader). Replaces legacy IMGUI
+    /// <see cref="AimCursorOverlay"/> when <c>ViewCheatsCrosshairV2Section.UseV2Crosshair</c>
+    /// is ON. Stage 1 = 1:1 functional port of v1.
+    ///
+    /// Pipeline:
+    ///   - One Screen-Space Overlay Canvas з RawImage fullscreen carrying SDF shader.
+    ///   - MaterialPropertyBlock writes per-frame: center px, gap, line geometry, ring fills, alpha, color.
+    ///   - Hit markers spawn з pool of <see cref="HitMarkerInstance"/> Images.
+    ///
+    /// Lives як plain class у App; LateTick from <c>App.LateTick</c>.
+    /// </summary>
+    public class CrosshairPresenter
+    {
+        const string CrosshairPrefabPath = "Vfx/Prefabs/UI/Crosshair";
+
+        // Shader property IDs (cached)
+        static readonly int _Color         = Shader.PropertyToID("_Color");
+        static readonly int _Alpha         = Shader.PropertyToID("_Alpha");
+        static readonly int _CenterPx      = Shader.PropertyToID("_CenterPx");
+        static readonly int _Gap           = Shader.PropertyToID("_Gap");
+        static readonly int _LineLength    = Shader.PropertyToID("_LineLength");
+        static readonly int _LineThickness = Shader.PropertyToID("_LineThickness");
+        static readonly int _DotRadius     = Shader.PropertyToID("_DotRadius");
+        static readonly int _LinesHidden   = Shader.PropertyToID("_LinesHidden");
+        static readonly int _RingFill      = Shader.PropertyToID("_RingFill");
+        static readonly int _RingRadius    = Shader.PropertyToID("_RingRadius");
+        static readonly int _RingThickness = Shader.PropertyToID("_RingThickness");
+        static readonly int _ChargeFill    = Shader.PropertyToID("_ChargeFill");
+        static readonly int _ChargeColor   = Shader.PropertyToID("_ChargeColor");
+        static readonly int _EdgeSoftness  = Shader.PropertyToID("_EdgeSoftness");
+        static readonly int _OutlineColor  = Shader.PropertyToID("_OutlineColor");
+        static readonly int _OutlineWidth  = Shader.PropertyToID("_OutlineWidth");
+        static readonly int _TopArmAlpha   = Shader.PropertyToID("_TopArmAlpha");
+        static readonly int _HitPulseProgress   = Shader.PropertyToID("_HitPulseProgress");
+        static readonly int _HitPulseColor      = Shader.PropertyToID("_HitPulseColor");
+        static readonly int _HitPulseInnerStart = Shader.PropertyToID("_HitPulseInnerStart");
+        static readonly int _HitPulseInnerEnd   = Shader.PropertyToID("_HitPulseInnerEnd");
+        static readonly int _HitPulseLength     = Shader.PropertyToID("_HitPulseLength");
+        static readonly int _HitPulseThickness  = Shader.PropertyToID("_HitPulseThickness");
+        static readonly int _HitPulseRotationRad         = Shader.PropertyToID("_HitPulseRotationRad");
+        static readonly int _HitPulseThicknessTaperStart = Shader.PropertyToID("_HitPulseThicknessTaperStart");
+        static readonly int _HitPulseThicknessTaperEnd   = Shader.PropertyToID("_HitPulseThicknessTaperEnd");
+        static readonly int _HitPulseBurstPhaseEnd       = Shader.PropertyToID("_HitPulseBurstPhaseEnd");
+        static readonly int _HitPulseHoldPhaseEnd        = Shader.PropertyToID("_HitPulseHoldPhaseEnd");
+
+        // Loaded resources
+        GameObject _crosshairPrefab;
+        // Scene-spawned root
+        Canvas _canvas;
+        RawImage _reticle;
+        Material _reticleMat; // per-instance material clone (auto-instanced via Image.material accessor)
+        // ADS visual interpolant (mirrors v1's _adsAmount)
+        float _adsAmount;
+        bool  _resourcesLoaded;
+        bool  _disabled;
+        // Hit pulse — single-slot animation (EFD-style). New hit RESTARTS pulse з updated profile.
+        // Snapshot profile values at trigger time → animation continues з locked-in values even
+        // if user tweaks DevCheats mid-pulse (avoids weird mid-animation jumps).
+        float _hitPulseStartTime;   // unscaledTime
+        HitPulseProfile _activeHitPulse;
+        bool  _hitPulseActive;
+
+        public CrosshairPresenter() { /* lazy init */ }
+
+        void LoadResources()
+        {
+            if (_resourcesLoaded) return;
+            _resourcesLoaded = true;
+            _crosshairPrefab = Resources.Load<GameObject>(CrosshairPrefabPath);
+            if (_crosshairPrefab == null)
+            {
+                Debug.LogWarning($"[CrosshairPresenter] Prefab missing at Resources/{CrosshairPrefabPath}");
+                _disabled = true;
+            }
+        }
+
+        void EnsureScene()
+        {
+            if (_canvas != null) return;
+            if (_crosshairPrefab == null) return;
+            var go = Object.Instantiate(_crosshairPrefab);
+            go.name = "[CrosshairV2]";
+            _canvas = go.GetComponentInChildren<Canvas>(true);
+            _reticle = go.GetComponentInChildren<RawImage>(true);
+            // Force material instance so SetFloat/SetColor don't leak to shared shader.
+            _reticleMat = _reticle.material;
+        }
+
+        public void LateTick(RaidSession session)
+        {
+            if (session == null) return;
+            var cfg = ViewCheats.Config?.CrosshairV2;
+            if (cfg == null) return;
+
+            // Dev hotkey Y — A/B toggle между v1 (IMGUI) і v2 (SDF). Removed once Stage 7 cleanup ships.
+            var kb = Keyboard.current;
+            if (kb != null && kb.yKey.wasPressedThisFrame)
+            {
+                cfg.UseV2Crosshair = !cfg.UseV2Crosshair;
+                Debug.Log($"[CrosshairV2] Hotkey Y → UseV2Crosshair = {cfg.UseV2Crosshair}");
+            }
+
+            if (!cfg.UseV2Crosshair)
+            {
+                // v2 disabled — hide canvas if previously created
+                if (_canvas != null && _canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(false);
+                return;
+            }
+
+            LoadResources();
+            if (_disabled) return;
+            EnsureScene();
+            if (_canvas == null) return;
+
+            if (!_canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(true);
+
+            // Consume events to drive hit pulse (single-slot — latest hit restarts animation).
+            foreach (var e in session.ConsumeEvents().All)
+            {
+                if (e.Type == RaidEventType.HitConfirmed) TriggerHitPulse(e, cfg);
+            }
+
+            // Drive reticle from player + weapon state
+            UpdateReticle(session.RaidState, cfg);
+        }
+
+        // RaidEventBuffer.HitConfirmed packs (DIFFERENT from EntityHit):
+        //   Damage      = isKill ? 1 : 0
+        //   Direction.x = isHeadshot ? 1 : 0
+        //   CurrentHp   = absorptionRatio
+        //   MaxHp       = isRicochet ? 1 : 0
+        void TriggerHitPulse(RaidEvent e, ViewCheatsCrosshairV2Section cfg)
+        {
+            bool isKill     = e.Damage > 0.5f;
+            bool isHeadshot = e.Direction.x > 0.5f;
+            bool isRicochet = e.MaxHp > 0.5f;
+
+            // Priority: Ricochet > Kill > Headshot > Normal
+            if      (isRicochet) _activeHitPulse = cfg.RicochetProfile;
+            else if (isKill)     _activeHitPulse = cfg.KillProfile;
+            else if (isHeadshot) _activeHitPulse = cfg.HeadshotProfile;
+            else                 _activeHitPulse = cfg.NormalProfile;
+
+            _hitPulseStartTime = Time.unscaledTime;
+            _hitPulseActive = true;
+        }
+
+        // Mirror v1 AimCursorOverlay phase logic — drives gap, color, alpha, ring fills.
+        void UpdateReticle(RaidState state, ViewCheatsCrosshairV2Section cfg)
+        {
+            var player = state.PlayerEntity;
+            if (player == null) return;
+            var weapon = player.EquippedWeapon;
+
+            // ADS blend toward target gap.
+            float adsTarget = player.IsADS ? 1f : 0f;
+            _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.unscaledDeltaTime * 8f);
+
+            // Resolve cursor screen position. Use cam.WorldToScreenPoint of WeaponAimPoint
+            // — mirrors v1 behavior + accounts for parallax/aim drift у same system.
+            var cam = Camera.main;
+            Vector3 sp = cam != null
+                ? cam.WorldToScreenPoint(player.WeaponAimPoint)
+                : new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
+
+            // Phase-driven params
+            float adsGap = Mathf.Lerp(cfg.Gap, cfg.AdsGap, _adsAmount);
+            float adsBloomExtra = Mathf.Lerp(cfg.BloomExtraGap, cfg.AdsBloomExtraGap, _adsAmount);
+
+            float gap = adsGap;
+            float alpha = 1f;
+            Color color = cfg.NormalColor;
+            float ringFill = 0f;
+            float chargeFill = 0f;
+            float linesHidden = 0f;
+
+            if (weapon == null)
+            {
+                // Unarmed — dot only
+                linesHidden = 1f;
+                alpha = 0.5f;
+            }
+            else
+            {
+                float elapsed = state.ElapsedTime - weapon.PhaseStartTime;
+                bool hasAmmo = !string.IsNullOrEmpty(weapon.AmmoType)
+                    ? weapon.AmmoInMagazine > 0
+                    : true;
+
+                switch (weapon.Phase)
+                {
+                    case WeaponPhase.Ready:
+                        color = hasAmmo ? cfg.NormalColor : cfg.WarningColor;
+                        break;
+
+                    case WeaponPhase.Firing:
+                        // 1-frame spike — full bloom
+                        gap = adsGap + adsBloomExtra;
+                        color = cfg.BloomColor;
+                        break;
+
+                    case WeaponPhase.Bursting:
+                        // Treat як sustained firing — keep bloomed
+                        gap = adsGap + adsBloomExtra * 0.8f;
+                        color = cfg.BloomColor;
+                        break;
+
+                    case WeaponPhase.Cooldown:
+                    {
+                        float cooldownT = weapon.Stats.FireInterval > 0f
+                            ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / weapon.Stats.FireInterval))
+                            : 1f;
+                        gap = adsGap + adsBloomExtra * (1f - cooldownT);
+                        color = Color.Lerp(cfg.BloomColor, cfg.NormalColor, cooldownT);
+                        break;
+                    }
+
+                    case WeaponPhase.Reloading:
+                    {
+                        float reloadProgress = weapon.Stats.ReloadTime > 0f
+                            ? Mathf.Clamp01(elapsed / weapon.Stats.ReloadTime)
+                            : 1f;
+                        ringFill = reloadProgress;
+                        linesHidden = 1f;
+                        color = cfg.NormalColor;
+                        break;
+                    }
+
+                    case WeaponPhase.Charging:
+                    {
+                        // Apply per-delivery charge multiplier so ring matches actual gameplay time.
+                        var laserCfg = DevCheats.Config?.Laser;
+                        float deliveryMult = laserCfg != null
+                            ? laserCfg.ChargeTimeMultiplierFor(weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single)
+                            : 1f;
+                        float chargeTime = Systems.WeaponChargeResolver.GetChargeTime(weapon, deliveryMult);
+                        chargeFill = chargeTime > 0f
+                            ? Mathf.Clamp01((state.ElapsedTime - weapon.ChargeStartTime) / chargeTime)
+                            : 1f;
+                        color = cfg.NormalColor;
+                        break;
+                    }
+
+                    case WeaponPhase.Equipping:
+                        alpha = weapon.Stats.EquipTime > 0f
+                            ? Mathf.Clamp01(elapsed / weapon.Stats.EquipTime)
+                            : 1f;
+                        color = cfg.NormalColor;
+                        break;
+
+                    case WeaponPhase.Unequipping:
+                        alpha = weapon.Stats.UnequipTime > 0f
+                            ? Mathf.Clamp01(1f - elapsed / weapon.Stats.UnequipTime)
+                            : 0f;
+                        color = cfg.NormalColor;
+                        break;
+
+                    default:
+                        color = cfg.NormalColor;
+                        break;
+                }
+            }
+
+            // Rolling — lower alpha
+            if (player.IsRolling) alpha *= cfg.RollingAlpha;
+
+            // Push to shader via per-instance material.
+            if (_reticleMat == null) _reticleMat = _reticle.material;
+            _reticleMat.SetColor(_Color, color);
+            _reticleMat.SetFloat(_Alpha, alpha);
+            _reticleMat.SetVector(_CenterPx, new Vector4(sp.x, sp.y, Screen.width, Screen.height));
+            _reticleMat.SetFloat(_Gap, gap);
+            _reticleMat.SetFloat(_LineLength, cfg.LineLength);
+            _reticleMat.SetFloat(_LineThickness, cfg.LineThickness);
+            _reticleMat.SetFloat(_DotRadius, cfg.DotRadius);
+            _reticleMat.SetFloat(_LinesHidden, linesHidden);
+            _reticleMat.SetFloat(_RingFill, ringFill);
+            _reticleMat.SetFloat(_RingRadius, cfg.RingRadius);
+            _reticleMat.SetFloat(_RingThickness, cfg.RingThickness);
+            _reticleMat.SetFloat(_ChargeFill, chargeFill);
+            _reticleMat.SetColor(_ChargeColor, cfg.ChargeColor);
+            _reticleMat.SetFloat(_EdgeSoftness, cfg.EdgeSoftness);
+            _reticleMat.SetColor(_OutlineColor, cfg.OutlineColor);
+            _reticleMat.SetFloat(_OutlineWidth, cfg.OutlineWidth);
+            // ADS — binary cutoff (Stage 1). adsAmount below threshold = top arm shown, above = hidden.
+            // Smooth alpha fade requires per-arm SDF composition rewrite — deferred to later stage.
+            float topArmAlpha = _adsAmount >= cfg.AdsTopArmFadeStart ? 0f : 1f;
+            _reticleMat.SetFloat(_TopArmAlpha, topArmAlpha);
+
+            // Hit pulse animation — single-slot, 0..1 progress. 1 = ended / inactive. Values come з
+            // _activeHitPulse profile snapshot taken at trigger time (immune до mid-animation tweaks).
+            float pulseProgress = 1f;
+            if (_hitPulseActive)
+            {
+                float t = (Time.unscaledTime - _hitPulseStartTime) / Mathf.Max(0.001f, _activeHitPulse.Duration);
+                if (t >= 1f) _hitPulseActive = false;
+                pulseProgress = Mathf.Clamp01(t);
+            }
+            _reticleMat.SetFloat(_HitPulseProgress, pulseProgress);
+            _reticleMat.SetColor(_HitPulseColor, _activeHitPulse.Color);
+            _reticleMat.SetFloat(_HitPulseInnerStart, _activeHitPulse.InnerStart);
+            _reticleMat.SetFloat(_HitPulseInnerEnd,   _activeHitPulse.InnerEnd);
+            _reticleMat.SetFloat(_HitPulseLength,     _activeHitPulse.Length);
+            _reticleMat.SetFloat(_HitPulseThickness,  _activeHitPulse.Thickness);
+            _reticleMat.SetFloat(_HitPulseRotationRad,         _activeHitPulse.RotationRad);
+            _reticleMat.SetFloat(_HitPulseThicknessTaperStart, _activeHitPulse.ThicknessTaperStart);
+            _reticleMat.SetFloat(_HitPulseThicknessTaperEnd,   _activeHitPulse.ThicknessTaperEnd);
+            _reticleMat.SetFloat(_HitPulseBurstPhaseEnd,       _activeHitPulse.BurstPhaseEnd);
+            _reticleMat.SetFloat(_HitPulseHoldPhaseEnd,        _activeHitPulse.HoldPhaseEnd);
+        }
+
+        public void Dispose()
+        {
+            if (_canvas != null) Object.Destroy(_canvas.gameObject);
+            _canvas = null;
+        }
+    }
+}

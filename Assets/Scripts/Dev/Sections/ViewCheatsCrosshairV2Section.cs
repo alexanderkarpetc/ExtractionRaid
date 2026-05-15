@@ -1,0 +1,103 @@
+using System;
+using UnityEngine;
+
+namespace Dev
+{
+    /// <summary>
+    /// Per-event-type hit pulse profile. Replaces shared params + per-type modifier multipliers
+    /// with full independent control per kind (normal / kill / headshot / ricochet).
+    /// </summary>
+    [Serializable]
+    public struct HitPulseProfile
+    {
+        public Color Color;
+        [Range(0.05f, 2f)] public float Duration;
+        [Range(2f, 50f)] public float InnerStart;
+        [Range(10f, 120f)] public float InnerEnd;
+        [Range(4f, 50f)] public float Length;
+        [Range(0.5f, 10f)] public float Thickness;
+        [Range(0.02f, 0.5f)] public float BurstPhaseEnd;
+        [Range(0.05f, 0.8f)] public float HoldPhaseEnd;
+        [Range(0f, 1.5f)] public float RotationRad;
+        [Range(0.5f, 2f)] public float ThicknessTaperStart;
+        [Range(0.1f, 2f)] public float ThicknessTaperEnd;
+
+        public static HitPulseProfile Default(Color color) => new HitPulseProfile
+        {
+            Color = color,
+            Duration = 0.4f,
+            InnerStart = 10f,
+            InnerEnd = 50f,
+            Length = 16f,
+            Thickness = 3f,
+            BurstPhaseEnd = 0.12f,
+            HoldPhaseEnd = 0.30f,
+            RotationRad = 0f,
+            ThicknessTaperStart = 1.05f,
+            ThicknessTaperEnd = 0.55f,
+        };
+    }
+
+    /// <summary>
+    /// v2 aim cursor — uGUI + SDF shader stack replacing IMGUI <c>AimCursorOverlay</c>.
+    /// Stage 1 baseline: 1:1 visual port of v1 (4-line crosshair + dot + reload/charge rings + hit markers).
+    /// Later stages extend: directional recoil kick (S2), focus blur (S3), 3-tier range color (S4),
+    /// UI cursor swap (S5), bloom/low-ammo/unified arcs (S6). See <c>docs/ai/gunplay/aim-cursor-v2.md</c>.
+    /// </summary>
+    public class ViewCheatsCrosshairV2Section : ScriptableObject
+    {
+        [Tooltip("Master toggle. OFF (default) = legacy IMGUI AimCursorOverlay renders. ON = v2 SDF crosshair active, IMGUI no-ops. A/B compare during stage rollout.")]
+        public bool UseV2Crosshair = false;
+
+        [Header("Stage 1 — Crosshair geometry (px)")]
+        [Range(0f, 30f)] public float Gap = 6f;
+        [Range(2f, 40f)] public float LineLength = 10f;
+        [Range(0.5f, 6f)] public float LineThickness = 2f;
+        [Range(0f, 8f)] public float DotRadius = 2f;
+
+        [Header("ADS — gap / bloom interpolation targets")]
+        [Range(0f, 30f)] public float AdsGap = 3f;
+        [Tooltip("Bloom extra gap added on fire — decays during cooldown.")]
+        [Range(0f, 60f)] public float BloomExtraGap = 18f;
+        [Range(0f, 30f)] public float AdsBloomExtraGap = 8f;
+
+        [Header("Reload / charge rings")]
+        [Range(10f, 80f)] public float RingRadius = 42f;
+        [Range(1f, 8f)] public float RingThickness = 3f;
+
+        [Header("Edge softness (AA)")]
+        [Range(0.3f, 4f)] public float EdgeSoftness = 1f;
+
+        [Header("Outline")]
+        [Tooltip("Outline ring color drawn behind face. Default black з 85% opacity for readability over busy backgrounds.")]
+        public Color OutlineColor = new Color(0f, 0f, 0f, 0.85f);
+        [Tooltip("Outline ring width (px). 0 = no outline.")]
+        [Range(0f, 6f)] public float OutlineWidth = 1.5f;
+
+        [Header("ADS — top arm cutoff")]
+        [Tooltip("Binary threshold on adsAmount (lerp toward IsADS). Below = top arm shown (4 arms), above = hidden (3 arms). Cleaner than smooth fade for Stage 1. 1 = always show, 0 = always hide.")]
+        [Range(0f, 1f)] public float AdsTopArmFadeStart = 0.5f;
+
+        [Header("Colors")]
+        public Color NormalColor   = Color.white;
+        public Color BloomColor    = new Color(1f, 0.9f, 0.4f, 1f);
+        public Color WarningColor  = new Color(1f, 0.4f, 0.3f, 1f); // dry-fire / out of ammo
+        public Color ChargeColor   = new Color(0.3f, 0.85f, 1f, 1f); // laser charge cyan
+
+        [Header("Rolling / fading")]
+        [Range(0f, 1f)] public float RollingAlpha = 0.3f;
+
+        [Header("Hit pulse — per-event-type profiles (4 diagonal stubs on cursor, spread + fade)")]
+        [Tooltip("Normal body hit (no kill, no headshot, no ricochet).")]
+        public HitPulseProfile NormalProfile = HitPulseProfile.Default(Color.white);
+
+        [Tooltip("Kill confirm — usually larger / longer / red.")]
+        public HitPulseProfile KillProfile = HitPulseProfile.Default(new Color(1f, 0.3f, 0.3f, 1f));
+
+        [Tooltip("Headshot — gold tint. Note: priority Ricochet > Kill > Headshot > Normal; headshot+kill uses Kill profile.")]
+        public HitPulseProfile HeadshotProfile = HitPulseProfile.Default(new Color(1f, 0.85f, 0.2f, 1f));
+
+        [Tooltip("Ricochet — armor deflected, no damage. Usually short flash / blue.")]
+        public HitPulseProfile RicochetProfile = HitPulseProfile.Default(new Color(0.4f, 0.7f, 1f, 1f));
+    }
+}

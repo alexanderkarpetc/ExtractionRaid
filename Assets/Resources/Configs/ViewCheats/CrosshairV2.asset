@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9cdf1487f49c45b8b53983ce1a7c5a2, type: 3}
+  m_Name: CrosshairV2
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsCrosshairV2Section
+  UseV2Crosshair: 1
+  Gap: 15
+  LineLength: 24
+  LineThickness: 5
+  DotRadius: 4
+  AdsGap: 10
+  BloomExtraGap: 18
+  AdsBloomExtraGap: 8
+  RingRadius: 42
+  RingThickness: 3
+  EdgeSoftness: 1
+  OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+  OutlineWidth: 1.8
+  AdsTopArmFadeStart: 0.5
+  NormalColor: {r: 1, g: 1, b: 1, a: 1}
+  BloomColor: {r: 1, g: 1, b: 1, a: 1}
+  WarningColor: {r: 1, g: 0.4, b: 0.3, a: 1}
+  ChargeColor: {r: 0.3, g: 0.85, b: 1, a: 1}
+  RollingAlpha: 0.3
+  NormalProfile:
+    Color: {r: 1, g: 1, b: 1, a: 1}
+    Duration: 0.4
+    InnerStart: 10
+    InnerEnd: 50
+    Length: 16
+    Thickness: 3
+    BurstPhaseEnd: 0.12
+    HoldPhaseEnd: 0.3
+    RotationRad: 0
+    ThicknessTaperStart: 1.05
+    ThicknessTaperEnd: 0.55
+  KillProfile:
+    Color: {r: 1, g: 0.3, b: 0.3, a: 1}
+    Duration: 1.2
+    InnerStart: 20
+    InnerEnd: 80
+    Length: 16
+    Thickness: 5
+    BurstPhaseEnd: 0.12
+    HoldPhaseEnd: 0.3
+    RotationRad: 0
+    ThicknessTaperStart: 1.05
+    ThicknessTaperEnd: 0.55
+  HeadshotProfile:
+    Color: {r: 1, g: 0.85, b: 0.2, a: 1}
+    Duration: 0.4
+    InnerStart: 10
+    InnerEnd: 50
+    Length: 16
+    Thickness: 3
+    BurstPhaseEnd: 0.12
+    HoldPhaseEnd: 0.3
+    RotationRad: 0
+    ThicknessTaperStart: 1.05
+    ThicknessTaperEnd: 0.55
+  RicochetProfile:
+    Color: {r: 0.4, g: 0.7, b: 1, a: 1}
+    Duration: 0.4
+    InnerStart: 10
+    InnerEnd: 50
+    Length: 16
+    Thickness: 3
+    BurstPhaseEnd: 0.12
+    HoldPhaseEnd: 0.3
+    RotationRad: 0
+    ThicknessTaperStart: 1.05
+    ThicknessTaperEnd: 0.55

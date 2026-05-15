@@ -97,6 +97,9 @@ namespace View
         void OnGUI()
         {
             if (!DevCheats.CrosshairEnabled) return;
+            // v2 SDF crosshair owns rendering when toggle ON — v1 IMGUI no-ops.
+            var v2cfg = ViewCheats.Config?.CrosshairV2;
+            if (v2cfg != null && v2cfg.UseV2Crosshair) return;
 
             var session = App.Instance?.RaidSession;
             if (session == null) return;

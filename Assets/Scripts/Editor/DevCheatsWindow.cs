@@ -165,6 +165,7 @@ namespace Editor
                 DrawSection("⚡ Hit Flash", view.HitFlash);
                 DrawSection("💥 Impact VFX (per-archetype)", view.ImpactVfx);
                 DrawSection("🔢 Damage Numbers v2 (TMP)", view.DamageNumberV2);
+                DrawSection("✛ Crosshair v2 (SDF)", view.CrosshairV2);
                 DrawSection("🤖 Bot Debug Overlay", view.BotDebug);
             }
 
@@ -654,6 +655,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsHitFlashSection>(so, "_hitFlash", folder, "HitFlash");
             CreateSectionIfMissing<ViewCheatsImpactVfxSection>(so, "_impactVfx", folder, "ImpactVfx");
             CreateSectionIfMissing<ViewCheatsDamageNumberSection>(so, "_damageNumberV2", folder, "DamageNumberV2");
+            CreateSectionIfMissing<ViewCheatsCrosshairV2Section>(so, "_crosshairV2", folder, "CrosshairV2");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
 
             so.ApplyModifiedPropertiesWithoutUndo();
