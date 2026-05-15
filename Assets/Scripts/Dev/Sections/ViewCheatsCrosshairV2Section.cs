@@ -104,6 +104,18 @@ namespace Dev
         [Header("Rolling / fading")]
         [Range(0f, 1f)] public float RollingAlpha = 0.3f;
 
+        [Header("Laser cursor — segmented ring (replaces 4-arm when active weapon payload = Laser)")]
+        [Tooltip("How many segments around the ring. 12 = clock-style baseline. Higher = smoother fill, more compute.")]
+        [Range(4, 24)] public int LaserSegmentCount = 12;
+        [Tooltip("Ring inner radius (px from center).")]
+        [Range(4f, 60f)] public float LaserRingInnerRadius = 14f;
+        [Tooltip("Ring outer radius (px from center). Must be > inner for a visible band.")]
+        [Range(6f, 80f)] public float LaserRingOuterRadius = 22f;
+        [Tooltip("Angular gap between adjacent segments (degrees). Visual separation; 0 = solid donut.")]
+        [Range(0f, 30f)] public float LaserSegmentGapDeg = 4f;
+        [Tooltip("Alpha multiplier for inactive segments (chargeRatio not yet reached them). 0 = invisible, 1 = same as active.")]
+        [Range(0f, 1f)] public float LaserInactiveAlpha = 0.22f;
+
         [Header("Hit pulse — per-event-type profiles (4 diagonal stubs on cursor, spread + fade)")]
         [Tooltip("Normal body hit (no kill, no headshot, no ricochet).")]
         public HitPulseProfile NormalProfile = HitPulseProfile.Default(Color.white);

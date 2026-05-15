@@ -57,6 +57,12 @@ namespace View
         static readonly int _HitPulseThicknessTaperEnd   = Shader.PropertyToID("_HitPulseThicknessTaperEnd");
         static readonly int _HitPulseBurstPhaseEnd       = Shader.PropertyToID("_HitPulseBurstPhaseEnd");
         static readonly int _HitPulseHoldPhaseEnd        = Shader.PropertyToID("_HitPulseHoldPhaseEnd");
+        static readonly int _LaserMode          = Shader.PropertyToID("_LaserMode");
+        static readonly int _LaserSegmentCount  = Shader.PropertyToID("_LaserSegmentCount");
+        static readonly int _LaserInnerRadius   = Shader.PropertyToID("_LaserInnerRadius");
+        static readonly int _LaserOuterRadius   = Shader.PropertyToID("_LaserOuterRadius");
+        static readonly int _LaserSegmentGapDeg = Shader.PropertyToID("_LaserSegmentGapDeg");
+        static readonly int _LaserInactiveAlpha = Shader.PropertyToID("_LaserInactiveAlpha");
 
         // Loaded resources
         GameObject _crosshairPrefab;
@@ -297,6 +303,10 @@ namespace View
                 trembleOffset = new Vector2(jx, jy) * cfg.ChargeOverheatTremblePx * intensity;
             }
 
+            // Laser archetype routing — payload "Laser" gets the segmented ring cursor instead of 4-arm.
+            // Unarmed / ballistic / unknown → ballistic 4-arm (laser mode 0).
+            bool laserMode = weapon?.PayloadDefinition?.Archetype == "Laser";
+
             // Push to shader via per-instance material.
             if (_reticleMat == null) _reticleMat = _reticle.material;
             _reticleMat.SetColor(_Color, color);
@@ -320,8 +330,19 @@ namespace View
             _reticleMat.SetFloat(_OutlineWidth, cfg.OutlineWidth);
             // ADS — binary cutoff (Stage 1). adsAmount below threshold = top arm shown, above = hidden.
             // Smooth alpha fade requires per-arm SDF composition rewrite — deferred to later stage.
-            float topArmAlpha = _adsAmount >= cfg.AdsTopArmFadeStart ? 0f : 1f;
+            // Laser mode has no arms — push 1 (no-op for that path; shader skips arm logic anyway).
+            float topArmAlpha = laserMode ? 1f : (_adsAmount >= cfg.AdsTopArmFadeStart ? 0f : 1f);
             _reticleMat.SetFloat(_TopArmAlpha, topArmAlpha);
+
+            // Laser mode block. When archetype = Laser, segmented ring overrides 4-arm rendering.
+            // Always-on dim silhouette: shader uses _LaserInactiveAlpha for sub-active segments,
+            // so the ring is visible even at chargeFill=0 (anchor point for the player's eye).
+            _reticleMat.SetFloat(_LaserMode,          laserMode ? 1f : 0f);
+            _reticleMat.SetFloat(_LaserSegmentCount,  cfg.LaserSegmentCount);
+            _reticleMat.SetFloat(_LaserInnerRadius,   cfg.LaserRingInnerRadius);
+            _reticleMat.SetFloat(_LaserOuterRadius,   cfg.LaserRingOuterRadius);
+            _reticleMat.SetFloat(_LaserSegmentGapDeg, cfg.LaserSegmentGapDeg);
+            _reticleMat.SetFloat(_LaserInactiveAlpha, cfg.LaserInactiveAlpha);
 
             // Hit pulse animation — single-slot, 0..1 progress. 1 = ended / inactive. Values come з
             // _activeHitPulse profile snapshot taken at trigger time (immune до mid-animation tweaks).

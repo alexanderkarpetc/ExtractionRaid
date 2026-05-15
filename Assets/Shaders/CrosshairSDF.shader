@@ -56,6 +56,12 @@ Shader "Crosshair/SDF"
         _HitPulseThicknessTaperStart ("Thickness start multiplier", Range(0.5, 2)) = 1.05
         _HitPulseBurstPhaseEnd ("Burst phase end (0..1)", Range(0, 0.5)) = 0.12
         _HitPulseHoldPhaseEnd ("Hold phase end (0..1)", Range(0, 0.8)) = 0.30
+        _LaserMode ("Laser Mode (0=4-arm, 1=segmented ring)", Range(0,1)) = 0
+        _LaserSegmentCount ("Laser Segment Count", Float) = 12
+        _LaserInnerRadius ("Laser Inner Radius px", Float) = 14
+        _LaserOuterRadius ("Laser Outer Radius px", Float) = 22
+        _LaserSegmentGapDeg ("Laser Segment Gap deg", Float) = 4
+        _LaserInactiveAlpha ("Laser Inactive Segment Alpha", Range(0,1)) = 0.22
     }
 
     SubShader
@@ -105,6 +111,12 @@ Shader "Crosshair/SDF"
             float _HitPulseThicknessTaperStart;
             float _HitPulseBurstPhaseEnd;
             float _HitPulseHoldPhaseEnd;
+            float _LaserMode;
+            float _LaserSegmentCount;
+            float _LaserInnerRadius;
+            float _LaserOuterRadius;
+            float _LaserSegmentGapDeg;
+            float _LaserInactiveAlpha;
 
             struct Attributes
             {
@@ -176,11 +188,13 @@ Shader "Crosshair/SDF"
             {
                 float2 px = IN.uv * _CenterPx.zw;
                 float2 center = _CenterPx.xy;
+                bool laserMode = _LaserMode > 0.5;
 
-                // ── Main shapes (crosshair lines + dot + reload ring) share _Color
+                // ── Main shapes (crosshair lines + dot + reload ring) share _Color.
+                // For laser mode the 4 arms + flame bars are replaced by a segmented ring (see dCharge block below).
                 float dMain = 1e6;
 
-                if (_LinesHidden < 0.5)
+                if (!laserMode && _LinesHidden < 0.5)
                 {
                     float halfThick = _LineThickness * 0.5;
                     float halfLen = _LineLength * 0.5;
@@ -201,25 +215,73 @@ Shader "Crosshair/SDF"
                 float dRing = sdRingArc(px, center, _RingRadius, _RingThickness, _RingFill);
                 dMain = min(dMain, dRing);
 
-                // ── Charge fill — overlay on the 4 crosshair arm segments themselves.
-                // Bar starts at arm inner edge (_Gap) and grows outward toward _Gap + _LineLength
-                // proportional to chargeRatio. Same path as main arms — overlays them з flame color.
-                // Top arm respects _TopArmAlpha (ADS hides it consistently).
+                // ── Charge fill block:
+                //   Ballistic / 4-arm mode → flame gradient bars overlaid on the 4 arms.
+                //   Laser mode             → segmented ring (12 slices clockwise from 12 o'clock).
+                // Both paths feed `dCharge` (SDF) + `chargeGradient` (RGB) consumed by the composite stage.
                 float dCharge = 1e6;
                 half3 chargeGradient = (half3)_ChargeColorCold.rgb;
-                if (_ChargeFill > 0.001)
+                float laserActiveAlpha = 1.0; // multiplier on face alpha for laser segments (handles inactive dim)
+
+                if (laserMode && _LinesHidden < 0.5)
                 {
+                    // Segmented ring path. One analytical SDF eval per pixel (O(1)).
+                    // _LinesHidden gates ring visibility same way arms hide during reload.
+                    float2 d = px - center;
+                    float r = length(d);
+                    float innerR = _LaserInnerRadius;
+                    float outerR = max(innerR + 0.01, _LaserOuterRadius);
+
+                    // Radial signed distance: <0 inside annulus, >0 outside.
+                    float radialDist = max(innerR - r, r - outerR);
+
+                    // Angle from 12 o'clock, clockwise. atan2(dx, dy): 0=up, PI/2=right, …
+                    float ang = atan2(d.x, d.y);
+                    if (ang < 0) ang += 6.2831853;
+
+                    float segCount = max(1.0, _LaserSegmentCount);
+                    float segWidth = 6.2831853 / segCount;          // radians per slice
+                    float gapAng   = _LaserSegmentGapDeg * 0.0174533;
+                    float halfGap  = gapAng * 0.5;
+
+                    float segIdx   = floor(ang / segWidth);          // 0..segCount-1
+                    float localAng = ang - segIdx * segWidth;        // 0..segWidth
+
+                    // Angular SDF inside slice: <0 inside body, >0 inside gap.
+                    // Approximate angular distance в pixels via arc length r·dAng (good enough at this scale).
+                    float angInside = min(localAng - halfGap, (segWidth - halfGap) - localAng);
+                    float angularDist = -angInside * max(r, 1.0);
+
+                    float dSeg = max(radialDist, angularDist);
+
+                    // Activate this segment if its index < chargeRatio × segCount.
+                    // Round up so first segment lights at chargeFill > 0.
+                    float activeCount = ceil(saturate(_ChargeFill) * segCount);
+                    bool isActive = segIdx < activeCount - 0.5;
+
+                    // Color: cold → mid → hot gradient за position у ring (so "heat" reads radially even when partially filled).
+                    float along = segIdx / max(1.0, segCount - 1.0);
+                    if (along < 0.5)
+                        chargeGradient = lerp((half3)_ChargeColorCold.rgb, (half3)_ChargeColorMid.rgb, along * 2.0);
+                    else
+                        chargeGradient = lerp((half3)_ChargeColorMid.rgb, (half3)_ChargeColorHot.rgb, (along - 0.5) * 2.0);
+
+                    laserActiveAlpha = isActive ? 1.0 : saturate(_LaserInactiveAlpha);
+                    dCharge = dSeg;
+                }
+                else if (_ChargeFill > 0.001)
+                {
+                    // Legacy 4-arm flame bar path. Bar starts at arm inner edge (_Gap) and grows outward
+                    // toward _Gap + _LineLength proportional to chargeRatio. Top arm respects _TopArmAlpha.
                     float fillLen = _LineLength * _ChargeFill;
                     float halfThick = _LineThickness * 0.5 * _ChargeBarThicknessRatio;
 
-                    // 4 cardinal bars matching main arms (anchored at _Gap, length scales з chargeRatio)
                     if (_TopArmAlpha > 0.5)
                         dCharge = min(dCharge, sdSegment(px, center + float2(0,  _Gap), center + float2(0,  _Gap + fillLen), halfThick));
                     dCharge = min(dCharge, sdSegment(px, center + float2(0, -_Gap), center + float2(0, -_Gap - fillLen), halfThick));
                     dCharge = min(dCharge, sdSegment(px, center + float2( _Gap, 0), center + float2( _Gap + fillLen, 0), halfThick));
                     dCharge = min(dCharge, sdSegment(px, center + float2(-_Gap, 0), center + float2(-_Gap - fillLen, 0), halfThick));
 
-                    // Along position: 0 at arm inner edge (cold), 1 at arm outer edge (hot)
                     float2 toPx = px - center;
                     float along;
                     if (abs(toPx.y) > abs(toPx.x))
@@ -228,7 +290,6 @@ Shader "Crosshair/SDF"
                         along = (abs(toPx.x) - _Gap) / max(0.001, _LineLength);
                     along = saturate(along);
 
-                    // Flame gradient: white (inner, near gap) → yellow (mid) → red (outer tip, hot)
                     if (along < 0.5)
                         chargeGradient = lerp((half3)_ChargeColorCold.rgb, (half3)_ChargeColorMid.rgb, along * 2.0);
                     else
@@ -298,7 +359,9 @@ Shader "Crosshair/SDF"
                 float totalMain   = 1.0 - smoothstep(_OutlineWidth, _OutlineWidth + _EdgeSoftness, dMain);
                 float outlineMain = max(0.0, totalMain - faceMain);
 
-                float faceCharge    = 1.0 - smoothstep(0.0, _EdgeSoftness, dCharge);
+                // For laser mode: face is dim for inactive segments but outline stays full strength,
+                // so empty silhouette reads clearly as anchor shape. Ballistic path: laserActiveAlpha = 1 → no-op.
+                float faceCharge    = (1.0 - smoothstep(0.0, _EdgeSoftness, dCharge)) * laserActiveAlpha;
                 float totalCharge   = 1.0 - smoothstep(_OutlineWidth, _OutlineWidth + _EdgeSoftness, dCharge);
                 float outlineCharge = max(0.0, totalCharge - faceCharge);
 
