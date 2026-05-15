@@ -182,22 +182,17 @@ Each Stage = independent ship + validate. Toggle `UseV2Crosshair` in DevCheats d
 
 ---
 
-### Stage 2 — Directional recoil kick (~2h)
+### ~~Stage 2 — Directional recoil kick~~ — ✂️ CUT 2026-05-15
 
-**Goal**: EFD-style XY offset on cursor per shot + spring back.
+**Reason**: scouting before implementation found that directional recoil kick is **already fully implemented at the gameplay layer**, not view-only:
+- `WeaponEntityState.RecoilOffset` (Vector3 world-space) is the single source of truth.
+- `ShootingSystem` applies impulse on fire: `aimDir × RecoilKickForward` (radial) + `right × Random(±RecoilKickSide)` (perpendicular).
+- `AimingSystem` decays it exponentially via `RecoilRecoverySpeed` (per-weapon stat) + ADS modifier (`AdsRecoilRecoveryMultiplier`).
+- `player.WeaponAimPoint = cleanAim + RecoilOffset` — affects headshot detection + projectile direction AND propagates to the cursor naturally via `cam.WorldToScreenPoint(player.WeaponAimPoint)` in `CrosshairPresenter`.
 
-**Changes**:
-- Shader `_RecoilOffset` (Vector2) — center at `0.5 + _RecoilOffset` instead of fixed 0.5
-- `CrosshairPresenter`: maintain `Vector2 _kickVelocity, _kickPosition`. SmoothDamp recovery via weapon stat `RecoilRecoverySpeed`.
-- On WeaponFired event:
-  - Radial: `aimDir2D * verticalKickAmount` (outward along aim ray)
-  - Perpendicular: `aimRight2D * Random(-sideKick, sideKick)`
-  - Add to `_kickPosition` (impulse, accumulates)
-- LateTick: `_kickPosition = SmoothDamp(_kickPosition, Vector2.zero, ref _kickVelocity, recoverTime)` → push to shader
+Implementing the planned view-only `_kickPosition` would have **doubled** the visual shift (gameplay shifts WeaponAimPoint already; presenter would add a second offset on top) and desynced hit detection from cursor visual. Existing impl is gameplay-rooted and consistent — exactly what EFD-style asks for. Recoil polish (saturation cap, per-archetype tuning, laser chargeRatio scaling) could be a future pass, but is not blocking the Aim Cursor v2 epic.
 
-**Section tunables**: `RecoilKickRadial`, `RecoilKickPerpendicular`, `RecoilRecoverTime`.
-
-**Validation**: shot → cursor stretches outward, perp swings ±, returns. Sustained auto = accumulating kick reads visually.
+**Outcome**: skipped, plan continues to Stage 3 (focus blur). Existing recoil system stays as-is.
 
 ---
 

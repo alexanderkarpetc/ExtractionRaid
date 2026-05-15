@@ -569,6 +569,10 @@ namespace Session
                     DecayPerSecond      = DevCheats.Config.BarrelHeat.DecayPerSecond,
                     HeatCurvePower      = DevCheats.Config.BarrelHeat.HeatCurvePower,
                     MaxSpreadMultiplier = DevCheats.Config.BarrelHeat.MaxSpreadMultiplier,
+                },
+                cheatsConfig: new CheatsConfig
+                {
+                    GodMode = DevCheats.GodMode,
                 }
             );
 

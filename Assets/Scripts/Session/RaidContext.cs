@@ -247,6 +247,24 @@ namespace Session
         public float HeatPerShot => MaxHeatShots > 0 ? 1f / MaxHeatShots : 0f;
     }
 
+    /// <summary>
+    /// Dev/test cheats isolated through context — replaces direct <c>DevCheats.X</c> reads in systems.
+    /// Per CLAUDE.md §6 rule 7, systems must NOT read DevCheats directly; tunables flow through
+    /// <c>RaidContext.*Config</c> structs. <c>RaidSession.Tick</c> copies from <c>DevCheats.Config.Cheats</c>
+    /// into here when building the runtime context. Tests get <see cref="Default"/> (all cheats off)
+    /// unless they explicitly inject a <c>CheatsConfig</c> via <c>TestContextFactory.Create</c>.
+    /// Add new cheat toggles here as they appear (avoids touching System layer plumbing each time).
+    /// </summary>
+    public struct CheatsConfig
+    {
+        public bool GodMode;
+
+        public static CheatsConfig Default => new CheatsConfig
+        {
+            GodMode = false,
+        };
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -266,6 +284,7 @@ namespace Session
         public readonly BotEngagementConfig BotEngagementConfig;
         public readonly LaserConfig LaserConfig;
         public readonly BarrelHeatConfig BarrelHeatConfig;
+        public readonly CheatsConfig CheatsConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -279,7 +298,8 @@ namespace Session
             MovementConfig? movementConfig = null,
             BotEngagementConfig? botEngagementConfig = null,
             LaserConfig? laserConfig = null,
-            BarrelHeatConfig? barrelHeatConfig = null)
+            BarrelHeatConfig? barrelHeatConfig = null,
+            CheatsConfig? cheatsConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -298,6 +318,7 @@ namespace Session
             BotEngagementConfig = botEngagementConfig ?? BotEngagementConfig.Default;
             LaserConfig = laserConfig ?? LaserConfig.Default;
             BarrelHeatConfig = barrelHeatConfig ?? BarrelHeatConfig.Default;
+            CheatsConfig = cheatsConfig ?? CheatsConfig.Default;
         }
     }
 }

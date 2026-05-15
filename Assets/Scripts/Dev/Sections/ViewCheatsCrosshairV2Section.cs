@@ -68,6 +68,20 @@ namespace Dev
         [Header("Edge softness (AA)")]
         [Range(0.3f, 4f)] public float EdgeSoftness = 1f;
 
+        [Header("Focus blur — edge softness driven by recoil pressure + ADS state (Stage 3)")]
+        [Tooltip("Master toggle. OFF = _EdgeSoftness stays на static EdgeSoftness value (Stage 1 fallback, no regression).")]
+        public bool FocusBlurEnabled = true;
+        [Tooltip("Baseline edge softness (px) at rest, ADS settled, no recoil. Lower = sharper baseline.")]
+        [Range(0.1f, 3f)] public float BlurMinPx = 0.6f;
+        [Tooltip("Max edge softness (px) at full accuracy deficit. Higher = more fuzzy при максимальному стресі.")]
+        [Range(1f, 8f)] public float BlurMaxPx = 3.0f;
+        [Tooltip("World units of weapon.RecoilOffset.magnitude що дорівнюють 'full blur'. Lower = blur saturates faster.")]
+        [Range(0.05f, 2f)] public float BlurRecoilSaturation = 0.4f;
+        [Tooltip("Weight of recoil pressure у blur calculation. 1 = full contribution. Combined з ADS via max(), not sum.")]
+        [Range(0f, 1f)] public float BlurRecoilWeight = 1.0f;
+        [Tooltip("How much hip-fire (no ADS) adds to accuracy deficit. 0 = no diff hip/ADS, 1 = hip-fire reaches BlurMax on its own.")]
+        [Range(0f, 1f)] public float BlurHipFireAmount = 0.3f;
+
         [Header("Outline")]
         [Tooltip("Outline ring color drawn behind face. Default black з 85% opacity for readability over busy backgrounds.")]
         public Color OutlineColor = new Color(0f, 0f, 0f, 0.85f);

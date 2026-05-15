@@ -16,7 +16,7 @@ Test systems with synthetic state, fake adapters/ports, deterministic RNG, event
 
 Before writing/extending tests for a system, grep for two red flags:
 
-1. **`DevCheats.X` reads** — violates the rule above. Tests pass via default alignment but silently diverge from production on toggle. Refactor through a `RaidContext.*Config` struct before writing tests. Known-violating systems: `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem` (2026-04-24, see `docs/ai/tests-review.md`).
+1. **`DevCheats.X` reads** — violates the rule above. Tests pass via default alignment but silently diverge from production on toggle. Refactor through a `RaidContext.*Config` struct before writing tests (cheats like `GodMode` flow through `CheatsConfig`). Known-violating systems: `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem` (2026-04-24, see `docs/ai/tests-review.md`). **Resolved 2026-05-15**: `DamageSystem`.
 2. **Direct Unity API calls** in `Tick` — `Physics.*`, `Time.*`, `GameObject.Find`, `Resources.Load`, etc. Violates architecture rule 9. Fake adapters get bypassed → semi-deterministic tests. Route through an adapter port first.
 
 If a violation is found, fix the architecture before adding coverage — otherwise new tests lock in false-green behaviour.

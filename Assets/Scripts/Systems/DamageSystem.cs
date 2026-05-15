@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -35,7 +34,8 @@ namespace Systems
                 if (IsRolling(state, hit.TargetId))
                     continue;
 
-                if (DevCheats.GodMode && state.PlayerEntity != null
+                // GodMode flows through context — see RaidContext.CheatsConfig.
+                if (context.CheatsConfig.GodMode && state.PlayerEntity != null
                     && hit.TargetId == state.PlayerEntity.Id)
                     continue;
 
@@ -272,7 +272,8 @@ namespace Systems
             if (!state.HealthMap.TryGetValue(targetId, out var health)) return;
             if (!health.IsAlive) return;
 
-            if (DevCheats.GodMode && state.PlayerEntity != null && targetId == state.PlayerEntity.Id)
+            // GodMode flows through context — see RaidContext.CheatsConfig.
+            if (context.CheatsConfig.GodMode && state.PlayerEntity != null && targetId == state.PlayerEntity.Id)
                 return;
 
             ApplyDamage(health, damage);

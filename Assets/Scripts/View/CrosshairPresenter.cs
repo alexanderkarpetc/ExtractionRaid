@@ -325,7 +325,29 @@ namespace View
             _reticleMat.SetColor(_ChargeColorMid,  cfg.ChargeColorMid);
             _reticleMat.SetColor(_ChargeColorHot,  cfg.ChargeColorHot);
             _reticleMat.SetFloat(_ChargeBarThicknessRatio, cfg.ChargeBarThicknessRatio);
-            _reticleMat.SetFloat(_EdgeSoftness, cfg.EdgeSoftness);
+            // Focus blur — Stage 3. _EdgeSoftness driven by accuracy state (recoil pressure + ADS settle).
+            // Disabled → static cfg.EdgeSoftness (Stage 1/2 fallback, no regression). Same softness applies
+            // to ALL SDF groups (main + charge + hit pulse) since shader uses single `_EdgeSoftness`.
+            float blurPx = cfg.EdgeSoftness;
+            if (cfg.FocusBlurEnabled)
+            {
+                // Recoil contribution: 0 = settled, 1 = saturated. Reads gameplay-rooted RecoilOffset
+                // (set by ShootingSystem, decayed by AimingSystem) so blur tracks the same shift
+                // the cursor already follows visually — single source of truth.
+                float recoilMag = weapon != null ? weapon.RecoilOffset.magnitude : 0f;
+                float recoilPressure = Mathf.Clamp01(recoilMag / Mathf.Max(0.001f, cfg.BlurRecoilSaturation));
+
+                // ADS contribution: 0 when fully ADS, 1 when hip-fire. Scaled by BlurHipFireAmount
+                // so designer can dial how much hip-vs-ADS baseline differs (0 = no diff).
+                float adsContribution = (1f - player.AdsBlend) * cfg.BlurHipFireAmount;
+
+                // Combined accuracy deficit via max() — whichever source causes the larger blur wins.
+                // Sum-style would double-count (recoil during hip fire = additive), max-style ceiling-clamps
+                // to BlurMaxPx via single-source path.
+                float deficit = Mathf.Max(recoilPressure * cfg.BlurRecoilWeight, adsContribution);
+                blurPx = Mathf.Lerp(cfg.BlurMinPx, cfg.BlurMaxPx, deficit);
+            }
+            _reticleMat.SetFloat(_EdgeSoftness, blurPx);
             _reticleMat.SetColor(_OutlineColor, cfg.OutlineColor);
             _reticleMat.SetFloat(_OutlineWidth, cfg.OutlineWidth);
             // ADS — binary cutoff (Stage 1). adsAmount below threshold = top arm shown, above = hidden.
