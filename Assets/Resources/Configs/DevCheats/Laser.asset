@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36c2cf92390684d37aecb44778ae569a, type: 3}
   m_Name: Laser
   m_EditorClassIdentifier: Game::Dev.DevCheatsLaserSection
+  ChargeTimeOverrideSeconds: 0
+  ChargeRatioPower: 0.75
   ChargeDamageMin: 0.1
   ChargeDamagePower: 2
   ShotgunMinSpreadMult: 0.5

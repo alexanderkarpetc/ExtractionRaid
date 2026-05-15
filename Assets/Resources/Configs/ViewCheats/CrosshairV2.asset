@@ -29,12 +29,12 @@ MonoBehaviour:
   NormalColor: {r: 1, g: 1, b: 1, a: 1}
   BloomColor: {r: 1, g: 1, b: 1, a: 1}
   WarningColor: {r: 1, g: 0.4, b: 0.3, a: 1}
-  ChargeColorCold: {r: 1, g: 1, b: 1, a: 1}
-  ChargeColorMid: {r: 1, g: 0.85, b: 0.2, a: 1}
+  ChargeColorCold: {r: 0.9098039, g: 0.77254903, b: 0.18431373, a: 1}
+  ChargeColorMid: {r: 1, g: 0.55586857, b: 0.19999999, a: 1}
   ChargeColorHot: {r: 1, g: 0.3, b: 0.1, a: 1}
-  ChargeBarThicknessRatio: 0.7
-  ChargeOverheatThreshold: 0.85
-  ChargeOverheatTremblePx: 2.5
+  ChargeBarThicknessRatio: 1.2
+  ChargeOverheatThreshold: 0.8
+  ChargeOverheatTremblePx: 3
   ChargeOverheatTrembleFreq: 35
   RollingAlpha: 0.3
   NormalProfile:

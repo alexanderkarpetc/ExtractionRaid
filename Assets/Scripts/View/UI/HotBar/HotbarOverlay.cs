@@ -84,9 +84,7 @@ namespace View.UI.Hotbar
             }
             else
             {
-                Debug.LogWarning("[HotbarOverlay] HotbarPanelSettings missing — " +
-                                 "asset is auto-provisioned by HotbarAssetsBootstrap; " +
-                                 "if this fires the bootstrap hasn't run yet.");
+                Debug.LogWarning("[HotbarOverlay] HotbarPanelSettings missing at Resources/UI/Hotbar/.");
             }
 
             var visualTree = Resources.Load<VisualTreeAsset>("UI/Hotbar/HotbarOverlay");

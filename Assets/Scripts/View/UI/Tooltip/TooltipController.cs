@@ -156,8 +156,7 @@ namespace View.UI.Tooltip
 
             if (tree == null || panel == null)
             {
-                Debug.LogWarning("[Tooltip] Missing UXML / PanelSettings at Resources/UI/Tooltip/. " +
-                                 "Domain reload should have created them via TooltipAssetsBootstrap.");
+                Debug.LogWarning("[Tooltip] Missing UXML / PanelSettings at Resources/UI/Tooltip/.");
                 return;
             }
 
