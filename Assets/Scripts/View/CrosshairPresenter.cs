@@ -80,6 +80,15 @@ namespace View
         float _hitPulseStartTime;   // unscaledTime
         HitPulseProfile _activeHitPulse;
         bool  _hitPulseActive;
+        // Laser firing animation — A+B from Stage 1.8 plan:
+        //   _capturedChargeAtFire — chargeRatio snapshot at WeaponFired event. Drives chargeFill decay
+        //                            during Cooldown so ring "bleeds back to empty" instead of instant drop.
+        //   _firePulseT           — 0..1 pulse envelope (1 = just fired). Drives radial radius expansion
+        //                            (inner shrinks / outer grows) so ring "inhales" on shot, springs back.
+        // Both decay together over weapon.Stats.FireInterval during Cooldown phase. Bursting holds them at 1
+        // (sustained feel). Ready/Reloading/Charging resets them to 0.
+        float _capturedChargeAtFire;
+        float _firePulseT;
 
         public CrosshairPresenter() { /* lazy init */ }
 
@@ -135,10 +144,19 @@ namespace View
 
             if (!_canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(true);
 
-            // Consume events to drive hit pulse (single-slot — latest hit restarts animation).
+            // Consume events to drive hit pulse + laser firing animation.
+            //  - HitConfirmed: single-slot pulse (latest hit restarts animation).
+            //  - WeaponFired:  capture chargeRatio (packed у Damage by RaidEventBuffer.WeaponFired) + trigger fire pulse
+            //                  for laser cursor. Ballistic ignores (LaserMode=0 → segments not rendered, captured value unused).
+            //                  Note: WeaponFired packs ratio in Damage, ProjectileSpawned packs it in CurrentHp — different events, different packing.
             foreach (var e in session.ConsumeEvents().All)
             {
                 if (e.Type == RaidEventType.HitConfirmed) TriggerHitPulse(e, cfg);
+                else if (e.Type == RaidEventType.WeaponFired)
+                {
+                    _capturedChargeAtFire = e.Damage; // chargeRatio (see RaidEventBuffer.WeaponFired packing)
+                    _firePulseT = 1f;
+                }
             }
 
             // Drive reticle from player + weapon state
@@ -212,18 +230,24 @@ namespace View
                 {
                     case WeaponPhase.Ready:
                         color = hasAmmo ? cfg.NormalColor : cfg.WarningColor;
+                        // Settled — drop captured charge + fire pulse (laser segments return to dim silhouette).
+                        _capturedChargeAtFire = 0f;
+                        _firePulseT = 0f;
                         break;
 
                     case WeaponPhase.Firing:
-                        // 1-frame spike — full bloom
+                        // 1-frame spike — full bloom (ballistic). Laser: hold captured charge у ring (sustained burn).
                         gap = adsGap + adsBloomExtra;
                         color = cfg.BloomColor;
+                        chargeFill = _capturedChargeAtFire;
                         break;
 
                     case WeaponPhase.Bursting:
-                        // Treat як sustained firing — keep bloomed
+                        // Treat як sustained firing — keep bloomed. Laser: ring stays at captured charge between burst shots
+                        // (each WeaponFired re-triggers _firePulseT = 1 → staccato pulse feel).
                         gap = adsGap + adsBloomExtra * 0.8f;
                         color = cfg.BloomColor;
+                        chargeFill = _capturedChargeAtFire;
                         break;
 
                     case WeaponPhase.Cooldown:
@@ -233,6 +257,9 @@ namespace View
                             : 1f;
                         gap = adsGap + adsBloomExtra * (1f - cooldownT);
                         color = Color.Lerp(cfg.BloomColor, cfg.NormalColor, cooldownT);
+                        // Laser ring "bleeds back to empty" + pulse springs back over FireInterval.
+                        chargeFill = _capturedChargeAtFire * (1f - cooldownT);
+                        _firePulseT = 1f - cooldownT;
                         break;
                     }
 
@@ -244,6 +271,9 @@ namespace View
                         ringFill = reloadProgress;
                         linesHidden = 1f;
                         color = cfg.NormalColor;
+                        // Reload restarts the round — drop fire animation state.
+                        _capturedChargeAtFire = 0f;
+                        _firePulseT = 0f;
                         break;
                     }
 
@@ -265,6 +295,9 @@ namespace View
                             : 1f;
                         chargeFill = laserCfg != null ? laserCfg.EvaluateChargeRatio(linearT) : linearT;
                         color = cfg.NormalColor;
+                        // New charge cycle — drop captured snapshot from previous shot.
+                        _capturedChargeAtFire = 0f;
+                        _firePulseT = 0f;
                         break;
                     }
 
@@ -361,8 +394,14 @@ namespace View
             // so the ring is visible even at chargeFill=0 (anchor point for the player's eye).
             _reticleMat.SetFloat(_LaserMode,          laserMode ? 1f : 0f);
             _reticleMat.SetFloat(_LaserSegmentCount,  cfg.LaserSegmentCount);
-            _reticleMat.SetFloat(_LaserInnerRadius,   cfg.LaserRingInnerRadius);
-            _reticleMat.SetFloat(_LaserOuterRadius,   cfg.LaserRingOuterRadius);
+            // Radial pulse on fire — inner shrinks / outer grows by `LaserFirePulseRadiusPx × _firePulseT`,
+            // settling back to baseline as cooldown progresses (decay set inside Cooldown phase case).
+            // Min clamp on inner keeps ring from inverting if user dials radii close together.
+            float pulseDelta      = cfg.LaserFirePulseRadiusPx * _firePulseT;
+            float effectiveInnerR = Mathf.Max(2f, cfg.LaserRingInnerRadius - pulseDelta);
+            float effectiveOuterR = cfg.LaserRingOuterRadius + pulseDelta;
+            _reticleMat.SetFloat(_LaserInnerRadius,   effectiveInnerR);
+            _reticleMat.SetFloat(_LaserOuterRadius,   effectiveOuterR);
             _reticleMat.SetFloat(_LaserSegmentGapDeg, cfg.LaserSegmentGapDeg);
             _reticleMat.SetFloat(_LaserInactiveAlpha, cfg.LaserInactiveAlpha);
 

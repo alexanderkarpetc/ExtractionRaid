@@ -129,6 +129,8 @@ namespace Dev
         [Range(0f, 30f)] public float LaserSegmentGapDeg = 4f;
         [Tooltip("Alpha multiplier for inactive segments (chargeRatio not yet reached them). 0 = invisible, 1 = same as active.")]
         [Range(0f, 1f)] public float LaserInactiveAlpha = 0.22f;
+        [Tooltip("Radial pulse expansion (px) on fire — ring inhales outward then springs back over weapon.FireInterval. Inner radius shrinks by this, outer grows by it. 0 = no pulse animation on shot.")]
+        [Range(0f, 20f)] public float LaserFirePulseRadiusPx = 5f;
 
         [Header("Hit pulse — per-event-type profiles (4 diagonal stubs on cursor, spread + fade)")]
         [Tooltip("Normal body hit (no kill, no headshot, no ricochet).")]
