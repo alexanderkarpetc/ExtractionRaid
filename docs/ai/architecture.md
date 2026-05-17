@@ -18,7 +18,7 @@ Responsibilities:
 
 **Bootstrap flow** (`AppBootstrap.cs`, `[DefaultExecutionOrder(1000)]`):
 1. `Awake`: guard against double-init, call `App.Initialize()`, `DontDestroyOnLoad`, attach MonoBehaviour overlays:
-   - `HotbarDebugOverlay`, `InventoryUI`, `QuestUI`, `AimCursorOverlay`, `DamageNumberOverlay`
+   - `HotbarDebugOverlay`, `InventoryUI`, `QuestUI`, `PointerOverUiTracker`, `DamageNumberOverlay`
    - `StatusEffectOverlay`, `CraftingUI`, `StaminaBarOverlay`, `DefenderArmorHUD`
    - `DeployUI`, `NpcUI`
 2. `Start`: build `LaunchOptions` from inspector `_launchMode` (Menu / Raid / TestScenario / Hideout), call `GameLauncher.Launch(options)`
@@ -121,8 +121,8 @@ All Unity subsystem access goes through interfaces passed via context:
 - `RaidCameraController` (camera follow + ADS zoom)
 - `BotDebugLabel` (3D TextMesh above bots)
 
-**IMGUI Overlays** (attached by AppBootstrap):
-- `AimCursorOverlay` — crosshair lines + bloom + reload ring + hit/kill/headshot/ricochet markers
+**View Layer Overlays** (attached by AppBootstrap):
+- `PointerOverUiTracker` — per-frame `App.IsPointerOverUi` broadcast + `Cursor.visible` (gates attack/ADS, swaps to OS cursor over UI panels). Crosshair itself is uGUI + SDF shader — see [`crosshair.md`](crosshair.md).
 - `HotbarDebugOverlay` — 9 hotbar slots at bottom of game view (mag/reserve ammo)
 - `InventoryUI` — inventory screen (Tab key) with drag/drop, context menu, stack counts, item tooltip
 - `QuestUI` — quest log and tracking

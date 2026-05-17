@@ -62,7 +62,7 @@ namespace ApplicationCore
             var extractionHudHost = new GameObject("ExtractionHudWindow");
             extractionHudHost.transform.SetParent(transform, false);
             extractionHudHost.AddComponent<ExtractionHudWindow>();
-            gameObject.AddComponent<AimCursorOverlay>();
+            gameObject.AddComponent<PointerOverUiTracker>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();

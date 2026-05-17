@@ -12,7 +12,7 @@ namespace View
     /// Inventory is canonical UI Toolkit since Stage 5; the legacy uGUI popup is
     /// gone. Inventory does NOT block gameplay input — player keeps walking and
     /// (when cursor's off UI) shooting. Attack/ADS gating happens у
-    /// IInputAdapter through the IsPointerOverUi flag set by AimCursorOverlay.
+    /// IInputAdapter through the IsPointerOverUi flag set by PointerOverUiTracker.
     ///
     /// State machine:
     ///   isOpen = !craft && (openedByTab || lootActive || builderOpen)

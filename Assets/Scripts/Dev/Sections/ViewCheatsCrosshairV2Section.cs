@@ -39,16 +39,15 @@ namespace Dev
     }
 
     /// <summary>
-    /// v2 aim cursor — uGUI + SDF shader stack replacing IMGUI <c>AimCursorOverlay</c>.
-    /// Stage 1 baseline: 1:1 visual port of v1 (4-line crosshair + dot + reload/charge rings + hit markers).
-    /// Later stages extend: directional recoil kick (S2), focus blur (S3), 3-tier range color (S4),
-    /// UI cursor swap (S5), bloom/low-ammo/unified arcs (S6). See <c>docs/ai/gunplay/aim-cursor-v2.md</c>.
+    /// v2 aim cursor tunables — uGUI + SDF shader stack. Replaced legacy IMGUI overlay 2026-05-18 (Stage 7).
+    /// Sections cover: 4-arm geometry (ballistic), ADS, reload/charge rings, edge softness, outline,
+    /// colors (normal/bloom/warning), charge flame gradient (cold/mid/hot), overheat tremble,
+    /// focus blur (recoil + ADS driven), laser segmented ring + firing animation,
+    /// hit pulse per-event-type profiles (normal/kill/headshot/ricochet).
+    /// See <c>docs/ai/gunplay/aim-cursor-v2.md</c> for design rationale + status log.
     /// </summary>
     public class ViewCheatsCrosshairV2Section : ScriptableObject
     {
-        [Tooltip("Master toggle. OFF (default) = legacy IMGUI AimCursorOverlay renders. ON = v2 SDF crosshair active, IMGUI no-ops. A/B compare during stage rollout.")]
-        public bool UseV2Crosshair = false;
-
         [Header("Stage 1 — Crosshair geometry (px)")]
         [Range(0f, 30f)] public float Gap = 6f;
         [Range(2f, 40f)] public float LineLength = 10f;

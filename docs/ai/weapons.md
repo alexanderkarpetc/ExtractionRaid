@@ -180,7 +180,7 @@ Continuous blend `player.AdsBlend` (0 = hip, 1 = ADS). Lerped each tick based on
 **Movement** (`MovementSystem`):
 - Move speed `*= Lerp(1, AdsMoveSpeedMultiplier, AdsBlend)` (default 0.7x)
 
-**Crosshair** (`AimCursorOverlay`): gap / bloom lerp toward ADS-specific values; top crosshair line fades out during ADS.
+**Crosshair** (`CrosshairPresenter` v2 SDF — see [`crosshair.md`](crosshair.md)): gap / bloom lerp toward ADS-specific values; top crosshair arm hides binary cutoff during ADS.
 
 DevCheats (ADS section): `AdsTransitionTime`, `AdsMoveSpeedMultiplier`, `AdsAimFollowMultiplier`, `AdsRecoilMultiplier`, `AdsRecoilRecoveryMultiplier`, `AdsBaseGap`, `AdsBloomExtraGap`.
 

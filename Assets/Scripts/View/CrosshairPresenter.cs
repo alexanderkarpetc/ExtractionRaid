@@ -4,22 +4,25 @@ using Dev;
 using Session;
 using State;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace View
 {
     /// <summary>
-    /// v2 aim cursor presenter (uGUI + SDF shader). Replaces legacy IMGUI
-    /// <see cref="AimCursorOverlay"/> when <c>ViewCheatsCrosshairV2Section.UseV2Crosshair</c>
-    /// is ON. Stage 1 = 1:1 functional port of v1.
+    /// Aim cursor presenter (uGUI + SDF shader). Owns the in-game reticle for both ballistic
+    /// (4-arm + center dot + flame charge bars) and laser (segmented ring) archetypes,
+    /// plus reload/charge arcs, hit pulse (EFD-style 4-stub spread), focus blur,
+    /// overheat tremble, and per-archetype firing animation.
     ///
     /// Pipeline:
-    ///   - One Screen-Space Overlay Canvas з RawImage fullscreen carrying SDF shader.
-    ///   - MaterialPropertyBlock writes per-frame: center px, gap, line geometry, ring fills, alpha, color.
-    ///   - Hit markers spawn з pool of <see cref="HitMarkerInstance"/> Images.
+    ///   - One Screen-Space Overlay Canvas з RawImage fullscreen carrying SDF shader (`CrosshairSDF`).
+    ///   - Per-instance material clone written each frame via `SetFloat`/`SetColor`/`SetVector`
+    ///     (~35 shader params). Branches on `_LaserMode` for archetype.
+    ///   - Consumes `HitConfirmed` (drives hit pulse) + `WeaponFired` for laser archetype
+    ///     (captures chargeRatio for cooldown decay + pulse trigger).
     ///
-    /// Lives як plain class у App; LateTick from <c>App.LateTick</c>.
+    /// Lives як plain class у App; LateTick called from <c>App.LateTick</c> after damage
+    /// numbers, before event-buffer clear.
     /// </summary>
     public class CrosshairPresenter
     {
@@ -122,25 +125,10 @@ namespace View
             var cfg = ViewCheats.Config?.CrosshairV2;
             if (cfg == null) return;
 
-            // Dev hotkey Y — A/B toggle между v1 (IMGUI) і v2 (SDF). Removed once Stage 7 cleanup ships.
-            var kb = Keyboard.current;
-            if (kb != null && kb.yKey.wasPressedThisFrame)
-            {
-                cfg.UseV2Crosshair = !cfg.UseV2Crosshair;
-                Debug.Log($"[CrosshairV2] Hotkey Y → UseV2Crosshair = {cfg.UseV2Crosshair}");
-            }
-
-            if (!cfg.UseV2Crosshair)
-            {
-                // v2 disabled — hide canvas if previously created
-                if (_canvas != null && _canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(false);
-                return;
-            }
-
             // Pointer over a UI Toolkit element (inv window/slot/builder/etc) —
-            // hide v2 reticle, OS cursor takes over. Mirrors v1 (AimCursorOverlay)
-            // OnGUI skip + InputAdapter attack-gating. AimCursorOverlay sets the
-            // flag in Update; this LateTick reads it in the same frame.
+            // hide v2 reticle, OS cursor takes over. PointerOverUiTracker (MonoBehaviour
+            // on AppBootstrap GO) sets the flag in Update; this LateTick reads it in
+            // the same frame. Attack/ADS gating in input adapter is driven by the same flag.
             if (App.Instance.IsPointerOverUi)
             {
                 if (_canvas != null && _canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(false);
@@ -156,13 +144,15 @@ namespace View
 
             // Consume events to drive hit pulse + laser firing animation.
             //  - HitConfirmed: single-slot pulse (latest hit restarts animation).
-            //  - WeaponFired:  capture chargeRatio (packed у Damage by RaidEventBuffer.WeaponFired) + trigger fire pulse
-            //                  for laser cursor. Ballistic ignores (LaserMode=0 → segments not rendered, captured value unused).
+            //  - WeaponFired (Laser-only): capture chargeRatio (packed у Damage by RaidEventBuffer.WeaponFired) +
+            //                  trigger fire pulse for laser segmented ring. **Filter by archetype** — if ballistic
+            //                  fires, captured stays 0 so shader's flame-bars path (gated on _ChargeFill > 0)
+            //                  doesn't accidentally light up over the 4 arms during ballistic Firing/Cooldown.
             //                  Note: WeaponFired packs ratio in Damage, ProjectileSpawned packs it in CurrentHp — different events, different packing.
             foreach (var e in session.ConsumeEvents().All)
             {
                 if (e.Type == RaidEventType.HitConfirmed) TriggerHitPulse(e, cfg);
-                else if (e.Type == RaidEventType.WeaponFired)
+                else if (e.Type == RaidEventType.WeaponFired && e.StringPayload == "Laser")
                 {
                     _capturedChargeAtFire = e.Damage; // chargeRatio (see RaidEventBuffer.WeaponFired packing)
                     _firePulseT = 1f;
@@ -194,7 +184,7 @@ namespace View
             _hitPulseActive = true;
         }
 
-        // Mirror v1 AimCursorOverlay phase logic — drives gap, color, alpha, ring fills.
+        // Phase-driven reticle update — gap, color, alpha, ring fills, laser charge/pulse.
         void UpdateReticle(RaidState state, ViewCheatsCrosshairV2Section cfg)
         {
             var player = state.PlayerEntity;

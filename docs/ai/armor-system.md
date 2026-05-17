@@ -10,7 +10,7 @@ complete shot deflection.
 Design goals:
 - Ammo choice matters: high-pen ammo defeats armor, HP ammo bleeds unarmored targets.
 - Armor degrades predictably: effective protection drops as durability falls below a threshold.
-- Transparent feedback: players see proportional hit markers, armor bars, and break VFX.
+- Transparent feedback: players see cursor hit pulse (per-event-type), armor bars, and break VFX.
 - Fully parameterized: all constants are tunable at runtime via DevCheats.
 
 ## 2. State
@@ -233,13 +233,16 @@ devastating against unarmored targets, useless against armor.
 
 ## 10. Visual Feedback
 
-### Proportional Hit Markers (AimCursorOverlay)
+### Hit Pulse on Crosshair (`CrosshairPresenter` v2 — see [`crosshair.md`](crosshair.md))
 
-Crosshair markers encode absorption via `HitConfirmed` event:
-- **Color**: lerps white to gray by `absorptionRatio` (heavily armored hits look dimmer).
-- **Size**: scales down with higher absorption.
-- **Ricochet**: blue spark marker with short duration (`isRicochet = true`).
-- **Standard**: white X = hit, red X = kill, gold double-X = headshot kill.
+EFD-style 4-stub spread on the reticle, triggered by `HitConfirmed` event. Per-event-type profiles (`HitPulseProfile` snapshot at trigger) drive Color / Duration / InnerStart / InnerEnd / Length / Thickness / phase envelopes:
+- **Normal**: white short pulse.
+- **Kill**: red, larger / longer.
+- **Headshot**: gold tint.
+- **Ricochet**: blue, short flash.
+- Priority: Ricochet > Kill > Headshot > Normal.
+
+Note: absorption-driven scaling (size + color blend by `absorptionRatio`) was a legacy IMGUI-overlay feature; current v2 SDF hit pulse uses event-type profiles instead. `HitConfirmed` still carries `absorptionRatio` (packed in `CurrentHp`) for other consumers (damage numbers, blood VFX intensity).
 
 ### Damage Numbers
 

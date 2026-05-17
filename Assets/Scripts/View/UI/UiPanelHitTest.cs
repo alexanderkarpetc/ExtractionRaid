@@ -10,7 +10,7 @@ namespace View.UI
     /// Returns true when ANY panel reports a hit — backdrops з
     /// <c>picking-mode=Ignore</c> pass through transparently.
     ///
-    /// Used by <see cref="AimCursorOverlay"/> для cursor visibility / attack
+    /// Used by <see cref="PointerOverUiTracker"/> для cursor visibility / attack
     /// gating, and by <see cref="View.UI.Inventory.InventoryWindow"/> для
     /// drop-over-UI silent-cancel logic.
     ///

@@ -499,14 +499,14 @@ The inventory UI is **fully UI Toolkit** — the legacy uGUI canvas / `LootPopup
 | `Assets/Scripts/View/UI/Inventory/LootSubPanelElement.cs` | Floating right-pane card — title + scroll + grid. One per loot source. Auto-grows slot pool, never shrinks. |
 | `Assets/Scripts/View/UI/Inventory/ContextMenuElement.cs` | Right-click overlay; options built from slot's `Source`. |
 | `Assets/Scripts/View/InventoryUI.cs` | State-machine bridging Tab / `LootTargetId` / `BuilderTargetId` / `CraftTargetId` to `InventoryWindow.Open/Close`. Single `_openedByTab` flag + derived state. |
-| `Assets/Scripts/View/UI/UiPanelHitTest.cs` | Shared "is cursor over any UTK panel" helper. Used by `AimCursorOverlay` (cursor visibility / attack gating) + `InventoryWindow` (drop-over-UI silent cancel). |
+| `Assets/Scripts/View/UI/UiPanelHitTest.cs` | Shared "is cursor over any UTK panel" helper. Used by `PointerOverUiTracker` (cursor visibility / attack gating) + `InventoryWindow` (drop-over-UI silent cancel). |
 | `Assets/Resources/UI/Inventory/InventoryWindow.{uxml,uss}` | Layout + styles. Modal layer tokens shared with WeaponBuilder через `_tokens.uss` + `CraftingMockupTheme.tss`. |
 | `Assets/Resources/UI/Inventory/InventoryPanelSettings.asset` | `ScaleWithScreenSize 1920×1080 match=0.5`, sort 100 (below Builder 110, above Hotbar 50). |
 
 ### Gameplay-input rules
 
 - Opening inventory does **not** block gameplay input. Walk/sprint/reload/etc keep working.
-- `Attack` + `Ads` are gated by `IInputAdapter.IsPointerOverUi` — set per frame by `AimCursorOverlay` via `UiPanelHitTest`. Cursor over UI = no shot, cursor over game = shot.
+- `Attack` + `Ads` are gated by `IInputAdapter.IsPointerOverUi` — set per frame by `PointerOverUiTracker` via `UiPanelHitTest`. Cursor over UI = no shot, cursor over game = shot.
 - Dialogue / quest log / craft / deploy / NPC modals continue to use `SetGameplayInputBlocked(true)` — fully-paused menu modes.
 - `PlayerEntityState.IsInMenu` excludes inventory/loot/builder; only QuestLog/Craft/Deploy/Npc set it.
 

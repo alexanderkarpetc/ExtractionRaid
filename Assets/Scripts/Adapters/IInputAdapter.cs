@@ -66,7 +66,7 @@ namespace Adapters
         /// element (inventory window/sub-panel, builder palette, hotbar slot).
         /// Used to suppress fire/ADS so clicking on UI never produces a shot.
         /// Walk/sprint/keyboard shortcuts are NOT gated — only attack-class.
-        /// Set externally (AimCursorOverlay polls active panels each frame).
+        /// Set externally (<c>PointerOverUiTracker</c> polls active panels each frame).
         /// </summary>
         bool IsPointerOverUi { get; set; }
     }

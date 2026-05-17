@@ -1,83 +1,116 @@
 # Crosshair System
 
-Weapon-state crosshair rendered via IMGUI `OnGUI()` in `View/AimCursorOverlay.cs`.
+In-game reticle rendered via **uGUI + custom SDF shader** in `View/CrosshairPresenter.cs`.
+Replaced the legacy IMGUI `AimCursorOverlay` overlay in 2026-05-18 (Aim Cursor v2 epic, Stage 7).
 
-## Two Cursors
+For the design rationale, stage-by-stage shipping log, and cut/deferred items, see
+[`docs/ai/gunplay/aim-cursor-v2.md`](gunplay/aim-cursor-v2.md).
 
-| Cursor | Source | Visual | Purpose |
-|--------|--------|--------|---------|
-| **Raw** | `player.RawAimPoint` | Small white dot (6px) | Player intent, instant from mouse |
-| **Weapon** | `player.WeaponAimPoint` | Crosshair / state indicator | Where weapon actually aims, carries state info |
+## Architecture
 
-Raw cursor is always a dot and never changes. Weapon cursor shape/color/animation reflects weapon state.
+| Layer | Tech | Notes |
+|---|---|---|
+| **Reticle** | One fullscreen `RawImage` on Screen-Space Overlay Canvas з SDF shader `CrosshairSDF` | All visuals procedural — no UI artist sprites |
+| **Presenter** | `CrosshairPresenter` (plain class, NOT MonoBehaviour) | Lives in App; `LateTick(RaidSession)` after damage numbers, before event-buffer clear |
+| **Pointer tracking** | `PointerOverUiTracker` MonoBehaviour on `AppBootstrap` GO | Update() polls `UiPanelHitTest.IsScreenPointOverUi`, broadcasts `App.IsPointerOverUi`, drives `Cursor.visible` |
+| **Material** | `Resources/Vfx/Materials/Crosshair.mat` auto-instanced via `Image.material` | Per-instance writes — `MaterialPropertyBlock` doesn't work on UI elements |
 
-## Weapon Cursor States
+Shader has a single fragment pass that branches on `_LaserMode` to pick rendering style.
 
-| WeaponPhase | Condition | Visual | Color |
-|-------------|-----------|--------|-------|
-| `Ready` | `AmmoInMagazine > 0` | 4-line crosshair + center dot | Green `(0.2, 1, 0.3, 0.9)` |
-| `Ready` | Empty mag + no reserve | 4-line crosshair + center dot | Red `(1, 0.25, 0.2, 0.9)` |
-| `Firing` | Just shot (1 tick) | Crosshair with max bloom gap | White `(1, 1, 1, 0.95)` |
-| `Cooldown` | Post-shot delay | Bloom gap contracting back | White->Green lerp |
-| `Reloading` | Reload in progress | Ring of 12 dots (no crosshair) | Orange filled / gray empty |
-| `Equipping` | Drawing weapon | Crosshair fading in | Green, alpha 0->1 |
-| `Unequipping` | Holstering weapon | Crosshair fading out | Green, alpha 1->0 |
-| Unarmed | `EquippedWeapon == null` | Single gray dot (15px) | Gray `(0.7, 0.7, 0.7, 0.6)` |
+## Phase-driven visual states
 
-Rolling (`IsRolling == true`) applies 0.3 alpha multiplier to any state above.
+`WeaponEntityState.Phase` drives the reticle look. `CrosshairPresenter.UpdateReticle()` switches на phase + reads `weapon.Stats.FireInterval/ReloadTime/EquipTime/UnequipTime` + `weapon.PhaseStartTime` for progress.
 
-## Crosshair Geometry
+| Phase | Visual | Notes |
+|---|---|---|
+| `Ready` (ammo > 0) | Baseline reticle (4-arm + dot для ballistic; segmented ring dim silhouette + dot для laser) | `NormalColor` |
+| `Ready` (ammo = 0) | Same shape, warning red tint | `WarningColor` |
+| `Firing` (1 frame) | Ballistic: gap expansion + bloom color. Laser: full ring + radial pulse | Captures `chargeRatio` for laser cooldown decay |
+| `Cooldown` | Ballistic: bloom decays over `FireInterval`. Laser: ring chargeFill drains + pulse springs back | `SmoothStep(0..1)` curve |
+| `Bursting` (laser+Auto burst) | Sustained Firing-style; each burst shot re-triggers pulse | `gap = adsGap + adsBloomExtra × 0.8` |
+| `Reloading` | Lines/segments hidden, animated reload arc (`_RingFill = elapsed/ReloadTime`) | Same SDF shader, single composite path |
+| `Charging` (laser) | Segmented ring fills clockwise from 12 o'clock as charge ratio grows | Shaped via `EvaluateChargeRatio` — see Charge curve |
+| `Equipping` / `Unequipping` | Alpha fade in/out | Driven by `EquipTime`/`UnequipTime` |
+| Unarmed | Dot only, dim alpha | `linesHidden = 1`, alpha 0.5 |
+
+`IsRolling == true` applies `RollingAlpha` (default 0.3) multiplier on top of any state.
+
+## Per-archetype rendering
+
+Detected via `weapon.PayloadDefinition?.Archetype`. Single shader, branched paths.
+
+### Ballistic — 4-arm + dot
+- 4 arms (top/bottom/left/right) anchored at `_Gap` from center, length `_LineLength`, thickness `_LineThickness`.
+- Center dot `_DotRadius`.
+- ADS: top arm hides binary cutoff via `_adsAmount >= AdsTopArmFadeStart` (3-arm T-shape).
+- Charge fill (only payload з charge mechanic): flame gradient bars overlay arms, growing from inner edge to outer tip as `chargeRatio` increases. Color gradient `ChargeColorCold → ChargeColorMid → ChargeColorHot` along arm length.
+
+### Laser — segmented ring
+- N slices (default 12, range 4..24), clockwise from 12 o'clock.
+- Inner radius `LaserRingInnerRadius`, outer `LaserRingOuterRadius`, gap between slices `LaserSegmentGapDeg`.
+- Empty silhouette always visible at `LaserInactiveAlpha` dim (face × inactive alpha, outline full strength — reads as anchor shape).
+- Active segments at full alpha з gradient color cold→hot за their position in ring (`segIdx / N`).
+- Implementation: analytical O(1) SDF per pixel — `segIdx = floor(ang / segWidth)` directly identifies pixel's slice (no fragment-shader loop).
+- Reload hides ring same as it hides arms (`_LinesHidden` gates both paths).
+
+## Firing animation (laser)
+
+Stage 1.8 — `CrosshairPresenter` consumes `WeaponFired` events filtered by `e.StringPayload == "Laser"`:
+
+- **chargeFill decay**: snapshot `chargeRatio` (packed in `e.Damage`) → drains `captured × (1 - cooldownT)` over `FireInterval`. Burst phase holds at captured.
+- **Radial pulse**: `_firePulseT` ramps to 1 on shot, decays in lockstep. Inner radius shrinks / outer grows by `LaserFirePulseRadiusPx × _firePulseT`.
+- Reset on Ready / Reloading / Charging.
+
+Ballistic ignored (event filter), so flame-bars path doesn't accidentally light up over ballistic arms.
+
+## Charge curve
+
+`DevCheatsLaserSection.EvaluateChargeRatio(linearT)` shapes the raw `elapsed / chargeTime` progression:
+
+- `ratio = Pow(clamp01(linearT), ChargeRatioPower)`
+- Power = 1 → linear (legacy)
+- Power > 1 → ease-in (slow start, fast finish — "build tension")
+- Power < 1 → ease-out (fast 60-70%, slow trail to max)
+
+Same math in `LaserConfig.EvaluateChargeRatio` in `RaidContext` → gameplay (damage/burst/spread) and cursor fill stay in lockstep. `WeaponChargeResolver.GetChargeTime(weapon, deliveryMult, overrideSeconds)` allows DevCheats baseline override (per-rarity payload values bypassed when override > 0).
+
+## Hit pulse
+
+EFD-style 4 diagonal stubs spreading outward + alpha fade. Replaces legacy flying X-markers (deleted in Stage 1.4).
+
+- Driven by `HitConfirmed` event. Single-slot animation (latest hit restarts).
+- Snapshot `HitPulseProfile` at trigger — animation continues з locked values even if user tweaks DevCheats mid-pulse.
+- 3-phase envelope: burst (ease-out scale from 50% to full inner anchor) → hold (max alpha, slow drift) → decay (ease-out outward spread + alpha fade + thickness taper + optional rotation drift).
+- 4 per-event-type profiles in `ViewCheatsCrosshairV2Section`: `NormalProfile` / `KillProfile` / `HeadshotProfile` / `RicochetProfile` (`HitPulseProfile` struct з Color / Duration / InnerStart / InnerEnd / Length / Thickness / BurstPhaseEnd / HoldPhaseEnd / RotationRad / ThicknessTaperStart / ThicknessTaperEnd).
+- Priority: Ricochet > Kill > Headshot > Normal.
+- Event packing note: `HitConfirmed` packs `Damage=isKill, Direction.x=isHeadshot, CurrentHp=absorptionRatio, MaxHp=isRicochet` (≠ EntityHit packing).
+
+## Focus blur
+
+Continuous edge softness driven by accuracy state. `_EdgeSoftness` shader param dynamically pushed по frame, applied to ALL SDF groups (main + charge + hit pulse).
 
 ```
-        |          <- top bar (fades out during ADS)
-        |
-   ===  .  ===    <- left bar, center dot, right bar
-        |
-        |          <- bottom bar
+recoilPressure = clamp01(weapon.RecoilOffset.magnitude / BlurRecoilSaturation)
+adsContribution = (1 - player.AdsBlend) × BlurHipFireAmount
+deficit = max(recoilPressure × BlurRecoilWeight, adsContribution)
+blurPx = lerp(BlurMinPx, BlurMaxPx, deficit)
 ```
 
-All values configurable via DevCheats (Crosshair section):
-- Line thickness: `CrosshairLineThickness` (default 6px)
-- Line length: `CrosshairLineLength` (default 24px)
-- Base gap (center to inner edge): `CrosshairBaseGap` (default 15px)
-- Center dot: `CrosshairCenterDotSize` (default 9px)
-- Bloom extra gap: `CrosshairBloomExtraGap` (default 30px)
+Master toggle `FocusBlurEnabled` (default ON). OFF falls back to static `EdgeSoftness` value (Stage 1 behavior — no regression).
 
-## ADS Crosshair
+## Overheat tremble
 
-During ADS (`player.AdsBlend` 0->1), crosshair interpolates toward tighter values:
-- Gap lerps from `CrosshairBaseGap` to `AdsBaseGap`
-- Bloom lerps from `CrosshairBloomExtraGap` to `AdsBloomExtraGap`
-- Top crosshair line fades out (`alpha *= 1 - adsBlend`) — creates a 3-line T-shape
-
-## Bloom Animation
-
-Triggered by Firing->Cooldown. Gap starts expanded, contracts to base.
-
-```
-progress = SmoothStep(0, 1, elapsed / weapon.FireInterval)
-currentGap = adsGap + adsBloomExtra * (1 - progress)
-color = Lerp(white, green, progress)
-```
-
-## Reload Ring
-
-12 dots arranged in circle (radius 42px), starting from 12 o'clock, clockwise. Dot size 9px.
-
-```
-progress = Clamp01(elapsed / weapon.ReloadTime)
-filledCount = Floor(progress * 12)
-```
-
-Filled dots = orange, unfilled = dim gray. Center dot in orange. Crosshair lines hidden.
+Perlin-noise jitter on cursor `_CenterPx` when `chargeFill ≥ ChargeOverheatThreshold` (default 0.85). Intensity scales linearly з overheat fraction. Default 2.5px @ 35Hz frequency.
 
 ## Recoil
 
-Firing displaces the crosshair (WeaponAimPoint) away from the player. The gap between raw dot and crosshair = recoil magnitude.
+Recoil is **gameplay-rooted**, not view-only. Single source of truth = `WeaponEntityState.RecoilOffset` (Vector3 world-space).
 
-**Two components per shot:**
-1. **Forward kick** (`RecoilKickForward`) — pushes aim away from player along `+AimDirection` (main recoil)
-2. **Sideways scatter** (`RecoilKickSide`) — random perpendicular displacement (spread)
+**Pipeline**:
+- `ShootingSystem` adds impulse on fire: `aimDir × RecoilKickForward` (radial) + `right × Random(±RecoilKickSide)` (perpendicular).
+- `AimingSystem` decays exponentially via per-weapon `RecoilRecoverySpeed` × ADS modifier (`AdsRecoilRecoveryMultiplier`).
+- `player.WeaponAimPoint = cleanAim + RecoilOffset` — affects headshot detection + projectile direction.
+- Cursor naturally follows via `cam.WorldToScreenPoint(player.WeaponAimPoint)`.
 
 **Subtract-apply pattern** in AimingSystem prevents double-recovery:
 ```
@@ -87,21 +120,7 @@ RecoilOffset = Lerp(RecoilOffset, zero, decay)  // recoil decay (RecoilRecoveryS
 WeaponAimPoint = cleanAim + RecoilOffset         // combine
 ```
 
-ShootingSystem applies kick after firing (both components go through `RecoilOffset`):
-```
-adsRecoilScale = Lerp(1, AdsRecoilMultiplier, AdsBlend)  // reduced in ADS
-recoilMul = RecoilMultiplier * adsRecoilScale
-aimDir = normalize(WeaponAimPoint - PlayerPosition)
-RecoilOffset += aimDir * RecoilKickForward * recoilMul * RecoilForwardMultiplier
-right = perpendicular(aimDir)  // 90deg CW on XZ
-RecoilOffset += right * Random(-RecoilKickSide, +RecoilKickSide) * recoilMul * RecoilSideMultiplier
-```
-
-DevCheats multipliers (all stack):
-- `RecoilMultiplier` — global kick scale
-- `RecoilForwardMultiplier` — forward channel only
-- `RecoilSideMultiplier` — side channel only
-- `RecoilRecoveryMultiplier` — decay speed
+**DevCheats multipliers** (all stack): `RecoilMultiplier` / `RecoilForwardMultiplier` / `RecoilSideMultiplier` / `RecoilRecoveryMultiplier` / `NoRecoil` toggle.
 
 | Weapon | RecoilKickForward | RecoilKickSide | RecoilRecoverySpeed | Behavior |
 |--------|------------------|----------------|---------------------|----------|
@@ -109,103 +128,35 @@ DevCheats multipliers (all stack):
 | Shotgun | 3 | 6 | 3 | Heavy forward kick, noticeable scatter. Mostly recovers between shots. |
 | Pistol | 1.5 | 1 | 4 | Light kick, minimal scatter. Fast recovery between semi-auto shots. |
 
-## Hit Marker System
+## UI cursor swap (inventory mode)
 
-COD-style X-markers on the crosshair, driven by `HitConfirmed` events from `DamageSystem`.
+OS cursor takes over when pointer is over а UI Toolkit panel (inventory window, sub-panel, builder palette, etc.). Game keeps running — player walks, fires when cursor's off UI.
 
-### HitMarker Struct
+| Component | Role |
+|---|---|
+| `PointerOverUiTracker.Update` | Polls `UiPanelHitTest.IsScreenPointOverUi(mouseScreen)` → broadcasts `App.SetPointerOverUi(bool)` → sets `Cursor.visible` |
+| `UiPanelHitTest.IsScreenPointOverUi` | Central hit test, iterates all `UIDocument`s, asks `panel.Pick()` |
+| `UnityInputAdapter.AttackPressed/JustPressed/JustReleased/AdsPressed` | All gated on `!IsPointerOverUi` — clicks on UI never fire weapon |
+| `CrosshairPresenter.LateTick` | Hides v2 reticle canvas when `IsPointerOverUi == true` |
+| `View/InventoryUI.cs` | Tab state machine — toggles `InventoryWindow.Open/Close()` + sets `player.IsInventoryOpen`. Mutually-exclusive з craft. Does NOT block gameplay input. |
 
-```csharp
-struct HitMarker {
-    float time;              // Time.time when created
-    bool isKill;             // target died from this hit
-    bool isHeadshot;         // headshot hit
-    float absorptionRatio;   // 0 = full pen, 1 = full absorption by armor
-    bool isRicochet;         // bullet ricocheted off helmet
-}
-```
+Same-pixel swap is natural — OS cursor appears at the exact mouse position, no warp.
 
-Markers are collected in `LateUpdate()` from `HitConfirmed` events and rendered each `OnGUI()`. Each marker fades out over its duration (alpha = 1 - age/duration).
+## Tunables
 
-### Marker Types
-
-**Regular hit** (white X):
-- 4-arm diagonal X drawn at crosshair center
-- Line length: `HitLineLength` (default 14px) scaled by `HitMarkerScale`
-- Gap starts at `HitGapStart`, expands by `HitGapExpand * t` over lifetime
-- Duration: `HitDuration` (default 0.3s)
-- Color: `HitColor` (default white)
-
-**Kill** (red X):
-- Same shape as hit but larger: `KillLineLength` (default 18px)
-- Duration: `KillDuration` (default 0.5s)
-- Color: `KillColor` (default red `(1, 0.15, 0.15, 1)`)
-
-**Headshot** (gold double-X):
-- Inner X same as kill (uses `KillLineLength`)
-- Outer X at `HeadshotOuterScale` (default 1.25x) with `HeadshotOuterExpandMul` (default 1.62x) faster expansion
-- Outer X alpha = inner alpha * 0.7
-- Duration: `HeadshotDuration` (default 0.5s)
-- Color: `HeadshotColor` (default gold `(1, 0.85, 0.2, 1)`)
-
-**Ricochet** (blue spark):
-- Smaller X: length = `HitLineLength * 0.5`, gap = `HitGapStart * 0.6`, thickness = `HitMarkerThickness * 0.8`
-- No gap expansion (static shape, just fades)
-- Duration: `RicochetDuration` (default 0.2s) — shortest of all markers
-- Color: `RicochetColor` (default blue `(0.5, 0.7, 1, 1)`)
-
-### Proportional Hit Markers (Armor Absorption)
-
-Hit markers scale by armor `absorptionRatio` (0 = full penetration, 1 = full absorption):
-
-**Size scaling**:
-```
-absScale = 1 - absorptionRatio * 0.5   // 1.0 at full pen, 0.5 at full absorption
-lineLen = baseLineLen * scale * absScale
-```
-
-**Color blending** (regular hits only, not kill/headshot):
-```
-color = Lerp(HitColor, ArmorHitColor, absorptionRatio)
-```
-- `ArmorHitColor` default: gray-blue `(0.6, 0.65, 0.7, 1)` — heavily armored hits appear muted and small
-- Kill and headshot colors are never blended (always their distinct color)
-
-### DevCheats Hit Marker Parameters
-
-All in the Crosshair section of `DevCheatsCrosshairSection`:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `HitMarkerScale` | 1.0 | Global scale multiplier for all markers |
-| `HitDuration` | 0.3s | Regular hit fade duration |
-| `KillDuration` | 0.5s | Kill marker fade duration |
-| `HeadshotDuration` | 0.5s | Headshot marker fade duration |
-| `RicochetDuration` | 0.2s | Ricochet spark fade duration |
-| `HitLineLength` | 14px | Regular hit X arm length |
-| `KillLineLength` | 18px | Kill/headshot X arm length |
-| `HitGapStart` | 8px | Initial gap from center |
-| `HitGapExpand` | 14px | Gap expansion over lifetime |
-| `HitMarkerThickness` | 4px | X arm thickness |
-| `HitColor` | White | Regular hit color |
-| `KillColor` | Red `(1, 0.15, 0.15)` | Kill marker color |
-| `HeadshotColor` | Gold `(1, 0.85, 0.2)` | Headshot marker color |
-| `ArmorHitColor` | Gray-blue `(0.6, 0.65, 0.7)` | Armor absorption tint |
-| `RicochetColor` | Blue `(0.5, 0.7, 1)` | Ricochet spark color |
-| `HeadshotOuterScale` | 1.25 | Outer X scale relative to inner |
-| `HeadshotOuterExpandMul` | 1.62 | Outer X gap expansion speed multiplier |
-
-## Technical Notes
-
-- Single `Texture2D(1,1)` white pixel; all colors via `GUI.color`
-- `AmmoSystem.CountReserve()` called as read-only query for no-reserve detection
-- Progress calculations: `elapsed = RaidState.ElapsedTime - weapon.PhaseStartTime`
-- World-to-GUI: `cam.WorldToScreenPoint()` + Y-flip (`Screen.height - screenPos.y`)
+- **`ViewCheatsCrosshairV2Section`** (`Raid → Dev Cheats → View Cheats → Crosshair v2 (SDF)`) — geometry, colors, ADS thresholds, outline, charge gradient (cold/mid/hot), overheat tremble, focus blur, laser ring (segment count / radii / gap / inactive alpha / fire pulse radius), hit pulse profiles (Normal/Kill/Headshot/Ricochet).
+- **`DevCheatsLaserSection`** — `ChargeRatioPower` (curve shape), `ChargeTimeOverrideSeconds` (baseline override), per-delivery charge multipliers, charge damage min/power, shotgun spread/lifetime tunables.
 
 ## Key Files
 
-- `Assets/Scripts/View/AimCursorOverlay.cs` — crosshair rendering
-- `Assets/Scripts/Systems/AimingSystem.cs` — recoil decay (subtract-apply pattern)
-- `Assets/Scripts/Systems/ShootingSystem.cs` — recoil kick application
-- `Assets/Scripts/Dev/Sections/DevCheatsCrosshairSection.cs` — hit marker DevCheats params
-- `Assets/Scripts/Dev/Sections/DevCheatsADSSection.cs` — ADS crosshair params
+- `Assets/Shaders/CrosshairSDF.shader` — single fragment SDF shader (4-arm + dot + reload arc + flame bars + laser segmented ring + hit pulse stubs + outline; branched on `_LaserMode`)
+- `Assets/Resources/Vfx/Materials/Crosshair.mat` — auto-instanced per Canvas
+- `Assets/Resources/Vfx/Prefabs/UI/Crosshair.prefab` — Screen-Space Overlay Canvas + fullscreen RawImage
+- `Assets/Scripts/View/CrosshairPresenter.cs` — plain class, LateTick from `App.LateTick`
+- `Assets/Scripts/View/PointerOverUiTracker.cs` — MonoBehaviour on AppBootstrap; pointer-over-UI broadcast + OS cursor visibility
+- `Assets/Scripts/Dev/Sections/ViewCheatsCrosshairV2Section.cs` — tunables, `HitPulseProfile` struct
+- `Assets/Scripts/Dev/Sections/DevCheatsLaserSection.cs` — laser charge tunables + `EvaluateChargeRatio` helper
+- `Assets/Scripts/Systems/AimingSystem.cs` — recoil decay (subtract-apply)
+- `Assets/Scripts/Systems/ShootingSystem.cs` — recoil kick application + Firing/Cooldown phase transitions
+- `Assets/Scripts/Systems/WeaponChargeResolver.cs` — charge time resolution з override support
+- `Assets/Scripts/View/UI/UiPanelHitTest.cs` — UI panel pick utility
