@@ -68,6 +68,26 @@ namespace View.UI.Inventory
             style.left = panelPos.x;
             style.top  = panelPos.y;
             style.display = DisplayStyle.Flex;
+
+            // Clamp to parent bounds next frame — resolvedStyle.width/height
+            // are 0 until layout runs once. parent.resolvedStyle.height у
+            // panel coords corresponds to the inventory's root viewport.
+            schedule.Execute(() =>
+            {
+                if (parent == null) return;
+                float parentW = parent.resolvedStyle.width;
+                float parentH = parent.resolvedStyle.height;
+                float w = resolvedStyle.width;
+                float h = resolvedStyle.height;
+                if (parentW <= 0f || parentH <= 0f || w <= 0f || h <= 0f) return;
+
+                float left = style.left.value.value;
+                float top  = style.top.value.value;
+                if (left + w > parentW) style.left = parentW - w;
+                if (top  + h > parentH) style.top  = parentH - h;
+                if (style.left.value.value < 0f) style.left = 0f;
+                if (style.top.value.value  < 0f) style.top  = 0f;
+            }).StartingIn(0);
         }
 
         public void Hide()

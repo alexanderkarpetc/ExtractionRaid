@@ -18,6 +18,13 @@ namespace View.UI.Inventory
         public enum SlotKind { Backpack, Equipment }
         public enum SlotSource { Player, Loot, Floor, Stash }
 
+        // Pre-allocated badge labels for the 7 quick-slot keys (3-9). Avoids
+        // a per-frame int.ToString allocation у UpdateQuickSlotBadge.
+        static readonly string[] QuickSlotKeyLabels =
+        {
+            "3", "4", "5", "6", "7", "8", "9",
+        };
+
         public SlotKind Kind { get; }
 
         /// <summary>
@@ -159,9 +166,15 @@ namespace View.UI.Inventory
 
         void UpdateQuickSlotBadge(int quickSlotKey)
         {
+            // quickSlotKey is the displayed key number (3..9) per
+            // InventoryState.QuickSlotKeyOffset.
             bool show = quickSlotKey >= 0;
             _quickSlotKey.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-            if (show) _quickSlotKey.text = quickSlotKey.ToString();
+            if (!show) return;
+            int idx = quickSlotKey - 3;
+            _quickSlotKey.text = (idx >= 0 && idx < QuickSlotKeyLabels.Length)
+                ? QuickSlotKeyLabels[idx]
+                : quickSlotKey.ToString();
         }
 
         void UpdateQuestMarker(ItemState item)

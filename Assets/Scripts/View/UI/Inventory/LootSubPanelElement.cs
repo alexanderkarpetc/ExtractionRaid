@@ -12,13 +12,12 @@ namespace View.UI.Inventory
     /// to the host <see cref="InventoryWindow"/>'s drag/drop manager so the
     /// drag pipeline sees them like any other slot.
     ///
-    /// Source identification is by <see cref="SourceKey"/> — used by the host
-    /// to reconcile sub-panels between refreshes без recreating elements (and
-    /// thereby invalidating any active drag).
+    /// Source identification is by the Dictionary key in <c>InventoryWindow._subPanels</c>
+    /// — sub-panels are reconciled between refreshes without recreating
+    /// elements (so an active drag survives reconcile).
     /// </summary>
     public class LootSubPanelElement : VisualElement
     {
-        public string SourceKey { get; private set; }
         public InventorySlotElement.SlotSource SlotSource { get; private set; }
             = InventorySlotElement.SlotSource.Loot;
         public EId LootableId { get; private set; }
@@ -49,8 +48,6 @@ namespace View.UI.Inventory
             _grid.AddToClassList("inv-subpanel__grid");
             scroll.Add(_grid);
         }
-
-        public void SetSourceKey(string key) => SourceKey = key;
 
         public void SetTitle(string title) => _title.text = title ?? string.Empty;
 

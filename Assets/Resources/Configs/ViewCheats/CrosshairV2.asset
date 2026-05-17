@@ -23,6 +23,12 @@ MonoBehaviour:
   RingRadius: 42
   RingThickness: 3
   EdgeSoftness: 1
+  FocusBlurEnabled: 1
+  BlurMinPx: 1
+  BlurMaxPx: 4
+  BlurRecoilSaturation: 0.724
+  BlurRecoilWeight: 1
+  BlurHipFireAmount: 0.3
   OutlineColor: {r: 0, g: 0, b: 0, a: 1}
   OutlineWidth: 1.8
   AdsTopArmFadeStart: 0.5
@@ -33,10 +39,16 @@ MonoBehaviour:
   ChargeColorMid: {r: 1, g: 0.55586857, b: 0.19999999, a: 1}
   ChargeColorHot: {r: 1, g: 0.3, b: 0.1, a: 1}
   ChargeBarThicknessRatio: 1.2
-  ChargeOverheatThreshold: 0.8
-  ChargeOverheatTremblePx: 3
+  ChargeOverheatThreshold: 0.75
+  ChargeOverheatTremblePx: 5
   ChargeOverheatTrembleFreq: 35
   RollingAlpha: 0.3
+  LaserSegmentCount: 12
+  LaserRingInnerRadius: 35
+  LaserRingOuterRadius: 40
+  LaserSegmentGapDeg: 15
+  LaserInactiveAlpha: 0.22
+  LaserFirePulseRadiusPx: 1
   NormalProfile:
     Color: {r: 1, g: 1, b: 1, a: 1}
     Duration: 0.4

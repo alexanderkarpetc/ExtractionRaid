@@ -47,6 +47,15 @@ namespace View.UI.Inventory
         const string FadingClass = "inv-fading";
         int _fadeGen;
 
+        // Player-pane rebind gate. Skips the 24-slot rebind loop (which
+        // allocates strings via WeaponDisplayName.For + stack-count interp)
+        // when the inventory hasn't been mutated since last bind. Sub-panel
+        // refresh always runs — it depends on player position для distance
+        // filtering of loot/floor. Reset to -1 on Open() to force a fresh
+        // bind. ItemState mutations (stack count change via reload etc) are
+        // NOT covered — those rarely happen while inv window open.
+        int _lastPlayerInvVersion = -1;
+
         VisualElement _equipmentRow;
         VisualElement _backpackGrid;
         InventorySlotElement[] _weaponSlots;
@@ -60,6 +69,10 @@ namespace View.UI.Inventory
         readonly List<GroundItemState> _floorItems = new();
         readonly List<string> _scratchRemoveKeys = new();
 
+        // Scratch HashSet reused each RefreshSubPanels frame instead of new'd
+        // per call (~250-400 B/frame saved). Cleared at the start of each pass.
+        readonly HashSet<string> _scratchWanted = new();
+
         // ── Context menu (right-click) ────────────────────────
         ContextMenuElement _contextMenu;
         readonly List<ContextMenuElement.Option> _scratchOptions = new();
@@ -71,7 +84,6 @@ namespace View.UI.Inventory
         Vector2 _dragStartPanelPos;
         bool _isDragging;
         VisualElement _dragGhost;
-        bool _suppressNextClick;
 
         // ── Hover state (for tooltip + hover-key quick-slot bind) ─
         InventorySlotElement _hoveredSlot;
@@ -122,6 +134,7 @@ namespace View.UI.Inventory
             // USS opacity transition runs (0 → 1). Mirrors WeaponBuilderWindow.
             int gen = ++_fadeGen;
             _isVisible = true;
+            _lastPlayerInvVersion = -1; // force first bind on open
             _root.style.display = DisplayStyle.Flex;
             if (_inner != null) _inner.AddToClassList(FadingClass);
             RefreshAll();
@@ -264,9 +277,24 @@ namespace View.UI.Inventory
             {
                 ClearPlayerSlots();
                 RemoveAllSubPanels();
+                _lastPlayerInvVersion = -1;
                 return;
             }
 
+            // Skip player-pane rebind when inventory hasn't been mutated since
+            // last frame. Sub-panel refresh below always runs (depends on
+            // player position для distance filtering of nearby lootables/floor).
+            if (inventory.Version != _lastPlayerInvVersion)
+            {
+                BindPlayerSlots(inventory, registry);
+                _lastPlayerInvVersion = inventory.Version;
+            }
+
+            RefreshSubPanels(registry);
+        }
+
+        void BindPlayerSlots(InventoryState inventory, Adapters.ICoreDefinitionRegistry registry)
+        {
             for (int i = 0; i < _weaponSlots.Length; i++)
             {
                 var item = i < inventory.WeaponSlots.Length ? inventory.WeaponSlots[i] : null;
@@ -282,8 +310,6 @@ namespace View.UI.Inventory
                 _backpackSlots[i].Bind(InventorySlotRef.BackpackSlot(i),
                     item, FindQuickSlotKey(inventory, i), registry);
             }
-
-            RefreshSubPanels(registry);
         }
 
         void ClearPlayerSlots()
@@ -309,11 +335,11 @@ namespace View.UI.Inventory
             }
             _subPanelsHost.style.display = DisplayStyle.Flex;
 
-            var wanted = new HashSet<string>();
+            _scratchWanted.Clear();
 
             if (App.Instance != null && App.Instance.IsInHideout)
             {
-                BindStashPanel(wanted, registry);
+                BindStashPanel(_scratchWanted, registry);
             }
             else
             {
@@ -321,8 +347,8 @@ namespace View.UI.Inventory
                 var player = state?.PlayerEntity;
                 if (state != null && player != null)
                 {
-                    BindLootablePanels(state, player.Position, wanted, registry);
-                    BindFloorPanel(state, player.Position, wanted, registry);
+                    BindLootablePanels(state, player.Position, _scratchWanted, registry);
+                    BindFloorPanel(state, player.Position, _scratchWanted, registry);
                 }
             }
 
@@ -330,7 +356,7 @@ namespace View.UI.Inventory
             // away, container got cleaned up, hideout returned to raid, etc).
             _scratchRemoveKeys.Clear();
             foreach (var key in _subPanels.Keys)
-                if (!wanted.Contains(key)) _scratchRemoveKeys.Add(key);
+                if (!_scratchWanted.Contains(key)) _scratchRemoveKeys.Add(key);
             foreach (var key in _scratchRemoveKeys)
             {
                 _subPanels[key].RemoveFromHierarchy();
@@ -358,10 +384,11 @@ namespace View.UI.Inventory
         void BindLootablePanels(RaidState state, Vector3 playerPos,
             HashSet<string> wanted, Adapters.ICoreDefinitionRegistry registry)
         {
+            float rangeSqr = LootSystem.LootRange * LootSystem.LootRange;
             for (int li = 0; li < state.Lootables.Count; li++)
             {
                 var lootable = state.Lootables[li];
-                if (Vector3.Distance(playerPos, lootable.Position) > LootSystem.LootRange) continue;
+                if ((lootable.Position - playerPos).sqrMagnitude > rangeSqr) continue;
                 if (lootable.Inventory == null) continue;
 
                 var inv = lootable.Inventory;
@@ -399,10 +426,11 @@ namespace View.UI.Inventory
             HashSet<string> wanted, Adapters.ICoreDefinitionRegistry registry)
         {
             _floorItems.Clear();
+            float rangeSqr = LootSystem.LootRange * LootSystem.LootRange;
             for (int i = 0; i < state.GroundItems.Count; i++)
             {
                 var gi = state.GroundItems[i];
-                if (Vector3.Distance(playerPos, gi.Position) <= LootSystem.LootRange)
+                if ((gi.Position - playerPos).sqrMagnitude <= rangeSqr)
                     _floorItems.Add(gi);
             }
             if (_floorItems.Count == 0) return;
@@ -431,7 +459,6 @@ namespace View.UI.Inventory
             if (!_subPanels.TryGetValue(key, out var panel))
             {
                 panel = new LootSubPanelElement(WireSlotInteractions);
-                panel.SetSourceKey(key);
                 _subPanels[key] = panel;
                 _subPanelsHost.Add(panel);
             }
@@ -552,12 +579,19 @@ namespace View.UI.Inventory
                         inv.QuickSlotBindings[i] = -1;
 
                 inv.QuickSlotBindings[qi] = backpackIndex;
+                inv.Version++; // hotbar badge cache invalidate
                 break;
             }
         }
 
         void OnSlotPointerDown(InventorySlotElement slot, PointerDownEvent evt)
         {
+            // Ignore input during fade-out — window's `_root` still has
+            // display:Flex while opacity transitions, so pointer events can
+            // technically fire. Starting a drag here would orphan the ghost
+            // when Close()'s scheduled callback collapses display.
+            if (!_isVisible) return;
+
             if (evt.button == 1)
             {
                 ShowContextMenu(slot, evt.position);
@@ -673,6 +707,7 @@ namespace View.UI.Inventory
                 if (inv.QuickSlotBindings[i] == backpackIndex)
                     inv.QuickSlotBindings[i] = -1;
             inv.QuickSlotBindings[qi] = backpackIndex;
+            inv.Version++; // hotbar badge у slot view depends on bindings — invalidate cache
         }
 
         void CtxUnbindQuickSlot(int qi)
@@ -681,6 +716,7 @@ namespace View.UI.Inventory
             if (inv == null) return;
             if (qi < 0 || qi >= inv.QuickSlotBindings.Length) return;
             inv.QuickSlotBindings[qi] = -1;
+            inv.Version++;
         }
 
         void CtxDropPlayer(InventorySlotElement slot)
@@ -720,16 +756,9 @@ namespace View.UI.Inventory
             var lootInv = ResolveLootInventory(slot.SourceLootableId);
             if (session == null || state == null || player == null || lootInv == null) return;
 
-            var item = lootInv.GetSlot(slot.SlotRef);
-            if (item == null) return;
-
-            lootInv.SetSlot(slot.SlotRef, null);
             var dropPos = player.Position + player.FacingDirection * 1.5f;
-            var ground = item.HasWeaponConfiguration
-                ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPos, item.WeaponConfiguration)
-                : GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
-            state.GroundItems.Add(ground);
-            session.ConsumeEvents().GroundItemSpawned(ground.Id, ground.Position, ground.DefinitionId);
+            InventorySystem.TryDrop(state, lootInv, slot.SlotRef, dropPos,
+                session.ConsumeEvents());
         }
 
         void CtxPickUpFromFloor(InventorySlotElement slot)
@@ -780,7 +809,6 @@ namespace View.UI.Inventory
                 TryDropOnSlot(evt.position);
                 DestroyGhost();
                 ClearAllSlotHover();
-                _suppressNextClick = true;
             }
 
             _draggedSlot   = null;
@@ -805,10 +833,9 @@ namespace View.UI.Inventory
                 _draggedSlot.ReleasePointer(_dragPointerId);
             DestroyGhost();
             ClearAllSlotHover();
-            _draggedSlot       = null;
-            _dragPointerId     = -1;
-            _isDragging        = false;
-            _suppressNextClick = false;
+            _draggedSlot   = null;
+            _dragPointerId = -1;
+            _isDragging    = false;
         }
 
         // ── Drop / hover detection ────────────────────────────
@@ -818,12 +845,15 @@ namespace View.UI.Inventory
             if (_draggedSlot == null) return;
             var target = SlotUnder(panelPos);
 
-            // Drop outside any slot → either silent cancel (drop hit inventory UI
-            // area like window body / sub-panel gap) або drop-to-ground/stash
-            // (drop completely outside UI, на dim backdrop'і).
+            // Drop outside any slot → either silent cancel (drop landed on ANY
+            // UTK panel — inv body, sub-panel gap, Builder palette, hotbar,
+            // tooltip etc) or drop-to-ground/stash (drop completely outside
+            // pick-enabled UI). Uses panel.Pick across all live docs so future
+            // modals automatically count as "do not drop here".
             if (target == null)
             {
-                if (IsInsideUiArea(panelPos)) return;
+                Vector2 mouseScreen = UnityEngine.InputSystem.Mouse.current?.position.ReadValue() ?? Vector2.zero;
+                if (UiPanelHitTest.IsScreenPointOverUi(mouseScreen)) return;
                 DropOutsideSlot();
                 return;
             }
@@ -856,6 +886,7 @@ namespace View.UI.Inventory
                 {
                     case InventorySlotElement.SlotSource.Loot:
                     {
+                        if (!IsLootableInRange(tgt.SourceLootableId)) return false;
                         var lootInv = ResolveLootInventory(tgt.SourceLootableId);
                         return lootInv != null &&
                                LootSystem.TryTransfer(playerInv, src.SlotRef, lootInv, tgt.SlotRef);
@@ -876,6 +907,7 @@ namespace View.UI.Inventory
                 {
                     case InventorySlotElement.SlotSource.Loot:
                     {
+                        if (!IsLootableInRange(src.SourceLootableId)) return false;
                         var lootInv = ResolveLootInventory(src.SourceLootableId);
                         return lootInv != null &&
                                LootSystem.TryTransfer(lootInv, src.SlotRef, playerInv, tgt.SlotRef);
@@ -894,11 +926,30 @@ namespace View.UI.Inventory
                 tgt.Source == InventorySlotElement.SlotSource.Loot &&
                 src.SourceLootableId == tgt.SourceLootableId)
             {
+                if (!IsLootableInRange(src.SourceLootableId)) return false;
                 var lootInv = ResolveLootInventory(src.SourceLootableId);
                 return lootInv != null && InventorySystem.TryMove(lootInv, src.SlotRef, tgt.SlotRef);
             }
 
             return false;
+        }
+
+        // Re-check at drop time that the lootable is still within LootRange. UI
+        // sub-panels are reconciled to keep nearby-only, але mid-drag refresh
+        // is skipped (RefreshAll early-out on _isDragging), тож player може
+        // walk out of range while a drag is in flight. Без цієї гарантії
+        // TryTransfer would succeed against an out-of-range container.
+        bool IsLootableInRange(EId lootableId)
+        {
+            var state  = App.Instance?.RaidSession?.RaidState;
+            var player = state?.PlayerEntity;
+            if (state == null || player == null) return false;
+            var lootable = LootSystem.GetLootable(state, lootableId);
+            if (lootable == null) return false;
+
+            var d = lootable.Position - player.Position;
+            float r = LootSystem.LootRange;
+            return d.sqrMagnitude <= r * r;
         }
 
         InventoryState ResolveLootInventory(EId lootableId)
@@ -908,56 +959,28 @@ namespace View.UI.Inventory
             return LootSystem.GetLootable(state, lootableId)?.Inventory;
         }
 
-        bool PushToStash(InventoryState playerInv, InventorySlotRef src)
-        {
-            var item = playerInv.GetSlot(src);
-            if (item == null) return false;
-            var stash = App.Instance?.Player?.Stash;
-            if (stash == null) return false;
-            playerInv.SetSlot(src, null);
-            stash.Add(item);
-            return true;
-        }
+        // Thin View-side adapters that route to the System layer. State
+        // mutations + event emission live у StashSystem / InventorySystem —
+        // View contains no gameplay rules (CLAUDE.md §3.10).
 
-        bool PullFromStash(int stashIndex, InventoryState playerInv, InventorySlotRef tgt)
-        {
-            var stash = App.Instance?.Player?.Stash;
-            if (stash == null || stashIndex < 0 || stashIndex >= stash.Count) return false;
-            var item = stash[stashIndex];
-            if (item?.Definition == null) return false;
-            if ((item.Definition.AllowedSlots & tgt.ToItemSlotType()) == 0) return false;
-            if (playerInv.GetSlot(tgt) != null) return false;
-            playerInv.SetSlot(tgt, item);
-            stash.RemoveAt(stashIndex);
-            return true;
-        }
+        static bool PushToStash(InventoryState playerInv, InventorySlotRef src) =>
+            StashSystem.TryDeposit(playerInv, App.Instance?.Player?.Stash, src);
+
+        static bool PullFromStash(int stashIndex, InventoryState playerInv, InventorySlotRef tgt) =>
+            StashSystem.TryWithdraw(App.Instance?.Player?.Stash, stashIndex, playerInv, tgt);
 
         bool PickUpFloorTo(int floorIndex, InventorySlotRef tgt)
         {
             if (floorIndex < 0 || floorIndex >= _floorItems.Count) return false;
             var gi = _floorItems[floorIndex];
-            var def = ItemDefinition.Get(gi.DefinitionId);
-            if (def == null || (def.AllowedSlots & tgt.ToItemSlotType()) == 0) return false;
 
             var playerInv = App.Instance?.Player?.Inventory;
             var session   = App.Instance?.RaidSession;
             var state     = session?.RaidState;
             if (playerInv == null || state == null) return false;
-            if (playerInv.GetSlot(tgt) != null) return false;
 
-            var item = gi.HasWeaponConfiguration
-                ? ItemState.CreateWeapon(gi.Id, gi.DefinitionId, gi.WeaponConfiguration)
-                : ItemState.Create(gi.Id, gi.DefinitionId, gi.StackCount);
-            playerInv.SetSlot(tgt, item);
-
-            for (int i = 0; i < state.GroundItems.Count; i++)
-            {
-                if (state.GroundItems[i].Id != gi.Id) continue;
-                state.GroundItems.RemoveAt(i);
-                break;
-            }
-            session.ConsumeEvents().GroundItemDespawned(gi.Id);
-            return true;
+            return InventorySystem.TryPickUpToSlot(state, playerInv, gi.Id, tgt,
+                session.ConsumeEvents());
         }
 
         void DropOutsideSlot()
@@ -998,18 +1021,6 @@ namespace View.UI.Inventory
                 if (s.worldBound.Contains(panelPos)) return s;
             }
             return null;
-        }
-
-        // True if panelPos sits within ANY inventory UI surface — the main
-        // window, або одна з floating sub-panels. Used to gate drop-to-ground:
-        // dropping into UI dead space (header/body padding, sub-panel gap)
-        // має сильно відрізнятися від dropping onto the dim backdrop за UI.
-        bool IsInsideUiArea(Vector2 panelPos)
-        {
-            if (_window != null && _window.worldBound.Contains(panelPos)) return true;
-            foreach (var panel in _subPanels.Values)
-                if (panel.worldBound.Contains(panelPos)) return true;
-            return false;
         }
 
         void UpdateSlotHover(Vector2 panelPos)

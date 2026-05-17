@@ -13,6 +13,14 @@ namespace State
         public ItemState[] Backpack = new ItemState[BackpackSize];
         public int[] QuickSlotBindings = { -1, -1, -1, -1, -1, -1, -1 };
 
+        /// <summary>
+        /// Mutation counter bumped by <see cref="SetSlot"/> + Systems that touch
+        /// backpack arrays directly. Views compare this against a cached value
+        /// to gate per-frame rebinds — when unchanged, skip the rebind work.
+        /// Wraps naturally if a player ever triggers 2bn mutations у one session.
+        /// </summary>
+        public int Version;
+
         public ItemState GetSlot(InventorySlotRef slot)
         {
             return slot.Type switch
@@ -42,6 +50,7 @@ namespace State
                     Backpack[slot.Index] = item;
                     break;
             }
+            Version++;
         }
 
         public int FindFreeBackpackSlot()

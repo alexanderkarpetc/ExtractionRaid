@@ -60,6 +60,7 @@ namespace Systems
 
                 state.GroundItems.RemoveAt(groundIndex);
                 events.GroundItemDespawned(groundItemId);
+                inventory.Version++; // direct backpack mutation above — bump version manually
                 return true;
             }
 
@@ -72,6 +73,52 @@ namespace Systems
                 ? ItemState.CreateWeapon(groundItem.Id, groundItem.DefinitionId, groundItem.WeaponConfiguration)
                 : ItemState.Create(groundItem.Id, groundItem.DefinitionId);
             inventory.Backpack[free] = item;
+            state.GroundItems.RemoveAt(groundIndex);
+            events.GroundItemDespawned(groundItemId);
+            inventory.Version++;
+            return true;
+        }
+
+        /// <summary>
+        /// Pick up a ground item directly into a specific player slot
+        /// (vs <see cref="TryPickUp"/> which auto-picks first free backpack slot
+        /// + stacks). Used by UI drag-drop of floor items onto a chosen slot.
+        ///
+        /// Validates the ground item's definition AllowedSlots against the
+        /// target slot type. Requires the target slot to be empty (no swap).
+        /// On success: removes the ground item, creates the ItemState у target
+        /// slot, fires <c>GroundItemDespawned</c>.
+        /// </summary>
+        public static bool TryPickUpToSlot(RaidState state, InventoryState inventory,
+            EId groundItemId, InventorySlotRef targetSlot, IRaidEvents events)
+        {
+            if (state == null || inventory == null) return false;
+
+            GroundItemState groundItem = null;
+            int groundIndex = -1;
+            for (int i = 0; i < state.GroundItems.Count; i++)
+            {
+                if (state.GroundItems[i].Id == groundItemId)
+                {
+                    groundItem = state.GroundItems[i];
+                    groundIndex = i;
+                    break;
+                }
+            }
+            if (groundItem == null) return false;
+
+            var def = ItemDefinition.Get(groundItem.DefinitionId);
+            if (def == null) return false;
+
+            var slotType = targetSlot.ToItemSlotType();
+            if ((def.AllowedSlots & slotType) == 0) return false;
+            if (inventory.GetSlot(targetSlot) != null) return false;
+
+            var item = groundItem.HasWeaponConfiguration
+                ? ItemState.CreateWeapon(groundItem.Id, groundItem.DefinitionId, groundItem.WeaponConfiguration)
+                : ItemState.Create(groundItem.Id, groundItem.DefinitionId, groundItem.StackCount);
+
+            inventory.SetSlot(targetSlot, item);
             state.GroundItems.RemoveAt(groundIndex);
             events.GroundItemDespawned(groundItemId);
             return true;

@@ -8,99 +8,98 @@ using View.UI.WeaponBuilder;
 namespace View
 {
     /// <summary>
-    /// Maps player gameplay state (Tab toggle, LootTargetId, BuilderTargetId,
-    /// CraftTargetId) to <see cref="InventoryWindow"/> open/close. Inventory is
-    /// canonical UI Toolkit since Stage 5 — the legacy uGUI LootPopupView is
-    /// gone. Inventory does NOT block gameplay input: player keeps walking +
-    /// shooting (when cursor's not over UI — gated у IInputAdapter through
-    /// IsPointerOverUi flag set by AimCursorOverlay).
+    /// Bridges player gameplay state to <see cref="InventoryWindow"/> open/close.
+    /// Inventory is canonical UI Toolkit since Stage 5; the legacy uGUI popup is
+    /// gone. Inventory does NOT block gameplay input — player keeps walking and
+    /// (when cursor's off UI) shooting. Attack/ADS gating happens у
+    /// IInputAdapter through the IsPointerOverUi flag set by AimCursorOverlay.
+    ///
+    /// State machine:
+    ///   isOpen = !craft && (openedByTab || lootActive || builderOpen)
+    /// — single boolean (`_openedByTab`) tracks user-intent open; loot/builder
+    /// pull authoritative open-reasons from PlayerEntityState; craft is
+    /// mutually-exclusive and forces close.
     /// </summary>
     public class InventoryUI : MonoBehaviour
     {
-        bool _isOpen;
-        bool _openedByLoot;
-        bool _openedByBuilder;
+        // User-intent flag set by Tab toggle. Cleared by Tab (close), X-button
+        // (external close via InventoryWindow), or craft starting.
+        bool _openedByTab;
+
+        // Snapshot of last frame's effective open state — needed to detect when
+        // the window closed externally (e.g. user clicked X) so we mirror that
+        // back into our state (clear loot/tab flags) instead of re-opening.
+        bool _wasOpen;
 
         void Update()
         {
             var session = App.Instance?.RaidSession;
-            var player = session?.RaidState?.PlayerEntity;
+            var player  = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
-            // UTK window's IsOpen is authoritative for user-initiated close
-            // (the X button). If it dropped while we still think we're open,
-            // mirror that intent here — clear LootTargetId, drop _isOpen — so
-            // we don't immediately re-open the window further down.
-            if (_isOpen && InventoryWindow.Instance != null && !InventoryWindow.Instance.IsOpen)
+            var window      = InventoryWindow.Instance;
+            bool windowOpen = window != null && window.IsOpen;
+            bool builderOpen = player.BuilderTargetId != EId.None;
+            bool lootActive  = player.LootTargetId   != EId.None;
+            bool craftActive = player.CraftTargetId  != EId.None;
+
+            // External close (X button on window): drop all our open-reasons
+            // so the derived isOpen below evaluates to false and we don't
+            // immediately re-open the window. Also clear LootTargetId — closing
+            // inv via X cancels the looting session, same as Tab close.
+            if (_wasOpen && !windowOpen)
             {
-                _isOpen = false;
-                _openedByLoot = false;
+                _openedByTab = false;
                 player.LootTargetId = EId.None;
+                lootActive = false;
             }
 
-            bool builderOpen = player.BuilderTargetId != EId.None;
-
+            // Tab handling.
             var kb = Keyboard.current;
-            if (kb != null && kb[Key.Tab].wasPressedThisFrame)
+            bool tabPressed = kb != null && kb[Key.Tab].wasPressedThisFrame;
+            if (tabPressed)
             {
                 if (builderOpen)
                 {
-                    // Tab is the universal "close everything" key. While Builder
-                    // is open it tears down the modal — Builder.Close clears
-                    // BuilderTargetId, and the next Update sees !builderOpen and
-                    // closes the inventory window naturally.
+                    // Tab while Builder open = "close everything" — closing
+                    // Builder clears BuilderTargetId → builderOpen=false next
+                    // frame → inv derives closed naturally.
                     WeaponBuilderWindow.Instance?.Close();
                 }
-                else if (_isOpen)
+                else if (_openedByTab || lootActive)
                 {
-                    _isOpen = false;
-                    _openedByLoot = false;
+                    // Currently open (any reason except builder) — Tab closes.
+                    _openedByTab = false;
                     player.LootTargetId = EId.None;
+                    lootActive = false;
                 }
                 else
                 {
-                    _isOpen = true;
+                    // Closed — Tab opens. Cancel craft (legacy: Tab cancels craft).
+                    _openedByTab = true;
                     player.CraftTargetId = EId.None;
+                    craftActive = false;
                 }
             }
 
-            if (player.CraftTargetId != EId.None && _isOpen)
+            // Craft is mutually-exclusive — cancels every open-reason. If craft
+            // started externally while inv was open, inv closes.
+            if (craftActive)
             {
-                _isOpen = false;
-                _openedByLoot = false;
+                _openedByTab = false;
+                player.LootTargetId = EId.None;
+                lootActive = false;
             }
 
-            if (player.LootTargetId != EId.None && !_isOpen)
-            {
-                _isOpen = true;
-                _openedByLoot = true;
-            }
+            // Derive authoritative open state.
+            bool isOpen = !craftActive && (_openedByTab || lootActive || builderOpen);
+            _wasOpen = isOpen;
 
-            if (player.LootTargetId == EId.None && _openedByLoot)
-            {
-                _isOpen = false;
-                _openedByLoot = false;
-            }
+            player.IsInventoryOpen = isOpen;
 
-            // Builder side-by-side: BuilderTargetId drives the inventory window
-            // open/close in lockstep with the Builder modal.
-            if (builderOpen && !_isOpen)
-            {
-                _isOpen = true;
-                _openedByBuilder = true;
-            }
-            else if (!builderOpen && _openedByBuilder)
-            {
-                _isOpen = false;
-                _openedByBuilder = false;
-            }
-
-            player.IsInventoryOpen = _isOpen;
-
-            var window = InventoryWindow.Instance;
             if (window == null) return;
-            if (_isOpen && !window.IsOpen)       window.Open();
-            else if (!_isOpen && window.IsOpen)  window.Close();
+            if (isOpen && !windowOpen)       window.Open();
+            else if (!isOpen && windowOpen)  window.Close();
         }
     }
 }

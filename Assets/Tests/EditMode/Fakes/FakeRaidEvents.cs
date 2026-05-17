@@ -45,8 +45,21 @@ namespace Tests.EditMode.Fakes
             EntityDiedKillerId = killerId;
         }
 
-        public void GroundItemSpawned(EId id, Vector3 position, string definitionId) { }
-        public void GroundItemDespawned(EId id) { }
+        public bool GroundItemSpawnedCalled;
+        public EId GroundItemSpawnedId;
+        public bool GroundItemDespawnedCalled;
+        public EId GroundItemDespawnedId;
+
+        public void GroundItemSpawned(EId id, Vector3 position, string definitionId)
+        {
+            GroundItemSpawnedCalled = true;
+            GroundItemSpawnedId = id;
+        }
+        public void GroundItemDespawned(EId id)
+        {
+            GroundItemDespawnedCalled = true;
+            GroundItemDespawnedId = id;
+        }
 
         public bool BotSpawnedCalled;
         public EId BotSpawnedId;

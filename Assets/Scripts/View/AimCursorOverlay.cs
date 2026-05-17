@@ -6,7 +6,7 @@ using State;
 using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
+using View.UI;
 
 namespace View
 {
@@ -52,14 +52,10 @@ namespace View
         // ADS visual interpolant
         float _adsAmount;
 
-        // Cached UIDocument list — refreshed lazily. Used per-frame to detect
-        // whether the OS cursor sits on a pick-enabled UI Toolkit element.
-        UIDocument[] _utkDocsCache;
-        int _utkDocsCacheFrame = -1;
-
-        // True when OS cursor is over any UI Toolkit panel (inv / Builder / hotbar /
-        // tooltip etc). Drives Cursor.visible + crosshair-draw skip + attack input
-        // gating via IInputAdapter.IsPointerOverUi.
+        // True when OS cursor is over any UI Toolkit panel (inv / Builder /
+        // hotbar / tooltip etc). Drives Cursor.visible + crosshair-draw skip +
+        // attack input gating via IInputAdapter.IsPointerOverUi. Detection
+        // logic shared with InventoryWindow via UiPanelHitTest utility.
         bool _pointerOverUi;
 
         // Colors (non-configurable)
@@ -82,46 +78,11 @@ namespace View
             bool inGameplay = player != null;
             bool inMenu = player != null && player.IsInMenu;
 
-            _pointerOverUi = inGameplay && IsPointerOverAnyUtkPanel();
+            Vector2 mouseScreen = Mouse.current?.position.ReadValue() ?? Vector2.zero;
+            _pointerOverUi = inGameplay && UiPanelHitTest.IsScreenPointOverUi(mouseScreen);
             App.Instance?.SetPointerOverUi(_pointerOverUi);
 
             UnityEngine.Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled || inMenu || _pointerOverUi;
-        }
-
-        // Hit-test the OS mouse position against every active UI Toolkit panel.
-        // Returns true when Pick finds any element — backdrop'и з picking-mode=Ignore
-        // pass through, тож тільки реальний UI (window/sub-panel/slot/button) тригерить.
-        bool IsPointerOverAnyUtkPanel()
-        {
-            var mouse = Mouse.current;
-            if (mouse == null) return false;
-            Vector2 screenPos = mouse.position.ReadValue();
-
-            int frame = Time.frameCount;
-            if (_utkDocsCacheFrame != frame || _utkDocsCache == null)
-            {
-                _utkDocsCache = Object.FindObjectsByType<UIDocument>(
-                    FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-                _utkDocsCacheFrame = frame;
-            }
-
-            foreach (var doc in _utkDocsCache)
-            {
-                var root = doc != null ? doc.rootVisualElement : null;
-                if (root == null) continue;
-                if (root.resolvedStyle.display == DisplayStyle.None) continue;
-                var panel = root.panel;
-                if (panel == null) continue;
-
-                // Convert screen → panel-coords (handles ScaleWithScreenSize +
-                // Y-flip; UI Toolkit panel origin is top-left, Input.mousePosition
-                // is bottom-left).
-                Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
-                    new Vector2(screenPos.x, Screen.height - screenPos.y));
-
-                if (panel.Pick(panelPos) != null) return true;
-            }
-            return false;
         }
 
         void LateUpdate()
