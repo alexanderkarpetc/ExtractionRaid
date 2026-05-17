@@ -10,14 +10,17 @@ using View.UI.WeaponBuilder;
 namespace View
 {
     /// <summary>
-    /// Workbenches now open a small dialogue (reusing <see cref="NpcDialogueWindow"/>)
-    /// instead of jumping straight into the recipe / builder popup. Choices depend on
-    /// <see cref="WorkbenchKind"/>:
-    ///   * Crafting     → "Craft", "Upgrade (coming soon)", "Exit"
-    ///   * WeaponBuilder → "Build Weapon", "Upgrade (coming soon)", "Exit"
-    /// Picking an action hides the dialogue and opens the matching modal; closing the
-    /// modal returns to the dialogue if the player is still standing at the workbench.
-    /// Exit clears <see cref="PlayerEntityState.CraftTargetId"/> which tears everything down.
+    /// Interactable buildings now open a small dialogue (reusing <see cref="NpcDialogueWindow"/>)
+    /// instead of jumping straight into a popup. The choice list depends on the
+    /// building's <see cref="BuildingKind"/>:
+    ///   * Crafting       → "Craft" → CraftPopupView
+    ///   * WeaponBuilder  → "Build Weapon" → WeaponBuilderWindow
+    ///   * Stash / Supply / MedStation / QuestTerminal → placeholder log actions until
+    ///     per-kind UIs land.
+    /// Each kind also gets an "Upgrade … (coming soon)" placeholder and an "Exit"
+    /// choice. Picking an action that opens a modal hides the dialogue and returns
+    /// to it when the modal closes (if the player is still standing at the building).
+    /// "Exit" clears <see cref="PlayerEntityState.CraftTargetId"/>, tearing everything down.
     /// </summary>
     public class BuildingDialoguePresenter : MonoBehaviour
     {
@@ -85,51 +88,71 @@ namespace View
             var wb = FindWorkbench(state, workbenchId);
             if (wb == null) return;
 
-            string title = wb.Kind switch
-            {
-                WorkbenchKind.WeaponBuilder => "Weapon Builder",
-                _                           => "Workbench",
-            };
-            string intro = wb.Kind switch
-            {
-                WorkbenchKind.WeaponBuilder => "Modules in, weapon out. What do you want to assemble?",
-                _                           => "Pick a recipe and I'll fire up the bench.",
-            };
-
             var choices = new List<NpcDialogueWindow.Choice>();
+            string title;
+            string intro;
 
-            if (wb.Kind == WorkbenchKind.WeaponBuilder)
+            switch (wb.Kind)
             {
-                choices.Add(new NpcDialogueWindow.Choice
-                {
-                    Label = "Build Weapon",
-                    OnClick = OpenWeaponBuilder,
-                });
+                case BuildingKind.WeaponBuilder:
+                    title = "Weapon Builder";
+                    intro = "Modules in, weapon out. What do you want to assemble?";
+                    choices.Add(Choice("Build Weapon", OpenWeaponBuilder));
+                    choices.Add(Placeholder("Upgrade / Build (coming soon)", "upgrade-weapon-builder"));
+                    break;
+
+                case BuildingKind.Stash:
+                    title = "Stash";
+                    intro = "Your gear, safe and sound. What needs sorting?";
+                    choices.Add(Placeholder("Open Stash (coming soon)", "open-stash"));
+                    choices.Add(Placeholder("Upgrade Stash (coming soon)", "upgrade-stash"));
+                    break;
+
+                case BuildingKind.SupplyTerminal:
+                    title = "Supply Terminal";
+                    intro = "Drop what you don't need. The market's always open.";
+                    choices.Add(Placeholder("Sell Items (coming soon)", "open-supply-terminal"));
+                    choices.Add(Placeholder("Upgrade Terminal (coming soon)", "upgrade-supply-terminal"));
+                    break;
+
+                case BuildingKind.MedStation:
+                    title = "Med Station";
+                    intro = "Patch up before your next run.";
+                    choices.Add(Placeholder("Heal Up (coming soon)", "open-med-station"));
+                    choices.Add(Placeholder("Upgrade Station (coming soon)", "upgrade-med-station"));
+                    break;
+
+                case BuildingKind.QuestTerminal:
+                    title = "Quest Terminal";
+                    intro = "Open contracts and active jobs, all in one place.";
+                    choices.Add(Placeholder("Browse Quests (coming soon)", "open-quest-terminal"));
+                    choices.Add(Placeholder("Upgrade Terminal (coming soon)", "upgrade-quest-terminal"));
+                    break;
+
+                default: // Crafting
+                    title = "Workbench";
+                    intro = "Pick a recipe and I'll fire up the bench.";
+                    choices.Add(Choice("Craft", OpenCraftPopup));
+                    choices.Add(Placeholder("Upgrade Workbench (coming soon)", "upgrade-workbench"));
+                    break;
             }
-            else
-            {
-                choices.Add(new NpcDialogueWindow.Choice
-                {
-                    Label = "Craft",
-                    OnClick = OpenCraftPopup,
-                });
-            }
 
-            // Placeholder for the next step — wired-up later. Logs so it's obvious in tests.
-            choices.Add(new NpcDialogueWindow.Choice
-            {
-                Label = "Upgrade / Build (coming soon)",
-                OnClick = () => Debug.Log("[BuildingDialogue] Upgrade/Build placeholder — not yet implemented."),
-            });
-
-            choices.Add(new NpcDialogueWindow.Choice
-            {
-                Label = "Exit",
-                OnClick = ExitDialogue,
-            });
-
+            choices.Add(Choice("Exit", ExitDialogue));
             _window.Show(title, intro, choices);
         }
+
+        // Small builders to keep the switch readable. Placeholder logs a stable tag so
+        // future grep / analytics can pinpoint which button is being clicked before it's
+        // hooked up to real behavior.
+        static NpcDialogueWindow.Choice Choice(string label, System.Action onClick) =>
+            new() { Label = label, OnClick = onClick };
+
+        static NpcDialogueWindow.Choice Placeholder(string label, string tag) =>
+            new()
+            {
+                Label = label,
+                OnClick = () => Debug.Log($"[BuildingDialogue] Placeholder '{tag}' — not yet implemented."),
+            };
 
         void OpenCraftPopup()
         {

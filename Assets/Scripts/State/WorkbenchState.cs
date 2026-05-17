@@ -6,10 +6,10 @@ namespace State
     {
         public EId Id;
         public Vector3 Position;
-        public WorkbenchKind Kind;
+        public BuildingKind Kind;
 
         public static WorkbenchState Create(EId id, Vector3 position,
-            WorkbenchKind kind = WorkbenchKind.Crafting)
+            BuildingKind kind = BuildingKind.Crafting)
         {
             return new WorkbenchState
             {
