@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="InventoryWindow.uss" />
+    <!-- Backdrop is picking-Ignore so pointer events still reach the world / hotbar
+         beneath the open inventory. Window itself stays default-pickable.
+         Layout: backdrop column-flexes the `inner` block to the LEFT of the screen
+         (matches legacy uGUI inventory anchoring). `inner` is a horizontal row of
+         (main window) + (floating sub-panels host) — sub-panels show one card per
+         source (lootable / corpse / floor / hideout stash). -->
+    <ui:VisualElement name="backdrop" picking-mode="Ignore" class="inv-backdrop">
+        <ui:VisualElement name="inner" class="inv-inner">
+
+            <ui:VisualElement name="window" class="inv-window">
+
+                <ui:VisualElement name="header" class="inv-header">
+                    <ui:Label text="Inventory" class="inv-title" />
+                    <ui:Button name="closeBtn" text="×" class="inv-close-btn" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="body" class="inv-body">
+                    <ui:VisualElement name="playerPane" class="inv-pane inv-pane--player">
+                        <ui:Label text="EQUIPMENT" class="inv-section-heading" />
+                        <ui:VisualElement name="equipmentRow" class="inv-equipment-row" />
+
+                        <ui:Label text="BACKPACK" class="inv-section-heading" />
+                        <ui:VisualElement name="backpackGrid" class="inv-backpack-grid" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <ui:VisualElement name="subPanels" class="inv-subpanels" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,8 +1,10 @@
 using ApplicationCore;
+using Dev;
 using State;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using View.UI;
+using View.UI.Inventory;
 using View.UI.WeaponBuilder;
 
 namespace View
@@ -83,8 +85,27 @@ namespace View
             player.IsInventoryOpen = _isOpen;
             App.Instance.SetGameplayInputBlocked(_isOpen);
 
-            if (HasLootPopup())
+            // Migration switch — when on, the new UI Toolkit InventoryWindow drives
+            // visibility and the legacy uGUI popup стай closed. When off, the legacy
+            // path remains canonical. Stage 0 = skeleton-only on the UTK side.
+            if (DevCheats.UseUiToolkitInventory)
+                SyncUiToolkitWindow();
+            else if (HasLootPopup())
                 SyncLootPopup(session.RaidState, player);
+        }
+
+        void SyncUiToolkitWindow()
+        {
+            var window = InventoryWindow.Instance;
+            if (window == null) return;
+
+            // Make sure the legacy popup is shut while UTK path owns the screen,
+            // в т.ч. на момент перемикання тогла наживо.
+            if (HasLootPopup() && _popupManager.IsOpen(_lootPopupView))
+                _popupManager.Close();
+
+            if (_isOpen && !window.IsOpen)       window.Open();
+            else if (!_isOpen && window.IsOpen)  window.Close();
         }
 
         bool HasLootPopup()

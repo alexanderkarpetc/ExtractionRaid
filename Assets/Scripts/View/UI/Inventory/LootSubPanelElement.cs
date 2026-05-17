@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using State;
+using UnityEngine.UIElements;
+
+namespace View.UI.Inventory
+{
+    /// <summary>
+    /// One floating sub-panel next to the main inventory window. Represents a
+    /// single loot source — nearby lootable container, corpse, floor items, or
+    /// hideout stash. Owns its own slot pool grown on demand; slots are wired
+    /// to the host <see cref="InventoryWindow"/>'s drag/drop manager so the
+    /// drag pipeline sees them like any other slot.
+    ///
+    /// Source identification is by <see cref="SourceKey"/> — used by the host
+    /// to reconcile sub-panels between refreshes без recreating elements (and
+    /// thereby invalidating any active drag).
+    /// </summary>
+    public class LootSubPanelElement : VisualElement
+    {
+        public string SourceKey { get; private set; }
+        public InventorySlotElement.SlotSource SlotSource { get; private set; }
+            = InventorySlotElement.SlotSource.Loot;
+        public EId LootableId { get; private set; }
+
+        readonly Label _title;
+        readonly VisualElement _grid;
+        readonly List<InventorySlotElement> _slots = new();
+        readonly Action<InventorySlotElement> _wire;
+
+        public IReadOnlyList<InventorySlotElement> Slots => _slots;
+
+        public LootSubPanelElement(Action<InventorySlotElement> wireInteractions)
+        {
+            _wire = wireInteractions;
+            AddToClassList("inv-subpanel");
+
+            _title = new Label();
+            _title.AddToClassList("inv-subpanel__title");
+            Add(_title);
+
+            var scroll = new ScrollView { mode = ScrollViewMode.Vertical };
+            scroll.AddToClassList("inv-subpanel__scroll");
+            scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            scroll.verticalScrollerVisibility   = ScrollerVisibility.Auto;
+            Add(scroll);
+
+            _grid = new VisualElement();
+            _grid.AddToClassList("inv-subpanel__grid");
+            scroll.Add(_grid);
+        }
+
+        public void SetSourceKey(string key) => SourceKey = key;
+
+        public void SetTitle(string title) => _title.text = title ?? string.Empty;
+
+        public void SetSourceMeta(InventorySlotElement.SlotSource source, EId lootableId)
+        {
+            SlotSource = source;
+            LootableId = lootableId;
+            foreach (var s in _slots)
+            {
+                s.Source = source;
+                s.SourceLootableId = lootableId;
+            }
+        }
+
+        /// <summary>
+        /// Ensure the pool has at least <paramref name="needed"/> slots. Extra
+        /// slots beyond <paramref name="needed"/> are hidden (display: None).
+        /// </summary>
+        public void EnsureSlotCount(int needed)
+        {
+            while (_slots.Count < needed)
+            {
+                var s = new InventorySlotElement(InventorySlotElement.SlotKind.Backpack, "");
+                s.Source = SlotSource;
+                s.SourceLootableId = LootableId;
+                _grid.Add(s);
+                _slots.Add(s);
+                _wire?.Invoke(s);
+            }
+
+            for (int i = 0; i < _slots.Count; i++)
+                _slots[i].style.display = i < needed ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+    }
+}

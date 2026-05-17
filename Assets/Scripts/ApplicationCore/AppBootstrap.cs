@@ -6,6 +6,7 @@ using View.UI.Dialogue;
 using View.UI.EndOfRaid;
 using View.UI.Extraction;
 using View.UI.Hotbar;
+using View.UI.Inventory;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
 
@@ -80,6 +81,14 @@ namespace ApplicationCore
             var hotbarHost = new GameObject("HotbarOverlay");
             hotbarHost.transform.SetParent(transform, false);
             hotbarHost.AddComponent<HotbarOverlay>();
+
+            // Inventory modal — UI Toolkit replacement for the legacy uGUI LootPopupView.
+            // Hidden by default; InventoryUI drives Open/Close when
+            // DevCheats.UseUiToolkitInventory is on (legacy popup is gated off in
+            // that path). See docs/ai/ui-styling.md and the migration plan.
+            var inventoryWindowHost = new GameObject("InventoryWindow");
+            inventoryWindowHost.transform.SetParent(transform, false);
+            inventoryWindowHost.AddComponent<InventoryWindow>();
 
             // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
             var craftingMockupHost = new GameObject("CraftingMockupWindow");

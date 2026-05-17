@@ -1,0 +1,300 @@
+/* Inventory modal — Tier A. All shared values pull from _tokens.uss via var(--*).
+ * Mirrors WeaponBuilderWindow.uss patterns (header/body, modal chrome).
+ *
+ * Layout (Stage 3 polish):
+ *   - Main window left-anchored, holds only the player pane.
+ *   - Floating sub-panels stack to the right of the window — one per nearby
+ *     lootable / corpse / floor inventory / hideout stash (matches legacy
+ *     uGUI multi-container layout).
+ *
+ * See docs/ai/ui-styling.md for the token catalogue + naming rules. */
+
+.inv-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    /* Left-anchored. padding-top clears the H/V HUD strip; padding-bottom
+     * clears the hotbar strip. inv-inner flex-grows у column main axis to
+     * fill that vertical strip — window then stretches vertically inside it
+     * via align-items: stretch. */
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-left: 24px;
+    padding-top: 40px;
+    padding-bottom: 130px;
+}
+
+.inv-inner {
+    flex-direction: row;
+    align-items: stretch;
+    flex-grow: 1;
+}
+
+.inv-window {
+    /* Player-pane-only modal. Reduced from full-width Tier A 1280px because
+     * loot/floor/stash content now lives in floating sub-panels к зправа.
+     * Vertical size is governed by inv-inner's stretch (фіксована ширина,
+     * висота тягнеться по доступному простору між top/bottom paddings). */
+    width: 640px;
+    flex-shrink: 0;
+    background-color: var(--color-window-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-window);
+    padding: 0;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+
+.inv-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    border-bottom-width: var(--border-window);
+    border-bottom-color: var(--color-border-inset);
+    background-color: var(--color-header-bg);
+}
+
+.inv-title {
+    font-size: var(--font-window-title);
+    color: var(--color-text-title);
+    -unity-font-style: bold;
+}
+
+.inv-close-btn {
+    width: 52px;
+    height: 52px;
+    background-color: transparent;
+    border-width: 0;
+    color: var(--color-text-button-cancel);
+    font-size: 36px;
+    -unity-font-style: bold;
+    padding: 0;
+}
+
+.inv-close-btn:hover {
+    background-color: var(--color-btn-cancel-bg);
+    border-radius: var(--radius-inset);
+}
+
+/* ── Body (single player pane) ──────────────────────── */
+
+.inv-body {
+    flex-direction: column;
+    /* Tighter padding than the canonical modal token — інвентар компактний,
+     * 24/18 economises horizontal room for the 5-column backpack grid. */
+    padding: 18px 24px;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.inv-pane {
+    padding: 16px;
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border-inset);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
+}
+
+.inv-pane--player {
+    flex-grow: 1;
+}
+
+.inv-section-heading {
+    font-size: var(--font-section-heading);
+    -unity-font-style: bold;
+    color: var(--color-section-heading);
+    margin-bottom: 8px;
+}
+
+.inv-placeholder {
+    font-size: var(--font-empty-placeholder);
+    color: var(--color-text-empty);
+    -unity-text-align: middle-center;
+    -unity-font-style: italic;
+}
+
+/* ── Equipment row ──────────────────────────────────── */
+
+.inv-equipment-row {
+    flex-direction: row;
+    margin-bottom: 16px;
+}
+
+/* ── Backpack grid ──────────────────────────────────── */
+
+.inv-backpack-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/* ── Slot — common ──────────────────────────────────── */
+
+.inv-slot {
+    background-color: var(--color-card-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
+    padding: var(--space-card-pad-y) var(--space-card-pad-x);
+    overflow: hidden;
+}
+
+.inv-slot__empty {
+    font-size: var(--font-empty-placeholder);
+    color: var(--color-text-empty);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+    flex-grow: 1;
+}
+
+.inv-slot__name {
+    font-size: var(--font-card-title);
+    -unity-font-style: bold;
+    color: var(--color-text-title);
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.inv-slot__resource {
+    font-size: var(--font-card-kind);
+    color: var(--color-text-secondary);
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+}
+
+.inv-slot__key {
+    font-size: var(--font-card-kind);
+    -unity-font-style: bold;
+    color: var(--color-accent);
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    background-color: var(--color-header-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.inv-slot__quest {
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-accent);
+    border-radius: 4px;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+}
+
+.inv-slot__durability {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 2px;
+    height: 3px;
+    background-color: var(--color-border-inset);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.inv-slot__durability-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 2px;
+}
+
+/* ── Slot — backpack variant ────────────────────────── */
+
+.inv-slot--bp {
+    /* Square cells, 5 per row. 5×104 + 4×5 gap = 540, fits a ~560-internal pane. */
+    width: 104px;
+    height: 104px;
+    margin: 0 5px 5px 0;
+    justify-content: flex-start;
+}
+
+.inv-slot--bp .inv-slot__name {
+    font-size: 12px;
+}
+
+/* ── Slot — equipment variant ───────────────────────── */
+
+.inv-slot--eq {
+    /* Fixed landscape cells — row left-aligns, free space на правому boku
+     * intentional для future equipment slots (e.g. throwable). */
+    width: 128px;
+    height: 104px;
+    margin-right: 6px;
+    justify-content: flex-start;
+    flex-shrink: 0;
+}
+
+.inv-slot--eq:last-child {
+    margin-right: 0;
+}
+
+/* ── Drag-and-drop visuals ──────────────────────────── */
+
+.inv-slot-drag-valid {
+    border-color: var(--color-drag-valid-border);
+    background-color: var(--color-drag-valid-bg);
+}
+
+.inv-slot-drag-invalid {
+    border-color: var(--color-drag-invalid-border);
+    background-color: var(--color-drag-invalid-bg);
+}
+
+/* Ghost is a clone of the source slot that follows the cursor while dragging.
+ * Mounted on _root (absolute coords) so it floats above the window. */
+.inv-drag-ghost {
+    position: absolute;
+    opacity: 0.85;
+    border-color: var(--color-accent);
+    border-width: 2px;
+}
+
+/* ── Floating sub-panels (loot / floor / stash) ─────── */
+
+.inv-subpanels {
+    flex-direction: column;
+    margin-left: 12px;
+    /* Stay at top of stretched .inv-inner — sub-panels are content-sized,
+     * не повинні тягтися вертикально як головне вікно. */
+    align-self: flex-start;
+}
+
+.inv-subpanel {
+    margin-bottom: 10px;
+    padding: 12px;
+    background-color: var(--color-window-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-window);
+    /* Width = 3 cells of the same size as the main backpack
+     * (3 × 104 + 2 × 5) + 24 pad = 346. */
+    width: 360px;
+    max-height: 460px;
+}
+
+.inv-subpanel__title {
+    font-size: var(--font-section-heading);
+    -unity-font-style: bold;
+    color: var(--color-section-heading);
+    margin-bottom: 8px;
+}
+
+.inv-subpanel__scroll {
+    flex-grow: 1;
+}
+
+.inv-subpanel__grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+/* Slots inside a sub-panel use the same dimensions as the main backpack
+ * (104×104) — visual consistency makes cross-pane drag feel native. */
