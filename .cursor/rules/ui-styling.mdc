@@ -137,7 +137,7 @@ patterns. They are kept token-clean on purpose.
 
 ## Scale tiers (semantic guidance)
 
-### Tier A — Modal (Weapon Builder, future inventory rebuild, Crafting)
+### Tier A — Modal (Weapon Builder, Inventory, Crafting)
 
 Use for full-screen modal windows that take user focus.
 
@@ -266,36 +266,26 @@ layout, fell back to `Screen.height`, and ended up with `scale = 1`.
 
 ## Cross-stack coordinates (uGUI ↔ UI Toolkit)
 
-The project mixes uGUI (Inventory, Hotbar) with UI Toolkit (Builder,
-Tooltip overlay, future modals). Pointer event coordinate systems differ:
+Player-facing UI is fully UI Toolkit (Inventory, Hotbar, Builder, Tooltip,
+Crafting, Dialogue, EndOfRaid). The only remaining uGUI consumer is
+`QuestItemView` (reward slot prefab) — out-of-scope for player input
+flows. If new uGUI surfaces appear that need to talk to UTK overlays
+(tooltip, etc.), the coordinate systems differ:
 
 | Stack | Source | Origin | Units |
 |---|---|---|---|
 | uGUI | `PointerEventData.position`, `Input.mousePosition` | bottom-left | actual screen pixels |
 | UI Toolkit | `PointerEnterEvent.position` (and friends) | top-left | panel (reference) pixels under `ScaleWithScreenSize` |
 
-When passing positions between stacks (e.g. uGUI inventory hovers a slot
-and asks `TooltipController` to show the tooltip in UI Toolkit space), do
-**not** assume `Screen.height` equals `_root.resolvedStyle.height` — under
-`ScaleWithScreenSize` they differ by the active scale factor.
-
-Conversion (screen → panel):
-
-```csharp
-float panelHeight = _root.resolvedStyle.height;     // panel/ref coords (~1080)
-float scale = Screen.height / panelHeight;          // 0.71 / 1.0 / 2.0 / …
-Vector2 panelPos = new Vector2(
-    screenPos.x / scale,
-    panelHeight - screenPos.y / scale);             // also flips Y origin
-```
+Use `RuntimePanelUtils.ScreenToPanel(panel, new Vector2(x, Screen.height - y))`
+to convert (flip Y first — uGUI is bottom-left, UTK is top-left). See
+`Assets/Scripts/View/UI/UiPanelHitTest.cs` for the canonical pattern.
 
 API pattern — give callers the entry point that fits their stack so neither
 side has to know the math:
 
-- `Show(model, screenPos)` — uGUI flavour. Input is screen pixels
-  (bottom-left). Conversion happens inside.
-- `ShowFromPanel(model, panelPos)` — UI Toolkit flavour. Input is panel
-  coords (top-left). No conversion.
+- `Show(model, screenPos)` — screen-pixel flavour. Conversion happens inside.
+- `ShowFromPanel(model, panelPos)` — panel-coord flavour. No conversion.
 
 Implementation in `TooltipController` — both funnel into a single
 panel-coord positioning routine.

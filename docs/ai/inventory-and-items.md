@@ -482,3 +482,61 @@ All tasks share: `Description`, `RequiredCount`.
 | `Assets/Scripts/Quests/QuestDefinition.cs` | Quest ScriptableObject schema |
 | `Assets/Scripts/Quests/QuestDatabase.cs` | Quest DB with prerequisite support |
 | `Assets/Scripts/Quests/QuestTask.cs` | Quest task type hierarchy |
+| `Assets/Scripts/Systems/StashSystem.cs` | Hideout stash deposit/withdraw з swap-семантикою |
+
+---
+
+## 14. UI Architecture (canonical UI Toolkit)
+
+The inventory UI is **fully UI Toolkit** — the legacy uGUI canvas / `LootPopupView` is gone. Layout: left-anchored player window + floating sub-panels to its right (one per nearby lootable / corpse / floor / hideout stash). Builder side-by-side coexists at right-anchor with shared modal-layer tokens.
+
+### Key files
+
+| File | Purpose |
+|---|---|
+| `Assets/Scripts/View/UI/Inventory/InventoryWindow.cs` | Singleton `MonoBehaviour` host. Owns the UIDocument, builds player slots once, reconciles sub-panels each frame, drives drag-and-drop + context menu + hover-key quick-slot bind. |
+| `Assets/Scripts/View/UI/Inventory/InventorySlotElement.cs` | Custom `VisualElement` (`SlotKind.Backpack`/`Equipment`, `SlotSource.Player`/`Loot`/`Floor`/`Stash`). Renders name + stack/armor count + durability bar + hotbar badge + quest dot. |
+| `Assets/Scripts/View/UI/Inventory/LootSubPanelElement.cs` | Floating right-pane card — title + scroll + grid. One per loot source. Auto-grows slot pool, never shrinks. |
+| `Assets/Scripts/View/UI/Inventory/ContextMenuElement.cs` | Right-click overlay; options built from slot's `Source`. |
+| `Assets/Scripts/View/InventoryUI.cs` | State-machine bridging Tab / `LootTargetId` / `BuilderTargetId` / `CraftTargetId` to `InventoryWindow.Open/Close`. Single `_openedByTab` flag + derived state. |
+| `Assets/Scripts/View/UI/UiPanelHitTest.cs` | Shared "is cursor over any UTK panel" helper. Used by `AimCursorOverlay` (cursor visibility / attack gating) + `InventoryWindow` (drop-over-UI silent cancel). |
+| `Assets/Resources/UI/Inventory/InventoryWindow.{uxml,uss}` | Layout + styles. Modal layer tokens shared with WeaponBuilder через `_tokens.uss` + `CraftingMockupTheme.tss`. |
+| `Assets/Resources/UI/Inventory/InventoryPanelSettings.asset` | `ScaleWithScreenSize 1920×1080 match=0.5`, sort 100 (below Builder 110, above Hotbar 50). |
+
+### Gameplay-input rules
+
+- Opening inventory does **not** block gameplay input. Walk/sprint/reload/etc keep working.
+- `Attack` + `Ads` are gated by `IInputAdapter.IsPointerOverUi` — set per frame by `AimCursorOverlay` via `UiPanelHitTest`. Cursor over UI = no shot, cursor over game = shot.
+- Dialogue / quest log / craft / deploy / NPC modals continue to use `SetGameplayInputBlocked(true)` — fully-paused menu modes.
+- `PlayerEntityState.IsInMenu` excludes inventory/loot/builder; only QuestLog/Craft/Deploy/Npc set it.
+
+### Transfer routing (View → Systems)
+
+UI never mutates `InventoryState` / `Stash` / `GroundItems` directly. Every transfer routes through a System:
+
+| Operation | System call |
+|---|---|
+| Player ↔ Player slot move | `InventorySystem.TryMove(inv, from, to)` |
+| Player ↔ Loot container | `LootSystem.TryTransfer(srcInv, srcSlot, tgtInv, tgtSlot)` |
+| Player → Stash (deposit) | `StashSystem.TryDeposit(playerInv, stash, sourceSlot)` |
+| Stash → Player (withdraw / swap) | `StashSystem.TryWithdraw(stash, stashIndex, playerInv, targetSlot)` |
+| Floor → Player (specific slot) | `InventorySystem.TryPickUpToSlot(state, inv, groundId, targetSlot, events)` |
+| Floor → Player (auto, F key) | `InventorySystem.TryPickUp(state, groundId, events)` |
+| Player → Ground (drop) | `InventorySystem.TryDrop(state, inv, slot, dropPos, events)` |
+| Loot → Ground (context menu Drop) | `InventorySystem.TryDrop(state, containerInv, slot, dropPos, events)` |
+
+### Refresh strategy
+
+- `InventoryState.Version` bumps on every `SetSlot` + direct array mutations in `InventorySystem.TryPickUp` + `QuickSlotBindings[]` mutations. `InventoryWindow.RefreshAll` compares cached version, skips the 24-slot rebind when unchanged.
+- Sub-panel reconciliation (`RefreshSubPanels`) runs every frame — depends on player position для distance filtering. Cheap (no string allocs on the happy path due to scratch HashSet reuse).
+- Skipped entirely during active drag (`_isDragging` early-out) to keep slot references stable.
+
+### UX rules
+
+- **Drop targeting:** drop on slot → transfer; drop on inventory chrome → silent cancel; drop on ANY UTK panel (Builder, hotbar, tooltip) → silent cancel; drop on game-world dim → drop-to-ground (raid) / push-to-stash (hideout).
+- **Out-of-range loot guard:** if player walks out of `LootSystem.LootRange` mid-drag, drop fails (sub-panel reconcile is skipped during drag but re-checks distance at drop time).
+- **Quick-slot bind paths:** (1) hover backpack consumable + press 3-9, (2) right-click → `Bind to N`. Only `QuickSlotRules.IsAssignable` definitions (Medkit/Bandage/Grenade).
+- **Compact loot view:** lootable/corpse panels show only populated slots, original `Backpack[i]` index preserved у `slot.SlotRef` for transfers. Same convention as floor/stash.
+- **Builder side-by-side:** sub-panels hidden when Builder open (`IsBuilderOpen()` check) since workbench has no nearby loot. Builder window renders above inv backdrop via sort 110 > 100.
+
+See also: [docs/ai/ui-styling.md](ui-styling.md), memory `project_ui_toolkit_quirks.md`.
