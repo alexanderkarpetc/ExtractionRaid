@@ -7,7 +7,7 @@
          (main window) + (floating sub-panels host) — sub-panels show one card per
          source (lootable / corpse / floor / hideout stash). -->
     <ui:VisualElement name="backdrop" picking-mode="Ignore" class="inv-backdrop">
-        <ui:VisualElement name="inner" class="inv-inner">
+        <ui:VisualElement name="inner" picking-mode="Ignore" class="inv-inner">
 
             <ui:VisualElement name="window" class="inv-window">
 
@@ -28,7 +28,7 @@
 
             </ui:VisualElement>
 
-            <ui:VisualElement name="subPanels" class="inv-subpanels" />
+            <ui:VisualElement name="subPanels" picking-mode="Ignore" class="inv-subpanels" />
 
         </ui:VisualElement>
     </ui:VisualElement>

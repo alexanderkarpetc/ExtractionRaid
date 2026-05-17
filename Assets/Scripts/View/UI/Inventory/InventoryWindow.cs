@@ -365,18 +365,33 @@ namespace View.UI.Inventory
                 if (Vector3.Distance(playerPos, lootable.Position) > LootSystem.LootRange) continue;
                 if (lootable.Inventory == null) continue;
 
+                var inv = lootable.Inventory;
+
+                // Compact view (як floor/stash) — render only populated backpack
+                // slots. Empty positions у corpse/container приховуємо, бо 20-cell
+                // sparse grid візуально плутає. Original backpack index лишається
+                // у slot.SlotRef для transfer-операцій (TryTransfer/TryMove
+                // використовують SlotRef.Index, а не display position).
+                int populated = 0;
+                for (int i = 0; i < inv.Backpack.Length; i++)
+                    if (inv.Backpack[i] != null) populated++;
+                if (populated == 0) continue;
+
                 var key = "loot:" + lootable.Id;
                 wanted.Add(key);
                 var panel = EnsureSubPanel(key, ResolveLootableTitle(lootable),
                     InventorySlotElement.SlotSource.Loot, lootable.Id);
+                panel.EnsureSlotCount(populated);
 
-                var inv = lootable.Inventory;
-                panel.EnsureSlotCount(inv.Backpack.Length);
+                int displayIdx = 0;
                 for (int i = 0; i < inv.Backpack.Length; i++)
                 {
-                    var slot = panel.Slots[i];
-                    slot.RightIndex = i;
-                    slot.Bind(InventorySlotRef.BackpackSlot(i), inv.Backpack[i], -1, registry);
+                    var item = inv.Backpack[i];
+                    if (item == null) continue;
+                    var slot = panel.Slots[displayIdx];
+                    slot.RightIndex = i; // preserve original backpack index
+                    slot.Bind(InventorySlotRef.BackpackSlot(i), item, -1, registry);
+                    displayIdx++;
                 }
             }
         }
