@@ -107,15 +107,9 @@ Preconditions:
 
 When delegating Unity work to a subagent (Task / custom agent), pass the bridge-up assumption + a pointer to `docs/ai/unity-mcp.md` in the prompt — subagents inherit the tools but not this conversation's context.
 
-## 8) Documentation sync
+## 8) Documentation
 
-AI docs exist in two places that must stay in sync:
-- `docs/ai/` — for Claude Code (`CLAUDE.md`, `architecture.md`, `entity-lifecycle.md`, `testing-and-workflow.md`, `crosshair.md`, `weapons.md`, `fog-of-war.md`)
-- `.cursor/rules/` — for Cursor (`architecture-contract.mdc`, `architecture-details.mdc`, `entity-lifecycle.mdc`, `testing-workflow.mdc`, `crosshair.mdc`, `weapons.mdc`, `fog-of-war.mdc`)
-
-When updating any AI doc, apply the same change to the corresponding Cursor doc.
-
-`docs/ai/unity-mcp.md` is **Claude-only** (Cursor uses its own MCP setup) — no `.cursor/rules/` mirror needed.
+Project docs live в `docs/ai/`. Update the relevant doc when changing the system it describes — section 9 lists which doc maps to which area.
 
 ## 9) Task routing (read only what is relevant)
 

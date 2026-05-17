@@ -69,7 +69,6 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 ### Known gaps (to track)
 
 - Bot weapons hardcoded у `BotConstants` — migration deferred до Tier 4 (per 2026-04-22 decision)
-- `.cursor/rules/weapon-builder*.mdc` counterpart (CLAUDE.md §7 вимога) — не зроблено
 - `docs/ai/weapons.md` застаріла (pre-migration Rifle/Shotgun/Pistol) — не оновлена
 - Weapon mesh для FormFactor="Shotgun" (видалений разом з Shotgun item у 0b) — fallback на Weapon_Rifle prefab
 - ~~Inventory UI показує "Weapon" DefinitionId замість archetype label~~ ✅ done у UX Pass 1 (`WeaponDisplayName.For` helper)
@@ -146,7 +145,6 @@ Foundation (Tiers 0a, 0b, 1, 2) + UX Pass 1 завершені. Gameplay: гра
 - [ ] **D9.** RaidContext / ports integration для `*CoreDefinition` registry
 - [ ] **D10.** Raid State Debugger update (CLAUDE.md §5.7)
 - [ ] **D11.** DevCheats integration (rarity multipliers, spin-up times)
-- [ ] **D12.** Docs sync `.cursor/rules/weapon-builder*.mdc` — після завершення планування
 
 ### Production
 - [ ] **UI збірки на базі — mockups / wireframes.** Поки немає.
@@ -468,7 +466,7 @@ Workbench interact (E key) тепер відкриває **Builder modal на п
 - `Systems/WeaponDisplayName.For(item, registry)` — будь-який inventory rendering
 - `View/UI/Tooltip/TooltipController` + `TooltipModel` + 3 builders
 - `View/UI/WeaponBuilder/Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement}` — UI Toolkit primitives
-- `docs/ai/ui-styling.md` (+ `.cursor/rules` mirror) — Tier A/B sizing + sort orders + color palette
+- `docs/ai/ui-styling.md` — Tier A/B sizing + sort orders + color palette
 
 **Tests:** +28 (WeaponDisplayName 7, Tooltip builders 14, Presenter extensions 10, end-to-end fix 1 retro).
 

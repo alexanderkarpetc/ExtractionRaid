@@ -310,15 +310,6 @@ HitSignal → Skip checks (self/dead/roll/god) → Headshot detect → HS multip
 | **testing-and-workflow.md** | Process | Test strategy, DevCheats isolation rule, feature flow |
 | **fx-artist-guide.md** | Art | 5 impact VFX prefabs, proportional scaling, art direction |
 
-### .cursor/rules/ (10 файлів) — синхронізація
-
-| Статус | Файли |
-|--------|-------|
-| Синхронізовано | entity-lifecycle, testing-workflow, weapons |
-| Потребує оновлення | architecture-details, crosshair (оновлені .md, .mdc відстають) |
-| Сильно застарілі | battle-design-status (step-function vs parabolic), armor-research (42%) |
-| Немає .mdc | armor-system, inventory-and-items, fx-artist-guide, handoff |
-
 ---
 
 ## 6. Тести
@@ -390,13 +381,6 @@ HitSignal → Skip checks (self/dead/roll/god) → Headshot detect → HS multip
 **Polish:**
 5. Audio system (events готові, потрібен SFX hookup)
 6. Explosion VFX для гранат
-
-### Документація:
-
-**Sync .cursor/rules/ (коли повернемось до цього):**
-- Оновити 3 .mdc файли які відстали від оновлених .md
-- Створити 4 нові .mdc для нових доків
-- Оновити 3 сильно застарілі .mdc (battle-design, armor-research, rpg-modifier)
 
 ---
 

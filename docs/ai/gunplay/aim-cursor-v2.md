@@ -284,7 +284,7 @@ After all stages validated + locked:
 - Delete `Assets/Scripts/View/AimCursorOverlay.cs` + meta
 - Remove `gameObject.AddComponent<AimCursorOverlay>()` from `AppBootstrap.cs`
 - Remove `UseV2Crosshair` toggle field (always-on)
-- Update `docs/ai/crosshair.md` + `.cursor/rules/crosshair.mdc` (mirror per CLAUDE.md §8)
+- Update `docs/ai/crosshair.md`
 - Update [`README.md`](README.md) — mark Aim cursor v2 ✅ shipped
 
 ---
@@ -338,7 +338,6 @@ After all stages validated + locked:
 - [`archetype-differentiation.md`](archetype-differentiation.md) — archetype design pass (closed)
 - [`../crosshair.md`](../crosshair.md) — current crosshair behavior (will be updated Stage 7)
 - [`../weapons.md`](../weapons.md) — weapon FSM, charge/burst details
-- [`../CLAUDE.md`](../CLAUDE.md) §8 — doc mirror rule for crosshair.md ↔ crosshair.mdc
 
 ---
 

@@ -190,7 +190,6 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ### Architecture debt
 - ✅ DevCheats/ViewCheats UI fragmentation — resolved (unified window)
-- ✅ `.cursor/rules/bot-ai.mdc` mirror — created 2026-05-12
 
 ### Test scenes available
 - `Assets/Scenes/HideoutScene.unity` — main hub
@@ -227,7 +226,6 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
    - HUD damage feedback / magazine drop physics
    - Bleed L2 DPS tuning (playtest-driven)
    - Test debt closure (P0-3/4/5 — see `tests-review.md`)
-5. Doc sync: `docs/ai/*.md` mirrors `.cursor/rules/*.mdc` per CLAUDE.md §8.
 
 ---
 
@@ -244,4 +242,4 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ---
 
-**Status as of session end:** All committed. 469/469 green. Heat-haze experiment reverted. Docs synced (weapons.md, weapons.mdc, bot-ai.md). Ready for fresh session.
+**Status as of session end:** All committed. 469/469 green. Heat-haze experiment reverted. Docs updated (weapons.md, bot-ai.md). Ready for fresh session.

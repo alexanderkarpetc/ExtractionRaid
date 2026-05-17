@@ -240,7 +240,6 @@ Detailed: [roadmap.md Tier 4a](./plan/roadmap.md#tier-4a--bot-weapon-migration-s
 - ⏸ Wave G (G7 initial loadout) — **deferred sine die** (DevCheats + loot cover playtest needs)
 
 ### Відкладено з минулого
-- `.cursor/rules/weapon-builder*.mdc` counterpart (per CLAUDE.md §7) — не зроблено
 - ~~Update `docs/ai/weapons.md`~~ — done 2026-05-01 (full sync; added 3D Visualization section + key file refs)
 - ~~Weapon view prefabs (Shotgun fallback)~~ — закрито Tier 8 Wave C (Scatter має власний symmetric body)
 
@@ -264,7 +263,7 @@ Detailed: [roadmap.md Tier 4a](./plan/roadmap.md#tier-4a--bot-weapon-migration-s
 - `View/UI/Tooltip/TooltipController.Instance` — view-singleton, `Show` (uGUI bottom-left coords) / `ShowFromPanel` (UI Toolkit top-left coords)
 - 3 tooltip builders: `Item`, `Weapon`, `Module` (для Payload/Delivery cards)
 - `WeaponBuilder/Elements/{ModuleCardElement, ModuleSlotElement, BackpackItemElement}` — UI Toolkit primitives
-- `docs/ai/ui-styling.md` (+ `.cursor/rules` mirror) — Tier A/B sizing + sort orders + color palette
+- `docs/ai/ui-styling.md` — Tier A/B sizing + sort orders + color palette
 
 **Нові файли:**
 - `Assets/Scripts/Systems/WeaponDisplayName.cs`

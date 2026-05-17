@@ -835,9 +835,6 @@ CLAUDE.md §5.7 — після refactor'у `WeaponEntityState` треба оно
 #### D11. DevCheats extension
 Rarity multipliers, spin-up times, volley intervals — мають бути DevCheats параметрами (Tier 2+).
 
-#### D12. Docs sync `.cursor/rules/`
-CLAUDE.md §7 — коли завершимо архітектурне планування, створити `.cursor/rules/weapon-builder*.mdc` counterpart.
-
 ---
 
 ## Open risks
