@@ -254,6 +254,13 @@ namespace ApplicationCore
             _inputAdapter.BlockGameplayInput = blocked;
         }
 
+        public void SetPointerOverUi(bool over)
+        {
+            _inputAdapter.IsPointerOverUi = over;
+        }
+
+        public bool IsPointerOverUi => _inputAdapter.IsPointerOverUi;
+
         public void Tick()
         {
             RaidSession?.Tick();

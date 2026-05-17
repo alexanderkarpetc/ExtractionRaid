@@ -69,6 +69,12 @@ namespace View.UI.Inventory
         /// Ensure the pool has at least <paramref name="needed"/> slots. Extra
         /// slots beyond <paramref name="needed"/> are hidden (display: None).
         /// </summary>
+        // Sub-panel grid spans 3 columns. Every 3rd slot drops its trailing
+        // right-margin (mirrors `.inv-slot--row-end` логіку для main backpack 5×4)
+        // — інакше trailing margin overflow'ить inner width і flex-wrap кидає
+        // last column на новий ряд.
+        const int ColumnsPerRow = 3;
+
         public void EnsureSlotCount(int needed)
         {
             while (_slots.Count < needed)
@@ -76,6 +82,11 @@ namespace View.UI.Inventory
                 var s = new InventorySlotElement(InventorySlotElement.SlotKind.Backpack, "");
                 s.Source = SlotSource;
                 s.SourceLootableId = LootableId;
+                if ((_slots.Count + 1) % ColumnsPerRow == 0)
+                {
+                    s.AddToClassList("inv-slot--row-end");
+                    s.style.marginRight = 0;
+                }
                 _grid.Add(s);
                 _slots.Add(s);
                 _wire?.Invoke(s);

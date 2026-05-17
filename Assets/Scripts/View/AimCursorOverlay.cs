@@ -5,6 +5,8 @@ using Dev;
 using State;
 using Systems;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 namespace View
 {
@@ -50,6 +52,16 @@ namespace View
         // ADS visual interpolant
         float _adsAmount;
 
+        // Cached UIDocument list — refreshed lazily. Used per-frame to detect
+        // whether the OS cursor sits on a pick-enabled UI Toolkit element.
+        UIDocument[] _utkDocsCache;
+        int _utkDocsCacheFrame = -1;
+
+        // True when OS cursor is over any UI Toolkit panel (inv / Builder / hotbar /
+        // tooltip etc). Drives Cursor.visible + crosshair-draw skip + attack input
+        // gating via IInputAdapter.IsPointerOverUi.
+        bool _pointerOverUi;
+
         // Colors (non-configurable)
         static readonly Color RawDotColor = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color ReloadFilledColor = new Color(1f, 0.65f, 0.1f, 0.9f);
@@ -69,7 +81,47 @@ namespace View
             var player = session?.RaidState?.PlayerEntity;
             bool inGameplay = player != null;
             bool inMenu = player != null && player.IsInMenu;
-            Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled || inMenu;
+
+            _pointerOverUi = inGameplay && IsPointerOverAnyUtkPanel();
+            App.Instance?.SetPointerOverUi(_pointerOverUi);
+
+            UnityEngine.Cursor.visible = !inGameplay || !DevCheats.CrosshairEnabled || inMenu || _pointerOverUi;
+        }
+
+        // Hit-test the OS mouse position against every active UI Toolkit panel.
+        // Returns true when Pick finds any element — backdrop'и з picking-mode=Ignore
+        // pass through, тож тільки реальний UI (window/sub-panel/slot/button) тригерить.
+        bool IsPointerOverAnyUtkPanel()
+        {
+            var mouse = Mouse.current;
+            if (mouse == null) return false;
+            Vector2 screenPos = mouse.position.ReadValue();
+
+            int frame = Time.frameCount;
+            if (_utkDocsCacheFrame != frame || _utkDocsCache == null)
+            {
+                _utkDocsCache = Object.FindObjectsByType<UIDocument>(
+                    FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                _utkDocsCacheFrame = frame;
+            }
+
+            foreach (var doc in _utkDocsCache)
+            {
+                var root = doc != null ? doc.rootVisualElement : null;
+                if (root == null) continue;
+                if (root.resolvedStyle.display == DisplayStyle.None) continue;
+                var panel = root.panel;
+                if (panel == null) continue;
+
+                // Convert screen → panel-coords (handles ScaleWithScreenSize +
+                // Y-flip; UI Toolkit panel origin is top-left, Input.mousePosition
+                // is bottom-left).
+                Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
+                    new Vector2(screenPos.x, Screen.height - screenPos.y));
+
+                if (panel.Pick(panelPos) != null) return true;
+            }
+            return false;
         }
 
         void LateUpdate()
@@ -115,6 +167,9 @@ namespace View
             var player = state?.PlayerEntity;
             if (player == null) return;
             if (player.IsInMenu) return;
+            // Skip crosshair coли cursor на UI (inv slot, button, sub-panel)
+            // — OS pointer is shown instead, attack input gated у InputAdapter.
+            if (_pointerOverUi) return;
 
             var cam = Camera.main;
             if (cam == null) return;
@@ -490,7 +545,7 @@ namespace View
 
         void OnDestroy()
         {
-            Cursor.visible = true;
+            UnityEngine.Cursor.visible = true;
             if (_pixelTex != null) Destroy(_pixelTex);
         }
     }
