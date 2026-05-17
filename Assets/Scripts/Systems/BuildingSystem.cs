@@ -72,6 +72,16 @@ namespace Systems
 
         // ── Counting / consuming across both containers ────────────────────
 
+        /// <summary>
+        /// Total stack count of <paramref name="itemId"/> across the player's stash
+        /// AND backpack. Exposed for HUD/dialogue code that needs to show "have / need".
+        /// </summary>
+        public static int GetAvailable(Player player, string itemId)
+        {
+            if (player == null) return 0;
+            return CountInStash(player.Stash, itemId) + CountInBackpack(player.Inventory, itemId);
+        }
+
         static int CountAvailable(Player player, string itemId) =>
             CountInStash(player.Stash, itemId) + CountInBackpack(player.Inventory, itemId);
 

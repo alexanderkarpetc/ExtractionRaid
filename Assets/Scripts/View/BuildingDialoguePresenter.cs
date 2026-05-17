@@ -206,7 +206,7 @@ namespace View
             }
 
             var recipe = BuildingConstants.GetUpgradeRecipe(kind, level);
-            string costStr = FormatRecipe(recipe);
+            string costStr = FormatRecipe(player, recipe);
             string label = $"Upgrade to Lv. {level + 1}  —  {costStr}";
 
             bool canAfford = player != null && BuildingSystem.CanAffordUpgrade(player, kind);
@@ -232,16 +232,40 @@ namespace View
                 OpenDialogueFor(session.RaidState, player.CraftTargetId);
         }
 
-        static string FormatRecipe(BuildingIngredient[] recipe)
+        // Rich-text colors picked to match the rest of the UI: cyan accents elsewhere,
+        // green = "satisfied", red = "missing". UI Toolkit Labels honor <color=#rrggbb>
+        // tags because TextElement.enableRichText defaults to true.
+        const string GreenHex = "6affc1";
+        const string RedHex   = "ff5d6c";
+
+        /// <summary>
+        /// Builds the "Name 8/10, Other 3/3, …" recipe string with per-ingredient color
+        /// coding: the count we have is always green, the required count is red while
+        /// short and green once satisfied. Capping at recipe count is intentional — if
+        /// the player has spare materials the display still reads cleanly as "10/10".
+        /// </summary>
+        static string FormatRecipe(Player player, BuildingIngredient[] recipe)
         {
             if (recipe == null || recipe.Length == 0) return "free";
+
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < recipe.Length; i++)
             {
                 if (i > 0) sb.Append(", ");
+
                 var def = ItemDefinition.Get(recipe[i].ItemId);
                 string name = def?.DisplayName ?? recipe[i].ItemId;
-                sb.Append(recipe[i].Count).Append("× ").Append(name);
+                int have = player != null ? BuildingSystem.GetAvailable(player, recipe[i].ItemId) : 0;
+                int need = recipe[i].Count;
+
+                bool short_ = have < need;
+                string needColor = short_ ? RedHex : GreenHex;
+                int shownHave = have < need ? have : need; // cap so "15/10" doesn't visually scream surplus
+
+                sb.Append(name).Append(' ')
+                  .Append("<color=#").Append(GreenHex).Append('>').Append(shownHave).Append("</color>")
+                  .Append('/')
+                  .Append("<color=#").Append(needColor).Append('>').Append(need).Append("</color>");
             }
             return sb.ToString();
         }

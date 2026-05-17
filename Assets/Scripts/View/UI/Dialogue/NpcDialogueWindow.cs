@@ -132,6 +132,9 @@ namespace View.UI.Dialogue
 
                 var label = new Label(c.Label ?? "") { pickingMode = PickingMode.Ignore };
                 label.AddToClassList("choice-label");
+                // Recipe strings use <color=#rrggbb> tags for the per-ingredient
+                // "have/need" counts — make sure rich text is on so the markup renders.
+                label.enableRichText = true;
                 btn.Add(label);
 
                 var captured = c;
