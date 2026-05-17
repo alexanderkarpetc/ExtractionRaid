@@ -140,6 +140,25 @@
     border-color: rgba(135, 230, 255, 0.32);
 }
 
+/* Visible but not clickable — used for upgrade options when materials are short
+   or when a building's main action is locked behind a higher level. */
+.choice--disabled {
+    opacity: 0.55;
+}
+
+.choice--disabled:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.choice--disabled .index {
+    color: rgb(120, 130, 150);
+}
+
+.choice--disabled .choice-label {
+    color: rgb(170, 178, 195);
+}
+
 .choice .index {
     min-width: 24px;
     margin-right: 6px;

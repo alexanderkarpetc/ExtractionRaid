@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using ApplicationCore;
+using Constants;
+using Session;
 using State;
+using Systems;
 using UnityEngine;
 using View.UI;
 using View.UI.Craft;
@@ -88,71 +91,187 @@ namespace View
             var wb = FindWorkbench(state, workbenchId);
             if (wb == null) return;
 
+            var player = App.Instance?.Player;
+            int level = player != null ? BuildingSystem.GetLevel(player, wb.Kind) : 0;
+
             var choices = new List<NpcDialogueWindow.Choice>();
-            string title;
+            string baseTitle;
             string intro;
 
             switch (wb.Kind)
             {
                 case BuildingKind.WeaponBuilder:
-                    title = "Weapon Builder";
+                    baseTitle = "Weapon Builder";
                     intro = "Modules in, weapon out. What do you want to assemble?";
-                    choices.Add(Choice("Build Weapon", OpenWeaponBuilder));
-                    choices.Add(Placeholder("Upgrade / Build (coming soon)", "upgrade-weapon-builder"));
+                    AddMainAction(choices, "Build Weapon", level, OpenWeaponBuilder);
                     break;
 
                 case BuildingKind.Stash:
-                    title = "Stash";
+                    baseTitle = "Stash";
                     intro = "Your gear, safe and sound. What needs sorting?";
-                    choices.Add(Placeholder("Open Stash (coming soon)", "open-stash"));
-                    choices.Add(Placeholder("Upgrade Stash (coming soon)", "upgrade-stash"));
+                    AddPlaceholderMain(choices, "Open Stash", level, "open-stash");
                     break;
 
                 case BuildingKind.SupplyTerminal:
-                    title = "Supply Terminal";
+                    baseTitle = "Supply Terminal";
                     intro = "Drop what you don't need. The market's always open.";
-                    choices.Add(Placeholder("Sell Items (coming soon)", "open-supply-terminal"));
-                    choices.Add(Placeholder("Upgrade Terminal (coming soon)", "upgrade-supply-terminal"));
+                    AddPlaceholderMain(choices, "Sell Items", level, "open-supply-terminal");
                     break;
 
                 case BuildingKind.MedStation:
-                    title = "Med Station";
+                    baseTitle = "Med Station";
                     intro = "Patch up before your next run.";
-                    choices.Add(Placeholder("Heal Up (coming soon)", "open-med-station"));
-                    choices.Add(Placeholder("Upgrade Station (coming soon)", "upgrade-med-station"));
+                    AddPlaceholderMain(choices, "Heal Up", level, "open-med-station");
                     break;
 
                 case BuildingKind.QuestTerminal:
-                    title = "Quest Terminal";
+                    baseTitle = "Quest Terminal";
                     intro = "Open contracts and active jobs, all in one place.";
-                    choices.Add(Placeholder("Browse Quests (coming soon)", "open-quest-terminal"));
-                    choices.Add(Placeholder("Upgrade Terminal (coming soon)", "upgrade-quest-terminal"));
+                    AddPlaceholderMain(choices, "Browse Quests", level, "open-quest-terminal");
                     break;
 
                 default: // Crafting
-                    title = "Workbench";
+                    baseTitle = "Workbench";
                     intro = "Pick a recipe and I'll fire up the bench.";
-                    choices.Add(Choice("Craft", OpenCraftPopup));
-                    choices.Add(Placeholder("Upgrade Workbench (coming soon)", "upgrade-workbench"));
+                    AddMainAction(choices, "Craft", level, OpenCraftPopup);
                     break;
             }
 
-            choices.Add(Choice("Exit", ExitDialogue));
+            // Upgrade row — always rendered. Disabled at max level or when the recipe
+            // can't be paid; label always reveals the cost so the player sees what to
+            // farm for.
+            AddUpgradeChoice(choices, wb.Kind, player, level);
+
+            choices.Add(MakeChoice("Exit", ExitDialogue));
+            string title = $"{baseTitle} — Lv. {level}";
             _window.Show(title, intro, choices);
         }
 
-        // Small builders to keep the switch readable. Placeholder logs a stable tag so
-        // future grep / analytics can pinpoint which button is being clicked before it's
-        // hooked up to real behavior.
-        static NpcDialogueWindow.Choice Choice(string label, System.Action onClick) =>
-            new() { Label = label, OnClick = onClick };
+        // Main action at level 0 is locked. We still render the choice so the player
+        // knows it exists; clicking is a no-op (Enabled = false → button disabled).
+        static void AddMainAction(List<NpcDialogueWindow.Choice> choices, string label,
+            int level, System.Action onClick)
+        {
+            if (level <= 0)
+            {
+                choices.Add(new NpcDialogueWindow.Choice
+                {
+                    Label = $"{label} (Unavailable — Upgrade to Lv. 1)",
+                    OnClick = null,
+                    EnabledOverride = false,
+                });
+            }
+            else
+            {
+                choices.Add(MakeChoice(label, onClick));
+            }
+        }
 
-        static NpcDialogueWindow.Choice Placeholder(string label, string tag) =>
-            new()
+        // For kinds whose real action is still a placeholder (Stash, Supply, etc.).
+        // At level 0 we show "Unavailable"; at level 1+ we log the placeholder tag.
+        static void AddPlaceholderMain(List<NpcDialogueWindow.Choice> choices, string label,
+            int level, string tag)
+        {
+            if (level <= 0)
+            {
+                choices.Add(new NpcDialogueWindow.Choice
+                {
+                    Label = $"{label} (Unavailable — Upgrade to Lv. 1)",
+                    OnClick = null,
+                    EnabledOverride = false,
+                });
+            }
+            else
+            {
+                choices.Add(new NpcDialogueWindow.Choice
+                {
+                    Label = $"{label} (coming soon)",
+                    OnClick = () => Debug.Log($"[BuildingDialogue] Placeholder '{tag}' — not yet implemented."),
+                });
+            }
+        }
+
+        void AddUpgradeChoice(List<NpcDialogueWindow.Choice> choices, BuildingKind kind,
+            Player player, int level)
+        {
+            if (level >= BuildingConstants.MaxLevel)
+            {
+                choices.Add(new NpcDialogueWindow.Choice
+                {
+                    Label = "Max Level Reached",
+                    OnClick = null,
+                    EnabledOverride = false,
+                });
+                return;
+            }
+
+            var recipe = BuildingConstants.GetUpgradeRecipe(kind, level);
+            string costStr = FormatRecipe(player, recipe);
+            string label = $"Upgrade to Lv. {level + 1}  —  {costStr}";
+
+            bool canAfford = player != null && BuildingSystem.CanAffordUpgrade(player, kind);
+            choices.Add(new NpcDialogueWindow.Choice
             {
                 Label = label,
-                OnClick = () => Debug.Log($"[BuildingDialogue] Placeholder '{tag}' — not yet implemented."),
-            };
+                EnabledOverride = canAfford,
+                OnClick = canAfford ? () => OnUpgradeClicked(kind) : (System.Action)null,
+            });
+        }
+
+        void OnUpgradeClicked(BuildingKind kind)
+        {
+            var app = App.Instance;
+            if (app?.Player == null) return;
+            if (!BuildingSystem.TryUpgrade(app.Player, kind)) return;
+
+            // Re-render so the new level (and the new upgrade cost / unlocked main
+            // action) are reflected immediately.
+            var session = app.RaidSession;
+            var player = session?.RaidState?.PlayerEntity;
+            if (player != null && player.CraftTargetId != EId.None)
+                OpenDialogueFor(session.RaidState, player.CraftTargetId);
+        }
+
+        // Rich-text colors picked to match the rest of the UI: cyan accents elsewhere,
+        // green = "satisfied", red = "missing". UI Toolkit Labels honor <color=#rrggbb>
+        // tags because TextElement.enableRichText defaults to true.
+        const string GreenHex = "6affc1";
+        const string RedHex   = "ff5d6c";
+
+        /// <summary>
+        /// Builds the "Name 8/10, Other 3/3, …" recipe string with per-ingredient color
+        /// coding: the count we have is always green, the required count is red while
+        /// short and green once satisfied. Capping at recipe count is intentional — if
+        /// the player has spare materials the display still reads cleanly as "10/10".
+        /// </summary>
+        static string FormatRecipe(Player player, BuildingIngredient[] recipe)
+        {
+            if (recipe == null || recipe.Length == 0) return "free";
+
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < recipe.Length; i++)
+            {
+                if (i > 0) sb.Append(", ");
+
+                var def = ItemDefinition.Get(recipe[i].ItemId);
+                string name = def?.DisplayName ?? recipe[i].ItemId;
+                int have = player != null ? BuildingSystem.GetAvailable(player, recipe[i].ItemId) : 0;
+                int need = recipe[i].Count;
+
+                bool short_ = have < need;
+                string needColor = short_ ? RedHex : GreenHex;
+                int shownHave = have < need ? have : need; // cap so "15/10" doesn't visually scream surplus
+
+                sb.Append(name).Append(' ')
+                  .Append("<color=#").Append(GreenHex).Append('>').Append(shownHave).Append("</color>")
+                  .Append('/')
+                  .Append("<color=#").Append(needColor).Append('>').Append(need).Append("</color>");
+            }
+            return sb.ToString();
+        }
+
+        static NpcDialogueWindow.Choice MakeChoice(string label, System.Action onClick) =>
+            new() { Label = label, OnClick = onClick };
 
         void OpenCraftPopup()
         {

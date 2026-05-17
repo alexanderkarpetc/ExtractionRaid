@@ -139,11 +139,21 @@ namespace Save
     }
 
     [Serializable]
+    public class BuildingLevelSaveData
+    {
+        // Kind is persisted as a string (enum name) instead of int so reordering or
+        // inserting BuildingKind values doesn't corrupt existing saves.
+        public string Kind;
+        public int Level;
+    }
+
+    [Serializable]
     public class SaveData
     {
         public string PlayerName;
         public InventorySaveData Inventory;
         public List<ItemSaveData> Stash;
         public List<QuestProgressSaveData> Quests;
+        public List<BuildingLevelSaveData> BuildingLevels;
     }
 }
