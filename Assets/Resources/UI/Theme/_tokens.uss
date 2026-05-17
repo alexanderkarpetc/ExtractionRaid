@@ -70,6 +70,18 @@
     --color-drag-invalid-bg:      rgb(50, 28, 28);
     --color-error:                rgb(220, 100, 100);
 
+    /* ── Modal layers — semi-transparent shared chrome ─── */
+    /* Spec: всі модалки (Inventory, Builder, Crafting, EndOfRaid)
+     * шарять ці значення для chrome'у. Gameplay проглядає крізь
+     * пейн-зони. Якщо змінюєш — змінюється всюди одразу.
+     *
+     * Backdrop applies до solo-modal'ів (Inventory). Builder лишається
+     * прозорим (wb-backdrop) для side-by-side. */
+    --color-modal-backdrop:       rgba(0, 0, 0, 0.55);
+    --color-modal-window-bg:      rgba(26, 28, 34, 0.85);
+    --color-modal-header-bg:      rgba(30, 33, 40, 0.92);
+    --color-modal-pane-bg:        rgba(22, 24, 30, 0.55);
+
     /* ══ Sizing — fonts ═══════════════════════════════════ */
     --font-window-title:      26px;
     --font-section-heading:   18px;
@@ -88,6 +100,22 @@
     /* ══ Sizing — spacing (split per-axis) ════════════════ */
     --space-modal-pad-x:   32px;
     --space-modal-pad-y:   24px;
+    /* Modal backdrop paddings — гарантують симетричні зазори при
+     * side-by-side. Edge-gap = відстань від екрану до вікна (inv лівий
+     * край, Builder правий + центр між вікнами). При inv 604 + builder
+     * 1250 + 3 × 22 gap = 1920 — все симетрично.
+     *
+     * Vertical: 22px gap зверху від screen edge (HUD при цьому накривається),
+     * 22px gap над hotbar strip (hotbar at y=946..1048 → modal-bottom 924
+     * → padding-bottom = 156). */
+    --space-modal-clear-top:     22px;
+    --space-modal-clear-bottom:  156px;
+    --space-modal-edge-gap:      22px;
+
+    /* Modal header — compact size shared між inv + Builder. -20% від
+     * canonical --space-modal-pad-y / --size-card-height. */
+    --space-header-pad-y:       18px;
+    --size-header-close-btn:    44px;
     --space-tooltip-pad-x: 20px;
     --space-tooltip-pad-y: 16px;
     --space-card-pad-x:    12px;

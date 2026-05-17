@@ -38,6 +38,7 @@ namespace View.UI.Inventory
         // ── Document ──────────────────────────────────────────
         UIDocument _doc;
         VisualElement _root;
+        VisualElement _backdrop;
         VisualElement _window;
         Button _closeBtn;
 
@@ -158,6 +159,7 @@ namespace View.UI.Inventory
             _root = _doc.rootVisualElement;
             if (_root == null) return;
 
+            _backdrop       = _root.Q<VisualElement>("backdrop");
             _window         = _root.Q<VisualElement>("window");
             _closeBtn       = _root.Q<Button>("closeBtn");
             _equipmentRow   = _root.Q<VisualElement>("equipmentRow");

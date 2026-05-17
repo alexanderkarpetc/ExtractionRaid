@@ -15,16 +15,25 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: var(--color-modal-backdrop);
     /* Left-anchored. padding-top clears the H/V HUD strip; padding-bottom
      * clears the hotbar strip. inv-inner flex-grows у column main axis to
      * fill that vertical strip — window then stretches vertically inside it
-     * via align-items: stretch. */
+     * via align-items: stretch.
+     *
+     * Backdrop tint follows the legacy uGUI inventory — sole modal that
+     * dims the game world. Builder stays transparent (wb-backdrop) so the
+     * two coexist visually under side-by-side. Inventory panel sort (100)
+     * sits ВЕЛОЙ за Builder (110) so Builder window renders above this
+     * backdrop і не виглядає тонованим. */
     align-items: flex-start;
     justify-content: flex-start;
-    padding-left: 8px;
-    padding-top: 40px;
-    padding-bottom: 130px;
+    /* All four paddings shared з Builder через токени. Edge-gap забезпечує
+     * симетричний зазор з обох сторін екрану + центр (1920 = gap×3 +
+     * inv + builder). Vertical clear'ять HUD top + hotbar bottom. */
+    padding-left: var(--space-modal-edge-gap);
+    padding-top: var(--space-modal-clear-top);
+    padding-bottom: var(--space-modal-clear-bottom);
 }
 
 .inv-inner {
@@ -43,7 +52,7 @@
      * висота тягнеться по доступному простору між top/bottom paddings). */
     width: 604px;
     flex-shrink: 0;
-    background-color: var(--color-window-bg);
+    background-color: var(--color-modal-window-bg);
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);
@@ -56,10 +65,18 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    /* flex-shrink: 0 — header не стискається коли body має багато контенту. */
+    flex-shrink: 0;
+    /* Longhand — Unity USS shorthand `padding` with var() refs not
+     * reliably resolved, тож розписуємо per-axis. Compact y-padding для
+     * shared header look. */
+    padding-top: var(--space-header-pad-y);
+    padding-right: var(--space-modal-pad-x);
+    padding-bottom: var(--space-header-pad-y);
+    padding-left: var(--space-modal-pad-x);
     border-bottom-width: var(--border-window);
     border-bottom-color: var(--color-border-inset);
-    background-color: var(--color-header-bg);
+    background-color: var(--color-modal-header-bg);
 }
 
 .inv-title {
@@ -69,8 +86,8 @@
 }
 
 .inv-close-btn {
-    width: 52px;
-    height: 52px;
+    width: var(--size-header-close-btn);
+    height: var(--size-header-close-btn);
     background-color: transparent;
     border-width: 0;
     color: var(--color-text-button-cancel);
@@ -98,7 +115,7 @@
 
 .inv-pane {
     padding: 12px;
-    background-color: var(--color-inset-bg);
+    background-color: var(--color-modal-pane-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);
     border-radius: var(--radius-inset);
@@ -288,7 +305,7 @@
 .inv-subpanel {
     margin-bottom: 10px;
     padding: 12px;
-    background-color: var(--color-window-bg);
+    background-color: var(--color-modal-window-bg);
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);

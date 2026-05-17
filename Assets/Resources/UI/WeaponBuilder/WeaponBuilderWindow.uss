@@ -28,19 +28,26 @@
      * inventory canvas (left-anchored at 0..~31% width) can sit alongside without
      * overlap. See docs/ai/weapon-builder/plan/roadmap.md → Tier 6 Wave A. */
     align-items: flex-end;
-    justify-content: center;
-    padding-right: 20px;
+    justify-content: flex-start;
+    /* All four paddings shared з Inventory через токени. Edge-gap забезпечує
+     * симетричний зазор з обох сторін екрану + центр. */
+    padding-right: var(--space-modal-edge-gap);
+    padding-top: var(--space-modal-clear-top);
+    padding-bottom: var(--space-modal-clear-bottom);
 }
 
 .wb-window {
-    width: var(--size-window-width);
+    /* Narrower than canonical --size-window-width (1280) — leaves clearance
+     * to інвентаря в side-by-side: builder left = 1920 - 35(pad) - 1250 = 635,
+     * inv right = 612, gap = 23px. */
+    width: 1250px;
     /* Hard cap at the reference panel height (1080 ref px). With
      * ScaleWithScreenSize this fits 16:9 screens at any resolution because the
      * panel layout space is always 1920×1080 ref. C# UpdateWindowMaxHeight
      * tightens this further at runtime for non-16:9 aspects (ultrawide) where
      * panel ref height drops below 1080. */
     max-height: 1080px;
-    background-color: var(--color-window-bg);
+    background-color: var(--color-modal-window-bg);
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);
@@ -64,10 +71,17 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    /* flex-shrink: 0 — header не стискається коли scrollable body
+     * має overflow контенту. */
+    flex-shrink: 0;
+    /* Longhand + compact y-padding shared з інв header. */
+    padding-top: var(--space-header-pad-y);
+    padding-right: var(--space-modal-pad-x);
+    padding-bottom: var(--space-header-pad-y);
+    padding-left: var(--space-modal-pad-x);
     border-bottom-width: var(--border-window);
     border-bottom-color: var(--color-border-inset);
-    background-color: var(--color-header-bg);
+    background-color: var(--color-modal-header-bg);
 }
 
 .wb-title {
@@ -77,8 +91,8 @@
 }
 
 .wb-close-btn {
-    width: 52px;
-    height: 52px;
+    width: var(--size-header-close-btn);
+    height: var(--size-header-close-btn);
     background-color: transparent;
     border-width: 0;
     color: var(--color-text-button-cancel);
@@ -121,7 +135,7 @@
     width: 580px;
     margin-right: 12px;
     padding: 16px;
-    background-color: var(--color-inset-bg);
+    background-color: var(--color-modal-pane-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);
     border-radius: var(--radius-inset);
@@ -194,7 +208,7 @@
 .wb-build-panel {
     flex-grow: 1;
     padding: 16px;
-    background-color: var(--color-inset-bg);
+    background-color: var(--color-modal-pane-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);
     border-radius: var(--radius-inset);
@@ -358,11 +372,18 @@
 
 .wb-footer {
     flex-direction: row;
-    justify-content: flex-end;
-    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    justify-content: center;
+    /* flex-shrink: 0 + compact padding share з header — footer той самий
+     * розмір що header. Longhand because Unity USS shorthand+var не
+     * резолвиться reliably. */
+    flex-shrink: 0;
+    padding-top: var(--space-header-pad-y);
+    padding-right: var(--space-modal-pad-x);
+    padding-bottom: var(--space-header-pad-y);
+    padding-left: var(--space-modal-pad-x);
     border-top-width: var(--border-window);
     border-top-color: var(--color-border-inset);
-    background-color: var(--color-header-bg);
+    background-color: var(--color-modal-header-bg);
 }
 
 .wb-btn {
