@@ -22,6 +22,11 @@ namespace View.UI.Dialogue
         {
             public string Label;
             public Action OnClick;
+            // Defaults to true via the constructor pattern below — a default-initialized
+            // struct (Enabled = false) is the rare path. Set explicitly false to render
+            // the button greyed out and non-clickable (e.g. upgrade with no materials).
+            public bool? EnabledOverride;
+            public bool Enabled => EnabledOverride ?? true;
         }
 
         UIDocument _doc;
@@ -115,6 +120,11 @@ namespace View.UI.Dialogue
                 var c = choices[i];
                 var btn = new Button { text = "" };
                 btn.AddToClassList("choice");
+                if (!c.Enabled)
+                {
+                    btn.AddToClassList("choice--disabled");
+                    btn.SetEnabled(false);
+                }
 
                 var index = new Label((i + 1) + ".") { pickingMode = PickingMode.Ignore };
                 index.AddToClassList("index");
