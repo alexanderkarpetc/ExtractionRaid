@@ -11,14 +11,13 @@ using View.UI.Tooltip.Builders;
 namespace View.UI.Inventory
 {
     /// <summary>
-    /// Runtime UI Toolkit inventory modal — UI Toolkit replacement for the
-    /// legacy uGUI <c>LootPopupView</c> canvas.
+    /// Runtime UI Toolkit inventory modal — canonical inventory UI.
     ///
-    /// Layout (Stage 3 polish):
+    /// Layout:
     ///   - Main window left-anchored, holds only the player pane.
     ///   - Floating <see cref="LootSubPanelElement"/> sub-panels stack to the
     ///     right of the window — one per nearby lootable / corpse / floor /
-    ///     hideout stash. Mirrors the legacy multi-container view, while
+    ///     hideout stash. Mirrors the multi-container view convention, while
     ///     keeping drag-drop centralised here.
     ///
     /// Visibility is driven by <see cref="View.InventoryUI"/> via Open / Close

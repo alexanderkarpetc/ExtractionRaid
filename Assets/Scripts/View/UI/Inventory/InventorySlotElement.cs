@@ -8,12 +8,10 @@ namespace View.UI.Inventory
 {
     /// <summary>
     /// One inventory slot — backpack OR equipment, distinguished by USS class.
-    /// Read-only render at Stage 1 — drag/drop wired up у Stage 2.
-    ///
-    /// Mirrors the data shape of the legacy <c>InventorySlotView</c> / <c>EquipmentSlotView</c>:
-    /// item display name (via <see cref="WeaponDisplayName"/>), stack count or armor rating,
-    /// durability bar для armor, optional hotbar key badge. Items з category Quest
-    /// show a small quest marker dot.
+    /// Renders item display name (via <see cref="WeaponDisplayName"/>),
+    /// stack count or armor rating, durability bar для armor, optional hotbar
+    /// key badge. Items з category Quest show a small quest marker dot.
+    /// Drag/drop manipulator is wired externally by <see cref="InventoryWindow"/>.
     /// </summary>
     public class InventorySlotElement : VisualElement
     {
@@ -151,7 +149,7 @@ namespace View.UI.Inventory
 
             _durabilityFill.style.width = new Length(pct * 100f, LengthUnit.Percent);
 
-            // Green > yellow > red thresholds — mirrors legacy InventorySlotView.
+            // Green > yellow > red thresholds for armor durability bar.
             Color c;
             if (pct >= 0.7f)      c = new Color(0.20f, 0.80f, 0.20f, 0.9f);
             else if (pct >= 0.4f) c = new Color(0.90f, 0.75f, 0.10f, 0.9f);

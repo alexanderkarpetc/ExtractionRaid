@@ -9,8 +9,7 @@ namespace View.UI.Hotbar
     /// <summary>
     /// UI Toolkit hotbar HUD — bottom-center strip showing
     /// <see cref="InventoryState.QuickSlotBindings"/> (medkit / bandage /
-    /// grenade shortcuts), keys 3-9. Replaces the legacy uGUI HotBarView /
-    /// HotBarItemView (still inactive in <c>UI.prefab</c> as legacy markers).
+    /// grenade shortcuts), keys 3-9.
     ///
     /// Activation continues to flow through keyboard (<c>QuickSlotSystem</c>
     /// reads <c>IInputAdapter.QuickSlotPressed</c>). The overlay handles
@@ -20,14 +19,11 @@ namespace View.UI.Hotbar
     ///     gold "is-active" highlight while the player holds the bound key.</item>
     ///   <item>Click on empty slot — opens a picker popup listing bindable
     ///     consumables from the backpack. Choose one → bound.</item>
-    ///   <item>Shift+left-click — unbind. (Right-click reserved for a future
-    ///     context menu; deferred because Mouse.RightButton is also read for
-    ///     ADS and a clean UI/gameplay split needs separate work.)</item>
+    ///   <item>Shift+left-click — unbind.</item>
     /// </list>
     ///
-    /// Two extra bind paths (kept for parity with the legacy flow) live in
-    /// <c>LootPopupView</c>: hover backpack item + key 3-9, and right-click
-    /// inventory item → "Bind to N" context menu.
+    /// Two extra bind paths live in <see cref="View.UI.Inventory.InventoryWindow"/>:
+    /// hover backpack item + key 3-9, and right-click → "Bind to N" context menu.
     /// </summary>
     [DefaultExecutionOrder(-90)]
     public class HotbarOverlay : MonoBehaviour

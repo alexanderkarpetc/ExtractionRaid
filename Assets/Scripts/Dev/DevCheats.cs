@@ -42,12 +42,6 @@ namespace Dev
             set => Config.Cheats.InfiniteAmmo = value;
         }
 
-        public static bool UseUiToolkitInventory
-        {
-            get => Config.Cheats.UseUiToolkitInventory;
-            set => Config.Cheats.UseUiToolkitInventory = value;
-        }
-
         // ── Weapon ──────────────────────────────────────────
         public static float DamageMultiplier
         {

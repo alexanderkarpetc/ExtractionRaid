@@ -14,8 +14,9 @@ namespace Systems
     /// content) render as <see cref="BrokenLabel"/> so the player has a visible
     /// signal something is wrong with that slot.
     ///
-    /// View-layer helper: callers (InventorySlotView, EquipmentSlotView, hotbar) pass
-    /// <c>App.Instance.CoreDefinitions</c>. Pure C#, registry-only — no Unity refs.
+    /// View-layer helper: callers (InventorySlotElement, hotbar, quest reward
+    /// slot) pass <c>App.Instance.CoreDefinitions</c>. Pure C#, registry-only —
+    /// no Unity refs.
     /// </summary>
     public static class WeaponDisplayName
     {
