@@ -29,7 +29,7 @@
      * overlap. See docs/ai/weapon-builder/plan/roadmap.md → Tier 6 Wave A. */
     align-items: flex-end;
     justify-content: center;
-    padding-right: 32px;
+    padding-right: 20px;
 }
 
 .wb-window {
@@ -95,7 +95,9 @@
 /* ── Body ───────────────────────────────────────────── */
 
 .wb-body {
-    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+    /* Override the canonical modal-pad tokens (24/32) with tighter values so
+     * side-by-side з інвентарем economises horizontal space. */
+    padding: 20px 20px;
     /* ScrollView fills the space between header and footer; content scrolls when
      * the natural content height exceeds the viewport. */
     flex-grow: 1;
@@ -117,8 +119,8 @@
 
 .wb-palette {
     width: 580px;
-    margin-right: 24px;
-    padding: 20px;
+    margin-right: 12px;
+    padding: 16px;
     background-color: var(--color-inset-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);
@@ -191,7 +193,7 @@
 
 .wb-build-panel {
     flex-grow: 1;
-    padding: 20px;
+    padding: 16px;
     background-color: var(--color-inset-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);

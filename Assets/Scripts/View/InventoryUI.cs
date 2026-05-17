@@ -25,6 +25,18 @@ namespace View
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
+            // UTK path: window's IsOpen is authoritative for user-initiated close
+            // (the X button). If it dropped while we still think we're open,
+            // mirror that intent here — clear LootTargetId, drop _isOpen — so we
+            // don't immediately re-open the window in SyncUiToolkitWindow below.
+            if (DevCheats.UseUiToolkitInventory && _isOpen
+                && InventoryWindow.Instance != null && !InventoryWindow.Instance.IsOpen)
+            {
+                _isOpen = false;
+                _openedByLoot = false;
+                player.LootTargetId = EId.None;
+            }
+
             bool builderOpen = player.BuilderTargetId != EId.None;
 
             var kb = Keyboard.current;

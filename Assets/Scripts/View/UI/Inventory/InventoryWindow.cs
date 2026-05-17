@@ -54,6 +54,10 @@ namespace View.UI.Inventory
         readonly List<GroundItemState> _floorItems = new();
         readonly List<string> _scratchRemoveKeys = new();
 
+        // ── Context menu (right-click) ────────────────────────
+        ContextMenuElement _contextMenu;
+        readonly List<ContextMenuElement.Option> _scratchOptions = new();
+
         // ── Drag state ────────────────────────────────────────
         const float DragThreshold = 4f;
         InventorySlotElement _draggedSlot;
@@ -116,6 +120,7 @@ namespace View.UI.Inventory
         {
             if (_root == null) return;
             CancelActiveDrag();
+            _contextMenu?.Hide();
             _isVisible = false;
             _root.style.display = DisplayStyle.None;
         }
@@ -161,6 +166,19 @@ namespace View.UI.Inventory
 
             if (_closeBtn != null)
                 _closeBtn.clicked += Close;
+
+            _contextMenu = new ContextMenuElement();
+            _root.Add(_contextMenu);
+            // Capture-phase pointer-down on root dismisses an open menu when
+            // the click lands outside the menu's bounds.
+            _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+        }
+
+        void OnRootPointerDown(PointerDownEvent evt)
+        {
+            if (_contextMenu == null || !_contextMenu.IsVisible) return;
+            if (_contextMenu.worldBound.Contains(evt.position)) return;
+            _contextMenu.Hide();
         }
 
         void BuildPlayerSlots()
@@ -191,6 +209,16 @@ namespace View.UI.Inventory
                 _backpackGrid.Add(s);
                 _backpackSlots[i] = s;
                 WireSlotInteractions(s);
+                // Every 5th slot ends a row — drop trailing right-margin so 5 cells
+                // fit exactly у the player pane. USS :nth-child() is unsupported
+                // by Unity's UI Toolkit parser; ми ставимо class + inline-style
+                // (defensive — inline style has highest specificity, гарантовано
+                // переб'є будь-який USS cascade quirk з shorthand `margin`).
+                if ((i + 1) % 5 == 0)
+                {
+                    s.AddToClassList("inv-slot--row-end");
+                    s.style.marginRight = 0;
+                }
             }
         }
 
@@ -240,6 +268,17 @@ namespace View.UI.Inventory
         void RefreshSubPanels(Adapters.ICoreDefinitionRegistry registry)
         {
             if (_subPanelsHost == null) return;
+
+            // Side-by-side з Builder: ховаємо праву колонку — Builder сидить
+            // y тій самій горизонтальній зоні (right-anchored 1280px), а у
+            // workbench-режимі лут-джерел поряд все одно немає.
+            if (IsBuilderOpen())
+            {
+                RemoveAllSubPanels();
+                _subPanelsHost.style.display = DisplayStyle.None;
+                return;
+            }
+            _subPanelsHost.style.display = DisplayStyle.Flex;
 
             var wanted = new HashSet<string>();
 
@@ -363,6 +402,12 @@ namespace View.UI.Inventory
             _subPanels.Clear();
         }
 
+        static bool IsBuilderOpen()
+        {
+            var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            return player != null && player.BuilderTargetId != EId.None;
+        }
+
         static string ResolveLootableTitle(LootableContainerState lootable)
         {
             if (lootable == null) return "LOOT";
@@ -469,6 +514,12 @@ namespace View.UI.Inventory
 
         void OnSlotPointerDown(InventorySlotElement slot, PointerDownEvent evt)
         {
+            if (evt.button == 1)
+            {
+                ShowContextMenu(slot, evt.position);
+                evt.StopPropagation();
+                return;
+            }
             if (evt.button != 0) return;
             if (slot.CurrentItem == null) return;
             if (_draggedSlot != null) return;
@@ -478,6 +529,181 @@ namespace View.UI.Inventory
             _dragStartPanelPos = evt.position;
             _isDragging        = false;
             slot.CapturePointer(evt.pointerId);
+        }
+
+        // ── Context menu ──────────────────────────────────────
+
+        void ShowContextMenu(InventorySlotElement slot, Vector2 panelPos)
+        {
+            if (slot.CurrentItem == null) { _contextMenu?.Hide(); return; }
+            TooltipController.Instance?.Hide();
+
+            _scratchOptions.Clear();
+            BuildContextOptions(slot, _scratchOptions);
+            if (_scratchOptions.Count == 0) { _contextMenu.Hide(); return; }
+
+            _contextMenu.Show(panelPos, _scratchOptions);
+        }
+
+        void BuildContextOptions(InventorySlotElement slot, List<ContextMenuElement.Option> opts)
+        {
+            switch (slot.Source)
+            {
+                case InventorySlotElement.SlotSource.Player:
+                    BuildPlayerOptions(slot, opts);
+                    break;
+                case InventorySlotElement.SlotSource.Loot:
+                    BuildLootOptions(slot, opts);
+                    break;
+                case InventorySlotElement.SlotSource.Floor:
+                    opts.Add(new ContextMenuElement.Option {
+                        Label = "Pick up", Hotkey = "F",
+                        OnClick = () => CtxPickUpFromFloor(slot) });
+                    break;
+                case InventorySlotElement.SlotSource.Stash:
+                    opts.Add(new ContextMenuElement.Option {
+                        Label = "Take", Hotkey = "F",
+                        OnClick = () => CtxTakeFromStash(slot) });
+                    break;
+            }
+        }
+
+        void BuildPlayerOptions(InventorySlotElement slot, List<ContextMenuElement.Option> opts)
+        {
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return;
+
+            // Quick-slot bind options for backpack consumables.
+            if (slot.SlotRef.Type == SlotType.Backpack &&
+                slot.CurrentItem != null &&
+                QuickSlotRules.IsAssignable(slot.CurrentItem.DefinitionId))
+            {
+                int srcIdx = slot.SlotRef.Index;
+                int boundAt = -1;
+                for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                    if (inv.QuickSlotBindings[i] == srcIdx) { boundAt = i; break; }
+
+                for (int qi = 0; qi < InventoryState.QuickSlotCount; qi++)
+                {
+                    int captured = qi;
+                    int keyNum = qi + InventoryState.QuickSlotKeyOffset;
+                    if (qi == boundAt)
+                        opts.Add(new ContextMenuElement.Option {
+                            Label = $"Unbind from {keyNum}",
+                            OnClick = () => CtxUnbindQuickSlot(captured) });
+                    else
+                        opts.Add(new ContextMenuElement.Option {
+                            Label = $"Bind to {keyNum}",
+                            OnClick = () => CtxBindToQuickSlot(srcIdx, captured) });
+                }
+            }
+
+            if (App.Instance.IsInHideout)
+                opts.Add(new ContextMenuElement.Option {
+                    Label = "Stash", Hotkey = "Del",
+                    OnClick = () => CtxStashPlayer(slot) });
+            else
+                opts.Add(new ContextMenuElement.Option {
+                    Label = "Drop", Hotkey = "Del",
+                    OnClick = () => CtxDropPlayer(slot) });
+        }
+
+        void BuildLootOptions(InventorySlotElement slot, List<ContextMenuElement.Option> opts)
+        {
+            opts.Add(new ContextMenuElement.Option {
+                Label = "Pick up", Hotkey = "F",
+                OnClick = () => CtxPickUpFromLoot(slot) });
+            opts.Add(new ContextMenuElement.Option {
+                Label = "Drop", Hotkey = "Del",
+                OnClick = () => CtxDropFromLoot(slot) });
+        }
+
+        // ── Context actions ──────────────────────────────────
+
+        void CtxBindToQuickSlot(int backpackIndex, int qi)
+        {
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return;
+            // Clear any prior binding pointing at this same backpack slot.
+            for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                if (inv.QuickSlotBindings[i] == backpackIndex)
+                    inv.QuickSlotBindings[i] = -1;
+            inv.QuickSlotBindings[qi] = backpackIndex;
+        }
+
+        void CtxUnbindQuickSlot(int qi)
+        {
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return;
+            if (qi < 0 || qi >= inv.QuickSlotBindings.Length) return;
+            inv.QuickSlotBindings[qi] = -1;
+        }
+
+        void CtxDropPlayer(InventorySlotElement slot)
+        {
+            var session = App.Instance?.RaidSession;
+            var state   = session?.RaidState;
+            var player  = state?.PlayerEntity;
+            var inv     = App.Instance?.Player?.Inventory;
+            if (session == null || state == null || player == null || inv == null) return;
+            var dropPos = player.Position + player.FacingDirection * 1.5f;
+            InventorySystem.TryDrop(state, inv, slot.SlotRef, dropPos, session.ConsumeEvents());
+        }
+
+        void CtxStashPlayer(InventorySlotElement slot)
+        {
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return;
+            PushToStash(inv, slot.SlotRef);
+        }
+
+        void CtxPickUpFromLoot(InventorySlotElement slot)
+        {
+            var playerInv = App.Instance?.Player?.Inventory;
+            var lootInv   = ResolveLootInventory(slot.SourceLootableId);
+            if (playerInv == null || lootInv == null) return;
+            int free = playerInv.FindFreeBackpackSlot();
+            if (free < 0) return;
+            LootSystem.TryTransfer(lootInv, slot.SlotRef, playerInv,
+                InventorySlotRef.BackpackSlot(free));
+        }
+
+        void CtxDropFromLoot(InventorySlotElement slot)
+        {
+            var session = App.Instance?.RaidSession;
+            var state   = session?.RaidState;
+            var player  = state?.PlayerEntity;
+            var lootInv = ResolveLootInventory(slot.SourceLootableId);
+            if (session == null || state == null || player == null || lootInv == null) return;
+
+            var item = lootInv.GetSlot(slot.SlotRef);
+            if (item == null) return;
+
+            lootInv.SetSlot(slot.SlotRef, null);
+            var dropPos = player.Position + player.FacingDirection * 1.5f;
+            var ground = item.HasWeaponConfiguration
+                ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPos, item.WeaponConfiguration)
+                : GroundItemState.Create(item.Id, item.DefinitionId, dropPos, item.StackCount);
+            state.GroundItems.Add(ground);
+            session.ConsumeEvents().GroundItemSpawned(ground.Id, ground.Position, ground.DefinitionId);
+        }
+
+        void CtxPickUpFromFloor(InventorySlotElement slot)
+        {
+            var playerInv = App.Instance?.Player?.Inventory;
+            if (playerInv == null) return;
+            int free = playerInv.FindFreeBackpackSlot();
+            if (free < 0) return;
+            PickUpFloorTo(slot.RightIndex, InventorySlotRef.BackpackSlot(free));
+        }
+
+        void CtxTakeFromStash(InventorySlotElement slot)
+        {
+            var playerInv = App.Instance?.Player?.Inventory;
+            if (playerInv == null) return;
+            int free = playerInv.FindFreeBackpackSlot();
+            if (free < 0) return;
+            PullFromStash(slot.RightIndex, playerInv, InventorySlotRef.BackpackSlot(free));
         }
 
         void OnSlotPointerMove(InventorySlotElement slot, PointerMoveEvent evt)

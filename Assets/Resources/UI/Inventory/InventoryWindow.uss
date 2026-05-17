@@ -22,7 +22,7 @@
      * via align-items: stretch. */
     align-items: flex-start;
     justify-content: flex-start;
-    padding-left: 24px;
+    padding-left: 8px;
     padding-top: 40px;
     padding-bottom: 130px;
 }
@@ -34,11 +34,14 @@
 }
 
 .inv-window {
-    /* Player-pane-only modal. Reduced from full-width Tier A 1280px because
-     * loot/floor/stash content now lives in floating sub-panels к зправа.
+    /* Player-pane-only modal. Width tuned tight до 5×backpack grid:
+     *   5×102 + 4×9 gap = 546 content
+     *   + pane padding 24 + pane border 2 = 572 pane outer
+     *   + body padding 24 = 596 body outer
+     *   + window border 4 = 600 window, плюс 4px buffer = 604.
      * Vertical size is governed by inv-inner's stretch (фіксована ширина,
      * висота тягнеться по доступному простору між top/bottom paddings). */
-    width: 640px;
+    width: 604px;
     flex-shrink: 0;
     background-color: var(--color-window-bg);
     border-color: var(--color-border);
@@ -86,14 +89,15 @@
 .inv-body {
     flex-direction: column;
     /* Tighter padding than the canonical modal token — інвентар компактний,
-     * 24/18 economises horizontal room for the 5-column backpack grid. */
-    padding: 18px 24px;
+     * 14/12 economises horizontal room for the 5-column backpack grid
+     * (Builder side-by-side fits cleanly без overlap'у). */
+    padding: 14px 12px;
     flex-grow: 1;
     flex-shrink: 1;
 }
 
 .inv-pane {
-    padding: 16px;
+    padding: 12px;
     background-color: var(--color-inset-bg);
     border-color: var(--color-border-inset);
     border-width: var(--border-inset);
@@ -209,11 +213,25 @@
 /* ── Slot — backpack variant ────────────────────────── */
 
 .inv-slot--bp {
-    /* Square cells, 5 per row. 5×104 + 4×5 gap = 540, fits a ~560-internal pane. */
-    width: 104px;
-    height: 104px;
-    margin: 0 5px 5px 0;
+    /* Square cells, 5 per row. 5×102 + 4×9 gap = 546, fits pane internal.
+     * Spacing 9 (horizontal) × 7 (vertical) mirrors the legacy uGUI
+     * GridLayoutGroup cell spacing for visual parity. Longhand margins:
+     * Unity USS shorthand `margin: 0 9px 7px 0` does NOT cleanly override
+     * via a later `margin-right` rule, тому розписуємо per-axis. */
+    width: 102px;
+    height: 102px;
+    margin-top: 0;
+    margin-right: 9px;
+    margin-bottom: 7px;
+    margin-left: 0;
     justify-content: flex-start;
+}
+
+/* Last cell of a row drops the trailing right-margin so 5 cells fit без
+ * переносу на 4-per-row. Applied у C# через AddToClassList (USS pseudo-class
+ * :nth-child() is not supported by Unity's UI Toolkit parser). */
+.inv-slot--row-end {
+    margin-right: 0;
 }
 
 .inv-slot--bp .inv-slot__name {
@@ -298,3 +316,47 @@
 
 /* Slots inside a sub-panel use the same dimensions as the main backpack
  * (104×104) — visual consistency makes cross-pane drag feel native. */
+
+/* ── Context menu (right-click) ──────────────────────── */
+
+.inv-ctx-menu {
+    position: absolute;
+    background-color: var(--color-window-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-inset);
+    padding: 4px 0;
+    min-width: 180px;
+}
+
+.inv-ctx-menu__list {
+    flex-direction: column;
+}
+
+.inv-ctx-menu__btn {
+    background-color: transparent;
+    border-width: 0;
+    border-radius: 0;
+    padding: 6px 14px;
+    margin: 0;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    -unity-text-align: middle-left;
+}
+
+.inv-ctx-menu__btn:hover {
+    background-color: var(--color-card-bg-hover);
+}
+
+.inv-ctx-menu__label {
+    font-size: var(--font-card-kind);
+    color: var(--color-text-body);
+    flex-grow: 1;
+}
+
+.inv-ctx-menu__hotkey {
+    font-size: var(--font-card-kind);
+    color: var(--color-text-muted);
+    margin-left: 12px;
+}
