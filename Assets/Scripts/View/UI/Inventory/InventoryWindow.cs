@@ -39,8 +39,14 @@ namespace View.UI.Inventory
         UIDocument _doc;
         VisualElement _root;
         VisualElement _backdrop;
+        VisualElement _inner;
         VisualElement _window;
         Button _closeBtn;
+
+        // ── Fade animation ────────────────────────────────────
+        const int FadeDurationMs = 160;
+        const string FadingClass = "inv-fading";
+        int _fadeGen;
 
         VisualElement _equipmentRow;
         VisualElement _backpackGrid;
@@ -112,9 +118,20 @@ namespace View.UI.Inventory
         public void Open()
         {
             if (_root == null) return;
+
+            // Mount invisible, then drop the fading class next frame so the
+            // USS opacity transition runs (0 → 1). Mirrors WeaponBuilderWindow.
+            int gen = ++_fadeGen;
             _isVisible = true;
             _root.style.display = DisplayStyle.Flex;
+            if (_inner != null) _inner.AddToClassList(FadingClass);
             RefreshAll();
+
+            _root.schedule.Execute(() =>
+            {
+                if (gen != _fadeGen) return;
+                if (_inner != null) _inner.RemoveFromClassList(FadingClass);
+            }).StartingIn(0);
         }
 
         public void Close()
@@ -122,8 +139,18 @@ namespace View.UI.Inventory
             if (_root == null) return;
             CancelActiveDrag();
             _contextMenu?.Hide();
+
+            // Start fade-out, then collapse display after the transition.
+            int gen = ++_fadeGen;
             _isVisible = false;
-            _root.style.display = DisplayStyle.None;
+            if (_inner != null) _inner.AddToClassList(FadingClass);
+
+            _root.schedule.Execute(() =>
+            {
+                if (gen != _fadeGen) return;
+                _root.style.display = DisplayStyle.None;
+                if (_inner != null) _inner.RemoveFromClassList(FadingClass);
+            }).StartingIn(FadeDurationMs);
         }
 
         // ── Build ─────────────────────────────────────────────
@@ -160,6 +187,7 @@ namespace View.UI.Inventory
             if (_root == null) return;
 
             _backdrop       = _root.Q<VisualElement>("backdrop");
+            _inner          = _root.Q<VisualElement>("inner");
             _window         = _root.Q<VisualElement>("window");
             _closeBtn       = _root.Q<Button>("closeBtn");
             _equipmentRow   = _root.Q<VisualElement>("equipmentRow");
@@ -776,9 +804,12 @@ namespace View.UI.Inventory
             if (_draggedSlot == null) return;
             var target = SlotUnder(panelPos);
 
-            // Drop outside any slot → drop-to-ground (raid) or add-to-stash (hideout).
+            // Drop outside any slot → either silent cancel (drop hit inventory UI
+            // area like window body / sub-panel gap) або drop-to-ground/stash
+            // (drop completely outside UI, на dim backdrop'і).
             if (target == null)
             {
+                if (IsInsideUiArea(panelPos)) return;
                 DropOutsideSlot();
                 return;
             }
@@ -953,6 +984,18 @@ namespace View.UI.Inventory
                 if (s.worldBound.Contains(panelPos)) return s;
             }
             return null;
+        }
+
+        // True if panelPos sits within ANY inventory UI surface — the main
+        // window, або одна з floating sub-panels. Used to gate drop-to-ground:
+        // dropping into UI dead space (header/body padding, sub-panel gap)
+        // має сильно відрізнятися від dropping onto the dim backdrop за UI.
+        bool IsInsideUiArea(Vector2 panelPos)
+        {
+            if (_window != null && _window.worldBound.Contains(panelPos)) return true;
+            foreach (var panel in _subPanels.Values)
+                if (panel.worldBound.Contains(panelPos)) return true;
+            return false;
         }
 
         void UpdateSlotHover(Vector2 panelPos)

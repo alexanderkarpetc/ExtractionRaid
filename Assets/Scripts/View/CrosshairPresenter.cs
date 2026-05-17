@@ -137,6 +137,16 @@ namespace View
                 return;
             }
 
+            // Pointer over a UI Toolkit element (inv window/slot/builder/etc) —
+            // hide v2 reticle, OS cursor takes over. Mirrors v1 (AimCursorOverlay)
+            // OnGUI skip + InputAdapter attack-gating. AimCursorOverlay sets the
+            // flag in Update; this LateTick reads it in the same frame.
+            if (App.Instance.IsPointerOverUi)
+            {
+                if (_canvas != null && _canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(false);
+                return;
+            }
+
             LoadResources();
             if (_disabled) return;
             EnsureScene();

@@ -15,17 +15,11 @@
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: var(--color-modal-backdrop);
-    /* Left-anchored. padding-top clears the H/V HUD strip; padding-bottom
-     * clears the hotbar strip. inv-inner flex-grows у column main axis to
-     * fill that vertical strip — window then stretches vertically inside it
-     * via align-items: stretch.
-     *
-     * Backdrop tint follows the legacy uGUI inventory — sole modal that
-     * dims the game world. Builder stays transparent (wb-backdrop) so the
-     * two coexist visually under side-by-side. Inventory panel sort (100)
-     * sits ВЕЛОЙ за Builder (110) so Builder window renders above this
-     * backdrop і не виглядає тонованим. */
+    /* Fully transparent — інвентар без full-screen dim'у; game world видно
+     * everywhere except where inv-window/sub-panels overlap. Builder теж
+     * transparent (wb-backdrop) for parity. Token --color-modal-backdrop
+     * лишається у _tokens.uss для future modals, що захочуть dim. */
+    background-color: rgba(0, 0, 0, 0);
     align-items: flex-start;
     justify-content: flex-start;
     /* All four paddings shared з Builder через токени. Edge-gap забезпечує
@@ -40,6 +34,17 @@
     flex-direction: row;
     align-items: stretch;
     flex-grow: 1;
+    /* Fade in/out — clas `.inv-fading` driven from C# в Open/Close.
+     * Matches WeaponBuilderWindow.fadeDuration (160ms у коді з 10ms safety
+     * над css transition). */
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}
+
+.inv-fading {
+    opacity: 0;
 }
 
 .inv-window {
@@ -309,8 +314,9 @@
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);
-    /* Width = 3 cells of the same size as the main backpack
-     * (3 × 104 + 2 × 5) + 24 pad = 346. */
+    /* 3 cells per row, кожен 102×102, gap 9. Inner content:
+     *   3 × 102 + 2 × 9 = 324 (з row-end class на 3-му — no trailing margin).
+     *   + 24 padding + 4 border = 352. 360px width дає 8px breathing room. */
     width: 360px;
     max-height: 460px;
 }

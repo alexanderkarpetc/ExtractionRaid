@@ -95,7 +95,11 @@ namespace View
             }
 
             player.IsInventoryOpen = _isOpen;
-            App.Instance.SetGameplayInputBlocked(_isOpen);
+            // Inventory NO LONGER blocks gameplay input — player keeps walking
+            // та може стріляти коли cursor not over UI. Attack/ADS gating
+            // handled у IInputAdapter через IsPointerOverUi (set by
+            // AimCursorOverlay each frame). See PlayerEntityState.IsInMenu —
+            // inventory removed від that formula теж.
 
             // Migration switch — when on, the new UI Toolkit InventoryWindow drives
             // visibility and the legacy uGUI popup стай closed. When off, the legacy

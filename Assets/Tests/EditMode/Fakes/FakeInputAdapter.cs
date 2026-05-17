@@ -28,5 +28,6 @@ namespace Tests.EditMode.Fakes
         public Collider ConvergenceCollider { get; set; }
         public Vector2 WorldToScreen(Vector3 worldPoint) => Vector2.zero;
         public void SetWeaponAimScreenPos(Vector2 screenPos) { }
+        public bool IsPointerOverUi { get; set; }
     }
 }

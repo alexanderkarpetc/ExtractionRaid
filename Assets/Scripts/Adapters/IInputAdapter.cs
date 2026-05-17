@@ -60,5 +60,14 @@ namespace Adapters
         /// so that recoil affects headshot detection.
         /// </summary>
         void SetWeaponAimScreenPos(Vector2 screenPos);
+
+        /// <summary>
+        /// True while the OS cursor sits on top of a pick-enabled UI Toolkit
+        /// element (inventory window/sub-panel, builder palette, hotbar slot).
+        /// Used to suppress fire/ADS so clicking on UI never produces a shot.
+        /// Walk/sprint/keyboard shortcuts are NOT gated — only attack-class.
+        /// Set externally (AimCursorOverlay polls active panels each frame).
+        /// </summary>
+        bool IsPointerOverUi { get; set; }
     }
 }

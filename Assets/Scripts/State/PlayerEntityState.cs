@@ -67,9 +67,15 @@ namespace State
         public float LastSprintStopTime;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
-        public bool IsInMenu => IsInventoryOpen || IsQuestLogOpen || LootTargetId != EId.None
-            || CraftTargetId != EId.None || DeployTargetId != EId.None || NpcTargetId != EId.None
-            || BuilderTargetId != EId.None;
+        // Gameplay-pausing modal states only. Inventory / Loot / Builder are
+        // explicitly NOT here: with the UTK migration the player keeps walking
+        // and (за cursor-not-over-UI gate) shooting while ці modal'и open.
+        // Attack/ADS suppression for clicks landing на UI handled у InputAdapter
+        // через IsPointerOverUi flag.
+        public bool IsInMenu => IsQuestLogOpen
+            || CraftTargetId != EId.None
+            || DeployTargetId != EId.None
+            || NpcTargetId != EId.None;
 
         public static PlayerEntityState Create(EId id, Vector3 spawnPosition)
         {

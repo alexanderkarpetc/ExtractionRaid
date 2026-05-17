@@ -31,6 +31,7 @@ namespace Adapters
         Vector2 _weaponAimScreenPos;
 
         public bool BlockGameplayInput { get; set; }
+        public bool IsPointerOverUi { get; set; }
 
         public UnityInputAdapter()
         {
@@ -40,8 +41,10 @@ namespace Adapters
 
         public Vector2 MoveInput => BlockGameplayInput ? Vector2.zero : _actions.Player.Move.ReadValue<Vector2>();
         public bool SprintPressed => !BlockGameplayInput && _actions.Player.Sprint.IsPressed();
-        public bool AttackPressed => !BlockGameplayInput && _actions.Player.Attack.IsPressed();
-        public bool AttackJustPressed => !BlockGameplayInput && _actions.Player.Attack.WasPressedThisFrame();
+        // Attack/ADS are extra-gated on IsPointerOverUi — clicking on a UI panel
+        // never produces a shot, but walk + other inputs continue to work.
+        public bool AttackPressed => !BlockGameplayInput && !IsPointerOverUi && _actions.Player.Attack.IsPressed();
+        public bool AttackJustPressed => !BlockGameplayInput && !IsPointerOverUi && _actions.Player.Attack.WasPressedThisFrame();
 
         void UpdateConvergence()
         {
@@ -231,9 +234,9 @@ namespace Adapters
             }
         }
 
-        public bool AdsPressed => !BlockGameplayInput && (Mouse.current?.rightButton.isPressed ?? false);
+        public bool AdsPressed => !BlockGameplayInput && !IsPointerOverUi && (Mouse.current?.rightButton.isPressed ?? false);
 
-        public bool AttackJustReleased => !BlockGameplayInput && _actions.Player.Attack.WasReleasedThisFrame();
+        public bool AttackJustReleased => !BlockGameplayInput && !IsPointerOverUi && _actions.Player.Attack.WasReleasedThisFrame();
 
         public void SetCamera(Camera camera)
         {
