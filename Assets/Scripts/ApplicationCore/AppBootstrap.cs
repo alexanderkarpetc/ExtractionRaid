@@ -39,6 +39,7 @@ namespace ApplicationCore
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<QuestPresenter>();
             gameObject.AddComponent<NpcDialoguePresenter>();
+            gameObject.AddComponent<BuildingDialoguePresenter>();
 
             // Dialogue UIDocument host — must be its own GO because NpcDialogueWindow
             // requires a UIDocument component (panel settings owned by the window).
@@ -62,7 +63,6 @@ namespace ApplicationCore
             extractionHudHost.AddComponent<ExtractionHudWindow>();
             gameObject.AddComponent<AimCursorOverlay>();
             gameObject.AddComponent<StatusEffectOverlay>();
-            gameObject.AddComponent<CraftPresenter>();
             gameObject.AddComponent<StaminaBarOverlay>();
             gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();

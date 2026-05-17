@@ -118,7 +118,7 @@ namespace Session
             foreach (var sp in workbenchPoints)
             {
                 var id = RaidState.AllocateEId();
-                var wb = WorkbenchState.Create(id, sp.transform.position);
+                var wb = WorkbenchState.Create(id, sp.transform.position, sp.kind);
                 RaidState.Workbenches.Add(wb);
             }
 
