@@ -615,25 +615,23 @@ namespace State
                     MaxStackSize = 10,
                 },
 
-                // --- Quest items (special collectibles, not raw materials) ---
-                // Military Intel & Bio Sample Case — flagged as Quest category so they
-                // surface in the inventory's quest filter and don't accidentally get fed
-                // into crafting recipes. Re-classify to Material if a recipe needs them.
+                // Specialty materials — intel/sample case classed as Material like the
+                // rest of the additions, low stack so they read as high-value crafting inputs.
                 ["Military_Intel"] = new()
                 {
                     Id = "Military_Intel",
                     DisplayName = "Military Intel",
-                    Category = ItemCategory.Quest,
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 1,
+                    MaxStackSize = 3,
                 },
                 ["Bio_Sample_Case"] = new()
                 {
                     Id = "Bio_Sample_Case",
                     DisplayName = "Bio Sample Case",
-                    Category = ItemCategory.Quest,
+                    Category = ItemCategory.Material,
                     AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 1,
+                    MaxStackSize = 3,
                 },
 
                 // --- AP Ammo ---
