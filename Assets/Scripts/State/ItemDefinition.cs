@@ -292,6 +292,350 @@ namespace State
                     MaxStackSize = 3,
                 },
 
+                // --- Crafting Materials (Common — structural / generic) ---
+                // Stack sizes mirror the existing common-tier scale (15-30 per stack).
+                // Adhesive / Plastic / Rubber / Springs are intentionally skipped — already
+                // defined above.
+                ["Pipes"] = new()
+                {
+                    Id = "Pipes",
+                    DisplayName = "Pipes",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["Insulated_Wiring"] = new()
+                {
+                    Id = "Insulated_Wiring",
+                    DisplayName = "Insulated Wiring",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["Duct_Tape"] = new()
+                {
+                    Id = "Duct_Tape",
+                    DisplayName = "Duct Tape",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["Aluminum"] = new()
+                {
+                    Id = "Aluminum",
+                    DisplayName = "Aluminum",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 30,
+                },
+                ["Structural_Foam"] = new()
+                {
+                    Id = "Structural_Foam",
+                    DisplayName = "Structural Foam",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["Synthetic_Fiber"] = new()
+                {
+                    Id = "Synthetic_Fiber",
+                    DisplayName = "Synthetic Fiber",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+
+                // --- Crafting Materials (Uncommon — mechanical / electrical modules) ---
+                // Stack 8-15. Recipe inputs for mid-tier crafts and weapon mods.
+                ["Hydraulic_Seals"] = new()
+                {
+                    Id = "Hydraulic_Seals",
+                    DisplayName = "Hydraulic Seals",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Gear_Cluster"] = new()
+                {
+                    Id = "Gear_Cluster",
+                    DisplayName = "Gear Cluster",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Rotary_Motor"] = new()
+                {
+                    Id = "Rotary_Motor",
+                    DisplayName = "Rotary Motor",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Pneumatic_Valve"] = new()
+                {
+                    Id = "Pneumatic_Valve",
+                    DisplayName = "Pneumatic Valve",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Cooling_Fan"] = new()
+                {
+                    Id = "Cooling_Fan",
+                    DisplayName = "Cooling Fan",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Sensor_Module"] = new()
+                {
+                    Id = "Sensor_Module",
+                    DisplayName = "Sensor Module",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Motion_Sensor"] = new()
+                {
+                    Id = "Motion_Sensor",
+                    DisplayName = "Motion Sensor",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 8,
+                },
+                ["Camera_Optics"] = new()
+                {
+                    Id = "Camera_Optics",
+                    DisplayName = "Camera Optics",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 8,
+                },
+                ["Flux_Coil"] = new()
+                {
+                    Id = "Flux_Coil",
+                    DisplayName = "Flux Coil",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Pulse_Converter"] = new()
+                {
+                    Id = "Pulse_Converter",
+                    DisplayName = "Pulse Converter",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 8,
+                },
+                ["Ion_Battery"] = new()
+                {
+                    Id = "Ion_Battery",
+                    DisplayName = "Ion Battery",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Conductive_Gel"] = new()
+                {
+                    Id = "Conductive_Gel",
+                    DisplayName = "Conductive Gel",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Energy_Relay"] = new()
+                {
+                    Id = "Energy_Relay",
+                    DisplayName = "Energy Relay",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Chemical_Catalyst"] = new()
+                {
+                    Id = "Chemical_Catalyst",
+                    DisplayName = "Chemical Catalyst",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Bio_Compound"] = new()
+                {
+                    Id = "Bio_Compound",
+                    DisplayName = "Bio Compound",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Filtration_Membrane"] = new()
+                {
+                    Id = "Filtration_Membrane",
+                    DisplayName = "Filtration Membrane",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+                ["Sterile_Wrap"] = new()
+                {
+                    Id = "Sterile_Wrap",
+                    DisplayName = "Sterile Wrap",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 15,
+                },
+
+                // --- Crafting Materials (Rare — exotic / advanced) ---
+                // Stack 3-10. Top-tier inputs; rolling these from loot should be a moment.
+                ["Gyro_Stabilizer"] = new()
+                {
+                    Id = "Gyro_Stabilizer",
+                    DisplayName = "Gyro Stabilizer",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 8,
+                },
+                ["Smart_Targeting_Unit"] = new()
+                {
+                    Id = "Smart_Targeting_Unit",
+                    DisplayName = "Smart Targeting Unit",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 3,
+                },
+                ["Pulse_Emitter"] = new()
+                {
+                    Id = "Pulse_Emitter",
+                    DisplayName = "Pulse Emitter",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 3,
+                },
+                ["Adaptive_Circuit"] = new()
+                {
+                    Id = "Adaptive_Circuit",
+                    DisplayName = "Adaptive Circuit",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Nano_Filament"] = new()
+                {
+                    Id = "Nano_Filament",
+                    DisplayName = "Nano Filament",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Magnetic_Alloy"] = new()
+                {
+                    Id = "Magnetic_Alloy",
+                    DisplayName = "Magnetic Alloy",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Resonance_Plate"] = new()
+                {
+                    Id = "Resonance_Plate",
+                    DisplayName = "Resonance Plate",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Synthetic_Quartz"] = new()
+                {
+                    Id = "Synthetic_Quartz",
+                    DisplayName = "Synthetic Quartz",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Crystal_Matrix"] = new()
+                {
+                    Id = "Crystal_Matrix",
+                    DisplayName = "Crystal Matrix",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Phase_Shard"] = new()
+                {
+                    Id = "Phase_Shard",
+                    DisplayName = "Phase Shard",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 3,
+                },
+                ["Phase_Battery"] = new()
+                {
+                    Id = "Phase_Battery",
+                    DisplayName = "Phase Battery",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 3,
+                },
+                ["Quantum_Relay"] = new()
+                {
+                    Id = "Quantum_Relay",
+                    DisplayName = "Quantum Relay",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 3,
+                },
+                ["Plasma_Residue"] = new()
+                {
+                    Id = "Plasma_Residue",
+                    DisplayName = "Plasma Residue",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Irradiated_Dust"] = new()
+                {
+                    Id = "Irradiated_Dust",
+                    DisplayName = "Irradiated Dust",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+                ["Neural_Gel"] = new()
+                {
+                    Id = "Neural_Gel",
+                    DisplayName = "Neural Gel",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 5,
+                },
+                ["Bio_Foam"] = new()
+                {
+                    Id = "Bio_Foam",
+                    DisplayName = "Bio Foam",
+                    Category = ItemCategory.Material,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 10,
+                },
+
+                // --- Quest items (special collectibles, not raw materials) ---
+                // Military Intel & Bio Sample Case — flagged as Quest category so they
+                // surface in the inventory's quest filter and don't accidentally get fed
+                // into crafting recipes. Re-classify to Material if a recipe needs them.
+                ["Military_Intel"] = new()
+                {
+                    Id = "Military_Intel",
+                    DisplayName = "Military Intel",
+                    Category = ItemCategory.Quest,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+                ["Bio_Sample_Case"] = new()
+                {
+                    Id = "Bio_Sample_Case",
+                    DisplayName = "Bio Sample Case",
+                    Category = ItemCategory.Quest,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 1,
+                },
+
                 // --- AP Ammo ---
                 ["Ammo_Pistol_AP"] = new()
                 {
