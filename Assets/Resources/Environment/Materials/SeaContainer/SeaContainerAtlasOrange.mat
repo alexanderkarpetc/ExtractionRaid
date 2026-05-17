@@ -72,6 +72,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: 73c54ab06a34357468ca44dec8789a8f, type: 3}
         m_Scale: {x: 20, y: 20}
         m_Offset: {x: 0, y: 0}
+    - _NoiseDither:
+        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NosieEmission:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -125,8 +133,10 @@ Material:
     - _Dither: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _Emission: 0
     - _EnvironmentReflections: 1
     - _Float0: 0.5
+    - _Frensel: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -146,11 +156,13 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _UseAlpha: 0
+    - _Vertex_Coord: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Bias_Scale_PowerFrensel: {r: 0, g: 1, b: 5, a: 0}
     - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _Color1: {r: 0, g: 0, b: 0, a: 0}
     - _Color2: {r: 1, g: 0.5998718, b: 0.19339621, a: 1}
