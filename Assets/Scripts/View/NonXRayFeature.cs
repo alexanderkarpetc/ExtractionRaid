@@ -15,6 +15,7 @@ namespace View
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
+            if (!Application.isPlaying) return;
             if (renderingData.cameraData.cameraType != CameraType.Game) return;
 
             var renderers = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
