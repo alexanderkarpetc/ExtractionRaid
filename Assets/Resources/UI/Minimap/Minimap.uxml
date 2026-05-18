@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Minimap.uss"/>
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
+        <ui:VisualElement name="frame" class="frame" picking-mode="Ignore">
+            <ui:VisualElement name="viewport" class="viewport" picking-mode="Ignore">
+                <ui:VisualElement name="surface" class="surface" picking-mode="Ignore"/>
+                <ui:VisualElement name="markerLayer" class="marker-layer" picking-mode="Ignore"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="hint" class="hint" picking-mode="Ignore">
+                <ui:Label text="M — expand" class="hint-text"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

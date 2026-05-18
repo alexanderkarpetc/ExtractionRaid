@@ -6,6 +6,7 @@ using View.UI.Dialogue;
 using View.UI.EndOfRaid;
 using View.UI.Extraction;
 using View.UI.Hotbar;
+using View.UI.Minimap;
 using View.UI.Inventory;
 using View.UI.Tooltip;
 using View.UI.WeaponBuilder;
@@ -62,6 +63,14 @@ namespace ApplicationCore
             var extractionHudHost = new GameObject("ExtractionHudWindow");
             extractionHudHost.transform.SetParent(transform, false);
             extractionHudHost.AddComponent<ExtractionHudWindow>();
+
+            // Minimap — env-only screenshot captured once at raid start; markers are
+            // contributed by the presenter (player/npc/extract/quest) and any external
+            // caller via MinimapMarkerRegistry. Press M to expand from corner → fullscreen.
+            gameObject.AddComponent<MinimapPresenter>();
+            var minimapHost = new GameObject("MinimapWindow");
+            minimapHost.transform.SetParent(transform, false);
+            minimapHost.AddComponent<MinimapWindow>();
             gameObject.AddComponent<PointerOverUiTracker>();
             gameObject.AddComponent<StatusEffectOverlay>();
             gameObject.AddComponent<StaminaBarOverlay>();

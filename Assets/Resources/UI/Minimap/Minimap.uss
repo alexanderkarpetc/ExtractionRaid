@@ -1,0 +1,114 @@
+.root {
+    flex-grow: 1;
+}
+
+/* Corner mode (default) — bottom-right HUD widget. */
+.frame {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    width: 220px;
+    height: 220px;
+    background-color: rgba(12, 16, 28, 0.92);
+    border-color: rgba(255, 255, 255, 0.14);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Expanded mode — centered overlay. Same frame element, swapped position rules
+   so the layout transitions cleanly between sizes. */
+.frame.expanded {
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    top: 50%;
+    width: 640px;
+    height: 640px;
+    translate: -50% -50%;
+    border-radius: 18px;
+    background-color: rgba(12, 16, 28, 0.96);
+}
+
+/* The viewport sits inside the (overflow-hidden) frame, sized 5× larger and
+   translated so the player marker lands at the frame's visual center. Stuff
+   outside the frame is clipped by the parent. Surface + marker layer both
+   fill the viewport so they pan together. */
+.viewport {
+    position: absolute;
+    /* width/height/left/top assigned at runtime by MinimapWindow.RefreshMarkers */
+}
+
+.surface {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 10, 18, 1);
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.marker-layer {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+}
+
+/* Hint chip — bottom-right of the frame in corner mode; top-right in expanded. */
+.hint {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.frame.expanded .hint {
+    right: 12px;
+    bottom: auto;
+    top: 12px;
+}
+
+.hint-text {
+    color: rgb(170, 180, 200);
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+
+/* ── Markers ──────────────────────────────────────────── */
+.marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    border-color: rgba(0, 0, 0, 0.7);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.marker--player {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: rgb(135, 230, 255);
+    border-color: rgba(20, 30, 40, 0.9);
+}
+
+.marker--npc {
+    background-color: rgb(255, 230, 120);
+}
+
+.marker--extract {
+    background-color: rgb(106, 255, 193);
+}
+
+.marker--quest {
+    background-color: rgb(255, 145, 90);
+}
+
+.marker--custom {
+    background-color: rgb(180, 180, 200);
+}
