@@ -24,83 +24,79 @@
     flex-direction: row;
 }
 
-/* ── Slot ──────────────────────────────────────────── */
-/* Size matches the uGUI inventory slot (102×102 in SlotItemView.prefab) so the
- * hotbar reads as the same visual family as the inventory grid. */
+/* ── Slot ──────────────────────────────────────────────
+ * Slot cells use the shared `.inv-slot` + `.inv-slot--bp` classes via
+ * `_inv-slot.uss` (imported in HotbarOverlay.uxml). The rules below are
+ * scoped overrides: hotbar-only state highlights + strip-row margin tweaks.
+ * The drag ghost reuses `.inv-drag-ghost` from the same shared file. */
 
-.hb-slot {
-    width: 102px;
-    height: 102px;
+/* `.inv-slot--bp` has margin-bottom: 7px (designed for the multi-row backpack
+ * grid). У single-row strip the bottom margin would shift slots up відносно
+ * `.hb-strip` bottom anchor. Strip-scope it back to 0. Margin-right same
+ * 10px familiar до hotbar — closer to the previous spacing than inventory's
+ * 9px (cosmetic preference, easy to revert). */
+.hb-strip > .inv-slot--bp {
+    margin-bottom: 0;
     margin-right: 10px;
-    padding: 10px;
-    background-color: var(--color-header-bg);
-    border-color: var(--color-border);
-    border-width: var(--border-window);
-    border-radius: var(--radius-inset);
 }
 
-.hb-slot:last-child {
+.hb-strip > .inv-slot--bp:last-child {
     margin-right: 0;
 }
 
-.hb-slot:hover {
+/* Hover border highlight — inventory backpack slots don't have this (drag
+ * highlight там делает свою роботу). Hotbar HUD читається краще з hover. */
+.hb-strip > .inv-slot:hover {
     border-color: var(--color-hint);
 }
 
-/* Empty slot — dimmer surface so the eye reads "nothing bound here". */
-.hb-slot.is-empty {
+/* Empty slot — dimmer surface so the eye reads "nothing bound here".
+ * Class toggled у Refresh based on item == null. Inventory has no
+ * .is-empty concept (renders empty state via inv-slot__empty Label alone). */
+.hb-strip > .inv-slot.is-empty {
     background-color: var(--color-card-bg-disabled);
     border-color: var(--color-border-inset);
 }
 
-/* Active state — fired while the player holds the bound key (QuickSlotHeld). */
-.hb-slot.is-active {
+/* Active state — fired while the player holds the bound key
+ * (QuickSlotHeld → PlayerEntityState.ActiveQuickSlot). */
+.hb-strip > .inv-slot.is-active {
     border-color: var(--color-accent);
     background-color: var(--color-card-bg-selected);
 }
 
-/* ── Slot children ─────────────────────────────────── */
+/* ── Slot children — hotbar-specific ─────────────────
+ * Only the always-on "3..9" key hint is hotbar-specific. The other slot
+ * children (`.inv-slot__name/__resource/__quest/__durability`) live у the
+ * shared _inv-slot.uss.
+ *
+ * Default = occupied look: accent text + header-bg pill, mirror of
+ * `.inv-slot__key` (the inventory's bound-item badge). When the slot is
+ * empty we revert to plain muted-gray text (no pill) — see `.is-empty`
+ * override нижче. The default-occupied / override-empty split avoids
+ * needing `:not()` (not supported by Unity UI Toolkit). */
 
 .hb-slot__key {
     position: absolute;
     top: 6px;
     left: 8px;
     font-size: var(--font-card-kind);
-    color: var(--color-text-muted);
     -unity-font-style: bold;
-}
-
-.hb-slot.is-active .hb-slot__key {
     color: var(--color-accent);
+    background-color: var(--color-header-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
 }
 
-.hb-slot__count {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    font-size: var(--font-card-kind);
-    color: var(--color-text-body-strong);
-    -unity-font-style: bold;
+.hb-strip > .inv-slot.is-empty .hb-slot__key {
+    color: var(--color-text-muted);
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
+    border-radius: 0;
 }
 
-.hb-slot__name {
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
-    font-size: var(--font-stat-label);
-    -unity-font-style: bold;
-    color: var(--color-text-body);
-    -unity-text-align: middle-center;
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.hb-slot.is-empty .hb-slot__name {
-    color: var(--color-text-empty);
-    -unity-font-style: italic;
-    font-size: var(--font-card-kind);
+.hb-strip > .inv-slot.is-active .hb-slot__key {
+    color: var(--color-accent);
 }
 
 /* ── Bind picker (click on empty slot → choose item from backpack) ── */
@@ -169,3 +165,7 @@
     padding: 8px 0;
     -unity-text-align: middle-center;
 }
+
+/* Drag ghost reuses `.inv-drag-ghost` + `.inv-slot--bp` from _inv-slot.uss
+ * (full-slot clone з opacity 0.85 + accent border). No hotbar-specific
+ * overrides — pixel parity з inventory ghost is the goal. */

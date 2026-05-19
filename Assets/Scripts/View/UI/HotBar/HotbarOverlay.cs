@@ -2,7 +2,10 @@ using ApplicationCore;
 using State;
 using Systems;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using View.UI;
+using View.UI.Inventory;
 
 namespace View.UI.Hotbar
 {
@@ -33,7 +36,11 @@ namespace View.UI.Hotbar
         UIDocument _doc;
         VisualElement _root;
         VisualElement _strip;
-        SlotElement[] _slots;
+        // Slot cells are full InventorySlotElement instances — same custom UTK
+        // class the inventory grid uses. Reuse gives free pixel parity (name,
+        // durability bar, stack count, quest dot, drag-highlight) + a single
+        // place to evolve slot visuals.
+        InventorySlotElement[] _slots;
 
         VisualElement _pickerBackdrop;
         VisualElement _picker;
@@ -41,12 +48,26 @@ namespace View.UI.Hotbar
         VisualElement _pickerRows;
         int _pickerSlotIndex = -1;
 
-        struct SlotElement
-        {
-            public VisualElement Root;
-            public Label Name;
-            public Label Count;
-        }
+        // ── Drag-and-drop within hotbar ──────────────────────
+        // Slot → empty hotbar slot   = move binding
+        // Slot → occupied hotbar slot = swap bindings
+        // Slot → empty world (no UI)  = unbind
+        // Slot → any other UI         = silent cancel
+        const float DragThreshold = 4f;
+        int _draggedQi     = -1;
+        int _dragPointerId = -1;
+        Vector2 _dragStartPanelPos;
+        bool _isDragging;
+        VisualElement _dragGhost;
+
+        /// <summary>
+        /// True while a hotbar slot is actively being dragged (ghost up, past
+        /// threshold). Mirrors <see cref="View.UI.Inventory.InventoryWindow.IsDragging"/>;
+        /// read by <see cref="View.PointerOverUiTracker"/> to keep IsPointerOverUi
+        /// sticky so the OS cursor stays + crosshair stays hidden + attack stays
+        /// gated even коли ghost виходить за межі hotbar strip.
+        /// </summary>
+        public bool IsDragging => _isDragging;
 
         void Awake()
         {
@@ -97,59 +118,44 @@ namespace View.UI.Hotbar
         {
             if (_strip == null) return;
 
-            _slots = new SlotElement[InventoryState.QuickSlotCount];
+            _slots = new InventorySlotElement[InventoryState.QuickSlotCount];
             for (int i = 0; i < InventoryState.QuickSlotCount; i++)
             {
                 int qi = i;
                 int keyNum = qi + InventoryState.QuickSlotKeyOffset;
 
-                var slot = new VisualElement { name = $"slot-{qi}" };
-                slot.AddToClassList("hb-slot");
-                slot.AddToClassList("is-empty");
+                // Backpack-variant InventorySlotElement — 102×102, inv-slot
+                // chrome, all the same visual children (name, resource, durability,
+                // quest, _quickSlotKey). emptyPlaceholder left blank so a pust slot
+                // shows ТІЛЬКИ the always-on "3..9" hotkey hint, без redundant "Empty"
+                // word. is-empty USS class buys us the dim surface treatment.
+                var slot = new InventorySlotElement(
+                    InventorySlotElement.SlotKind.Backpack,
+                    emptyPlaceholder: string.Empty);
+                slot.name = $"slot-{qi}";
 
+                // Always-visible hotbar key hint. Distinct semantic from
+                // InventorySlotElement._quickSlotKey (which marks "this backpack
+                // item is bound to slot N" inside the inventory grid). Stays
+                // visible even when the hotbar slot is unbound — гравцеві потрібно
+                // бачити яку клавішу тиснути. Last child = top of z-stack.
                 var keyLbl = new Label(keyNum.ToString());
                 keyLbl.AddToClassList("hb-slot__key");
                 keyLbl.pickingMode = PickingMode.Ignore;
                 slot.Add(keyLbl);
 
-                var countLbl = new Label();
-                countLbl.AddToClassList("hb-slot__count");
-                countLbl.pickingMode = PickingMode.Ignore;
-                slot.Add(countLbl);
-
-                var nameLbl = new Label("Empty");
-                nameLbl.AddToClassList("hb-slot__name");
-                nameLbl.pickingMode = PickingMode.Ignore;
-                slot.Add(nameLbl);
-
-                slot.RegisterCallback<MouseDownEvent>(evt =>
-                {
-                    if (evt.button != 0) return;
-
-                    if (evt.shiftKey)
-                    {
-                        Unbind(qi);
-                        evt.StopPropagation();
-                        return;
-                    }
-
-                    // Plain click on an empty slot opens the picker. Click on
-                    // a busy slot is a no-op for now (use Shift+click to free
-                    // the slot first, or right-click in inventory to rebind).
-                    if (IsSlotEmpty(qi))
-                    {
-                        OpenPicker(qi, slot);
-                        evt.StopPropagation();
-                    }
-                });
+                // Slot input is pointer-based (not MouseDown) so we can branch:
+                //   shift+click → unbind, click-empty → picker, click-occupied → drag start.
+                // PointerDown captures the pointer; PointerMove flips _isDragging
+                // after threshold and spawns the ghost; PointerUp routes to
+                // TryDropFromHotbar (move/swap/unbind/cancel per drop target).
+                slot.RegisterCallback<PointerDownEvent>(evt => OnSlotPointerDown(qi, slot, evt));
+                slot.RegisterCallback<PointerMoveEvent>(evt => OnSlotPointerMove(qi, slot, evt));
+                slot.RegisterCallback<PointerUpEvent>(evt => OnSlotPointerUp(qi, slot, evt));
+                slot.RegisterCallback<PointerCaptureOutEvent>(_ => OnSlotPointerCaptureOut(qi));
 
                 _strip.Add(slot);
-                _slots[qi] = new SlotElement
-                {
-                    Root = slot,
-                    Name = nameLbl,
-                    Count = countLbl,
-                };
+                _slots[qi] = slot;
             }
         }
 
@@ -196,12 +202,13 @@ namespace View.UI.Hotbar
             if (_slots == null) return;
 
             var inventory = App.Instance?.Player?.Inventory;
-            var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            var player    = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            var registry  = App.Instance?.CoreDefinitions;
 
             for (int i = 0; i < _slots.Length; i++)
             {
-                var s = _slots[i];
-                if (s.Root == null) continue;
+                var slot = _slots[i];
+                if (slot == null) continue;
 
                 int boundSlot = inventory != null && i < inventory.QuickSlotBindings.Length
                     ? inventory.QuickSlotBindings[i]
@@ -210,14 +217,18 @@ namespace View.UI.Hotbar
                     ? inventory.Backpack[boundSlot]
                     : null;
 
-                bool hasItem = item != null;
+                // Bind() handles name / stack count "xN" via _resource / durability /
+                // quest dot / empty placeholder visibility — same rendering as the
+                // inventory grid. quickSlotKey: -1 → InventorySlotElement's own
+                // _quickSlotKey badge stays hidden (ми малюємо власний `hb-slot__key`).
+                var slotRef = boundSlot >= 0
+                    ? InventorySlotRef.BackpackSlot(boundSlot)
+                    : default;
+                slot.Bind(slotRef, item, quickSlotKey: -1, registry);
+
                 bool isActive = player != null && player.ActiveQuickSlot == i;
-
-                s.Root.EnableInClassList("is-empty", !hasItem);
-                s.Root.EnableInClassList("is-active", isActive);
-
-                s.Name.text = hasItem ? item.DisplayName : "Empty";
-                s.Count.text = hasItem && item.StackCount > 1 ? $"x{item.StackCount}" : string.Empty;
+                slot.EnableInClassList("is-empty", item == null);
+                slot.EnableInClassList("is-active", isActive);
             }
 
             // Picker auto-close: if the slot it was opened for got bound from
@@ -365,6 +376,231 @@ namespace View.UI.Hotbar
             inv.Version++;
         }
 
+        // ── Drag handlers ────────────────────────────────────
+
+        void OnSlotPointerDown(int qi, InventorySlotElement slot, PointerDownEvent evt)
+        {
+            if (evt.button != 0) return;
+
+            // Shift+click → unbind. Never enters drag mode (drag-then-unbind
+            // is unintuitive, and Shift+drag would surprise the user).
+            if (evt.shiftKey)
+            {
+                Unbind(qi);
+                evt.StopPropagation();
+                return;
+            }
+
+            // Empty slot — open picker. Drag-from-empty has no source binding
+            // so it would be a no-op anyway; picker is the only useful action.
+            if (IsSlotEmpty(qi))
+            {
+                OpenPicker(qi, slot);
+                evt.StopPropagation();
+                return;
+            }
+
+            // Occupied + no shift → start drag tracking. Ghost only spawns
+            // у OnSlotPointerMove after DragThreshold so a plain click on an
+            // occupied slot still feels like a click (no-op currently).
+            slot.CapturePointer(evt.pointerId);
+            _draggedQi         = qi;
+            _dragPointerId     = evt.pointerId;
+            _dragStartPanelPos = evt.position;
+            _isDragging        = false;
+            evt.StopPropagation();
+        }
+
+        void OnSlotPointerMove(int qi, InventorySlotElement slot, PointerMoveEvent evt)
+        {
+            if (_draggedQi != qi) return;
+            if (!slot.HasPointerCapture(evt.pointerId)) return;
+
+            if (!_isDragging)
+            {
+                Vector2 delta = (Vector2)evt.position - _dragStartPanelPos;
+                if (delta.sqrMagnitude < DragThreshold * DragThreshold) return;
+                _isDragging = true;
+                CreateGhost(qi);
+            }
+
+            UpdateGhostPosition(evt.position);
+            UpdateSlotHover(evt.position);
+        }
+
+        void OnSlotPointerUp(int qi, InventorySlotElement slot, PointerUpEvent evt)
+        {
+            if (_draggedQi != qi) return;
+
+            if (slot.HasPointerCapture(evt.pointerId))
+                slot.ReleasePointer(evt.pointerId);
+
+            if (_isDragging)
+            {
+                // Mouse.current.position is bottom-left screen coords — same convention
+                // as InventoryWindow.TryDropOnSlot, consistent with UiPanelHitTest.
+                Vector2 mouseScreen = Mouse.current?.position.ReadValue() ?? Vector2.zero;
+                TryDropFromHotbar(qi, mouseScreen);
+                DestroyGhost();
+                ClearAllSlotHover();
+            }
+
+            _draggedQi     = -1;
+            _dragPointerId = -1;
+            _isDragging    = false;
+        }
+
+        void OnSlotPointerCaptureOut(int qi)
+        {
+            if (_draggedQi != qi) return;
+            // Pointer capture lost mid-drag (e.g. panel rebuilt, scene change).
+            // Drop the ghost and reset — never run drop logic on a lost gesture.
+            DestroyGhost();
+            ClearAllSlotHover();
+            _draggedQi     = -1;
+            _dragPointerId = -1;
+            _isDragging    = false;
+        }
+
+        // ── Drop routing ─────────────────────────────────────
+
+        void TryDropFromHotbar(int srcQi, Vector2 mouseScreen)
+        {
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return;
+            if (srcQi < 0 || srcQi >= inv.QuickSlotBindings.Length) return;
+
+            int srcIdx = inv.QuickSlotBindings[srcQi];
+            if (srcIdx < 0) return; // drag started but binding vanished — bail.
+
+            int targetQi = FindHotbarSlotUnder(mouseScreen);
+            if (targetQi >= 0)
+            {
+                if (targetQi == srcQi) return; // self-drop = no-op
+                if (targetQi >= inv.QuickSlotBindings.Length) return;
+
+                int tgtIdx = inv.QuickSlotBindings[targetQi];
+                if (tgtIdx < 0)
+                {
+                    // Rule 1: move to empty hotbar slot.
+                    inv.QuickSlotBindings[srcQi]    = -1;
+                    inv.QuickSlotBindings[targetQi] = srcIdx;
+                }
+                else
+                {
+                    // Rule 2: swap bindings.
+                    inv.QuickSlotBindings[srcQi]    = tgtIdx;
+                    inv.QuickSlotBindings[targetQi] = srcIdx;
+                }
+                inv.Version++;
+                return;
+            }
+
+            // Rule 4: dropped on some OTHER UI panel (inventory, tooltip, builder...).
+            // Silent cancel — hotbar drag is hotbar-internal only, никаких передач
+            // в інвентар чи деінде.
+            if (UiPanelHitTest.IsScreenPointOverUi(mouseScreen)) return;
+
+            // Rule 3: dropped onto empty world space → drop-to-clear (unbind).
+            inv.QuickSlotBindings[srcQi] = -1;
+            inv.Version++;
+        }
+
+        // Shared by drag-internal target lookup AND public TryBindFromBackpack
+        // (inventory→hotbar drop) — single source of truth for "which hotbar slot
+        // is under this screen point".
+        int FindHotbarSlotUnder(Vector2 screenPos)
+        {
+            if (_slots == null || _root == null) return -1;
+            var panel = _root.panel;
+            if (panel == null) return -1;
+
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
+                new Vector2(screenPos.x, Screen.height - screenPos.y));
+
+            for (int qi = 0; qi < _slots.Length; qi++)
+            {
+                var slot = _slots[qi];
+                if (slot != null && slot.worldBound.Contains(panelPos))
+                    return qi;
+            }
+            return -1;
+        }
+
+        // ── Ghost + hover-highlight ──────────────────────────
+        // Mirror InventoryWindow's drag-visual idioms 1:1 — same .inv-slot + .inv-slot--bp
+        // + .inv-drag-ghost class triplet, same center-on-cursor formula, same
+        // .SetDragOver(valid, hovering) protocol for drop-target highlight.
+
+        void CreateGhost(int srcQi)
+        {
+            if (_root == null) return;
+            var srcSlot = (srcQi >= 0 && srcQi < _slots.Length) ? _slots[srcQi] : null;
+            if (srcSlot?.CurrentItem == null) return;
+
+            DestroyGhost();
+            _dragGhost = new VisualElement { name = "hb-drag-ghost" };
+            _dragGhost.pickingMode = PickingMode.Ignore;
+            _dragGhost.AddToClassList("inv-slot");
+            _dragGhost.AddToClassList("inv-slot--bp");
+            _dragGhost.AddToClassList("inv-drag-ghost");
+
+            var registry = App.Instance?.CoreDefinitions;
+            var name = new Label(WeaponDisplayName.For(srcSlot.CurrentItem, registry));
+            name.AddToClassList("inv-slot__name");
+            name.pickingMode = PickingMode.Ignore;
+            _dragGhost.Add(name);
+
+            // Last child of root → top of z-stack (above strip + picker).
+            _root.Add(_dragGhost);
+        }
+
+        void UpdateGhostPosition(Vector2 panelPos)
+        {
+            if (_dragGhost == null) return;
+            // Center the ghost on the cursor — matches InventoryWindow.UpdateGhostPosition.
+            float w = _dragGhost.resolvedStyle.width;
+            float h = _dragGhost.resolvedStyle.height;
+            if (w <= 0f) w = 102f;
+            if (h <= 0f) h = 102f;
+            _dragGhost.style.left = panelPos.x - w * 0.5f;
+            _dragGhost.style.top  = panelPos.y - h * 0.5f;
+        }
+
+        void DestroyGhost()
+        {
+            if (_dragGhost == null) return;
+            _dragGhost.RemoveFromHierarchy();
+            _dragGhost = null;
+        }
+
+        // Drop-target highlight while dragging — adds inv-slot-drag-valid (green
+        // border + bg) to the slot under the cursor, clears on the rest. Source
+        // slot itself never highlights. Hotbar drop is always valid on any other
+        // slot (Rules 1+2 cover move/swap), тому валідність всюди true.
+        void UpdateSlotHover(Vector2 panelPos)
+        {
+            if (_slots == null) return;
+            for (int qi = 0; qi < _slots.Length; qi++)
+            {
+                var s = _slots[qi];
+                if (s == null) continue;
+                bool over = s.worldBound.Contains(panelPos);
+                if (!over || qi == _draggedQi)
+                {
+                    s.SetDragOver(false, false);
+                    continue;
+                }
+                s.SetDragOver(valid: true, hovering: true);
+            }
+        }
+
+        void ClearAllSlotHover()
+        {
+            if (_slots == null) return;
+            foreach (var s in _slots) s?.SetDragOver(false, false);
+        }
+
         /// <summary>
         /// Drag-drop entry point — called by InventoryWindow.TryDropOnSlot when a
         /// drop lands outside any inventory slot. Locates the hotbar slot under
@@ -376,10 +612,6 @@ namespace View.UI.Hotbar
         /// </summary>
         public bool TryBindFromBackpack(Vector2 screenPos, int backpackIndex)
         {
-            if (_slots == null || _root == null) return false;
-            var panel = _root.panel;
-            if (panel == null) return false;
-
             var inv = App.Instance?.Player?.Inventory;
             if (inv == null) return false;
             if (backpackIndex < 0 || backpackIndex >= InventoryState.BackpackSize) return false;
@@ -387,34 +619,25 @@ namespace View.UI.Hotbar
             if (item == null) return false;
             if (!QuickSlotRules.IsAssignable(item.DefinitionId)) return false;
 
-            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
-                new Vector2(screenPos.x, Screen.height - screenPos.y));
+            int qi = FindHotbarSlotUnder(screenPos);
+            if (qi < 0) return false;
+            if (qi >= inv.QuickSlotBindings.Length) return false;
 
-            for (int qi = 0; qi < _slots.Length; qi++)
-            {
-                var root = _slots[qi].Root;
-                if (root == null) continue;
-                if (!root.worldBound.Contains(panelPos)) continue;
+            // Clear any prior binding pointing at this same backpack slot — mirrors
+            // digit-bind (HandleQuickSlotKeys) + ctx-menu bind (CtxBindToQuickSlot):
+            // a single item can occupy at most one quick slot, otherwise dragging
+            // through several slots duplicates it.
+            for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                if (inv.QuickSlotBindings[i] == backpackIndex)
+                    inv.QuickSlotBindings[i] = -1;
 
-                if (qi >= inv.QuickSlotBindings.Length) return false;
-
-                // Clear any prior binding pointing at this same backpack slot — mirrors
-                // digit-bind (HandleQuickSlotKeys) + ctx-menu bind (CtxBindToQuickSlot):
-                // a single item can occupy at most one quick slot, otherwise dragging
-                // through several slots duplicates it.
-                for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
-                    if (inv.QuickSlotBindings[i] == backpackIndex)
-                        inv.QuickSlotBindings[i] = -1;
-
-                inv.QuickSlotBindings[qi] = backpackIndex;
-                // Bump InventoryState.Version so InventoryWindow.RefreshAll re-binds the
-                // backpack pane and the new "3..9" key badge appears on the source slot
-                // (RefreshAll early-outs when Version is unchanged).
-                inv.Version++;
-                HidePicker();
-                return true;
-            }
-            return false;
+            inv.QuickSlotBindings[qi] = backpackIndex;
+            // Bump InventoryState.Version so InventoryWindow.RefreshAll re-binds the
+            // backpack pane and the new "3..9" key badge appears on the source slot
+            // (RefreshAll early-outs when Version is unchanged).
+            inv.Version++;
+            HidePicker();
+            return true;
         }
     }
 }

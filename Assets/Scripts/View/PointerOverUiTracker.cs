@@ -3,6 +3,7 @@ using Dev;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using View.UI;
+using View.UI.Hotbar;
 using View.UI.Inventory;
 
 namespace View
@@ -32,11 +33,12 @@ namespace View
             bool inMenu = player != null && player.IsInMenu;
 
             Vector2 mouseScreen = Mouse.current?.position.ReadValue() ?? Vector2.zero;
-            // Sticky-during-drag: while a slot is being dragged the ghost is following
-            // the mouse OUTSIDE the inventory window, so the point-based hit-test
-            // would report "not over UI" and re-enable attack/crosshair mid-drag. Force
-            // UI mode until OnSlotPointerUp / CancelActiveDrag flips _isDragging back.
-            bool dragging = InventoryWindow.Instance != null && InventoryWindow.Instance.IsDragging;
+            // Sticky-during-drag: while a slot is being dragged (inventory OR hotbar)
+            // the ghost follows the mouse outside the originating window, so the
+            // point-based hit-test would report "not over UI" and re-enable
+            // attack/crosshair mid-drag. Force UI mode until the drag releases.
+            bool dragging = (InventoryWindow.Instance != null && InventoryWindow.Instance.IsDragging)
+                         || (HotbarOverlay.Instance   != null && HotbarOverlay.Instance.IsDragging);
             bool pointerOverUi = inGameplay && (dragging || UiPanelHitTest.IsScreenPointOverUi(mouseScreen));
             App.Instance?.SetPointerOverUi(pointerOverUi);
 

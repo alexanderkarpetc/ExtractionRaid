@@ -1,0 +1,155 @@
+/* Inventory slot — shared visual contract.
+ *
+ * Used by:
+ *   - InventoryWindow (backpack grid + equipment row + loot/floor/stash sub-panels)
+ *   - HotbarOverlay   (bottom-center strip — reuses `.inv-slot--bp` 102×102 cells
+ *                      for pixel-perfect parity з inventory items)
+ *
+ * Imported via <Style src=".../_inv-slot.uss" /> in each consumer's UXML.
+ * Tokens pulled from _tokens.uss (loaded globally via Theme.tss).
+ *
+ * Naming pattern: `.inv-slot`           — base cell
+ *                 `.inv-slot__<part>`   — child labels / bars
+ *                 `.inv-slot--<kind>`   — backpack vs equipment variants
+ *                 `.inv-slot-drag-*`    — drag-target highlight overlay
+ *                 `.inv-drag-ghost`     — floating ghost that follows the cursor.
+ */
+
+/* ── Slot — common ──────────────────────────────────── */
+
+.inv-slot {
+    background-color: var(--color-card-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
+    padding: var(--space-card-pad-y) var(--space-card-pad-x);
+    overflow: hidden;
+}
+
+.inv-slot__empty {
+    font-size: var(--font-empty-placeholder);
+    color: var(--color-text-empty);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+    flex-grow: 1;
+}
+
+.inv-slot__name {
+    font-size: var(--font-card-title);
+    -unity-font-style: bold;
+    color: var(--color-text-title);
+    white-space: normal;
+    flex-grow: 1;
+}
+
+.inv-slot__resource {
+    font-size: var(--font-card-kind);
+    color: var(--color-text-secondary);
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+}
+
+.inv-slot__key {
+    font-size: var(--font-card-kind);
+    -unity-font-style: bold;
+    color: var(--color-accent);
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    background-color: var(--color-header-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.inv-slot__quest {
+    width: 8px;
+    height: 8px;
+    background-color: var(--color-accent);
+    border-radius: 4px;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+}
+
+.inv-slot__durability {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 2px;
+    height: 3px;
+    background-color: var(--color-border-inset);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.inv-slot__durability-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 2px;
+}
+
+/* ── Slot — backpack variant ────────────────────────── */
+
+.inv-slot--bp {
+    /* Square cells, 5 per row. 5×102 + 4×9 gap = 546, fits pane internal.
+     * Spacing 9 (horizontal) × 7 (vertical) mirrors the legacy uGUI
+     * GridLayoutGroup cell spacing for visual parity. Longhand margins:
+     * Unity USS shorthand `margin: 0 9px 7px 0` does NOT cleanly override
+     * via a later `margin-right` rule, тому розписуємо per-axis. */
+    width: 102px;
+    height: 102px;
+    margin-top: 0;
+    margin-right: 9px;
+    margin-bottom: 7px;
+    margin-left: 0;
+    justify-content: flex-start;
+}
+
+/* Last cell of a row drops the trailing right-margin so 5 cells fit без
+ * переносу на 4-per-row. Applied у C# через AddToClassList (USS pseudo-class
+ * :nth-child() is not supported by Unity's UI Toolkit parser). */
+.inv-slot--row-end {
+    margin-right: 0;
+}
+
+.inv-slot--bp .inv-slot__name {
+    font-size: 12px;
+}
+
+/* ── Slot — equipment variant ───────────────────────── */
+
+.inv-slot--eq {
+    /* Fixed landscape cells — row left-aligns, free space на правому boku
+     * intentional для future equipment slots (e.g. throwable). */
+    width: 128px;
+    height: 104px;
+    margin-right: 6px;
+    justify-content: flex-start;
+    flex-shrink: 0;
+}
+
+.inv-slot--eq:last-child {
+    margin-right: 0;
+}
+
+/* ── Drag-and-drop visuals ──────────────────────────── */
+
+.inv-slot-drag-valid {
+    border-color: var(--color-drag-valid-border);
+    background-color: var(--color-drag-valid-bg);
+}
+
+.inv-slot-drag-invalid {
+    border-color: var(--color-drag-invalid-border);
+    background-color: var(--color-drag-invalid-bg);
+}
+
+/* Ghost is a clone of the source slot that follows the cursor while dragging.
+ * Mounted on _root (absolute coords) so it floats above the window. */
+.inv-drag-ghost {
+    position: absolute;
+    opacity: 0.85;
+    border-color: var(--color-accent);
+    border-width: 2px;
+}
