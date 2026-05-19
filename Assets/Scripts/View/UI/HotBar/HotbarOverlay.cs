@@ -69,6 +69,18 @@ namespace View.UI.Hotbar
         /// </summary>
         public bool IsDragging => _isDragging;
 
+        // ── Active-slot press flash ──────────────────────────
+        // QuickSlotSystem sets PlayerEntityState.ActiveQuickSlot only while the
+        // key is held. For a quick tap that's a single frame — visually invisible
+        // (`is-active` toggles on/off too fast to register). To give clear
+        // feedback on every press, we sample edges (-1 → qi) and hold the
+        // `is-active` class for at least ActiveFlashDuration regardless of how
+        // briefly the key was held. Pressing a DIFFERENT bound slot restarts.
+        const float ActiveFlashDuration = 0.18f;
+        int   _lastActiveQuickSlot = -1;
+        int   _activeFlashSlot     = -1;
+        float _activeFlashStart    = -1f;
+
         void Awake()
         {
             Instance = this;
@@ -205,6 +217,19 @@ namespace View.UI.Hotbar
             var player    = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             var registry  = App.Instance?.CoreDefinitions;
 
+            // Edge-detect a new activation (only fires коли binding exists +
+            // player can actually use it — QuickSlotSystem gates на rolling /
+            // hands busy, тому unbound presses не дають фалшивого flash-у).
+            int active = player?.ActiveQuickSlot ?? -1;
+            if (active >= 0 && active != _lastActiveQuickSlot)
+            {
+                _activeFlashSlot  = active;
+                _activeFlashStart = Time.time;
+            }
+            _lastActiveQuickSlot = active;
+            bool flashAlive = _activeFlashSlot >= 0
+                              && (Time.time - _activeFlashStart) < ActiveFlashDuration;
+
             for (int i = 0; i < _slots.Length; i++)
             {
                 var slot = _slots[i];
@@ -226,9 +251,13 @@ namespace View.UI.Hotbar
                     : default;
                 slot.Bind(slotRef, item, quickSlotKey: -1, registry);
 
-                bool isActive = player != null && player.ActiveQuickSlot == i;
+                // is-active = held right now OR within the press-flash window.
+                // Tap (release < 0.18s) keeps highlight visible; held key extends
+                // it naturally through the `isHeld` branch.
+                bool isHeld  = active == i;
+                bool isFlash = flashAlive && _activeFlashSlot == i;
                 slot.EnableInClassList("is-empty", item == null);
-                slot.EnableInClassList("is-active", isActive);
+                slot.EnableInClassList("is-active", isHeld || isFlash);
             }
 
             // Picker auto-close: if the slot it was opened for got bound from
