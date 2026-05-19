@@ -115,13 +115,26 @@ namespace View
                 _playerView.SyncFromState(session.RaidState.PlayerEntity, session.RaidState.ElapsedTime);
                 _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
 
-                // Sync armor bar on player healthbar
-                if (session.RaidState.ArmorMap.TryGetValue(_trackedId, out var armorSlots))
-                {
-                    float helmetDur = armorSlots.Helmet?.DurabilityPercent ?? 0f;
-                    float vestDur = armorSlots.BodyArmor?.DurabilityPercent ?? 0f;
-                    _playerView.UpdateArmor(helmetDur, vestDur);
-                }
+                // Armor sync — bar durability + mesh attach/detach. State-driven (NOT event-
+                // driven) so that ANY mutation of HelmetSlot/BodyArmorSlot from any source
+                // (inventory drag-out → backpack/loot/stash/floor, drag-in, swap, future
+                // cheats) updates the visual without needing each mutation site to emit an
+                // event. SwapHelmetModel/SwapArmorModel are idempotent — no-op when the
+                // prefab ID hasn't changed, so per-tick calls are free. Fly-off path
+                // (ArmorBroken event handled above) detaches via DetachHelmetModel and
+                // sets CharacterBody's tracked prefab to null; this block then writes the
+                // null state ВПЕРЕД with SwapHelmetModel(null) → no-op. When the broken
+                // armor item is later removed from inventory, ArmorSlotState.IsBroken
+                // ensures we don't re-attach до a replacement is equipped.
+                session.RaidState.ArmorMap.TryGetValue(_trackedId, out var armorSlots);
+
+                float helmetDur = armorSlots?.Helmet?.DurabilityPercent ?? 0f;
+                float vestDur   = armorSlots?.BodyArmor?.DurabilityPercent ?? 0f;
+                _playerView.UpdateArmor(helmetDur, vestDur);
+
+                var inventory = App.Instance?.Player?.Inventory;
+                _playerView.SwapHelmetModel(ResolveArmorPrefab(inventory?.HelmetSlot,    armorSlots?.Helmet));
+                _playerView.SwapArmorModel (ResolveArmorPrefab(inventory?.BodyArmorSlot, armorSlots?.BodyArmor));
 
                 // B1 — push barrel heat into WeaponView for emission glow telegraph.
                 var equipped = session.RaidState.PlayerEntity.EquippedWeapon;
@@ -178,24 +191,24 @@ namespace View
             _fogOfWarController = fowGo.AddComponent<FogOfWarController>();
             _fogOfWarController.Initialize(_playerView.transform);
 
-            // Equip armor visuals from inventory
-            EquipArmorVisuals(session);
+            // Armor visuals are state-driven у LateTick — first post-spawn tick
+            // attaches the meshes (idempotent SwapXxxModel handles the diff).
+            // No spawn-time one-shot call needed.
 
             Debug.Log($"[PlayerPresenter] Spawned player view for {_trackedId}");
         }
 
-        void EquipArmorVisuals(RaidSession session)
+        // Maps inventory equipment slot + ArmorMap durability state → prefab ID for the
+        // attached mesh. Null = "should not be visible" — каже SwapXxxModel detach.
+        // Hides the mesh in three cases: slot is empty, definition has no prefab id,
+        // or armor is broken (Durability ≤ 0 — fly-off path already detached the model;
+        // this guard prevents a re-attach before the broken item leaves the slot).
+        static string ResolveArmorPrefab(ItemState item, ArmorState armor)
         {
-            if (_playerView == null || session == null) return;
-            var inventory = App.Instance?.Player?.Inventory;
-
-            var helmetDef = inventory.HelmetSlot?.Definition;
-            if (helmetDef != null && !string.IsNullOrEmpty(helmetDef.ArmorPrefabId))
-                _playerView.SwapHelmetModel(helmetDef.ArmorPrefabId);
-
-            var armorDef = inventory.BodyArmorSlot?.Definition;
-            if (armorDef != null && !string.IsNullOrEmpty(armorDef.ArmorPrefabId))
-                _playerView.SwapArmorModel(armorDef.ArmorPrefabId);
+            if (item?.Definition == null) return null;
+            if (string.IsNullOrEmpty(item.Definition.ArmorPrefabId)) return null;
+            if (armor != null && armor.IsBroken) return null;
+            return item.Definition.ArmorPrefabId;
         }
 
         static void ArmorBreakHelmetFlyOff(PlayerView view)
