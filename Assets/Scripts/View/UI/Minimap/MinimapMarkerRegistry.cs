@@ -24,11 +24,19 @@ namespace View.UI.Minimap
         public MinimapMarkerType Type;
         public Vector3 StaticPosition;
         public Func<Vector3> LivePositionFn;
+        // Optional yaw provider in degrees, clockwise from minimap-up (world +Z). Only
+        // honored by marker types that draw a directional indicator (Player arrow).
+        public Func<float> LiveRotationFn;
         public string Tooltip;
 
         public Vector3 ResolvePosition()
         {
             return LivePositionFn != null ? LivePositionFn() : StaticPosition;
+        }
+
+        public float ResolveRotation()
+        {
+            return LiveRotationFn != null ? LiveRotationFn() : 0f;
         }
     }
 
@@ -60,7 +68,8 @@ namespace View.UI.Minimap
         }
 
         public static void Register(string id, MinimapMarkerType type,
-            Func<Vector3> livePositionFn, string tooltip = null)
+            Func<Vector3> livePositionFn, string tooltip = null,
+            Func<float> liveRotationFn = null)
         {
             if (string.IsNullOrEmpty(id) || livePositionFn == null) return;
             _markers[id] = new MinimapMarker
@@ -68,6 +77,7 @@ namespace View.UI.Minimap
                 Id = id,
                 Type = type,
                 LivePositionFn = livePositionFn,
+                LiveRotationFn = liveRotationFn,
                 Tooltip = tooltip,
             };
         }

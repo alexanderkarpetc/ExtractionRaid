@@ -36,7 +36,7 @@ namespace View.SpawnPoints
         public Color clearColor = new Color(0.18f, 0.22f, 0.30f, 1f);
 
         [Tooltip("Capture texture resolution (square). 512 is a good default.")]
-        public int textureSize = 512;
+        public int textureSize = 2048;
 
         // Excludes UI (5), Player (6), Bot (7), FOV (8), Ragdoll (9). Includes
         // Default (0), IgnoreRaycast (2), Water (4) and any custom env layers.

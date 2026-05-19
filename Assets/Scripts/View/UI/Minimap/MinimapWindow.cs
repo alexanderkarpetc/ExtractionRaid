@@ -29,6 +29,9 @@ namespace View.UI.Minimap
         VisualElement _surface;   // holds the env texture
         VisualElement _markerLayer;
 
+        static Texture2D s_playerArrowTex;
+        const int PlayerArrowSize = 18;
+
         Vector2 _boundsCenterXZ;
         Vector2 _boundsSize = new Vector2(80f, 80f);
         bool _hasCapture;
@@ -151,8 +154,22 @@ namespace View.UI.Minimap
                 var dot = new VisualElement();
                 dot.AddToClassList("marker");
                 dot.AddToClassList(ClassFor(m.Type));
-                dot.style.left = mx - MarkerHalfSizeFor(m.Type);
-                dot.style.top  = my - MarkerHalfSizeFor(m.Type);
+                if (m.Type == MinimapMarkerType.Player)
+                {
+                    float half = PlayerArrowSize * 0.5f;
+                    dot.style.width = PlayerArrowSize;
+                    dot.style.height = PlayerArrowSize;
+                    dot.style.left = mx - half;
+                    dot.style.top  = my - half;
+                    dot.style.backgroundImage = new StyleBackground(GetPlayerArrowTexture());
+                    dot.style.rotate = new StyleRotate(
+                        new Rotate(new Angle(m.ResolveRotation(), AngleUnit.Degree)));
+                }
+                else
+                {
+                    dot.style.left = mx - MarkerHalfSizeFor(m.Type);
+                    dot.style.top  = my - MarkerHalfSizeFor(m.Type);
+                }
                 if (!string.IsNullOrEmpty(m.Tooltip)) dot.tooltip = m.Tooltip;
                 _markerLayer.Add(dot);
             }
@@ -197,5 +214,87 @@ namespace View.UI.Minimap
 
         static float MarkerHalfSizeFor(MinimapMarkerType t) =>
             t == MinimapMarkerType.Player ? 6f : 5f;
+
+        // Procedurally painted player arrow: kite/chevron pointing up at yaw=0, with
+        // a V-notch carved out of the base so it reads as a "you" arrow at small sizes.
+        // Cached statically — same shape for every raid, generated on first use.
+        static Texture2D GetPlayerArrowTexture()
+        {
+            if (s_playerArrowTex != null) return s_playerArrowTex;
+
+            const int S = 64;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, mipChain: false)
+            {
+                name = "Minimap_PlayerArrow",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+
+            var fill    = new Color32(135, 230, 255, 255);
+            var outline = new Color32(15, 25, 35, 230);
+            var clear   = new Color32(0, 0, 0, 0);
+
+            // Arrow polygon in normalized (x,y) coords with y growing downward, apex up:
+            //   apex      (0.50, 0.05)
+            //   right     (0.95, 0.95)
+            //   notch tip (0.50, 0.65)
+            //   left      (0.05, 0.95)
+            var apex   = new Vector2(0.50f, 0.05f);
+            var right  = new Vector2(0.95f, 0.95f);
+            var notch  = new Vector2(0.50f, 0.65f);
+            var left   = new Vector2(0.05f, 0.95f);
+
+            var pixels = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+            {
+                for (int x = 0; x < S; x++)
+                {
+                    // Texture2D y=0 is bottom; element y=0 is top. Flip so the
+                    // polygon's apex (semantic y≈0) lands at the top of the element.
+                    var p = new Vector2((x + 0.5f) / S, 1f - (y + 0.5f) / S);
+                    bool inside =
+                        PointInTriangle(p, apex, right, notch) ||
+                        PointInTriangle(p, apex, notch, left);
+                    pixels[y * S + x] = inside ? fill : clear;
+                }
+            }
+
+            // Thin outline by sampling 4-neighbors: any clear pixel adjacent to a fill
+            // pixel becomes outline. Keeps the arrow legible against the map texture.
+            var outlined = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+            {
+                for (int x = 0; x < S; x++)
+                {
+                    int idx = y * S + x;
+                    if (pixels[idx].a > 0) { outlined[idx] = fill; continue; }
+                    bool nearFill =
+                        (x > 0     && pixels[idx - 1].a > 0) ||
+                        (x < S - 1 && pixels[idx + 1].a > 0) ||
+                        (y > 0     && pixels[idx - S].a > 0) ||
+                        (y < S - 1 && pixels[idx + S].a > 0);
+                    outlined[idx] = nearFill ? outline : clear;
+                }
+            }
+
+            tex.SetPixels32(outlined);
+            tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+            s_playerArrowTex = tex;
+            return tex;
+        }
+
+        static bool PointInTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        {
+            float d1 = Sign(p, a, b);
+            float d2 = Sign(p, b, c);
+            float d3 = Sign(p, c, a);
+            bool hasNeg = d1 < 0f || d2 < 0f || d3 < 0f;
+            bool hasPos = d1 > 0f || d2 > 0f || d3 > 0f;
+            return !(hasNeg && hasPos);
+        }
+
+        static float Sign(Vector2 p1, Vector2 p2, Vector2 p3) =>
+            (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
     }
 }

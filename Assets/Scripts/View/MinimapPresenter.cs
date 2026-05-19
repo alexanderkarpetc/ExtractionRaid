@@ -54,12 +54,13 @@ namespace View
             // (2) Refresh marker overlay every frame (cheap; supports live positions).
             _window.RefreshMarkers();
 
-            // (3) M-key toggle. Read directly from Keyboard.current — gameplay input
-            // gating doesn't apply because M isn't a gameplay key, and we want the
-            // toggle to work even inside menus / dialogues.
+            // (3) Hold-to-expand on M. Read directly from Keyboard.current — gameplay
+            // input gating doesn't apply because M isn't a gameplay key, and we want
+            // the hold behavior to work even inside menus / dialogues.
             var kb = Keyboard.current;
-            if (kb != null && kb[Key.M].wasPressedThisFrame)
-                _window.SetExpanded(!_window.IsExpanded);
+            bool wantExpanded = kb != null && kb[Key.M].isPressed;
+            if (wantExpanded != _window.IsExpanded)
+                _window.SetExpanded(wantExpanded);
         }
 
         bool EnsureWindow()
@@ -80,7 +81,7 @@ namespace View
             var marker = FindObjectOfType<MinimapBoundsMarker>(includeInactive: false);
             bool autoFit = marker == null || marker.autoFit;
             LayerMask layers = marker != null ? marker.captureLayers : MinimapBoundsMarker.DefaultCaptureLayers;
-            int texSize = marker != null ? Mathf.Max(64, marker.textureSize) : 512;
+            int texSize = marker != null ? Mathf.Max(64, marker.textureSize) : 2048;
             Color clear = marker != null ? marker.clearColor : new Color(0.18f, 0.22f, 0.30f, 1f);
             float minCamHeight = marker != null ? marker.cameraHeight : 60f;
             float padding = marker != null ? marker.autoFitPadding : 4f;
@@ -218,7 +219,18 @@ namespace View
                     var p = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
                     return p?.Position ?? Vector3.zero;
                 },
-                tooltip: "You");
+                tooltip: "You",
+                // FacingDirection is world-space XZ. Atan2(x, z) gives clockwise yaw
+                // from world +Z, which matches minimap-up (camera looks down -Y, so
+                // larger Z renders at the top of the texture).
+                liveRotationFn: () =>
+                {
+                    var p = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+                    if (p == null) return 0f;
+                    var f = p.FacingDirection;
+                    if (f.sqrMagnitude < 0.0001f) return 0f;
+                    return Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+                });
 
             var state = session.RaidState;
 
