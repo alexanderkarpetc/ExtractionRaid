@@ -122,20 +122,20 @@ namespace View
             if (view == null)
                 view = shellGo.AddComponent<BotView>();
 
-            // 2. Body as child (CharacterBody + visual mesh)
-            if (!string.IsNullOrEmpty(config.BodyPrefabId))
+            // 2. Body as child (CharacterBody + visual mesh).
+            // Direct override (set by BotTypeConfigAsset) takes priority over Resources.Load by id.
+            var bodyPrefab = BotConstants.GetBodyPrefabOverride(typeId);
+            if (bodyPrefab == null && !string.IsNullOrEmpty(config.BodyPrefabId))
+                bodyPrefab = GetPrefab("Bodies/" + config.BodyPrefabId);
+            if (bodyPrefab != null)
             {
-                var bodyPrefab = GetPrefab("Bodies/" + config.BodyPrefabId);
-                if (bodyPrefab != null)
-                {
-                    var bodyGo = Object.Instantiate(bodyPrefab, shellGo.transform);
-                    bodyGo.transform.localPosition = Vector3.zero;
-                    bodyGo.transform.localRotation = Quaternion.identity;
+                var bodyGo = Object.Instantiate(bodyPrefab, shellGo.transform);
+                bodyGo.transform.localPosition = Vector3.zero;
+                bodyGo.transform.localRotation = Quaternion.identity;
 
-                    var body = bodyGo.GetComponent<CharacterBody>();
-                    if (body != null)
-                        view.BindBody(body);
-                }
+                var body = bodyGo.GetComponent<CharacterBody>();
+                if (body != null)
+                    view.BindBody(body);
             }
 
             view.Initialize(id, typeId, weapon, config.MaxHp);

@@ -81,7 +81,13 @@ namespace Session
             foreach (var sp in botPoints)
             {
                 if (UnityEngine.Random.value > sp.spawnChance) continue;
-                BotSpawnSystem.SpawnBot(RaidState, sp.botTypeId,
+                if (sp.config == null)
+                {
+                    UnityEngine.Debug.LogWarning($"BotSpawnPoint '{sp.name}' has no config asset — skipping.", sp);
+                    continue;
+                }
+                sp.config.ApplyToRegistry();
+                BotSpawnSystem.SpawnBot(RaidState, sp.config.TypeId,
                     sp.transform.position, sp.GetPatrolPositions(), _eventBuffer, _coreDefinitions);
             }
 

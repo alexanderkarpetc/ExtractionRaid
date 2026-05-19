@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6182647053cc70479189d48153a00a6, type: 3}
+  m_Name: PMC
+  m_EditorClassIdentifier: Game::Constants.BotTypeConfigAsset
+  _typeId: PMC
+  _shellPrefabId: BotShell
+  _bodyPrefab: {fileID: 1612062852821883575, guid: 7207586e38ebd104d8e73bccf905c8dc, type: 3}
+  _weapon: 1
+  _maxHp: 100
+  _healAmount: 30
+  _healThreshold: 0.5
+  _healCooldown: 15
+  _emergencyHealThreshold: 0.3
+  _emergencyHealDelay: 1.5
+  _emergencyHealCooldown: 8
+  _healSafeDelay: 3
+  _healSafeEnemyDistance: 10
+  _medkitCount: 2
+  _moveSpeed: 4.5
+  _patrolSpeed: 2.5
+  _chaseSpeed: 5
+  _visionRange: 35
+  _visionAngle: 120
+  _hearingRange: 6
+  _targetMemoryDuration: 8
+  _reactionTime: 0.4
+  _accuracy: 0.75
+  _engageRange: 28
+  _dodgeCooldown: 5
+  _grenadeCount: 2
+  _grenadeCooldown: 20
+  _grenadeMinThrowDist: 5
+  _meleeAttackRadius: 1.5
+  _meleeAttackDamage: 10
+  _meleeAttackCooldown: 1
+  _helmetDefinitionId: Helmet_Basic
+  _bodyArmorDefinitionId: Armor_Basic
+  _behaviors: 119

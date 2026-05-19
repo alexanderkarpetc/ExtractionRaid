@@ -159,6 +159,34 @@ namespace Constants
         // WeaponSyncSystem.BuildWeaponForItem. Stats (Damage, FireInterval, Spread,
         // Penetration, ArmorDamage, BleedChance, Headshot multiplier) all derived from cores.
 
+        public static WeaponConfiguration GetWeaponPreset(BotWeaponPreset preset)
+        {
+            switch (preset)
+            {
+                case BotWeaponPreset.Pistol:  return PistolWeapon;
+                case BotWeaponPreset.Shotgun: return ShotgunWeapon;
+                default:                      return RifleWeapon;
+            }
+        }
+
+        public static void RegisterOrOverride(BotTypeConfig config)
+        {
+            Registry[config.TypeId] = config;
+        }
+
+        static readonly Dictionary<string, GameObject> BodyPrefabOverrides = new();
+
+        public static void SetBodyPrefabOverride(string typeId, GameObject prefab)
+        {
+            if (string.IsNullOrEmpty(typeId) || prefab == null) return;
+            BodyPrefabOverrides[typeId] = prefab;
+        }
+
+        public static GameObject GetBodyPrefabOverride(string typeId)
+        {
+            return typeId != null && BodyPrefabOverrides.TryGetValue(typeId, out var p) ? p : null;
+        }
+
         static readonly WeaponConfiguration RifleWeapon = new(
             payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
             delivery:       new DeliveryCoreInstance("Auto",          RarityTier.Common),

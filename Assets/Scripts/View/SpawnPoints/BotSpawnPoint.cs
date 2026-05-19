@@ -1,3 +1,4 @@
+using Constants;
 using UnityEngine;
 
 namespace View.SpawnPoints
@@ -8,8 +9,8 @@ namespace View.SpawnPoints
         [Tooltip("Probability this bot spawns (0 = never, 1 = always)")]
         public float spawnChance = 1f;
 
-        [Tooltip("Bot type ID from BotConstants: Scav, PMC, Boss")]
-        public string botTypeId = "Scav";
+        [Tooltip("BotTypeConfig asset. Defines bot type, stats, visuals, and behavior. Registered into BotConstants at spawn time.")]
+        public BotTypeConfigAsset config;
 
         [Tooltip("Patrol waypoint transforms. If empty, bot patrols around its spawn position.")]
         public Transform[] patrolWaypoints;
@@ -69,8 +70,9 @@ namespace View.SpawnPoints
                 }
             }
 
+            string label = config != null ? config.TypeId : "<no config>";
             UnityEditor.Handles.Label(transform.position + Vector3.up,
-                $"Bot: {botTypeId} ({spawnChance:P0})");
+                $"Bot: {label} ({spawnChance:P0})");
         }
 #endif
     }

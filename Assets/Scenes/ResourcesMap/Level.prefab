@@ -23895,9 +23895,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 4878407308211793050}
     m_Modifications:
     - target: {fileID: 1602644184442492092, guid: 01460466311fe034fb42736dd89dd156, type: 3}
-      propertyPath: botTypeId
-      value: PMC
-      objectReference: {fileID: 0}
+      propertyPath: config
+      value:
+      objectReference: {fileID: 11400000, guid: 9a1c4b7e5a2f4d0c9b3e1a8d4f6c0a02, type: 2}
     - target: {fileID: 1602644184442492092, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: spawnChance
       value: 0.795
@@ -40753,9 +40753,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 4878407308211793050}
     m_Modifications:
     - target: {fileID: 1602644184442492092, guid: 01460466311fe034fb42736dd89dd156, type: 3}
-      propertyPath: botTypeId
-      value: PMC
-      objectReference: {fileID: 0}
+      propertyPath: config
+      value:
+      objectReference: {fileID: 11400000, guid: 9a1c4b7e5a2f4d0c9b3e1a8d4f6c0a02, type: 2}
     - target: {fileID: 1602644184442492092, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: patrolRadius
       value: 5
