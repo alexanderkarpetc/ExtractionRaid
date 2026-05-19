@@ -16,6 +16,9 @@ namespace Constants
         Dodge        = 1 << 5,
         ThrowGrenade = 1 << 6,
         MeleeAttack  = 1 << 7,
+        // Fires continuously in the bot's current facing direction. No target tracking,
+        // no rotation toward target. Used by FeedbackRange test turrets.
+        FireForward  = 1 << 8,
     }
 
     public readonly struct BotTypeConfig
@@ -202,6 +205,25 @@ namespace Constants
         static readonly WeaponConfiguration ShotgunWeapon = new(
             payload:        new PayloadCoreInstance("BallisticRound", RarityTier.Common),
             delivery:       new DeliveryCoreInstance("Scatter",       RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 5);
+
+        // Laser counterparts — used by FeedbackRange test scene targets to cover all 6 archetypes.
+        static readonly WeaponConfiguration LaserPistolWeapon = new(
+            payload:        new PayloadCoreInstance("LaserCharge",   RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("SingleAction", RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 12);
+
+        static readonly WeaponConfiguration LaserRifleWeapon = new(
+            payload:        new PayloadCoreInstance("LaserCharge", RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("Auto",       RarityTier.Common),
+            exotic:         null,
+            ammoInMagazine: 30);
+
+        static readonly WeaponConfiguration LaserShotgunWeapon = new(
+            payload:        new PayloadCoreInstance("LaserCharge", RarityTier.Common),
+            delivery:       new DeliveryCoreInstance("Scatter",    RarityTier.Common),
             exotic:         null,
             ammoInMagazine: 5);
 
@@ -403,6 +425,28 @@ namespace Constants
             behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
         );
 
+        // --- FeedbackRange targets (6 archetypes) ---
+        // Stationary turrets for damage-feedback playtest. Fire continuously in current facing
+        // direction (FireForward behavior — no target tracking, no rotation toward player).
+        // Player walks into the firing lanes to sample hit reactions / VFX / HUD damage
+        // indicators. High HP + full armor so dummies don't break during playtest. Pairs з
+        // GodMode visual passthrough (DamageSystem zeroes player HP damage, fires all VFX events).
+        static BotTypeConfig FeedbackTarget(string typeId, WeaponConfiguration weapon) => new(
+            typeId: typeId, prefabId: "BotShell", weaponConfig: weapon,
+            maxHp: 1000f, moveSpeed: 0f, chaseSpeed: 0f, patrolSpeed: 0f,
+            visionRange: 0f, visionAngle: 0f, hearingRange: 0f,
+            targetMemoryDuration: 0f, reactionTime: 0f, accuracy: 1f, engageRange: 0f,
+            helmetDefinitionId: "Helmet_Basic", bodyArmorDefinitionId: "Armor_Basic",
+            behaviors: BotBehaviorFlags.FireForward
+        );
+
+        public static readonly BotTypeConfig FeedbackTarget_BPistol  = FeedbackTarget("FeedbackTarget_BPistol",  PistolWeapon);
+        public static readonly BotTypeConfig FeedbackTarget_BRifle   = FeedbackTarget("FeedbackTarget_BRifle",   RifleWeapon);
+        public static readonly BotTypeConfig FeedbackTarget_BShotgun = FeedbackTarget("FeedbackTarget_BShotgun", ShotgunWeapon);
+        public static readonly BotTypeConfig FeedbackTarget_LPistol  = FeedbackTarget("FeedbackTarget_LPistol",  LaserPistolWeapon);
+        public static readonly BotTypeConfig FeedbackTarget_LRifle   = FeedbackTarget("FeedbackTarget_LRifle",   LaserRifleWeapon);
+        public static readonly BotTypeConfig FeedbackTarget_LShotgun = FeedbackTarget("FeedbackTarget_LShotgun", LaserShotgunWeapon);
+
         // --- Horde-mode zombie ---
         // Always sees player (vision 999 / 360°), chases relentlessly, no ranged fire.
         // Carries PistolWeapon as a visual placeholder so WeaponPivot has something
@@ -441,6 +485,12 @@ namespace Constants
             { TargetKillFeelHelmet.TypeId, TargetKillFeelHelmet },
             { Zombie.TypeId, Zombie },
             { RangedTarget.TypeId, RangedTarget },
+            { FeedbackTarget_BPistol.TypeId,  FeedbackTarget_BPistol  },
+            { FeedbackTarget_BRifle.TypeId,   FeedbackTarget_BRifle   },
+            { FeedbackTarget_BShotgun.TypeId, FeedbackTarget_BShotgun },
+            { FeedbackTarget_LPistol.TypeId,  FeedbackTarget_LPistol  },
+            { FeedbackTarget_LRifle.TypeId,   FeedbackTarget_LRifle   },
+            { FeedbackTarget_LShotgun.TypeId, FeedbackTarget_LShotgun },
         };
 
         public static BotTypeConfig GetConfig(string typeId)

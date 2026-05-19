@@ -17,9 +17,11 @@ namespace View
         float _bleedChance;
         bool _hit;
         EId _targetedEntityId;
+        EId _ownerId;
 
         public void Initialize(EId id, float damage, EId targetedEntityId = default,
-            float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f)
+            float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f,
+            EId ownerId = default)
         {
             EId = id;
             _damage = damage;
@@ -27,6 +29,7 @@ namespace View
             _armorDamage = armorDamage;
             _bleedChance = bleedChance;
             _targetedEntityId = targetedEntityId;
+            _ownerId = ownerId;
         }
 
         public void SyncFromState(ProjectileEntityState state)
@@ -49,7 +52,12 @@ namespace View
                 var col = OverlapBuffer[i];
                 if (col == null) continue;
                 if (col.GetComponent<ProjectileView>() != null) continue;
-                if (col.GetComponent<IDamageableView>() == null) continue;
+                var dmg = col.GetComponent<IDamageableView>();
+                if (dmg == null) continue;
+                // Skip the shooter's own capsule — spawn pos sits inside it when the bot fires
+                // straight forward (FeedbackRange turrets, point-blank shots). Without this gate
+                // the projectile self-hits on frame 0 and stalls visually.
+                if (dmg.EId == _ownerId) continue;
 
                 _hit = true;
                 var startDelta = newPos - oldPos;
@@ -70,12 +78,17 @@ namespace View
                 if (Physics.SphereCast(oldPos, hitRadius, delta / dist, out var hit, dist,
                         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
                 {
-                    // Skip other projectiles
+                    // Skip other projectiles + the shooter's own capsule.
                     if (hit.collider.GetComponent<ProjectileView>() == null)
                     {
-                        _hit = true;
-                        ReportHit(hit.collider, hit.point, hit.normal);
-                        return;
+                        var dmg = hit.collider.GetComponent<IDamageableView>();
+                        bool isOwner = dmg != null && dmg.EId == _ownerId;
+                        if (!isOwner)
+                        {
+                            _hit = true;
+                            ReportHit(hit.collider, hit.point, hit.normal);
+                            return;
+                        }
                     }
                 }
             }

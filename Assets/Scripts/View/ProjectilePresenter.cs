@@ -52,6 +52,7 @@ namespace View
                     {
                         // Find targeted entity and combat stats from state
                         EId targeted = default;
+                        EId ownerId = default;
                         float penetration = 0f;
                         float armorDamage = 0f;
                         float bleedChance = 0f;
@@ -60,13 +61,14 @@ namespace View
                             if (p.Id == e.Id)
                             {
                                 targeted = p.TargetedEntityId;
+                                ownerId = p.OwnerId;
                                 penetration = p.Penetration;
                                 armorDamage = p.ArmorDamage;
                                 bleedChance = p.BleedChance;
                                 break;
                             }
                         }
-                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage, bleedChance, e.StringPayload);
+                        SpawnView(e.Id, e.Position, e.Direction, e.Damage, targeted, penetration, armorDamage, bleedChance, e.StringPayload, ownerId);
                         break;
                     }
                     case RaidEventType.ProjectileHit:
@@ -98,7 +100,7 @@ namespace View
 
         void SpawnView(EId id, Vector3 position, Vector3 direction, float damage,
             EId targetedEntityId = default, float penetration = 0f, float armorDamage = 0f,
-            float bleedChance = 0f, string payloadArchetype = null)
+            float bleedChance = 0f, string payloadArchetype = null, EId ownerId = default)
         {
             if (_projectilePrefab == null) return;
 
@@ -108,7 +110,7 @@ namespace View
 
             var go = Object.Instantiate(_projectilePrefab, position, rotation);
             var view = go.GetComponent<ProjectileView>();
-            view.Initialize(id, damage, targetedEntityId, penetration, armorDamage, bleedChance);
+            view.Initialize(id, damage, targetedEntityId, penetration, armorDamage, bleedChance, ownerId);
             _views[id] = view;
 
             // Per-archetype trail swap: laser uses TrailBullet02 (energy beam look),

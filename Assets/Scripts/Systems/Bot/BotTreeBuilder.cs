@@ -2,12 +2,21 @@ using System.Collections.Generic;
 using Constants;
 using Systems.Bot.BT;
 using Systems.Bot.Nodes;
+using UnityEngine;
 
 namespace Systems.Bot
 {
     public static class BotTreeBuilder
     {
         static readonly Dictionary<string, IBTNode> Cache = new();
+
+        // Reset cache on every Play-mode enter — Domain Reload is disabled in this project
+        // (ProjectSettings/EditorSettings.asset → m_EnterPlayModeOptions: 1), so static
+        // dictionaries persist across sessions and would hand back BT trees built from stale
+        // BotTypeConfig values after a behavior-flag edit. Hook here is cheap (Clear on
+        // already-empty dict), keeps tests + Editor iteration deterministic.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetCacheOnPlay() => Cache.Clear();
 
         public static IBTNode GetOrBuild(in BotTypeConfig config)
         {
@@ -22,6 +31,14 @@ namespace Systems.Bot
         static IBTNode Build(in BotTypeConfig config)
         {
             var branches = new List<IBTNode>();
+
+            // FireForward — top-level, NOT gated by HasTarget. Stationary turrets fire continuously
+            // in their current facing direction regardless of any perception state. Used by
+            // FeedbackRange test bots. Placed first so other branches (if mixed) don't preempt.
+            if (config.Has(BotBehaviorFlags.FireForward))
+            {
+                branches.Add(new FireForwardNode());
+            }
 
             if (config.Has(BotBehaviorFlags.Heal))
             {

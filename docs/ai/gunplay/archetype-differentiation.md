@@ -60,66 +60,6 @@ Heat persists across reload + weapon swap (decay only via `WeaponHeatSystem.Tick
 
 ---
 
-## Track B brainstorm
-
-For each combo: 3 candidates → eval (interesting × fits theme × scoped × balance-safe) → pick winner. Decisions logged at bottom.
-
-### Ballistic Pistol (Single, semi-auto, 12 mag, 1.5s reload)
-Identity: precise sidearm, fast, low-commitment.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| BP-1 | **Tap rhythm bonus** | Each shot within 0.3s of previous = +stacking damage (cap 3). Encourages rhythmic tapping vs panic-spam. | Med — needs HUD telegraph |
-| BP-2 | **Quick-draw shot** | First shot after equip-finish within 0.5s window = +damage + zero spread. Rewards reactive use. | Low — small state addition |
-| BP-3 | **Last-round overcharge** | Final round in mag = 1.5× damage + brighter muzzle. Cinematic last-shot. | Low — purely stat branch |
-
-### Ballistic Rifle (Auto, 30 mag, 2.0s reload)
-Identity: workhorse, sustained engagement, discipline matters.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| BR-1 | **First-shot precision** | First bullet of any burst = 0 spread + bonus pen. Release trigger ≥0.2s resets. Punishes spray, rewards burst discipline. | Low — fits existing recoil model |
-| BR-2 | **Suppressed cone** | Sustained fire (>5 shots, <0.5s gap) applies "suppressed" debuff on bots in cone — they flinch + can't return fire briefly. | High — new bot status effect, balance hazard |
-| BR-3 | **Heat-up spread climb** | Continuous fire grows spread cone — visual barrel-glow telegraph. Cool: 1s no-fire = reset. Forces burst discipline. | Med — similar to BR-1 but inverse curve |
-
-### Ballistic Shotgun (Scatter, 5 mag, 2.5s reload, 7 pellets)
-Identity: close-range king, brutal, physical.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| BS-1 | **Slug alt-fire** | Hold alt-fire button = next shot is single high-dmg slug (no spread, +pen). Tactical mode switch. | Med — new input + WeaponStats branch |
-| BS-2 | **Knockback impulse** | Hits at close range (<5m) apply impulse on bot rigidbody / ragdoll — physical shove. Stagger guaranteed. | Med — applies impulse via state event |
-| BS-3 | **Per-shell reload** | 1 shell loaded at a time (~0.5s each). Reload cancellable mid-load to fire. Cooler reload UX. | Med-High — reload FSM rework |
-
-### Laser Pistol (Single + Charge, 12 mag, 1.5s reload)
-Identity: precise charge sniper, commitment shot.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| LP-1 | **Charge-mark target** | Charge animation paints laser dot on cursor target. If charge released while dot is on same target = +damage + headshot multiplier. Pre-aim setup. | Med — needs marker visual + dot raycast |
-| LP-2 | **Bounce-beam at full charge** | Full charge (≥0.95) = beam ricochets once off wall. Skill shot trick. | High — new projectile branch (ricochet path) |
-| LP-3 | **Soft-lock homing on tap** | No charge (<0.2) tap-shots have weak homing toward bot under cursor (15° max curve). Charged shots = straight beam. | High — projectile homing logic |
-
-### Laser Rifle (Auto + Charge → Burst)
-Identity: charge-and-unload artillery. Already has 1–6 burst.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| LR-1 | **Heat lockout** | Each burst shot adds heat. Heat=100% = forced 1.5s cooldown (audio whistle + glow). Forces gaps between bursts. | Low-Med — purely additive state field |
-| LR-2 | **Burst chain to next target** | Each burst shot can arc to a nearby (≤3m) bot if line of sight. Multi-target sweep. | High — new projectile post-hit logic |
-| LR-3 | **Overcharge penalty** | Holding charge past max time (>2× ChargeTime) auto-fires with WORSE damage (instead of best). Punishes greedy hold. | Low — single phase check |
-
-### Laser Shotgun (Scatter + Charge, 5 mag, 2.5s reload, 7 pellets)
-Identity: charge-controlled beam-buckshot. Hardest combo to differentiate.
-
-| # | Idea | Core mechanic | Risk |
-|---|---|---|---|
-| LS-1 | **Charge controls focus** | Low charge = wide 30° cone (buckshot). Full charge = narrow 5° focused single-direction beam-cluster (slug-mode). Same 7 pellets, different spread. | Low — modulates pellet dir math |
-| LS-2 | **Pellet chain-arc on hit** | Each pellet that hits a bot can arc lightning to 1 nearby bot (≤4m). Multi-kill potential, cluster combat. | High — chain raycast post-hit |
-| LS-3 | **Charge controls range** | Low charge = short-range cone (low projectile lifetime). Full charge = long-range tight cluster (extended lifetime + speed). | Low — modulates stats per shot |
-
----
-
 ## Decision log
 
 | Combo | Winner | Why | Date |
@@ -137,14 +77,6 @@ Identity: charge-controlled beam-buckshot. Hardest combo to differentiate.
 **New:** parabolic with lower start, e.g. `min + (max - min) × chargeRatio²` з `min = 0.1` → quick tap ≈ 10%, mid ≈ 33%, full = 100%.
 **Why:** make quick-spam laser shots clearly weak — user must commit to charge for meaningful damage. Applies to all 3 laser archetypes; Laser+Auto burst uses cached `BurstChargeRatio` so this propagates наturally.
 **Tunables:** expose як DevCheats `LaserChargeDamageMin` (0.1) + `LaserChargeDamagePower` (2.0) — runtime feel-test friendly.
-
----
-
-## Open questions
-
-- Audio layer is missing entirely — should signature mechanics ship with placeholder SFX hooks now, or wait for audio epic?
-- Some mechanics (BR-2 suppression, LR-2 chain) need balance pass — high risk of dominating one archetype. Want playtest after each, not all-then-test.
-- A2/A3 view polish — should we author per-mechanic VFX during the mechanic implementation, or batch all view work after Track B is locked?
 
 ---
 

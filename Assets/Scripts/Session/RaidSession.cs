@@ -67,6 +67,8 @@ namespace Session
                 SpawnKillFeelTargets();
             else if (LevelState.LevelId == "ranged_range")
                 SpawnRangedRangeTargets();
+            else if (LevelState.LevelId == "feedback_range")
+                SpawnFeedbackRangeTargets();
             // horde_range: no static spawn — HordeSpawnSystem.Tick drives waves.
 
             _eventBuffer.RaidStarted();
@@ -477,6 +479,41 @@ namespace Session
             // Zone D — long range, behind big wall
             var d1 = new UnityEngine.Vector3(0f, 0f, 75f);
             BotSpawnSystem.SpawnBot(RaidState, "RangedTarget", d1, new[] { d1 }, _eventBuffer, _coreDefinitions);
+        }
+
+        // Damage-feedback playtest layout — 6 stationary turret bots (one per weapon archetype)
+        // arranged in a row ahead of the player spawn. Each bot uses FireForward behavior
+        // (continuous fire in fixed facing direction, no targeting). Player walks into the firing
+        // lanes to sample hit reactions / VFX / HUD damage indicators. Pairs з GodMode visual
+        // passthrough (DamageSystem zeroes player HP damage but fires all VFX events) — see
+        // ShootingScene_Feedback.unity + level id "feedback_range".
+        //
+        // Row layout: x = -25…+25 step 10m, z = 10 (ahead of player), y = 0.
+        // Bot order left→right: Ballistic Pistol / Rifle / Shotgun, Laser Pistol / Rifle / Shotgun.
+        // Bots face -Z (back toward the player area) so the firing lanes intersect the player's walk path.
+        void SpawnFeedbackRangeTargets()
+        {
+            const float z = 10f;
+            const float step = 10f;
+            string[] typeIds =
+            {
+                "FeedbackTarget_BPistol",
+                "FeedbackTarget_BRifle",
+                "FeedbackTarget_BShotgun",
+                "FeedbackTarget_LPistol",
+                "FeedbackTarget_LRifle",
+                "FeedbackTarget_LShotgun",
+            };
+            // Center the row around x=0 — first bot at -((N-1)/2 × step).
+            float startX = -((typeIds.Length - 1) * step) * 0.5f;
+            for (int i = 0; i < typeIds.Length; i++)
+            {
+                var pos = new UnityEngine.Vector3(startX + i * step, 0f, z);
+                BotSpawnSystem.SpawnBot(RaidState, typeIds[i], pos, new[] { pos }, _eventBuffer, _coreDefinitions);
+                // Last added bot — face -Z so firing lane points back to the player area.
+                var spawned = RaidState.Bots[RaidState.Bots.Count - 1];
+                spawned.FacingDirection = -UnityEngine.Vector3.forward;
+            }
         }
 
         public void Tick()

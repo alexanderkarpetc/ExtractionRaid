@@ -35,9 +35,14 @@ namespace Systems
                     continue;
 
                 // GodMode flows through context — see RaidContext.CheatsConfig.
-                if (context.CheatsConfig.GodMode && state.PlayerEntity != null
-                    && hit.TargetId == state.PlayerEntity.Id)
-                    continue;
+                // Player victim — pipeline runs normally (all VFX/events fire: hit pulse, blood,
+                // decals, damage numbers, ragdoll-not-triggered-because-alive). Side-effect mutations
+                // (HP, armor durability, bleeding) are gated below; HP damage is zeroed at ApplyDamage.
+                // Lets us playtest visual feedback (HUD damage indicators, hit pulse, etc.) without
+                // dying every 2 seconds.
+                bool godModePlayerVictim = context.CheatsConfig.GodMode
+                    && state.PlayerEntity != null
+                    && hit.TargetId == state.PlayerEntity.Id;
 
                 bool isHeadshot = hit.TargetedEntityId == hit.TargetId
                                  && hit.TargetedEntityId.Value != 0;
@@ -53,12 +58,16 @@ namespace Systems
                     float ricochetRoll = randomProvider != null ? randomProvider() : Random.value;
                     if (ArmorSystem.ShouldRicochet(helmet, hit.Penetration, ricochetRoll, context.ArmorConfig.RicochetChance))
                     {
-                        // Ricochet: 0 HP damage, full durability damage (absorptionRatio = 1)
-                        float armorDurDmg = ArmorSystem.CalcArmorDurabilityDamage(hit.ArmorDamage, 1f);
-                        ArmorSystem.ApplyDurabilityDamage(helmet, armorDurDmg);
+                        // Ricochet: 0 HP damage, full durability damage (absorptionRatio = 1).
+                        // GodMode: skip the mutation but still fire visuals below.
+                        if (!godModePlayerVictim)
+                        {
+                            float armorDurDmg = ArmorSystem.CalcArmorDurabilityDamage(hit.ArmorDamage, 1f);
+                            ArmorSystem.ApplyDurabilityDamage(helmet, armorDurDmg);
 
-                        if (helmet.IsBroken)
-                            context.Events.ArmorBroken(hit.TargetId, isHelmet: true);
+                            if (helmet.IsBroken)
+                                context.Events.ArmorBroken(hit.TargetId, isHelmet: true);
+                        }
 
                         var ricochetDir = projectile != null ? projectile.Direction : Vector3.forward;
                         context.Events.ProjectileRicochet(hit.ProjectileId, hit.HitPoint, ricochetDir);
@@ -111,7 +120,9 @@ namespace Systems
                     absorptionRatio = result.AbsorptionRatio;
 
                     var armor = ArmorSystem.GetArmorForHit(armorSlots, isHeadshot);
-                    if (armor != null && !armor.IsBroken)
+                    // GodMode: skip armor durability damage to keep player armor full mid-playtest;
+                    // absorptionRatio still calculated from current armor state so visuals stay representative.
+                    if (armor != null && !armor.IsBroken && !godModePlayerVictim)
                     {
                         ArmorSystem.ApplyDurabilityDamage(armor, result.ArmorDurDamage);
 
@@ -120,7 +131,8 @@ namespace Systems
                     }
                 }
 
-                ApplyDamage(health, finalDamage);
+                // GodMode: zero HP damage but keep `finalDamage` value for events/damage-numbers (visual realism).
+                ApplyDamage(health, godModePlayerVictim ? 0f : finalDamage);
 
                 // Stagger application (B.4 hit reaction). Only on bots that survived;
                 // dead targets handled by ragdoll layer. Tier picked from damage fraction:
@@ -128,8 +140,9 @@ namespace Systems
                 if (health.IsAlive && context.StaggerConfig.Enabled)
                     ApplyStagger(state, hit.TargetId, finalDamage, isHeadshot, in context);
 
-                // Bleed roll (ignores armor, per hit signal = per pellet for shotgun)
-                if (health.IsAlive && hit.BleedChance > 0f)
+                // Bleed roll (ignores armor, per hit signal = per pellet for shotgun).
+                // GodMode: skip bleeding application on player victim — visuals already covered by other events.
+                if (health.IsAlive && hit.BleedChance > 0f && !godModePlayerVictim)
                 {
                     float bleedRoll = randomProvider != null ? randomProvider() : Random.value;
                     if (bleedRoll < hit.BleedChance)

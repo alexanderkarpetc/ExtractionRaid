@@ -48,9 +48,11 @@ namespace Systems.Bot
                 {
                     bot.FacingDirection = velocity.normalized;
                 }
-                else if (bot.Blackboard.HasTarget)
+                else if (bot.Blackboard.HasTarget && !config.Has(BotBehaviorFlags.FireForward))
                 {
-                    // When stationary with a target, face toward target so vision cone covers them
+                    // When stationary with a target, face toward target so vision cone covers them.
+                    // FireForward bots (FeedbackRange turrets) opt out — their facing is set once at spawn
+                    // and must NOT track the player.
                     var toTarget = bot.Blackboard.LastKnownTargetPos - bot.Position;
                     toTarget.y = 0f;
                     if (toTarget.sqrMagnitude > 0.001f)
