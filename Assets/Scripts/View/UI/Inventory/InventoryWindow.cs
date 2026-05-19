@@ -5,6 +5,7 @@ using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using View.UI.Hotbar;
 using View.UI.Tooltip;
 using View.UI.Tooltip.Builders;
 
@@ -98,6 +99,13 @@ namespace View.UI.Inventory
         bool _isVisible;
 
         public bool IsOpen => _isVisible;
+
+        // True once a drag has passed the threshold and the ghost is up (set in
+        // OnSlotPointerMove). Read by PointerOverUiTracker to keep IsPointerOverUi
+        // sticky during drag — without this, dragging the ghost outside the inventory
+        // window flips the cursor back to crosshair + un-gates attack input,
+        // and the player starts shooting mid-drag. Resets on drop / cancel.
+        public bool IsDragging => _isDragging;
 
         void Awake()
         {
@@ -845,14 +853,26 @@ namespace View.UI.Inventory
             if (_draggedSlot == null) return;
             var target = SlotUnder(panelPos);
 
-            // Drop outside any slot → either silent cancel (drop landed on ANY
-            // UTK panel — inv body, sub-panel gap, Builder palette, hotbar,
-            // tooltip etc) or drop-to-ground/stash (drop completely outside
-            // pick-enabled UI). Uses panel.Pick across all live docs so future
-            // modals automatically count as "do not drop here".
+            // Drop outside any slot → priority order:
+            //  1. backpack→hotbar drag-bind (only when item is QuickSlotRules-assignable);
+            //  2. silent cancel if drop landed on ANY UTK panel (inv body, sub-panel
+            //     gap, hotbar but not over a slot, builder palette, tooltip, etc);
+            //  3. drop-to-ground/stash if drop is completely outside pick-enabled UI.
+            // Uses panel.Pick across all live docs so future modals automatically
+            // count as "do not drop here".
             if (target == null)
             {
                 Vector2 mouseScreen = UnityEngine.InputSystem.Mouse.current?.position.ReadValue() ?? Vector2.zero;
+
+                if (_draggedSlot.Source == InventorySlotElement.SlotSource.Player &&
+                    _draggedSlot.SlotRef.Type == SlotType.Backpack &&
+                    HotbarOverlay.Instance != null &&
+                    HotbarOverlay.Instance.TryBindFromBackpack(mouseScreen, _draggedSlot.SlotRef.Index))
+                {
+                    RefreshAll();
+                    return;
+                }
+
                 if (UiPanelHitTest.IsScreenPointOverUi(mouseScreen)) return;
                 DropOutsideSlot();
                 return;

@@ -318,7 +318,19 @@ namespace View.UI.Hotbar
             var inv = App.Instance?.Player?.Inventory;
             if (inv == null) return;
             if (qi < 0 || qi >= inv.QuickSlotBindings.Length) return;
+
+            // Defensive dup-clear — OpenPicker already filters bound-elsewhere
+            // items out of the row list, але якщо логіка пікера зміниться
+            // bind path має дати таку саму гарантію "один айтем = один слот"
+            // як digit-bind / ctx-menu / drag-bind.
+            for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                if (inv.QuickSlotBindings[i] == backpackIndex)
+                    inv.QuickSlotBindings[i] = -1;
+
             inv.QuickSlotBindings[qi] = backpackIndex;
+            // Bump version так само як інші bind paths — інакше InventoryWindow
+            // не оновить "3..9" badge на bound backpack-слоті після пікер-біндингу.
+            inv.Version++;
             HidePicker();
         }
 
@@ -348,6 +360,61 @@ namespace View.UI.Hotbar
             if (inv == null) return;
             if (qi < 0 || qi >= inv.QuickSlotBindings.Length) return;
             inv.QuickSlotBindings[qi] = -1;
+            // Mirror CtxUnbindQuickSlot: bump version so InventoryWindow re-binds
+            // the backpack pane and clears the "3..9" key badge.
+            inv.Version++;
+        }
+
+        /// <summary>
+        /// Drag-drop entry point — called by InventoryWindow.TryDropOnSlot when a
+        /// drop lands outside any inventory slot. Locates the hotbar slot under
+        /// <paramref name="screenPos"/> (bottom-left origin, raw Input System
+        /// coords), validates that the backpack item is assignable via
+        /// <see cref="QuickSlotRules"/>, and binds (replacing any existing
+        /// binding). Returns false for "not over any hotbar slot" OR "item not
+        /// assignable" — caller treats both as silent cancel.
+        /// </summary>
+        public bool TryBindFromBackpack(Vector2 screenPos, int backpackIndex)
+        {
+            if (_slots == null || _root == null) return false;
+            var panel = _root.panel;
+            if (panel == null) return false;
+
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return false;
+            if (backpackIndex < 0 || backpackIndex >= InventoryState.BackpackSize) return false;
+            var item = inv.Backpack[backpackIndex];
+            if (item == null) return false;
+            if (!QuickSlotRules.IsAssignable(item.DefinitionId)) return false;
+
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
+                new Vector2(screenPos.x, Screen.height - screenPos.y));
+
+            for (int qi = 0; qi < _slots.Length; qi++)
+            {
+                var root = _slots[qi].Root;
+                if (root == null) continue;
+                if (!root.worldBound.Contains(panelPos)) continue;
+
+                if (qi >= inv.QuickSlotBindings.Length) return false;
+
+                // Clear any prior binding pointing at this same backpack slot — mirrors
+                // digit-bind (HandleQuickSlotKeys) + ctx-menu bind (CtxBindToQuickSlot):
+                // a single item can occupy at most one quick slot, otherwise dragging
+                // through several slots duplicates it.
+                for (int i = 0; i < inv.QuickSlotBindings.Length; i++)
+                    if (inv.QuickSlotBindings[i] == backpackIndex)
+                        inv.QuickSlotBindings[i] = -1;
+
+                inv.QuickSlotBindings[qi] = backpackIndex;
+                // Bump InventoryState.Version so InventoryWindow.RefreshAll re-binds the
+                // backpack pane and the new "3..9" key badge appears on the source slot
+                // (RefreshAll early-outs when Version is unchanged).
+                inv.Version++;
+                HidePicker();
+                return true;
+            }
+            return false;
         }
     }
 }

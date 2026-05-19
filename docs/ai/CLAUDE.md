@@ -40,6 +40,7 @@ Do not introduce these unless explicitly requested:
 12. Never add new singletons.
 13. Keep diffs small and local.
 14. Do not introduce new frameworks unless explicitly requested.
+15. **Reload Domain is OFF** (`EditorSettings.m_EnterPlayModeOptions=1`) — static fields/events survive Play→Stop→Play. Reset any static cache via `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` (ref: `UiPanelHitTest.ResetCacheOnPlay`).
 
 ## 4) Core architecture
 

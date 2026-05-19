@@ -30,6 +30,13 @@ namespace View.UI
         /// </summary>
         public static void Invalidate() => _docsCache = null;
 
+        // Reload Domain is disabled in this project (EditorSettings
+        // m_EnterPlayModeOptions=1), so static fields survive Play→Stop→Play.
+        // Без цього коллбеку cache тримав би destroyed UIDocument refs після
+        // рестарту Play Mode → IsScreenPointOverUi завжди повертав би false.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetCacheOnPlay() => _docsCache = null;
+
         /// <summary>
         /// Screen-space (Input.mousePosition / Mouse.current.position) origin
         /// is bottom-left. UTK panels expect top-left origin so we flip Y
