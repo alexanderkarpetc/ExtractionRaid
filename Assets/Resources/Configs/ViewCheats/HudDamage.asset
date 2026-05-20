@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a078ec8a02bd12d20303b5aa43d35161, type: 3}
+  m_Name: HudDamage
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsHudDamageSection
+  Enabled: 1
+  BaseColor: {r: 1, g: 0.15, b: 0.15, a: 0.85}
+  SectorHalfWidthDeg: 25.2
+  InnerRadius: 0.869
+  EdgeSoftness: 0.01
+  PulseDuration: 0.5
+  NormalHitIntensity: 0.7
+  KillHitIntensity: 1
+  HeadshotHitIntensity: 0.95
+  RicochetHitIntensity: 0.35
+  LowHpGlowEnabled: 1
+  LowHpThresholdRatio: 0.2
+  LowHpPulseFreqHz: 0.3
+  LowHpMinIntensity: 0.088
+  LowHpMaxIntensity: 0.721
