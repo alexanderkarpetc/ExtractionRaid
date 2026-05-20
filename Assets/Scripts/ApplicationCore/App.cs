@@ -65,6 +65,7 @@ namespace ApplicationCore
         readonly BeamFlashPresenter _beamFlashPresenter;
         readonly DamageNumberPresenter _damageNumberPresenter;
         readonly CrosshairPresenter _crosshairPresenter;
+        readonly HudDamagePresenter _hudDamagePresenter;
 
         App()
         {
@@ -91,6 +92,7 @@ namespace ApplicationCore
             _beamFlashPresenter = new BeamFlashPresenter();
             _damageNumberPresenter = new DamageNumberPresenter();
             _crosshairPresenter = new CrosshairPresenter();
+            _hudDamagePresenter = new HudDamagePresenter();
             Player = new Player();
 
             QuestDatabase = Resources.Load<QuestDatabase>("Quests/QuestGraph");
@@ -235,6 +237,7 @@ namespace ApplicationCore
             _beamFlashPresenter.Dispose();
             _damageNumberPresenter.Dispose();
             _crosshairPresenter.Dispose();
+            _hudDamagePresenter.Dispose();
         }
 
         public void EndRaid()
@@ -290,6 +293,7 @@ namespace ApplicationCore
             _beamFlashPresenter.LateTick(RaidSession);
             _damageNumberPresenter.LateTick(RaidSession);
             _crosshairPresenter.LateTick(RaidSession);
+            _hudDamagePresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 

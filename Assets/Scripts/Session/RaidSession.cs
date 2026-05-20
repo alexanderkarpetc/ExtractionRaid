@@ -514,6 +514,28 @@ namespace Session
                 var spawned = RaidState.Bots[RaidState.Bots.Count - 1];
                 spawned.FacingDirection = -UnityEngine.Vector3.forward;
             }
+
+            // Side column on the right edge — varied archetypes, facing -X (right→left fire).
+            // Player walks vertically through the horizontal lanes, intercepting hit-vignette
+            // direction-sector tests from a different axis (orthogonal to the top row).
+            // x kept clear of top row's x=25 firing lane (top bot at x=25 fires straight -Z and
+            // would shred this column if collinear — push sideX further out by ~10m).
+            const float sideX = 35f;
+            const float sideStartZ = 0f;
+            const float sideStep = 4f;
+            string[] sideTypeIds =
+            {
+                "FeedbackTarget_BRifle",
+                "FeedbackTarget_BShotgun",
+                "FeedbackTarget_LRifle",
+            };
+            for (int i = 0; i < sideTypeIds.Length; i++)
+            {
+                var pos = new UnityEngine.Vector3(sideX, 0f, sideStartZ + i * sideStep);
+                BotSpawnSystem.SpawnBot(RaidState, sideTypeIds[i], pos, new[] { pos }, _eventBuffer, _coreDefinitions);
+                var spawned = RaidState.Bots[RaidState.Bots.Count - 1];
+                spawned.FacingDirection = -UnityEngine.Vector3.right;
+            }
         }
 
         public void Tick()
