@@ -147,6 +147,7 @@ namespace Editor
                 DrawSection("✛ Crosshair", _config.Crosshair);
                 if (view != null) DrawSection("✛ Crosshair v2 (SDF)", view.CrosshairV2);
                 if (view != null) DrawSection("🩸 HUD damage feedback", view.HudDamage);
+                if (view != null) DrawSection("⚔ Battle HUD", view.BattleHud);
                 DrawSection("🛡 Armor", _config.Armor);
                 if (view != null) DrawSection("🔢 Damage Numbers v2 (TMP)", view.DamageNumberV2);
                 DrawSection("⏸ Hit Pause", _config.HitPause);
@@ -697,6 +698,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsDamageNumberSection>(so, "_damageNumberV2", folder, "DamageNumberV2");
             CreateSectionIfMissing<ViewCheatsCrosshairV2Section>(so, "_crosshairV2", folder, "CrosshairV2");
             CreateSectionIfMissing<ViewCheatsHudDamageSection>(so, "_hudDamage", folder, "HudDamage");
+            CreateSectionIfMissing<ViewCheatsBattleHudSection>(so, "_battleHud", folder, "BattleHud");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
 
             so.ApplyModifiedPropertiesWithoutUndo();

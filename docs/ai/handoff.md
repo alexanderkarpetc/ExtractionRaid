@@ -172,12 +172,7 @@ Files: `View/BotDebugLabel.cs`, `View/WorldHealthBar.cs`, `View/BotView.cs`, `De
 ## What's deferred / open
 
 ### Gunplay backlog
-See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation shipped. Active candidates:
-- **Floating damage numbers v2** — typography / motion / hierarchy polish (competitor research first)
-- **Aim cursor v2** — variants per archetype / readability / dynamics (competitor research first)
-- **Maximal archetype differentiation** — every Builder combo mechanically unique, not just stat reskin (design pass needed before code)
-- **Bots must enter the screen before firing** — gate `WantsToFire` on camera-frustum visibility (avoids off-screen cheap shots)
-- HUD damage feedback, magazine drop physics
+See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation shipped. **Most prior backlog items have shipped through 2026-05-21** — see "Shipped" / "Tried + Reverted" sections. Closed epics: Floating Damage Numbers v2, Aim Cursor v2, Maximal Archetype Differentiation, Bot off-screen fire gate, Magazine Drop Physics, **HUD Damage Feedback**. No active backlog candidates open at the moment — pick next direction with user.
 
 ### Battle design open
 - Bleed L2 DPS values (playtest-driven)
@@ -197,6 +192,7 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 - `Assets/Scenes/ShootingScenes/ShootingScene_KillFeel.unity` — low-HP targets (10/25/50/75/100)
 - `Assets/Scenes/ShootingScenes/ShootingScene_Horde.unity` — zombie wave spawner, 5s grace, 360° ring spawn
 - `Assets/Scenes/ShootingScenes/ShootingScene_RangedRange.unity` — 7 RangedTarget bots across 4 zones with 13 cover cubes, NavMesh baked
+- `Assets/Scenes/ShootingScenes/ShootingScene_Feedback.unity` — HUD damage feedback playtest. 6 stationary turrets in row firing -Z (all 6 archetypes) + 3 side turrets firing -X. Bots use `BotBehaviorFlags.FireForward` (no target tracking, fire continuously in fixed facing). Pairs з GodMode visual passthrough for damage-free playtest.
 
 ---
 
@@ -217,15 +213,13 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify `mcp__unityMCP__run_tests` EditMode → 469/469.
-4. Sync with user on direction. Likely candidates:
-   - Floating damage numbers v2 (typography + motion + hierarchy)
-   - Aim cursor v2 (per-archetype variants + readability)
-   - Maximal archetype differentiation (design pass + impl)
-   - Bots-only-shoot-when-visible (camera-frustum gate)
-   - HUD damage feedback / magazine drop physics
+3. Verify `mcp__unityMCP__run_tests` EditMode → 524/524 (baseline as of 2026-05-21).
+4. Sync with user on direction. Most gunplay polish epic items are shipped — likely candidates remaining:
    - Bleed L2 DPS tuning (playtest-driven)
    - Test debt closure (P0-3/4/5 — see `tests-review.md`)
+   - Audio epic (no SFX hooks yet — biggest missing channel)
+   - Level design / first map content
+   - Quest/economy systems
 
 ---
 

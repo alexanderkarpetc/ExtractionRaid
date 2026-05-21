@@ -30,6 +30,7 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 - ✅ Bullet hole decals on walls (200 active cap, 90s lifetime)
 - ✅ Helmet fly-off on armor break (`ArmorBreakHelper`)
 - ✅ Defender armor HUD + healthbar armor stripe
+- ✅ HUD damage feedback — **directional vignette pulse on hit + low-HP edge glow** (single SDF shader, fullscreen overlay). 4 concurrent hit slots з round-robin allocation, sector arc on screen edge pointing where shot came from (camera-local projection of `projectileDirection`). Hit kind tier intensity (Ricochet/Normal/Headshot/Kill = 0.35/0.7/0.95/1.0). Low-HP layer: heartbeat sine pulse (0.8Hz) when HP ratio ≤ 35%. Chebyshev radial gate (square-aligned to screen edges, symmetric on all sides). See `View/HudDamagePresenter.cs`, `Shaders/HudDamageDirectional.shader`, live-tunable via `🩸 HUD damage feedback` section.
 
 ### Weapon visual layer
 - ✅ Procedural recoil kick on fire (`WeaponView.TriggerRecoilKick`)
@@ -53,9 +54,12 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 - ✅ Lock-on convergence override (3D-accurate hits when cursor on damageable)
 - ✅ Semi-auto trigger gate (Single / Scatter = one-press one-shot; Auto = held)
 - ✅ Bot off-screen fire gate — player-centric radius (`BotEngagementConfig.MaxEngagementRadius`) caps bot fire range. Closes "damage from off-screen without telegraph" UX gap. ShootNode early-out, runtime-tunable in DevCheats. Trade-off (acknowledged): 16:9 vertical edge может пропустити case коли бот стріляє з-за кадру по вертикалі — tunable radius мінімізує.
+- ✅ GodMode visual passthrough (2026-05-19) — `DamageSystem` no longer early-returns on player victim under GodMode. Mutations (HP / armor durability / bleeding) gated by `godModePlayerVictim` flag while all VFX/events (HitConfirmed, EntityHit, ProjectileRicochet, DamageNumber, etc.) fire normally. Lets us playtest hit feedback without dying.
+- ✅ Projectile own-owner filter (2026-05-19) — `ProjectileView` now skips its own shooter's capsule in both Start-overlap probe + SphereCast collision branches. Fixes silent-fail case where bot's projectile spawned inside its own capsule and self-hit on frame 0 (visible симптом: bots "didn't shoot" because bullets froze on spawn; lasers showed beam VFX but missed player).
 
 ### Test infrastructure
-- ✅ 4 test scenes: `ShootingScene` (armored targets), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover)
+- ✅ 5 test scenes: `ShootingScene` (armored targets), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover), **`ShootingScene_Feedback`** (HUD damage feedback playtest — 6 stationary turrets in a row firing -Z + 3 side turrets firing -X, all 6 weapon archetypes covered)
+- ✅ `BotBehaviorFlags.FireForward` + `FireForwardNode` (2026-05-19) — stationary-turret behavior. Continuous fire in current facing direction, no target tracking, no rotation toward player. Top-level BT branch, not gated by `HasTarget?`. Skips face-target rotation in `BotMovementSystem`. Used by `FeedbackTarget_*` configs in FeedbackRange scene.
 
 ---
 
@@ -83,7 +87,8 @@ Top-down extraction shooter. Every shot must register physically — weight, hit
 
 - ~~**Floating damage numbers v2**~~ — ✅ shipped 2026-05-14. uGUI + TextMeshPro World-Space Canvas (Distance Field Overlay shader → renders over geometry), Oswald-Bold SDF, 6 per-tier HDR-boosted material presets. Per-tier trajectory modes (FloatUp / FloatUpDrift / Knockback / ArcGravity — kill defaults to ArcGravity for cinematic punctuation, ricochet to FloatUpDrift). Same-target 200ms consolidation (Hades-style anti-spam). Sub-label format `30\nHEAD/KILL` для headshot/kill, "RICOCHET" word для deflections, bleed tick emits popup. Legacy IMGUI overlay fully removed. Live-tunable via `🔢 Damage Numbers v2 (TMP)` section.
 - ~~**Aim cursor v2**~~ — ✅ SHIPPED 2026-05-18. Hybrid uGUI + SDF shader stack replaced legacy IMGUI overlay. Final feature set: 1:1 IMGUI port + ADS top-arm cutoff + outline + EFD-style hit pulse (4 per-event-type profiles) + flame charge fill for ballistic / **segmented ring for laser** (12 slices clockwise fill, analytical O(1) SDF) + overheat tremble + tunable charge curve (`ChargeRatioPower` + `ChargeTimeOverride`) + laser firing animation (chargeFill bleed + radial pulse over FireInterval) + focus blur edge (recoil pressure + ADS settle driven). Recoil stays gameplay-rooted (no view-only duplication). UI cursor swap via existing `PointerOverUiTracker` + `IsPointerOverUi` infrastructure (same-pixel OS cursor). Legacy `AimCursorOverlay.cs` deleted in Stage 7. See [`aim-cursor-v2.md`](aim-cursor-v2.md) for stage-by-stage shipping log + cut items (Stage 2 directional kick / Stage 4 range tier color / Stage 6 low-ammo pulse).
-- **HUD damage feedback** — vignette pulse on take-damage, low-HP edge glow, directional damage indicator. Player-side gap; revisit when "I lost HP and don't know why" becomes a playtest signal.
+- ~~**HUD damage feedback**~~ — ✅ SHIPPED 2026-05-21 (see Shipped → Hit feedback layer above). Combined "directional vignette pulse" + "low-HP edge glow" into a single SDF shader instead of separate elements. Side-channel deliverables: GodMode visual passthrough in DamageSystem, projectile own-owner filter in ProjectileView, FireForward bot behavior + FeedbackRange test scene to drive playtest.
+- **Battle HUD** — 🚧 spec locked 2026-05-21. Replace debug-style armor/helmet overlays з coherent procedural HUD: armor paper-doll (TL) + status effects row з tooltips (WoW-style, right of paper-doll) + worldspace status mini-icons UNIVERSAL for all characters (under existing HP bar) + Zelda-style radial stamina ring under player feet + hotbar weapon slot redesign (UI Toolkit extension з distinct treatment for slots 1-2). Restrained-tactical tone — procedural SDF (no UI artist). HP bar stays worldspace-only (no HUD duplication). See [`battle-hud.md`](battle-hud.md) for full spec + implementation plan (~7h Tier 1).
 
 ### Weapon identity
 
