@@ -87,6 +87,7 @@ namespace View
             _canvas = go.GetComponentInChildren<Canvas>(true);
             _overlay = go.GetComponentInChildren<RawImage>(true);
             _mat = _overlay.material; // auto-instance — writes don't leak to shared asset
+            _overlay.raycastTarget = false;
         }
 
         public void LateTick(RaidSession session)
