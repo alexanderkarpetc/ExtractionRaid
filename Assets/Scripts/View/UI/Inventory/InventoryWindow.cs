@@ -42,6 +42,7 @@ namespace View.UI.Inventory
         VisualElement _inner;
         VisualElement _window;
         Button _closeBtn;
+        Label _creditsLabel;
 
         // ── Fade animation ────────────────────────────────────
         const int FadeDurationMs = 160;
@@ -210,6 +211,7 @@ namespace View.UI.Inventory
             _inner          = _root.Q<VisualElement>("inner");
             _window         = _root.Q<VisualElement>("window");
             _closeBtn       = _root.Q<Button>("closeBtn");
+            _creditsLabel   = _root.Q<Label>("creditsLabel");
             _equipmentRow   = _root.Q<VisualElement>("equipmentRow");
             _backpackGrid   = _root.Q<VisualElement>("backpackGrid");
             _subPanelsHost  = _root.Q<VisualElement>("subPanels");
@@ -278,6 +280,9 @@ namespace View.UI.Inventory
         {
             if (_isDragging) return; // Stale slot refs would break if we reconcile mid-drag.
 
+            if (_creditsLabel != null)
+                _creditsLabel.text = $"{App.Instance?.Player?.Credits ?? 0}¢";
+
             var inventory = App.Instance?.Player?.Inventory;
             var registry  = App.Instance?.CoreDefinitions;
 
@@ -345,19 +350,19 @@ namespace View.UI.Inventory
 
             _scratchWanted.Clear();
 
-            if (App.Instance != null && App.Instance.IsInHideout)
-            {
+            bool inHideout = App.Instance != null && App.Instance.IsInHideout;
+            var state  = App.Instance?.RaidSession?.RaidState;
+            var player = state?.PlayerEntity;
+            bool tradingShop = FindNearbyShop() != null;
+
+            if (inHideout && !tradingShop)
                 BindStashPanel(_scratchWanted, registry);
-            }
-            else
+
+            if (state != null && player != null)
             {
-                var state  = App.Instance?.RaidSession?.RaidState;
-                var player = state?.PlayerEntity;
-                if (state != null && player != null)
-                {
-                    BindLootablePanels(state, player.Position, _scratchWanted, registry);
+                BindLootablePanels(state, player.Position, _scratchWanted, registry);
+                if (!inHideout)
                     BindFloorPanel(state, player.Position, _scratchWanted, registry);
-                }
             }
 
             // Sweep out sub-panels for sources that disappeared (player walked
@@ -490,6 +495,14 @@ namespace View.UI.Inventory
         static string ResolveLootableTitle(LootableContainerState lootable)
         {
             if (lootable == null) return "LOOT";
+            // Shop panel surfaces the vendor name + live credit balance so players
+            // see what they can afford without opening a separate UI.
+            if (lootable.IsShop)
+            {
+                return string.IsNullOrEmpty(lootable.OwnerNpcId)
+                    ? "TRADE"
+                    : lootable.OwnerNpcId.ToUpperInvariant();
+            }
             if (!string.IsNullOrEmpty(lootable.TypeId)
                 && Constants.ContainerConstants.TryGetConfig(lootable.TypeId, out var cfg)
                 && !string.IsNullOrEmpty(cfg.DisplayName))
@@ -692,16 +705,72 @@ namespace View.UI.Inventory
                 opts.Add(new ContextMenuElement.Option {
                     Label = "Drop", Hotkey = "Del",
                     OnClick = () => CtxDropPlayer(slot) });
+
+            // Sell — only when a shop is in range. We show the actual sell price so
+            // the player doesn't have to drag-and-guess. Picks the first in-range
+            // shop; with one NPC at a time this is unambiguous.
+            var item = slot.CurrentItem;
+            if (item != null && slot.SlotRef.Type == SlotType.Backpack)
+            {
+                var shop = FindNearbyShop();
+                if (shop != null)
+                {
+                    int price = ShopSystem.GetSellPrice(shop, item);
+                    var captured = slot;
+                    var capturedShop = shop;
+                    opts.Add(new ContextMenuElement.Option {
+                        Label = $"Sell ({price}¢)",
+                        OnClick = () => CtxSellToShop(captured, capturedShop) });
+                }
+            }
         }
 
         void BuildLootOptions(InventorySlotElement slot, List<ContextMenuElement.Option> opts)
         {
+            // Buy label when the source is a shop, with the actual cost. Falls back
+            // to "Pick up" for free loot / corpses.
+            var lootable = ResolveLootable(slot.SourceLootableId);
+            if (lootable != null && lootable.IsShop)
+            {
+                int price = ShopSystem.GetBuyPrice(lootable, slot.CurrentItem);
+                opts.Add(new ContextMenuElement.Option {
+                    Label = $"Buy ({price}¢)", Hotkey = "F",
+                    OnClick = () => CtxPickUpFromLoot(slot) });
+                return;
+            }
+
             opts.Add(new ContextMenuElement.Option {
                 Label = "Pick up", Hotkey = "F",
                 OnClick = () => CtxPickUpFromLoot(slot) });
             opts.Add(new ContextMenuElement.Option {
                 Label = "Drop", Hotkey = "Del",
                 OnClick = () => CtxDropFromLoot(slot) });
+        }
+
+        LootableContainerState FindNearbyShop()
+        {
+            var state = App.Instance?.RaidSession?.RaidState;
+            var player = state?.PlayerEntity;
+            if (state == null || player == null) return null;
+            float rangeSqr = LootSystem.LootRange * LootSystem.LootRange;
+            for (int i = 0; i < state.Lootables.Count; i++)
+            {
+                var l = state.Lootables[i];
+                if (!l.IsShop) continue;
+                if ((l.Position - player.Position).sqrMagnitude > rangeSqr) continue;
+                return l;
+            }
+            return null;
+        }
+
+        void CtxSellToShop(InventorySlotElement slot, LootableContainerState shop)
+        {
+            var player = App.Instance?.Player;
+            if (player == null || shop == null) return;
+            // Find a free slot in the shop's inventory; TrySell requires empty target.
+            int free = shop.Inventory.FindFreeBackpackSlot();
+            if (free < 0) return;
+            ShopSystem.TrySell(player, shop, slot.SlotRef, InventorySlotRef.BackpackSlot(free));
         }
 
         // ── Context actions ──────────────────────────────────
@@ -748,12 +817,15 @@ namespace View.UI.Inventory
         void CtxPickUpFromLoot(InventorySlotElement slot)
         {
             var playerInv = App.Instance?.Player?.Inventory;
-            var lootInv   = ResolveLootInventory(slot.SourceLootableId);
-            if (playerInv == null || lootInv == null) return;
+            var lootable  = ResolveLootable(slot.SourceLootableId);
+            if (playerInv == null || lootable == null) return;
             int free = playerInv.FindFreeBackpackSlot();
             if (free < 0) return;
-            LootSystem.TryTransfer(lootInv, slot.SlotRef, playerInv,
-                InventorySlotRef.BackpackSlot(free));
+            var dst = InventorySlotRef.BackpackSlot(free);
+            if (lootable.IsShop)
+                ShopSystem.TryBuy(App.Instance?.Player, lootable, slot.SlotRef, dst);
+            else
+                LootSystem.TryTransfer(lootable.Inventory, slot.SlotRef, playerInv, dst);
         }
 
         void CtxDropFromLoot(InventorySlotElement slot)
@@ -907,9 +979,11 @@ namespace View.UI.Inventory
                     case InventorySlotElement.SlotSource.Loot:
                     {
                         if (!IsLootableInRange(tgt.SourceLootableId)) return false;
-                        var lootInv = ResolveLootInventory(tgt.SourceLootableId);
-                        return lootInv != null &&
-                               LootSystem.TryTransfer(playerInv, src.SlotRef, lootInv, tgt.SlotRef);
+                        var tgtLootable = ResolveLootable(tgt.SourceLootableId);
+                        if (tgtLootable == null) return false;
+                        if (tgtLootable.IsShop)
+                            return ShopSystem.TrySell(App.Instance?.Player, tgtLootable, src.SlotRef, tgt.SlotRef);
+                        return LootSystem.TryTransfer(playerInv, src.SlotRef, tgtLootable.Inventory, tgt.SlotRef);
                     }
                     case InventorySlotElement.SlotSource.Stash:
                         return PushToStash(playerInv, src.SlotRef);
@@ -928,9 +1002,11 @@ namespace View.UI.Inventory
                     case InventorySlotElement.SlotSource.Loot:
                     {
                         if (!IsLootableInRange(src.SourceLootableId)) return false;
-                        var lootInv = ResolveLootInventory(src.SourceLootableId);
-                        return lootInv != null &&
-                               LootSystem.TryTransfer(lootInv, src.SlotRef, playerInv, tgt.SlotRef);
+                        var srcLootable = ResolveLootable(src.SourceLootableId);
+                        if (srcLootable == null) return false;
+                        if (srcLootable.IsShop)
+                            return ShopSystem.TryBuy(App.Instance?.Player, srcLootable, src.SlotRef, tgt.SlotRef);
+                        return LootSystem.TryTransfer(srcLootable.Inventory, src.SlotRef, playerInv, tgt.SlotRef);
                     }
                     case InventorySlotElement.SlotSource.Stash:
                         return PullFromStash(src.RightIndex, playerInv, tgt.SlotRef);
@@ -977,6 +1053,12 @@ namespace View.UI.Inventory
             var state = App.Instance?.RaidSession?.RaidState;
             if (state == null) return null;
             return LootSystem.GetLootable(state, lootableId)?.Inventory;
+        }
+
+        LootableContainerState ResolveLootable(EId lootableId)
+        {
+            var state = App.Instance?.RaidSession?.RaidState;
+            return state != null ? LootSystem.GetLootable(state, lootableId) : null;
         }
 
         // Thin View-side adapters that route to the System layer. State

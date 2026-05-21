@@ -38,6 +38,7 @@ namespace Editor
         // testable both in hideout and in raid.
         string _giveItemId;
         int _giveItemCount = 1;
+        int _giveCreditsAmount = 1000;
 
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
@@ -386,6 +387,13 @@ namespace Editor
                 DrawGiveItemRow();
             }
 
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Give Credits", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!appReady))
+            {
+                DrawGiveCreditsRow();
+            }
+
             if (!appReady)
                 EditorGUILayout.HelpBox("Enter Play Mode to use raid cheats.", MessageType.Info);
             else if (App.Instance.IsInHideout)
@@ -424,6 +432,46 @@ namespace Editor
                         GiveItem(_giveItemId, _giveItemCount);
                 }
             }
+        }
+
+        void DrawGiveCreditsRow()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                int current = App.Instance?.Player?.Credits ?? 0;
+                EditorGUILayout.LabelField($"Balance: {current}¢", GUILayout.MinWidth(140));
+
+                EditorGUILayout.LabelField("Amount", GUILayout.Width(54));
+                _giveCreditsAmount = EditorGUILayout.IntField(_giveCreditsAmount, GUILayout.Width(80));
+
+                if (GUILayout.Button("Give", GUILayout.Width(70)))
+                    GiveCredits(_giveCreditsAmount);
+                if (GUILayout.Button("Reset", GUILayout.Width(70)))
+                    SetCredits(0);
+            }
+        }
+
+        static void GiveCredits(int amount)
+        {
+            var player = App.Instance?.Player;
+            if (player == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot give credits — Player not ready.");
+                return;
+            }
+            if (amount >= 0)
+                player.Credit(amount);
+            else
+                player.TryDebit(-amount);
+            Debug.Log($"[DevCheats] Credits {(amount >= 0 ? "+" : "")}{amount} → {player.Credits}¢.");
+        }
+
+        static void SetCredits(int amount)
+        {
+            var player = App.Instance?.Player;
+            if (player == null) return;
+            player.ProfileState.Credits = Mathf.Max(0, amount);
+            Debug.Log($"[DevCheats] Credits set to {player.Credits}¢.");
         }
 
         static void GiveItem(string defId, int count)

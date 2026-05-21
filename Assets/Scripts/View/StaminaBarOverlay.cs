@@ -38,7 +38,7 @@ namespace View
 
             float ratio = player.Stamina / player.MaxStamina;
 
-            float x = MarginX;
+            float x = Screen.width - BarWidth - MarginX;
             float y = MarginY;
 
             var bgRect = new Rect(x - 1f, y - 1f, BarWidth + 2f, BarHeight + 2f);

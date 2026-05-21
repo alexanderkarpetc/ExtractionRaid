@@ -25,6 +25,25 @@ namespace Session
             BuildingLevels = new Dictionary<BuildingKind, int>();
         }
 
+        public int Credits => ProfileState.Credits;
+
+        // Returns false (without mutating) if the player can't afford the cost. Negative
+        // or zero amounts succeed silently — keeps call sites that pass GetSellPrice
+        // result safe even when prices land at 0 due to rounding.
+        public bool TryDebit(int amount)
+        {
+            if (amount <= 0) return true;
+            if (ProfileState.Credits < amount) return false;
+            ProfileState.Credits -= amount;
+            return true;
+        }
+
+        public void Credit(int amount)
+        {
+            if (amount <= 0) return;
+            ProfileState.Credits += amount;
+        }
+
         public int GetBuildingLevel(BuildingKind kind) =>
             BuildingLevels.TryGetValue(kind, out var lv) ? lv : 0;
 
@@ -50,6 +69,7 @@ namespace Session
             return new SaveData
             {
                 PlayerName = ProfileState.PlayerName,
+                Credits = ProfileState.Credits,
                 Inventory = InventorySaveData.FromState(Inventory),
                 Stash = stashData,
                 Quests = questList,
@@ -62,6 +82,7 @@ namespace Session
             if (data == null) return;
 
             ProfileState.PlayerName = data.PlayerName;
+            ProfileState.Credits = data.Credits;
             data.Inventory?.ApplyTo(Inventory);
 
             Stash.Clear();

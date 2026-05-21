@@ -151,6 +151,7 @@ namespace Save
     public class SaveData
     {
         public string PlayerName;
+        public int Credits;
         public InventorySaveData Inventory;
         public List<ItemSaveData> Stash;
         public List<QuestProgressSaveData> Quests;

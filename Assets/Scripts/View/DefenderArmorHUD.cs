@@ -91,22 +91,24 @@ namespace View
             float labelW = 30f;
             float statsW = 200f;
 
-            // Position from top-left (below stamina bar)
-            float curY = marginY;
+            // Top-right anchored, stacked below the stamina bar. Helmet on top, vest
+            // below it. The whole row (label + bar + stats) is right-justified.
+            const float StaminaBarReservation = 24f; // 16 stamina height + 8 gap
+            float rowWidth = labelW + barW + statsW;
+            float x = Screen.width - rowWidth - marginX;
+            float helmetY = marginY + StaminaBarReservation;
+            float vestY = helmetY + barH + gap;
 
-            // Helmet bar (top)
             if (armorSlots.Helmet != null)
             {
-                DrawArmorSlot(marginX, curY, labelW, barW, barH, statsW,
+                DrawArmorSlot(x, helmetY, labelW, barW, barH, statsW,
                     "H", armorSlots.Helmet,
                     ref _prevHelmetDur, ref _helmetFlashTimer, _helmetBrokenTimer);
-                curY += barH + gap;
             }
 
-            // Body armor bar (bottom)
             if (armorSlots.BodyArmor != null)
             {
-                DrawArmorSlot(marginX, curY, labelW, barW, barH, statsW,
+                DrawArmorSlot(x, vestY, labelW, barW, barH, statsW,
                     "V", armorSlots.BodyArmor,
                     ref _prevVestDur, ref _vestFlashTimer, _vestBrokenTimer);
             }

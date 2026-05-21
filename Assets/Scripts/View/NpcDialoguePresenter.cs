@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using ApplicationCore;
+using Constants;
 using State;
 using Systems;
 using UnityEngine;
 using View.UI;
 using View.UI.Dialogue;
+using View.UI.Inventory;
 using View.UI.Quests;
 
 namespace View
@@ -31,6 +33,11 @@ namespace View
         // journal-mode close path (which QuestPresenter owns).
         bool _expectingQuestPopupReturn;
 
+        // NpcId whose shop is currently spawned in state.Lootables. Tracked here so
+        // CloseEverything can despawn cleanly without needing to re-resolve which NPC
+        // we were talking to (NpcTargetId is already gone by then).
+        string _activeShopOwnerId;
+
         void Update()
         {
             var session = App.Instance?.RaidSession;
@@ -46,6 +53,20 @@ namespace View
                     OpenDialogueFor(session.RaidState, player.NpcTargetId);
                 else
                     CloseEverything();
+            }
+
+            // Shop session lifecycle: when the player closes the inventory window
+            // (Esc / Tab) while a shop is up, despawn the shop and bring the
+            // dialogue back. NpcTargetId is still set, so this is the same return
+            // path as the quest popup.
+            if (!string.IsNullOrEmpty(_activeShopOwnerId)
+                && (InventoryWindow.Instance == null || !InventoryWindow.Instance.IsOpen))
+            {
+                ShopSystem.CloseShopFor(session.RaidState, _activeShopOwnerId);
+                _activeShopOwnerId = null;
+                player.LootTargetId = EId.None;
+                if (player.NpcTargetId != EId.None)
+                    OpenDialogueFor(session.RaidState, player.NpcTargetId);
             }
 
             // Keep gameplay input blocked while either UI is up.
@@ -118,6 +139,20 @@ namespace View
                 }
             }
 
+            // Trade — only offered if a ShopDefinitionAsset exists for this NpcId.
+            // Assets live at Resources/Configs/Shops/<NpcId>.asset; see ShopDefinitionAsset.
+            var shopDef = LoadShopDefinition(npcId);
+            if (shopDef != null)
+            {
+                string capturedNpcId = npcId;
+                string capturedDisplayName = displayName;
+                choices.Add(new NpcDialogueWindow.Choice
+                {
+                    Label = "Trade",
+                    OnClick = () => OpenShop(shopDef, capturedNpcId, capturedDisplayName),
+                });
+            }
+
             choices.Add(new NpcDialogueWindow.Choice
             {
                 Label = "Open Quests",
@@ -149,6 +184,26 @@ namespace View
 
             // Re-render dialogue so the choice list reflects new task progress / inventory.
             ShowDialogue(displayName, npcId, introLine);
+        }
+
+        void OpenShop(ShopDefinitionAsset shopDef, string npcId, string displayName)
+        {
+            var app = App.Instance;
+            var session = app?.RaidSession;
+            var state = session?.RaidState;
+            var npc = state != null ? FindNpcByNpcId(state, npcId) : null;
+            if (state == null || npc == null) return;
+
+            var shop = ShopSystem.OpenShopFor(state, npc, shopDef);
+            if (shop == null) return;
+            _activeShopOwnerId = npcId;
+
+            // Route through the LootTargetId open-reason so InventoryUI keeps the
+            // window open. Without this, InventoryUI.Update would close it next
+            // frame because none of its open-reason flags would be set.
+            state.PlayerEntity.LootTargetId = shop.Id;
+
+            _window.Hide();
         }
 
         void OpenQuests(string npcId, string displayName)
@@ -187,6 +242,20 @@ namespace View
             if (_window != null) _window.Hide();
             if (_popupManager != null && _questsPopupView != null && _popupManager.IsOpen(_questsPopupView))
                 _popupManager.Close();
+
+            // Despawn the active shop (if any). Shop stock is per-trade-session — next
+            // dialogue opens a freshly rolled shop.
+            if (!string.IsNullOrEmpty(_activeShopOwnerId))
+            {
+                var state = App.Instance?.RaidSession?.RaidState;
+                if (state != null)
+                {
+                    ShopSystem.CloseShopFor(state, _activeShopOwnerId);
+                    if (state.PlayerEntity != null) state.PlayerEntity.LootTargetId = EId.None;
+                }
+                _activeShopOwnerId = null;
+            }
+
             App.Instance?.SetGameplayInputBlocked(false);
         }
 
@@ -195,6 +264,34 @@ namespace View
             for (int i = 0; i < state.Npcs.Count; i++)
                 if (state.Npcs[i].Id == id) return state.Npcs[i];
             return null;
+        }
+
+        static NpcState FindNpcByNpcId(RaidState state, string npcId)
+        {
+            for (int i = 0; i < state.Npcs.Count; i++)
+                if (state.Npcs[i].NpcId == npcId) return state.Npcs[i];
+            return null;
+        }
+
+        // ShopDefinitionAsset lookup. Cached per-NpcId so repeated dialogue opens
+        // don't pay the Resources.Load cost. A null cache entry means "we already
+        // looked and there's no shop for this NPC" — distinct from "not yet checked".
+        static readonly Dictionary<string, ShopDefinitionAsset> _shopDefCache = new();
+
+        static ShopDefinitionAsset LoadShopDefinition(string npcId)
+        {
+            if (string.IsNullOrEmpty(npcId)) return null;
+            if (_shopDefCache.TryGetValue(npcId, out var cached)) return cached;
+
+            // Match by OwnerNpcId field — decouples filename from lookup.
+            ShopDefinitionAsset found = null;
+            var all = Resources.LoadAll<ShopDefinitionAsset>("Configs/Shops");
+            foreach (var a in all)
+            {
+                if (a != null && a.OwnerNpcId == npcId) { found = a; break; }
+            }
+            _shopDefCache[npcId] = found;
+            return found;
         }
 
         // Stub greeting until per-NPC dialogue data lands. Lookup by NpcId so
