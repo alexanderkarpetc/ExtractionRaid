@@ -66,11 +66,7 @@ namespace View.UI.Inventory
         /// Ensure the pool has at least <paramref name="needed"/> slots. Extra
         /// slots beyond <paramref name="needed"/> are hidden (display: None).
         /// </summary>
-        // Sub-panel grid spans 3 columns. Every 3rd slot drops its trailing
-        // right-margin (mirrors `.inv-slot--row-end` логіку для main backpack 5×4)
-        // — інакше trailing margin overflow'ить inner width і flex-wrap кидає
-        // last column на новий ряд.
-        const int ColumnsPerRow = 3;
+        const int ColumnsPerRow = 6;
 
         public void EnsureSlotCount(int needed)
         {

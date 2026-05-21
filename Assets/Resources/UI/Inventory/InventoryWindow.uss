@@ -189,11 +189,11 @@
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);
-    /* 3 cells per row, кожен 102×102, gap 9. Inner content:
-     *   3 × 102 + 2 × 9 = 324 (з row-end class на 3-му — no trailing margin).
-     *   + 24 padding + 4 border = 352. 360px width дає 8px breathing room. */
-    width: 360px;
-    max-height: 460px;
+    /* 6 cells × 102 + 5 × 9 gaps + 24 padding + 4 border = 685px. Fixed width
+     * even when stock is smaller — keeps layout stable between trades. Vertical
+     * cap matches the player backpack (4 rows of 102 + 3 × 9 gap ≈ 435 + title). */
+    width: 685px;
+    max-height: 480px;
 }
 
 .inv-subpanel__title {

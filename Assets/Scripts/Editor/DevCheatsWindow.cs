@@ -438,7 +438,7 @@ namespace Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                int current = App.Instance?.Player?.Credits ?? 0;
+                int current = App.IsInitialized ? (App.Instance.Player?.Credits ?? 0) : 0;
                 EditorGUILayout.LabelField($"Balance: {current}¢", GUILayout.MinWidth(140));
 
                 EditorGUILayout.LabelField("Amount", GUILayout.Width(54));
