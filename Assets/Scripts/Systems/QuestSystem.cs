@@ -177,6 +177,37 @@ namespace Systems
         }
 
         /// <summary>
+        /// Ticks every active <see cref="ExtractTask"/> whose level matches the one the
+        /// player just extracted from. An empty <c>LevelId</c> on the task means "any
+        /// level". Called from <c>App.EndRaid</c> only on the Extracted outcome.
+        /// </summary>
+        public static bool OnPlayerExtracted(
+            QuestProgressState progress, QuestDatabase db, string levelId)
+        {
+            if (progress == null || db == null) return false;
+            bool any = false;
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not ExtractTask ex) continue;
+                    if (!string.IsNullOrEmpty(ex.LevelId) && ex.LevelId != levelId) continue;
+
+                    var tp = qp.Tasks[i];
+                    if (tp.CurrentCount >= ex.RequiredCount) continue;
+                    tp.CurrentCount++;
+                    any = true;
+                }
+            }
+            return any;
+        }
+
+        /// <summary>
         /// Called from <see cref="ApplicationCore.App.EndRaid"/> at the end of every
         /// raid (extract or KIA). Resets <see cref="KillEnemyTask"/> progress on every
         /// active quest where the task has <c>InOneRaid = true</c> and the player

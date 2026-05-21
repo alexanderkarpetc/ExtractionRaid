@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01f7b830b6b19b348a074d28ea82e4c4, type: 3}
+  m_Name: SafePassageQuest
+  m_EditorClassIdentifier: Game::Quests.QuestDefinition
+  Id: safe_passage
+  DisplayName: Safe Passage
+  Description: "Anyone can drop into a raid. Few make it out. Show me you can: get
+    in, stay alive, and reach an extraction zone on the main map. Twice. I'll know
+    if you came home in one piece."
+  RequiredLevel: 0
+  NpcId: AL
+  Tasks:
+  - rid: 5821730921348112641
+  Rewards:
+  - ItemId: Medkit
+    Count: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 5821730921348112641
+      type: {class: ExtractTask, ns: Quests, asm: Game}
+      data:
+        Description: Extract from the main map (2 successful runs)
+        RequiredCount: 2
+        LevelId: main_map

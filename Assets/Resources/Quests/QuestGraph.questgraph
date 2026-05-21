@@ -19,6 +19,81 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 486512401003053130
+      type: {class: UserNodeModelImp, ns: Unity.GraphToolkit.Editor.Implementation, asm: Unity.GraphToolkit.Editor}
+      data:
+        m_Guid:
+          m_Value0: 11602675394147308666
+          m_Value1: 6469587334173680893
+        m_HashGuid:
+          serializedVersion: 2
+          Hash: 7ad45020ccfb04a1fde4c9306797c859
+        m_Version: 2
+        m_Position: {x: -473.71497, y: 242.32498}
+        m_Title: QuestNode
+        m_Tooltip: 
+        m_NodePreviewModel:
+          rid: -2
+        m_State: 0
+        m_InputConstantsById:
+          m_KeyList:
+          - __option_Quest
+          m_ValueList:
+          - rid: 486512401003053131
+        m_InputPortInfos:
+          expandedPortsById:
+            m_KeyList: []
+            m_ValueList: 
+        m_OutputPortInfos:
+          expandedPortsById:
+            m_KeyList: []
+            m_ValueList: 
+        m_Collapsed: 0
+        m_CurrentModeIndex: 0
+        m_ElementColor:
+          m_Color: {r: 0, g: 0, b: 0, a: 0}
+          m_HasUserColor: 0
+        m_Node:
+          rid: 486512401003053132
+    - rid: 486512401003053131
+      type: {class: 'Constant`1[[Quests.QuestDefinition, Game]]', ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Value: {fileID: 11400000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f10, type: 2}
+    - rid: 486512401003053132
+      type: {class: QuestNode, ns: Editor.Quests, asm: Game.Editor}
+      data: 
+    - rid: 486512401003053133
+      type: {class: WireModel, ns: Unity.GraphToolkit.Editor, asm: Unity.GraphToolkit.Internal.Editor}
+      data:
+        m_Guid:
+          m_Value0: 7310143401084521404
+          m_Value1: 14392739610512766140
+        m_HashGuid:
+          serializedVersion: 2
+          Hash: bc0bcf46b1d87265bcb44e756b48bdc7
+        m_Version: 2
+        m_FromPortReference:
+          m_NodeModelGuid:
+            m_Value0: 11602675394147308666
+            m_Value1: 6469587334173680893
+          m_NodeModelHashGuid:
+            serializedVersion: 2
+            Hash: 7ad45020ccfb04a1fde4c9306797c859
+          m_UniqueId: Unlocks
+          m_PortDirection: 2
+          m_PortOrientation: 0
+          m_Title: Unlocks
+        m_ToPortReference:
+          m_NodeModelGuid:
+            m_Value0: 14000493271236467496
+            m_Value1: 16141042600387516148
+          m_NodeModelHashGuid:
+            serializedVersion: 2
+            Hash: 28db4bd073be4bc2f4968be4b98000e0
+          m_UniqueId: Requires
+          m_PortDirection: 1
+          m_PortOrientation: 0
+          m_Title: Requires
     - rid: 2541323798265200832
       type: {class: GraphModelImp, ns: Unity.GraphToolkit.Editor.Implementation, asm: Unity.GraphToolkit.Editor}
       data:
@@ -34,10 +109,12 @@ MonoBehaviour:
         - rid: 2541323798265200843
         - rid: 2541323798265200855
         - rid: 2541323798265200867
+        - rid: 486512401003053130
         m_GraphWireModels:
         - rid: 2541323798265200849
         - rid: 2541323798265200861
         - rid: 2541323798265200873
+        - rid: 486512401003053133
         m_GraphStickyNoteModels: []
         m_GraphPlacematModels: []
         m_GraphVariableModels: []
@@ -47,9 +124,9 @@ MonoBehaviour:
         m_LocalSubgraphs: []
         m_LastKnownBounds:
           serializedVersion: 2
-          x: -62
+          x: -474
           y: 184
-          width: 1065
+          width: 1508
           height: 303
         m_GraphElementMetaData:
         - m_Guid:
@@ -108,6 +185,22 @@ MonoBehaviour:
             Hash: 1c93432102928f26251294eaef5a4411
           m_Category: 2
           m_Index: 2
+        - m_Guid:
+            m_Value0: 11602675394147308666
+            m_Value1: 6469587334173680893
+          m_HashGuid:
+            serializedVersion: 2
+            Hash: 7ad45020ccfb04a1fde4c9306797c859
+          m_Category: 0
+          m_Index: 4
+        - m_Guid:
+            m_Value0: 7310143401084521404
+            m_Value1: 14392739610512766140
+          m_HashGuid:
+            serializedVersion: 2
+            Hash: bc0bcf46b1d87265bcb44e756b48bdc7
+          m_Category: 2
+          m_Index: 3
         m_EntryPoint:
           rid: 2541323798265200835
         m_Graph:
@@ -137,7 +230,7 @@ MonoBehaviour:
           serializedVersion: 2
           Hash: 28db4bd073be4bc2f4968be4b98000e0
         m_Version: 2
-        m_Position: {x: -61.54857, y: 252.3037}
+        m_Position: {x: -72.12857, y: 237.75618}
         m_Title: 
         m_Tooltip: 
         m_NodePreviewModel:

@@ -247,8 +247,11 @@ namespace ApplicationCore
         {
             if (RaidSession == null) return;
 
+            string endedLevelId = RaidSession.LevelState?.LevelId;
             RaidSession.End();
             IsInHideout = false;
+            if (LastRaidOutcome == RaidOutcome.Extracted)
+                Systems.QuestSystem.OnPlayerExtracted(Player.QuestProgress, QuestDatabase, endedLevelId);
             Systems.QuestSystem.OnRaidEnded(Player.QuestProgress, QuestDatabase);
             SavePlayer();
             Debug.Log("[App] Raid ended.");
