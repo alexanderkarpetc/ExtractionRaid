@@ -126,6 +126,37 @@ namespace View.UI.Inventory
             if (!_isVisible) return;
             RefreshAll();
             HandleQuickSlotKeys();
+            HandleFKey();
+        }
+
+        void HandleFKey()
+        {
+            var hovered = _hoveredSlot;
+            if (hovered == null || hovered.CurrentItem == null) return;
+            var kb = Keyboard.current;
+            if (kb == null || !kb[Key.F].wasPressedThisFrame) return;
+
+            switch (hovered.Source)
+            {
+                case InventorySlotElement.SlotSource.Loot:
+                    CtxPickUpFromLoot(hovered); // shop → buy, free loot → pick up
+                    break;
+                case InventorySlotElement.SlotSource.Floor:
+                    CtxPickUpFromFloor(hovered);
+                    break;
+                case InventorySlotElement.SlotSource.Stash:
+                    CtxTakeFromStash(hovered);
+                    break;
+                case InventorySlotElement.SlotSource.Player:
+                    if (hovered.SlotRef.Type != SlotType.Backpack) break;
+                    var shop = FindNearbyShop();
+                    if (shop != null) CtxSellToShop(hovered, shop);
+                    else if (App.Instance != null && App.Instance.IsInHideout)
+                        CtxStashPlayer(hovered);
+                    else
+                        CtxDropPlayer(hovered);
+                    break;
+            }
         }
 
         // ── Public API ────────────────────────────────────────
@@ -963,6 +994,15 @@ namespace View.UI.Inventory
                     return;
                 }
 
+                // Drop landed inside a sub-panel's empty area (not on a slot) —
+                // treat as "transfer to this panel" by auto-picking a free slot.
+                var subPanel = FindSubPanelAt(panelPos);
+                if (subPanel != null && TryDropOnSubPanel(subPanel))
+                {
+                    RefreshAll();
+                    return;
+                }
+
                 if (UiPanelHitTest.IsScreenPointOverUi(mouseScreen)) return;
                 DropOutsideSlot();
                 return;
@@ -1000,7 +1040,15 @@ namespace View.UI.Inventory
                         var tgtLootable = ResolveLootable(tgt.SourceLootableId);
                         if (tgtLootable == null) return false;
                         if (tgtLootable.IsShop)
-                            return ShopSystem.TrySell(App.Instance?.Player, tgtLootable, src.SlotRef, tgt.SlotRef);
+                        {
+                            // Shop slots are usually full of stock — sell into the targeted
+                            // slot if empty, otherwise auto-pick the first free shop slot.
+                            var dst = tgtLootable.Inventory.GetSlot(tgt.SlotRef) == null
+                                ? tgt.SlotRef
+                                : InventorySlotRef.BackpackSlot(tgtLootable.Inventory.FindFreeBackpackSlot());
+                            if (dst.Index < 0) return false;
+                            return ShopSystem.TrySell(App.Instance?.Player, tgtLootable, src.SlotRef, dst);
+                        }
                         return LootSystem.TryTransfer(playerInv, src.SlotRef, tgtLootable.Inventory, tgt.SlotRef);
                     }
                     case InventorySlotElement.SlotSource.Stash:
@@ -1077,6 +1125,40 @@ namespace View.UI.Inventory
         {
             var state = App.Instance?.RaidSession?.RaidState;
             return state != null ? LootSystem.GetLootable(state, lootableId) : null;
+        }
+
+        LootSubPanelElement FindSubPanelAt(Vector2 panelPos)
+        {
+            foreach (var p in _subPanels.Values)
+                if (p.worldBound.Contains(panelPos)) return p;
+            return null;
+        }
+
+        bool TryDropOnSubPanel(LootSubPanelElement subPanel)
+        {
+            var playerInv = App.Instance?.Player?.Inventory;
+            if (playerInv == null || _draggedSlot == null) return false;
+            if (_draggedSlot.Source != InventorySlotElement.SlotSource.Player) return false;
+
+            switch (subPanel.SlotSource)
+            {
+                case InventorySlotElement.SlotSource.Loot:
+                {
+                    var lootable = ResolveLootable(subPanel.LootableId);
+                    if (lootable == null) return false;
+                    if (!IsLootableInRange(subPanel.LootableId)) return false;
+                    int free = lootable.Inventory.FindFreeBackpackSlot();
+                    if (free < 0) return false;
+                    var dst = InventorySlotRef.BackpackSlot(free);
+                    return lootable.IsShop
+                        ? ShopSystem.TrySell(App.Instance.Player, lootable, _draggedSlot.SlotRef, dst)
+                        : LootSystem.TryTransfer(playerInv, _draggedSlot.SlotRef, lootable.Inventory, dst);
+                }
+                case InventorySlotElement.SlotSource.Stash:
+                    return PushToStash(playerInv, _draggedSlot.SlotRef);
+                default:
+                    return false;
+            }
         }
 
         // Thin View-side adapters that route to the System layer. State
