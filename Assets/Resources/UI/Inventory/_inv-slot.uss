@@ -62,6 +62,18 @@
     border-radius: 4px;
 }
 
+.inv-slot__price {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: rgb(255, 215, 90);
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 4px;
+}
+
 .inv-slot__quest {
     width: 8px;
     height: 8px;

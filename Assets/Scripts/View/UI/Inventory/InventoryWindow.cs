@@ -430,6 +430,7 @@ namespace View.UI.Inventory
                     var slot = panel.Slots[displayIdx];
                     slot.RightIndex = i; // preserve original backpack index
                     slot.Bind(InventorySlotRef.BackpackSlot(i), item, -1, registry);
+                    slot.SetShopPrice(lootable.IsShop ? ShopSystem.GetBuyPrice(lootable, item) : -1);
                     displayIdx++;
                 }
             }
@@ -559,8 +560,25 @@ namespace View.UI.Inventory
             if (slot.CurrentItem == null) return;
             var tooltip = TooltipController.Instance;
             if (tooltip == null) return;
+            // Resolve shop context: if hovering a shop slot use that shop directly
+            // (Buy price). Otherwise use any nearby shop (Sell price) — gives stash /
+            // loot / player slots a value indicator while trading.
+            LootableContainerState shopCtx = null;
+            bool itemIsInShop = false;
+            if (slot.Source == InventorySlotElement.SlotSource.Loot)
+            {
+                var lootable = ResolveLootable(slot.SourceLootableId);
+                if (lootable != null && lootable.IsShop)
+                {
+                    shopCtx = lootable;
+                    itemIsInShop = true;
+                }
+            }
+            if (shopCtx == null) shopCtx = FindNearbyShop();
+
             var model = ItemTooltipBuilder.For(slot.CurrentItem,
-                App.Instance?.CoreDefinitions, App.Instance?.QuestDatabase);
+                App.Instance?.CoreDefinitions, App.Instance?.QuestDatabase,
+                shopCtx, itemIsInShop);
             tooltip.ShowFromPanel(model, evt.position);
         }
 

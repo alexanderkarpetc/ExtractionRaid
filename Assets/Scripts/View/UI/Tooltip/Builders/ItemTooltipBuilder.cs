@@ -18,10 +18,16 @@ namespace View.UI.Tooltip.Builders
     {
         public static TooltipModel For(ItemState item,
             ICoreDefinitionRegistry registry = null,
-            QuestDatabase questDatabase = null)
+            QuestDatabase questDatabase = null,
+            LootableContainerState shopContext = null,
+            bool itemIsInShop = false)
         {
             if (item == null) return new TooltipModel(string.Empty);
-            if (item.HasWeaponConfiguration) return WeaponTooltipBuilder.For(item, registry);
+            if (item.HasWeaponConfiguration)
+            {
+                var weaponModel = WeaponTooltipBuilder.For(item, registry);
+                return AppendPrice(weaponModel, item, shopContext, itemIsInShop);
+            }
 
             // Tier 6 G1: module items у backpack share identity з palette cards у
             // Builder — tooltip має бути однаковий, не generic "module name only".
@@ -75,7 +81,39 @@ namespace View.UI.Tooltip.Builders
                 AppendQuestInfo(item.DefinitionId, questDatabase, sections, out description);
             }
 
-            return new TooltipModel(title, subtitle, sections, description);
+            var model = new TooltipModel(title, subtitle, sections, description);
+            return AppendPrice(model, item, shopContext, itemIsInShop);
+        }
+
+        static TooltipModel AppendPrice(TooltipModel model, ItemState item,
+            LootableContainerState shop, bool itemIsInShop)
+        {
+            int price;
+            string label;
+            if (shop != null && shop.IsShop && itemIsInShop)
+            {
+                price = Systems.ShopSystem.GetBuyPrice(shop, item);
+                label = "Buy";
+            }
+            else if (shop != null && shop.IsShop)
+            {
+                price = Systems.ShopSystem.GetSellPrice(shop, item);
+                label = "Sell";
+            }
+            else
+            {
+                price = Systems.ShopSystem.GetGlobalSellPrice(item);
+                label = "Value";
+            }
+            if (price <= 0) return model;
+            var existing = model.Sections;
+            var combined = new List<TooltipSection>(existing != null ? existing.Count + 1 : 1);
+            if (existing != null) combined.AddRange(existing);
+            combined.Add(new TooltipSection(null, new[]
+            {
+                new TooltipRow(label, price + "¢"),
+            }));
+            return new TooltipModel(model.Title, model.Subtitle, combined, model.Description);
         }
 
         static void AppendQuestInfo(string itemId, QuestDatabase database,

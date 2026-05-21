@@ -118,6 +118,40 @@ namespace Systems
             return unit * Mathf.Max(1, item.StackCount);
         }
 
+        // Catalog-wide fallback: aggregates every ShopDefinitionAsset under
+        // Resources/Configs/Shops so tooltips can show a sell value even when no
+        // shop instance is live. First buy price encountered for each item id
+        // wins; sell value derived via the asset's SellRatio.
+        static bool s_globalLoaded;
+        static readonly Dictionary<string, int> s_globalSellPrices = new();
+
+        public static int GetGlobalSellPrice(ItemState item)
+        {
+            if (item == null) return 0;
+            EnsureGlobalCatalog();
+            if (!s_globalSellPrices.TryGetValue(item.DefinitionId, out var unit))
+                return 0;
+            return unit * Mathf.Max(1, item.StackCount);
+        }
+
+        static void EnsureGlobalCatalog()
+        {
+            if (s_globalLoaded) return;
+            s_globalLoaded = true;
+            var assets = Resources.LoadAll<ShopDefinitionAsset>("Configs/Shops");
+            foreach (var def in assets)
+            {
+                if (def?.Stock == null) continue;
+                float ratio = Mathf.Max(0f, def.SellRatio);
+                foreach (var entry in def.Stock)
+                {
+                    if (string.IsNullOrEmpty(entry.ItemDefId)) continue;
+                    if (s_globalSellPrices.ContainsKey(entry.ItemDefId)) continue;
+                    s_globalSellPrices[entry.ItemDefId] = Mathf.Max(1, Mathf.RoundToInt(entry.BuyPrice * ratio));
+                }
+            }
+        }
+
         /// <summary>
         /// Player picks up an item from the shop. Target slot must be empty — swaps
         /// would double as a sell in the same operation, which complicates UX and

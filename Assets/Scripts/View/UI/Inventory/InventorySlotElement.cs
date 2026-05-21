@@ -50,6 +50,7 @@ namespace View.UI.Inventory
         readonly Label _resource;
         readonly Label _quickSlotKey;
         readonly Label _emptyLabel;
+        readonly Label _priceBadge;
         readonly VisualElement _quest;
         readonly VisualElement _durabilityRoot;
         readonly VisualElement _durabilityFill;
@@ -93,6 +94,23 @@ namespace View.UI.Inventory
             _durabilityFill.pickingMode = PickingMode.Ignore;
             _durabilityRoot.Add(_durabilityFill);
             Add(_durabilityRoot);
+
+            _priceBadge = new Label();
+            _priceBadge.AddToClassList("inv-slot__price");
+            _priceBadge.pickingMode = PickingMode.Ignore;
+            _priceBadge.style.display = DisplayStyle.None;
+            Add(_priceBadge);
+        }
+
+        public void SetShopPrice(int price)
+        {
+            if (price < 0 || _priceBadge == null)
+            {
+                if (_priceBadge != null) _priceBadge.style.display = DisplayStyle.None;
+                return;
+            }
+            _priceBadge.text = price + "¢";
+            _priceBadge.style.display = DisplayStyle.Flex;
         }
 
         public void Bind(InventorySlotRef slotRef, ItemState item, int quickSlotKey,
@@ -109,6 +127,7 @@ namespace View.UI.Inventory
                 _quickSlotKey.style.display = DisplayStyle.None;
                 _quest.style.display = DisplayStyle.None;
                 _durabilityRoot.style.display = DisplayStyle.None;
+                _priceBadge.style.display = DisplayStyle.None;
                 return;
             }
 
