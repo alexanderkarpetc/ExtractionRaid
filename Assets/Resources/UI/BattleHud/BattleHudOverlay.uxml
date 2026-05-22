@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="BattleHudOverlay.uss" />
+    <ui:VisualElement name="root" picking-mode="Ignore" class="bh-root">
+        <!-- Status effect tiles row. Spawned at runtime by BattleHudOverlay.cs.
+             Anchor + offset set via inline style from DevCheats. -->
+        <ui:VisualElement name="status-row" picking-mode="Position" class="bh-status-row" />
+    </ui:VisualElement>
+</ui:UXML>

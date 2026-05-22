@@ -1,0 +1,58 @@
+/* Battle HUD overlay — UI Toolkit panel for status effect row (Stage 3), future:
+ * status tile catalog, stamina ring placeholder, etc.
+ *
+ * Shared tokens via _tokens.uss are pulled in by PanelSettings → ThemeStyleSheet,
+ * so var(--color-X) values resolve once the theme is attached at runtime.
+ *
+ * Anchor + offset are set as inline styles by BattleHudOverlay.cs based on
+ * the configured HudCorner enum + Vector2 padding-inward offset. The CSS
+ * defaults below are simple TopLeft baseline so the layout reads even before
+ * the C# side runs. */
+
+.bh-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.bh-status-row {
+    position: absolute;
+    /* Edge anchors (top/left/right/bottom) are set inline by ApplyCornerAnchor per HudCorner.
+     * Setting them in USS leaks into the "auto" branches and overrides inline keyword resets,
+     * causing the row to stick to TL even when StatusRowCorner = BottomLeft. */
+    flex-direction: row;
+}
+
+.bh-status-tile {
+    width: 40px;
+    height: 40px;
+    margin-right: 6px;
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.bh-status-tile:hover {
+    border-color: rgba(255, 220, 100, 0.95);
+}
+
+/* Bleed light = -1 HP/sec. Subtle dark-red surface. */
+.bh-status-tile--bleed-light {
+    background-color: rgba(150, 30, 30, 0.85);
+}
+
+/* Bleed heavy = -3 HP/sec. Brighter red surface, accent border. */
+.bh-status-tile--bleed-heavy {
+    background-color: rgba(210, 25, 25, 0.95);
+    border-color: rgba(255, 200, 80, 0.95);
+}
+
+.bh-status-tile__icon {
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    color: rgba(255, 230, 230, 1);
+}

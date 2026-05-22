@@ -72,9 +72,6 @@ namespace ApplicationCore
             minimapHost.transform.SetParent(transform, false);
             minimapHost.AddComponent<MinimapWindow>();
             gameObject.AddComponent<PointerOverUiTracker>();
-            gameObject.AddComponent<StatusEffectOverlay>();
-            gameObject.AddComponent<StaminaBarOverlay>();
-            gameObject.AddComponent<DefenderArmorHUD>();
             gameObject.AddComponent<DeployUI>();
 
             // Tooltip overlay — runtime UI Toolkit panel that floats on top of everything.
@@ -90,6 +87,13 @@ namespace ApplicationCore
             var hotbarHost = new GameObject("HotbarOverlay");
             hotbarHost.transform.SetParent(transform, false);
             hotbarHost.AddComponent<HotbarOverlay>();
+
+            // Battle HUD overlay — UI Toolkit panel hosting status effect row (Stage 3+).
+            // Replaces legacy IMGUI StatusEffectOverlay. Reuses TooltipController.ShowFromPanel
+            // for hover tooltips. See docs/ai/gunplay/battle-hud.md.
+            var battleHudHost = new GameObject("BattleHudOverlay");
+            battleHudHost.transform.SetParent(transform, false);
+            battleHudHost.AddComponent<View.UI.BattleHud.BattleHudOverlay>();
 
             // Inventory modal — UI Toolkit replacement for the legacy uGUI LootPopupView.
             // Hidden by default; InventoryUI drives Open/Close when

@@ -23,7 +23,7 @@ Replace debug-only armor/helmet overlays (which currently render on top of UI + 
 | # | Decision | Notes |
 |---|---|---|
 | 1 | **No separate HP bar on HUD** | Worldspace `WorldHealthBar` (existing, over player head) carries HP. No duplication in TL corner. |
-| 2 | **Armor: procedural paper-doll** in TL corner | 2 regions (helmet + body). Region tint = bright (full) → amber (cracked) → muted gray (broken). SDF-shader procedural (no UI artist needed). |
+| 2 | ~~**Armor: procedural paper-doll**~~ — ✂️ CUT 2026-05-21 after Stage 2a visual test. Did not read well at HUD size in restrained-tactical tone. Armor stays on existing `WorldHealthBar` armor stripe (by-analogy-with-HP), shipped earlier. |
 | 3 | **Status effects HUD row** — horizontal, right of paper-doll | World of Warcraft debuff-row reference. Hover → tooltip. Procedural SDF icons. |
 | 3b | **Status effects worldspace** — universal pattern (player + all bots) | Mini-icons row UNDER the existing `WorldHealthBar`. No tooltips (peripheral signal only). Lives on the same MonoBehaviour as the HP bar so all chars get it. |
 | 4 | **Stamina: radial ring** in worldspace, under player feet | Zelda BotW reference. Fade out when ≥ ~98% (only visible while depleting/regenerating). |
@@ -206,6 +206,8 @@ public Color ConsumableSlotBgTint = new Color(0.3f, 0.4f, 0.5f, 0.5f);
 | Date | Item | Notes |
 |---|---|---|
 | 2026-05-21 | spec | Locked design decisions (paper-doll / procedural icons / radial stamina / worldspace status row universal / weapon-slot hotbar redesign). Plan approved. Ready for implementation. |
+| 2026-05-21 | Stage 1 — Foundation | Shipped: `ViewCheatsBattleHudSection` + asset, `BattleHudPresenter` skeleton wired у App, empty `BattleHud.prefab` (Canvas Screen-Space Overlay, sortOrder 850, Scale-With-Screen-Size ref 1920×1080). DevCheats `⚔ Battle HUD` section visible. 525/525 tests. |
+| 2026-05-21 | ~~Stage 2 — Armor paper-doll~~ | Tried Stage 2a (visual exploration via procedural SDF — humanoid silhouette з helmet/visor/shoulder/chest/diamond shapes, BL anchor, scale-with-screen). Form did not read well at HUD scale + did not match restrained-tactical tone. Reverted: shader/material/section tunables/prefab child deleted. Armor coverage stays on existing `WorldHealthBar` armor stripe (shipped earlier). Presenter kept as skeleton для Stage 3+. |
 
 ---
 

@@ -116,6 +116,22 @@ namespace View.UI.Tooltip
 
             // Defer so the card has measured its size before edge-clamping.
             _root.schedule.Execute(() => PositionCard(panelPos)).StartingIn(0);
+
+            // Re-position once geometry settles — first PositionCard pass sees
+            // `_card.resolvedStyle.width = 0` (layout not yet computed), so right-edge
+            // flip check misses. After GeometryChangedEvent we have real card width
+            // and can flip correctly. Critical when tile sits near right edge
+            // (e.g. status row у TR corner — без цього tooltip відплив би off-screen).
+            if (_card != null) _card.RegisterCallback<GeometryChangedEvent>(OnCardGeometryChanged);
+            _pendingPanelPos = panelPos;
+        }
+
+        Vector2 _pendingPanelPos;
+        void OnCardGeometryChanged(GeometryChangedEvent _)
+        {
+            if (_card == null) return;
+            _card.UnregisterCallback<GeometryChangedEvent>(OnCardGeometryChanged);
+            if (_isVisible) PositionCard(_pendingPanelPos);
         }
 
         Vector2 ScreenToPanel(Vector2 screenPos)
