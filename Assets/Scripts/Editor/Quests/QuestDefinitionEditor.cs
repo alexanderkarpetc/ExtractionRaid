@@ -18,6 +18,7 @@ namespace Editor.Quests
             ("Craft", () => new CraftTask()),
             ("Find Item", () => new FindItemTask()),
             ("Sell Items", () => new SellItemsTask()),
+            ("Upgrade Building", () => new UpgradeBuildingTask()),
         };
 
         public override void OnInspectorGUI()

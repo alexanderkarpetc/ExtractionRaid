@@ -132,7 +132,7 @@ namespace View.UI.Quests
             item.Setup(quest, p, status,
                 onAccept: () =>
                 {
-                    QuestSystem.TryAccept(progress, quest);
+                    QuestSystem.TryAccept(progress, quest, App.Instance?.Player);
                     Refresh();
                 },
                 onClaim: () =>

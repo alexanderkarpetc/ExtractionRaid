@@ -65,8 +65,12 @@ namespace Systems
                     ConsumeFromBackpack(player.Inventory, recipe[i].ItemId, remaining);
             }
 
-            player.SetBuildingLevel(kind, GetLevel(player, kind) + 1);
-            Debug.Log($"[BuildingSystem] Upgraded {kind} → Lv. {GetLevel(player, kind)}.");
+            int newLevel = GetLevel(player, kind) + 1;
+            player.SetBuildingLevel(kind, newLevel);
+            if (ApplicationCore.App.IsInitialized)
+                QuestSystem.OnBuildingUpgraded(player.QuestProgress,
+                    ApplicationCore.App.Instance.QuestDatabase, kind, newLevel);
+            Debug.Log($"[BuildingSystem] Upgraded {kind} → Lv. {newLevel}.");
             return true;
         }
 

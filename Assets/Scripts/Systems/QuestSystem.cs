@@ -177,6 +177,40 @@ namespace Systems
         }
 
         /// <summary>
+        /// Snaps every active <see cref="UpgradeBuildingTask"/> for the given building
+        /// kind to the new level. Called from <see cref="BuildingSystem.TryUpgrade"/>
+        /// right after the level increments. Cap is the task's RequiredCount so the
+        /// progress bar can't overshoot a 1/3 task into 3/3 from a single +1 bump.
+        /// </summary>
+        public static bool OnBuildingUpgraded(
+            QuestProgressState progress, QuestDatabase db,
+            State.BuildingKind kind, int newLevel)
+        {
+            if (progress == null || db == null) return false;
+            bool any = false;
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not UpgradeBuildingTask up) continue;
+                    if (up.Kind != kind) continue;
+
+                    var tp = qp.Tasks[i];
+                    int capped = newLevel < up.RequiredCount ? newLevel : up.RequiredCount;
+                    if (capped <= tp.CurrentCount) continue;
+                    tp.CurrentCount = capped;
+                    any = true;
+                }
+            }
+            return any;
+        }
+
+        /// <summary>
         /// Ticks every active <see cref="ExtractTask"/> whose level matches the one the
         /// player just extracted from. An empty <c>LevelId</c> on the task means "any
         /// level". Called from <c>App.EndRaid</c> only on the Extracted outcome.
@@ -258,12 +292,33 @@ namespace Systems
             return true;
         }
 
-        public static bool TryAccept(QuestProgressState progress, QuestDefinition quest)
+        public static bool TryAccept(QuestProgressState progress, QuestDefinition quest,
+            Session.Player player = null)
         {
             if (quest == null || string.IsNullOrEmpty(quest.Id)) return false;
             if (progress.GetStatus(quest.Id) != QuestStatus.NotStarted) return false;
 
             progress.StartQuest(quest.Id, quest.Tasks?.Count ?? 0);
+
+            // Seed already-satisfied prerequisites. Currently relevant for
+            // UpgradeBuildingTask — if the building is already at or past the
+            // target level when the player accepts, the task should land as
+            // done instead of waiting for a future upgrade that may never come.
+            if (player != null && quest.Tasks != null)
+            {
+                var qp = progress.GetProgress(quest.Id);
+                if (qp != null)
+                {
+                    for (int i = 0; i < quest.Tasks.Count && i < qp.Tasks.Count; i++)
+                    {
+                        if (quest.Tasks[i] is not UpgradeBuildingTask up) continue;
+                        int current = player.GetBuildingLevel(up.Kind);
+                        int capped = current < up.RequiredCount ? current : up.RequiredCount;
+                        if (capped > qp.Tasks[i].CurrentCount)
+                            qp.Tasks[i].CurrentCount = capped;
+                    }
+                }
+            }
             return true;
         }
 

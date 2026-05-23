@@ -13,6 +13,7 @@ namespace Quests
         Craft,
         FindItem,
         SellItems,
+        UpgradeBuilding,
     }
 
     /// <summary>
@@ -127,5 +128,17 @@ namespace Quests
     public class SellItemsTask : QuestTask
     {
         public override QuestTaskType TaskType => QuestTaskType.SellItems;
+    }
+
+    /// <summary>
+    /// "Upgrade the <see cref="Kind"/> building to <see cref="QuestTask.RequiredCount"/>"
+    /// objective. Progress mirrors the player's current building level — completes the
+    /// moment the level reaches the requirement, persists across raids.
+    /// </summary>
+    [Serializable]
+    public class UpgradeBuildingTask : QuestTask
+    {
+        public override QuestTaskType TaskType => QuestTaskType.UpgradeBuilding;
+        public State.BuildingKind Kind;
     }
 }
