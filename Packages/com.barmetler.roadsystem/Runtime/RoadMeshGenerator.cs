@@ -25,6 +25,10 @@ namespace Barmetler.RoadSystem
 
             [Tooltip("By how much to displace uvs every time the mesh tiles")]
             public Vector2 uvOffset = Vector2.up;
+
+            [Min(0.01f)]
+            [Tooltip("Multiplier applied to the width of the generated road.")]
+            public float widthMultiplier = 1f;
         }
 
         [Tooltip("Settings regarding mesh generation")]
@@ -100,6 +104,7 @@ namespace Barmetler.RoadSystem
             {
                 StepSize = stepSize,
                 UVOffset = settings.uvOffset,
+                WidthMultiplier = max(settings.widthMultiplier, 0.01f),
                 Points = new NativeArray<GenerateRoadMeshV2Job.OrientedPoint>(points, Allocator.TempJob),
                 SourceOrientation = settings.SourceOrientation,
                 SourceMeshData = sourceMeshDataArray[0],
@@ -135,6 +140,9 @@ namespace Barmetler.RoadSystem
 
             [ReadOnly]
             public float2 UVOffset;
+
+            [ReadOnly]
+            public float WidthMultiplier;
 
             [ReadOnly]
             [DeallocateOnJobCompletion]
@@ -239,11 +247,15 @@ namespace Barmetler.RoadSystem
                         position -= meshMinZ * sourceForward;
                         position = float3(dot(sourceRight, position), dot(sourceUp, position),
                             dot(sourceForward, position) + zOffset);
+                        position.x *= WidthMultiplier;
                         sourceAttributeData.GetFloat3(sourceIndex, VertexAttribute.Normal, out var normal);
                         normal = float3(dot(sourceRight, normal), dot(sourceUp, normal), dot(sourceForward, normal));
+                        normal = normalize(new float3(normal.x / WidthMultiplier, normal.y, normal.z));
                         sourceAttributeData.GetFloat4(sourceIndex, VertexAttribute.Tangent, out var tangent);
                         tangent = float4(dot(sourceRight, tangent.xyz), dot(sourceUp, tangent.xyz),
                             dot(sourceForward, tangent.xyz), tangent.w);
+                        tangent = float4(normalize(new float3(
+                            tangent.x * WidthMultiplier, tangent.y, tangent.z)), tangent.w);
 
                         positions[resultIndex] = position;
                         normals[resultIndex] = normal;
