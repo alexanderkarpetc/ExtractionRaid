@@ -32,6 +32,9 @@ namespace View.UI.Minimap
         static Texture2D s_playerArrowTex;
         const int PlayerArrowSize = 18;
 
+        static Texture2D s_extractionIconTex;
+        const int ExtractionIconSize = 44;
+
         Vector2 _boundsCenterXZ;
         Vector2 _boundsSize = new Vector2(80f, 80f);
         bool _hasCapture;
@@ -165,6 +168,25 @@ namespace View.UI.Minimap
                     dot.style.rotate = new StyleRotate(
                         new Rotate(new Angle(m.ResolveRotation(), AngleUnit.Degree)));
                 }
+                else if (m.Type == MinimapMarkerType.Extraction)
+                {
+                    var tex = GetExtractionIconTexture();
+                    if (tex != null)
+                    {
+                        float half = ExtractionIconSize * 0.5f;
+                        dot.style.width = ExtractionIconSize;
+                        dot.style.height = ExtractionIconSize;
+                        dot.style.left = mx - half;
+                        dot.style.top  = my - half;
+                        dot.style.backgroundImage = new StyleBackground(tex);
+                        dot.style.backgroundColor = new StyleColor(new Color(0, 0, 0, 0));
+                    }
+                    else
+                    {
+                        dot.style.left = mx - MarkerHalfSizeFor(m.Type);
+                        dot.style.top  = my - MarkerHalfSizeFor(m.Type);
+                    }
+                }
                 else
                 {
                     dot.style.left = mx - MarkerHalfSizeFor(m.Type);
@@ -214,6 +236,13 @@ namespace View.UI.Minimap
 
         static float MarkerHalfSizeFor(MinimapMarkerType t) =>
             t == MinimapMarkerType.Player ? 6f : 5f;
+
+        static Texture2D GetExtractionIconTexture()
+        {
+            if (s_extractionIconTex != null) return s_extractionIconTex;
+            s_extractionIconTex = Resources.Load<Texture2D>("UI/Extraction/exit_icon_32x32");
+            return s_extractionIconTex;
+        }
 
         // Procedurally painted player arrow: kite/chevron pointing up at yaw=0, with
         // a V-notch carved out of the base so it reads as a "you" arrow at small sizes.

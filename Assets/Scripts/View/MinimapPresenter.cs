@@ -115,6 +115,12 @@ namespace View
                 camHeight = minCamHeight;
             }
 
+            // Force a square capture region so the rectangular world doesn't get
+            // squashed into the square RenderTexture. The frame's scale-and-crop
+            // hides any extra so the visible UI still looks rectangular.
+            float square = Mathf.Max(size.x, size.y);
+            size = new Vector2(square, square);
+
             // Replace any prior RT — old textures can't outlive the raid swap.
             if (_envTexture != null) _envTexture.Release();
             _envTexture = new RenderTexture(texSize, texSize, 16, RenderTextureFormat.ARGB32)
