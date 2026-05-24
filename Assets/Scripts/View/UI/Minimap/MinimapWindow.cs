@@ -35,6 +35,9 @@ namespace View.UI.Minimap
         static Texture2D s_extractionIconTex;
         const int ExtractionIconSize = 44;
 
+        static Texture2D s_questIconTex;
+        const int QuestIconSize = 44;
+
         Vector2 _boundsCenterXZ;
         Vector2 _boundsSize = new Vector2(80f, 80f);
         bool _hasCapture;
@@ -170,22 +173,11 @@ namespace View.UI.Minimap
                 }
                 else if (m.Type == MinimapMarkerType.Extraction)
                 {
-                    var tex = GetExtractionIconTexture();
-                    if (tex != null)
-                    {
-                        float half = ExtractionIconSize * 0.5f;
-                        dot.style.width = ExtractionIconSize;
-                        dot.style.height = ExtractionIconSize;
-                        dot.style.left = mx - half;
-                        dot.style.top  = my - half;
-                        dot.style.backgroundImage = new StyleBackground(tex);
-                        dot.style.backgroundColor = new StyleColor(new Color(0, 0, 0, 0));
-                    }
-                    else
-                    {
-                        dot.style.left = mx - MarkerHalfSizeFor(m.Type);
-                        dot.style.top  = my - MarkerHalfSizeFor(m.Type);
-                    }
+                    ApplyIcon(dot, GetExtractionIconTexture(), ExtractionIconSize, mx, my, m.Type);
+                }
+                else if (m.Type == MinimapMarkerType.Quest)
+                {
+                    ApplyIcon(dot, GetQuestIconTexture(), QuestIconSize, mx, my, m.Type);
                 }
                 else
                 {
@@ -240,8 +232,33 @@ namespace View.UI.Minimap
         static Texture2D GetExtractionIconTexture()
         {
             if (s_extractionIconTex != null) return s_extractionIconTex;
-            s_extractionIconTex = Resources.Load<Texture2D>("UI/Extraction/exit_icon_32x32");
+            s_extractionIconTex = Resources.Load<Texture2D>("UI/Minimap/exit_icon_32x32");
             return s_extractionIconTex;
+        }
+
+        static Texture2D GetQuestIconTexture()
+        {
+            if (s_questIconTex != null) return s_questIconTex;
+            s_questIconTex = Resources.Load<Texture2D>("UI/Minimap/quest_icon_32x32");
+            return s_questIconTex;
+        }
+
+        static void ApplyIcon(VisualElement dot, Texture2D tex, int size,
+            float mx, float my, MinimapMarkerType type)
+        {
+            if (tex == null)
+            {
+                dot.style.left = mx - MarkerHalfSizeFor(type);
+                dot.style.top  = my - MarkerHalfSizeFor(type);
+                return;
+            }
+            float half = size * 0.5f;
+            dot.style.width = size;
+            dot.style.height = size;
+            dot.style.left = mx - half;
+            dot.style.top  = my - half;
+            dot.style.backgroundImage = new StyleBackground(tex);
+            dot.style.backgroundColor = new StyleColor(new Color(0, 0, 0, 0));
         }
 
         // Procedurally painted player arrow: kite/chevron pointing up at yaw=0, with
