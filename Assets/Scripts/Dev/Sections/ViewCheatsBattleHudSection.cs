@@ -22,8 +22,15 @@ namespace Dev
         [Tooltip("Padding inward from chosen corner (px in reference resolution 1920×1080).")]
         public Vector2 StatusRowOffset = new Vector2(40f, 40f);
 
-        // Stage 4+ tunables added as each stage ships:
-        //   Stage 4: worldspace status mini-icons (size, y-offset, gap)
+        [Header("Stage 4 — Worldspace status mini-icons (universal — player + bots)")]
+        [Tooltip("Icon size (world units). ~0.12 reads at small-but-glanceable.")]
+        [Range(0.05f, 0.5f)] public float WorldStatusIconSize = 0.12f;
+        [Tooltip("Gap between icons (world units).")]
+        [Range(0f, 0.2f)] public float WorldStatusIconGap = 0.04f;
+        [Tooltip("Y offset below HP bar (world units, negative = down).")]
+        [Range(-1f, 0f)] public float WorldStatusYOffset = -0.18f;
+
+        // Stage 5+ tunables added as each stage ships:
         //   Stage 5: radial stamina ring (colors, radius, thickness, hide threshold, fade time)
         //   Stage 6: hotbar weapon slot styling (separator gap, tints)
     }

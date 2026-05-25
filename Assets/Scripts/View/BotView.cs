@@ -10,6 +10,7 @@ namespace View
         CharacterBody _body; // bound at runtime via BindBody()
 
         WorldHealthBar _healthBar;
+        WorldStatusIcons _statusIcons;
         BotDebugLabel _debugLabel;
 
         // ── Hit feedback delegation ──────────────────────────────────
@@ -38,6 +39,7 @@ namespace View
             EId = id;
             TypeId = typeId;
             _healthBar = WorldHealthBar.Create(transform, maxHp);
+            _statusIcons = WorldStatusIcons.Create(transform, id);
             _debugLabel = BotDebugLabel.Create(transform);
 
             if (weapon != null && _body != null && weapon.BasePrefab != null)

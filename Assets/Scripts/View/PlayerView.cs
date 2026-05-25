@@ -15,6 +15,7 @@ namespace View
         Action<Transform> _onMuzzlePointChanged;
         WorldHealthBar _healthBar;
         WorldProgressBar _progressBar;
+        WorldStatusIcons _statusIcons;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _body != null ? _body.MuzzlePoint : null;
@@ -32,6 +33,7 @@ namespace View
             EId = id;
             _onMuzzlePointChanged = onMuzzlePointChanged;
             _healthBar = WorldHealthBar.Create(transform, maxHp);
+            _statusIcons = WorldStatusIcons.Create(transform, id);
             _progressBar = WorldProgressBar.Create(transform);
         }
 

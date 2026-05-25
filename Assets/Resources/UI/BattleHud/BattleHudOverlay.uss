@@ -26,9 +26,11 @@
 }
 
 .bh-status-tile {
-    width: 40px;
-    height: 40px;
-    margin-right: 6px;
+    /* +15% bump from 40 → 46px container around the (unchanged) 38px emoji.
+     * Adds breathing room so the icon doesn't crowd against the tile border. */
+    width: 46px;
+    height: 46px;
+    margin-right: 7px;
     border-radius: 8px;
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0.85);
@@ -52,7 +54,9 @@
 }
 
 .bh-status-tile__icon {
-    font-size: 22px;
+    /* +70% bump from 22 → 38px so emoji icons read at glanceable distance.
+     * Single value applies to every status type's tile uniformly. */
+    font-size: 38px;
     -unity-text-align: middle-center;
     color: rgba(255, 230, 230, 1);
 }

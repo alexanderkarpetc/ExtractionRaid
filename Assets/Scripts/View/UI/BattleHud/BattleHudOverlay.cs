@@ -117,7 +117,7 @@ namespace View.UI.BattleHud
                 for (int i = 0; i < effects.Count; i++)
                 {
                     var e = effects[i];
-                    var key = $"{e.Type}-L{e.Level}";
+                    var key = StatusEffectVisualMap.KeyFor(e);
                     _seenThisFrame.Add(key);
 
                     if (!_tiles.TryGetValue(key, out var tile))
@@ -152,10 +152,10 @@ namespace View.UI.BattleHud
         {
             var tile = new VisualElement();
             tile.AddToClassList("bh-status-tile");
-            tile.AddToClassList(VisualClassFor(e));
+            tile.AddToClassList(StatusEffectVisualMap.UssClassFor(e));
             tile.userData = e;
 
-            var icon = new Label(EmojiFor(e));
+            var icon = new Label(StatusEffectVisualMap.EmojiFor(e));
             icon.AddToClassList("bh-status-tile__icon");
             icon.pickingMode = PickingMode.Ignore;
             tile.Add(icon);
@@ -186,20 +186,8 @@ namespace View.UI.BattleHud
             _tiles.Clear();
         }
 
-        // ── Visual mapping (status type/level → USS class + emoji) ──────────
-        // Inlined for now (2 cases). Move to a static helper if it grows.
-        static string VisualClassFor(StatusEffectInstance e) => e.Type switch
-        {
-            StatusEffectType.Bleeding when e.Level >= 2 => "bh-status-tile--bleed-heavy",
-            StatusEffectType.Bleeding                   => "bh-status-tile--bleed-light",
-            _ => "bh-status-tile--bleed-light", // fallback
-        };
-
-        static string EmojiFor(StatusEffectInstance e) => e.Type switch
-        {
-            StatusEffectType.Bleeding => "🩸",
-            _ => "?",
-        };
+        // Visual mapping (status type/level → USS class + emoji + color) lives у
+        // `StatusEffectVisualMap` — shared with Stage 4 worldspace mini-icons.
 
         // ── Corner anchor ──────────────────────────────────────────────────
         // Offset = padding-inward from chosen corner. Positive values always push
