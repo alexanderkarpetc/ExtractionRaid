@@ -45,13 +45,26 @@ namespace Systems
             float dmg = effect.Level >= 2
                 ? StatusEffectConstants.BleedL2DamagePerTick
                 : StatusEffectConstants.BleedL1DamagePerTick;
-            DamageSystem.ApplyDamage(health, dmg);
+
+            // Bleed-damage gates for player: GodMode zeroes HP loss but lets the effect
+            // keep ticking (icons + popups still meaningful for playtest); IgnoreBleedOnPlayer
+            // suppresses the damage event entirely. Bots take bleed normally.
+            bool isPlayerVictim = state.PlayerEntity != null && state.PlayerEntity.Id == entityId;
+            bool suppressBleedDamage = isPlayerVictim
+                && (context.CheatsConfig.GodMode || context.CheatsConfig.IgnoreBleedOnPlayer);
+
+            if (!suppressBleedDamage)
+                DamageSystem.ApplyDamage(health, dmg);
 
             // v2 damage-number: emit bleed-tick popup at entity world position.
-            var bleedPos = ResolveEntityPosition(state, entityId) + Vector3.up * 1f;
-            context.Events.DamageNumberSpawned(bleedPos, dmg,
-                isHeadshot: false, isKill: !health.IsAlive,
-                bulletDir: Vector3.up, absorptionRatio: 0f, isBleed: true);
+            // Skip on suppressed player ticks — popup spamming "3" on full-HP player is noise.
+            if (!suppressBleedDamage)
+            {
+                var bleedPos = ResolveEntityPosition(state, entityId) + Vector3.up * 1f;
+                context.Events.DamageNumberSpawned(bleedPos, dmg,
+                    isHeadshot: false, isKill: !health.IsAlive,
+                    bulletDir: Vector3.up, absorptionRatio: 0f, isBleed: true);
+            }
 
             if (health.IsAlive)
                 context.Events.EntityDamaged(entityId, health.CurrentHp, health.MaxHp);

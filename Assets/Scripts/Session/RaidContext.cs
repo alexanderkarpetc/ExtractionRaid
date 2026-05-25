@@ -258,10 +258,15 @@ namespace Session
     public struct CheatsConfig
     {
         public bool GodMode;
+        // Suppresses bleed apply + bleed tick damage on player victim. Orthogonal to GodMode:
+        // GodMode lets bleed apply (icons show) but zeroes tick damage; IgnoreBleed is the
+        // hard-off switch used to keep status row clean for isolated playtests.
+        public bool IgnoreBleedOnPlayer;
 
         public static CheatsConfig Default => new CheatsConfig
         {
             GodMode = false,
+            IgnoreBleedOnPlayer = false,
         };
     }
 

@@ -141,8 +141,12 @@ namespace Systems
                     ApplyStagger(state, hit.TargetId, finalDamage, isHeadshot, in context);
 
                 // Bleed roll (ignores armor, per hit signal = per pellet for shotgun).
-                // GodMode: skip bleeding application on player victim — visuals already covered by other events.
-                if (health.IsAlive && hit.BleedChance > 0f && !godModePlayerVictim)
+                // GodMode no longer gates apply — bleed accumulates so HUD/worldspace icons
+                // show on player too; tick damage in StatusEffectSystem is gated by GodMode.
+                // IgnoreBleedOnPlayer is the explicit kill switch (test isolation).
+                bool isPlayerVictim = state.PlayerEntity != null && hit.TargetId == state.PlayerEntity.Id;
+                bool ignoreBleedApply = isPlayerVictim && context.CheatsConfig.IgnoreBleedOnPlayer;
+                if (health.IsAlive && hit.BleedChance > 0f && !ignoreBleedApply)
                 {
                     float bleedRoll = randomProvider != null ? randomProvider() : Random.value;
                     if (bleedRoll < hit.BleedChance)

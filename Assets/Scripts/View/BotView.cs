@@ -39,7 +39,8 @@ namespace View
             EId = id;
             TypeId = typeId;
             _healthBar = WorldHealthBar.Create(transform, maxHp);
-            _statusIcons = WorldStatusIcons.Create(transform, id);
+            // Parent to HealthBar so row Y offset is "below the HP bar", not "below feet".
+            _statusIcons = WorldStatusIcons.Create(_healthBar.transform, id);
             _debugLabel = BotDebugLabel.Create(transform);
 
             if (weapon != null && _body != null && weapon.BasePrefab != null)

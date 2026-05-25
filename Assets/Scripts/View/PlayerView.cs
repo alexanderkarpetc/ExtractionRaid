@@ -33,7 +33,9 @@ namespace View
             EId = id;
             _onMuzzlePointChanged = onMuzzlePointChanged;
             _healthBar = WorldHealthBar.Create(transform, maxHp);
-            _statusIcons = WorldStatusIcons.Create(transform, id);
+            // Parent to HealthBar's transform so the row sits relative to the HP bar position
+            // (which already has its own Y offset from feet) — keeps "under the bar" semantics.
+            _statusIcons = WorldStatusIcons.Create(_healthBar.transform, id);
             _progressBar = WorldProgressBar.Create(transform);
         }
 

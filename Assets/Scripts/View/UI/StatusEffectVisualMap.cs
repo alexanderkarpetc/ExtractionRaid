@@ -54,5 +54,27 @@ namespace View.UI
             StatusEffectType.Bleeding                   => new Color(0.59f, 0.12f, 0.12f, 0.85f), // ≈ rgba(150,30,30,0.85)
             _ => new Color(0.5f, 0.5f, 0.5f, 0.8f),
         };
+
+        /// <summary>
+        /// Procedural icon shape index (consumed by `StatusEffectIcon.shader` `_IconShape`).
+        /// 0 = blood drop, 1 = cross (X), 2 = spiral (future).
+        /// </summary>
+        public static int IconShapeFor(StatusEffectInstance e) => e.Type switch
+        {
+            StatusEffectType.Bleeding => 0, // drop
+            _ => 0,
+        };
+
+        /// <summary>
+        /// Foreground glyph color (rendered shape inside the tile). Matches the natural
+        /// emoji palette seen у HUD tile: a brighter shade of the background hue so the
+        /// shape reads з contrast but stays within the status's color family.
+        /// </summary>
+        public static Color FgColorFor(StatusEffectInstance e) => e.Type switch
+        {
+            // Bright red drop on dark/medium-red bg — same red-on-red palette as the HUD emoji.
+            StatusEffectType.Bleeding => new Color(1f, 0.3f, 0.3f, 1f),
+            _ => new Color(1f, 1f, 1f, 1f),
+        };
     }
 }

@@ -486,6 +486,12 @@ namespace Dev
             set => Config.StatusEffects.ForceBleedPlayer = value;
         }
 
+        public static bool IgnoreBleed
+        {
+            get => Config.Cheats.IgnoreBleed;
+            set => Config.Cheats.IgnoreBleed = value;
+        }
+
         // ── Armor ────────────────────────────────────────────
         public static float ArmorK
         {

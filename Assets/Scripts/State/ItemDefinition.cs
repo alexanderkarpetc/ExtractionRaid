@@ -133,6 +133,8 @@ namespace State
                     AmmoType = "Ammo_Rifle",
                     Penetration = 10f,
                     ArmorDamage = 5f,
+                    // Baseline 5% — every shot has a chance to bleed. HP variants escalate further.
+                    BleedChance = 0.05f,
                 },
                 ["Ammo_EnergyCell"] = new()
                 {
@@ -143,10 +145,11 @@ namespace State
                     MaxStackSize = 30,
                     AmmoType = "Ammo_EnergyCell",
                     // Laser payload does its damage through weapon base stats; ammo-level
-                    // pen/armor/bleed modifiers are zero in Tier 2 (AP/HP variants → Tier 4).
+                    // pen/armor modifiers are zero in Tier 2 (AP/HP variants → Tier 4).
+                    // Baseline 5% bleed shared across all ammo for consistent feedback.
                     Penetration = 0f,
                     ArmorDamage = 0f,
-                    BleedChance = 0f,
+                    BleedChance = 0.05f,
                 },
                 ["Ammo_Pistol"] = new()
                 {
@@ -158,6 +161,7 @@ namespace State
                     AmmoType = "Ammo_Pistol",
                     Penetration = 12f,
                     ArmorDamage = 6f,
+                    BleedChance = 0.05f,
                 },
                 ["Grenade"] = new()
                 {
@@ -646,6 +650,7 @@ namespace State
                     Penetration = 30f,
                     DamageModifier = -5f,
                     ArmorDamage = 7f,
+                    BleedChance = 0.05f,
                 },
                 ["Ammo_Rifle_AP"] = new()
                 {
@@ -658,6 +663,7 @@ namespace State
                     Penetration = 35f,
                     DamageModifier = -5f,
                     ArmorDamage = 8f,
+                    BleedChance = 0.05f,
                 },
 
                 // --- HP Ammo (Hollow Point — flesh shredder, no pen, no armor damage) ---

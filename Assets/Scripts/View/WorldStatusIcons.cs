@@ -20,9 +20,16 @@ namespace View
     /// </summary>
     public class WorldStatusIcons : MonoBehaviour
     {
+        const string IconMaterialPath = "Vfx/Materials/StatusEffectIcon";
+
+        static readonly int _BgColorProp   = Shader.PropertyToID("_BgColor");
+        static readonly int _FgColorProp   = Shader.PropertyToID("_FgColor");
+        static readonly int _IconShapeProp = Shader.PropertyToID("_IconShape");
+
         EId _ownerId;
         Canvas _canvas;
         RectTransform _rowRect;
+        Material _iconMaterial;
         readonly Dictionary<string, IconCell> _cells = new();
         readonly HashSet<string> _seenThisFrame = new();
         readonly List<string> _staleBuffer = new();
@@ -31,6 +38,7 @@ namespace View
         {
             public GameObject Go;
             public Image Image;
+            public Material Material;
             public RectTransform Rect;
         }
 
@@ -51,7 +59,12 @@ namespace View
             comp._ownerId = ownerId;
             comp._canvas = canvas;
             comp._rowRect = rt;
-            go.SetActive(false); // hide until first status appears
+            comp._iconMaterial = Resources.Load<Material>(IconMaterialPath);
+            if (comp._iconMaterial == null)
+                Debug.LogWarning($"[WorldStatusIcons] Material missing at Resources/{IconMaterialPath}");
+            // Toggle visibility via Canvas.enabled, NOT GameObject.SetActive — inactive GOs
+            // skip LateUpdate, so the row could never re-show after status spawned.
+            canvas.enabled = false;
             return comp;
         }
 
@@ -67,7 +80,7 @@ namespace View
                 return;
             }
 
-            if (!_canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(true);
+            if (!_canvas.enabled) _canvas.enabled = true;
 
             var cfg = ViewCheats.Config?.BattleHud;
             float size = cfg != null ? cfg.WorldStatusIconSize : 0.12f;
@@ -91,8 +104,13 @@ namespace View
                     _cells[key] = cell;
                 }
 
-                cell.Image.color = StatusEffectVisualMap.BgColorFor(e);
                 cell.Rect.sizeDelta = new Vector2(size, size);
+                if (cell.Material != null)
+                {
+                    cell.Material.SetColor(_BgColorProp, StatusEffectVisualMap.BgColorFor(e));
+                    cell.Material.SetColor(_FgColorProp, StatusEffectVisualMap.FgColorFor(e));
+                    cell.Material.SetFloat(_IconShapeProp, StatusEffectVisualMap.IconShapeFor(e));
+                }
             }
 
             // Remove cells whose status no longer active.
@@ -106,10 +124,18 @@ namespace View
                 _cells.Remove(k);
             }
 
-            // Layout — horizontal left-to-right, centered around parent x=0.
+            // Layout — horizontal row, anchored to HP bar edge per WorldStatusAlignment.
+            // Bar width comes from DevCheats so row alignment tracks bar geometry as user tunes it.
             int count = effects.Count;
             float rowWidth = count * size + (count - 1) * gap;
-            float startX = -rowWidth * 0.5f + size * 0.5f;
+            float barHalf = DevCheats.HBarWidth * 0.5f;
+            var alignment = cfg != null ? cfg.WorldStatusAlignment : Dev.WorldStatusAlignment.Left;
+            float startX = alignment switch
+            {
+                Dev.WorldStatusAlignment.Right  =>  barHalf - rowWidth + size * 0.5f,
+                Dev.WorldStatusAlignment.Center => -rowWidth * 0.5f + size * 0.5f,
+                _                               => -barHalf + size * 0.5f, // Left default
+            };
             int idx = 0;
             for (int i = 0; i < effects.Count; i++)
             {
@@ -122,7 +148,7 @@ namespace View
 
         void HideRow()
         {
-            if (_canvas != null && _canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(false);
+            if (_canvas != null && _canvas.enabled) _canvas.enabled = false;
         }
 
         IconCell CreateCell(float size)
@@ -135,7 +161,16 @@ namespace View
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
             var img = go.AddComponent<Image>();
-            return new IconCell { Go = go, Image = img, Rect = rt };
+            img.raycastTarget = false;
+            // Per-cell material instance so SetColor/SetFloat don't leak to the shared asset.
+            // Reading Image.material auto-instances if assigned shared first.
+            if (_iconMaterial != null)
+            {
+                img.material = _iconMaterial;
+                var mat = img.material;
+                return new IconCell { Go = go, Image = img, Material = mat, Rect = rt };
+            }
+            return new IconCell { Go = go, Image = img, Material = null, Rect = rt };
         }
 
         void OnDestroy()

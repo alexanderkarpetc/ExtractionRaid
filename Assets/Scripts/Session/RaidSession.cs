@@ -638,6 +638,7 @@ namespace Session
                 cheatsConfig: new CheatsConfig
                 {
                     GodMode = DevCheats.GodMode,
+                    IgnoreBleedOnPlayer = DevCheats.IgnoreBleed,
                 }
             );
 

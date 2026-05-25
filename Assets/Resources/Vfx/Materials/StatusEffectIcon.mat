@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: HudDamageDirectional
-  m_Shader: {fileID: 4800000, guid: 426861b4b042592e3a5ec094ecbd892a, type: 3}
+  m_Name: StatusEffectIcon
+  m_Shader: {fileID: 4800000, guid: 381678c22a00b8e96c3f57e16d3a422b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,16 +29,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AspectRatio: 1.777193
+    - _CornerRadius: 0.12
     - _EdgeSoftness: 0.01
-    - _InnerRadius: 0.869
-    - _LowHpGlow: 0
-    - _SectorHalfWidthRad: 0.43982297
+    - _IconShape: 0
+    - _OutlineWidth: 0.04
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.15, b: 0.15, a: 0.85}
-    - _HitSlot0: {r: 0, g: 0, b: 0, a: 0}
-    - _HitSlot1: {r: 0, g: 0, b: 0, a: 0}
-    - _HitSlot2: {r: 0, g: 0, b: 0, a: 0}
-    - _HitSlot3: {r: 0, g: 0, b: 0, a: 0}
+    - _BgColor: {r: 0.82, g: 0.1, b: 0.1, a: 0.95}
+    - _FgColor: {r: 1, g: 0.3, b: 0.3, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 0.85}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

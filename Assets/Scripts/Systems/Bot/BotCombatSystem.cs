@@ -82,6 +82,18 @@ namespace Systems.Bot
 
             float accuracySpread = (1f - config.Accuracy) * 10f;
 
+            // Bleed parity з player: bots не consume ammo, але читаємо BleedChance з compatible
+            // AmmoType (Ammo_Rifle / Ammo_EnergyCell) щоб baseline 5% з ItemDefinition застосовувався
+            // і на bot shots. Інші ammo модифікатори (Penetration / Damage / ArmorDamage) свідомо
+            // не додаємо — design: bot стати композуються тільки з payload core (див. Tier 4a comment нижче).
+            float ammoBleedChance = 0f;
+            if (!string.IsNullOrEmpty(weapon.AmmoType))
+            {
+                var ammoDef = ItemDefinition.Get(weapon.AmmoType);
+                if (ammoDef != null) ammoBleedChance = ammoDef.BleedChance;
+            }
+            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
+
             for (int i = 0; i < count; i++)
             {
                 var pelletDir = aimDir;
@@ -110,7 +122,7 @@ namespace Systems.Bot
                     targetedEntityId: default,
                     penetration:      weapon.Stats.BasePenetration,
                     armorDamage:      weapon.Stats.BaseArmorDamage,
-                    bleedChance:      weapon.Stats.BaseBleedChance,
+                    bleedChance:      totalBleedChance,
                     archetype:        PayloadArchetypeKeyExt.FromArchetypeString(weapon.PayloadDefinition?.Archetype));
 
                 state.Projectiles.Add(projectile);

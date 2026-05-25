@@ -5,6 +5,9 @@ namespace Dev
     /// <summary>Which screen corner a HUD element anchors to. Offset reads as "padding inward".</summary>
     public enum HudCorner { TopLeft, TopRight, BottomLeft, BottomRight }
 
+    /// <summary>Row anchor relative to the HP bar above the character.</summary>
+    public enum WorldStatusAlignment { Left, Center, Right }
+
     /// <summary>
     /// Battle HUD tunables — status effects (HUD row + worldspace),
     /// radial stamina ring (worldspace), hotbar weapon slots. Multi-stage shipping pass.
@@ -23,12 +26,14 @@ namespace Dev
         public Vector2 StatusRowOffset = new Vector2(40f, 40f);
 
         [Header("Stage 4 — Worldspace status mini-icons (universal — player + bots)")]
-        [Tooltip("Icon size (world units). ~0.12 reads at small-but-glanceable.")]
-        [Range(0.05f, 0.5f)] public float WorldStatusIconSize = 0.12f;
+        [Tooltip("Icon size (world units). ~0.3 reads cleanly при HP bar height 0.12.")]
+        [Range(0.05f, 0.6f)] public float WorldStatusIconSize = 0.3f;
         [Tooltip("Gap between icons (world units).")]
         [Range(0f, 0.2f)] public float WorldStatusIconGap = 0.04f;
         [Tooltip("Y offset below HP bar (world units, negative = down).")]
-        [Range(-1f, 0f)] public float WorldStatusYOffset = -0.18f;
+        [Range(-1f, 0f)] public float WorldStatusYOffset = -0.2f;
+        [Tooltip("Row alignment relative to HP bar. Left = WoW-style debuff row.")]
+        public WorldStatusAlignment WorldStatusAlignment = WorldStatusAlignment.Left;
 
         // Stage 5+ tunables added as each stage ships:
         //   Stage 5: radial stamina ring (colors, radius, thickness, hide threshold, fade time)

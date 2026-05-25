@@ -7,7 +7,7 @@ namespace Dev
         // Layout
         public float HBarWidth = 1f;
         public float HBarHeight = 0.12f;
-        public float HBarOffsetY = 2.2f;
+        public float HBarOffsetY = 2.4f;
         public float HBarBorderSize = 0.04f;
 
         // Animation
