@@ -78,6 +78,7 @@ namespace View.UI.EndOfRaid
             _titleLabel.text = title ?? "";
             _subtitleLabel.text = subtitle ?? "";
             _onNextClicked = onNext;
+            if (_nextButton != null) _nextButton.SetEnabled(true);
 
             if (_card != null)
             {

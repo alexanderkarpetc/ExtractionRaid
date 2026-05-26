@@ -30,6 +30,9 @@ namespace View
                 {
                     _window?.Hide();
                     _shown = false;
+                    // Release the input block we set when showing the screen.
+                    // Without this the hideout starts with gameplay input gated → can't walk.
+                    app.SetGameplayInputBlocked(false);
                 }
                 return;
             }
