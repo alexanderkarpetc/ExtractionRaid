@@ -471,7 +471,8 @@ namespace Systems
         /// quest journal.
         /// </summary>
         public static List<HandoverOpportunity> GetHandoverOpportunities(
-            QuestProgressState progress, QuestDatabase db, InventoryState inventory, string npcId)
+            QuestProgressState progress, QuestDatabase db, InventoryState inventory, string npcId,
+            List<ItemState> stash = null)
         {
             var result = new List<HandoverOpportunity>();
             if (progress == null || db == null || inventory == null || string.IsNullOrEmpty(npcId))
@@ -487,7 +488,8 @@ namespace Systems
                 if (p == null || p.Status != QuestStatus.Active) continue;
                 if (quest.Tasks == null) continue;
 
-                for (int i = 0; i < quest.Tasks.Count && i < p.Tasks.Count; i++)
+                int i = 0;
+                for (; i < quest.Tasks.Count && i < p.Tasks.Count; i++)
                 {
                     string itemId = ExtractHandoverItemId(quest.Tasks[i]);
                     if (string.IsNullOrEmpty(itemId)) continue;
@@ -495,9 +497,12 @@ namespace Systems
                     int remainingTask = quest.Tasks[i].RequiredCount - p.Tasks[i].CurrentCount;
                     if (remainingTask <= 0) continue;
 
-                    int available = CountItemInBackpack(inventory, itemId);
-                    if (available <= 0) continue;
+                    int available = CountItemInBackpack(inventory, itemId)
+                                  + CountItemInStash(stash, itemId);
 
+                    // Surface every incomplete task, even when the player has nothing —
+                    // dialogue renders it as a disabled "Y/X" hint so the player knows
+                    // what's missing.
                     int deliverable = remainingTask < available ? remainingTask : available;
                     result.Add(new HandoverOpportunity
                     {
@@ -523,7 +528,7 @@ namespace Systems
         /// </summary>
         public static int HandOver(
             QuestProgressState progress, QuestDatabase db, InventoryState inventory,
-            HandoverOpportunity opportunity)
+            HandoverOpportunity opportunity, List<ItemState> stash = null)
         {
             if (progress == null || db == null || inventory == null) return 0;
             if (string.IsNullOrEmpty(opportunity.QuestId) || string.IsNullOrEmpty(opportunity.ItemId)) return 0;
@@ -539,11 +544,16 @@ namespace Systems
             int remainingTask = task.RequiredCount - p.Tasks[opportunity.TaskIndex].CurrentCount;
             if (remainingTask <= 0) return 0;
 
-            int available = CountItemInBackpack(inventory, opportunity.ItemId);
+            int available = CountItemInBackpack(inventory, opportunity.ItemId)
+                          + CountItemInStash(stash, opportunity.ItemId);
             int amount = Mathf.Min(remainingTask, available);
             if (amount <= 0) return 0;
 
-            ConsumeFromBackpack(inventory, opportunity.ItemId, amount);
+            // Drain backpack first so the player's raid loadout is preserved when
+            // stash supply alone covers the delivery.
+            int leftover = ConsumeFromBackpackReturning(inventory, opportunity.ItemId, amount);
+            if (leftover > 0) ConsumeFromStash(stash, opportunity.ItemId, leftover);
+
             p.Tasks[opportunity.TaskIndex].CurrentCount += amount;
             return amount;
         }
@@ -570,7 +580,8 @@ namespace Systems
             return count;
         }
 
-        static void ConsumeFromBackpack(InventoryState inventory, string itemId, int amount)
+        // Returns leftover (unspent) amount so the caller can fall back to another container.
+        static int ConsumeFromBackpackReturning(InventoryState inventory, string itemId, int amount)
         {
             int remaining = amount;
             for (int i = 0; i < InventoryState.BackpackSize && remaining > 0; i++)
@@ -586,6 +597,42 @@ namespace Systems
                 else
                 {
                     slot.StackCount -= remaining;
+                    remaining = 0;
+                }
+            }
+            inventory.Version++;
+            return remaining;
+        }
+
+        static int CountItemInStash(List<ItemState> stash, string itemId)
+        {
+            if (stash == null) return 0;
+            int count = 0;
+            for (int i = 0; i < stash.Count; i++)
+            {
+                var item = stash[i];
+                if (item != null && item.DefinitionId == itemId)
+                    count += item.StackCount;
+            }
+            return count;
+        }
+
+        static void ConsumeFromStash(List<ItemState> stash, string itemId, int amount)
+        {
+            if (stash == null) return;
+            int remaining = amount;
+            for (int i = stash.Count - 1; i >= 0 && remaining > 0; i--)
+            {
+                var item = stash[i];
+                if (item == null || item.DefinitionId != itemId) continue;
+                if (item.StackCount <= remaining)
+                {
+                    remaining -= item.StackCount;
+                    stash.RemoveAt(i);
+                }
+                else
+                {
+                    item.StackCount -= remaining;
                     remaining = 0;
                 }
             }

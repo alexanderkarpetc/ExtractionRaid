@@ -22,8 +22,17 @@ MonoBehaviour:
     try not to use them all on yourself before you get back."
   RequiredLevel: 0
   NpcId: AL
-  Tasks: []
-  Rewards: []
+  Tasks:
+  - rid: 486512507912978504
+  Rewards:
+  - ItemId: Helmet_Basic
+    Count: 1
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 486512507912978504
+      type: {class: FindAndTransferTask, ns: Quests, asm: Game}
+      data:
+        Description: Bring medkits
+        RequiredCount: 3
+        QuestItemId: Medkit

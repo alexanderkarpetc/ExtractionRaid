@@ -113,19 +113,19 @@ namespace View
             var db = app?.QuestDatabase;
             if (inventory != null && progress != null && db != null)
             {
-                var ops = QuestSystem.GetHandoverOpportunities(progress, db, inventory, npcId);
+                var stash = app.Player.Stash;
+                var ops = QuestSystem.GetHandoverOpportunities(progress, db, inventory, npcId, stash);
                 foreach (var op in ops)
                 {
                     var def = ItemDefinition.Get(op.ItemId);
                     string itemName = def?.DisplayName ?? op.ItemId;
 
-                    int current = 0;
-                    var p = progress.GetProgress(op.QuestId);
-                    if (p != null && op.TaskIndex < p.Tasks.Count)
-                        current = p.Tasks[op.TaskIndex].CurrentCount;
-                    int required = current + op.RequiredRemaining;
+                    // Y/X is raw "have/need" — even when the player is over-stocked
+                    // (e.g. 10/3) the full count is shown so they know how much they're
+                    // carrying. Click is gated until have ≥ need.
+                    string label = $"Hand over {itemName} ({op.Available}/{op.RequiredRemaining})";
 
-                    string label = $"Hand over {op.DeliverableNow}× {itemName}  ({current}/{required})";
+                    bool canDeliver = op.Available >= op.RequiredRemaining;
 
                     var captured = op;
                     string capturedNpcId = npcId;
@@ -134,6 +134,7 @@ namespace View
                     choices.Add(new NpcDialogueWindow.Choice
                     {
                         Label = label,
+                        EnabledOverride = canDeliver,
                         OnClick = () => OnHandoverClicked(captured, capturedNpcId, capturedDisplayName, capturedIntro),
                     });
                 }
@@ -176,7 +177,7 @@ namespace View
             var db = app?.QuestDatabase;
             if (inventory == null || progress == null || db == null) return;
 
-            int delivered = QuestSystem.HandOver(progress, db, inventory, op);
+            int delivered = QuestSystem.HandOver(progress, db, inventory, op, app.Player.Stash);
             if (delivered <= 0) return;
 
             var def = ItemDefinition.Get(op.ItemId);
