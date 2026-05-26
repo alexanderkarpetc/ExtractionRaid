@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::Quests.QuestDefinition
   Id: good_for_business
   DisplayName: Good for Business
-  Description: "\u201CYou want to survive here? Then learn one thing fast \u2014
-    junk keeps people alive.\nAmmo, tools, scrap, broken electronics\u2026 somebody
+  Description: "“You want to survive here? Then learn one thing fast —
+    junk keeps people alive.\nAmmo, tools, scrap, broken electronics… somebody
     always pays for something.\n\nMost rookies hoard everything until they die with
     a backpack full of garbage. Smart ones know when to sell.\n\nBring me anything
-    valuable you find out there and sell goods worth at least 1,500 Credits. I don\u2019t
-    care what it is, as long as it\u2019s worth something and not covered in fresh
+    valuable you find out there and sell goods worth at least 1,000 Credits. I don’t
+    care what it is, as long as it’s worth something and not covered in fresh
     blood.\n\nThink of this as your first lesson in trade: gear comes and goes, but
-    steady profit keeps you breathing.\u201D"
+    steady profit keeps you breathing.”"
   RequiredLevel: 0
   NpcId: AL
-  Tasks: []
+  Tasks:
+  - rid: 6912843015829473102
   Rewards: []
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 6912843015829473102
+      type: {class: SellItemsTask, ns: Quests, asm: Game}
+      data:
+        Description: Sell goods worth 1,000 credits in total
+        RequiredCount: 1000

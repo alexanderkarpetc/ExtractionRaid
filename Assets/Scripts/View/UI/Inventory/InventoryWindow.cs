@@ -816,10 +816,7 @@ namespace View.UI.Inventory
         {
             var player = App.Instance?.Player;
             if (player == null || shop == null) return;
-            // Find a free slot in the shop's inventory; TrySell requires empty target.
-            int free = shop.Inventory.FindFreeBackpackSlot();
-            if (free < 0) return;
-            ShopSystem.TrySell(player, shop, slot.SlotRef, InventorySlotRef.BackpackSlot(free));
+            ShopSystem.TrySell(player, shop, slot.SlotRef);
         }
 
         // ── Context actions ──────────────────────────────────
@@ -1040,15 +1037,7 @@ namespace View.UI.Inventory
                         var tgtLootable = ResolveLootable(tgt.SourceLootableId);
                         if (tgtLootable == null) return false;
                         if (tgtLootable.IsShop)
-                        {
-                            // Shop slots are usually full of stock — sell into the targeted
-                            // slot if empty, otherwise auto-pick the first free shop slot.
-                            var dst = tgtLootable.Inventory.GetSlot(tgt.SlotRef) == null
-                                ? tgt.SlotRef
-                                : InventorySlotRef.BackpackSlot(tgtLootable.Inventory.FindFreeBackpackSlot());
-                            if (dst.Index < 0) return false;
-                            return ShopSystem.TrySell(App.Instance?.Player, tgtLootable, src.SlotRef, dst);
-                        }
+                            return ShopSystem.TrySell(App.Instance?.Player, tgtLootable, src.SlotRef);
                         return LootSystem.TryTransfer(playerInv, src.SlotRef, tgtLootable.Inventory, tgt.SlotRef);
                     }
                     case InventorySlotElement.SlotSource.Stash:
@@ -1147,12 +1136,12 @@ namespace View.UI.Inventory
                     var lootable = ResolveLootable(subPanel.LootableId);
                     if (lootable == null) return false;
                     if (!IsLootableInRange(subPanel.LootableId)) return false;
+                    if (lootable.IsShop)
+                        return ShopSystem.TrySell(App.Instance.Player, lootable, _draggedSlot.SlotRef);
                     int free = lootable.Inventory.FindFreeBackpackSlot();
                     if (free < 0) return false;
-                    var dst = InventorySlotRef.BackpackSlot(free);
-                    return lootable.IsShop
-                        ? ShopSystem.TrySell(App.Instance.Player, lootable, _draggedSlot.SlotRef, dst)
-                        : LootSystem.TryTransfer(playerInv, _draggedSlot.SlotRef, lootable.Inventory, dst);
+                    return LootSystem.TryTransfer(playerInv, _draggedSlot.SlotRef,
+                        lootable.Inventory, InventorySlotRef.BackpackSlot(free));
                 }
                 case InventorySlotElement.SlotSource.Stash:
                     return PushToStash(playerInv, _draggedSlot.SlotRef);

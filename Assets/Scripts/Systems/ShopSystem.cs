@@ -180,10 +180,13 @@ namespace Systems
         }
 
         /// <summary>
-        /// Player sells an item to the shop. Target slot in the shop must be empty.
+        /// Player sells an item to the shop. The item is removed from the player's
+        /// inventory and the credit value paid out — the shop's own inventory isn't
+        /// touched (sold goods evaporate). Lets us ignore "shop full" failure paths
+        /// entirely while keeping the per-shop sell pricing.
         /// </summary>
         public static bool TrySell(Player player, LootableContainerState shop,
-            InventorySlotRef playerSlot, InventorySlotRef shopSlot)
+            InventorySlotRef playerSlot)
         {
             if (player == null || shop == null || !shop.IsShop) return false;
             var inv = player.Inventory;
@@ -191,14 +194,14 @@ namespace Systems
 
             var item = inv.GetSlot(playerSlot);
             if (item == null) return false;
-            if (shop.Inventory.GetSlot(shopSlot) != null) return false;
 
             int price = GetSellPrice(shop, item);
 
-            if (!LootSystem.TryTransfer(inv, playerSlot, shop.Inventory, shopSlot))
-                return false;
-
+            inv.SetSlot(playerSlot, null);
             player.Credit(price);
+            if (ApplicationCore.App.IsInitialized)
+                QuestSystem.OnItemSold(player.QuestProgress,
+                    ApplicationCore.App.Instance.QuestDatabase, price);
             return true;
         }
     }
