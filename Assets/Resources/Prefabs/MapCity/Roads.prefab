@@ -1,0 +1,545 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2683431126940888664
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4787710534664464612}
+  - component: {fileID: 2617433148062465064}
+  - component: {fileID: 6758566531256620582}
+  - component: {fileID: 1578759213118109322}
+  - component: {fileID: 4902377485101061336}
+  - component: {fileID: 1756761506917958440}
+  m_Layer: 0
+  m_Name: RoadMain(Clone)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4787710534664464612
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.38268277, z: -0, w: 0.92387986}
+  m_LocalPosition: {x: 27, y: 0, z: 30}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7800521142118146474}
+  m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
+--- !u!114 &2617433148062465064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cddc1941501135645b2a8b35032f1fc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.Road
+  start: {fileID: 0}
+  end: {fileID: 0}
+  direction: 0
+  autoSetControlPoints: 0
+  points:
+  - {x: 30.90142, y: 0, z: -134.50488}
+  - {x: 43.943146, y: 0.00045669792, z: -122.01114}
+  - {x: 48.90044, y: -0.028167808, z: -111.27945}
+  - {x: 49.59644, y: -0.050392713, z: -102.390335}
+  - {x: 50.22224, y: -0.07037603, z: -94.39777}
+  - {x: 49.785168, y: -0.09530365, z: -91.08114}
+  - {x: 46.299946, y: -0.079147905, z: -86.12637}
+  - {x: 44.191505, y: -0.06937423, z: -83.128914}
+  - {x: 39.45715, y: -0.038149685, z: -77.51177}
+  - {x: 37.47656, y: 0, z: -75.660484}
+  - {x: 31.052902, y: 0.12373096, z: -69.65619}
+  - {x: -0.6779243, y: 0.37693134, z: -53.91225}
+  - {x: -0.37666416, y: 0, z: -28.521965}
+  - {x: -0.28422236, y: -0.115661554, z: -20.730942}
+  - {x: -0.0000013411045, y: 0, z: -12.3196125}
+  - {x: -0.0000013411045, y: 0, z: -0.9579433}
+  normals:
+  - {x: -0.0008334899, y: 0.9999993, z: 0.0008334931}
+  - {x: -0.00015141332, y: 0.9999919, z: 0.0040126867}
+  - {x: -0.003702002, y: 0.99999094, z: -0.002088459}
+  - {x: 0.0059497035, y: 0.9998809, z: -0.014239367}
+  - {x: 0.010229458, y: 0.9998393, z: 0.014721735}
+  - {x: 0, y: 1, z: 0}
+  angles: []
+  bounds:
+    m_Center: {x: 24.729612, y: 0.057102174, z: -67.731415}
+    m_Extent: {x: 25.106277, y: 0.14139956, z: 66.77347}
+  boundingBoxes:
+  - m_Center: {x: 40.24893, y: -0.025196357, z: -118.44761}
+    m_Extent: {x: 9.347511, y: 0.025196357, z: 16.057274}
+  - m_Center: {x: 48.067917, y: -0.06734505, z: -94.258354}
+    m_Extent: {x: 1.7679749, y: 0.016952336, z: 8.131981}
+  - m_Center: {x: 41.888252, y: -0.039573953, z: -80.89343}
+    m_Extent: {x: 4.4116936, y: 0.039573953, z: 5.2329407}
+  - m_Center: {x: 18.549944, y: 0.09925086, z: -52.091225}
+    m_Extent: {x: 18.926609, y: 0.09925086, z: 23.56926}
+  - m_Center: {x: -0.18833275, y: -0.02569562, z: -14.739954}
+    m_Extent: {x: 0.18833141, y: 0.02569562, z: 13.782011}
+--- !u!33 &6758566531256620582
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  m_Mesh: {fileID: 0}
+--- !u!114 &1578759213118109322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f529346a7379142901f04d3a39718e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadMeshGenerator
+  settings:
+    SourceOrientation:
+      forward: 4
+      up: 2
+      isRightHanded: 0
+    uvOffset: {x: 0, y: 1}
+    widthMultiplier: 0.17
+  autoGenerate: 1
+  SourceMesh: {fileID: -5754084199372789682, guid: a7242140ef2690e4fac340e3f5cd65ec, type: 3}
+--- !u!23 &4902377485101061336
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21c1e0845fe50de4bacf0970b304729c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &1756761506917958440
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683431126940888664}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
+--- !u!1 &2922567695824321216
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6186104602943460197}
+  - component: {fileID: 4169185537058173993}
+  - component: {fileID: 423779824127802339}
+  - component: {fileID: 6827855488438562985}
+  - component: {fileID: 3454261410209575949}
+  - component: {fileID: 2965167079482085258}
+  m_Layer: 0
+  m_Name: RoadMain(Clone)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6186104602943460197
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 59.8, y: 0, z: 148.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3270306978191578585}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4169185537058173993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cddc1941501135645b2a8b35032f1fc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.Road
+  start: {fileID: 0}
+  end: {fileID: 0}
+  direction: 0
+  autoSetControlPoints: 0
+  points:
+  - {x: 14.041523, y: 0, z: 17.284119}
+  - {x: 14.041523, y: 0, z: 17.475689}
+  - {x: -10.845879, y: 0.00084237347, z: -5.658248}
+  - {x: -24.532558, y: 0.0018880535, z: -19.93892}
+  - {x: -31.204872, y: 0.0023978269, z: -26.900806}
+  - {x: -50.140957, y: 0.0037989025, z: -48.25182}
+  - {x: -57.120564, y: 0.0042372635, z: -58.761368}
+  - {x: -63.220005, y: 0.004620345, z: -67.94561}
+  - {x: -81.20948, y: 0.0053019123, z: -89.88581}
+  - {x: -87.90906, y: 0.0057127383, z: -100.32102}
+  - {x: -101.618645, y: 0.0065534273, z: -121.675}
+  - {x: -121.28421, y: 0.0085905045, z: -144.57959}
+  - {x: -125.81761, y: 0.00885479, z: -152.10815}
+  - {x: -131.09792, y: 0.009162618, z: -160.8771}
+  - {x: -140.76231, y: 0.0098729925, z: -171.95857}
+  - {x: -147.62462, y: 0.010334596, z: -181.27095}
+  - {x: -155.56335, y: 0.010868609, z: -192.04411}
+  - {x: -161.787, y: 0.011216759, z: -202.86804}
+  - {x: -167.14114, y: 0.011496767, z: -212.83035}
+  - {x: -184.08955, y: 0.0123831285, z: -244.36583}
+  - {x: -182.50024, y: 0.011862706, z: -280.9494}
+  - {x: -182.50024, y: 0.011862706, z: -280.65585}
+  normals:
+  - {x: 0, y: 1, z: 0}
+  - {x: 0.000107365, y: 1, z: -0.0000296758}
+  - {x: 0.00010740404, y: 1, z: -0.000029618459}
+  - {x: 0.00010741927, y: 1, z: -0.000029595645}
+  - {x: 0.00010742733, y: 1, z: -0.000029584138}
+  - {x: 0.00010742265, y: 1, z: -0.000029590989}
+  - {x: 0.00010740848, y: 1, z: -0.000029618845}
+  - {x: 0, y: 1, z: 0}
+  angles: []
+  bounds:
+    m_Center: {x: -84.248985, y: 0.0060072523, z: -131.68587}
+    m_Extent: {x: 98.290504, y: 0.0060072523, z: 148.96999}
+  boundingBoxes:
+  - m_Center: {x: -5.2455177, y: 0.00094402675, z: -1.3274002}
+    m_Extent: {x: 19.28704, y: 0.00094402675, z: 18.611519}
+  - m_Center: {x: -40.82656, y: 0.0030626585, z: -39.350143}
+    m_Extent: {x: 16.294003, y: 0.001174605, z: 19.411224}
+  - m_Center: {x: -72.51481, y: 0.004975001, z: -79.5412}
+    m_Extent: {x: 15.394249, y: 0.0007377374, z: 20.77983}
+  - m_Center: {x: -106.863335, y: 0.007283764, z: -126.214584}
+    m_Extent: {x: 18.954277, y: 0.0015710257, z: 25.89357}
+  - m_Center: {x: -136.72112, y: 0.009594693, z: -166.68954}
+    m_Extent: {x: 10.903503, y: 0.0007399032, z: 14.58139}
+  - m_Center: {x: -157.38287, y: 0.010915682, z: -197.05066}
+    m_Extent: {x: 9.75827, y: 0.0005810857, z: 15.779694}
+  - m_Center: {x: -174.84032, y: 0.011755636, z: -246.7431}
+    m_Extent: {x: 7.699173, y: 0.00025886856, z: 33.91275}
+--- !u!33 &423779824127802339
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  m_Mesh: {fileID: 0}
+--- !u!114 &6827855488438562985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f529346a7379142901f04d3a39718e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadMeshGenerator
+  settings:
+    SourceOrientation:
+      forward: 4
+      up: 2
+      isRightHanded: 1
+    uvOffset: {x: 0, y: 1}
+    widthMultiplier: 0.15
+  autoGenerate: 1
+  SourceMesh: {fileID: -5754084199372789682, guid: a7242140ef2690e4fac340e3f5cd65ec, type: 3}
+--- !u!23 &3454261410209575949
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: e133d88402762c745a1b720ebeb9ba45, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &2965167079482085258
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2922567695824321216}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
+--- !u!1 &7464509512041054052
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3270306978191578585}
+  - component: {fileID: 8089338089402882897}
+  m_Layer: 0
+  m_Name: RoadSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3270306978191578585
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7464509512041054052}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6186104602943460197}
+  m_Father: {fileID: 7136199032449808363}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8089338089402882897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7464509512041054052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b620528168e7c6c4190189510f83124f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadSystem
+  intersections: []
+  roads:
+  - {fileID: 4169185537058173993}
+  graph:
+    roadSystem: {fileID: 8089338089402882897}
+    nodes: []
+    weights:
+      width: 0
+      height: 0
+      array: []
+  ShowDebugInfo: 1
+  ShowEdgeWeights: 1
+  DistanceFactor: 1000
+--- !u!1 &7971940843606350806
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7800521142118146474}
+  - component: {fileID: 2635532321377042113}
+  m_Layer: 0
+  m_Name: RoadSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7800521142118146474
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7971940843606350806}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 254, y: 0.1, z: -35}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4787710534664464612}
+  m_Father: {fileID: 7136199032449808363}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2635532321377042113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7971940843606350806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b620528168e7c6c4190189510f83124f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadSystem
+  intersections: []
+  roads:
+  - {fileID: 2617433148062465064}
+  graph:
+    roadSystem: {fileID: 2635532321377042113}
+    nodes: []
+    weights:
+      width: 0
+      height: 0
+      array: []
+  ShowDebugInfo: 1
+  ShowEdgeWeights: 1
+  DistanceFactor: 1000
+--- !u!1 &8497623806855852900
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7136199032449808363}
+  m_Layer: 0
+  m_Name: Roads
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7136199032449808363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8497623806855852900}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7800521142118146474}
+  - {fileID: 3270306978191578585}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
