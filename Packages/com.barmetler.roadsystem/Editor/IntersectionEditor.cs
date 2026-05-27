@@ -14,6 +14,14 @@ namespace Barmetler.RoadSystem
         private Intersection _intersection;
         private List<Road> _affectedRoads;
 
+        public override void OnInspectorGUI()
+        {
+            EditorGUI.BeginChangeCheck();
+            base.OnInspectorGUI();
+            if (EditorGUI.EndChangeCheck())
+                _intersection.Invalidate();
+        }
+
         private void OnEnable()
         {
             _intersection = (Intersection)target;
