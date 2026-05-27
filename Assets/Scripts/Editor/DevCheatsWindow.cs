@@ -39,6 +39,8 @@ namespace Editor
         string _giveItemId;
         int _giveItemCount = 1;
         int _giveCreditsAmount = 1000;
+        State.BuildingKind _buildingKind = State.BuildingKind.WeaponBuilder;
+        int _buildingLevel = 1;
 
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
@@ -394,6 +396,13 @@ namespace Editor
                 DrawGiveCreditsRow();
             }
 
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Set Building Level", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!appReady))
+            {
+                DrawSetBuildingLevelRow();
+            }
+
             if (!appReady)
                 EditorGUILayout.HelpBox("Enter Play Mode to use raid cheats.", MessageType.Info);
             else if (App.Instance.IsInHideout)
@@ -449,6 +458,41 @@ namespace Editor
                 if (GUILayout.Button("Reset", GUILayout.Width(70)))
                     SetCredits(0);
             }
+        }
+
+        void DrawSetBuildingLevelRow()
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                int current = App.IsInitialized
+                    ? (App.Instance.Player?.GetBuildingLevel(_buildingKind) ?? 0)
+                    : 0;
+
+                _buildingKind = (State.BuildingKind)EditorGUILayout.EnumPopup(
+                    _buildingKind, GUILayout.Width(150));
+                EditorGUILayout.LabelField($"current Lv. {current}", GUILayout.Width(90));
+                EditorGUILayout.LabelField("→", GUILayout.Width(14));
+                _buildingLevel = Mathf.Max(0, EditorGUILayout.IntField(
+                    _buildingLevel, GUILayout.Width(50)));
+                if (GUILayout.Button("Set", GUILayout.Width(60)))
+                    SetBuildingLevel(_buildingKind, _buildingLevel);
+            }
+        }
+
+        static void SetBuildingLevel(State.BuildingKind kind, int level)
+        {
+            var player = App.Instance?.Player;
+            if (player == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot set building level — Player not ready.");
+                return;
+            }
+            player.SetBuildingLevel(kind, Mathf.Max(0, level));
+            // Tick any UpgradeBuildingTask that targets this kind so a quest waiting
+            // for the upgrade doesn't sit stuck.
+            Systems.QuestSystem.OnBuildingUpgraded(
+                player.QuestProgress, App.Instance.QuestDatabase, kind, level);
+            Debug.Log($"[DevCheats] {kind} set to Lv. {player.GetBuildingLevel(kind)}.");
         }
 
         static void GiveCredits(int amount)
