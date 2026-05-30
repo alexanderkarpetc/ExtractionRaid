@@ -51,7 +51,11 @@ namespace View
         Vector3 _springVel;
         bool _posInitialized;
         float _alpha;       // current fade alpha
-        float _fullTimer;   // seconds stamina has been "full"
+        // Seconds stamina has been "full". Seeded large so the ring starts HIDDEN at level
+        // start (full stamina from spawn) instead of fading in then hiding by timeout. Resets
+        // to 0 the moment stamina depletes, so the "show topping-off after a refill" behavior
+        // is preserved for in-game regen.
+        float _fullTimer = 9999f;
 
         public static WorldStaminaRing Create(Transform followTarget)
         {
