@@ -2,9 +2,15 @@
     <Style src="../Inventory/_inv-slot.uss" />
     <Style src="HotbarOverlay.uss" />
     <ui:VisualElement name="root" picking-mode="Ignore" class="hb-root">
-        <!-- Slot strip: bottom-center anchored. Slots are spawned at runtime by
-             HotbarOverlay.cs (count = InventoryState.QuickSlotCount = 7), so a
-             change to slot count needs only a constant edit, not a UXML edit. -->
-        <ui:VisualElement name="strip" class="hb-strip" />
+        <!-- Bottom-center bar: [weapon slots 1-2] [separator] [quick slots 3-9].
+             Both strips are populated at runtime by HotbarOverlay.cs from the
+             respective constants (WeaponSlotCount / QuickSlotCount). The bar
+             centers as a unit, so the quick strip shifts right of dead-center by
+             half the weapon-strip + separator width — intended (spec decision #5). -->
+        <ui:VisualElement name="bar" picking-mode="Ignore" class="hb-bar">
+            <ui:VisualElement name="weapon-strip" class="hb-weapon-strip" />
+            <ui:VisualElement name="separator" picking-mode="Ignore" class="hb-separator" />
+            <ui:VisualElement name="strip" class="hb-strip" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

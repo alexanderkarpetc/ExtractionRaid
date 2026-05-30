@@ -80,6 +80,15 @@ namespace Dev
         [Tooltip("Fade in/out duration (seconds).")]
         [Range(0.05f, 1f)] public float StaminaRingFadeTime = 0.3f;
 
-        // Stage 6: hotbar weapon slot styling (separator gap, tints)
+        [Header("Stage 6 — Hotbar weapon slots")]
+        [Tooltip("Gap (px, 1920×1080 ref) between the weapon strip (1-2) and quick strip (3-9).")]
+        [Range(0f, 60f)] public float HotbarWeaponSeparatorPx = 18f;
+        [Tooltip("Resting background tint of weapon slots (warm — distinct from consumables).")]
+        public Color WeaponSlotBgTint = new Color(0.55f, 0.42f, 0.22f, 0.5f);
+        [Tooltip("Background tint of the equipped (selected) weapon slot.")]
+        public Color WeaponSlotActiveTint = new Color(0.85f, 0.62f, 0.25f, 0.7f);
+        [Tooltip("Resting background tint of consumable quick slots (cool). Applied only in the " +
+                 "normal occupied state — empty/active keep their existing USS treatment.")]
+        public Color ConsumableSlotBgTint = new Color(0.28f, 0.38f, 0.5f, 0.4f);
     }
 }

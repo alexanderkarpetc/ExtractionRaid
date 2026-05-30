@@ -16,12 +16,56 @@
     bottom: 0;
 }
 
-.hb-strip {
+/* Bottom-center bar holding both strips. Absolute-positioned (was on .hb-strip);
+ * the strips are now plain flex children so weapon + quick sit in one row with a
+ * separator between. align-items: flex-end bottom-aligns slots of differing height. */
+.hb-bar {
     position: absolute;
     bottom: 32px;
     left: 50%;
     translate: -50% 0;
     flex-direction: row;
+    align-items: flex-end;
+}
+
+.hb-weapon-strip {
+    flex-direction: row;
+}
+
+.hb-strip {
+    flex-direction: row;
+}
+
+/* Gap between weapon strip and quick strip. Width overridden at runtime from
+ * ViewCheatsBattleHudSection.HotbarWeaponSeparatorPx (default mirrors this). */
+.hb-separator {
+    width: 18px;
+}
+
+/* Weapon slots mirror the quick-strip row spacing. */
+.hb-weapon-strip > .inv-slot--bp {
+    margin-bottom: 0;
+    margin-right: 10px;
+}
+
+.hb-weapon-strip > .inv-slot--bp:last-child {
+    margin-right: 0;
+}
+
+.hb-weapon-strip > .inv-slot:hover {
+    border-color: var(--color-hint);
+}
+
+/* Equipped weapon slot — accent border (the fill tint is pushed inline from
+ * ViewCheatsBattleHudSection.WeaponSlotActiveTint, so only the border lives here). */
+.hb-weapon-strip > .inv-slot.is-active {
+    border-color: var(--color-accent);
+}
+
+/* Empty weapon slot — dim inset surface (mirrors quick-strip empty treatment). */
+.hb-weapon-strip > .inv-slot.is-empty {
+    background-color: var(--color-card-bg-disabled);
+    border-color: var(--color-border-inset);
 }
 
 /* ── Slot ──────────────────────────────────────────────

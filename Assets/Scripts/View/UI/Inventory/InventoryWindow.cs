@@ -1011,7 +1011,25 @@ namespace View.UI.Inventory
                 target.Source == InventorySlotElement.SlotSource.Player)
             {
                 var inv = App.Instance?.Player?.Inventory;
-                ok = inv != null && InventorySystem.TryMove(inv, _draggedSlot.SlotRef, target.SlotRef);
+                var state = App.Instance?.RaidSession?.RaidState;
+
+                // Weapon↔weapon swap during a raid must route through HotbarWeaponSystem so the
+                // equipped weapon follows to its new slot + magazines are preserved (plain TryMove
+                // only swaps inventory refs → WeaponSyncSystem rebuilds → selection stuck on the
+                // index + mag reset). Outside a raid (no PlayerEntity) there's no equipped weapon —
+                // fall through to the plain inventory swap.
+                bool weaponSwap = _draggedSlot.SlotRef.Type == SlotType.Weapon
+                                  && target.SlotRef.Type == SlotType.Weapon;
+                if (inv != null && weaponSwap && state?.PlayerEntity != null)
+                {
+                    HotbarWeaponSystem.SwapWeaponSlots(state, inv,
+                        _draggedSlot.SlotRef.Index, target.SlotRef.Index);
+                    ok = true;
+                }
+                else
+                {
+                    ok = inv != null && InventorySystem.TryMove(inv, _draggedSlot.SlotRef, target.SlotRef);
+                }
             }
             else
             {

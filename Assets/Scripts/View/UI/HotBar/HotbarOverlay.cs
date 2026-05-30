@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Dev;
 using State;
 using Systems;
 using UnityEngine;
@@ -36,11 +37,17 @@ namespace View.UI.Hotbar
         UIDocument _doc;
         VisualElement _root;
         VisualElement _strip;
+        VisualElement _weaponStrip;
+        VisualElement _separator;
         // Slot cells are full InventorySlotElement instances — same custom UTK
         // class the inventory grid uses. Reuse gives free pixel parity (name,
         // durability bar, stack count, quest dot, drag-highlight) + a single
         // place to evolve slot visuals.
         InventorySlotElement[] _slots;
+        // Weapon hotbar slots (1-2) — display equipped weapons (PlayerEntityState.Hotbar /
+        // InventoryState.WeaponSlots). Click = equip/holster (writes PendingHotbarSlot);
+        // drag weapon→weapon = swap via HotbarWeaponSystem. Separate from quick `_slots`.
+        InventorySlotElement[] _weaponSlots;
 
         VisualElement _pickerBackdrop;
         VisualElement _picker;
@@ -60,6 +67,12 @@ namespace View.UI.Hotbar
         bool _isDragging;
         VisualElement _dragGhost;
 
+        // ── Drag-and-drop within weapon strip (slot 1 ↔ 2) ──
+        int _draggedWi             = -1;
+        int _weaponDragPointerId   = -1;
+        Vector2 _weaponDragStartPanelPos;
+        bool _isWeaponDragging;
+
         /// <summary>
         /// True while a hotbar slot is actively being dragged (ghost up, past
         /// threshold). Mirrors <see cref="View.UI.Inventory.InventoryWindow.IsDragging"/>;
@@ -67,7 +80,7 @@ namespace View.UI.Hotbar
         /// sticky so the OS cursor stays + crosshair stays hidden + attack stays
         /// gated even коли ghost виходить за межі hotbar strip.
         /// </summary>
-        public bool IsDragging => _isDragging;
+        public bool IsDragging => _isDragging || _isWeaponDragging;
 
         // ── Active-slot press flash ──────────────────────────
         // QuickSlotSystem sets PlayerEntityState.ActiveQuickSlot only while the
@@ -85,6 +98,7 @@ namespace View.UI.Hotbar
         {
             Instance = this;
             BuildDocument();
+            BuildWeaponSlots();
             BuildSlots();
             BuildPicker();
         }
@@ -124,6 +138,8 @@ namespace View.UI.Hotbar
 
             _root = _doc.rootVisualElement;
             _strip = _root?.Q<VisualElement>("strip");
+            _weaponStrip = _root?.Q<VisualElement>("weapon-strip");
+            _separator = _root?.Q<VisualElement>("separator");
         }
 
         void BuildSlots()
@@ -168,6 +184,40 @@ namespace View.UI.Hotbar
 
                 _strip.Add(slot);
                 _slots[qi] = slot;
+            }
+        }
+
+        void BuildWeaponSlots()
+        {
+            if (_weaponStrip == null) return;
+
+            _weaponSlots = new InventorySlotElement[InventoryState.WeaponSlotCount];
+            for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
+            {
+                int wi = i;
+                int keyNum = wi + 1; // weapon slots use keys 1-2
+
+                // Same 102×102 Backpack chrome as quick slots for row parity; the warm
+                // .hb-slot--weapon tint + "1/2" key + separator gap differentiate them.
+                var slot = new InventorySlotElement(
+                    InventorySlotElement.SlotKind.Backpack,
+                    emptyPlaceholder: string.Empty);
+                slot.name = $"weapon-slot-{wi}";
+                slot.AddToClassList("hb-slot--weapon");
+
+                var keyLbl = new Label(keyNum.ToString());
+                keyLbl.AddToClassList("hb-slot__key");
+                keyLbl.pickingMode = PickingMode.Ignore;
+                slot.Add(keyLbl);
+
+                // Click = equip/holster (no picker — weapons aren't "bound"); drag = swap.
+                slot.RegisterCallback<PointerDownEvent>(evt => OnWeaponPointerDown(wi, slot, evt));
+                slot.RegisterCallback<PointerMoveEvent>(evt => OnWeaponPointerMove(wi, slot, evt));
+                slot.RegisterCallback<PointerUpEvent>(evt => OnWeaponPointerUp(wi, slot, evt));
+                slot.RegisterCallback<PointerCaptureOutEvent>(_ => OnWeaponPointerCaptureOut(wi));
+
+                _weaponStrip.Add(slot);
+                _weaponSlots[wi] = slot;
             }
         }
 
@@ -216,6 +266,7 @@ namespace View.UI.Hotbar
             var inventory = App.Instance?.Player?.Inventory;
             var player    = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             var registry  = App.Instance?.CoreDefinitions;
+            var view      = ViewCheats.Config?.BattleHud;
 
             // Edge-detect a new activation (only fires коли binding exists +
             // player can actually use it — QuickSlotSystem gates на rolling /
@@ -258,12 +309,59 @@ namespace View.UI.Hotbar
                 bool isFlash = flashAlive && _activeFlashSlot == i;
                 slot.EnableInClassList("is-empty", item == null);
                 slot.EnableInClassList("is-active", isHeld || isFlash);
+
+                // Resting consumable tint — only when occupied AND not active, so the
+                // empty (dim) + active (selected) USS treatments stay intact. Null reverts
+                // the inline value so the USS cascade applies in those states.
+                bool restingNormal = item != null && !(isHeld || isFlash);
+                slot.style.backgroundColor = (view != null && restingNormal)
+                    ? new StyleColor(view.ConsumableSlotBgTint)
+                    : new StyleColor(StyleKeyword.Null);
             }
+
+            RefreshWeaponSlots(inventory, player, registry, view);
 
             // Picker auto-close: if the slot it was opened for got bound from
             // elsewhere (hover+key, context menu, etc), the picker becomes stale.
             if (_pickerSlotIndex >= 0 && !IsSlotEmpty(_pickerSlotIndex))
                 HidePicker();
+        }
+
+        // ── Weapon slots (1-2) ───────────────────────────────
+
+        void RefreshWeaponSlots(InventoryState inventory, PlayerEntityState player,
+            Adapters.ICoreDefinitionRegistry registry, ViewCheatsBattleHudSection view)
+        {
+            if (_weaponSlots == null) return;
+
+            // Separator gap (live-tunable).
+            if (_separator != null && view != null)
+                _separator.style.width = view.HotbarWeaponSeparatorPx;
+
+            int selected = player?.SelectedHotbarSlot ?? -1;
+
+            for (int i = 0; i < _weaponSlots.Length; i++)
+            {
+                var slot = _weaponSlots[i];
+                if (slot == null) continue;
+
+                ItemState item = inventory != null && i < inventory.WeaponSlots.Length
+                    ? inventory.WeaponSlots[i]
+                    : null;
+
+                slot.Bind(InventorySlotRef.Weapon(i), item, quickSlotKey: -1, registry);
+
+                bool isEquipped = selected == i && item != null;
+                slot.EnableInClassList("is-empty", item == null);
+                slot.EnableInClassList("is-active", isEquipped); // accent border via USS
+
+                // Fill tint pushed inline (border stays USS): active vs resting vs empty.
+                StyleColor bg;
+                if (view == null) bg = new StyleColor(StyleKeyword.Null);
+                else if (item == null) bg = new StyleColor(StyleKeyword.Null); // empty → USS dim
+                else bg = new StyleColor(isEquipped ? view.WeaponSlotActiveTint : view.WeaponSlotBgTint);
+                slot.style.backgroundColor = bg;
+            }
         }
 
         // ── Picker ─────────────────────────────────────────
@@ -628,6 +726,158 @@ namespace View.UI.Hotbar
         {
             if (_slots == null) return;
             foreach (var s in _slots) s?.SetDragOver(false, false);
+        }
+
+        // ── Weapon-slot input (click = equip/holster, drag = swap) ───────────
+
+        void OnWeaponPointerDown(int wi, InventorySlotElement slot, PointerDownEvent evt)
+        {
+            if (evt.button != 0) return;
+            // Capture now; PointerMove decides drag-vs-click via threshold, PointerUp routes.
+            slot.CapturePointer(evt.pointerId);
+            _draggedWi               = wi;
+            _weaponDragPointerId     = evt.pointerId;
+            _weaponDragStartPanelPos = evt.position;
+            _isWeaponDragging        = false;
+            evt.StopPropagation();
+        }
+
+        void OnWeaponPointerMove(int wi, InventorySlotElement slot, PointerMoveEvent evt)
+        {
+            if (_draggedWi != wi) return;
+            if (!slot.HasPointerCapture(evt.pointerId)) return;
+
+            if (!_isWeaponDragging)
+            {
+                Vector2 delta = (Vector2)evt.position - _weaponDragStartPanelPos;
+                if (delta.sqrMagnitude < DragThreshold * DragThreshold) return;
+                // Nothing to drag from an empty slot — let it fall through to a click no-op.
+                if (slot.CurrentItem == null) return;
+                _isWeaponDragging = true;
+                CreateWeaponGhost(wi);
+            }
+
+            UpdateGhostPosition(evt.position);
+            UpdateWeaponSlotHover(evt.position);
+        }
+
+        void OnWeaponPointerUp(int wi, InventorySlotElement slot, PointerUpEvent evt)
+        {
+            if (_draggedWi != wi) return;
+
+            if (slot.HasPointerCapture(evt.pointerId))
+                slot.ReleasePointer(evt.pointerId);
+
+            if (_isWeaponDragging)
+            {
+                Vector2 mouseScreen = Mouse.current?.position.ReadValue() ?? Vector2.zero;
+                TryDropWeapon(wi, mouseScreen);
+                DestroyGhost();
+                ClearAllWeaponSlotHover();
+            }
+            else
+            {
+                // Plain click → equip/holster (intent only; WeaponStateMachineSystem handshakes).
+                EquipWeaponSlot(wi);
+            }
+
+            _draggedWi           = -1;
+            _weaponDragPointerId = -1;
+            _isWeaponDragging    = false;
+        }
+
+        void OnWeaponPointerCaptureOut(int wi)
+        {
+            if (_draggedWi != wi) return;
+            DestroyGhost();
+            ClearAllWeaponSlotHover();
+            _draggedWi           = -1;
+            _weaponDragPointerId = -1;
+            _isWeaponDragging    = false;
+        }
+
+        void EquipWeaponSlot(int wi)
+        {
+            var inv    = App.Instance?.Player?.Inventory;
+            var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            if (inv == null || player == null) return;
+            if (wi < 0 || wi >= InventoryState.WeaponSlotCount) return;
+            if (inv.WeaponSlots[wi] == null) return; // empty → nothing to equip
+
+            // Mirror key 1/2: set the switch intent. WeaponStateMachineSystem equips, or
+            // holsters when wi == SelectedHotbarSlot.
+            player.PendingHotbarSlot = wi;
+        }
+
+        void TryDropWeapon(int srcWi, Vector2 mouseScreen)
+        {
+            var state = App.Instance?.RaidSession?.RaidState;
+            var inv   = App.Instance?.Player?.Inventory;
+            if (state == null || inv == null) return;
+
+            int targetWi = FindWeaponSlotUnder(mouseScreen);
+            // Off-strip or self-drop → cancel. Weapons don't unbind (unlike quick slots).
+            if (targetWi < 0 || targetWi == srcWi) return;
+
+            HotbarWeaponSystem.SwapWeaponSlots(state, inv, srcWi, targetWi);
+        }
+
+        void CreateWeaponGhost(int srcWi)
+        {
+            if (_root == null) return;
+            var srcSlot = (srcWi >= 0 && srcWi < _weaponSlots.Length) ? _weaponSlots[srcWi] : null;
+            if (srcSlot?.CurrentItem == null) return;
+
+            DestroyGhost();
+            _dragGhost = new VisualElement { name = "hb-drag-ghost" };
+            _dragGhost.pickingMode = PickingMode.Ignore;
+            _dragGhost.AddToClassList("inv-slot");
+            _dragGhost.AddToClassList("inv-slot--bp");
+            _dragGhost.AddToClassList("inv-drag-ghost");
+
+            var registry = App.Instance?.CoreDefinitions;
+            var name = new Label(WeaponDisplayName.For(srcSlot.CurrentItem, registry));
+            name.AddToClassList("inv-slot__name");
+            name.pickingMode = PickingMode.Ignore;
+            _dragGhost.Add(name);
+
+            _root.Add(_dragGhost);
+        }
+
+        int FindWeaponSlotUnder(Vector2 screenPos)
+        {
+            if (_weaponSlots == null || _root == null) return -1;
+            var panel = _root.panel;
+            if (panel == null) return -1;
+
+            Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
+                new Vector2(screenPos.x, Screen.height - screenPos.y));
+
+            for (int wi = 0; wi < _weaponSlots.Length; wi++)
+            {
+                var s = _weaponSlots[wi];
+                if (s != null && s.worldBound.Contains(panelPos)) return wi;
+            }
+            return -1;
+        }
+
+        void UpdateWeaponSlotHover(Vector2 panelPos)
+        {
+            if (_weaponSlots == null) return;
+            for (int wi = 0; wi < _weaponSlots.Length; wi++)
+            {
+                var s = _weaponSlots[wi];
+                if (s == null) continue;
+                bool over = s.worldBound.Contains(panelPos);
+                if (!over || wi == _draggedWi) { s.SetDragOver(false, false); continue; }
+                s.SetDragOver(valid: true, hovering: true);
+            }
+        }
+
+        void ClearAllWeaponSlotHover()
+        {
+            if (_weaponSlots == null) return;
+            foreach (var s in _weaponSlots) s?.SetDragOver(false, false);
         }
 
         /// <summary>
