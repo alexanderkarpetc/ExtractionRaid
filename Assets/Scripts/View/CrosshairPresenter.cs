@@ -115,8 +115,16 @@ namespace View
             go.name = "[CrosshairV2]";
             _canvas = go.GetComponentInChildren<Canvas>(true);
             _reticle = go.GetComponentInChildren<RawImage>(true);
-            // Force material instance so SetFloat/SetColor don't leak to shared shader.
-            _reticleMat = _reticle.material;
+            // Force a real material instance. uGUI Graphic.material (RawImage/Image) does NOT
+            // auto-instance (unlike Renderer.material) — it returns the assigned reference as-is.
+            // Without an explicit `new Material(...)` every per-frame SetFloat/SetColor (esp.
+            // _CenterPx = live screen position) mutates the shared Crosshair.mat Resources asset,
+            // which persists on play-mode exit → endless git churn across machines.
+            if (_reticle != null && _reticle.material != null)
+            {
+                _reticleMat = new Material(_reticle.material);
+                _reticle.material = _reticleMat;
+            }
         }
 
         public void LateTick(RaidSession session)
@@ -340,8 +348,14 @@ namespace View
             // Unarmed / ballistic / unknown → ballistic 4-arm (laser mode 0).
             bool laserMode = weapon?.PayloadDefinition?.Archetype == "Laser";
 
-            // Push to shader via per-instance material.
-            if (_reticleMat == null) _reticleMat = _reticle.material;
+            // Push to shader via per-instance material. Lazy re-instance if lost (domain reload
+            // etc.) — never write the shared asset directly (see SetupReticle).
+            if (_reticleMat == null && _reticle != null && _reticle.material != null)
+            {
+                _reticleMat = new Material(_reticle.material);
+                _reticle.material = _reticleMat;
+            }
+            if (_reticleMat == null) return;
             _reticleMat.SetColor(_Color, color);
             _reticleMat.SetFloat(_Alpha, alpha);
             _reticleMat.SetVector(_CenterPx, new Vector4(sp.x + trembleOffset.x, sp.y + trembleOffset.y, Screen.width, Screen.height));

@@ -120,6 +120,7 @@ namespace View
             for (int i = 0; i < _staleBuffer.Count; i++)
             {
                 var k = _staleBuffer[i];
+                if (_cells[k].Material != null) Destroy(_cells[k].Material); // owned instance — free it
                 Destroy(_cells[k].Go);
                 _cells.Remove(k);
             }
@@ -163,11 +164,13 @@ namespace View
             var img = go.AddComponent<Image>();
             img.raycastTarget = false;
             // Per-cell material instance so SetColor/SetFloat don't leak to the shared asset.
-            // Reading Image.material auto-instances if assigned shared first.
+            // uGUI Image.material does NOT auto-instance (returns the assigned reference as-is),
+            // so we must `new Material(...)` an owned copy — otherwise every cell across all
+            // characters writes the shared StatusEffectIcon.mat Resources asset at runtime.
             if (_iconMaterial != null)
             {
-                img.material = _iconMaterial;
-                var mat = img.material;
+                var mat = new Material(_iconMaterial);
+                img.material = mat;
                 return new IconCell { Go = go, Image = img, Material = mat, Rect = rt };
             }
             return new IconCell { Go = go, Image = img, Material = null, Rect = rt };
@@ -175,7 +178,11 @@ namespace View
 
         void OnDestroy()
         {
-            foreach (var kvp in _cells) if (kvp.Value.Go != null) Destroy(kvp.Value.Go);
+            foreach (var kvp in _cells)
+            {
+                if (kvp.Value.Material != null) Destroy(kvp.Value.Material); // owned instances
+                if (kvp.Value.Go != null) Destroy(kvp.Value.Go);
+            }
             _cells.Clear();
         }
     }

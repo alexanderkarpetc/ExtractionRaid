@@ -86,7 +86,14 @@ namespace View
             go.name = "[HudDamage]";
             _canvas = go.GetComponentInChildren<Canvas>(true);
             _overlay = go.GetComponentInChildren<RawImage>(true);
-            _mat = _overlay.material; // auto-instance — writes don't leak to shared asset
+            // Real material instance — uGUI Graphic.material does NOT auto-instance (returns the
+            // assigned reference as-is), so per-frame SetColor/SetVector would otherwise mutate the
+            // shared Resources material asset (persists on play-mode exit → git churn).
+            if (_overlay != null && _overlay.material != null)
+            {
+                _mat = new Material(_overlay.material);
+                _overlay.material = _mat;
+            }
             _overlay.raycastTarget = false;
         }
 
@@ -103,7 +110,7 @@ namespace View
             LoadResources();
             if (_disabled) return;
             EnsureScene();
-            if (_canvas == null) return;
+            if (_canvas == null || _mat == null) return;
             if (!_canvas.gameObject.activeSelf) _canvas.gameObject.SetActive(true);
 
             var state = session.RaidState;
