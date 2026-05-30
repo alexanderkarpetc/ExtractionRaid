@@ -30,6 +30,7 @@ namespace Dev
         [SerializeField] DevCheatsBotEngagementSection _botEngagement;
         [SerializeField] DevCheatsLaserSection _laser;
         [SerializeField] DevCheatsBarrelHeatSection _barrelHeat;
+        [SerializeField] DevCheatsStaminaSection _stamina;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public DevCheatsCheatsSection Cheats => _cheats ? _cheats : (_cheats = CreateInstance<DevCheatsCheatsSection>());
@@ -52,5 +53,6 @@ namespace Dev
         public DevCheatsBotEngagementSection BotEngagement => _botEngagement ? _botEngagement : (_botEngagement = CreateInstance<DevCheatsBotEngagementSection>());
         public DevCheatsLaserSection Laser => _laser ? _laser : (_laser = CreateInstance<DevCheatsLaserSection>());
         public DevCheatsBarrelHeatSection BarrelHeat => _barrelHeat ? _barrelHeat : (_barrelHeat = CreateInstance<DevCheatsBarrelHeatSection>());
+        public DevCheatsStaminaSection Stamina => _stamina ? _stamina : (_stamina = CreateInstance<DevCheatsStaminaSection>());
     }
 }

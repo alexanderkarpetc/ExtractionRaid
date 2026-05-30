@@ -639,6 +639,15 @@ namespace Session
                 {
                     GodMode = DevCheats.GodMode,
                     IgnoreBleedOnPlayer = DevCheats.IgnoreBleed,
+                },
+                staminaConfig: new StaminaConfig
+                {
+                    MaxStamina              = DevCheats.Config.Stamina.MaxStamina,
+                    SprintDrainRate         = DevCheats.Config.Stamina.SprintDrainRate,
+                    RegenRate               = DevCheats.Config.Stamina.RegenRate,
+                    RegenDelay              = DevCheats.Config.Stamina.RegenDelay,
+                    SprintSpeedMultiplier   = DevCheats.Config.Stamina.SprintSpeedMultiplier,
+                    ExhaustionRecoveryRatio = DevCheats.Config.Stamina.ExhaustionRecoveryRatio,
                 }
             );
 

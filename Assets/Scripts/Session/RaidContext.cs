@@ -62,6 +62,28 @@ namespace Session
         };
     }
 
+    public struct StaminaConfig
+    {
+        public float MaxStamina;
+        public float SprintDrainRate;
+        public float RegenRate;
+        public float RegenDelay;
+        public float SprintSpeedMultiplier;
+        // Exhaustion hysteresis: once stamina empties, sprint is locked until stamina
+        // recovers to this fraction of max. 0.10 = unlock at 10%.
+        public float ExhaustionRecoveryRatio;
+
+        public static StaminaConfig Default => new StaminaConfig
+        {
+            MaxStamina            = Constants.StaminaConstants.MaxStamina,
+            SprintDrainRate       = Constants.StaminaConstants.SprintDrainRate,
+            RegenRate             = Constants.StaminaConstants.RegenRate,
+            RegenDelay            = Constants.StaminaConstants.RegenDelay,
+            SprintSpeedMultiplier = Constants.StaminaConstants.SprintSpeedMultiplier,
+            ExhaustionRecoveryRatio = 0.10f,
+        };
+    }
+
     public struct StaggerConfig
     {
         public bool  Enabled;
@@ -282,6 +304,7 @@ namespace Session
         public readonly ICoreDefinitionRegistry CoreDefinitions;
         public readonly AimConfig AimConfig;
         public readonly ShootingConfig ShootingConfig;
+        public readonly StaminaConfig StaminaConfig;
         public readonly StaggerConfig StaggerConfig;
         public readonly ArmorConfig ArmorConfig;
         public readonly FOVConfig FOVConfig;
@@ -297,6 +320,7 @@ namespace Session
             ICoreDefinitionRegistry coreDefinitions = null,
             AimConfig? aimConfig = null,
             ShootingConfig? shootingConfig = null,
+            StaminaConfig? staminaConfig = null,
             StaggerConfig? staggerConfig = null,
             ArmorConfig? armorConfig = null,
             FOVConfig? fovConfig = null,
@@ -316,6 +340,7 @@ namespace Session
             CoreDefinitions = coreDefinitions;
             AimConfig = aimConfig ?? AimConfig.Default;
             ShootingConfig = shootingConfig ?? ShootingConfig.Default;
+            StaminaConfig = staminaConfig ?? StaminaConfig.Default;
             StaggerConfig = staggerConfig ?? StaggerConfig.Default;
             ArmorConfig = armorConfig ?? ArmorConfig.Default;
             FOVConfig = fovConfig ?? FOVConfig.Default;

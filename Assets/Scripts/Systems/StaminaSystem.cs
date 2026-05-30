@@ -1,4 +1,3 @@
-using Constants;
 using Session;
 using State;
 using UnityEngine;
@@ -15,10 +14,17 @@ namespace Systems
             var input = context.Input;
             if (input == null) return;
 
+            var cfg = context.StaminaConfig;
+
             var moveInput = input.MoveInput;
             bool isMoving = moveInput.sqrMagnitude > 0.01f;
             bool wantsToSprint = input.SprintPressed && isMoving;
-            bool canSprint = player.Stamina > 0f
+
+            // Exhaustion hysteresis: once empty, lock sprint until stamina recovers past
+            // the threshold. !IsExhausted alone replaces the old `Stamina > 0` so a single
+            // regen tick can't re-enable sprint at empty (no stutter-sprint).
+            bool canSprint = !player.IsExhausted
+                             && player.Stamina > 0f
                              && !player.IsRolling
                              && !player.AreHandsBusy
                              && !player.IsADS;
@@ -27,19 +33,26 @@ namespace Systems
 
             if (player.IsSprinting)
             {
-                player.Stamina -= StaminaConstants.SprintDrainRate * context.DeltaTime;
+                player.Stamina -= cfg.SprintDrainRate * context.DeltaTime;
                 player.Stamina = Mathf.Max(player.Stamina, 0f);
                 player.LastSprintStopTime = context.Time.Time;
             }
             else
             {
                 float timeSinceStop = context.Time.Time - player.LastSprintStopTime;
-                if (timeSinceStop >= StaminaConstants.RegenDelay)
+                if (timeSinceStop >= cfg.RegenDelay)
                 {
-                    player.Stamina += StaminaConstants.RegenRate * context.DeltaTime;
+                    player.Stamina += cfg.RegenRate * context.DeltaTime;
                     player.Stamina = Mathf.Min(player.Stamina, player.MaxStamina);
                 }
             }
+
+            // Latch exhaustion at empty; release once recovered past the threshold.
+            if (player.Stamina <= 0f)
+                player.IsExhausted = true;
+            else if (player.IsExhausted
+                     && player.Stamina >= player.MaxStamina * cfg.ExhaustionRecoveryRatio)
+                player.IsExhausted = false;
         }
     }
 }

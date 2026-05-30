@@ -30,7 +30,7 @@ namespace Systems
                     moveDirection.Normalize();
 
                 var move = context.MovementConfig;
-                float sprintScale = player.IsSprinting ? StaminaConstants.SprintSpeedMultiplier : 1f;
+                float sprintScale = player.IsSprinting ? context.StaminaConfig.SprintSpeedMultiplier : 1f;
                 float adsMoveScale = Mathf.Lerp(1f, move.AdsMoveSpeedMultiplier, player.AdsBlend);
                 state.ArmorMap.TryGetValue(player.Id, out var playerArmor);
                 float armorScale = ArmorSystem.ComputeArmorSpeedMultiplier(playerArmor);

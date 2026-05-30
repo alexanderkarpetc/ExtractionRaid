@@ -65,6 +65,10 @@ namespace State
         public float MaxStamina;
         public bool IsSprinting;
         public float LastSprintStopTime;
+        // Hysteresis lockout: set true when Stamina hits 0, cleared only when Stamina
+        // recovers past the configured recovery threshold (StaminaConfig.ExhaustionRecoveryRatio).
+        // Prevents stutter-sprint at empty. Drives ring blink in WorldStaminaRing.
+        public bool IsExhausted;
 
         public bool AreHandsBusy => IsUsingMedkit || IsUsingBandage || IsInGrenadeMode;
         // Gameplay-pausing modal states only. Inventory / Loot / Builder are

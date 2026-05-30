@@ -162,6 +162,7 @@ namespace Editor
             DrawMacroGroup("🏃 Player & World", PlayerTone, defaultExpanded: false, () =>
             {
                 DrawSection("🏃 Player", _config.Player);
+                DrawSection("🏃 Stamina (sprint)", _config.Stamina);
                 DrawSection("👁 FOV", _config.FOV);
                 DrawSection("💉 Status Effects", _config.StatusEffects);
                 DrawSection("❤ Health Bar", _config.HealthBar);
@@ -830,6 +831,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsBotEngagementSection>(so, "_botEngagement", folder, "BotEngagement");
             CreateSectionIfMissing<DevCheatsLaserSection>(so, "_laser", folder, "Laser");
             CreateSectionIfMissing<DevCheatsBarrelHeatSection>(so, "_barrelHeat", folder, "BarrelHeat");
+            CreateSectionIfMissing<DevCheatsStaminaSection>(so, "_stamina", folder, "Stamina");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

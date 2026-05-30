@@ -35,8 +35,51 @@ namespace Dev
         [Tooltip("Row alignment relative to HP bar. Left = WoW-style debuff row.")]
         public WorldStatusAlignment WorldStatusAlignment = WorldStatusAlignment.Left;
 
-        // Stage 5+ tunables added as each stage ships:
-        //   Stage 5: radial stamina ring (colors, radius, thickness, hide threshold, fade time)
-        //   Stage 6: hotbar weapon slot styling (separator gap, tints)
+        [Header("Stage 5 — Worldspace radial stamina ring (player only)")]
+        [Tooltip("Master toggle for the stamina ring.")]
+        public bool StaminaRingEnabled = true;
+        [Tooltip("World-space offset of the ring relative to the player center. " +
+                 "Default = to the left. Top-down: world-left ≈ screen-left. " +
+                 "Use (0,0,-x) to sit under the feet instead.")]
+        public Vector3 StaminaRingOffset = new Vector3(-0.65f, 0.05f, 0f);
+        [Tooltip("Ring diameter in world units.")]
+        [Range(0.2f, 1.5f)] public float StaminaRingWorldSize = 0.55f;
+        [Tooltip("Ring thickness (shader UV units, fraction of the quad).")]
+        [Range(0.02f, 0.3f)] public float StaminaRingThickness = 0.11f;
+
+        [Tooltip("Spring follow time (SmoothDamp). Higher = laggier 'rubber-band' catch-up. 0 = rigid.")]
+        [Range(0f, 0.5f)] public float StaminaRingSpringTime = 0.13f;
+
+        [Header("Stage 5 — colors")]
+        public Color StaminaRingTrackColor = new Color(0.18f, 0.18f, 0.20f, 0.70f);
+        public Color StaminaRingColorHigh  = new Color(0.25f, 1.00f, 0.40f, 1f);
+        public Color StaminaRingColorMid   = new Color(1.00f, 0.62f, 0.08f, 1f);
+        public Color StaminaRingColorLow   = new Color(1.00f, 0.18f, 0.14f, 1f);
+        [Tooltip("HDR intensity boost on the fill arc — >1 makes colors pop through URP tonemap (juicy).")]
+        [Range(1f, 3f)] public float StaminaRingFillIntensity = 1.5f;
+
+        [Header("Stage 5 — outline")]
+        public Color StaminaRingOutlineColor = new Color(0.02f, 0.02f, 0.03f, 0.95f);
+        [Tooltip("Outline band width hugging the donut's inner+outer edges (UV units).")]
+        [Range(0f, 0.1f)] public float StaminaRingOutlineWidth = 0.028f;
+
+        [Header("Stage 5 — exhaustion blink")]
+        [Tooltip("Blink frequency (Hz) while exhausted (locked out of sprint).")]
+        [Range(0.5f, 8f)] public float StaminaRingBlinkFrequency = 3f;
+        [Tooltip("Dim point of the exhaustion opacity pulse — ring fades to this alpha fraction " +
+                 "at the bottom of each pulse (gentle up/down, not a hard flash).")]
+        [Range(0f, 1f)] public float StaminaRingBlinkMinAlpha = 0.25f;
+
+        [Header("Stage 5 — visibility")]
+        [Tooltip("If ON, ring always shown. If OFF, fades out when stamina full (after delay).")]
+        public bool StaminaRingAlwaysVisible = false;
+        [Tooltip("Stamina ratio at/above which the ring counts as 'full' and begins to hide.")]
+        [Range(0.8f, 1f)] public float StaminaRingHideThreshold = 0.999f;
+        [Tooltip("Seconds the ring stays full before it starts fading out.")]
+        [Range(0f, 3f)] public float StaminaRingHideDelay = 0.8f;
+        [Tooltip("Fade in/out duration (seconds).")]
+        [Range(0.05f, 1f)] public float StaminaRingFadeTime = 0.3f;
+
+        // Stage 6: hotbar weapon slot styling (separator gap, tints)
     }
 }

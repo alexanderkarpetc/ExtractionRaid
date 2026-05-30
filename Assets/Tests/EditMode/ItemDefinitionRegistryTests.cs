@@ -31,13 +31,25 @@ namespace Tests.EditMode
             return def.Penetration > 0f;
         }
 
-        [TestCase("Ammo_Rifle",    ExpectedResult = false)] // standard: no bleed
-        [TestCase("Ammo_Rifle_HP", ExpectedResult = true)]  // HP:       has bleed
+        // 2026-05-26: all ammo carries a baseline bleed chance (5%) so the bleed/HUD loop
+        // always has a chance to fire; HP variants escalate further (see escalation test).
+        [TestCase("Ammo_Rifle",    ExpectedResult = true)] // standard: baseline bleed
+        [TestCase("Ammo_Rifle_HP", ExpectedResult = true)] // HP:       elevated bleed
         public bool Ammo_HasBleedChance(string id)
         {
             var def = ItemDefinition.Get(id);
             Assert.IsNotNull(def, $"{id} must be in registry");
             return def.BleedChance > 0f;
+        }
+
+        [Test]
+        public void AmmoRifleHP_HasHigherBleedThanStandard()
+        {
+            // Design contract: HP ammo is the bleed upgrade — must exceed the baseline.
+            var standard = ItemDefinition.Get("Ammo_Rifle");
+            var hp       = ItemDefinition.Get("Ammo_Rifle_HP");
+            Assert.Greater(hp.BleedChance, standard.BleedChance,
+                "HP ammo should have higher bleed chance than standard");
         }
 
         [Test]

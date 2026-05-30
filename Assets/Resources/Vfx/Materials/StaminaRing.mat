@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: StatusEffectIcon
-  m_Shader: {fileID: 4800000, guid: 381678c22a00b8e96c3f57e16d3a422b, type: 3}
+  m_Name: StaminaRing
+  m_Shader: {fileID: 4800000, guid: 64cddefaaebaf4e3b8e8a20e502df28a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,13 +29,21 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _CornerRadius: 0.12
-    - _EdgeSoftness: 0.01
-    - _IconShape: 0
-    - _OutlineWidth: 0.04
+    - _Blink: 0
+    - _BlinkBoost: 0.9
+    - _BlinkMinAlpha: 0.25
+    - _EdgeSoftness: 0.012
+    - _FillIntensity: 1.5
+    - _FillRatio: 0.68060213
+    - _GlobalAlpha: 1
+    - _OutlineWidth: 0.028
+    - _Radius: 0.38
+    - _Thickness: 0.144
     m_Colors:
-    - _BgColor: {r: 0.59, g: 0.12, b: 0.12, a: 0.85}
-    - _FgColor: {r: 1, g: 0.3, b: 0.3, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 0.85}
+    - _ColorHigh: {r: 0.25, g: 1, b: 0.4, a: 1}
+    - _ColorLow: {r: 1, g: 0.18, b: 0.14, a: 1}
+    - _ColorMid: {r: 1, g: 0.62, b: 0.08, a: 1}
+    - _OutlineColor: {r: 0.02, g: 0.02, b: 0.03, a: 0.95}
+    - _TrackColor: {r: 0.18, g: 0.18, b: 0.2, a: 0.7}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

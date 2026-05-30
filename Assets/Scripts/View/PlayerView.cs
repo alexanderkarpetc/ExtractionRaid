@@ -16,6 +16,7 @@ namespace View
         WorldHealthBar _healthBar;
         WorldProgressBar _progressBar;
         WorldStatusIcons _statusIcons;
+        WorldStaminaRing _staminaRing;
 
         public EId EId { get; private set; }
         public Transform MuzzlePoint => _body != null ? _body.MuzzlePoint : null;
@@ -37,6 +38,9 @@ namespace View
             // (which already has its own Y offset from feet) — keeps "under the bar" semantics.
             _statusIcons = WorldStatusIcons.Create(_healthBar.transform, id);
             _progressBar = WorldProgressBar.Create(transform);
+            // Stamina ring is NOT parented (needs free world position for spring-follow);
+            // it tracks this transform's position + a world offset and self-destroys when gone.
+            _staminaRing = WorldStaminaRing.Create(transform);
         }
 
         public void OnDamaged(float currentHp, float maxHp)
@@ -54,6 +58,12 @@ namespace View
         public void SyncFromState(PlayerEntityState state, float elapsedTime)
         {
             transform.position = state.Position;
+
+            if (_staminaRing != null)
+            {
+                float ratio = state.MaxStamina > 0f ? state.Stamina / state.MaxStamina : 0f;
+                _staminaRing.UpdateStamina(ratio, state.IsExhausted);
+            }
 
             if (_progressBar != null)
             {
