@@ -157,6 +157,34 @@ namespace Constants
         public const float WaypointArrivalDistance = 1f;
         public const float PatrolWaitTime = 2f;
 
+        // Head-scan during PatrolWait: sweep facing back-and-forth ±ScanAmplitude
+        // around the inbound-travel direction. Pure cosmetic — perception still uses
+        // FacingDirection so this also widens the effective vision sweep at rest.
+        public const float PatrolScanAmplitudeDeg = 35f;
+        public const float PatrolScanPeriod       = 2.4f;
+
+        // --- Combat humanization ---
+        // Strafe while shooting: lateral movement perpendicular to target. Slow enough
+        // that bots stay in their engagement spot, fast enough to look intentional.
+        public const float ShootStrafeSpeedFraction = 0.35f;   // of config.ChaseSpeed
+        public const float ShootStrafeMinDuration   = 1.2f;
+        public const float ShootStrafeMaxDuration   = 2.6f;
+
+        // Aim sway: Perlin-noise-driven lateral offset on the aim point. Sized so
+        // per-shot hit rate at engage range stays roughly equal to baseline accuracy.
+        public const float AimSwayAmplitude = 0.45f;           // meters at the aim point
+        public const float AimSwayFrequency = 0.9f;            // Hz
+
+        // Reaction jitter: randomized addition to config.ReactionTime, rolled on each
+        // target acquisition. Keeps fixed ReactionTime from feeling metronomic.
+        public const float ReactionJitterMin = -0.15f;
+        public const float ReactionJitterMax =  0.35f;
+
+        // Facing turn rate (deg/s) for bot-to-target rotation when stationary or
+        // strafing. Snap was the biggest "robot" tell — this gives a believable
+        // human turn-around.
+        public const float FacingTurnRateDeg = 540f;
+
         // --- Bot weapon presets (Tier 4a — Builder configurations) ---
         // Bots inherit от Builder system: Payload + Delivery composition through
         // WeaponSyncSystem.BuildWeaponForItem. Stats (Damage, FireInterval, Spread,

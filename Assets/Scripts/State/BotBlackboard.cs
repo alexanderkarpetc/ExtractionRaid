@@ -16,12 +16,19 @@ namespace State
         public Vector3[] PatrolWaypoints;
         public int PatrolWaypointIndex;
         public float PatrolWaitTimer;
+        public Vector3 PatrolScanBaseDir;   // facing captured when wait started; head-scan oscillates around this
 
         // Timers
         public float ReactionTimer;
         public float DodgeCooldownTimer;
         public float HealCooldownTimer;
         public float PerceptionTimer;
+
+        // Humanization — rolled per target-acquisition so each engagement feels distinct
+        public float ReactionJitter;        // added to config.ReactionTime in ShootNode
+        public int   StrafeDirection;       // -1 or +1 along perp-to-target axis
+        public float StrafeChangeTime;      // ElapsedTime at which to flip strafe direction
+        public float AimSwaySeed;           // per-bot phase offset for aim-sway noise
 
         // Dodge state
         public bool IsDodging;
@@ -60,6 +67,10 @@ namespace State
             DodgeCooldownTimer = 0f;
             HealCooldownTimer = 0f;
             PerceptionTimer = 0f;
+            ReactionJitter = 0f;
+            StrafeDirection = 0;
+            StrafeChangeTime = 0f;
+            AimSwaySeed = 0f;
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;

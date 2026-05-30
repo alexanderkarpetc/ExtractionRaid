@@ -44,19 +44,36 @@ namespace Systems.Bot
                     bot.Position = candidatePos;
                 }
 
-                if (velocity.sqrMagnitude > 0.001f)
+                // Pick the desired facing direction. Target takes priority over velocity
+                // so the bot stays oriented on its enemy while strafing/repositioning —
+                // a human-feeling combat stance, instead of the legacy snap-to-velocity.
+                // FireForward bots (FeedbackRange turrets) opt out completely.
+                Vector3 desiredFacing = Vector3.zero;
+                if (!config.Has(BotBehaviorFlags.FireForward))
                 {
-                    bot.FacingDirection = velocity.normalized;
+                    if (bot.Blackboard.HasTarget)
+                    {
+                        var toTarget = bot.Blackboard.LastKnownTargetPos - bot.Position;
+                        toTarget.y = 0f;
+                        if (toTarget.sqrMagnitude > 0.001f)
+                            desiredFacing = toTarget.normalized;
+                    }
+                    else if (velocity.sqrMagnitude > 0.001f)
+                    {
+                        desiredFacing = velocity.normalized;
+                    }
                 }
-                else if (bot.Blackboard.HasTarget && !config.Has(BotBehaviorFlags.FireForward))
+
+                if (desiredFacing.sqrMagnitude > 0.0001f && bot.FacingDirection.sqrMagnitude > 0.0001f)
                 {
-                    // When stationary with a target, face toward target so vision cone covers them.
-                    // FireForward bots (FeedbackRange turrets) opt out — their facing is set once at spawn
-                    // and must NOT track the player.
-                    var toTarget = bot.Blackboard.LastKnownTargetPos - bot.Position;
-                    toTarget.y = 0f;
-                    if (toTarget.sqrMagnitude > 0.001f)
-                        bot.FacingDirection = toTarget.normalized;
+                    float maxStepDeg = BotConstants.FacingTurnRateDeg * ctx.DeltaTime;
+                    bot.FacingDirection = Vector3.RotateTowards(
+                        bot.FacingDirection, desiredFacing,
+                        maxStepDeg * Mathf.Deg2Rad, 0f);
+                }
+                else if (desiredFacing.sqrMagnitude > 0.0001f)
+                {
+                    bot.FacingDirection = desiredFacing;
                 }
             }
         }

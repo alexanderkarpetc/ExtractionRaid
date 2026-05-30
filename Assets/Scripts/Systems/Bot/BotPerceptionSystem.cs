@@ -88,6 +88,8 @@ namespace Systems.Bot
 
                 if (detected)
                 {
+                    bool freshAcquire = !bb.HasTarget;
+
                     bb.TargetEId = player.Id;
                     bb.LastKnownTargetPos = player.Position;
                     bb.HasTarget = true;
@@ -97,6 +99,14 @@ namespace Systems.Bot
 
                     if (bb.CanSeeTarget)
                         bb.GrenadeThrowDelayTimer = -1f;
+
+                    if (freshAcquire)
+                    {
+                        bb.ReactionJitter   = Random.Range(BotConstants.ReactionJitterMin, BotConstants.ReactionJitterMax);
+                        bb.StrafeDirection  = Random.value < 0.5f ? -1 : 1;
+                        bb.StrafeChangeTime = state.ElapsedTime + Random.Range(BotConstants.ShootStrafeMinDuration, BotConstants.ShootStrafeMaxDuration);
+                        bb.AimSwaySeed      = Random.Range(0f, 1000f);
+                    }
                 }
                 else
                 {
