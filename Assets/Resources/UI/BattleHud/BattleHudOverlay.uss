@@ -60,3 +60,62 @@
     -unity-text-align: middle-center;
     color: rgba(255, 230, 230, 1);
 }
+
+/* ── Ammo counter (Stage 7) ─────────────────────────────────────────────
+ * Edge anchors set inline by ApplyCornerAnchor per AmmoCorner (same approach
+ * as the status row — no top/left/right/bottom here). Column, right-aligned. */
+.bh-ammo {
+    position: absolute;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.bh-ammo__counts {
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+/* Fixed-width number boxes so the row width stays CONSTANT regardless of digit
+ * count (1 vs 100) — otherwise the variable-width mag reflows the row and the
+ * whole block visibly jitters every shot. Mag right-aligned (units digit pinned
+ * by the slash); reserve left-aligned (hugs the slash, grows into its box). */
+.bh-ammo__mag {
+    font-size: 52px;
+    -unity-font-style: bold;
+    color: var(--color-text-title);
+    width: 90px;
+    -unity-text-align: lower-right;
+}
+
+.bh-ammo__sep {
+    font-size: 30px;
+    color: var(--color-text-muted);
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 5px;
+}
+
+.bh-ammo__reserve {
+    font-size: 30px;
+    color: var(--color-text-muted);
+    width: 64px;
+    -unity-text-align: lower-left;
+    margin-bottom: 5px;
+}
+
+.bh-ammo__type {
+    font-size: 16px;
+    color: var(--color-text-muted);
+    -unity-text-align: upper-right;
+    margin-top: -2px;
+}
+
+/* Low magazine (≤ threshold) → gold warning. Empty → red. Only the mag number
+ * recolors; reserve + type stay muted. */
+.bh-ammo.is-low .bh-ammo__mag {
+    color: var(--color-accent);
+}
+
+.bh-ammo.is-empty .bh-ammo__mag {
+    color: var(--color-error);
+}

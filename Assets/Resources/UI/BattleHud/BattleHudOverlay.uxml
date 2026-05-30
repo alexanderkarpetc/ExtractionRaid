@@ -4,5 +4,16 @@
         <!-- Status effect tiles row. Spawned at runtime by BattleHudOverlay.cs.
              Anchor + offset set via inline style from DevCheats. -->
         <ui:VisualElement name="status-row" picking-mode="Position" class="bh-status-row" />
+
+        <!-- Ammo counter (Stage 7). Anchor + offset set inline from DevCheats.
+             Big mag count / reserve / ammo-type name. Hidden when holstered. -->
+        <ui:VisualElement name="ammo-block" picking-mode="Ignore" class="bh-ammo">
+            <ui:VisualElement name="ammo-counts" picking-mode="Ignore" class="bh-ammo__counts">
+                <ui:Label name="ammo-mag" class="bh-ammo__mag" />
+                <ui:Label name="ammo-sep" text="/" class="bh-ammo__sep" />
+                <ui:Label name="ammo-reserve" class="bh-ammo__reserve" />
+            </ui:VisualElement>
+            <ui:Label name="ammo-type" class="bh-ammo__type" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

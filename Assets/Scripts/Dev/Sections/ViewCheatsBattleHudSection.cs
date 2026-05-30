@@ -80,6 +80,16 @@ namespace Dev
         [Tooltip("Fade in/out duration (seconds).")]
         [Range(0.05f, 1f)] public float StaminaRingFadeTime = 0.3f;
 
+        [Header("Stage 7 — Ammo counter")]
+        [Tooltip("Master toggle for the ammo counter block.")]
+        public bool AmmoEnabled = true;
+        [Tooltip("Which screen corner the ammo block anchors to.")]
+        public HudCorner AmmoCorner = HudCorner.BottomRight;
+        [Tooltip("Padding inward from chosen corner (px in 1920×1080 ref).")]
+        public Vector2 AmmoOffset = new Vector2(48f, 40f);
+        [Tooltip("Magazine fraction at/below which the count turns gold (low-ammo warning). Empty = red.")]
+        [Range(0f, 0.5f)] public float AmmoLowThreshold = 0.25f;
+
         [Header("Stage 6 — Hotbar weapon slots")]
         [Tooltip("Gap (px, 1920×1080 ref) between the weapon strip (1-2) and quick strip (3-9).")]
         [Range(0f, 60f)] public float HotbarWeaponSeparatorPx = 18f;

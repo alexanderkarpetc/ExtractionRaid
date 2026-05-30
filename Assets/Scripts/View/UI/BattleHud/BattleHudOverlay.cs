@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using ApplicationCore;
 using Dev;
 using State;
+using Systems;
 using UnityEngine;
 using UnityEngine.UIElements;
 using View.UI.Tooltip;
@@ -28,6 +29,10 @@ namespace View.UI.BattleHud
         UIDocument _doc;
         VisualElement _root;
         VisualElement _statusRow;
+        VisualElement _ammoBlock;
+        Label _ammoMag;
+        Label _ammoReserve;
+        Label _ammoType;
         // Track tiles by composite key (Type + Level) so we can in-place update
         // when bleed escalates L1 → L2 without losing tooltip hover state.
         readonly Dictionary<string, VisualElement> _tiles = new();
@@ -70,6 +75,10 @@ namespace View.UI.BattleHud
             _root = _doc.rootVisualElement;
             if (_root == null) return;
             _statusRow = _root.Q<VisualElement>("status-row");
+            _ammoBlock = _root.Q<VisualElement>("ammo-block");
+            _ammoMag = _root.Q<Label>("ammo-mag");
+            _ammoReserve = _root.Q<Label>("ammo-reserve");
+            _ammoType = _root.Q<Label>("ammo-type");
         }
 
         void OnDestroy()
@@ -97,6 +106,47 @@ namespace View.UI.BattleHud
 
             ApplyCornerAnchor(_statusRow, cfg.StatusRowCorner, cfg.StatusRowOffset);
             SyncStatusTiles(cfg);
+            RefreshAmmo(cfg);
+        }
+
+        // ── Ammo counter (Stage 7) ─────────────────────────────────────────
+        void RefreshAmmo(ViewCheatsBattleHudSection cfg)
+        {
+            if (_ammoBlock == null) return;
+
+            // Hidden when disabled, holstered (no equipped weapon), or weapon has no ammo
+            // concept (null AmmoType — e.g. melee). Otherwise: mag / reserve / type name.
+            var weapon    = App.Instance?.RaidSession?.RaidState?.PlayerEntity?.EquippedWeapon;
+            var inventory = App.Instance?.Player?.Inventory;
+            bool show = cfg.AmmoEnabled && weapon != null && !string.IsNullOrEmpty(weapon.AmmoType);
+
+            if (!show)
+            {
+                if (_ammoBlock.style.display != DisplayStyle.None) _ammoBlock.style.display = DisplayStyle.None;
+                return;
+            }
+
+            if (_ammoBlock.style.display != DisplayStyle.Flex) _ammoBlock.style.display = DisplayStyle.Flex;
+            ApplyCornerAnchor(_ammoBlock, cfg.AmmoCorner, cfg.AmmoOffset);
+
+            int mag     = weapon.AmmoInMagazine;
+            int reserve = inventory != null ? AmmoSystem.CountReserve(inventory, weapon.AmmoType) : 0;
+            int magSize = weapon.Stats.MagazineSize;
+
+            if (_ammoMag != null)     _ammoMag.text = mag.ToString();
+            if (_ammoReserve != null) _ammoReserve.text = reserve.ToString();
+            if (_ammoType != null)
+            {
+                var def = ItemDefinition.Get(weapon.AmmoType);
+                _ammoType.text = def != null ? def.DisplayName : weapon.AmmoType;
+            }
+
+            // Low/empty warning recolors the mag number (USS classes).
+            float ratio = magSize > 0 ? (float)mag / magSize : 1f;
+            bool empty = mag <= 0;
+            bool low   = !empty && ratio <= cfg.AmmoLowThreshold;
+            _ammoBlock.EnableInClassList("is-low", low);
+            _ammoBlock.EnableInClassList("is-empty", empty);
         }
 
         void SyncStatusTiles(ViewCheatsBattleHudSection cfg)

@@ -83,13 +83,17 @@ namespace View
             comp._canvas = canvas;
             comp._rect = rect;
 
-            // Per-instance material — Resources asset if present (build-safe), else build from
-            // the shader at runtime (dev fallback so the ring works before the .mat is authored).
+            // Per-instance material. NOTE: uGUI Image.material does NOT auto-instance (unlike
+            // Renderer.material) — it returns the assigned reference as-is. So we must `new
+            // Material(...)` an OWNED copy here, otherwise (a) per-frame SetColor would mutate the
+            // shared Resources .mat at runtime, and (b) OnDestroy's Destroy() would hit the asset
+            // ("Destroying assets is not permitted"). Resources asset preferred (build-safe);
+            // shader fallback so the ring works before the .mat is authored.
             var shared = Resources.Load<Material>(MaterialPath);
             if (shared != null)
             {
-                img.material = shared;
-                comp._material = img.material; // auto-instances
+                comp._material = new Material(shared);
+                img.material = comp._material;
             }
             else
             {
