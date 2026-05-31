@@ -438,6 +438,7 @@ Currently only `StatusEffectType.Bleeding`.
 | Craft | `CraftTask` | `ItemId` |
 | FindItem | `FindItemTask` | `ItemId`, `Coordinates`, `Map` |
 | SellItems | `SellItemsTask` | *(none yet — v1 has no category filter)* — `RequiredCount` = total currency to earn |
+| BuildWeapon | `BuildWeaponTask` | `PayloadId`, `DeliveryId` (empty = any) — increments once per matching Weapon Builder commit |
 
 All tasks share: `Description`, `RequiredCount`.
 

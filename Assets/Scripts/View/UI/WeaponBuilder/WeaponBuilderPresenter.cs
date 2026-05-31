@@ -244,6 +244,13 @@ namespace View.UI.WeaponBuilder
             // there's no inventory room — Build itself does not fail.
             GrantAmmoReserve(payloadDef.AmmoType, stats.MagazineSize * 2);
 
+            if (ApplicationCore.App.IsInitialized)
+            {
+                var app = ApplicationCore.App.Instance;
+                QuestSystem.OnWeaponBuilt(app.Player.QuestProgress, app.QuestDatabase,
+                    State.SelectedPayload.DefinitionId, State.SelectedDelivery.DefinitionId);
+            }
+
             failReason = null;
             return true;
         }

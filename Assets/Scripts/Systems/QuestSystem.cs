@@ -211,6 +211,40 @@ namespace Systems
         }
 
         /// <summary>
+        /// Credits a Weapon Builder commit to every active <see cref="BuildWeaponTask"/>
+        /// whose payload + delivery IDs match the build (empty string on either field on
+        /// the task means "any"). Called from <see cref="View.UI.WeaponBuilder.WeaponBuilderPresenter.TryBuild"/>
+        /// right after the new weapon lands in the inventory.
+        /// </summary>
+        public static bool OnWeaponBuilt(
+            QuestProgressState progress, QuestDatabase db,
+            string payloadId, string deliveryId)
+        {
+            if (progress == null || db == null) return false;
+            bool any = false;
+            foreach (var kvp in progress.All)
+            {
+                var qp = kvp.Value;
+                if (qp.Status != QuestStatus.Active) continue;
+                if (!db.TryGet(qp.QuestId, out var entry) || entry.Quest?.Tasks == null) continue;
+
+                var tasks = entry.Quest.Tasks;
+                for (int i = 0; i < tasks.Count && i < qp.Tasks.Count; i++)
+                {
+                    if (tasks[i] is not BuildWeaponTask build) continue;
+                    if (!string.IsNullOrEmpty(build.PayloadId) && build.PayloadId != payloadId) continue;
+                    if (!string.IsNullOrEmpty(build.DeliveryId) && build.DeliveryId != deliveryId) continue;
+
+                    var tp = qp.Tasks[i];
+                    if (tp.CurrentCount >= build.RequiredCount) continue;
+                    tp.CurrentCount++;
+                    any = true;
+                }
+            }
+            return any;
+        }
+
+        /// <summary>
         /// Ticks every active <see cref="ExtractTask"/> whose level matches the one the
         /// player just extracted from. An empty <c>LevelId</c> on the task means "any
         /// level". Called from <c>App.EndRaid</c> only on the Extracted outcome.

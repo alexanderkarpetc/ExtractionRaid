@@ -14,6 +14,7 @@ namespace Quests
         FindItem,
         SellItems,
         UpgradeBuilding,
+        BuildWeapon,
     }
 
     /// <summary>
@@ -140,5 +141,20 @@ namespace Quests
     {
         public override QuestTaskType TaskType => QuestTaskType.UpgradeBuilding;
         public State.BuildingKind Kind;
+    }
+
+    /// <summary>
+    /// "Assemble a weapon from <see cref="PayloadId"/> + <see cref="DeliveryId"/>"
+    /// objective. Progress ticks every time the player commits a build in the Weapon
+    /// Builder whose payload + delivery core IDs match — empty string on either field
+    /// means "any". For "Ballistic Shotgun" set PayloadId=BallisticRound, DeliveryId=Scatter.
+    /// Persists across raids.
+    /// </summary>
+    [Serializable]
+    public class BuildWeaponTask : QuestTask
+    {
+        public override QuestTaskType TaskType => QuestTaskType.BuildWeapon;
+        public string PayloadId;
+        public string DeliveryId;
     }
 }

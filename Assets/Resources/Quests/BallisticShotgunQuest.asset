@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01f7b830b6b19b348a074d28ea82e4c4, type: 3}
+  m_Name: BallisticShotgunQuest
+  m_EditorClassIdentifier: Game::Quests.QuestDefinition
+  Id: ballistic_shotgun
+  DisplayName: Close-Range Persuasion
+  Description: "Now that the Builder's lit up, let's see if you can swing it. Slap
+    a ballistic round into a scatter barrel and bring me a proper shotgun —
+    the kind that turns doorways into final destinations. Close range, loud, dirty.
+    My favourite kind of weapon."
+  RequiredLevel: 0
+  NpcId: AL
+  Tasks:
+  - rid: 6912843204871923340
+  Rewards:
+  - ItemId: Ammo_Rifle
+    Count: 30
+  references:
+    version: 2
+    RefIds:
+    - rid: 6912843204871923340
+      type: {class: BuildWeaponTask, ns: Quests, asm: Game}
+      data:
+        Description: Build a Ballistic Shotgun at the Weapon Builder
+        RequiredCount: 1
+        PayloadId: BallisticRound
+        DeliveryId: Scatter
