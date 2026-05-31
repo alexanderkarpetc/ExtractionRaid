@@ -8,6 +8,44 @@ namespace Systems
     public static class QuestSystem
     {
         /// <summary>
+        /// A quest task that just crossed from incomplete to fully satisfied. Raised by the
+        /// On* progress hooks the moment a task hits its <see cref="QuestTask.RequiredCount"/>.
+        /// View code subscribes to surface a notification banner. <see cref="QuestReady"/> is
+        /// true when this completion also makes every task in the quest done (ready to claim).
+        /// </summary>
+        public readonly struct QuestTaskCompletion
+        {
+            public readonly string QuestId;
+            public readonly string QuestDisplayName;
+            public readonly int TaskIndex;
+            public readonly string TaskDescription;
+            public readonly bool QuestReady;
+
+            public QuestTaskCompletion(string questId, string questDisplayName,
+                int taskIndex, string taskDescription, bool questReady)
+            {
+                QuestId = questId;
+                QuestDisplayName = questDisplayName;
+                TaskIndex = taskIndex;
+                TaskDescription = taskDescription;
+                QuestReady = questReady;
+            }
+        }
+
+        public static event System.Action<QuestTaskCompletion> TaskCompleted;
+
+        static void NotifyTaskCompleted(QuestDefinition quest, int taskIndex, QuestProgress qp)
+        {
+            if (TaskCompleted == null || quest?.Tasks == null) return;
+            if (taskIndex < 0 || taskIndex >= quest.Tasks.Count) return;
+
+            var task = quest.Tasks[taskIndex];
+            TaskCompleted.Invoke(new QuestTaskCompletion(
+                quest.Id, quest.DisplayName, taskIndex,
+                task?.Description, AreAllTasksDone(quest, qp)));
+        }
+
+        /// <summary>
         /// Returns quests that the given NPC can offer (requirements met, not yet started).
         /// </summary>
         public static List<QuestDefinition> GetAvailableQuests(
@@ -131,6 +169,7 @@ namespace Systems
 
                     tp.CurrentCount++;
                     any = true;
+                    if (tp.CurrentCount >= kill.RequiredCount) NotifyTaskCompleted(entry.Quest, i, qp);
                 }
             }
 
@@ -170,6 +209,7 @@ namespace Systems
                     int credit = currencyEarned < remaining ? currencyEarned : remaining;
                     tp.CurrentCount += credit;
                     any = true;
+                    if (tp.CurrentCount >= sell.RequiredCount) NotifyTaskCompleted(entry.Quest, i, qp);
                 }
             }
 
@@ -205,6 +245,7 @@ namespace Systems
                     if (capped <= tp.CurrentCount) continue;
                     tp.CurrentCount = capped;
                     any = true;
+                    if (tp.CurrentCount >= up.RequiredCount) NotifyTaskCompleted(entry.Quest, i, qp);
                 }
             }
             return any;
@@ -239,6 +280,7 @@ namespace Systems
                     if (tp.CurrentCount >= build.RequiredCount) continue;
                     tp.CurrentCount++;
                     any = true;
+                    if (tp.CurrentCount >= build.RequiredCount) NotifyTaskCompleted(entry.Quest, i, qp);
                 }
             }
             return any;
@@ -270,6 +312,7 @@ namespace Systems
                     if (tp.CurrentCount >= ex.RequiredCount) continue;
                     tp.CurrentCount++;
                     any = true;
+                    if (tp.CurrentCount >= ex.RequiredCount) NotifyTaskCompleted(entry.Quest, i, qp);
                 }
             }
             return any;
@@ -589,6 +632,8 @@ namespace Systems
             if (leftover > 0) ConsumeFromStash(stash, opportunity.ItemId, leftover);
 
             p.Tasks[opportunity.TaskIndex].CurrentCount += amount;
+            if (p.Tasks[opportunity.TaskIndex].CurrentCount >= task.RequiredCount)
+                NotifyTaskCompleted(entry.Quest, opportunity.TaskIndex, p);
             return amount;
         }
 

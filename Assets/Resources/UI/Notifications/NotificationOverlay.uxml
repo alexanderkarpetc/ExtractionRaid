@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="NotificationOverlay.uss"/>
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
+        <ui:VisualElement name="stack" class="toast-stack" picking-mode="Ignore"/>
+    </ui:VisualElement>
+</ui:UXML>

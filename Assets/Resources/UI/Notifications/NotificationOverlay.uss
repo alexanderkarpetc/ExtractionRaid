@@ -1,0 +1,147 @@
+/* Notification banners — bottom-right stack. Ports notification_banner_concept.html
+ * into UI Toolkit: real child elements stand in for ::before/::after, USS transitions
+ * replace @keyframes, palette hardcoded to match the concept (cyan/amber/red/green). */
+
+.root {
+    flex-grow: 1;
+}
+
+/* Bottom-right anchor; newest toast sits at the bottom, older ones pushed up.
+ * column-reverse + inserting at index 0 keeps newest visually lowest. */
+.toast-stack {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    width: 380px;
+    flex-direction: column-reverse;
+}
+
+/* ── Toast card ────────────────────────────────────────── */
+.toast {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-top: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background-color: rgba(18, 24, 42, 0.95);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+
+    opacity: 0;
+    translate: 40px 16px;
+    transition-property: opacity, translate;
+    transition-duration: 0.32s, 0.32s;
+    transition-timing-function: ease-out, ease-out;
+}
+
+.toast.is-shown {
+    opacity: 1;
+    translate: 0 0;
+}
+
+.toast.is-leaving {
+    opacity: 0;
+    translate: 40px 0;
+    transition-duration: 0.26s, 0.26s;
+}
+
+/* Left accent strip — color-coded per type via the t-* classes below. */
+.toast-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: rgb(135, 230, 255);
+}
+
+/* ── Icon tile ─────────────────────────────────────────── */
+.toast-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    border-radius: 12px;
+    -unity-text-align: middle-center;
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(135, 230, 255);
+    background-color: rgba(135, 230, 255, 0.16);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(135, 230, 255, 0.32);
+}
+
+/* ── Text block ────────────────────────────────────────── */
+.toast-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.toast-kicker {
+    font-size: 11px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+    color: rgb(135, 230, 255);
+    margin-bottom: 3px;
+}
+
+.toast-title {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: rgb(238, 244, 255);
+    white-space: normal;
+}
+
+.toast-desc {
+    margin-top: 3px;
+    font-size: 13px;
+    color: rgb(159, 176, 208);
+    white-space: normal;
+}
+
+/* ── Auto-dismiss timer bar ────────────────────────────── */
+.toast-timer {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    background-color: rgb(135, 230, 255);
+    opacity: 0.55;
+    transform-origin: left;
+    scale: 1 1;
+    transition-property: scale;
+    transition-timing-function: linear;
+}
+
+.toast.is-counting .toast-timer {
+    scale: 0 1;
+}
+
+/* ── Type color variants ───────────────────────────────── */
+.toast.t-success .toast-accent,
+.toast.t-success .toast-timer { background-color: rgb(106, 255, 193); }
+.toast.t-success .toast-icon  { color: rgb(106, 255, 193); background-color: rgba(106, 255, 193, 0.16); border-color: rgba(106, 255, 193, 0.32); }
+.toast.t-success .toast-kicker { color: rgb(106, 255, 193); }
+
+.toast.t-info .toast-accent,
+.toast.t-info .toast-timer { background-color: rgb(135, 230, 255); }
+.toast.t-info .toast-icon  { color: rgb(135, 230, 255); background-color: rgba(135, 230, 255, 0.16); border-color: rgba(135, 230, 255, 0.32); }
+.toast.t-info .toast-kicker { color: rgb(135, 230, 255); }
+
+.toast.t-loot .toast-accent,
+.toast.t-loot .toast-timer { background-color: rgb(255, 182, 72); }
+.toast.t-loot .toast-icon  { color: rgb(255, 182, 72); background-color: rgba(255, 182, 72, 0.16); border-color: rgba(255, 182, 72, 0.32); }
+.toast.t-loot .toast-kicker { color: rgb(255, 182, 72); }
+
+.toast.t-danger .toast-accent,
+.toast.t-danger .toast-timer { background-color: rgb(255, 93, 108); }
+.toast.t-danger .toast-icon  { color: rgb(255, 93, 108); background-color: rgba(255, 93, 108, 0.16); border-color: rgba(255, 93, 108, 0.32); }
+.toast.t-danger .toast-kicker { color: rgb(255, 93, 108); }

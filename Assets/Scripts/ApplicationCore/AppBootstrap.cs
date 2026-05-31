@@ -64,6 +64,14 @@ namespace ApplicationCore
             extractionHudHost.transform.SetParent(transform, false);
             extractionHudHost.AddComponent<ExtractionHudWindow>();
 
+            // Notification banners — bottom-right toast stack. The presenter listens to
+            // QuestSystem.TaskCompleted (only event wired in v1) and pushes banners to
+            // the overlay window, which owns the UI Toolkit panel + animations.
+            gameObject.AddComponent<NotificationPresenter>();
+            var notificationHost = new GameObject("NotificationOverlay");
+            notificationHost.transform.SetParent(transform, false);
+            notificationHost.AddComponent<View.UI.Notifications.NotificationOverlay>();
+
             // Minimap — env-only screenshot captured once at raid start; markers are
             // contributed by the presenter (player/npc/extract/quest) and any external
             // caller via MinimapMarkerRegistry. Press M to expand from corner → fullscreen.
