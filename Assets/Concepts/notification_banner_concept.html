@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notification Banner Concept</title>
+  <style>
+    :root {
+      --bg-deep:      #0a0d18;
+      --bg-mid:       #10182f;
+      --panel:        rgba(18, 24, 42, 0.92);
+      --panel-border: rgba(255, 255, 255, 0.12);
+
+      --text:         #eef4ff;
+      --muted:        #9fb0d0;
+
+      --accent:       #87e6ff;   /* info / quest updated (cyan) */
+      --accent-glow:  rgba(135, 230, 255, 0.55);
+      --warn:         #ffb648;   /* loot / pickup (amber) */
+      --warn-glow:    rgba(255, 182, 72, 0.55);
+      --danger:       #ff5d6c;   /* failed / alert (red) */
+      --danger-glow:  rgba(255, 93, 108, 0.55);
+      --success:      #6affc1;   /* completed (green) */
+      --success-glow: rgba(106, 255, 193, 0.55);
+
+      --shadow:       0 18px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(80, 120, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 82% 30%, rgba(0, 220, 180, 0.12), transparent 24%),
+        linear-gradient(180deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ── Fake top-down playfield (visual context only) ── */
+    .playfield {
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 56px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 56px);
+      mask-image: radial-gradient(circle at 50% 50%, #000 40%, transparent 80%);
+    }
+
+    .world-hint {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 13px;
+      backdrop-filter: blur(8px);
+    }
+
+    .controls {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      z-index: 6;
+      max-width: min(520px, calc(100vw - 48px));
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(17, 22, 38, 0.88);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.18s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(28, 35, 58, 0.96);
+    }
+
+    /* ── Notification stack: bottom-right, newest at the bottom ── */
+    .toast-stack {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      width: min(380px, calc(100vw - 48px));
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 12px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      transform-origin: bottom right;
+      animation: toast-in 0.32s cubic-bezier(0.2, 0.9, 0.25, 1);
+    }
+
+    .toast.leaving {
+      animation: toast-out 0.28s ease forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translate(40px, 16px) scale(0.96); }
+      to   { opacity: 1; transform: translate(0, 0) scale(1); }
+    }
+
+    @keyframes toast-out {
+      to { opacity: 0; transform: translateX(40px) scale(0.96); height: 0; padding-top: 0; padding-bottom: 0; margin-top: -12px; }
+    }
+
+    /* Accent strip on the left edge — color-coded per type */
+    .toast::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--c, var(--accent));
+      box-shadow: 0 0 14px var(--cg, var(--accent-glow));
+    }
+
+    /* Soft top sheen, matches the dialogue panel */
+    .toast::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 36%);
+      pointer-events: none;
+    }
+
+    .toast .icon {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      color: var(--c, var(--accent));
+      background: color-mix(in srgb, var(--c, var(--accent)) 16%, transparent);
+      border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 32%, transparent);
+    }
+
+    .toast .body {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .toast .kicker {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--c, var(--accent));
+      margin-bottom: 3px;
+      font-weight: 700;
+    }
+
+    .toast .title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .toast .desc {
+      margin-top: 3px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    /* Optional reward chips for quest-completed banners */
+    .toast .rewards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .reward-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: var(--text);
+    }
+
+    .reward-chip .swatch {
+      width: 8px; height: 8px; border-radius: 2px;
+      background: var(--c, var(--accent));
+      box-shadow: 0 0 8px var(--cg, var(--accent-glow));
+    }
+
+    /* Auto-dismiss timer bar at the bottom edge */
+    .toast .timer {
+      position: absolute;
+      left: 0; bottom: 0;
+      height: 3px;
+      width: 100%;
+      transform-origin: left;
+      background: var(--c, var(--accent));
+      opacity: 0.55;
+      animation: timer-shrink var(--ttl, 5s) linear forwards;
+    }
+
+    @keyframes timer-shrink {
+      from { transform: scaleX(1); }
+      to   { transform: scaleX(0); }
+    }
+
+    /* Type color tokens */
+    .toast.t-success { --c: var(--success); --cg: var(--success-glow); }
+    .toast.t-info    { --c: var(--accent);  --cg: var(--accent-glow); }
+    .toast.t-loot    { --c: var(--warn);    --cg: var(--warn-glow); }
+    .toast.t-danger  { --c: var(--danger);  --cg: var(--danger-glow); }
+
+    @media (max-width: 720px) {
+      .toast-stack { top: 16px; right: 16px; left: 16px; width: auto; }
+      .controls { gap: 8px; }
+      button { padding: 8px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="playfield"></div>
+    <div class="world-hint">Концепт всплывающих уведомлений для top-down игры</div>
+
+    <div class="toast-stack" id="stack"></div>
+
+    <div class="controls">
+      <button data-type="quest-complete">Квест выполнен</button>
+      <button data-type="quest-updated">Прогресс квеста</button>
+      <button data-type="quest-new">Новый квест</button>
+      <button data-type="loot">Найден предмет</button>
+      <button data-type="levelup">Новый уровень</button>
+      <button data-type="extract">Эвакуация готова</button>
+      <button data-type="danger">Тревога</button>
+      <button data-type="clear">Очистить</button>
+    </div>
+  </div>
+
+  <script>
+    const stack = document.getElementById('stack');
+    const MAX_VISIBLE = 4;
+
+    // Each preset maps to a notification "type" the game would raise.
+    const PRESETS = {
+      'quest-complete': {
+        cls: 't-success', icon: '✓', kicker: 'Квест выполнен', ttl: 6,
+        title: 'Чистка нижнего сектора',
+        desc: 'Награда получена.',
+        rewards: ['+2 500 ₿', 'Аптечка ×2', 'Ключ-карта B']
+      },
+      'quest-updated': {
+        cls: 't-info', icon: '◈', kicker: 'Прогресс квеста', ttl: 4.5,
+        title: 'Убить рейдеров 3 / 5',
+        desc: 'Цель обновлена.'
+      },
+      'quest-new': {
+        cls: 't-info', icon: '＋', kicker: 'Новый квест', ttl: 5,
+        title: 'Механик: «Достань мне турбину»',
+        desc: 'Доступно в журнале заданий.'
+      },
+      'loot': {
+        cls: 't-loot', icon: '◆', kicker: 'Найден предмет', ttl: 4,
+        title: 'Графический процессор',
+        desc: 'Добавлено в рюкзак.'
+      },
+      'levelup': {
+        cls: 't-success', icon: '▲', kicker: 'Новый уровень', ttl: 5,
+        title: 'Уровень 12',
+        desc: 'Открыт доступ к новым модулям оружия.'
+      },
+      'extract': {
+        cls: 't-info', icon: '⇲', kicker: 'Эвакуация', ttl: 6,
+        title: 'Точка эвакуации активна',
+        desc: 'Доберитесь до южного шлюза, чтобы выйти из рейда.'
+      },
+      'danger': {
+        cls: 't-danger', icon: '!', kicker: 'Тревога', ttl: 5,
+        title: 'Турели активированы',
+        desc: 'Зона под огнём. Отступайте.'
+      }
+    };
+
+    function spawn(type) {
+      if (type === 'clear') { clearAll(); return; }
+      const p = PRESETS[type];
+      if (!p) return;
+
+      const el = document.createElement('div');
+      el.className = `toast ${p.cls}`;
+      el.style.setProperty('--ttl', `${p.ttl}s`);
+
+      const rewards = p.rewards
+        ? `<div class="rewards">${p.rewards
+            .map(r => `<span class="reward-chip"><span class="swatch"></span>${r}</span>`)
+            .join('')}</div>`
+        : '';
+
+      el.innerHTML = `
+        <div class="icon">${p.icon}</div>
+        <div class="body">
+          <div class="kicker">${p.kicker}</div>
+          <div class="title">${p.title}</div>
+          <div class="desc">${p.desc}</div>
+          ${rewards}
+        </div>
+        <div class="timer"></div>
+      `;
+
+      // Newest on top.
+      stack.prepend(el);
+      trimOverflow();
+
+      const ttlMs = p.ttl * 1000;
+      const timer = setTimeout(() => dismiss(el), ttlMs);
+
+      // Click to dismiss early; hover pauses the timer bar + auto-dismiss.
+      el.addEventListener('click', () => { clearTimeout(timer); dismiss(el); });
+      el.addEventListener('mouseenter', () => {
+        clearTimeout(timer);
+        el.querySelector('.timer').style.animationPlayState = 'paused';
+      });
+      el.addEventListener('mouseleave', () => {
+        el.querySelector('.timer').style.animationPlayState = 'running';
+        setTimeout(() => dismiss(el), 1500);
+      });
+    }
+
+    function dismiss(el) {
+      if (!el || el.classList.contains('leaving')) return;
+      el.classList.add('leaving');
+      el.addEventListener('animationend', () => el.remove(), { once: true });
+    }
+
+    function trimOverflow() {
+      const items = Array.from(stack.children);
+      items.slice(MAX_VISIBLE).forEach(dismiss);
+    }
+
+    function clearAll() {
+      Array.from(stack.children).forEach(dismiss);
+    }
+
+    document.querySelectorAll('.controls button').forEach(btn => {
+      btn.addEventListener('click', () => spawn(btn.dataset.type));
+    });
+
+    // Seed a couple on load so the stack reads at a glance.
+    spawn('quest-updated');
+    setTimeout(() => spawn('quest-complete'), 350);
+  </script>
+</body>
+</html>
