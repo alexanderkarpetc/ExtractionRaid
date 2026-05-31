@@ -6,6 +6,53 @@ using UnityEngine;
 
 namespace Save
 {
+    /// <summary>
+    /// Flat, JsonUtility-friendly snapshot of a weapon's <see cref="WeaponConfiguration"/>.
+    /// The live config nests <c>readonly struct</c> cores (PayloadCoreInstance etc.) whose
+    /// readonly fields Unity serialization can't round-trip, so we persist the identity
+    /// primitives here and rebuild the config on load via <see cref="ToConfig"/>.
+    /// </summary>
+    [Serializable]
+    public class WeaponConfigSaveData
+    {
+        public string PayloadId;
+        public int PayloadRarity;
+        public string DeliveryId;
+        public int DeliveryRarity;
+        public bool HasExotic;
+        public string ExoticId;
+        public int AmmoInMagazine;
+
+        public static WeaponConfigSaveData FromConfig(WeaponConfiguration c)
+        {
+            var data = new WeaponConfigSaveData
+            {
+                PayloadId = c.Payload.DefinitionId,
+                PayloadRarity = (int)c.Payload.Rarity,
+                DeliveryId = c.Delivery.DefinitionId,
+                DeliveryRarity = (int)c.Delivery.Rarity,
+                AmmoInMagazine = c.AmmoInMagazine,
+            };
+            var exotic = c.Exotic;
+            data.HasExotic = exotic.HasValue;
+            data.ExoticId = exotic.HasValue ? exotic.Value.DefinitionId : null;
+            return data;
+        }
+
+        public WeaponConfiguration ToConfig()
+        {
+            ExoticModInstance? exotic = HasExotic && !string.IsNullOrEmpty(ExoticId)
+                ? new ExoticModInstance(ExoticId)
+                : (ExoticModInstance?)null;
+
+            return new WeaponConfiguration(
+                new PayloadCoreInstance(PayloadId, (RarityTier)PayloadRarity),
+                new DeliveryCoreInstance(DeliveryId, (RarityTier)DeliveryRarity),
+                exotic,
+                AmmoInMagazine);
+        }
+    }
+
     [Serializable]
     public class ItemSaveData
     {
@@ -13,15 +60,27 @@ namespace Save
         public string DefinitionId;
         public int StackCount;
 
+        // Weapon-builder composition — only set for weapon items. Without this the
+        // weapon loads back as a plain ItemState (HasWeaponConfiguration = false),
+        // which the equip path treats as a broken/unconfigured weapon.
+        public bool HasWeaponConfiguration;
+        public WeaponConfigSaveData Weapon;
+
         public static ItemSaveData FromSlot(ItemState item, int slotIndex)
         {
             if (item == null) return null;
-            return new ItemSaveData
+            var data = new ItemSaveData
             {
                 SlotIndex = slotIndex,
                 DefinitionId = item.DefinitionId,
                 StackCount = item.StackCount
             };
+            if (item.HasWeaponConfiguration)
+            {
+                data.HasWeaponConfiguration = true;
+                data.Weapon = WeaponConfigSaveData.FromConfig(item.WeaponConfiguration);
+            }
+            return data;
         }
 
         public static ItemSaveData FromState(ItemState item)
@@ -32,6 +91,10 @@ namespace Save
         public ItemState ToState()
         {
             if (string.IsNullOrEmpty(DefinitionId)) return null;
+
+            if (HasWeaponConfiguration && Weapon != null)
+                return ItemState.CreateWeapon(App.Instance.AllocateEId(), DefinitionId, Weapon.ToConfig());
+
             return new ItemState { Id = App.Instance.AllocateEId(), DefinitionId = DefinitionId, StackCount = StackCount };
         }
     }
