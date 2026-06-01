@@ -132,8 +132,8 @@ namespace Barmetler.RoadSystem
 
         public void RefreshEndPoints(bool updatemesh = true)
         {
-            if (start != null) start.SetRoad(this, true);
-            if (end != null) end.SetRoad(this, false);
+            RefreshAnchor(ref start, true);
+            RefreshAnchor(ref end, false);
 
             // Convert to using normals:
             if (angles.Count == NumSegments + 1)
@@ -412,8 +412,18 @@ namespace Barmetler.RoadSystem
         public void OnValidate()
         {
             RefreshEndPoints(false);
-            if (start != null) start.SetRoad(this, true);
-            if (end != null) end.SetRoad(this, false);
+        }
+
+        private void RefreshAnchor(ref RoadAnchor anchor, bool isStart)
+        {
+            if (!anchor) return;
+            if (!anchor.CanConnect(this))
+            {
+                anchor = null;
+                return;
+            }
+
+            anchor.SetRoad(this, isStart);
         }
 
         #region Automatic Control Point Functions

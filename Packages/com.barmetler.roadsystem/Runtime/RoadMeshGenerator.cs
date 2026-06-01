@@ -26,6 +26,12 @@ namespace Barmetler.RoadSystem
             [Tooltip("By how much to displace uvs every time the mesh tiles")]
             public Vector2 uvOffset = Vector2.up;
 
+            [Tooltip("Generate UVs continuously along the whole road instead of repeating the source mesh UVs per tile.")]
+            public bool continuousUV = true;
+
+            [Tooltip("Rotate generated continuous UVs by 90 degrees.")]
+            public bool rotateContinuousUV;
+
             [Min(0.01f)]
             [Tooltip("Multiplier applied to the width of the generated road.")]
             public float widthMultiplier = 1f;
@@ -104,6 +110,8 @@ namespace Barmetler.RoadSystem
             {
                 StepSize = stepSize,
                 UVOffset = settings.uvOffset,
+                ContinuousUV = settings.continuousUV,
+                RotateContinuousUV = settings.rotateContinuousUV,
                 WidthMultiplier = max(settings.widthMultiplier, 0.01f),
                 Points = new NativeArray<GenerateRoadMeshV2Job.OrientedPoint>(points, Allocator.TempJob),
                 SourceOrientation = settings.SourceOrientation,
@@ -140,6 +148,12 @@ namespace Barmetler.RoadSystem
 
             [ReadOnly]
             public float2 UVOffset;
+
+            [ReadOnly]
+            public bool ContinuousUV;
+
+            [ReadOnly]
+            public bool RotateContinuousUV;
 
             [ReadOnly]
             public float WidthMultiplier;
@@ -236,6 +250,10 @@ namespace Barmetler.RoadSystem
                 var sourceRight = SourceOrientation.isRightHanded
                     ? cross(sourceForward, sourceUp)
                     : cross(sourceUp, sourceForward);
+                var continuousUVOffset = RotateContinuousUV
+                    ? float2(UVOffset.y, -UVOffset.x)
+                    : UVOffset;
+                var uvOffsetLengthSq = dot(continuousUVOffset, continuousUVOffset);
 
                 for (var z = 0; z < copyCount; ++z)
                 {
@@ -265,7 +283,17 @@ namespace Barmetler.RoadSystem
                         {
                             sourceAttributeData.GetFloat2(sourceIndex, VertexAttribute.TexCoord0 + channel,
                                 out var uv);
-                            uvs[resultIndex * sourceAttributeData.UVChannelCount + channel] = uv + UVOffset * z;
+                            if (ContinuousUV && channel == 0 && uvOffsetLengthSq > 0.000001f)
+                            {
+                                var uvAcrossRoad = uv - continuousUVOffset *
+                                    (dot(uv, continuousUVOffset) / uvOffsetLengthSq);
+                                uvs[resultIndex * sourceAttributeData.UVChannelCount + channel] =
+                                    uvAcrossRoad + continuousUVOffset * (position.z / meshLength);
+                            }
+                            else
+                            {
+                                uvs[resultIndex * sourceAttributeData.UVChannelCount + channel] = uv + UVOffset * z;
+                            }
                         }
                     }
 
