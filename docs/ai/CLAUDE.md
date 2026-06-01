@@ -77,7 +77,7 @@ DevCheats provides runtime-tunable parameters via ScriptableObject assets.
 **Architecture:**
 - `DevCheats.cs` — static accessor (thin wrapper, no state)
 - `DevCheatsConfig.cs` — root SO at `Resources/Configs/DevCheatsConfig.asset`, holds `[SerializeField]` references to section SOs
-- `Assets/Scripts/Dev/Sections/` — one file per section SO (14 sections)
+- `Assets/Scripts/Dev/Sections/` — one file per section SO (21 DevCheats sections + 14 ViewCheats counterparts in the same folder)
 - `DevCheatsWindow.cs` — Editor UI (`Raid → Dev Cheats`)
 
 **Rules:**

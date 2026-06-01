@@ -13,7 +13,7 @@ For the design rationale, stage-by-stage shipping log, and cut/deferred items, s
 | **Reticle** | One fullscreen `RawImage` on Screen-Space Overlay Canvas з SDF shader `CrosshairSDF` | All visuals procedural — no UI artist sprites |
 | **Presenter** | `CrosshairPresenter` (plain class, NOT MonoBehaviour) | Lives in App; `LateTick(RaidSession)` after damage numbers, before event-buffer clear |
 | **Pointer tracking** | `PointerOverUiTracker` MonoBehaviour on `AppBootstrap` GO | Update() polls `UiPanelHitTest.IsScreenPointOverUi`, broadcasts `App.IsPointerOverUi`, drives `Cursor.visible` |
-| **Material** | `Resources/Vfx/Materials/Crosshair.mat` auto-instanced via `Image.material` | Per-instance writes — `MaterialPropertyBlock` doesn't work on UI elements |
+| **Material** | `Resources/Vfx/Materials/Crosshair.mat` → explicit `new Material(...)` instance (uGUI `Image/RawImage.material` does NOT auto-instance — fixed 2026-05-31) | Per-instance writes — `MaterialPropertyBlock` doesn't work on UI elements. Without the explicit instance, per-frame `_CenterPx` writes mutated the shared `.mat` → git churn. |
 
 Shader has a single fragment pass that branches on `_LaserMode` to pick rendering style.
 
@@ -150,7 +150,7 @@ Same-pixel swap is natural — OS cursor appears at the exact mouse position, no
 ## Key Files
 
 - `Assets/Shaders/CrosshairSDF.shader` — single fragment SDF shader (4-arm + dot + reload arc + flame bars + laser segmented ring + hit pulse stubs + outline; branched on `_LaserMode`)
-- `Assets/Resources/Vfx/Materials/Crosshair.mat` — auto-instanced per Canvas
+- `Assets/Resources/Vfx/Materials/Crosshair.mat` — cloned to a runtime instance via `new Material(...)` in `CrosshairPresenter` (NOT auto-instanced by `Image.material`)
 - `Assets/Resources/Vfx/Prefabs/UI/Crosshair.prefab` — Screen-Space Overlay Canvas + fullscreen RawImage
 - `Assets/Scripts/View/CrosshairPresenter.cs` — plain class, LateTick from `App.LateTick`
 - `Assets/Scripts/View/PointerOverUiTracker.cs` — MonoBehaviour on AppBootstrap; pointer-over-UI broadcast + OS cursor visibility

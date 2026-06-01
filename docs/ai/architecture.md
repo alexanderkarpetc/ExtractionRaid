@@ -317,11 +317,11 @@ Do not rely on directly loading arbitrary scenes.
 - SO-based architecture: `DevCheats.cs` (static accessor) → `DevCheatsConfig.cs` (root SO) → section SOs
 - Root asset at `Resources/Configs/DevCheatsConfig.asset`
 - Section assets at `Assets/Resources/Configs/DevCheats/`
-- **14 sections** (`Assets/Scripts/Dev/Sections/`):
+- **21 DevCheats sections** (`Assets/Scripts/Dev/Sections/DevCheats*.cs`; ViewCheats* sections live in the same folder, separate root):
 
 | Section SO | Key parameters |
 |---|---|
-| `DevCheatsCheatsSection` | GodMode, InfiniteAmmo |
+| `DevCheatsCheatsSection` | GodMode, InfiniteAmmo, IgnoreBleed |
 | `DevCheatsWeaponSection` | DamageMultiplier, ProjectileSpeedMultiplier, FireRateMultiplier |
 | `DevCheatsRecoilSection` | NoRecoil, RecoilMultiplier, Forward/Side multipliers, Recovery |
 | `DevCheatsAimSection` | AimSplitEnabled, AimFollowMultiplier |
@@ -332,9 +332,18 @@ Do not rely on directly loading arbitrary scenes.
 | `DevCheatsADSSection` | AdsTransitionTime, MoveSpeedMul, AimFollowMul, RecoilMul, ZoomFactor, VignetteIntensity, BaseGap, BloomGap, CursorInfluence |
 | `DevCheatsHealthBarSection` | Bar dimensions, trail/flash/shake params, segment lines, colors |
 | `DevCheatsParallaxSection` | ProjectileSpawnHeight, ParallaxCorrection, ConvergenceBlend/AimUp, ProjectileHitRadius |
-| `DevCheatsDamageNumberSection` | Enabled, TrajectoryMode, Duration, FlySpeed, Gravity, PopOvershoot, FontSize, Colors |
 | `DevCheatsStatusEffectsSection` | ForceBleedPlayer |
 | `DevCheatsArmorSection` | DamageReductionK, DurabilityThreshold/Power, RicochetChance, ArmorDamageCap, PenetrationCap, ArmorPointsCap, ForceNoArmor/MaxArmor, HUD params |
+| `DevCheatsHitPauseSection` | Hit-pause / freeze-frame duration + trigger threshold |
+| `DevCheatsMuzzleVfxSection` | Muzzle flash scale / intensity / lifetime |
+| `DevCheatsStaggerSection` | Enabled, Light/Heavy/Headshot durations, HeavyDamageThreshold, AIShootingLockout |
+| `DevCheatsHordeSection` | Horde spawn cadence + wave counts |
+| `DevCheatsBotEngagementSection` | Bot engagement ranges / timings |
+| `DevCheatsLaserSection` | Charge time/curve, charge damage mult, shotgun spread + lifetime mults |
+| `DevCheatsBarrelHeatSection` | Enabled, MaxHeatShots, DecayPerSecond, HeatCurvePower, MaxSpreadMultiplier |
+| `DevCheatsStaminaSection` | MaxStamina, SprintDrainRate, RegenRate/Delay, SprintSpeedMultiplier, ExhaustionRecoveryRatio |
+
+(`DevCheatsDamageNumberSection` referenced in older docs is actually `ViewCheatsDamageNumberSection` — a ViewCheats section, not listed here.)
 
 ### Bot BT Debugger (EditorWindow)
 - `Assets/Scripts/Editor/BotBTDebuggerWindow.cs`

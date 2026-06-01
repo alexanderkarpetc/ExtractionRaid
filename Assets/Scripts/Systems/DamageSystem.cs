@@ -289,15 +289,19 @@ namespace Systems
             if (!state.HealthMap.TryGetValue(targetId, out var health)) return;
             if (!health.IsAlive) return;
 
-            // GodMode flows through context — see RaidContext.CheatsConfig.
-            if (context.CheatsConfig.GodMode && state.PlayerEntity != null && targetId == state.PlayerEntity.Id)
-                return;
+            // GodMode visual passthrough (mirrors the projectile branch in Tick): do NOT early-return
+            // on the godmode player — zero the HP damage but still fire every feedback event
+            // (EntityHit / EntityDamaged → flash, blood, HUD damage vignette, flinch). Otherwise melee
+            // bots (horde zombies) show no feedback under the user's permanent GodMode while ranged do.
+            // ApplyStagger is a no-op vs the player (it only staggers state.Bots entries) → no lock risk.
+            bool godModePlayerVictim = context.CheatsConfig.GodMode
+                && state.PlayerEntity != null && targetId == state.PlayerEntity.Id;
 
-            ApplyDamage(health, damage);
+            ApplyDamage(health, godModePlayerVictim ? 0f : damage);
 
             // Stagger surviving targets symmetrically с проектильною гілкою.
             if (health.IsAlive && context.StaggerConfig.Enabled)
-                ApplyStagger(state, targetId, damage, isHeadshot: false, in context);
+                ApplyStagger(state, targetId, godModePlayerVictim ? 0f : damage, isHeadshot: false, in context);
 
             if (health.IsAlive)
                 context.Events.EntityDamaged(targetId, health.CurrentHp, health.MaxHp);

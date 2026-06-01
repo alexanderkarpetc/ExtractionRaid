@@ -130,9 +130,11 @@ Each caliber (Rifle, Shotgun, Pistol, future...) has ammo variants:
 
 | Type | Pen | DMG | Bleed | ArmorDmg (flat pts) | Role | Status |
 |------|-----|-----|-------|---------------------|------|--------|
-| Standard | +10 (Rifle) / +12 (Pistol) | +0 | 0% | +5 (Rifle) / +6 (Pistol) | Cheap, baseline | ✅ impl |
-| AP | +35 (Rifle) / +30 (Pistol) | -5 | 0% | +8 (Rifle) / +7 (Pistol) | Anti-armor, less flesh | ✅ impl 2026-05-05 |
+| Standard | +10 (Rifle) / +12 (Pistol) | +0 | 5% | +5 (Rifle) / +6 (Pistol) | Cheap, baseline | ✅ impl |
+| AP | +35 (Rifle) / +30 (Pistol) | -5 | 5% | +8 (Rifle) / +7 (Pistol) | Anti-armor, less flesh | ✅ impl 2026-05-05 |
 | HP (Hollow Point) | +0 | +10 | +30% (Rifle) / +25% (Pistol) | +0 | Flesh shredder, useless vs armor | ✅ impl 2026-05-05 |
+
+**Baseline bleed (2026-05-26):** ALL ammo carries 5% bleed (was 0 on Standard/AP) so the bleed→HUD feedback loop always has a chance to fire; HP escalates to 25-30%. Bots read ammo bleed too. Laser `Ammo_EnergyCell` also 5%.
 
 **Design intent**: every ammo type has a clear tactical niche. No "best ammo" — only "best ammo for this situation."
 *Note: concrete values playtest-tunable. Composition pipeline у `ShootingSystem`: `WeaponBase + Ammo`.*
@@ -209,7 +211,8 @@ mix of blood, sparks, sound, and number size.
 - **Design intent**: makes helmets feel special vs body armor, rewards investing in headgear
 
 ### 9. Bleeding
-- **Trigger**: per-shot roll, `BleedChance = AmmoBleed + WeaponBleed + CharBleed` (cap: 70%)
+- **Trigger**: per-shot roll, `BleedChance = AmmoBleed + WeaponBleed + CharBleed` (cap: 70%). Baseline 5% on all ammo (2026-05-26) so it always *can* fire.
+- **GodMode (2026-05-26)**: bleed still APPLIES on the player (HUD/worldspace icons show) but tick damage is zeroed. `IgnoreBleed` cheat (Cheats section) = hard-off for both apply + tick.
 - **Bleed ignores armor**: roll happens regardless of pen result. Blunt hit through armor can still cause bleed
   - Design intent: HP ammo vs heavy armor = low direct damage but bleed still works = "death by bleeding"
   - Gives HP ammo a niche even vs armored targets (attrition warfare)

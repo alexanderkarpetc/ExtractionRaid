@@ -1,6 +1,7 @@
 using Adapters;
 using Constants;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems;
 using Systems.Bot;
@@ -88,6 +89,31 @@ namespace Tests.EditMode
             Assert.IsTrue(hp.IsAlive);
             Assert.AreEqual(1, events.EntityHits.Count);
             Assert.IsFalse(events.EntityDiedCalled);
+        }
+
+        [Test]
+        public void ApplyMeleeDamage_GodModePlayer_ZeroHpButStillEmitsFeedback()
+        {
+            // Visual passthrough: GodMode zeroes HP loss on the player but melee must still emit
+            // EntityHit so horde-zombie feedback (flash / vignette / flinch) shows during GodMode
+            // playtest — mirrors the projectile branch. Regression guard for the 2026-06-01 fix.
+            var state  = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var events = new FakeRaidEvents();
+            var cheats = CheatsConfig.Default;
+            cheats.GodMode = true;
+            var ctx    = TestContextFactory.Create(events: events, cheatsConfig: cheats);
+            var pid    = state.PlayerEntity.Id;
+            state.HealthMap[pid] = HealthState.Create(BotConstants.PlayerMaxHp);
+            var hp     = state.HealthMap[pid];
+            float startHp = hp.CurrentHp;
+
+            DamageSystem.ApplyMeleeDamage(state, pid, damage: 25f,
+                attackerId: default, hitPoint: Vector3.zero,
+                hitDirection: Vector3.forward, in ctx);
+
+            Assert.AreEqual(startHp, hp.CurrentHp, 0.001f); // GodMode → no HP loss
+            Assert.IsTrue(hp.IsAlive);
+            Assert.AreEqual(1, events.EntityHits.Count);    // …but feedback still fires
         }
 
         [Test]
