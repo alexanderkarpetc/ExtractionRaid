@@ -27,7 +27,11 @@ Shader "UI/NpcQuestIcon"
         _MainTex      ("Texture (unused)", 2D) = "white" {}
         _BorderColor  ("Border Color", Color) = (1.0, 0.82, 0.15, 1)
         _FillColor    ("Fill Color",   Color) = (0.08, 0.08, 0.10, 0.95)
-        _MarkColor    ("Mark Color",   Color) = (1.0, 0.95, 0.55, 1)
+        _MarkColor    ("Mark Color (mid)",   Color) = (1.0, 0.85, 0.10, 1)
+        _MarkTopColor ("Mark Color (top hi)", Color) = (1.0, 1.0, 0.55, 1)
+        _MarkBotColor ("Mark Color (bottom shadow)", Color) = (0.55, 0.35, 0.05, 1)
+        _MarkOutlineColor ("Mark Outline", Color) = (0.05, 0.04, 0.0, 1)
+        _MarkOutlineWidth ("Mark Outline Width", Range(0, 0.05)) = 0.012
         _GlowColor    ("Glow Color",   Color) = (1.0, 0.82, 0.15, 1)
         _Alpha        ("Alpha", Range(0,1)) = 1
         _Aspect       ("Aspect (w/h)", Float) = 1.1
@@ -78,6 +82,10 @@ Shader "UI/NpcQuestIcon"
             float4 _BorderColor;
             float4 _FillColor;
             float4 _MarkColor;
+            float4 _MarkTopColor;
+            float4 _MarkBotColor;
+            float4 _MarkOutlineColor;
+            float  _MarkOutlineWidth;
             float4 _GlowColor;
             float  _Alpha;
             float  _Aspect;
@@ -151,33 +159,55 @@ Shader "UI/NpcQuestIcon"
                 // Inner fill = inside the triangle, минус the border ring.
                 float dFill = dTriRounded + _BorderWidth * 0.5;
 
-                // ── "!" mark, positioned near the triangle's visual centroid (about 1/3 up from base).
-                // Centroid of triangle relative to apex/base: y = APEX.y - HEIGHT/3 = 0.42 - 0.28 = 0.14
-                // Shift the mark slightly above that so it reads visually centered (eye favors top).
+                // ── "!" mark — chunky stylized exclamation. Sits near the triangle's
+                // visual centroid, nudged up because the eye reads centroid above geometric
+                // mid-point of a point-up triangle.
                 const float MARK_CY = 0.05;
                 float2 pMark = float2(uv.x, uv.y - MARK_CY);
 
-                // Bar — vertical rounded rect.
-                float barHalfW = 0.045;
-                float barHalfH = 0.135;
-                float barRound = 0.035;
-                float2 pBar = float2(pMark.x, pMark.y - 0.065); // bar sits above mid
-                float dBar = sdRoundedBox(pBar, float2(barHalfW, barHalfH), barRound);
+                // Bar — rounded box, slightly wider than tall stripe. Big and bold так
+                // it reads from distance like the reference screenshot.
+                const float BAR_HALF_W = 0.07;
+                const float BAR_HALF_H = 0.18;
+                const float BAR_ROUND  = 0.055;
+                float2 pBar = float2(pMark.x, pMark.y - 0.09); // bar above mid
+                float dBar = sdRoundedBox(pBar, float2(BAR_HALF_W, BAR_HALF_H), BAR_ROUND);
 
-                // Dot — circle below the bar.
-                float dotR = 0.05;
-                float2 pDot = float2(pMark.x, pMark.y + 0.13);
-                float dDot = sdCircle(pDot, dotR);
+                // Dot — bold circle below the bar з a clear gap.
+                const float DOT_R = 0.085;
+                float2 pDot = float2(pMark.x, pMark.y + 0.20);
+                float dDot = sdCircle(pDot, DOT_R);
 
                 float dMark = min(dBar, dDot);
 
-                // Clip the mark to inside the triangle (don't render bits that poke through edges).
-                float dMarkClipped = max(dMark, dTriRounded + _BorderWidth);
+                // Clip the mark to inside the triangle (don't render bits poking out).
+                float dMarkClipped    = max(dMark, dTriRounded + _BorderWidth);
+                // Outline ring around the mark — slightly larger silhouette.
+                float dMarkOutline    = max(dMark + _MarkOutlineWidth, dTriRounded + _BorderWidth);
+
+                // Vertical gradient across the mark's bounding span so it reads as 3D:
+                // bright highlight at the top of the bar, mid-tone through middle,
+                // shadow toward the bottom of the dot. t in [0..1] from top→bottom.
+                float markTop    = -0.32 + MARK_CY;   // approx Y of bar top
+                float markBottom =  0.30 + MARK_CY;   // approx Y of dot bottom
+                float t = saturate((uv.y - markTop) / max(markBottom - markTop, 1e-4));
+                // Two-stop ramp: top→mid in first half, mid→bottom in second half.
+                half3 markCol = t < 0.5
+                    ? lerp((half3)_MarkTopColor.rgb, (half3)_MarkColor.rgb, t * 2.0)
+                    : lerp((half3)_MarkColor.rgb, (half3)_MarkBotColor.rgb, (t - 0.5) * 2.0);
+
+                // Specular sliver — bright highlight on the bar's upper-left edge.
+                // Cheap fake: distance from a vertical line on the left side, gated by Y.
+                float specMask = saturate(1.0 - smoothstep(0.0, 0.025, abs(pBar.x + BAR_HALF_W * 0.55)))
+                               * saturate(1.0 - smoothstep(-0.05, 0.10, pBar.y))
+                               * step(dBar, 0.0); // only inside the bar
+                markCol = lerp(markCol, half3(1.0, 1.0, 0.92), specMask * 0.6);
 
                 // ── Coverage masks (smoothstep AA).
-                float aaFill   = 1.0 - smoothstep(0.0, _EdgeSoftness, dFill);
-                float aaBorder = 1.0 - smoothstep(0.0, _EdgeSoftness, dBorder);
-                float aaMark   = 1.0 - smoothstep(0.0, _EdgeSoftness, dMarkClipped);
+                float aaFill        = 1.0 - smoothstep(0.0, _EdgeSoftness, dFill);
+                float aaBorder      = 1.0 - smoothstep(0.0, _EdgeSoftness, dBorder);
+                float aaMark        = 1.0 - smoothstep(0.0, _EdgeSoftness, dMarkClipped);
+                float aaMarkOutline = 1.0 - smoothstep(0.0, _EdgeSoftness, dMarkOutline);
 
                 // ── Outer glow — soft falloff outside the triangle edge.
                 // Visible only where outside the shape (dTriRounded > 0).
@@ -198,8 +228,12 @@ Shader "UI/NpcQuestIcon"
                 col.rgb = lerp(col.rgb, _FillColor.rgb, aaFill);
                 col.a   = max(col.a, aaFill * _FillColor.a);
 
-                // Mark on top of fill
-                col.rgb = lerp(col.rgb, _MarkColor.rgb, aaMark);
+                // Mark outline (dark halo) — sits between fill and mark face.
+                col.rgb = lerp(col.rgb, _MarkOutlineColor.rgb, aaMarkOutline);
+                col.a   = max(col.a, aaMarkOutline * _MarkOutlineColor.a);
+
+                // Mark face — gradient yellow з spec sliver.
+                col.rgb = lerp(col.rgb, markCol, aaMark);
                 col.a   = max(col.a, aaMark * _MarkColor.a);
 
                 // Border last — it reads as the strongest silhouette.

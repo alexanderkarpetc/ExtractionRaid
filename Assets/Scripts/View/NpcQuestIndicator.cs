@@ -28,23 +28,36 @@ namespace View
         const float PollInterval = 0.4f;       // quest-state recheck cadence (seconds)
         const float PulseHz      = 0.9f;       // breath frequency for the outer glow
 
-        // ── Palette
-        static readonly Color FillColor    = new(0.08f, 0.08f, 0.10f, 0.95f);
+        // ── Palette. Mark uses three stops (top highlight → mid → bottom shadow)
+        // so the shader can fake a 3D bevel — matches the reference screenshot.
+        static readonly Color FillColor       = new(0.08f, 0.08f, 0.10f, 0.95f);
+        static readonly Color MarkOutlineDark = new(0.05f, 0.04f, 0.00f, 1f);
+
+        // Quest available — chunky yellow.
         static readonly Color BorderAvail  = new(1.00f, 0.82f, 0.15f, 1f);
-        static readonly Color MarkAvail    = new(1.00f, 0.95f, 0.55f, 1f);
+        static readonly Color MarkTopAvail = new(1.00f, 1.00f, 0.55f, 1f);
+        static readonly Color MarkMidAvail = new(1.00f, 0.85f, 0.10f, 1f);
+        static readonly Color MarkBotAvail = new(0.55f, 0.32f, 0.04f, 1f);
         static readonly Color GlowAvail    = new(1.00f, 0.78f, 0.20f, 1f);
+
+        // Ready to turn in — green variant з same bevel shape.
         static readonly Color BorderReady  = new(0.30f, 0.95f, 0.40f, 1f);
-        static readonly Color MarkReady    = new(0.75f, 1.00f, 0.80f, 1f);
+        static readonly Color MarkTopReady = new(0.85f, 1.00f, 0.75f, 1f);
+        static readonly Color MarkMidReady = new(0.30f, 0.90f, 0.35f, 1f);
+        static readonly Color MarkBotReady = new(0.06f, 0.35f, 0.10f, 1f);
         static readonly Color GlowReady    = new(0.35f, 0.95f, 0.45f, 1f);
 
         // ── Shader property IDs (cached)
-        static readonly int PropBorder    = Shader.PropertyToID("_BorderColor");
-        static readonly int PropFill      = Shader.PropertyToID("_FillColor");
-        static readonly int PropMark      = Shader.PropertyToID("_MarkColor");
-        static readonly int PropGlow      = Shader.PropertyToID("_GlowColor");
-        static readonly int PropAspect    = Shader.PropertyToID("_Aspect");
-        static readonly int PropPulse     = Shader.PropertyToID("_PulseT");
-        static readonly int PropAlpha     = Shader.PropertyToID("_Alpha");
+        static readonly int PropBorder       = Shader.PropertyToID("_BorderColor");
+        static readonly int PropFill         = Shader.PropertyToID("_FillColor");
+        static readonly int PropMark         = Shader.PropertyToID("_MarkColor");
+        static readonly int PropMarkTop      = Shader.PropertyToID("_MarkTopColor");
+        static readonly int PropMarkBot      = Shader.PropertyToID("_MarkBotColor");
+        static readonly int PropMarkOutline  = Shader.PropertyToID("_MarkOutlineColor");
+        static readonly int PropGlow         = Shader.PropertyToID("_GlowColor");
+        static readonly int PropAspect       = Shader.PropertyToID("_Aspect");
+        static readonly int PropPulse        = Shader.PropertyToID("_PulseT");
+        static readonly int PropAlpha        = Shader.PropertyToID("_Alpha");
 
         string _npcId;
         GameObject _root;
@@ -97,19 +110,25 @@ namespace View
 
             _material = new Material(shader);
             _material.SetFloat(PropAspect, Width / Mathf.Max(0.001f, Height));
-            ApplyPalette(BorderAvail, MarkAvail, GlowAvail);
+            _material.SetColor(PropMarkOutline, MarkOutlineDark);
+            ApplyAvailable();
             _badge.material = _material;
 
             SetVisible(false);
         }
 
-        void ApplyPalette(Color border, Color mark, Color glow)
+        void ApplyAvailable() => ApplyPalette(BorderAvail, MarkTopAvail, MarkMidAvail, MarkBotAvail, GlowAvail);
+        void ApplyReady()     => ApplyPalette(BorderReady, MarkTopReady, MarkMidReady, MarkBotReady, GlowReady);
+
+        void ApplyPalette(Color border, Color markTop, Color markMid, Color markBot, Color glow)
         {
             if (_material == null) return;
-            _material.SetColor(PropBorder, border);
-            _material.SetColor(PropFill,   FillColor);
-            _material.SetColor(PropMark,   mark);
-            _material.SetColor(PropGlow,   glow);
+            _material.SetColor(PropBorder,  border);
+            _material.SetColor(PropFill,    FillColor);
+            _material.SetColor(PropMarkTop, markTop);
+            _material.SetColor(PropMark,    markMid);
+            _material.SetColor(PropMarkBot, markBot);
+            _material.SetColor(PropGlow,    glow);
         }
 
         void LateUpdate()
@@ -171,8 +190,8 @@ namespace View
             SetVisible(visible);
             if (visible)
             {
-                if (hasAvailable) ApplyPalette(BorderAvail, MarkAvail, GlowAvail);
-                else              ApplyPalette(BorderReady, MarkReady, GlowReady);
+                if (hasAvailable) ApplyAvailable();
+                else              ApplyReady();
             }
         }
 
