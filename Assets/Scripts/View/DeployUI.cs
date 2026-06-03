@@ -51,7 +51,7 @@ namespace View
 
             if (!_isOpen)
             {
-                DrawDeployPrompt(state, state.PlayerEntity);
+                DrawInteractPrompt(state, state.PlayerEntity);
                 return;
             }
 
@@ -95,21 +95,34 @@ namespace View
             }
         }
 
-        void DrawDeployPrompt(RaidState state, PlayerEntityState player)
+        void DrawInteractPrompt(RaidState state, PlayerEntityState player)
         {
+            if (player.IsInMenu) return;
             if (player.LootTargetId != EId.None) return;
             if (player.CraftTargetId != EId.None) return;
             if (player.DeployTargetId != EId.None) return;
+            if (player.NpcTargetId != EId.None) return;
 
             var nearest = LootSystem.FindNearestInteractable(state, player.Position, player.FacingDirection);
-            if (nearest.Type != InteractableType.DeployPoint) return;
+            if (!nearest.IsValid) return;
+
+            string label = nearest.Type switch
+            {
+                InteractableType.Lootable    => "Press F to loot",
+                InteractableType.GroundItem  => "Press F to pick up",
+                InteractableType.Workbench   => "Press F to craft",
+                InteractableType.DeployPoint => "Press F to deploy",
+                InteractableType.Npc         => "Press F to talk",
+                _ => null,
+            };
+            if (label == null) return;
 
             EnsureStyles();
 
             float w = 220f;
             float h = 32f;
             float x = (Screen.width - w) * 0.5f;
-            float y = Screen.height * 0.65f;
+            float y = Screen.height * 0.78f;
 
             var rect = new Rect(x, y, w, h);
             GUI.DrawTexture(rect, _promptBg);
@@ -125,7 +138,7 @@ namespace View
                 _promptStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
             }
 
-            GUI.Label(rect, "Press F to deploy", _promptStyle);
+            GUI.Label(rect, label, _promptStyle);
         }
 
         void EnsureStyles()
