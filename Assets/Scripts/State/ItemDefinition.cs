@@ -177,7 +177,7 @@ namespace State
                     DisplayName = "Bandage",
                     Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 1,
+                    MaxStackSize = 3,
                 },
                 ["Advanced_Medkit"] = new()
                 {
