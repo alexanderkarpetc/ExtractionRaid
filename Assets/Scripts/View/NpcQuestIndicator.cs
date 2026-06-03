@@ -19,10 +19,10 @@ namespace View
     /// </summary>
     public class NpcQuestIndicator : MonoBehaviour
     {
-        // ── Layout
+        // ── Layout — square so the disc stays circular without aspect correction.
         const float OffsetY = 2.2f;            // meters above the NPC root
-        const float Width   = 0.55f;
-        const float Height  = 0.55f;
+        const float Width   = 0.6f;
+        const float Height  = 0.6f;
 
         // ── Behavior
         const float PollInterval = 0.4f;       // quest-state recheck cadence (seconds)

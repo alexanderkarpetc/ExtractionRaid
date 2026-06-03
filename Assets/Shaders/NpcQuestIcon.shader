@@ -1,20 +1,20 @@
 // NpcQuestIcon — procedural SDF badge для floating quest indicator above NPCs.
-// One full-quad UI shader: rounded triangle frame (face + outline) з "!" mark inside,
+// One full-quad UI shader: circular frame (face + outline) з a chunky "!" mark inside,
 // plus a soft outer glow that breathes на _PulseT. No textures, no sprite atlas.
 //
 // Mesh: any Image/RawImage RectTransform — UVs 0..1 mapped to the badge area.
 // Aspect ratio is preserved internally (we read _Aspect = width/height and remap UVs
-// to a centered unit space so the triangle stays equilateral-ish regardless of rect).
+// to a centered unit space so the disc stays circular regardless of rect shape).
 //
 // Param namespace:
-//   _BorderColor RGBA — triangle outline / stroke
+//   _BorderColor RGBA — disc outline / stroke
 //   _FillColor   RGBA — dark interior фоn behind the "!"
 //   _MarkColor   RGBA — color of "!" body + dot
 //   _GlowColor   RGBA — outer breathing glow
 //   _Alpha       global opacity
 //   _Aspect      width / height of the host RectTransform (sent from C#)
 //   _BorderWidth UV-units stroke thickness
-//   _CornerRadius UV-units rounding on triangle vertices
+//   _DiscRadius  UV-units radius of the frame
 //   _EdgeSoftness UV-units anti-aliasing band
 //   _PulseT      0..1 — drives glow breathe (typical: 0.5 + 0.5*sin(Time*PI))
 //   _GlowStrength 0..1 — peak glow alpha at pulse=1
@@ -35,8 +35,8 @@ Shader "UI/NpcQuestIcon"
         _GlowColor    ("Glow Color",   Color) = (1.0, 0.82, 0.15, 1)
         _Alpha        ("Alpha", Range(0,1)) = 1
         _Aspect       ("Aspect (w/h)", Float) = 1.1
-        _BorderWidth  ("Border Width", Range(0, 0.2)) = 0.045
-        _CornerRadius ("Corner Radius", Range(0, 0.2)) = 0.06
+        _BorderWidth  ("Border Width", Range(0, 0.2)) = 0.055
+        _DiscRadius   ("Disc Radius", Range(0.1, 0.5)) = 0.44
         _EdgeSoftness ("Edge Softness", Range(0.001, 0.04)) = 0.006
         _PulseT       ("Pulse T (0..1)", Range(0,1)) = 0
         _GlowStrength ("Glow Strength", Range(0,1)) = 0.55
@@ -90,7 +90,7 @@ Shader "UI/NpcQuestIcon"
             float  _Alpha;
             float  _Aspect;
             float  _BorderWidth;
-            float  _CornerRadius;
+            float  _DiscRadius;
             float  _EdgeSoftness;
             float  _PulseT;
             float  _GlowStrength;
@@ -108,19 +108,6 @@ Shader "UI/NpcQuestIcon"
                 return OUT;
             }
 
-            // Inigo Quilez — isoceles triangle SDF. Apex at origin, base centered below.
-            // q = (halfBase, -height). Returns signed distance (negative inside).
-            float sdIsoTriangle(float2 p, float2 q)
-            {
-                p.x = abs(p.x);
-                float2 a = p - q * clamp(dot(p, q) / max(dot(q, q), 1e-6), 0.0, 1.0);
-                float2 b = p - q * float2(clamp(p.x / max(q.x, 1e-6), 0.0, 1.0), 1.0);
-                float k = sign(q.y);
-                float d = min(dot(a, a), dot(b, b));
-                float s = max(k * (p.x * q.y - p.y * q.x), k * (p.y - q.y));
-                return sqrt(d) * sign(s);
-            }
-
             // Rounded box SDF — p is local point, b is half-extents, r is corner radius.
             float sdRoundedBox(float2 p, float2 b, float r)
             {
@@ -136,33 +123,21 @@ Shader "UI/NpcQuestIcon"
             half4 Frag(Varyings IN) : SV_Target
             {
                 // Remap UV to a centered space where Y ∈ [-0.5, 0.5] and X scaled by aspect.
-                // This keeps the triangle's geometry independent of the rect's pixel aspect.
+                // This keeps the disc geometrically circular regardless of rect aspect.
                 float2 uv = IN.uv - 0.5;
                 uv.x *= _Aspect;
 
-                // Triangle: apex high (positive Y), base low (negative Y).
-                // Tip at (0, +0.42), half-base = 0.46, height = 0.84 — leaves margin for glow.
-                const float2 APEX = float2(0.0, 0.42);
-                const float HALF_BASE = 0.46;
-                const float HEIGHT    = 0.84;
+                // Disc — centered, radius _DiscRadius. Leaves outer margin for glow.
+                float dDisc = sdCircle(uv, _DiscRadius);
 
-                float2 pTri = uv - APEX;
-                float dTri = sdIsoTriangle(pTri, float2(HALF_BASE, -HEIGHT));
+                // Frame border = annulus of width _BorderWidth around the disc edge.
+                float dBorder = abs(dDisc) - _BorderWidth * 0.5;
 
-                // Inflate corners by subtracting CornerRadius — same trick as rounded box.
-                // This rounds the triangle's tips without warping the edges.
-                float dTriRounded = dTri - _CornerRadius;
+                // Inner fill = inside the disc минус the border ring.
+                float dFill = dDisc + _BorderWidth * 0.5;
 
-                // Frame border = annulus of width _BorderWidth around the rounded triangle edge.
-                float dBorder = abs(dTriRounded) - _BorderWidth * 0.5;
-
-                // Inner fill = inside the triangle, минус the border ring.
-                float dFill = dTriRounded + _BorderWidth * 0.5;
-
-                // ── "!" mark — chunky stylized exclamation. Sits near the triangle's
-                // visual centroid, nudged up because the eye reads centroid above geometric
-                // mid-point of a point-up triangle.
-                const float MARK_CY = 0.05;
+                // ── "!" mark — chunky stylized exclamation, centered in the disc.
+                const float MARK_CY = 0.0;
                 float2 pMark = float2(uv.x, uv.y - MARK_CY);
 
                 // Bar — rounded box, slightly wider than tall stripe. Big and bold так
@@ -180,17 +155,18 @@ Shader "UI/NpcQuestIcon"
 
                 float dMark = min(dBar, dDot);
 
-                // Clip the mark to inside the triangle (don't render bits poking out).
-                float dMarkClipped    = max(dMark, dTriRounded + _BorderWidth);
+                // Clip the mark to inside the disc (don't render bits poking out).
+                float dMarkClipped    = max(dMark, dDisc + _BorderWidth);
                 // Outline ring around the mark — slightly larger silhouette.
-                float dMarkOutline    = max(dMark + _MarkOutlineWidth, dTriRounded + _BorderWidth);
+                float dMarkOutline    = max(dMark + _MarkOutlineWidth, dDisc + _BorderWidth);
 
                 // Vertical gradient across the mark's bounding span so it reads as 3D:
                 // bright highlight at the top of the bar, mid-tone through middle,
                 // shadow toward the bottom of the dot. t in [0..1] from top→bottom.
-                float markTop    = -0.32 + MARK_CY;   // approx Y of bar top
-                float markBottom =  0.30 + MARK_CY;   // approx Y of dot bottom
-                float t = saturate((uv.y - markTop) / max(markBottom - markTop, 1e-4));
+                // UV.y increases upward, so markTop has the larger Y value.
+                float markTopY    =  0.30 + MARK_CY;   // approx Y of bar top
+                float markBotY    = -0.32 + MARK_CY;   // approx Y of dot bottom
+                float t = saturate((markTopY - uv.y) / max(markTopY - markBotY, 1e-4));
                 // Two-stop ramp: top→mid in first half, mid→bottom in second half.
                 half3 markCol = t < 0.5
                     ? lerp((half3)_MarkTopColor.rgb, (half3)_MarkColor.rgb, t * 2.0)
@@ -199,8 +175,8 @@ Shader "UI/NpcQuestIcon"
                 // Specular sliver — bright highlight on the bar's upper-left edge.
                 // Cheap fake: distance from a vertical line on the left side, gated by Y.
                 float specMask = saturate(1.0 - smoothstep(0.0, 0.025, abs(pBar.x + BAR_HALF_W * 0.55)))
-                               * saturate(1.0 - smoothstep(-0.05, 0.10, pBar.y))
-                               * step(dBar, 0.0); // only inside the bar
+                               * saturate(smoothstep(-0.05, 0.10, pBar.y))
+                               * step(dBar, 0.0); // only inside the bar, upper portion
                 markCol = lerp(markCol, half3(1.0, 1.0, 0.92), specMask * 0.6);
 
                 // ── Coverage masks (smoothstep AA).
@@ -209,10 +185,10 @@ Shader "UI/NpcQuestIcon"
                 float aaMark        = 1.0 - smoothstep(0.0, _EdgeSoftness, dMarkClipped);
                 float aaMarkOutline = 1.0 - smoothstep(0.0, _EdgeSoftness, dMarkOutline);
 
-                // ── Outer glow — soft falloff outside the triangle edge.
-                // Visible only where outside the shape (dTriRounded > 0).
+                // ── Outer glow — soft falloff outside the disc edge.
+                // Visible only where outside the shape (dDisc > 0).
                 float glowReach = max(_GlowRadius, 1e-4);
-                float glow = 1.0 - smoothstep(0.0, glowReach, dTriRounded);
+                float glow = 1.0 - smoothstep(0.0, glowReach, dDisc);
                 glow = pow(saturate(glow), 1.8);                     // gentle falloff
                 glow *= saturate(1.0 - aaBorder - aaFill);           // don't double-shade the body
                 glow *= _GlowStrength * saturate(_PulseT);
