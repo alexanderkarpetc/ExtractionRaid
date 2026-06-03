@@ -112,14 +112,19 @@ namespace Session
             foreach (var sp in containerPoints)
             {
                 if (UnityEngine.Random.value > sp.spawnChance) continue;
-                if (ContainerConstants.TryGetConfig(sp.containerType, out var config))
+                if (sp.config == null)
                 {
-                    // Register the per-instance visual override (if any) BEFORE firing the
-                    // LootableSpawned event so LootablePresenter can consume it in the same tick.
-                    if (sp.visualPrefab != null)
-                        ContainerVisualRegistry.Register(sp.transform.position, sp.visualPrefab);
-                    LootSystem.CreateContainer(RaidState, in config, sp.transform.position, _eventBuffer);
+                    UnityEngine.Debug.LogWarning(
+                        $"LootContainerSpawnPoint '{sp.name}' has no config asset — skipping.", sp);
+                    continue;
                 }
+                sp.config.ApplyToRegistry();
+                var config = sp.config.ToContainerTypeConfig();
+                // Register the per-instance visual override (if any) BEFORE firing the
+                // LootableSpawned event so LootablePresenter can consume it in the same tick.
+                if (sp.visualPrefab != null)
+                    ContainerVisualRegistry.Register(sp.transform.position, sp.visualPrefab);
+                LootSystem.CreateContainer(RaidState, in config, sp.transform.position, _eventBuffer);
             }
 
             var workbenchPoints = Object.FindObjectsByType<WorkbenchSpawnPoint>(FindObjectsSortMode.None);

@@ -7,28 +7,41 @@ namespace Constants
         public readonly string DefinitionId;
         public readonly int MinCount;
         public readonly int MaxCount;
+        public readonly float Weight;
 
         public LootDrop(string definitionId, int minCount, int maxCount)
+            : this(definitionId, minCount, maxCount, 1f) { }
+
+        public LootDrop(string definitionId, int minCount, int maxCount, float weight)
         {
             DefinitionId = definitionId;
             MinCount = minCount;
             MaxCount = maxCount;
+            Weight = weight > 0f ? weight : 1f;
         }
     }
 
     public readonly struct ContainerTypeConfig
     {
+        public const int DefaultSlotCount = 20;
+
         public readonly string TypeId;
         public readonly string DisplayName;
+        public readonly int SlotCount;
         public readonly int MinDrops;
         public readonly int MaxDrops;
         public readonly LootDrop[] PossibleDrops;
 
         public ContainerTypeConfig(string typeId, string displayName, int minDrops, int maxDrops,
             LootDrop[] possibleDrops)
+            : this(typeId, displayName, DefaultSlotCount, minDrops, maxDrops, possibleDrops) { }
+
+        public ContainerTypeConfig(string typeId, string displayName, int slotCount,
+            int minDrops, int maxDrops, LootDrop[] possibleDrops)
         {
             TypeId = typeId;
             DisplayName = displayName;
+            SlotCount = slotCount > 0 ? slotCount : DefaultSlotCount;
             MinDrops = minDrops;
             MaxDrops = maxDrops;
             PossibleDrops = possibleDrops;
@@ -129,6 +142,12 @@ namespace Constants
         public static bool TryGetConfig(ContainerType type, out ContainerTypeConfig config)
         {
             return Registry.TryGetValue(type.ToString(), out config);
+        }
+
+        public static void RegisterOrOverride(ContainerTypeConfig config)
+        {
+            if (string.IsNullOrEmpty(config.TypeId)) return;
+            Registry[config.TypeId] = config;
         }
     }
 }

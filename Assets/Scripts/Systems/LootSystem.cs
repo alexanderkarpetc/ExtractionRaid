@@ -24,12 +24,25 @@ namespace Systems
             var id = state.AllocateEId();
             var inventory = new InventoryState();
 
-            int dropCount = Random.Range(config.MinDrops, config.MaxDrops + 1);
-            int slot = 0;
+            int capacity = Mathf.Min(
+                config.SlotCount > 0 ? config.SlotCount : InventoryState.BackpackSize,
+                inventory.Backpack.Length);
 
-            for (int i = 0; i < dropCount && slot < InventoryState.BackpackSize; i++)
+            int rolledCount = Random.Range(config.MinDrops, config.MaxDrops + 1);
+            int dropCount = Mathf.Min(rolledCount, capacity);
+
+            var pool = config.PossibleDrops;
+            float totalWeight = 0f;
+            if (pool != null)
+                for (int i = 0; i < pool.Length; i++)
+                    totalWeight += pool[i].Weight;
+
+            int slot = 0;
+            for (int i = 0; i < dropCount && slot < capacity; i++)
             {
-                var drop = config.PossibleDrops[Random.Range(0, config.PossibleDrops.Length)];
+                if (pool == null || pool.Length == 0 || totalWeight <= 0f) break;
+
+                var drop = PickWeighted(pool, totalWeight);
                 var itemId = state.AllocateEId();
                 int count = Random.Range(drop.MinCount, drop.MaxCount + 1);
 
@@ -45,6 +58,18 @@ namespace Systems
             var lootable = LootableContainerState.Create(id, position, config.TypeId, inventory, isContainer: true);
             state.Lootables.Add(lootable);
             events.LootableSpawned(id, position, config.TypeId);
+        }
+
+        static LootDrop PickWeighted(LootDrop[] pool, float totalWeight)
+        {
+            float r = Random.value * totalWeight;
+            float acc = 0f;
+            for (int i = 0; i < pool.Length; i++)
+            {
+                acc += pool[i].Weight;
+                if (r <= acc) return pool[i];
+            }
+            return pool[pool.Length - 1];
         }
 
         public static void CreateLootable(RaidState state, BotEntityState bot, in BotTypeConfig config,

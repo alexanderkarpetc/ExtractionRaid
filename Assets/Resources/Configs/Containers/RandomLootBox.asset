@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 995b410d30489c4479bdc50c690cae96, type: 3}
+  m_Name: RandomLootBox
+  m_EditorClassIdentifier: Game::Constants.ContainerTypeConfigAsset
+  _typeId: RandomLootBox
+  _displayName: Loot Box
+  _slotCount: 12
+  _minDrops: 2
+  _maxDrops: 4
+  _drops:
+  - definitionId: Medkit
+    minCount: 1
+    maxCount: 1
+    weight: 2
+  - definitionId: Bandage
+    minCount: 1
+    maxCount: 1
+    weight: 2
+  - definitionId: Grenade
+    minCount: 1
+    maxCount: 1
+    weight: 1
+  - definitionId: Ammo_Rifle
+    minCount: 10
+    maxCount: 30
+    weight: 3
+  - definitionId: BallisticRound
+    minCount: 1
+    maxCount: 1
+    weight: 1
+  - definitionId: LaserCharge
+    minCount: 1
+    maxCount: 1
+    weight: 1
+  - definitionId: SingleAction
+    minCount: 1
+    maxCount: 1
+    weight: 1
+  - definitionId: Auto
+    minCount: 1
+    maxCount: 1
+    weight: 0.5
+  - definitionId: Scatter
+    minCount: 1
+    maxCount: 1
+    weight: 0.5
