@@ -6,6 +6,13 @@ namespace View.SpawnPoints
     {
         public string npcId;
 
+        void Start()
+        {
+            // Floating "!" badge above head when this NPC has a quest offer.
+            // Built code-side so existing NPC prefabs need no edits.
+            NpcQuestIndicator.Create(transform, npcId);
+        }
+
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {
