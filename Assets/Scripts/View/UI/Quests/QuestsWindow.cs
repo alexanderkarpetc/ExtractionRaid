@@ -9,9 +9,15 @@ using UnityEngine.UIElements;
 
 namespace View.UI.Quests
 {
+    /// <summary>Which surface opened the quest popup.</summary>
+    public enum QuestPopupMode { Journal, Npc }
+
+    /// <summary>Tab selection within the quest popup.</summary>
+    public enum QuestTab { Available, Active, Completed }
+
     /// <summary>
-    /// UI Toolkit quest popup — canonical quest UI, replacing the legacy uGUI
-    /// <see cref="QuestsPopupView"/>. Layout follows the concept at
+    /// UI Toolkit quest popup — canonical quest UI, replacing the former uGUI
+    /// quest popup. Layout follows the concept at
     /// Assets/Concepts/quest-ui-popup.html: centered modal with a header
     /// (title + optional NPC pill + close), a tab strip (Available / Active /
     /// Completed) and a scrolling list of expandable quest cards.

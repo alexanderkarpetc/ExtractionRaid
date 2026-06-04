@@ -49,7 +49,7 @@ namespace ApplicationCore
             dialogueHost.transform.SetParent(transform, false);
             dialogueHost.AddComponent<NpcDialogueWindow>();
 
-            // Quests modal — UI Toolkit replacement for the legacy uGUI QuestsPopupView.
+            // Quests modal — UI Toolkit quest popup.
             // Hidden by default; opened by QuestPresenter (journal, Key.I) or
             // NpcDialoguePresenter ("Open Quests" choice). Own UIDocument host.
             var questsWindowHost = new GameObject("QuestsWindow");

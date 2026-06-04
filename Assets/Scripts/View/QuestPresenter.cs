@@ -10,7 +10,7 @@ namespace View
     /// Handles the journal hotkey (Key.I) and keeps PlayerEntityState.IsQuestLogOpen
     /// in sync with the actual popup state. NPC-driven popup opening lives in
     /// <see cref="NpcDialoguePresenter"/>. Drives the UI Toolkit
-    /// <see cref="QuestsWindow"/> (the legacy uGUI QuestsPopupView is retired).
+    /// <see cref="QuestsWindow"/>.
     /// </summary>
     public class QuestPresenter : MonoBehaviour
     {
