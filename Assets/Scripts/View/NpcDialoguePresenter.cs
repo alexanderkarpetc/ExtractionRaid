@@ -143,7 +143,7 @@ namespace View
             // Trade — only offered if a ShopDefinitionAsset exists for this NpcId.
             // Assets live at Resources/Configs/Shops/<NpcId>.asset; see ShopDefinitionAsset.
             var shopDef = LoadShopDefinition(npcId);
-            if (shopDef != null)
+            if (shopDef != null && IsShopUnlocked(shopDef, progress))
             {
                 string capturedNpcId = npcId;
                 string capturedDisplayName = displayName;
@@ -272,6 +272,15 @@ namespace View
             for (int i = 0; i < state.Npcs.Count; i++)
                 if (state.Npcs[i].NpcId == npcId) return state.Npcs[i];
             return null;
+        }
+
+        // A shop with no RequiredQuestId is always open; otherwise the Trade option
+        // stays hidden until that quest is Completed.
+        static bool IsShopUnlocked(ShopDefinitionAsset shopDef, QuestProgressState progress)
+        {
+            if (string.IsNullOrEmpty(shopDef.RequiredQuestId)) return true;
+            return progress != null
+                   && progress.GetStatus(shopDef.RequiredQuestId) == QuestStatus.Completed;
         }
 
         // ShopDefinitionAsset lookup. Cached per-NpcId so repeated dialogue opens

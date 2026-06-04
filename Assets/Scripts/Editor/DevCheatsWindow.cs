@@ -682,20 +682,47 @@ namespace Editor
 
             using (new EditorGUI.DisabledScope(!appReady))
             {
+                // Pick from currently-active quests so designers don't have to know /
+                // paste raw ids. The text field below stays as a fallback for quests
+                // that aren't active yet (or ids typed by hand).
+                if (appReady)
+                {
+                    var db = App.Instance.QuestDatabase;
+                    var activeIds = new List<string>();
+                    var activeLabels = new List<string>();
+                    foreach (var kvp in App.Instance.Player.QuestProgress.All)
+                    {
+                        if (kvp.Value.Status != State.QuestStatus.Active) continue;
+                        string name = db != null && db.TryGet(kvp.Key, out var e) && e.Quest != null
+                            ? e.Quest.DisplayName : null;
+                        activeIds.Add(kvp.Key);
+                        activeLabels.Add(string.IsNullOrEmpty(name) ? kvp.Key : $"{name} ({kvp.Key})");
+                    }
+
+                    if (activeIds.Count > 0)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        int sel = Mathf.Clamp(activeIds.IndexOf(_questIdInput), 0, activeIds.Count - 1);
+                        int newSel = EditorGUILayout.Popup("Active Quest", sel, activeLabels.ToArray());
+                        _questIdInput = activeIds[newSel];
+
+                        if (GUILayout.Button("Fulfill", GUILayout.Width(80)))
+                            FulfillQuest(_questIdInput);
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("No active quests.", EditorStyles.miniLabel);
+                    }
+                }
+
                 EditorGUILayout.BeginHorizontal();
                 _questIdInput = EditorGUILayout.TextField("Quest ID", _questIdInput);
 
                 if (GUILayout.Button("Fulfill", GUILayout.Width(80)))
                 {
                     if (appReady && !string.IsNullOrEmpty(_questIdInput))
-                    {
-                        var player = App.Instance.Player;
-                        var db = App.Instance.QuestDatabase;
-                        if (QuestSystem.TryFulfillTasks(player.QuestProgress, db, _questIdInput))
-                            Debug.Log($"[DevCheats] Fulfilled all tasks for quest '{_questIdInput}'. Claim reward at NPC.");
-                        else
-                            Debug.LogWarning($"[DevCheats] Quest '{_questIdInput}' is not active.");
-                    }
+                        FulfillQuest(_questIdInput);
                 }
                 EditorGUILayout.EndHorizontal();
 
@@ -717,6 +744,16 @@ namespace Editor
                 EditorGUILayout.HelpBox("Enter Play Mode to use quest cheats.", MessageType.Info);
 
             EditorGUI.indentLevel--;
+        }
+
+        static void FulfillQuest(string questId)
+        {
+            var player = App.Instance.Player;
+            var db = App.Instance.QuestDatabase;
+            if (QuestSystem.TryFulfillTasks(player.QuestProgress, db, questId))
+                Debug.Log($"[DevCheats] Fulfilled all tasks for quest '{questId}'. Claim reward at NPC.");
+            else
+                Debug.LogWarning($"[DevCheats] Quest '{questId}' is not active.");
         }
 
         // ── Asset creation helpers ─────────────────────────────

@@ -30,6 +30,9 @@ namespace Constants
         [Tooltip("Must match NpcState.NpcId of the vendor that owns this shop.")]
         public string OwnerNpcId;
 
+        [Tooltip("If set, the Trade option stays hidden until this quest is Completed. Leave empty for an always-open shop.")]
+        public string RequiredQuestId;
+
         [Header("Stock")]
         public StockEntry[] Stock;
 
