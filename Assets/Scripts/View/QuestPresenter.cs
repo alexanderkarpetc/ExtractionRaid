@@ -2,7 +2,6 @@ using ApplicationCore;
 using State;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using View.UI;
 using View.UI.Quests;
 
 namespace View
@@ -10,13 +9,13 @@ namespace View
     /// <summary>
     /// Handles the journal hotkey (Key.I) and keeps PlayerEntityState.IsQuestLogOpen
     /// in sync with the actual popup state. NPC-driven popup opening lives in
-    /// <see cref="NpcDialoguePresenter"/>.
+    /// <see cref="NpcDialoguePresenter"/>. Drives the UI Toolkit
+    /// <see cref="QuestsWindow"/> (the legacy uGUI QuestsPopupView is retired).
     /// </summary>
     public class QuestPresenter : MonoBehaviour
     {
-        PopupManager _popupManager;
-        QuestsPopupView _questsPopupView;
-        bool _triedFind;
+        QuestsWindow _window;
+        bool _subscribed;
 
         void Update()
         {
@@ -24,45 +23,42 @@ namespace View
             var player = session?.RaidState?.PlayerEntity;
 
             if (player == null) return;
+            if (!EnsureWindow()) return;
 
-            bool popupOpen = HasPopup() && _popupManager.IsOpen(_questsPopupView);
+            bool popupOpen = _window.IsOpen;
 
             var kb = Keyboard.current;
             if (kb != null && kb[Key.I].wasPressedThisFrame)
             {
                 if (popupOpen)
-                    _questsPopupView.RequestClose();
-                else if (!player.IsInMenu && HasPopup())
-                {
-                    _popupManager.Open(_questsPopupView);
-                    _questsPopupView.OpenJournal();
-                }
+                    _window.RequestClose();
+                else if (!player.IsInMenu)
+                    _window.OpenJournal();
             }
 
-            popupOpen = HasPopup() && _popupManager.IsOpen(_questsPopupView);
+            popupOpen = _window.IsOpen;
             player.IsQuestLogOpen = popupOpen;
 
             if (popupOpen)
                 App.Instance.SetGameplayInputBlocked(true);
         }
 
-        bool HasPopup()
+        bool EnsureWindow()
         {
-            if (!_triedFind)
+            if (!_subscribed)
             {
-                _triedFind = true;
-                _popupManager = FindObjectOfType<PopupManager>(includeInactive: true);
-                _questsPopupView = FindObjectOfType<QuestsPopupView>(includeInactive: true);
-
-                if (_questsPopupView != null)
-                    _questsPopupView.Closed += OnPopupClosed;
+                _window = QuestsWindow.Instance;
+                if (_window != null)
+                {
+                    _window.Closed += OnPopupClosed;
+                    _subscribed = true;
+                }
             }
-            return _popupManager != null && _questsPopupView != null;
+            return _window != null;
         }
 
         void OnPopupClosed()
         {
-            _popupManager?.Close();
             var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             if (player != null)
             {
@@ -77,8 +73,8 @@ namespace View
 
         void OnDestroy()
         {
-            if (_questsPopupView != null)
-                _questsPopupView.Closed -= OnPopupClosed;
+            if (_window != null)
+                _window.Closed -= OnPopupClosed;
         }
     }
 }

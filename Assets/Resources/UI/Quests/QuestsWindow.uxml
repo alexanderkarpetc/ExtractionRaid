@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!-- Stylesheet is also attached in code (QuestsWindow.BuildDocument) as a
+         fallback in case this src reference fails to resolve on import. -->
+    <Style src="QuestsWindow.uss"/>
+    <ui:VisualElement name="root" class="qp-root" picking-mode="Ignore">
+        <ui:VisualElement name="overlay" class="qp-overlay">
+            <ui:VisualElement name="popup" class="qp-popup">
+
+                <ui:VisualElement name="header" class="qp-header">
+                    <ui:VisualElement class="qp-header-top">
+                        <ui:VisualElement class="qp-title-area">
+                            <ui:Label name="title" text="Quests" class="qp-title"/>
+                            <ui:VisualElement name="npcPill" class="qp-npc-pill">
+                                <ui:VisualElement class="qp-npc-avatar"/>
+                                <ui:Label name="npcPillName" text="NPC" class="qp-npc-pill-name"/>
+                                <ui:Label text="Quest Giver" class="qp-npc-pill-role"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:Button name="closeBtn" text="✕" class="qp-close"/>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="tabs" class="qp-tabs"/>
+                </ui:VisualElement>
+
+                <ui:ScrollView name="body" class="qp-body"/>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

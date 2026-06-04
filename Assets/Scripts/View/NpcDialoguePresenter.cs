@@ -15,15 +15,14 @@ namespace View
     /// Bridges NPC interaction state (player.NpcTargetId) to the UI Toolkit
     /// dialogue window. Drives the dialogue flow:
     ///   * NpcTargetId set     → show dialogue with the NPC's choices
-    ///   * "Open Quests"       → hand control to QuestsPopupView for that NPC
+    ///   * "Open Quests"       → hand control to QuestsWindow for that NPC
     ///   * QuestsPopup closed  → return to dialogue (NPC still targeted)
     ///   * "Exit" / NpcTargetId cleared → hide dialogue
     /// </summary>
     public class NpcDialoguePresenter : MonoBehaviour
     {
         NpcDialogueWindow _window;
-        PopupManager _popupManager;
-        QuestsPopupView _questsPopupView;
+        QuestsWindow _questsWindow;
         bool _triedFind;
 
         EId _lastNpcTargetId = EId.None;
@@ -81,11 +80,10 @@ namespace View
 
             _window = NpcDialogueWindow.Instance
                       ?? FindObjectOfType<NpcDialogueWindow>(includeInactive: true);
-            _popupManager = FindObjectOfType<PopupManager>(includeInactive: true);
-            _questsPopupView = FindObjectOfType<QuestsPopupView>(includeInactive: true);
+            _questsWindow = QuestsWindow.Instance;
 
-            if (_questsPopupView != null)
-                _questsPopupView.Closed += OnQuestsPopupClosed;
+            if (_questsWindow != null)
+                _questsWindow.Closed += OnQuestsPopupClosed;
 
             return _window != null;
         }
@@ -209,12 +207,11 @@ namespace View
 
         void OpenQuests(string npcId, string displayName)
         {
-            if (_popupManager == null || _questsPopupView == null) return;
+            if (_questsWindow == null) return;
 
             _expectingQuestPopupReturn = true;
             _window.Hide();
-            _popupManager.Open(_questsPopupView);
-            _questsPopupView.OpenForNpc(npcId, displayName);
+            _questsWindow.OpenForNpc(npcId, displayName);
         }
 
         void OnQuestsPopupClosed()
@@ -241,8 +238,8 @@ namespace View
         {
             _expectingQuestPopupReturn = false;
             if (_window != null) _window.Hide();
-            if (_popupManager != null && _questsPopupView != null && _popupManager.IsOpen(_questsPopupView))
-                _popupManager.Close();
+            if (_questsWindow != null && _questsWindow.IsOpen)
+                _questsWindow.RequestClose();
 
             // Despawn the active shop (if any). Shop stock is per-trade-session — next
             // dialogue opens a freshly rolled shop.
@@ -323,8 +320,8 @@ namespace View
 
         void OnDestroy()
         {
-            if (_questsPopupView != null)
-                _questsPopupView.Closed -= OnQuestsPopupClosed;
+            if (_questsWindow != null)
+                _questsWindow.Closed -= OnQuestsPopupClosed;
         }
     }
 }

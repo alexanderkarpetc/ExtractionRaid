@@ -49,6 +49,13 @@ namespace ApplicationCore
             dialogueHost.transform.SetParent(transform, false);
             dialogueHost.AddComponent<NpcDialogueWindow>();
 
+            // Quests modal — UI Toolkit replacement for the legacy uGUI QuestsPopupView.
+            // Hidden by default; opened by QuestPresenter (journal, Key.I) or
+            // NpcDialoguePresenter ("Open Quests" choice). Own UIDocument host.
+            var questsWindowHost = new GameObject("QuestsWindow");
+            questsWindowHost.transform.SetParent(transform, false);
+            questsWindowHost.AddComponent<View.UI.Quests.QuestsWindow>();
+
             // End-of-raid result screen — separate UIDocument host (own panel settings,
             // own sort order so it lands above HUD overlays).
             gameObject.AddComponent<EndOfRaidPresenter>();
