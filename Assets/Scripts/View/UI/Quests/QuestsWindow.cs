@@ -87,6 +87,15 @@ namespace View.UI.Quests
                 return;
             }
 
+            // Re-apply scale config in code — Unity caches PanelSettings asset
+            // edits unreliably across domain reloads, so the asset's scale fields
+            // can be ignored (popup renders tiny on high-DPI / 4K displays).
+            // Mirrors InventoryWindow / docs/ai/ui-styling.md.
+            panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+            panel.referenceResolution = new Vector2Int(1920, 1080);
+            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panel.match = 0.5f;
+
             _doc = GetComponent<UIDocument>();
             _doc.panelSettings = panel;
             _doc.visualTreeAsset = tree;
