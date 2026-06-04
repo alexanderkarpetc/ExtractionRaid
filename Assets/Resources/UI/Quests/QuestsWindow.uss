@@ -1,7 +1,9 @@
 /* Quest popup — UI Toolkit port of Assets/Concepts/quest-ui-popup.html.
  * Self-contained colours (no token dependency) so the visual matches the
  * concept exactly; mirrors the approach in UI/Dialogue/NpcDialogue.uss.
- * (rev2 — re-saved to force a clean reimport after metas were generated.) */
+ * Sizes are tuned for the 1920x1080 reference resolution (PanelSettings
+ * ScaleWithScreenSize) — roughly 1.5x the concept's browser-window values so
+ * text stays readable, matching the project's font tokens (18-26px). */
 
 .qp-root {
     flex-grow: 1;
@@ -19,25 +21,25 @@
 
 /* ── Popup window ────────────────────────────────────── */
 .qp-popup {
-    width: 820px;
+    width: 1180px;
     max-width: 96%;
-    max-height: 86%;
+    max-height: 88%;
     background-color: rgba(10, 13, 20, 0.98);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
     flex-direction: column;
 }
 
 /* ── Header ──────────────────────────────────────────── */
 .qp-header {
-    padding-top: 18px;
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-top: 24px;
+    padding-left: 30px;
+    padding-right: 30px;
     border-bottom-width: 1px;
     border-bottom-color: rgb(26, 32, 48);
 }
@@ -46,7 +48,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 
 .qp-title-area {
@@ -55,9 +57,9 @@
 }
 
 .qp-title {
-    font-size: 16px;
+    font-size: 26px;
     -unity-font-style: bold;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     color: rgb(255, 255, 255);
 }
 
@@ -65,25 +67,25 @@
 .qp-npc-pill {
     flex-direction: row;
     align-items: center;
-    margin-left: 14px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 7px;
-    padding-right: 10px;
+    margin-left: 20px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 10px;
+    padding-right: 14px;
     background-color: rgb(22, 27, 40);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgb(36, 46, 66);
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .qp-npc-avatar {
-    width: 24px;
-    height: 24px;
-    margin-right: 8px;
-    border-radius: 5px;
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    border-radius: 6px;
     background-color: rgb(28, 34, 53);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -93,30 +95,30 @@
 }
 
 .qp-npc-pill-name {
-    font-size: 12px;
+    font-size: 16px;
     -unity-font-style: bold;
     color: rgb(224, 228, 236);
 }
 
 .qp-npc-pill-role {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1px;
-    margin-left: 8px;
+    margin-left: 10px;
     color: rgb(136, 146, 166);
 }
 
 .qp-close {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     background-color: rgb(22, 27, 40);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgb(36, 46, 66);
-    color: rgb(136, 146, 166);
-    font-size: 13px;
+    color: rgb(176, 184, 200);
+    font-size: 20px;
 }
 
 .qp-close:hover {
@@ -130,20 +132,20 @@
 }
 
 .qp-tab {
-    padding-top: 9px;
-    padding-bottom: 10px;
-    padding-left: 22px;
-    padding-right: 22px;
+    padding-top: 12px;
+    padding-bottom: 13px;
+    padding-left: 28px;
+    padding-right: 28px;
     margin-left: 0;
-    margin-right: 2px;
+    margin-right: 4px;
     background-color: rgba(0, 0, 0, 0);
     border-left-width: 0;
     border-right-width: 0;
     border-top-width: 0;
-    border-bottom-width: 2px;
+    border-bottom-width: 3px;
     border-bottom-color: rgba(0, 0, 0, 0);
     border-radius: 0;
-    font-size: 11px;
+    font-size: 15px;
     letter-spacing: 1px;
     color: rgb(136, 146, 166);
 }
@@ -160,22 +162,22 @@
 /* ── Body (scroll) ───────────────────────────────────── */
 .qp-body {
     flex-grow: 1;
-    padding-top: 18px;
-    padding-left: 22px;
-    padding-right: 22px;
-    padding-bottom: 22px;
+    padding-top: 22px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 28px;
 }
 
 /* ── Quest card ──────────────────────────────────────── */
 .qp-card {
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     background-color: rgb(17, 21, 32);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgb(36, 46, 66);
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -187,10 +189,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding-top: 11px;
-    padding-bottom: 10px;
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-top: 15px;
+    padding-bottom: 14px;
+    padding-left: 18px;
+    padding-right: 18px;
 }
 
 .qp-card--open .qp-card-hdr {
@@ -209,10 +211,10 @@
 }
 
 .qp-icon {
-    width: 28px;
-    height: 28px;
-    margin-right: 10px;
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    margin-right: 14px;
+    border-radius: 8px;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -235,20 +237,20 @@
 }
 
 .qp-name {
-    font-size: 13px;
+    font-size: 19px;
     -unity-font-style: bold;
     color: rgb(255, 255, 255);
 }
 
 .qp-badge {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1px;
-    margin-left: 8px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 8px;
-    padding-right: 8px;
-    border-radius: 4px;
+    margin-left: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -274,38 +276,38 @@
 }
 
 .qp-chevron {
-    margin-left: 8px;
-    font-size: 10px;
+    margin-left: 12px;
+    font-size: 15px;
     color: rgb(136, 146, 166);
 }
 
 .qp-npc-tag {
     flex-direction: row;
     align-items: center;
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1px;
     color: rgb(136, 146, 166);
 }
 
 .qp-npc-dot {
-    width: 5px;
-    height: 5px;
-    margin-right: 5px;
-    border-radius: 3px;
+    width: 7px;
+    height: 7px;
+    margin-right: 7px;
+    border-radius: 4px;
     background-color: rgba(74, 124, 255, 0.7);
 }
 
 /* ── Card body ───────────────────────────────────────── */
 .qp-card-body {
-    padding-top: 13px;
-    padding-bottom: 15px;
-    padding-left: 14px;
-    padding-right: 14px;
+    padding-top: 16px;
+    padding-bottom: 20px;
+    padding-left: 18px;
+    padding-right: 18px;
 }
 
 .qp-desc {
-    font-size: 12px;
-    margin-bottom: 10px;
+    font-size: 16px;
+    margin-bottom: 14px;
     color: rgb(176, 184, 200);
     white-space: normal;
 }
@@ -318,13 +320,13 @@
 .qp-obj-row {
     flex-direction: row;
     align-items: center;
-    margin-bottom: 5px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    padding-left: 10px;
-    padding-right: 10px;
+    margin-bottom: 7px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 13px;
+    padding-right: 13px;
     background-color: rgb(22, 27, 40);
-    border-radius: 5px;
+    border-radius: 7px;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -333,10 +335,10 @@
 }
 
 .qp-obj-check {
-    width: 14px;
-    height: 14px;
-    margin-right: 9px;
-    border-radius: 3px;
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    border-radius: 4px;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -351,7 +353,7 @@
 
 .qp-obj-text {
     flex-grow: 1;
-    font-size: 12px;
+    font-size: 16px;
     color: rgb(224, 228, 236);
     white-space: normal;
 }
@@ -361,8 +363,8 @@
 }
 
 .qp-obj-progress {
-    min-width: 30px;
-    font-size: 10px;
+    min-width: 42px;
+    font-size: 14px;
     -unity-text-align: middle-right;
     color: rgb(136, 146, 166);
 }
@@ -375,21 +377,21 @@
 .qp-progress-row {
     flex-direction: row;
     align-items: center;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 
 .qp-progress-track {
     flex-grow: 1;
-    height: 3px;
-    margin-right: 10px;
+    height: 5px;
+    margin-right: 14px;
     background-color: rgb(8, 10, 16);
-    border-radius: 2px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .qp-progress-fill {
     height: 100%;
-    border-radius: 2px;
+    border-radius: 3px;
     background-color: rgb(74, 124, 255);
 }
 
@@ -398,8 +400,8 @@
 }
 
 .qp-progress-label {
-    min-width: 32px;
-    font-size: 9px;
+    min-width: 44px;
+    font-size: 13px;
     -unity-text-align: middle-right;
     color: rgb(136, 146, 166);
 }
@@ -409,41 +411,41 @@
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 
 .qp-rewards-label {
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 1px;
-    margin-right: 8px;
+    margin-right: 12px;
     color: rgb(136, 146, 166);
 }
 
 .qp-reward-chip {
     flex-direction: row;
     align-items: center;
-    margin-right: 8px;
-    margin-bottom: 4px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    padding-left: 8px;
-    padding-right: 8px;
+    margin-right: 10px;
+    margin-bottom: 6px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 11px;
+    padding-right: 11px;
     background-color: rgb(22, 27, 40);
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgb(36, 46, 66);
-    border-radius: 5px;
-    font-size: 11px;
+    border-radius: 7px;
+    font-size: 15px;
     color: rgb(224, 228, 236);
 }
 
 .qp-reward-dot {
-    width: 6px;
-    height: 6px;
-    margin-right: 5px;
-    border-radius: 3px;
+    width: 8px;
+    height: 8px;
+    margin-right: 7px;
+    border-radius: 4px;
     background-color: rgb(212, 160, 23);
 }
 
@@ -451,17 +453,17 @@
 .qp-actions {
     flex-direction: row;
     justify-content: flex-end;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 
 .qp-btn {
-    margin-left: 8px;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    padding-left: 18px;
-    padding-right: 18px;
-    border-radius: 6px;
-    font-size: 10px;
+    margin-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 24px;
+    padding-right: 24px;
+    border-radius: 8px;
+    font-size: 15px;
     letter-spacing: 1px;
     border-left-width: 1px;
     border-right-width: 1px;
@@ -485,16 +487,16 @@
 .qp-empty {
     align-items: center;
     justify-content: center;
-    padding-top: 40px;
-    padding-bottom: 40px;
+    padding-top: 56px;
+    padding-bottom: 56px;
     opacity: 0.4;
 }
 
 .qp-empty-icon {
-    width: 32px;
-    height: 32px;
-    margin-bottom: 8px;
-    border-radius: 6px;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 12px;
+    border-radius: 8px;
     border-left-width: 1px;
     border-right-width: 1px;
     border-top-width: 1px;
@@ -503,7 +505,7 @@
 }
 
 .qp-empty-text {
-    font-size: 10px;
+    font-size: 14px;
     letter-spacing: 1px;
     color: rgb(136, 146, 166);
 }
