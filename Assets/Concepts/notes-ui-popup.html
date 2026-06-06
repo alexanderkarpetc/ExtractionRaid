@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes / Field Guide — Popup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-0: #080a10;
+    --bg-1: #0c0f17;
+    --bg-2: #111520;
+    --bg-3: #161b28;
+    --bg-4: #1c2235;
+    --border-0: #1a2030;
+    --border-1: #242e42;
+    --border-2: #2e3a52;
+    --text-0: #ffffff;
+    --text-1: #e0e4ec;
+    --text-2: #b0b8c8;
+    --text-3: #8892a6;
+    --accent: #4a7cff;
+    --accent-dim: rgba(74,124,255,0.15);
+    --green: #2ecc71;
+    --yellow: #d4a017;
+    --red: #e05040;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(circle at 18% 22%, rgba(74,124,255,0.10), transparent 34%),
+      radial-gradient(circle at 82% 16%, rgba(46,204,113,0.07), transparent 30%),
+      #0d1020;
+    color: var(--text-0);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── DEMO CONTROLS ── */
+  .demo-controls { display:flex; gap:12px; z-index:1; }
+  .demo-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+    padding: 9px 20px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--border-2); background: var(--bg-3); color: var(--text-2);
+    transition: all 0.12s;
+  }
+  .demo-btn:hover { border-color: var(--accent); color: var(--text-0); }
+  .hint { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.2px; color:var(--text-3); }
+
+  /* ── OVERLAY ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(4,6,12,0.72);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; opacity: 0; pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .overlay.visible { opacity: 1; pointer-events: all; }
+
+  /* ── POPUP ── */
+  .popup {
+    width: 940px;
+    max-width: calc(100vw - 40px);
+    height: 640px;
+    max-height: calc(100vh - 80px);
+    background: rgba(10,13,20,0.97);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,124,255,0.06);
+    transform: translateY(8px) scale(0.985); opacity: 0;
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), opacity 0.18s ease;
+  }
+  .overlay.visible .popup { transform: translateY(0) scale(1); opacity: 1; }
+
+  /* ── HEADER ── */
+  .popup-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-0);
+    flex-shrink: 0;
+  }
+  .hdr-left { display:flex; align-items:center; gap:12px; }
+  .popup-title { font-size: 15px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+  .hdr-count {
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px;
+    color: var(--text-3); padding: 3px 9px; border:1px solid var(--border-1);
+    border-radius: 999px; background: var(--bg-2);
+  }
+  .popup-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border-1); background: var(--bg-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-3); font-size: 13px;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .popup-close:hover { border-color: var(--border-2); color: var(--text-1); }
+
+  /* ── BODY: master / detail ── */
+  .popup-body { flex: 1; display: flex; min-height: 0; }
+
+  /* ── SIDEBAR (list) ── */
+  .sidebar {
+    width: 290px; flex-shrink: 0;
+    border-right: 1px solid var(--border-0);
+    display: flex; flex-direction: column;
+    background: rgba(8,10,16,0.4);
+  }
+  .search-wrap { padding: 14px 14px 8px; }
+  .search {
+    width: 100%;
+    background: var(--bg-2);
+    border: 1px solid var(--border-1);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text-1);
+    font-family: inherit; font-size: 13px;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .search::placeholder { color: var(--text-3); }
+  .search:focus { border-color: var(--accent); }
+
+  .list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+  .list::-webkit-scrollbar { width: 8px; }
+  .list::-webkit-scrollbar-thumb { background: rgba(74,124,255,0.28); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+  .list::-webkit-scrollbar-thumb:hover { background: rgba(74,124,255,0.5); background-clip: padding-box; }
+
+  .group-label {
+    font-family:'JetBrains Mono',monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); opacity: 0.85;
+    padding: 14px 10px 6px;
+  }
+
+  .note-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .note-item:hover { background: var(--bg-2); }
+  .note-item.active { background: var(--accent-dim); border-color: rgba(74,124,255,0.28); }
+
+  .note-ico {
+    width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--bg-3); border: 1px solid var(--border-1);
+    font-size: 13px;
+  }
+  .note-item.active .note-ico { border-color: rgba(74,124,255,0.4); background: rgba(74,124,255,0.12); }
+  .note-item-title { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-1); }
+  .note-item.active .note-item-title { color: #fff; }
+  .new-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px rgba(74,124,255,0.8); flex-shrink: 0; }
+  .note-item.read .new-dot { display: none; }
+
+  .list-empty {
+    padding: 30px 16px; text-align: center;
+    font-family:'JetBrains Mono',monospace; font-size: 10px; letter-spacing: 1.5px;
+    color: var(--text-3);
+  }
+
+  /* ── DETAIL ── */
+  .detail { flex: 1; overflow-y: auto; padding: 26px 30px 30px; min-width: 0; }
+  .detail::-webkit-scrollbar { width: 8px; }
+  .detail::-webkit-scrollbar-thumb { background: rgba(74,124,255,0.28); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+  .detail::-webkit-scrollbar-thumb:hover { background: rgba(74,124,255,0.5); background-clip: padding-box; }
+
+  .detail-kicker {
+    font-family:'JetBrains Mono',monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .kicker-chip {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,124,255,0.25);
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .detail-title { font-size: 26px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 18px; }
+
+  .detail-body p {
+    font-size: 15px; line-height: 1.6; color: var(--text-2);
+    margin-bottom: 14px;
+  }
+  .detail-body strong { color: var(--text-1); font-weight: 600; }
+  .detail-body .kbd {
+    font-family:'JetBrains Mono',monospace; font-size: 12px; font-weight: 600;
+    color: #dff1ff; background: var(--accent-dim);
+    border: 1px solid rgba(74,124,255,0.35); border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 7px; margin: 0 1px;
+  }
+
+  /* tip callout */
+  .callout {
+    display: flex; gap: 12px;
+    background: rgba(46,204,113,0.08);
+    border: 1px solid rgba(46,204,113,0.22);
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    padding: 13px 15px; margin: 4px 0 18px;
+  }
+  .callout.warn { background: rgba(224,80,64,0.08); border-color: rgba(224,80,64,0.22); border-left-color: var(--red); }
+  .callout-ico { font-size: 15px; flex-shrink: 0; line-height: 1.5; }
+  .callout-text { font-size: 13.5px; line-height: 1.5; color: var(--text-1); }
+  .callout-text b { color: #fff; }
+
+  .detail-divider { height: 1px; background: var(--border-0); margin: 6px 0 16px; }
+  .related-label {
+    font-family:'JetBrains Mono',monospace; font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
+  }
+  .related-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .related-chip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--bg-2); border: 1px solid var(--border-1);
+    border-radius: 6px; padding: 6px 11px 6px 8px; font-size: 13px; color: var(--text-1);
+  }
+  .related-chip .kbd {
+    font-family:'JetBrains Mono',monospace; font-size: 11px; font-weight: 700;
+    min-width: 22px; text-align:center; color: #dff1ff;
+    background: var(--accent-dim); border: 1px solid rgba(74,124,255,0.35); border-bottom-width: 2px;
+    border-radius: 5px; padding: 2px 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- DEMO CONTROLS -->
+<div class="demo-controls">
+  <div class="demo-btn" onclick="openNotes()">Open Field Notes (N)</div>
+</div>
+<div class="hint">Click a button or press N — Esc / N closes</div>
+
+<!-- ── OVERLAY ── -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="popup">
+
+    <!-- HEADER -->
+    <div class="popup-hdr">
+      <div class="hdr-left">
+        <div class="popup-title">Field Notes</div>
+        <div class="hdr-count" id="count">0 entries</div>
+      </div>
+      <div class="popup-close" onclick="closeNotes()">✕</div>
+    </div>
+
+    <!-- BODY -->
+    <div class="popup-body">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="search-wrap">
+          <input class="search" id="search" type="text" placeholder="Search notes…" oninput="renderList()">
+        </div>
+        <div class="list" id="list"></div>
+      </div>
+
+      <!-- DETAIL -->
+      <div class="detail" id="detail"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── NOTE DATA ──────────────────────────────────────────────────────────────
+// Tutorial explanations are stored here; the game would unlock/append entries
+// as the player encounters each system. `isNew` drives the unread dot.
+const NOTES = [
+  {
+    id: 'welcome', cat: 'Basics', icon: '◈', title: 'Welcome to the Raid', isNew: false,
+    body: `<p>You drop into a hostile zone with whatever gear you brought. Your goal is simple to say and hard to do: <strong>get in, find what you came for, and reach an extraction point alive</strong>.</p>
+           <p>Anything you carry out is yours. Anything you leave behind — or die holding — is gone.</p>`,
+    callout: { kind: 'tip', text: `Take it slow on your first runs. A quiet extraction with a little loot beats a loud death with a full bag.` },
+    controls: [],
+  },
+  {
+    id: 'movement', cat: 'Basics', icon: '🏃', title: 'Moving & Dodging', isNew: false,
+    body: `<p>Use <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> to move and hold <span class="kbd">Shift</span> to sprint. Sprinting is faster but louder and drains stamina.</p>
+           <p>Tap <span class="kbd">Space</span> to <strong>dodge-roll</strong> — a short burst of movement with brief invulnerability. Use it to break line of sight or escape a grenade.</p>`,
+    callout: { kind: 'tip', text: `Rolling costs stamina. Don't empty the bar — you still need it to sprint away.` },
+    controls: [ {k:'WASD', d:'Move'}, {k:'Shift', d:'Sprint'}, {k:'Space', d:'Dodge'} ],
+  },
+  {
+    id: 'extraction', cat: 'Basics', icon: '⛿', title: 'Extraction', isNew: true,
+    body: `<p>Extraction points are marked on your map. Reach one and hold position to start the <strong>extraction timer</strong> — stay inside the zone until it completes.</p>
+           <p>Extracts can be contested. Expect company at the obvious ones.</p>`,
+    callout: { kind: 'warn', text: `Leaving the zone <b>resets the timer</b>. Don't wander off to grab one more crate.` },
+    controls: [ {k:'M', d:'Open map'} ],
+  },
+  {
+    id: 'looting', cat: 'Combat & Gear', icon: '🎒', title: 'Looting & Inventory', isNew: false,
+    body: `<p>Open your inventory with <span class="kbd">Tab</span>. Nearby containers, corpses and floor items appear as side panels you can drag from.</p>
+           <p>Hover an item and press <span class="kbd">F</span> to grab it fast, or drag it into a free backpack slot. Space is limited — prioritise.</p>`,
+    callout: { kind: 'tip', text: `Right-click an item for context actions — drop, stash, sell, or bind to a quick slot.` },
+    controls: [ {k:'Tab', d:'Inventory'}, {k:'F', d:'Pick up'} ],
+  },
+  {
+    id: 'quickslots', cat: 'Combat & Gear', icon: '⚡', title: 'Quick Slots', isNew: false,
+    body: `<p>Consumables like medkits and bandages can be bound to keys <span class="kbd">3</span>–<span class="kbd">9</span> for instant use mid-fight.</p>
+           <p>While the inventory is open, hover a consumable and press a number key to bind it — or right-click → <strong>Bind to N</strong>. Weapons live on <span class="kbd">1</span> and <span class="kbd">2</span>.</p>`,
+    callout: { kind: 'tip', text: `Bind a medkit before you need it. Fumbling through the bag while bleeding gets you killed.` },
+    controls: [ {k:'1 2', d:'Weapons'}, {k:'3–9', d:'Quick slots'} ],
+  },
+  {
+    id: 'combat', cat: 'Combat & Gear', icon: '🎯', title: 'Shooting & Reloading', isNew: false,
+    body: `<p>Aim with the mouse, fire with <span class="kbd">LMB</span>, hold <span class="kbd">RMB</span> to steady your aim. Reload with <span class="kbd">R</span> and throw a grenade with <span class="kbd">G</span>.</p>
+           <p>Armour soaks hits but degrades. Headshots bypass body armour entirely.</p>`,
+    callout: { kind: 'warn', text: `Reloading with rounds in the mag keeps the leftovers but uses a fresh magazine — watch your ammo economy.` },
+    controls: [ {k:'LMB', d:'Fire'}, {k:'RMB', d:'Aim'}, {k:'R', d:'Reload'}, {k:'G', d:'Grenade'} ],
+  },
+  {
+    id: 'armor', cat: 'Combat & Gear', icon: '🛡', title: 'Armour & Medical', isNew: false,
+    body: `<p>Equip a <strong>helmet</strong> and <strong>body armour</strong> from the equipment row. Each has its own durability and protection class.</p>
+           <p>Use a <strong>bandage</strong> to stop bleeding and a <strong>medkit</strong> to restore health. Heavier meds heal more but take longer to apply.</p>`,
+    callout: { kind: 'tip', text: `You can't apply most meds while sprinting or taking fire. Break contact first.` },
+    controls: [],
+  },
+  {
+    id: 'stash', cat: 'Hideout & Economy', icon: '📦', title: 'The Stash', isNew: false,
+    body: `<p>Your <strong>stash</strong> in the hideout is permanent storage — anything placed there survives between raids, even if you die on the next run.</p>
+           <p>Bring gear home and deposit it to keep it safe. Treat the stash as your long-term progress.</p>`,
+    callout: { kind: 'tip', text: `Stash your best loot before risky runs. Only take in what you're willing to lose.` },
+    controls: [],
+  },
+  {
+    id: 'quests', cat: 'Hideout & Economy', icon: '✦', title: 'Quests & Traders', isNew: true,
+    body: `<p>NPCs offer <strong>quests</strong> — kill targets, find items, reach places, or sell goods. Press <span class="kbd">I</span> to open your quest journal at any time.</p>
+           <p>Hand in completed objectives at the giving NPC to claim rewards. Some NPCs only open their <strong>shop</strong> after you finish a specific quest.</p>`,
+    callout: { kind: 'tip', text: `Carry quest items in your bag — you hand them over directly in the NPC dialogue.` },
+    controls: [ {k:'I', d:'Quests'} ],
+  },
+  {
+    id: 'weapons', cat: 'Hideout & Economy', icon: '🔧', title: 'Weapon Building', isNew: false,
+    body: `<p>At the workbench you assemble weapons from a <strong>payload</strong> (the round/effect) and a <strong>delivery</strong> (the form factor). Combinations change range, spread, and damage type.</p>
+           <p>Built weapons go to your inventory like any other gear — take them into a raid or stash them.</p>`,
+    callout: { kind: 'tip', text: `Some quests ask for a weapon built from specific parts. Check the objective before you commit a build.` },
+    controls: [ {k:'E', d:'Use workbench'} ],
+  },
+];
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+const overlay = document.getElementById('overlay');
+const listEl = document.getElementById('list');
+const detailEl = document.getElementById('detail');
+const searchEl = document.getElementById('search');
+const countEl = document.getElementById('count');
+
+let activeId = NOTES[0].id;
+
+function updateCount() {
+  const unread = NOTES.filter(n => n.isNew).length;
+  countEl.textContent = unread > 0 ? `${NOTES.length} entries · ${unread} new` : `${NOTES.length} entries`;
+}
+
+function renderList() {
+  const q = searchEl.value.trim().toLowerCase();
+  const matches = NOTES.filter(n =>
+    !q || n.title.toLowerCase().includes(q) || n.cat.toLowerCase().includes(q));
+
+  listEl.innerHTML = '';
+  if (matches.length === 0) {
+    listEl.innerHTML = `<div class="list-empty">No notes match "${searchEl.value}"</div>`;
+    return;
+  }
+
+  // group by category, preserving first-seen order
+  const cats = [];
+  matches.forEach(n => { if (!cats.includes(n.cat)) cats.push(n.cat); });
+
+  cats.forEach(cat => {
+    const label = document.createElement('div');
+    label.className = 'group-label';
+    label.textContent = cat;
+    listEl.appendChild(label);
+
+    matches.filter(n => n.cat === cat).forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'note-item' + (n.id === activeId ? ' active' : '') + (n.isNew ? '' : ' read');
+      item.innerHTML =
+        `<div class="note-ico">${n.icon}</div>` +
+        `<div class="note-item-title">${n.title}</div>` +
+        `<div class="new-dot"></div>`;
+      item.addEventListener('click', () => selectNote(n.id));
+      listEl.appendChild(item);
+    });
+  });
+}
+
+function selectNote(id) {
+  activeId = id;
+  const note = NOTES.find(n => n.id === id);
+  if (note) note.isNew = false; // reading clears the unread dot
+  renderList();
+  renderDetail(note);
+  updateCount();
+}
+
+function renderDetail(note) {
+  if (!note) { detailEl.innerHTML = ''; return; }
+
+  let html =
+    `<div class="detail-kicker"><span class="kicker-chip">${note.cat}</span></div>` +
+    `<div class="detail-title">${note.title}</div>` +
+    `<div class="detail-body">${note.body}`;
+
+  if (note.callout) {
+    const warn = note.callout.kind === 'warn';
+    html += `<div class="callout${warn ? ' warn' : ''}">` +
+            `<div class="callout-ico">${warn ? '⚠' : '💡'}</div>` +
+            `<div class="callout-text">${note.callout.text}</div></div>`;
+  }
+  html += `</div>`;
+
+  if (note.controls && note.controls.length) {
+    html += `<div class="detail-divider"></div>` +
+            `<div class="related-label">Related controls</div>` +
+            `<div class="related-row">` +
+            note.controls.map(c => `<div class="related-chip"><span class="kbd">${c.k}</span>${c.d}</div>`).join('') +
+            `</div>`;
+  }
+
+  detailEl.innerHTML = html;
+  detailEl.scrollTop = 0;
+}
+
+// ─── OPEN / CLOSE ─────────────────────────────────────────────────────────────
+function openNotes() {
+  renderList();
+  renderDetail(NOTES.find(n => n.id === activeId));
+  updateCount();
+  overlay.classList.add('visible');
+}
+function closeNotes() { overlay.classList.remove('visible'); }
+function handleOverlayClick(e) { if (e.target === overlay) closeNotes(); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeNotes();
+  if (e.key === 'n' || e.key === 'N') {
+    if (overlay.classList.contains('visible')) closeNotes();
+    else openNotes();
+  }
+});
+
+updateCount();
+</script>
+</body>
+</html>
