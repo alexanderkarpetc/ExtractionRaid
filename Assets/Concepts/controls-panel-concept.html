@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controls Panel Concept</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(18, 24, 42, 0.92);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --accent: #87e6ff;
+      --accent-dim: rgba(135, 230, 255, 0.18);
+      --text: #eef4ff;
+      --muted: #9fb0d0;
+      --row-hover: rgba(255, 255, 255, 0.05);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(80, 120, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 80% 30%, rgba(0, 220, 180, 0.12), transparent 24%),
+        linear-gradient(180deg, #10182f 0%, #0a0d18 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: 24px;
+    }
+
+    .world-hint {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 13px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* ── Top-right anchor ─────────────────────────────── */
+    .controls-anchor {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    /* Collapsed pill — always visible */
+    .controls-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px 9px 14px;
+      border-radius: 999px;
+      background: rgba(17, 22, 38, 0.88);
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      user-select: none;
+    }
+
+    .controls-toggle:hover {
+      transform: translateY(-1px);
+      border-color: rgba(135, 230, 255, 0.4);
+      background: rgba(28, 35, 58, 0.96);
+    }
+
+    .controls-toggle .label-text { color: var(--muted); }
+    .controls-toggle:hover .label-text { color: var(--text); }
+
+    /* Key cap */
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      border-radius: 7px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(135, 230, 255, 0.35);
+      border-bottom-width: 2px;
+      color: #dff9ff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    /* ── Expanded panel ───────────────────────────────── */
+    .controls-panel {
+      width: 360px;
+      max-width: calc(100vw - 48px);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      position: relative;
+
+      /* collapsed state */
+      transform-origin: top right;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .controls-anchor.open .controls-panel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .controls-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 30%);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .panel-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .panel-title .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(135, 230, 255, 0.7);
+    }
+
+    .panel-close {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s ease;
+    }
+    .panel-close:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+    .panel-body {
+      padding: 8px 10px 12px;
+      max-height: min(70vh, 560px);
+      overflow-y: auto;
+    }
+
+    .group-label {
+      padding: 12px 8px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0.85;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 9px 10px;
+      border-radius: 12px;
+    }
+    .row:hover { background: var(--row-hover); }
+
+    .row .desc {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .row .keys {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex: 0 0 auto;
+    }
+
+    .keys .sep {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 1px;
+    }
+
+    .hint-foot {
+      padding: 10px 16px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="world-hint">Controls panel concept — top-down extraction raid</div>
+
+    <div class="controls-anchor" id="anchor">
+      <!-- Collapsed pill (always visible) -->
+      <button class="controls-toggle" id="toggle" aria-expanded="false">
+        <span class="kbd">O</span>
+        <span class="label-text">Controls</span>
+      </button>
+
+      <!-- Expanded panel -->
+      <div class="controls-panel" id="panel" role="dialog" aria-label="Controls">
+        <div class="panel-header">
+          <span class="panel-title"><span class="dot"></span>Controls</span>
+          <button class="panel-close" id="close" aria-label="Close">✕</button>
+        </div>
+
+        <div class="panel-body" id="body">
+          <!-- groups injected by script -->
+        </div>
+
+        <div class="hint-foot">
+          <span class="kbd">O</span>
+          <span>or</span>
+          <span class="kbd">Esc</span>
+          <span>— close this panel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Real bindings pulled from UnityInputAdapter / presenters.
+    const GROUPS = [
+      {
+        title: 'Movement',
+        rows: [
+          { desc: 'Move',          keys: ['W', 'A', 'S', 'D'] },
+          { desc: 'Sprint',        keys: ['Shift'] },
+          { desc: 'Dodge / Roll',  keys: ['Space'] },
+        ],
+      },
+      {
+        title: 'Combat',
+        rows: [
+          { desc: 'Fire',          keys: ['LMB'] },
+          { desc: 'Aim',           keys: ['RMB'] },
+          { desc: 'Reload',        keys: ['R'] },
+          { desc: 'Throw grenade', keys: ['G'] },
+        ],
+      },
+      {
+        title: 'Items',
+        rows: [
+          { desc: 'Weapon slots',  keys: ['1', '2'] },
+          { desc: 'Quick slots',   keys: ['3', '…', '9'] },
+          { desc: 'Pick up / loot', keys: ['F'] },
+          { desc: 'Interact',      keys: ['E'] },
+        ],
+      },
+      {
+        title: 'Interface',
+        rows: [
+          { desc: 'Inventory',     keys: ['Tab'] },
+          { desc: 'Quests',        keys: ['I'] },
+          { desc: 'Map (hold)',    keys: ['M'] },
+          { desc: 'Controls',      keys: ['O'] },
+        ],
+      },
+    ];
+
+    const body = document.getElementById('body');
+
+    function renderKeys(keys) {
+      return keys
+        .map((k) => (k === '…' ? `<span class="sep">…</span>` : `<span class="kbd">${k}</span>`))
+        .join('<span class="sep">/</span>')
+        // collapse the "…" so it reads 3 … 9 rather than 3 / … / 9
+        .replace(/<span class="sep">\/<\/span><span class="sep">…<\/span><span class="sep">\/<\/span>/g,
+                 '<span class="sep">…</span>');
+    }
+
+    GROUPS.forEach((g) => {
+      const label = document.createElement('div');
+      label.className = 'group-label';
+      label.textContent = g.title;
+      body.appendChild(label);
+
+      g.rows.forEach((r) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<span class="desc">${r.desc}</span><span class="keys">${renderKeys(r.keys)}</span>`;
+        body.appendChild(row);
+      });
+    });
+
+    // ── Toggle behaviour ──────────────────────────────
+    const anchor = document.getElementById('anchor');
+    const toggle = document.getElementById('toggle');
+    const closeBtn = document.getElementById('close');
+
+    function setOpen(open) {
+      anchor.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    toggle.addEventListener('click', () => setOpen(!anchor.classList.contains('open')));
+    closeBtn.addEventListener('click', () => setOpen(false));
+
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'o') {
+        e.preventDefault();
+        setOpen(!anchor.classList.contains('open'));
+      } else if (k === 'escape') {
+        setOpen(false);
+      }
+    });
+  </script>
+</body>
+</html>
