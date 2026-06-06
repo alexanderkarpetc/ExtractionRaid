@@ -211,6 +211,58 @@
     color: rgb(159, 176, 208);
 }
 
+/* ── Scrollbar (minimal, themed) ──────────────────────── */
+/* Unity's default ScrollView scroller is a wide track with up/down arrow
+   buttons and a chunky grey dragger. Strip it down to a thin rounded accent
+   thumb on a transparent track. */
+.co-body .unity-scroller--vertical {
+    width: 10px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+}
+
+/* Drop the up/down arrow buttons entirely. */
+.co-body .unity-scroller--vertical .unity-scroller__low-button,
+.co-body .unity-scroller--vertical .unity-scroller__high-button {
+    display: none;
+}
+
+/* The slider fills the full height now that the buttons are gone. */
+.co-body .unity-scroller--vertical .unity-base-slider--vertical {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Transparent track. */
+.co-body .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+/* Rounded accent thumb. */
+.co-body .unity-scroller--vertical #unity-dragger {
+    width: 6px;
+    min-height: 36px;
+    border-radius: 3px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+    background-color: rgba(135, 230, 255, 0.28);
+}
+
+.co-body .unity-scroller--vertical #unity-dragger:hover {
+    background-color: rgba(135, 230, 255, 0.5);
+}
+
 /* ── Footer hint ──────────────────────────────────────── */
 .co-foot {
     flex-direction: row;

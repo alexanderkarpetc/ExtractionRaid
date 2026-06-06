@@ -33,6 +33,13 @@ namespace View.UI.Controls
 
         bool _open;
 
+        // ── Drag-to-scroll state ──
+        const float DragThreshold = 4f;
+        int _scrollPointerId = -1;
+        float _dragStartY;
+        float _dragStartOffsetY;
+        bool _scrollDragging;
+
         // ── Keybinding data (mirrors UnityInputAdapter + presenters) ──
         readonly struct Binding
         {
@@ -155,6 +162,23 @@ namespace View.UI.Controls
             _panel    = _root.Q<VisualElement>("panel");
             _body     = _root.Q<ScrollView>("body");
 
+            if (_body != null)
+            {
+                // Never show a horizontal bar (content fits width); vertical only
+                // when the list overflows. The thin themed thumb is styled in USS.
+                _body.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+                _body.verticalScrollerVisibility = ScrollerVisibility.Auto;
+
+                // Grab-and-pull drag scrolling (UI Toolkit has no desktop drag-scroll
+                // by default). Registered on the content container so dragging the
+                // scrollbar thumb — which lives outside it — isn't intercepted.
+                var surface = _body.contentContainer;
+                surface.RegisterCallback<PointerDownEvent>(OnScrollPointerDown);
+                surface.RegisterCallback<PointerMoveEvent>(OnScrollPointerMove);
+                surface.RegisterCallback<PointerUpEvent>(OnScrollPointerUp);
+                surface.RegisterCallback<PointerCaptureOutEvent>(_ => EndScrollDrag());
+            }
+
             if (_toggle != null) _toggle.clicked += () => SetOpen(!_open);
             if (_closeBtn != null) _closeBtn.clicked += () => SetOpen(false);
 
@@ -218,6 +242,52 @@ namespace View.UI.Controls
             row.Add(keys);
 
             return row;
+        }
+
+        // ── Drag-to-scroll ────────────────────────────────────
+
+        void OnScrollPointerDown(PointerDownEvent evt)
+        {
+            if (evt.button != 0 || _body == null) return;
+            _scrollPointerId = evt.pointerId;
+            _dragStartY = evt.position.y;
+            _dragStartOffsetY = _body.scrollOffset.y;
+            _scrollDragging = false;
+            _body.contentContainer.CapturePointer(evt.pointerId);
+        }
+
+        void OnScrollPointerMove(PointerMoveEvent evt)
+        {
+            if (_scrollPointerId != evt.pointerId || _body == null) return;
+            if (!_body.contentContainer.HasPointerCapture(evt.pointerId)) return;
+
+            float dy = evt.position.y - _dragStartY;
+            if (!_scrollDragging)
+            {
+                if (Mathf.Abs(dy) < DragThreshold) return;
+                _scrollDragging = true;
+            }
+
+            // Clamp to the scrollable range so the drag can't over-scroll.
+            float max = Mathf.Max(0f,
+                _body.contentContainer.layout.height - _body.contentViewport.layout.height);
+            var off = _body.scrollOffset;
+            off.y = Mathf.Clamp(_dragStartOffsetY - dy, 0f, max);
+            _body.scrollOffset = off;
+        }
+
+        void OnScrollPointerUp(PointerUpEvent evt)
+        {
+            if (_scrollPointerId != evt.pointerId) return;
+            if (_body != null && _body.contentContainer.HasPointerCapture(evt.pointerId))
+                _body.contentContainer.ReleasePointer(evt.pointerId);
+            EndScrollDrag();
+        }
+
+        void EndScrollDrag()
+        {
+            _scrollPointerId = -1;
+            _scrollDragging = false;
         }
 
         // ── Open / close ──────────────────────────────────────
