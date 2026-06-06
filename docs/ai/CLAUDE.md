@@ -125,6 +125,7 @@ Read extra docs depending on the task:
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`
 - Interactable outline/highlight and material-property tweening -> `docs/ai/interactable-highlight.md`
 - Armor system, penetration, durability, bleeding, feedback -> `docs/ai/battle-design-status.md`
+- Need a competitor/reference game (pick by attribute, by UX/feel reputation, or by how much knowledge exists) -> `docs/ai/competitor-reference-db.md`
 - Armor research (competitor analysis) -> `docs/ai/armor-research.md`
 - Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`
 - UI Toolkit panel sizing / theme / sort order -> `docs/ai/ui-styling.md`
