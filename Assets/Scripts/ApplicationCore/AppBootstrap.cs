@@ -103,6 +103,13 @@ namespace ApplicationCore
             hotbarHost.transform.SetParent(transform, false);
             hotbarHost.AddComponent<HotbarOverlay>();
 
+            // Controls legend — top-right "[O] Controls" pill that expands into a
+            // keybinding list. Passive HUD; toggled by the O key (handled in the
+            // overlay itself). Own UIDocument host.
+            var controlsHost = new GameObject("ControlsOverlay");
+            controlsHost.transform.SetParent(transform, false);
+            controlsHost.AddComponent<View.UI.Controls.ControlsOverlay>();
+
             // Battle HUD overlay — UI Toolkit panel hosting status effect row (Stage 3+).
             // Replaces legacy IMGUI StatusEffectOverlay. Reuses TooltipController.ShowFromPanel
             // for hover tooltips. See docs/ai/gunplay/battle-hud.md.

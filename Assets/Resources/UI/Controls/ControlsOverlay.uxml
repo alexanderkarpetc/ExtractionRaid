@@ -1,0 +1,36 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!-- Stylesheet is also attached in code (ControlsOverlay.BuildDocument) as a
+         fallback in case this src reference fails to resolve on import. -->
+    <Style src="ControlsOverlay.uss"/>
+    <ui:VisualElement name="root" class="co-root" picking-mode="Ignore">
+        <ui:VisualElement name="anchor" class="co-anchor">
+
+            <!-- Collapsed pill — always visible -->
+            <ui:Button name="toggle" class="co-toggle">
+                <ui:Label text="O" class="co-kbd" picking-mode="Ignore"/>
+                <ui:Label text="Controls" class="co-toggle-label" picking-mode="Ignore"/>
+            </ui:Button>
+
+            <!-- Expanded panel -->
+            <ui:VisualElement name="panel" class="co-panel">
+                <ui:VisualElement class="co-panel-header">
+                    <ui:VisualElement class="co-title">
+                        <ui:VisualElement class="co-title-dot"/>
+                        <ui:Label text="Controls" class="co-title-text"/>
+                    </ui:VisualElement>
+                    <ui:Button name="closeBtn" text="✕" class="co-close"/>
+                </ui:VisualElement>
+
+                <ui:ScrollView name="body" class="co-body"/>
+
+                <ui:VisualElement class="co-foot">
+                    <ui:Label text="O" class="co-kbd co-kbd--sm"/>
+                    <ui:Label text="or" class="co-foot-text"/>
+                    <ui:Label text="Esc" class="co-kbd co-kbd--sm"/>
+                    <ui:Label text="— close" class="co-foot-text"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

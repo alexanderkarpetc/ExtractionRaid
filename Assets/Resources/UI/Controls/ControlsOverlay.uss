@@ -1,0 +1,231 @@
+/* Controls legend — UI Toolkit port of Assets/Concepts/controls-panel-concept.html.
+ * Self-contained colours (mirrors UI/Dialogue/NpcDialogue.uss). Sizes tuned for
+ * the 1920x1080 reference resolution (~1.5x the concept's browser values). */
+
+.co-root {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* ── Top-right anchor ─────────────────────────────────── */
+.co-anchor {
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    align-items: flex-end;
+}
+
+/* ── Collapsed pill ───────────────────────────────────── */
+.co-toggle {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 14px;
+    padding-right: 16px;
+    border-radius: 999px;
+    background-color: rgba(17, 22, 38, 0.88);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    margin-bottom: 12px;
+}
+
+.co-toggle:hover {
+    border-color: rgba(135, 230, 255, 0.4);
+    background-color: rgba(28, 35, 58, 0.96);
+}
+
+.co-toggle--active {
+    border-color: rgba(135, 230, 255, 0.5);
+    background-color: rgba(28, 35, 58, 0.96);
+}
+
+.co-toggle-label {
+    font-size: 16px;
+    margin-left: 10px;
+    color: rgb(159, 176, 208);
+}
+
+.co-toggle:hover .co-toggle-label,
+.co-toggle--active .co-toggle-label {
+    color: rgb(238, 244, 255);
+}
+
+/* ── Key cap ──────────────────────────────────────────── */
+.co-kbd {
+    min-width: 30px;
+    height: 30px;
+    padding-left: 9px;
+    padding-right: 9px;
+    border-radius: 8px;
+    background-color: rgba(135, 230, 255, 0.18);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 2px;
+    border-color: rgba(135, 230, 255, 0.35);
+    color: rgb(223, 249, 255);
+    font-size: 15px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.co-kbd--sm {
+    min-width: 24px;
+    height: 24px;
+    font-size: 12px;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+/* ── Expanded panel ───────────────────────────────────── */
+.co-panel {
+    width: 380px;
+    max-width: 92%;
+    background-color: rgba(18, 24, 42, 0.94);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    overflow: hidden;
+
+    opacity: 0;
+    scale: 0.97 0.97;
+    translate: 0 -8px;
+    transform-origin: top right;
+    transition-property: opacity, scale, translate;
+    transition-duration: 0.16s, 0.18s, 0.18s;
+    transition-timing-function: ease, ease-out, ease-out;
+}
+
+.co-anchor--open .co-panel {
+    opacity: 1;
+    scale: 1 1;
+    translate: 0 0;
+}
+
+.co-panel-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 18px;
+    padding-right: 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.co-title {
+    flex-direction: row;
+    align-items: center;
+}
+
+.co-title-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 5px;
+    margin-right: 11px;
+    background-color: rgb(135, 230, 255);
+}
+
+.co-title-text {
+    font-size: 15px;
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+    color: rgb(255, 255, 255);
+}
+
+.co-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgb(159, 176, 208);
+    font-size: 16px;
+}
+
+.co-close:hover {
+    color: rgb(238, 244, 255);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Body ─────────────────────────────────────────────── */
+.co-body {
+    padding-top: 8px;
+    padding-bottom: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    max-height: 620px;
+}
+
+.co-group-label {
+    padding-top: 14px;
+    padding-bottom: 6px;
+    padding-left: 10px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 3px;
+    color: rgb(135, 230, 255);
+}
+
+.co-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 12px;
+}
+
+.co-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.co-desc {
+    font-size: 16px;
+    color: rgb(238, 244, 255);
+}
+
+.co-keys {
+    flex-direction: row;
+    align-items: center;
+}
+
+.co-sep {
+    margin-left: 5px;
+    margin-right: 5px;
+    font-size: 13px;
+    color: rgb(159, 176, 208);
+}
+
+/* ── Footer hint ──────────────────────────────────────── */
+.co-foot {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 11px;
+    padding-bottom: 13px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.co-foot-text {
+    font-size: 13px;
+    margin-left: 8px;
+    margin-right: 8px;
+    color: rgb(159, 176, 208);
+}
