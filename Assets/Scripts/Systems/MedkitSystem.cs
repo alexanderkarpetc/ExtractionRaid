@@ -40,15 +40,15 @@ namespace Systems
                 int drain = (int)player.MedkitHealFraction;
                 if (drain < 1) return;
 
-                drain = Mathf.Min(drain, medkit.StackCount);
+                drain = Mathf.Min(drain, medkit.CurrentResource);
                 float actualHeal = Mathf.Min(drain, health.MaxHp - health.CurrentHp);
 
                 health.CurrentHp = Mathf.Min(health.CurrentHp + actualHeal, health.MaxHp);
-                medkit.StackCount -= drain;
+                medkit.Resource = medkit.CurrentResource - drain;
                 player.MedkitHealFraction -= drain;
                 context.Events.EntityDamaged(player.Id, health.CurrentHp, health.MaxHp);
 
-                if (medkit.StackCount <= 0)
+                if (medkit.Resource <= 0)
                 {
                     App.Instance.Player.Inventory.Backpack[player.ActiveMedkitSlot] = null;
                     player.ActiveMedkitSlot = -1;

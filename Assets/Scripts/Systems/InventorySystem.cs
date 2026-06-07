@@ -72,6 +72,7 @@ namespace Systems
             var item = groundItem.HasWeaponConfiguration
                 ? ItemState.CreateWeapon(groundItem.Id, groundItem.DefinitionId, groundItem.WeaponConfiguration)
                 : ItemState.Create(groundItem.Id, groundItem.DefinitionId);
+            if (!groundItem.HasWeaponConfiguration) item.Resource = groundItem.Resource;
             inventory.Backpack[free] = item;
             state.GroundItems.RemoveAt(groundIndex);
             events.GroundItemDespawned(groundItemId);
@@ -117,6 +118,7 @@ namespace Systems
             var item = groundItem.HasWeaponConfiguration
                 ? ItemState.CreateWeapon(groundItem.Id, groundItem.DefinitionId, groundItem.WeaponConfiguration)
                 : ItemState.Create(groundItem.Id, groundItem.DefinitionId, groundItem.StackCount);
+            if (!groundItem.HasWeaponConfiguration) item.Resource = groundItem.Resource;
 
             inventory.SetSlot(targetSlot, item);
             state.GroundItems.RemoveAt(groundIndex);
@@ -134,7 +136,7 @@ namespace Systems
             // Preserve WeaponConfiguration when dropping a weapon to the ground.
             var groundItem = item.HasWeaponConfiguration
                 ? GroundItemState.CreateWeapon(item.Id, item.DefinitionId, dropPosition, item.WeaponConfiguration)
-                : GroundItemState.Create(item.Id, item.DefinitionId, dropPosition, item.StackCount);
+                : GroundItemState.Create(item.Id, item.DefinitionId, dropPosition, item.StackCount, item.Resource);
             state.GroundItems.Add(groundItem);
             events.GroundItemSpawned(groundItem.Id, groundItem.Position, groundItem.DefinitionId);
             return true;

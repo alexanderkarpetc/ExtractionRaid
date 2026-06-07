@@ -60,6 +60,10 @@ namespace Save
         public string DefinitionId;
         public int StackCount;
 
+        // Consumable resource pool (e.g. medkit charge). -1 = full/uninitialized;
+        // default keeps legacy saves (missing field) at "full" rather than empty.
+        public int Resource = -1;
+
         // Weapon-builder composition — only set for weapon items. Without this the
         // weapon loads back as a plain ItemState (HasWeaponConfiguration = false),
         // which the equip path treats as a broken/unconfigured weapon.
@@ -73,7 +77,8 @@ namespace Save
             {
                 SlotIndex = slotIndex,
                 DefinitionId = item.DefinitionId,
-                StackCount = item.StackCount
+                StackCount = item.StackCount,
+                Resource = item.Resource
             };
             if (item.HasWeaponConfiguration)
             {
@@ -95,7 +100,7 @@ namespace Save
             if (HasWeaponConfiguration && Weapon != null)
                 return ItemState.CreateWeapon(App.Instance.AllocateEId(), DefinitionId, Weapon.ToConfig());
 
-            return new ItemState { Id = App.Instance.AllocateEId(), DefinitionId = DefinitionId, StackCount = StackCount };
+            return new ItemState { Id = App.Instance.AllocateEId(), DefinitionId = DefinitionId, StackCount = StackCount, Resource = Resource };
         }
     }
 

@@ -101,8 +101,8 @@ namespace Systems
 
             // Minimal consumables: 1 grenade, 1 medkit, 1 bandage
             inventory.Backpack[5] = ItemState.Create(state.AllocateEId(), "Grenade");
-            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit",
-                (int)MedConstants.TotalHealAmount);
+            // One medkit (resource pool defaults to full via ItemDefinition.MaxResource).
+            inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit");
             inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
         }
 

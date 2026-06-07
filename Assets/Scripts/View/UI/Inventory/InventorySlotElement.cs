@@ -152,6 +152,10 @@ namespace View.UI.Inventory
                 float cur = item.HasCustomDurability ? item.CurrentDurability : max;
                 _resource.text = max > 0f ? $"{cur:0}/{max:0}" : "";
             }
+            else if (item.IsResourceItem)
+            {
+                _resource.text = $"{item.CurrentResource}/{item.MaxResource}";
+            }
             else if (item.StackCount > 1)
             {
                 _resource.text = $"x{item.StackCount}";

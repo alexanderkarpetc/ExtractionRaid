@@ -44,7 +44,14 @@ namespace View.UI.Tooltip.Builders
 
             var sections = new List<TooltipSection>();
 
-            if (item.StackCount > 1)
+            if (item.IsResourceItem)
+            {
+                sections.Add(new TooltipSection(null, new[]
+                {
+                    new TooltipRow("Resource", $"{item.CurrentResource}/{item.MaxResource}"),
+                }));
+            }
+            else if (item.StackCount > 1)
             {
                 sections.Add(new TooltipSection(null, new[]
                 {

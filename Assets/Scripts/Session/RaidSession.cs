@@ -196,7 +196,7 @@ namespace Session
             // Non-weapon ground items (legacy "Rifle" entry retired у Cluster A 2026-05-01).
             var testItems = new (string defId, UnityEngine.Vector3 pos, int count)[]
             {
-                ("Medkit",       new UnityEngine.Vector3( 3f, 0f,  2f), (int)Constants.MedConstants.TotalHealAmount),
+                ("Medkit",       new UnityEngine.Vector3( 3f, 0f,  2f), 1),
                 ("Helmet_Basic", new UnityEngine.Vector3(-2f, 0f,  4f), 1),
                 ("Armor_Basic",  new UnityEngine.Vector3( 5f, 0f, -1f), 1),
                 ("Ammo_Rifle",   new UnityEngine.Vector3(-3f, 0f, -3f), 30),

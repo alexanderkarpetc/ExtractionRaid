@@ -397,7 +397,14 @@ namespace View.UI.Hotbar
                 label.pickingMode = PickingMode.Ignore;
                 row.Add(label);
 
-                if (item.StackCount > 1)
+                if (item.IsResourceItem)
+                {
+                    var count = new Label($"{item.CurrentResource}/{item.MaxResource}");
+                    count.AddToClassList("hb-picker__row-count");
+                    count.pickingMode = PickingMode.Ignore;
+                    row.Add(count);
+                }
+                else if (item.StackCount > 1)
                 {
                     var count = new Label($"x{item.StackCount}");
                     count.AddToClassList("hb-picker__row-count");

@@ -35,6 +35,11 @@ namespace State
         public int MaxStackSize = 1;
         public string AmmoType;
 
+        // Consumable resource pool (e.g. medkit healing charge). 0 = not a resource
+        // item. When > 0 the item is a single, non-stackable unit whose resource
+        // drains on use and is shown as "current/max" rather than a stack count.
+        public int MaxResource;
+
         // Armor stats (helmet/vest items)
         public float ArmorPoints;
         public float MaxDurability;
@@ -121,7 +126,10 @@ namespace State
                     DisplayName = "Medkit",
                     Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 200,
+                    // One medkit per slot. Its 200 HP is a drainable resource pool,
+                    // not a stack of 200 items. See MedkitSystem / ItemState.Resource.
+                    MaxStackSize = 1,
+                    MaxResource = (int)Constants.MedConstants.TotalHealAmount,
                 },
                 ["Ammo_Rifle"] = new()
                 {

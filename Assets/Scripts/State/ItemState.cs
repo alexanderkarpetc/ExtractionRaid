@@ -11,6 +11,11 @@ namespace State
         public float CurrentDurability = -1f;
         public float MaxDurability = -1f;
 
+        // Consumable resource pool (e.g. medkit healing charge), persisted on the
+        // item so a half-used medkit keeps its remaining charge through loot/save.
+        // -1 = uninitialized → treated as a full pool (ItemDefinition.MaxResource).
+        public int Resource = -1;
+
         // Weapon-builder composition (only populated for weapon items).
         // Set via CreateWeapon() / WeaponItemFactory.
         // Assembled into a runtime WeaponEntityState by WeaponSyncSystem / PlayerSpawnSystem.
@@ -18,6 +23,12 @@ namespace State
         public WeaponConfiguration WeaponConfiguration;
 
         public bool HasCustomDurability => CurrentDurability >= 0f;
+
+        // Resource-pool helpers (medkit-style consumables). MaxResource comes from
+        // the definition; CurrentResource resolves the -1 "full" sentinel to max.
+        public int MaxResource => Definition?.MaxResource ?? 0;
+        public bool IsResourceItem => MaxResource > 0;
+        public int CurrentResource => Resource >= 0 ? Resource : MaxResource;
 
         public ItemDefinition Definition => ItemDefinition.Get(DefinitionId);
         public string DisplayName => Definition?.DisplayName ?? DefinitionId;

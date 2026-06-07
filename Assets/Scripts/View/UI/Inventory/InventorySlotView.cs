@@ -68,6 +68,10 @@ namespace View.UI
                 float cur = item.HasCustomDurability ? item.CurrentDurability : max;
                 _resourceText.text = max > 0f ? $"{cur:0}/{max:0}" : "";
             }
+            else if (item.IsResourceItem)
+            {
+                _resourceText.text = $"{item.CurrentResource}/{item.MaxResource}";
+            }
             else if (item.StackCount > 1)
             {
                 _resourceText.text = $"x{item.StackCount}";
