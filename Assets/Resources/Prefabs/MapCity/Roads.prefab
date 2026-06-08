@@ -1218,8 +1218,207 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40a17a93314be894982a1a4a345c5be5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadAnchor
-  road: {fileID: 0}
-  isStart: 0
+  road: {fileID: 9083620250276223293}
+  isStart: 1
+--- !u!1 &3805771208401412448
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4618711420122111968}
+  - component: {fileID: 9083620250276223293}
+  - component: {fileID: 1437081832443155409}
+  - component: {fileID: 396166383281528089}
+  - component: {fileID: 2075864954844349438}
+  - component: {fileID: 7896622169803547192}
+  m_Layer: 0
+  m_Name: RoadMain(Clone)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4618711420122111968
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3270306978191578585}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9083620250276223293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cddc1941501135645b2a8b35032f1fc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.Road
+  start: {fileID: 685959072643367427}
+  end: {fileID: 0}
+  direction: 0
+  autoSetControlPoints: 0
+  points:
+  - {x: 233.12021, y: 0, z: 43.310204}
+  - {x: 232.4131, y: 0, z: 42.603096}
+  - {x: 191.01404, y: 0.01, z: 1.071931}
+  - {x: 190.30693, y: 0.01, z: 0.36482534}
+  - {x: 171.08253, y: 0.01, z: -18.859516}
+  - {x: 167.96744, y: -0.0099990275, z: -21.484488}
+  - {x: 150.31523, y: -0.01, z: -36.359325}
+  - {x: 114.64218, y: -0.0100018885, z: -66.41963}
+  - {x: 110.3024, y: -0.00999999, z: -71.99771}
+  - {x: 85.710266, y: -0.01, z: -103.60681}
+  - {x: 69.103004, y: -0.010000006, z: -124.95269}
+  - {x: 65.86685, y: -0.01, z: -127.49789}
+  - {x: 47.528625, y: -0.01, z: -141.92068}
+  - {x: 32.17607, y: -0.01, z: -153.99529}
+  - {x: 29.643486, y: -0.01, z: -155.49362}
+  - {x: 15.292175, y: -0.01, z: -163.98422}
+  - {x: 5.361759, y: -0.01, z: -169.85931}
+  - {x: -3.4915519, y: 0, z: -176.57765}
+  - {x: -10.579853, y: 0, z: -183.45149}
+  normals:
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1.0000002, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: 1, z: 0}
+  angles: []
+  bounds:
+    m_Center: {x: 111.27018, y: -0.00000041909516, z: -70.070656}
+    m_Extent: {x: 121.85004, y: 0.010000419, z: 113.38085}
+  boundingBoxes:
+  - m_Center: {x: 211.71356, y: 0.005, z: 21.837515}
+    m_Extent: {x: 21.406647, y: 0.005, z: 21.472689}
+  - m_Center: {x: 170.31108, y: 0, z: -17.99725}
+    m_Extent: {x: 19.99585, y: 0.01, z: 18.362076}
+  - m_Center: {x: 118.01275, y: -0.010000419, z: -69.98307}
+    m_Extent: {x: 32.302483, y: 0.00000041956082, z: 33.62374}
+  - m_Center: {x: 66.619446, y: -0.010000002, z: -122.76375}
+    m_Extent: {x: 19.09082, y: 0.0000000018626451, z: 19.156937}
+  - m_Center: {x: 31.384872, y: -0.01, z: -152.96756}
+    m_Extent: {x: 16.143755, y: 4.656613e-10, z: 11.046875}
+  - m_Center: {x: 2.356161, y: -0.005, z: -173.71786}
+    m_Extent: {x: 12.936014, y: 0.005, z: 9.733643}
+--- !u!33 &1437081832443155409
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  m_Mesh: {fileID: 0}
+--- !u!114 &396166383281528089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f529346a7379142901f04d3a39718e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Barmetler.RoadSystem.Runtime::Barmetler.RoadSystem.RoadMeshGenerator
+  settings:
+    SourceOrientation:
+      forward: 4
+      up: 2
+      isRightHanded: 0
+    uvOffset: {x: 0, y: 1}
+    continuousUV: 1
+    rotateContinuousUV: 1
+    widthMultiplier: 4
+  autoGenerate: 1
+  SourceMesh: {fileID: -5754084199372789682, guid: a7242140ef2690e4fac340e3f5cd65ec, type: 3}
+--- !u!23 &2075864954844349438
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 7fb7088cb4ff4f54caa87a22bbf30eb2, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &7896622169803547192
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805771208401412448}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &3889584044455203501
 GameObject:
   m_ObjectHideFlags: 0
@@ -1825,7 +2024,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7fb7088cb4ff4f54caa87a22bbf30eb2, type: 2}
+  - {fileID: 2100000, guid: 3edb21f3bb21c1f4296a9629ea165842, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2503,7 +2702,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1323077782594449091
 Transform:
   m_ObjectHideFlags: 0
@@ -2541,9 +2740,9 @@ MonoBehaviour:
   - {x: 14.485288, y: 0.01, z: -166.37917}
   - {x: 15.203171, y: 0.01, z: -165.683}
   - {x: 20.835361, y: 0.01, z: -160.22118}
-  - {x: 32.778046, y: 0.005919108, z: -152.64935}
-  - {x: 48.22762, y: 0.00041005202, z: -140.47478}
-  - {x: 60.437187, y: -0.0039436724, z: -130.85341}
+  - {x: 32.705635, y: 0.0059169903, z: -152.55743}
+  - {x: 48.15521, y: 0.0004079342, z: -140.38286}
+  - {x: 60.364777, y: -0.00394579, z: -130.76149}
   - {x: 74.55448, y: -0.01, z: -113.40989}
   - {x: 78.16094, y: -0.01, z: -110.18184}
   - {x: 85.616165, y: -0.01, z: -103.508865}
@@ -2561,17 +2760,17 @@ MonoBehaviour:
   - {x: 0, y: 1, z: 0}
   angles: []
   bounds:
-    m_Center: {x: 111.27018, y: -9.313226e-10, z: -70.07065}
-    m_Extent: {x: 121.85004, y: 0.010000001, z: 113.380844}
+    m_Center: {x: 111.27018, y: 0, z: -70.07063}
+    m_Extent: {x: 121.85004, y: 0.01, z: 113.38086}
   boundingBoxes:
   - m_Center: {x: 2.311658, y: 0.005, z: -174.56725}
     m_Extent: {x: 12.891513, y: 0.005, z: 8.884247}
-  - m_Center: {x: 31.715395, y: 0.005205026, z: -153.07889}
-    m_Extent: {x: 16.512224, y: 0.004794974, z: 12.604111}
-  - m_Center: {x: 63.194283, y: -0.004794974, z: -125.32831}
-    m_Extent: {x: 14.96666, y: 0.005205026, z: 15.146469}
+  - m_Center: {x: 31.67919, y: 0.005203967, z: -153.03293}
+    m_Extent: {x: 16.476019, y: 0.004796033, z: 12.65007}
+  - m_Center: {x: 63.158073, y: -0.004796033, z: -125.28235}
+    m_Extent: {x: 15.002869, y: 0.005203967, z: 15.10051}
   - m_Center: {x: 96.887344, y: -0.01, z: -90.69289}
-    m_Extent: {x: 18.726395, y: 0.0000000018626451, z: 19.488953}
+    m_Extent: {x: 18.726395, y: 0, z: 19.488953}
   - m_Center: {x: 174.36697, y: -0.005, z: -13.946861}
     m_Extent: {x: 58.753235, y: 0.005, z: 57.257065}
 --- !u!33 &2427665376230283471
@@ -2603,7 +2802,7 @@ MonoBehaviour:
     continuousUV: 1
     rotateContinuousUV: 1
     widthMultiplier: 4
-  autoGenerate: 1
+  autoGenerate: 0
   SourceMesh: {fileID: -5754084199372789682, guid: a7242140ef2690e4fac340e3f5cd65ec, type: 3}
 --- !u!23 &1409109707954300302
 MeshRenderer:
@@ -2788,6 +2987,7 @@ Transform:
   - {fileID: 5928374470867012666}
   - {fileID: 102482753973454188}
   - {fileID: 415518750840247044}
+  - {fileID: 4618711420122111968}
   m_Father: {fileID: 7136199032449808363}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8089338089402882897
@@ -2816,10 +3016,10 @@ MonoBehaviour:
   - {fileID: 4533897528313787561}
   - {fileID: 2847829405453665910}
   - {fileID: 6067961709718533707}
-  - {fileID: 5980272815431743324}
   - {fileID: 7715489382181803598}
   - {fileID: 1017535524016287613}
   - {fileID: 3683689503345501636}
+  - {fileID: 9083620250276223293}
   graph:
     roadSystem: {fileID: 8089338089402882897}
     nodes: []
