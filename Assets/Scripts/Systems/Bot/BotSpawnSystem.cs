@@ -31,6 +31,8 @@ namespace Systems.Bot
 
             bot.Blackboard.MedkitsRemaining = config.MedkitCount;
             bot.Blackboard.GrenadesRemaining = config.GrenadeCount;
+            // Every enemy carries 0-4 bandages so they're easy to scavenge.
+            bot.Blackboard.BandagesRemaining = Random.Range(0, 5);
 
             state.Bots.Add(bot);
             state.HealthMap[id] = HealthState.Create(config.MaxHp);

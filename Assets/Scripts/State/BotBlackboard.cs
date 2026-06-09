@@ -38,6 +38,7 @@ namespace State
         // Consumables
         public int   MedkitsRemaining;
         public int   GrenadesRemaining;
+        public int   BandagesRemaining;
         public float GrenadeCooldownTimer;
         public float GrenadeThrowDelayTimer = -1;   // -1 = idle; counts down to 0 then fires
         public float MeleeAttackCooldownTimer;
@@ -76,6 +77,7 @@ namespace State
             DodgeTimer = 0f;
             MedkitsRemaining = 0;
             GrenadesRemaining = 0;
+            BandagesRemaining = 0;
             GrenadeCooldownTimer = 0f;
             GrenadeThrowDelayTimer = -1f;
             MeleeAttackCooldownTimer = 0f;

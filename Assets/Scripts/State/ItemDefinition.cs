@@ -40,6 +40,11 @@ namespace State
         // drains on use and is shown as "current/max" rather than a stack count.
         public int MaxResource;
 
+        // Flat HP restored when this consumable finishes applying (e.g. bandage).
+        // 0 = no direct healing. Unlike MaxResource (a drainable pool), this is a
+        // fixed amount granted once per item consumed.
+        public float HealAmount;
+
         // Armor stats (helmet/vest items)
         public float ArmorPoints;
         public float MaxDurability;
@@ -186,6 +191,8 @@ namespace State
                     Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 3,
+                    // Stops/reduces bleeding AND restores a small chunk of HP on use.
+                    HealAmount = 25f,
                 },
                 ["Advanced_Medkit"] = new()
                 {

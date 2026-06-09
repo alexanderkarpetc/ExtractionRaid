@@ -118,6 +118,16 @@ namespace Systems
                 inventory.Backpack[backpackSlot++] = ItemState.Create(grenadeId, "Grenade");
             }
 
+            // Bandages — packed into stacks (MaxStackSize) rather than one slot each.
+            int bandages = bot.Blackboard.BandagesRemaining;
+            int bandageStack = ItemDefinition.Get("Bandage")?.MaxStackSize ?? 1;
+            while (bandages > 0 && backpackSlot < InventoryState.BackpackSize)
+            {
+                int add = bandages < bandageStack ? bandages : bandageStack;
+                inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), "Bandage", add);
+                bandages -= add;
+            }
+
             // Armor loot — preserve durability from combat
             if (state.ArmorMap.TryGetValue(bot.Id, out var armorSlots))
             {
