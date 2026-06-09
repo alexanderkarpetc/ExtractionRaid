@@ -535,16 +535,17 @@ namespace Editor
                 return;
             }
 
-            int slot = player.Inventory.FindFreeBackpackSlot();
-            if (slot < 0)
+            int added = InventorySystem.AddToBackpack(player.Inventory, defId, count, App.Instance.AllocateEId);
+            if (added <= 0)
             {
                 Debug.LogWarning($"[DevCheats] Cannot give '{defId}' — backpack is full.");
                 return;
             }
 
-            var eid = App.Instance.AllocateEId();
-            player.Inventory.Backpack[slot] = ItemState.Create(eid, defId, count);
-            Debug.Log($"[DevCheats] Gave {count}× {def.DisplayName} ({defId}) to backpack slot {slot}.");
+            if (added < count)
+                Debug.LogWarning($"[DevCheats] Gave {added}/{count}× {def.DisplayName} ({defId}) — backpack full, {count - added} dropped.");
+            else
+                Debug.Log($"[DevCheats] Gave {added}× {def.DisplayName} ({defId}).");
         }
 
         /// <summary>

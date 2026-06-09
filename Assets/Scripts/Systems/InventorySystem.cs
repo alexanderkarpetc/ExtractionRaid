@@ -32,35 +32,11 @@ namespace Systems
             // Stackable item: merge into existing stacks, then overflow to free slots
             if (def != null && def.IsStackable && pickupCount > 0)
             {
-                int originalCount = pickupCount;
-
-                // Phase 1: fill existing partial stacks
-                for (int i = 0; i < InventoryState.BackpackSize && pickupCount > 0; i++)
-                {
-                    var slot = inventory.Backpack[i];
-                    if (slot == null || slot.DefinitionId != groundItem.DefinitionId) continue;
-                    int space = def.MaxStackSize - slot.StackCount;
-                    if (space <= 0) continue;
-                    int add = pickupCount < space ? pickupCount : space;
-                    slot.StackCount += add;
-                    pickupCount -= add;
-                }
-
-                // Phase 2: overflow into free slots
-                while (pickupCount > 0)
-                {
-                    int freeSlot = inventory.FindFreeBackpackSlot();
-                    if (freeSlot < 0) break;
-                    int add = pickupCount < def.MaxStackSize ? pickupCount : def.MaxStackSize;
-                    inventory.Backpack[freeSlot] = ItemState.Create(state.AllocateEId(), groundItem.DefinitionId, add);
-                    pickupCount -= add;
-                }
-
-                if (pickupCount == originalCount) return false; // nothing picked up
+                int added = AddToBackpack(inventory, groundItem.DefinitionId, pickupCount, state.AllocateEId);
+                if (added <= 0) return false; // nothing picked up
 
                 state.GroundItems.RemoveAt(groundIndex);
                 events.GroundItemDespawned(groundItemId);
-                inventory.Version++; // direct backpack mutation above — bump version manually
                 return true;
             }
 
@@ -78,6 +54,54 @@ namespace Systems
             events.GroundItemDespawned(groundItemId);
             inventory.Version++;
             return true;
+        }
+
+        /// <summary>
+        /// Adds <paramref name="count"/> of an item definition into the backpack,
+        /// respecting <see cref="ItemDefinition.MaxStackSize"/>. Fills existing
+        /// partial stacks of the same item first, then overflows into free slots
+        /// creating as many full stacks as needed (plus a remainder stack).
+        /// Returns the number actually added (may be less than requested if the
+        /// backpack fills up). Bumps <see cref="InventoryState.Version"/> when
+        /// anything changed.
+        /// </summary>
+        public static int AddToBackpack(InventoryState inventory, string defId, int count, System.Func<EId> allocateId)
+        {
+            if (inventory == null || count <= 0) return 0;
+            var def = ItemDefinition.Get(defId);
+            if (def == null) return 0;
+
+            int maxStack = def.MaxStackSize < 1 ? 1 : def.MaxStackSize;
+            int remaining = count;
+
+            // Phase 1: top up existing partial stacks (stackable items only).
+            if (def.IsStackable)
+            {
+                for (int i = 0; i < InventoryState.BackpackSize && remaining > 0; i++)
+                {
+                    var slot = inventory.Backpack[i];
+                    if (slot == null || slot.DefinitionId != defId) continue;
+                    int space = maxStack - slot.StackCount;
+                    if (space <= 0) continue;
+                    int add = remaining < space ? remaining : space;
+                    slot.StackCount += add;
+                    remaining -= add;
+                }
+            }
+
+            // Phase 2: overflow into free slots, one full stack at a time.
+            while (remaining > 0)
+            {
+                int freeSlot = inventory.FindFreeBackpackSlot();
+                if (freeSlot < 0) break;
+                int add = remaining < maxStack ? remaining : maxStack;
+                inventory.Backpack[freeSlot] = ItemState.Create(allocateId(), defId, add);
+                remaining -= add;
+            }
+
+            int added = count - remaining;
+            if (added > 0) inventory.Version++;
+            return added;
         }
 
         /// <summary>
