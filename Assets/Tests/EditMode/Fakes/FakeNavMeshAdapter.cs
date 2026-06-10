@@ -10,5 +10,15 @@ namespace Tests.EditMode.Fakes
             result = source;
             return true;
         }
+
+        public int CalculatePath(Vector3 from, Vector3 to, Vector3[] corners)
+        {
+            if (corners == null || corners.Length < 2)
+                return 0;
+
+            corners[0] = from;
+            corners[1] = to;
+            return 2;
+        }
     }
 }

@@ -155,7 +155,38 @@ namespace Constants
 
         // --- Patrol ---
         public const float WaypointArrivalDistance = 1f;
-        public const float PatrolWaitTime = 2f;
+
+        // Wait at each waypoint is rolled in [Min, Max] — a fixed pause is the easiest
+        // "robot" tell on a patrol loop.
+        public const float PatrolWaitTimeMin = 1.0f;
+        public const float PatrolWaitTimeMax = 3.5f;
+
+        // --- Patrol pathing (NavMesh) ---
+        public const int   PatrolMaxPathCorners        = 32;
+        public const float PatrolCornerArrivalDistance = 0.4f;  // tighter than waypoint arrival — cuts corners naturally
+        public const float PatrolRepathInterval        = 2f;    // periodic refresh while walking a leg
+        public const float PatrolStuckRepathTime       = 0.6f;  // commanded-move with no displacement → recalc path
+        public const float PatrolStuckSkipTime         = 3f;    // still pinned → give up on this waypoint, take the next
+
+        // --- Patrol humanization ---
+        // Per-leg speed scale: each stretch between waypoints walks at a slightly
+        // different pace so the loop never looks metronomic.
+        public const float PatrolSpeedScaleMin = 0.85f;
+        public const float PatrolSpeedScaleMax = 1.1f;
+
+        // Ease into waypoints instead of stopping dead: below SlowRadius speed lerps
+        // down to MinSpeedFraction at the arrival point.
+        public const float PatrolArrivalSlowRadius       = 2.5f;
+        public const float PatrolArrivalMinSpeedFraction = 0.5f;
+
+        // Steering turn rate for patrol velocity (deg/s). Heading changes sweep
+        // through an arc instead of snapping to the new corner direction.
+        public const float PatrolSteerTurnRateDeg = 270f;
+
+        // Gentle Perlin wander applied to the steering direction — drifts the walk
+        // line a few degrees side to side like an unfocused human gait.
+        public const float PatrolWanderAmplitudeDeg = 6f;
+        public const float PatrolWanderFrequency    = 0.2f;
 
         // Head-scan during PatrolWait: sweep facing back-and-forth ±ScanAmplitude
         // around the inbound-travel direction. Pure cosmetic — perception still uses

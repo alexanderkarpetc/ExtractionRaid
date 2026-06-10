@@ -16,7 +16,20 @@ namespace State
         public Vector3[] PatrolWaypoints;
         public int PatrolWaypointIndex;
         public float PatrolWaitTimer;
+        public float PatrolWaitDuration;    // rolled per stop; full length of the current wait
         public Vector3 PatrolScanBaseDir;   // facing captured when wait started; head-scan oscillates around this
+
+        // Patrol path-following: NavMesh corners toward the current waypoint
+        public Vector3[] PatrolPathCorners;     // lazily allocated corner buffer
+        public int PatrolPathCornerCount;
+        public int PatrolPathCornerIndex;
+        public int PatrolPathWaypointIndex = -1; // waypoint the cached path targets; -1 = no valid path
+        public float PatrolRepathTimer;
+        public float PatrolStuckTimer;          // seconds of commanded-move with no real displacement
+        public Vector3 PatrolLastPosition;
+
+        // Patrol humanization — rolled per leg so each stretch reads differently
+        public float PatrolSpeedScale = 1f;
 
         // Timers
         public float ReactionTimer;
@@ -64,6 +77,15 @@ namespace State
             TimeSinceTargetSeen = float.MaxValue;
             PatrolWaypointIndex = 0;
             PatrolWaitTimer = 0f;
+            PatrolWaitDuration = 0f;
+            PatrolScanBaseDir = Vector3.zero;
+            PatrolPathCornerCount = 0;
+            PatrolPathCornerIndex = 0;
+            PatrolPathWaypointIndex = -1;
+            PatrolRepathTimer = 0f;
+            PatrolStuckTimer = 0f;
+            PatrolLastPosition = Vector3.zero;
+            PatrolSpeedScale = 1f;
             ReactionTimer = 0f;
             DodgeCooldownTimer = 0f;
             HealCooldownTimer = 0f;
