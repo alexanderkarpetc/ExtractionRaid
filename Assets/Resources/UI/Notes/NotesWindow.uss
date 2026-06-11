@@ -1,0 +1,443 @@
+/* Field Notes popup — UI Toolkit port of Assets/Concepts/notes-ui-popup.html.
+ * Self-contained colours (no token dependency) so the visual matches the
+ * concept exactly; mirrors the approach in UI/Quests/QuestsWindow.uss.
+ * Sizes are tuned for the 1920x1080 reference resolution (PanelSettings
+ * ScaleWithScreenSize) — roughly 1.35x the concept's browser-window values
+ * so text stays readable, matching the project's font tokens (16-30px). */
+
+.np-root {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* ── Overlay / backdrop ──────────────────────────────── */
+.np-overlay {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(4, 6, 12, 0.72);
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Popup window ────────────────────────────────────── */
+.np-popup {
+    width: 1280px;
+    height: 860px;
+    max-width: 96%;
+    max-height: 88%;
+    background-color: rgba(10, 13, 20, 0.98);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.np-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    padding-top: 22px;
+    padding-bottom: 22px;
+    padding-left: 30px;
+    padding-right: 30px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(26, 32, 48);
+}
+
+.np-header-left {
+    flex-direction: row;
+    align-items: center;
+}
+
+.np-title {
+    font-size: 22px;
+    -unity-font-style: bold;
+    letter-spacing: 4px;
+    color: rgb(255, 255, 255);
+}
+
+.np-count {
+    font-size: 13px;
+    letter-spacing: 1px;
+    margin-left: 16px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 12px;
+    padding-right: 12px;
+    color: rgb(136, 146, 166);
+    background-color: rgb(17, 21, 32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 46, 66);
+    border-radius: 12px;
+}
+
+.np-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: rgb(22, 27, 40);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 46, 66);
+    color: rgb(176, 184, 200);
+    font-size: 20px;
+}
+
+.np-close:hover {
+    border-color: rgb(46, 58, 82);
+    color: rgb(224, 228, 236);
+}
+
+/* ── Body: master / detail ───────────────────────────── */
+.np-body {
+    flex-grow: 1;
+    flex-direction: row;
+    min-height: 0;
+}
+
+/* ── Sidebar (list) ──────────────────────────────────── */
+.np-sidebar {
+    width: 390px;
+    flex-shrink: 0;
+    border-right-width: 1px;
+    border-right-color: rgb(26, 32, 48);
+    flex-direction: column;
+    background-color: rgba(8, 10, 16, 0.4);
+}
+
+.np-search-wrap {
+    padding-top: 18px;
+    padding-bottom: 10px;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.np-search {
+    margin: 0;
+}
+
+.np-search > #unity-text-input {
+    background-color: rgb(17, 21, 32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 46, 66);
+    border-radius: 8px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    padding-left: 14px;
+    padding-right: 14px;
+    font-size: 16px;
+    color: rgb(224, 228, 236);
+}
+
+.np-search:focus > #unity-text-input {
+    border-color: rgb(74, 124, 255);
+}
+
+.np-list {
+    flex-grow: 1;
+    padding-top: 4px;
+    padding-bottom: 16px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.np-group-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgb(74, 124, 255);
+    opacity: 0.85;
+    padding-top: 18px;
+    padding-bottom: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.np-item {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 10px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.np-item:hover {
+    background-color: rgb(17, 21, 32);
+}
+
+.np-item--active {
+    background-color: rgba(74, 124, 255, 0.15);
+    border-color: rgba(74, 124, 255, 0.28);
+}
+
+/* Icon chip — per-note glyph + tint colors are set inline from
+   NotesWindow.BuildListItem (concept uses emoji, which the runtime font
+   can't render; colored glyphs stand in for them). */
+.np-item-ico {
+    width: 34px;
+    height: 34px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background-color: rgb(22, 27, 40);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 46, 66);
+    font-size: 17px;
+    color: rgb(176, 184, 200);
+    -unity-text-align: middle-center;
+}
+
+.np-item-title {
+    flex-grow: 1;
+    font-size: 16px;
+    color: rgb(224, 228, 236);
+}
+
+.np-item--active .np-item-title {
+    color: rgb(255, 255, 255);
+}
+
+.np-new-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    background-color: rgb(74, 124, 255);
+}
+
+.np-list-empty {
+    padding-top: 36px;
+    padding-bottom: 36px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: rgb(136, 146, 166);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* ── Scrollbar (minimal, themed) ─────────────────────── */
+/* Unity's default ScrollView scroller is a wide track with up/down arrow
+   buttons and a chunky grey dragger. Strip it down to a thin rounded accent
+   thumb on a transparent track (same pattern as ControlsOverlay.uss). */
+.np-popup .unity-scroller--vertical {
+    width: 10px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+}
+
+/* Drop the up/down arrow buttons entirely. */
+.np-popup .unity-scroller--vertical .unity-scroller__low-button,
+.np-popup .unity-scroller--vertical .unity-scroller__high-button {
+    display: none;
+}
+
+/* The slider fills the full height now that the buttons are gone. */
+.np-popup .unity-scroller--vertical .unity-base-slider--vertical {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Transparent track. */
+.np-popup .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+/* Rounded accent thumb. */
+.np-popup .unity-scroller--vertical #unity-dragger {
+    width: 6px;
+    min-height: 36px;
+    border-radius: 3px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+    background-color: rgba(74, 124, 255, 0.28);
+}
+
+.np-popup .unity-scroller--vertical #unity-dragger:hover {
+    background-color: rgba(74, 124, 255, 0.5);
+}
+
+/* ── Detail pane ─────────────────────────────────────── */
+.np-detail {
+    flex-grow: 1;
+    padding-top: 32px;
+    padding-bottom: 36px;
+    padding-left: 38px;
+    padding-right: 38px;
+}
+
+.np-kicker-chip {
+    align-self: flex-start;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgb(74, 124, 255);
+    background-color: rgba(74, 124, 255, 0.15);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(74, 124, 255, 0.25);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    margin-bottom: 12px;
+}
+
+.np-detail-title {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    margin-bottom: 20px;
+    white-space: normal;
+}
+
+.np-para {
+    font-size: 17px;
+    color: rgb(176, 184, 200);
+    margin-bottom: 16px;
+    white-space: normal;
+}
+
+/* Tip / warning callout */
+.np-callout {
+    flex-direction: row;
+    background-color: rgba(46, 204, 113, 0.08);
+    border-left-width: 4px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(46, 204, 113, 0.22);
+    border-left-color: rgb(46, 204, 113);
+    border-radius: 8px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 17px;
+    padding-right: 17px;
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+
+.np-callout--warn {
+    background-color: rgba(224, 80, 64, 0.08);
+    border-color: rgba(224, 80, 64, 0.22);
+    border-left-color: rgb(224, 80, 64);
+}
+
+.np-callout-kind {
+    font-size: 12px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+    color: rgb(46, 204, 113);
+    margin-right: 14px;
+    padding-top: 2px;
+}
+
+.np-callout--warn .np-callout-kind {
+    color: rgb(224, 80, 64);
+}
+
+.np-callout-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    font-size: 15px;
+    color: rgb(224, 228, 236);
+    white-space: normal;
+}
+
+/* Related controls */
+.np-divider {
+    height: 1px;
+    background-color: rgb(26, 32, 48);
+    margin-top: 8px;
+    margin-bottom: 18px;
+}
+
+.np-related-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: rgb(136, 146, 166);
+    margin-bottom: 12px;
+}
+
+.np-related-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.np-related-chip {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgb(17, 21, 32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 46, 66);
+    border-radius: 7px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    padding-left: 9px;
+    padding-right: 13px;
+    margin-right: 10px;
+    margin-bottom: 8px;
+    font-size: 15px;
+    color: rgb(224, 228, 236);
+}
+
+.np-kbd {
+    min-width: 26px;
+    -unity-text-align: middle-center;
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(223, 241, 255);
+    background-color: rgba(74, 124, 255, 0.15);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 2px;
+    border-color: rgba(74, 124, 255, 0.35);
+    border-radius: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 7px;
+    padding-right: 7px;
+    margin-right: 9px;
+}

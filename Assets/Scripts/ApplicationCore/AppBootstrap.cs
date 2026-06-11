@@ -40,6 +40,7 @@ namespace ApplicationCore
             }
             gameObject.AddComponent<InventoryUI>();
             gameObject.AddComponent<QuestPresenter>();
+            gameObject.AddComponent<NotesPresenter>();
             gameObject.AddComponent<NpcDialoguePresenter>();
             gameObject.AddComponent<BuildingDialoguePresenter>();
 
@@ -55,6 +56,12 @@ namespace ApplicationCore
             var questsWindowHost = new GameObject("QuestsWindow");
             questsWindowHost.transform.SetParent(transform, false);
             questsWindowHost.AddComponent<View.UI.Quests.QuestsWindow>();
+
+            // Field Notes modal — UI Toolkit tutorial / field guide popup.
+            // Hidden by default; toggled by NotesPresenter (Key.N). Own UIDocument host.
+            var notesWindowHost = new GameObject("NotesWindow");
+            notesWindowHost.transform.SetParent(transform, false);
+            notesWindowHost.AddComponent<View.UI.Notes.NotesWindow>();
 
             // End-of-raid result screen — separate UIDocument host (own panel settings,
             // own sort order so it lands above HUD overlays).

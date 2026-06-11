@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <!-- Stylesheet is also attached in code (NotesWindow.BuildDocument) as a
+         fallback in case this src reference fails to resolve on import. -->
+    <Style src="NotesWindow.uss"/>
+    <ui:VisualElement name="root" class="np-root" picking-mode="Ignore">
+        <ui:VisualElement name="overlay" class="np-overlay">
+            <ui:VisualElement name="popup" class="np-popup">
+
+                <ui:VisualElement name="header" class="np-header">
+                    <ui:VisualElement class="np-header-left">
+                        <ui:Label name="title" text="Field Notes" class="np-title"/>
+                        <ui:Label name="count" text="0 entries" class="np-count"/>
+                    </ui:VisualElement>
+                    <ui:Button name="closeBtn" text="✕" class="np-close"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="body" class="np-body">
+                    <ui:VisualElement name="sidebar" class="np-sidebar">
+                        <ui:VisualElement class="np-search-wrap">
+                            <ui:TextField name="search" class="np-search" placeholder-text="Search notes..."/>
+                        </ui:VisualElement>
+                        <ui:ScrollView name="list" class="np-list"/>
+                    </ui:VisualElement>
+                    <ui:ScrollView name="detail" class="np-detail"/>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

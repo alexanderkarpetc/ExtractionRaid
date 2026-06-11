@@ -81,6 +81,7 @@ namespace View.UI.Controls
             {
                 new Binding("Inventory", "Tab"),
                 new Binding("Quests", "I"),
+                new Binding("Field notes", "N"),
                 new Binding("Map (hold)", "M"),
                 new Binding("Controls", "O"),
             }),

@@ -60,6 +60,7 @@ namespace State
 
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
         public bool IsQuestLogOpen;
+        public bool IsNotesOpen; // set by NotesPresenter (field notes popup, Key.N)
 
         public float Stamina;
         public float MaxStamina;
@@ -77,6 +78,7 @@ namespace State
         // Attack/ADS suppression for clicks landing на UI handled у InputAdapter
         // через IsPointerOverUi flag.
         public bool IsInMenu => IsQuestLogOpen
+            || IsNotesOpen
             || CraftTargetId != EId.None
             || DeployTargetId != EId.None
             || NpcTargetId != EId.None;
