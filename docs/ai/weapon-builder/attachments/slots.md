@@ -1,8 +1,44 @@
 # Attachments — Slot Taxonomy (Iteration 3)
 
 > Які слоти, скільки їх, до чого прив'язані (Payload / Delivery / whole-weapon), і як це взаємодіє з rarity двох cores.
-> **Статус:** 🔬 аналіз + варіанти + рекомендація. Рішення ще не зафіксоване. Продовження [`analysis.md`](./analysis.md) (Q2/Q3) + [`stats.md`](./stats.md).
-> **Дата:** 2026-06-07.
+> **Статус:** 🔬 аналіз + ✅ **робочий layout обрано** (для тесту, див. нижче). Продовження [`analysis.md`](./analysis.md) (Q2/Q3) + [`stats.md`](./stats.md).
+> **Дата:** 2026-06-07 (аналіз) · 2026-06-10 (layout).
+
+---
+
+## ✅ Working layout — обрано для тесту (2026-06-10)
+
+```
+PAYLOAD  → [Buttstock] [Optic] [Magazine]      к-ть розблокованих = f(Payload rarity)
+DELIVERY → [Muzzle]    [Grip]                  к-ть розблокованих = f(Delivery rarity)
+         + unique mods, що підходять лише під конкретний payload/delivery
+```
+
+**Зафіксовано:**
+- **Вісь 1 = core-granted (1B)** — слоти приписані до cores, не whole-weapon.
+- **Вісь 3 = rarity-scaled count** — к-ть слотів кожного core залежить від його rarity; комбінація рарностей двох cores = build-canvas. Крива Common→Legendary тюниться в тесті.
+- **Unique (payload/delivery-specific) mods** — додаємо.
+
+### ⚠️ Ключова clarification: слоти декаплені від stat-domain
+
+Прив'язка слота до core **≠** хто володіє статом. `Magazine`-слот на **Payload**, але мод усе одно крутить `MagazineSize` (Delivery-composed стат). Слот = «місце повісити мод» + лічильник від rarity того core + тематична група в UI. Mod чіпає свої стати незалежно від того, чий слот його хостить.
+
+Наслідок layout'у: **рарність Payload** контролює {Buttstock/Optic/Magazine}-кастомізацію («наскільки відточена платформа»), **рарність Delivery** — {Muzzle/Grip} («наскільки відточений firing-механізм»).
+
+### Unique mods — без власного типу слота
+
+Це звичайні слот-категорії з **обмеженою сумісністю** (поле `CompatibleArchetype?`; null = universal):
+- *«Laser Focusing Optic»* — Optic-mod, лише **Laser** payload → ChargeTime/damage-scaling.
+- *«Scatter Choke»* — Muzzle-mod, лише **Scatter** delivery → стискає spread-cone.
+- *«Auto Heat-Sink»* — лише **Auto** delivery → −Heat ramp.
+
+Дає **identity-chase** (шукаєш unique-mod під улюблений архетип — design.md §10) + лягає на compatibility-систему (Q23) природно.
+
+### Нотатки на тест (не блокери)
+1. **Buttstock (Payload) + Grip (Delivery)** обидва тюнять recoil/ergo — ок (як Tarkov stock+foregrip); Delivery-слот названо **Grip** (не «Grip/Stock»), щоб не дублювати stock.
+2. **Баланс 3/2:** Payload (3) дає рарності Payload більший важіль на total slot count, ніж Delivery (2). Симетрія з §1 (Delivery робить більше) → опційний своп на 2/3. Тюнимо в тесті.
+
+> Аналіз нижче (§1-§5) — rationale й розглянуті варіанти; layout вище його підсумовує.
 
 ---
 
@@ -134,13 +170,14 @@ weapon_total = payload_slots + delivery_slots
 
 ## 6. Open questions → наступна ітерація
 
-- **Q18. Вісь 1: 1B (повністю core-granted) чи 1C (Optic = whole-weapon, решта core-granted)?**
-- **Q19. Вісь 2: typed (2A) чи generic-per-domain (2B)?** Typed читабельніше, generic простіший для variable-count.
-- **Q20. Rarity-curve слотів.** base + bonus на tier? (Common 1 → Legendary 3?) Cap per core?
-- **Q21. Ballistic Payload-слот.** Laser має Lens (charge/damage). Що дає Ballistic Payload, окрім Optic? (barrel-treatment? просто Optic?) — або Payload дає лише Optic, а специфіка лишається Delivery+Exotic.
-- **Q22. Чи всі deliveries мають Magazine-слот?** (Single-action — менший mag; чи всі однакові слоти?)
-- **Q23. Attachment compatibility поза domain.** Чи потрібні archetype-tags (Duckov «BR»), чи domain (Payload/Delivery) достатньо?
-- **Q24. Persistence у `WeaponConfiguration`.** Як зберігаємо встановлені attachment-instances (масив per slot?) — структурне рішення для Tier 0 даних.
+- ~~**Q18. Вісь 1: core-granted vs whole-weapon?**~~ ✅ **RESOLVED 2026-06-10** — core-granted (1B). Payload: Buttstock/Optic/Magazine; Delivery: Muzzle/Grip.
+- **Q19. Вісь 2: typed (2A) чи generic-per-domain (2B)?** Layout показує typed-категорії; чи слот строго одна категорія, чи domain-generic — ⏳ open (нахил: typed).
+- ~~**Q20. Rarity-curve слотів.**~~ ✅ accepted-for-testing — rarity-scaled count, крива Common→Legendary тюниться в плейтесті. **Sub-open:** порядок unlock'у слотів per core (Payload: Optic→Magazine→Buttstock? Delivery: Muzzle→Grip?).
+- ~~**Q21. Ballistic Payload-слот / payload-specific.**~~ ✅ **RESOLVED 2026-06-10** — payload-specific = **unique mods** (обмежена сумісність на наявних слот-категоріях), не окремий тип слота. Payload дає Buttstock/Optic/Magazine універсально.
+- **Q22. Чи всі deliveries/payloads мають усі свої слоти?** (Single-action — менший mag; чи слот-набір однаковий, лише к-ть unlocked різниться за rarity?) ⏳ open.
+- ~~**Q23. Attachment compatibility поза domain.**~~ ✅ напрям обрано — поле `CompatibleArchetype?` (null = universal; "Laser"/"Scatter"/… = unique). Деталі реалізації — Tier 0 даних.
+- **Q24. Persistence у `WeaponConfiguration`.** Як зберігаємо встановлені attachment-instances (масив per slot? `{ SlotId, ModId, Rarity? }`) — структурне рішення для Tier 0 даних.
+- **Q25. Slot-баланс Payload 3 / Delivery 2** — лишити чи свопнути на 2/3 (симетрія з §1 «Delivery робить більше»). ⏳ на тест.
 
 ---
 

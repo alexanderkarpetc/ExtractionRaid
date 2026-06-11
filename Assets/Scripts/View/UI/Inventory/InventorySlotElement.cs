@@ -54,6 +54,8 @@ namespace View.UI.Inventory
         readonly VisualElement _quest;
         readonly VisualElement _durabilityRoot;
         readonly VisualElement _durabilityFill;
+        readonly VisualElement _rarityTl;
+        readonly VisualElement _rarityBr;
 
         public InventorySlotElement(SlotKind kind, string emptyPlaceholder = "")
         {
@@ -100,6 +102,18 @@ namespace View.UI.Inventory
             _priceBadge.pickingMode = PickingMode.Ignore;
             _priceBadge.style.display = DisplayStyle.None;
             Add(_priceBadge);
+
+            _rarityTl = new VisualElement();
+            _rarityTl.AddToClassList("inv-slot__rarity-tl");
+            _rarityTl.pickingMode = PickingMode.Ignore;
+            _rarityTl.style.display = DisplayStyle.None;
+            Add(_rarityTl);
+
+            _rarityBr = new VisualElement();
+            _rarityBr.AddToClassList("inv-slot__rarity-br");
+            _rarityBr.pickingMode = PickingMode.Ignore;
+            _rarityBr.style.display = DisplayStyle.None;
+            Add(_rarityBr);
         }
 
         public void SetShopPrice(int price)
@@ -128,6 +142,7 @@ namespace View.UI.Inventory
                 _quest.style.display = DisplayStyle.None;
                 _durabilityRoot.style.display = DisplayStyle.None;
                 _priceBadge.style.display = DisplayStyle.None;
+                UpdateRarityFrame(null);
                 return;
             }
 
@@ -139,6 +154,7 @@ namespace View.UI.Inventory
             UpdateDurability(item);
             UpdateQuickSlotBadge(quickSlotKey);
             UpdateQuestMarker(item);
+            UpdateRarityFrame(item);
         }
 
         void UpdateResource(ItemState item)
@@ -204,6 +220,26 @@ namespace View.UI.Inventory
         {
             bool show = item?.Definition?.Category == ItemCategory.Quest;
             _quest.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        // Dual-rarity corner brackets — Payload (top-left) + Delivery (bottom-right),
+        // each tinted by its core's rarity. Shown only for built weapons. Rarity lives
+        // on the WeaponConfiguration instance, so no registry lookup is needed.
+        void UpdateRarityFrame(ItemState item)
+        {
+            bool show = item != null && item.HasWeaponConfiguration;
+            _rarityTl.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            _rarityBr.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!show) return;
+
+            var cfg = item.WeaponConfiguration;
+            var payloadColor  = RarityVisuals.Color(cfg.Payload.Rarity);
+            var deliveryColor = RarityVisuals.Color(cfg.Delivery.Rarity);
+
+            _rarityTl.style.borderLeftColor = payloadColor;
+            _rarityTl.style.borderTopColor  = payloadColor;
+            _rarityBr.style.borderRightColor  = deliveryColor;
+            _rarityBr.style.borderBottomColor = deliveryColor;
         }
 
         // ── Drag visuals (Stage 2) ────────────────────────────

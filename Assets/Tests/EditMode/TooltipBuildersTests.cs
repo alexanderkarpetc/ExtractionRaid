@@ -100,8 +100,7 @@ namespace Tests.EditMode
             var model = ItemTooltipBuilder.For(weapon, _registry);
 
             Assert.AreEqual("Ballistic Pistol", model.Title);
-            Assert.IsTrue(HasSection(model, "Combat"));
-            Assert.IsTrue(HasSection(model, "Cadence"));
+            Assert.IsTrue(HasSection(model, "Stats"));
         }
 
         [Test]
@@ -145,9 +144,29 @@ namespace Tests.EditMode
             var model = WeaponTooltipBuilder.For(weapon, _registry);
 
             Assert.AreEqual("Ballistic Pistol", model.Title);
-            Assert.AreEqual("Ballistic · Pistol", model.Subtitle);
+            // Subtitle = two rarity-colored cores (rich text). Assert content, not exact markup.
+            StringAssert.Contains("Ballistic", model.Subtitle);
+            StringAssert.Contains("Pistol", model.Subtitle);
+            StringAssert.Contains("Common", model.Subtitle);
             Assert.IsTrue(HasRow(model, "Damage", "15"));
             Assert.IsTrue(HasRow(model, "Magazine", "8/12"));
+        }
+
+        [Test]
+        public void WeaponBuilder_StatReadout_HasFeelBars_AndOmitsAmmoChannelStats()
+        {
+            var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 12);
+            var model = WeaponTooltipBuilder.For(weapon, _registry);
+
+            // Bar rows (value + progress bar): Damage, Rate of Fire + the feel stats.
+            Assert.IsTrue(HasBarRow(model, "Damage"));
+            Assert.IsTrue(HasBarRow(model, "Rate of Fire"));
+            Assert.IsTrue(HasBarRow(model, "Stability"));
+            Assert.IsTrue(HasBarRow(model, "Accuracy"));
+            Assert.IsTrue(HasBarRow(model, "Ergonomics"));
+            // Display rules: ammo-channel + delta-only stats are NOT shown on the weapon.
+            Assert.IsFalse(HasRowLabel(model, "Penetration"));
+            Assert.IsFalse(HasRowLabel(model, "Reload"));
         }
 
         [Test]
@@ -280,6 +299,14 @@ namespace Tests.EditMode
             foreach (var section in model.Sections)
                 foreach (var row in section.Rows)
                     if (row.Label == label) return true;
+            return false;
+        }
+
+        static bool HasBarRow(TooltipModel model, string label)
+        {
+            foreach (var section in model.Sections)
+                foreach (var row in section.Rows)
+                    if (row.Label == label && row.HasBar) return true;
             return false;
         }
     }

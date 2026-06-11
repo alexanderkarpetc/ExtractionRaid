@@ -2,15 +2,21 @@ using System.Collections.Generic;
 using Adapters;
 using State;
 using Systems;
+using View.UI;
 
 namespace View.UI.Tooltip.Builders
 {
     /// <summary>
-    /// Builds a <see cref="TooltipModel"/> for a built weapon — composition (Payload ·
-    /// FormFactor) plus combat / cadence stat groups. Reuses <see cref="WeaponStatComposer"/>
-    /// so the numbers exactly match what <see cref="WeaponBuilderPresenter"/> shows.
+    /// Builds a <see cref="TooltipModel"/> for a built weapon: the two cores with
+    /// per-core rarity (color = rarity) plus the player-facing stat readout from
+    /// <see cref="WeaponStatDisplay"/> (number rows + bar rows). Reuses
+    /// <see cref="WeaponStatComposer"/> so numbers match the Weapon Builder.
     ///
-    /// Pure C# — no Unity refs.
+    /// Display rules per docs/ai/weapon-builder/attachments/stats.md: no Penetration
+    /// (ammo channel), no Reload base value (delta-only later), Rate of Fire instead
+    /// of raw Fire Interval. Charge row kept for Laser payloads.
+    ///
+    /// Pure C# — rarity color via <see cref="RarityVisuals"/> hex (string), no Unity object refs.
     /// </summary>
     public static class WeaponTooltipBuilder
     {
@@ -31,33 +37,38 @@ namespace View.UI.Tooltip.Builders
             if (payloadDef == null || deliveryDef == null)
                 return new TooltipModel(title);
 
-            var subtitle = $"{payloadDef.DisplayName} · {deliveryDef.FormFactor}";
+            // Two cores, each tinted by its own rarity (the "weapon = 2 cores" signal).
+            var pRarity = config.Payload.Rarity;
+            var dRarity = config.Delivery.Rarity;
+            var subtitle =
+                $"<color={RarityVisuals.Hex(pRarity)}>{payloadDef.DisplayName} ({pRarity})</color>"
+                + " · "
+                + $"<color={RarityVisuals.Hex(dRarity)}>{deliveryDef.FormFactor} ({dRarity})</color>";
 
-            var stats = WeaponStatComposer.Compose(
-                payloadDef,  config.Payload.Rarity,
-                deliveryDef, config.Delivery.Rarity);
+            var stats = WeaponStatComposer.Compose(payloadDef, pRarity, deliveryDef, dRarity);
 
-            var combat = new List<TooltipRow>
-            {
-                new("Damage",      stats.Damage.ToString("0.##")),
-                new("Headshot",    $"{stats.HeadshotDamageMultiplier:0.##}×"),
-                new("Penetration", stats.BasePenetration.ToString("0.##")),
-            };
+            var rows = new List<TooltipRow>();
 
-            var cadence = new List<TooltipRow>();
+            // Charge (Laser only) — payload-specific cadence, shown first.
             if (WeaponChargeResolver.RequiresChargeUp(payloadDef))
             {
-                float chargeTime = WeaponChargeResolver.GetChargeTime(payloadDef, config.Payload.Rarity);
-                cadence.Add(new TooltipRow("Charge", $"{chargeTime:0.##} s"));
+                float chargeTime = WeaponChargeResolver.GetChargeTime(payloadDef, pRarity);
+                rows.Add(new TooltipRow("Charge", $"{chargeTime:0.##} s"));
             }
-            cadence.Add(new TooltipRow("Fire Interval", $"{stats.FireInterval:0.##} s"));
-            cadence.Add(new TooltipRow("Magazine",      $"{config.AmmoInMagazine}/{stats.MagazineSize}"));
-            cadence.Add(new TooltipRow("Reload",        $"{stats.ReloadTime:0.##} s"));
+
+            foreach (var r in WeaponStatDisplay.Build(stats))
+            {
+                if (r.Label == "Magazine")
+                    rows.Add(new TooltipRow("Magazine", $"{config.AmmoInMagazine}/{stats.MagazineSize}"));
+                else if (r.HasBar)
+                    rows.Add(new TooltipRow(r.Label, r.Value, r.BarRatio01));
+                else
+                    rows.Add(new TooltipRow(r.Label, r.Value));
+            }
 
             return new TooltipModel(title, subtitle, new[]
             {
-                new TooltipSection("Combat",  combat),
-                new TooltipSection("Cadence", cadence),
+                new TooltipSection("Stats", rows),
             });
         }
     }
