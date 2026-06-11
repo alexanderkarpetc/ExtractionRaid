@@ -84,6 +84,35 @@
     top: 6px;
 }
 
+/* Dual-rarity corner brackets for built weapons — Payload (top-left) +
+ * Delivery (bottom-right). Geometry here; per-item colors set in
+ * InventorySlotElement.UpdateRarityFrame. Hidden for empty / non-weapon slots. */
+.inv-slot__rarity-tl {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 13px;
+    height: 13px;
+    border-left-width: 2px;
+    border-top-width: 2px;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-radius: 0;
+}
+
+.inv-slot__rarity-br {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 13px;
+    height: 13px;
+    border-left-width: 0;
+    border-top-width: 0;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-radius: 0;
+}
+
 .inv-slot__durability {
     position: absolute;
     left: 6px;

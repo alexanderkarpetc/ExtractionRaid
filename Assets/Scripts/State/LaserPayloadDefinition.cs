@@ -15,8 +15,18 @@ namespace State
 
         [SerializeField] LaserSpecificStats[] _specificByTier = new LaserSpecificStats[RarityTierCount];
 
-        /// <summary>Laser-specific stats (ChargeTime) for the given rarity tier.</summary>
-        public LaserSpecificStats SpecificByTier(RarityTier tier) => _specificByTier[(int)tier];
+        /// <summary>
+        /// Laser-specific stats (ChargeTime) for the given rarity tier. Unauthored higher
+        /// tiers fall back to Common (rarity is visual-only until per-tier values exist),
+        /// so a non-Common laser keeps a valid charge time instead of 0.
+        /// </summary>
+        public LaserSpecificStats SpecificByTier(RarityTier tier)
+        {
+            var s = _specificByTier[(int)tier];
+            if (tier != RarityTier.Common && s.Equals(default(LaserSpecificStats)))
+                return _specificByTier[(int)RarityTier.Common];
+            return s;
+        }
 
         protected override void OnValidate()
         {

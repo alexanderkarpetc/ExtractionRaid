@@ -77,9 +77,13 @@
 }
 
 .tt-row {
+    flex-direction: column;
+    padding: var(--space-row-pad-y) 0;
+}
+
+.tt-row-header {
     flex-direction: row;
     justify-content: space-between;
-    padding: var(--space-row-pad-y) 0;
 }
 
 .tt-row-label {
@@ -91,4 +95,20 @@
     font-size: var(--font-tooltip-row);
     -unity-font-style: bold;
     color: var(--color-text-body-strong);
+}
+
+/* Full-width progress bar under the header line. Fill = goodness (higher = better). */
+.tt-row-bar {
+    width: 100%;
+    height: 5px;
+    margin-top: 3px;
+    background-color: var(--color-border-inset);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.tt-row-bar-fill {
+    height: 100%;
+    background-color: var(--color-accent);
+    border-radius: 3px;
 }

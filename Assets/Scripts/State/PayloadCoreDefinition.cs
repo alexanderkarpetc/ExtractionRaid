@@ -43,8 +43,19 @@ namespace State
         /// </summary>
         public GameObject BasePrefab => _basePrefab;
 
-        /// <summary>Common payload stats for the given rarity tier.</summary>
-        public CommonPayloadStats StatsByTier(RarityTier tier) => _statsByTier[(int)tier];
+        /// <summary>
+        /// Common payload stats for the given rarity tier. Unauthored higher tiers
+        /// (per-tier values are Tier 4b — not yet filled) fall back to Common, so a
+        /// non-Common rarity never yields a zero-stat weapon. Rarity is visual-only
+        /// until per-tier values exist.
+        /// </summary>
+        public CommonPayloadStats StatsByTier(RarityTier tier)
+        {
+            var s = _statsByTier[(int)tier];
+            if (tier != RarityTier.Common && s.Equals(default(CommonPayloadStats)))
+                return _statsByTier[(int)RarityTier.Common];
+            return s;
+        }
 
         protected virtual void OnValidate()
         {

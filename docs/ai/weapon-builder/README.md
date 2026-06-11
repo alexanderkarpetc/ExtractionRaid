@@ -4,6 +4,8 @@
 
 > ⏸ **PAUSED 2026-05-01.** Foundation + Tier 6 + Tier 8 shipped. Active dev focus shifted до **Better Feel Gunplay** epic ([`docs/ai/gunplay/`](../gunplay/README.md)) — make existing 6 archetypes feel visceral. Weapon Builder polish track (Tier 8.x → 4a → 9 → 10) re-engages коли gunplay polish loop converges. Tier 3/5 (content expansion) лишаються deferred sine die.
 
+> 🎨 **Active sub-epic (2026-06-10): Weapon Attachments** — шар модулів (Typed Attachments §6.4), що тюнять стати/feel без зміни логіки. Дизайн завершено, 5-фазний roadmap затверджено → [`attachments/README.md`](./attachments/README.md).
+
 > **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (A/B/D/E/F shipped; G7 deferred) + **Tier 8 done (Waves A-E)** + Cluster A legacy-refs retirement.
 >
 > **Strategic pivot 2026-05-01: polish-first.** Tier 3/5 (content expansion + exotic) deferred sine die; current effort = make existing 6 archetypes feel great. 📋 Next: **Tier 8.x follow-ups → Tier 4a (bot migration) → Tier 9 (VFX/SFX) → Tier 10 (feel)**. See [plan/roadmap.md](./plan/roadmap.md#execution-sequence-revised-2026-05-01--polish-first) for full execution sequence.

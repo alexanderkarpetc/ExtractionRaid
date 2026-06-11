@@ -51,16 +51,42 @@ namespace View.UI.Tooltip
         }
     }
 
-    /// <summary>A single key/value line inside a tooltip section.</summary>
+    /// <summary>
+    /// A single line inside a tooltip section. Either a key/value text row
+    /// (<see cref="Value"/> set, <see cref="HasBar"/> false) or a key/bar row
+    /// (<see cref="BarRatio01"/> in 0..1, <see cref="Value"/> empty) — used for the
+    /// "feel" stats (Recoil / Accuracy / Ergonomics) where a 0..1 goodness fill
+    /// reads better than a raw number. See WeaponStatDisplay.
+    /// </summary>
     public readonly struct TooltipRow
     {
         public string Label { get; }
         public string Value { get; }
+        /// <summary>0..1 fill (fuller = better) for bar rows; -1 = text row, no bar.</summary>
+        public float BarRatio01 { get; }
+
+        public bool HasBar => BarRatio01 >= 0f;
 
         public TooltipRow(string label, string value)
         {
             Label = label ?? string.Empty;
             Value = value ?? string.Empty;
+            BarRatio01 = -1f;
+        }
+
+        public TooltipRow(string label, float barRatio01)
+        {
+            Label = label ?? string.Empty;
+            Value = string.Empty;
+            BarRatio01 = barRatio01 < 0f ? 0f : barRatio01 > 1f ? 1f : barRatio01;
+        }
+
+        /// <summary>Row with both a value (header, right) and a progress bar (below).</summary>
+        public TooltipRow(string label, string value, float barRatio01)
+        {
+            Label = label ?? string.Empty;
+            Value = value ?? string.Empty;
+            BarRatio01 = barRatio01 < 0f ? 0f : barRatio01 > 1f ? 1f : barRatio01;
         }
     }
 }

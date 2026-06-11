@@ -552,7 +552,9 @@ namespace Editor
         /// Builds a fully-assembled <see cref="State.ItemState"/> for every Payload × Delivery
         /// combination in <see cref="State.CoreDefinitionDatabase"/> and drops them into free
         /// backpack slots. Lets QA/dev test each archetype without going through the Builder UI.
-        /// All variants spawn at <see cref="State.RarityTier.Common"/>; magazines start full.
+        /// Each core gets a RANDOM rarity — exercises the dual-rarity inventory frame +
+        /// tooltip colors. Stats fall back to Common until per-tier values are authored
+        /// (Tier 4b), so rarity is visual-only for now; magazines start full.
         /// </summary>
         static void SpawnAllWeaponVariations()
         {
@@ -582,10 +584,12 @@ namespace Editor
                     int slot = inventory.FindFreeBackpackSlot();
                     if (slot < 0) { skippedFull++; continue; }
 
-                    var deliveryStats = delivery.StatsByTier(State.RarityTier.Common);
+                    var payloadRarity  = (State.RarityTier)Random.Range(0, 5);
+                    var deliveryRarity = (State.RarityTier)Random.Range(0, 5);
+                    var deliveryStats  = delivery.StatsByTier(deliveryRarity);
                     var config = new State.WeaponConfiguration(
-                        payload:        new State.PayloadCoreInstance(payload.Id,   State.RarityTier.Common),
-                        delivery:       new State.DeliveryCoreInstance(delivery.Id, State.RarityTier.Common),
+                        payload:        new State.PayloadCoreInstance(payload.Id,   payloadRarity),
+                        delivery:       new State.DeliveryCoreInstance(delivery.Id, deliveryRarity),
                         exotic:         null,
                         ammoInMagazine: deliveryStats.MagazineSize);
 

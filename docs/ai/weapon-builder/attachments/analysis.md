@@ -179,6 +179,8 @@
 
 - [`stats.md`](./stats.md) — **стат-словник (іт. 2):** на що Attachments впливають, наші стати vs конкуренти, gaps
 - [`slots.md`](./slots.md) — **слот-таксономія (іт. 3):** які слоти, скільки, прив'язка до cores, rarity × slots
+- [`catalog.md`](./catalog.md) — **стартовий каталог модулів (іт. 4):** конкретні attachment-и з give/take + unique
+- [`ux.md`](./ux.md) — **UX-прохід (іт. 5):** readout параметрів, показ 2-core, де/як малювати слоти модів
 - [`competitor-research.md`](./competitor-research.md) — повні per-game findings із джерелами
 - [`../design.md`](../design.md) §6.4 Typed Attachments, §6.5 Slot structure — концептуальний каркас
 - [`../architecture.md`](../architecture.md) — D1 (WeaponStats склад), D2 (payload subclasses), composition pipeline

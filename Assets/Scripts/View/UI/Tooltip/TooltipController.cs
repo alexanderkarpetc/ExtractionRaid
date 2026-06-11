@@ -237,14 +237,31 @@ namespace View.UI.Tooltip
                 var rowEl = new VisualElement();
                 rowEl.AddToClassList("tt-row");
 
+                // Header line: label (left) + value (right).
+                var header = new VisualElement();
+                header.AddToClassList("tt-row-header");
+
                 var label = new Label(row.Label);
                 label.AddToClassList("tt-row-label");
-
                 var value = new Label(row.Value);
                 value.AddToClassList("tt-row-value");
 
-                rowEl.Add(label);
-                rowEl.Add(value);
+                header.Add(label);
+                header.Add(value);
+                rowEl.Add(header);
+
+                // Full-width progress bar below the header (bar rows only).
+                if (row.HasBar)
+                {
+                    var bar = new VisualElement();
+                    bar.AddToClassList("tt-row-bar");
+                    var fill = new VisualElement();
+                    fill.AddToClassList("tt-row-bar-fill");
+                    fill.style.width = new Length(row.BarRatio01 * 100f, LengthUnit.Percent);
+                    bar.Add(fill);
+                    rowEl.Add(bar);
+                }
+
                 box.Add(rowEl);
             }
 

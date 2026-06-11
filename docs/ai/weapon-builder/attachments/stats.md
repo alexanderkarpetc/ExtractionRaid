@@ -18,7 +18,7 @@
 | **Headshot Mult** | `HeadshotDamageMultiplier` | наш «crit» |
 | **Rate of Fire** | `FireInterval` (інверсія) | показуємо RoF (вище=краще), НЕ сирий interval у секундах |
 | **Magazine Size** | `MagazineSize` | |
-| **Recoil (V + H + recovery)** | `RecoilKickForward`, `RecoilKickSide`, `RecoilRecoverySpeed` | recovery під Recoil (не Ergo) — щоб recoil був цілісним |
+| **Recoil (V + H + recovery)** | `RecoilKickForward`, `RecoilKickSide`, `RecoilRecoverySpeed` | recovery під Recoil (не Ergo); **показуємо гравцю як "Stability"** (вище=краще, 0..100 score) — див. ux.md §3 |
 | **Accuracy / Spread** | `SpreadAngle`, `ConeHalfAngle` (+ heat-spread coupling) | додано цієї ітерації; видно через SDF-crosshair |
 | **Ergonomics** (агрегат) | ADS-speed + equip/unequip + move-speed-mult + `BodyRotationSpeed` | **один множник масштабує весь бандл**; ➕ 2 нові per-weapon поля |
 | **Noise** | ➕ `NoiseRadius` + боти реагують на `WeaponFired` | **НОВА** perception-механіка (стелс vs DPS — глушник) |

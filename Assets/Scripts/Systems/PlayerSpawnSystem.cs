@@ -108,12 +108,17 @@ namespace Systems
 
         static ItemState MakeWeapon(RaidState state, (string payload, string delivery, int magSize) combo)
         {
+            // CHEAT loadout: random rarity per core so the dual-rarity inventory frame +
+            // tooltip colors are immediately testable on a fresh player. Stats fall back
+            // to Common until per-tier values are authored (Tier 4b) — rarity is visual-only.
             var config = new WeaponConfiguration(
-                payload:        new PayloadCoreInstance(combo.payload, RarityTier.Common),
-                delivery:       new DeliveryCoreInstance(combo.delivery, RarityTier.Common),
+                payload:        new PayloadCoreInstance(combo.payload, RandomRarity()),
+                delivery:       new DeliveryCoreInstance(combo.delivery, RandomRarity()),
                 exotic:         null,
                 ammoInMagazine: combo.magSize);
             return ItemState.CreateWeapon(state.AllocateEId(), "Weapon", config);
         }
+
+        static RarityTier RandomRarity() => (RarityTier)UnityEngine.Random.Range(0, 5);
     }
 }
