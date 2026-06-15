@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5194425620583709061
+--- !u!114 &-4066404077554716746
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Cars01
+  m_Name: MedCit
   m_Shader: {fileID: 4800000, guid: 36fed6af82d4c2444bf25a8ac18e73e5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -69,16 +69,12 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _Noise:
-        m_Texture: {fileID: 2800000, guid: 73c54ab06a34357468ca44dec8789a8f, type: 3}
-        m_Scale: {x: 20, y: 20}
-        m_Offset: {x: 0, y: 0}
     - _NoiseDither:
-        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NosieEmission:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d806f4f4115f38a43a11b0a7d42cb36c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -94,7 +90,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Texture:
-        m_Texture: {fileID: 2800000, guid: b71821e9410bd174f982ccfcbaa59fd8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4a3cd6389c42d1d439405822f8e4291c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -121,12 +117,10 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
-    - _Brightness: 0
-    - _BrightnessEmission: 0
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorStreng: 1.3
+    - _ColorStreng: 1.5
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -134,22 +128,19 @@ Material:
     - _Dither: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _Emission: 0
+    - _Emission: 1
     - _EnvironmentReflections: 1
-    - _Float0: 0.5
     - _Frensel: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaskIvert: 0
     - _Metallic: 0
-    - _NoiseTilling: 50
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Saturate: 1.6
+    - _Saturate: 1.5
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -164,10 +155,9 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Bias_Scale_PowerFrensel: {r: 0, g: 1, b: 5, a: 0}
-    - _Color: {r: 0, g: 0, b: 0, a: 1}
-    - _Color1: {r: 0, g: 0, b: 0, a: 0}
-    - _Color2: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorEmission: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 1, g: 1, b: 1, a: 0}
+    - _ColorEmission: {r: 0.2069281, g: 3.396227, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
