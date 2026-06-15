@@ -16,33 +16,33 @@ MonoBehaviour:
   _shellPrefabId: BotShell
   _bodyPrefab: {fileID: 1612062852821883575, guid: d5b06130063e44a518996bc34d8c8e2e, type: 3}
   _weapon: 2
-  _maxHp: 200
-  _healAmount: 0
-  _healThreshold: 0
-  _healCooldown: 0
+  _maxHp: 300
+  _healAmount: 30
+  _healThreshold: 0.5
+  _healCooldown: 10
   _emergencyHealThreshold: 0.3
   _emergencyHealDelay: 1.5
   _emergencyHealCooldown: 8
   _healSafeDelay: 3
   _healSafeEnemyDistance: 10
-  _medkitCount: 0
-  _moveSpeed: 4
+  _medkitCount: 1
+  _moveSpeed: 3
   _patrolSpeed: 2
-  _chaseSpeed: 5.5
+  _chaseSpeed: 4
   _visionRange: 40
   _visionAngle: 140
   _hearingRange: 6
   _targetMemoryDuration: 12
   _reactionTime: 0.3
-  _accuracy: 0.65
-  _engageRange: 15
+  _accuracy: 0.8
+  _engageRange: 25
   _dodgeCooldown: 3
-  _grenadeCount: 0
-  _grenadeCooldown: 0
+  _grenadeCount: 5
+  _grenadeCooldown: 5
   _grenadeMinThrowDist: 5
   _meleeAttackRadius: 1.5
   _meleeAttackDamage: 10
   _meleeAttackCooldown: 1
-  _helmetDefinitionId:
+  _helmetDefinitionId: 
   _bodyArmorDefinitionId: Armor_Basic
-  _behaviors: 38
+  _behaviors: 118
