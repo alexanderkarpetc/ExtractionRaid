@@ -6,6 +6,7 @@
             <ui:Label name="subtitle"    class="tt-subtitle" />
             <ui:Label name="description" class="tt-description" />
             <ui:VisualElement name="sections" picking-mode="Ignore" class="tt-sections" />
+            <ui:Label name="footer" class="tt-footer" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

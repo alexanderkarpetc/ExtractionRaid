@@ -22,17 +22,24 @@ namespace View.UI.Tooltip
         /// </summary>
         public string Description { get; }
         public IReadOnlyList<TooltipSection> Sections { get; }
+        /// <summary>
+        /// Optional muted hint rendered at the bottom (e.g. "Right-click to modify").
+        /// Hidden when empty.
+        /// </summary>
+        public string Footer { get; }
 
         public TooltipModel(
             string title,
             string subtitle = null,
             IReadOnlyList<TooltipSection> sections = null,
-            string description = null)
+            string description = null,
+            string footer = null)
         {
             Title       = title       ?? string.Empty;
             Subtitle    = subtitle    ?? string.Empty;
             Description = description ?? string.Empty;
             Sections    = sections    ?? Array.Empty<TooltipSection>();
+            Footer      = footer      ?? string.Empty;
         }
 
         public bool IsEmpty => string.IsNullOrEmpty(Title) && Sections.Count == 0;

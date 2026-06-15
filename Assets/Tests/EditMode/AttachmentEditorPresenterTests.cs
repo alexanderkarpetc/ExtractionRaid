@@ -186,5 +186,21 @@ namespace Tests.EditMode
             Assert.AreEqual(20, p.CurrentStats.Value.MagazineSize);      // actual unchanged
             Assert.IsFalse(p.InstalledIn(AttachmentSlot.Magazine).HasValue);
         }
+
+        [Test]
+        public void InstallAndRemove_BumpConfigVersion()
+        {
+            var mag = MakeAtt("mg", AttachmentSlot.Magazine, (WeaponStatAxis.MagazineSize, 50f));
+            var p = PresenterWith(mag);
+            var w = Weapon();
+            p.Load(w);
+            int before = w.WeaponConfigVersion;
+
+            p.Install(AttachmentSlot.Magazine, "mg");
+            Assert.AreEqual(before + 1, w.WeaponConfigVersion);
+
+            p.Remove(AttachmentSlot.Magazine);
+            Assert.AreEqual(before + 2, w.WeaponConfigVersion);
+        }
     }
 }

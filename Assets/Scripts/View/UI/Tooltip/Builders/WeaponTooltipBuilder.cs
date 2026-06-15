@@ -67,10 +67,26 @@ namespace View.UI.Tooltip.Builders
                     rows.Add(new TooltipRow(r.Label, r.Value));
             }
 
-            return new TooltipModel(title, subtitle, new[]
+            var sections = new List<TooltipSection> { new("Stats", rows) };
+
+            // Installed attachments — one row per occupied slot (slot → mod name).
+            var attachRows = new List<TooltipRow>();
+            var atts = config.Attachments;
+            if (atts != null)
             {
-                new TooltipSection("Stats", rows),
-            });
+                for (int i = 0; i < atts.Length; i++)
+                {
+                    if (string.IsNullOrEmpty(atts[i].DefinitionId)) continue;
+                    string modName = registry.TryGetAttachment(atts[i].DefinitionId, out var aDef) && aDef != null
+                        ? aDef.DisplayName
+                        : atts[i].DefinitionId;
+                    attachRows.Add(new TooltipRow(atts[i].Slot.ToString(), modName));
+                }
+            }
+            if (attachRows.Count > 0)
+                sections.Add(new TooltipSection("Attachments", attachRows));
+
+            return new TooltipModel(title, subtitle, sections, footer: "Right-click to modify");
         }
     }
 }

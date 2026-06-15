@@ -21,6 +21,10 @@ namespace State
         // Assembled into a runtime WeaponEntityState by WeaponSyncSystem / PlayerSpawnSystem.
         public bool HasWeaponConfiguration;
         public WeaponConfiguration WeaponConfiguration;
+        // Bumped whenever the configuration changes in place (e.g. attachment install/
+        // remove). WeaponSyncSystem rebuilds the equipped runtime weapon when this differs
+        // from the built weapon's ConfigVersion — the D6 re-assembly trigger for live edits.
+        public int WeaponConfigVersion;
 
         public bool HasCustomDurability => CurrentDurability >= 0f;
 

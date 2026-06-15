@@ -113,6 +113,22 @@
     border-radius: 0;
 }
 
+/* Mod pips (top-right) — one dot per installed attachment. */
+.inv-slot__mod-pips {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    flex-direction: row;
+}
+
+.inv-slot__mod-pip {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    margin-left: 3px;
+    background-color: var(--color-text-secondary);
+}
+
 .inv-slot__durability {
     position: absolute;
     left: 6px;

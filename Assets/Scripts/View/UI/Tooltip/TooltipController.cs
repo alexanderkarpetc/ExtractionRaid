@@ -43,6 +43,7 @@ namespace View.UI.Tooltip
         Label _subtitle;
         Label _description;
         VisualElement _sections;
+        Label _footer;
 
         bool _isVisible;
 
@@ -197,6 +198,7 @@ namespace View.UI.Tooltip
             _subtitle    = _root.Q<Label>("subtitle");
             _description = _root.Q<Label>("description");
             _sections    = _root.Q<VisualElement>("sections");
+            _footer      = _root.Q<Label>("footer");
         }
 
         void HideImmediate()
@@ -215,6 +217,9 @@ namespace View.UI.Tooltip
 
             _description.text = model.Description;
             ToggleEmptyClass(_description, string.IsNullOrEmpty(model.Description));
+
+            _footer.text = model.Footer;
+            ToggleEmptyClass(_footer, string.IsNullOrEmpty(model.Footer));
 
             _sections.Clear();
             for (int i = 0; i < model.Sections.Count; i++)

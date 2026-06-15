@@ -56,7 +56,8 @@ namespace Systems
                 }
 
                 if (invItem != null && hotbarWeapon != null
-                    && hotbarWeapon.Id != invItem.Id)
+                    && (hotbarWeapon.Id != invItem.Id
+                        || hotbarWeapon.ConfigVersion != invItem.WeaponConfigVersion))
                 {
                     player.Hotbar[i] = BuildWeaponForItem(invItem, context.CoreDefinitions, context.Events);
 
@@ -128,6 +129,7 @@ namespace Systems
                 Stats = result.Stats,
 
                 AmmoType       = result.PayloadDefinition?.AmmoType,
+                ConfigVersion  = invItem.WeaponConfigVersion,
                 AmmoInMagazine = config.AmmoInMagazine,
 
                 LastFireTime   = -999f,

@@ -87,6 +87,13 @@ namespace State
         /// </summary>
         public string AmmoType;
 
+        /// <summary>
+        /// Snapshot of the source <see cref="ItemState.WeaponConfigVersion"/> this runtime
+        /// weapon was assembled from. WeaponSyncSystem rebuilds when it diverges (live
+        /// attachment edits) — D6 re-assembly trigger.
+        /// </summary>
+        public int ConfigVersion;
+
         // ── Runtime state ──────────────────────────────────
         public int         AmmoInMagazine;
         public float       LastFireTime;

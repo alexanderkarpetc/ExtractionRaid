@@ -56,6 +56,19 @@
     display: none;
 }
 
+/* Bottom hint — e.g. "Right-click to modify". */
+.tt-footer {
+    font-size: var(--font-tooltip-flavor);
+    -unity-font-style: italic;
+    color: var(--color-text-muted);
+    white-space: normal;
+    margin-top: 8px;
+}
+
+.tt-footer.is-empty {
+    display: none;
+}
+
 .tt-sections {
     flex-direction: column;
 }

@@ -56,6 +56,7 @@ namespace View.UI.Inventory
         readonly VisualElement _durabilityFill;
         readonly VisualElement _rarityTl;
         readonly VisualElement _rarityBr;
+        readonly VisualElement _modPips;
 
         public InventorySlotElement(SlotKind kind, string emptyPlaceholder = "")
         {
@@ -114,6 +115,12 @@ namespace View.UI.Inventory
             _rarityBr.pickingMode = PickingMode.Ignore;
             _rarityBr.style.display = DisplayStyle.None;
             Add(_rarityBr);
+
+            _modPips = new VisualElement();
+            _modPips.AddToClassList("inv-slot__mod-pips");
+            _modPips.pickingMode = PickingMode.Ignore;
+            _modPips.style.display = DisplayStyle.None;
+            Add(_modPips);
         }
 
         public void SetShopPrice(int price)
@@ -143,6 +150,7 @@ namespace View.UI.Inventory
                 _durabilityRoot.style.display = DisplayStyle.None;
                 _priceBadge.style.display = DisplayStyle.None;
                 UpdateRarityFrame(null);
+                UpdateModPips(null);
                 return;
             }
 
@@ -155,6 +163,7 @@ namespace View.UI.Inventory
             UpdateQuickSlotBadge(quickSlotKey);
             UpdateQuestMarker(item);
             UpdateRarityFrame(item);
+            UpdateModPips(item);
         }
 
         void UpdateResource(ItemState item)
@@ -240,6 +249,38 @@ namespace View.UI.Inventory
             _rarityTl.style.borderTopColor  = payloadColor;
             _rarityBr.style.borderRightColor  = deliveryColor;
             _rarityBr.style.borderBottomColor = deliveryColor;
+        }
+
+        // Mod pips (top-right) — one dot per installed attachment. At-a-glance "how kitted
+        // out" this weapon is. Hidden for non-weapons / weapons with no attachments.
+        void UpdateModPips(ItemState item)
+        {
+            int count = 0;
+            if (item != null && item.HasWeaponConfiguration)
+            {
+                var atts = item.WeaponConfiguration.Attachments;
+                if (atts != null)
+                    for (int i = 0; i < atts.Length; i++)
+                        if (!string.IsNullOrEmpty(atts[i].DefinitionId)) count++;
+            }
+
+            if (count <= 0)
+            {
+                _modPips.style.display = DisplayStyle.None;
+                _modPips.Clear();
+                return;
+            }
+
+            _modPips.Clear();
+            int shown = count > 8 ? 8 : count; // defensive cap (≤5 slot categories in practice)
+            for (int i = 0; i < shown; i++)
+            {
+                var pip = new VisualElement();
+                pip.AddToClassList("inv-slot__mod-pip");
+                pip.pickingMode = PickingMode.Ignore;
+                _modPips.Add(pip);
+            }
+            _modPips.style.display = DisplayStyle.Flex;
         }
 
         // ── Drag visuals (Stage 2) ────────────────────────────

@@ -59,7 +59,13 @@ namespace View
             bool tabPressed = kb != null && kb[Key.Tab].wasPressedThisFrame;
             if (tabPressed)
             {
-                if (builderOpen)
+                if (View.UI.Attachments.AttachmentEditorWindow.Instance != null
+                    && View.UI.Attachments.AttachmentEditorWindow.Instance.IsOpen)
+                {
+                    // Tab while the attachment editor is open closes it first (inventory stays).
+                    View.UI.Attachments.AttachmentEditorWindow.Instance.Close();
+                }
+                else if (builderOpen)
                 {
                     // Tab while Builder open = "close everything" — closing
                     // Builder clears BuilderTargetId → builderOpen=false next

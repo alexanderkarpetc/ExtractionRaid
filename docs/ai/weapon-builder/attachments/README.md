@@ -2,7 +2,7 @@
 
 Шар **модулів (attachments)** на зброю, зібрану у Weapon Builder. Покращення, що **тюнять характеристики й feel**, але **не міняють логіку** зброї (логіка = Payload + Delivery). Це активація шару **«Typed Attachments»** з [`../design.md`](../design.md) §6.4 (раніше deferred).
 
-> **Статус (2026-06-10):** 🎨 дизайн завершено (5 ітерацій) → 📋 roadmap затверджено → 🚧 **P1 shipped** (стат-readout у tooltip з барами + 2-core dual-rarity + inventory rarity-frame; 564 EditMode green). **Next: P2 — перші attachments.**
+> **Статус (2026-06-12):** 🎨 дизайн завершено → ✅ **P1 shipped** (tooltip стат-бари + dual-rarity + inventory frame) → 🚧 **P2 core shipped**: P2.1 data+compose, P2.2 inventory-invoked attachment editor (anywhere, Variant A, focus-slot→list, live green/red delta, config-version re-assembly), P2.3 base mods. ✅ **P2 done** (P2.4 inventory mod-pips shipped). Sidegrade-loop живий end-to-end. **Лишилось:** balance/playtest (числа модів = catalog placeholders). 587 EditMode green. **Next phases:** P4 (Noise→Suppressor, Sight/FOV→Scope), P3 (unique mods + rarity-scaled slots), loot-gating attachments-as-items.
 >
 > **Термінологія:** цей шар = **Attachments / mods**. «Cores / modules» = Payload/Delivery (щоб не плутати — слово «module» зайняте під cores). Q9 — soft, лишаємо «attachments».
 

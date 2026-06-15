@@ -140,14 +140,31 @@ namespace Tests.EditMode.Fakes
         public static CoreDefinitionDatabase MakeDatabase(
             IEnumerable<PayloadCoreDefinition> payloads = null,
             IEnumerable<DeliveryCoreDefinition> deliveries = null,
-            IEnumerable<ExoticModDefinition> exotics = null)
+            IEnumerable<ExoticModDefinition> exotics = null,
+            IEnumerable<AttachmentDefinition> attachments = null)
         {
             var db = ScriptableObject.CreateInstance<CoreDefinitionDatabase>();
             db.SetEntries(
-                payloads   == null ? new List<PayloadCoreDefinition>()  : new List<PayloadCoreDefinition>(payloads),
-                deliveries == null ? new List<DeliveryCoreDefinition>() : new List<DeliveryCoreDefinition>(deliveries),
-                exotics    == null ? new List<ExoticModDefinition>()    : new List<ExoticModDefinition>(exotics));
+                payloads    == null ? new List<PayloadCoreDefinition>()  : new List<PayloadCoreDefinition>(payloads),
+                deliveries  == null ? new List<DeliveryCoreDefinition>() : new List<DeliveryCoreDefinition>(deliveries),
+                exotics     == null ? new List<ExoticModDefinition>()    : new List<ExoticModDefinition>(exotics),
+                attachments == null ? new List<AttachmentDefinition>()   : new List<AttachmentDefinition>(attachments));
             return db;
+        }
+
+        public static AttachmentDefinition MakeAttachment(
+            string id, string displayName, AttachmentSlot slot,
+            params (WeaponStatAxis axis, float percent)[] deltas)
+        {
+            var def = ScriptableObject.CreateInstance<AttachmentDefinition>();
+            SetPrivateField(def, "_id", id);
+            SetPrivateField(def, "_displayName", displayName);
+            SetPrivateField(def, "_slot", slot);
+            var mods = new StatDelta[deltas?.Length ?? 0];
+            for (int i = 0; i < mods.Length; i++)
+                mods[i] = new StatDelta { Axis = deltas[i].axis, Percent = deltas[i].percent };
+            SetPrivateField(def, "_modifiers", mods);
+            return def;
         }
 
         public static ICoreDefinitionRegistry MakeRegistry(CoreDefinitionDatabase db)

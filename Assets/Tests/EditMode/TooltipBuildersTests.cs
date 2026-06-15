@@ -150,6 +150,7 @@ namespace Tests.EditMode
             StringAssert.Contains("Common", model.Subtitle);
             Assert.IsTrue(HasRow(model, "Damage", "15"));
             Assert.IsTrue(HasRow(model, "Magazine", "8/12"));
+            StringAssert.Contains("modify", model.Footer); // "Right-click to modify" hint (P2)
         }
 
         [Test]
@@ -198,6 +199,31 @@ namespace Tests.EditMode
 
             Assert.AreEqual(WeaponDisplayName.BrokenLabel, model.Title);
             Assert.AreEqual(0, model.Sections.Count);
+        }
+
+        [Test]
+        public void WeaponBuilder_WithAttachment_ListsItInAttachmentsSection()
+        {
+            var redDot = WeaponBuilderTestFactory.MakeAttachment("RedDot", "Red Dot", AttachmentSlot.Optic);
+            var db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:    new[] { _ballistic },
+                deliveries:  new[] { _singleAction },
+                attachments: new[] { redDot });
+            var reg = WeaponBuilderTestFactory.MakeRegistry(db);
+
+            var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 8);
+            weapon.WeaponConfiguration.Attachments = new[]
+            {
+                new AttachmentInstance(AttachmentSlot.Optic, "RedDot"),
+            };
+
+            try
+            {
+                var model = WeaponTooltipBuilder.For(weapon, reg);
+                Assert.IsTrue(HasSection(model, "Attachments"));
+                Assert.IsTrue(HasRow(model, "Optic", "Red Dot"));
+            }
+            finally { WeaponBuilderTestFactory.DestroyAll(redDot, db); }
         }
 
         // ── ModuleTooltipBuilder ──────────────────────────────

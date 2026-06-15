@@ -721,6 +721,15 @@ namespace View.UI.Inventory
             var inv = App.Instance?.Player?.Inventory;
             if (inv == null) return;
 
+            // Weapon attachment editing — opens the modal editor anywhere (P2.2c).
+            if (slot.CurrentItem != null && slot.CurrentItem.HasWeaponConfiguration)
+            {
+                var weapon = slot.CurrentItem;
+                opts.Add(new ContextMenuElement.Option {
+                    Label = "Modify",
+                    OnClick = () => View.UI.Attachments.AttachmentEditorWindow.Instance?.Open(weapon) });
+            }
+
             // Quick-slot bind options for backpack consumables.
             if (slot.SlotRef.Type == SlotType.Backpack &&
                 slot.CurrentItem != null &&

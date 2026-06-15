@@ -87,6 +87,7 @@ namespace View.UI.Attachments
 
             _weapon.WeaponConfiguration.Attachments =
                 WithSlot(_weapon.WeaponConfiguration.Attachments, slot, new AttachmentInstance(slot, modId));
+            _weapon.WeaponConfigVersion++; // D6 re-assembly trigger (live equipped-weapon resync)
             StateChanged?.Invoke();
         }
 
@@ -95,6 +96,7 @@ namespace View.UI.Attachments
             if (!HasWeapon) return;
             _weapon.WeaponConfiguration.Attachments =
                 WithSlot(_weapon.WeaponConfiguration.Attachments, slot, null);
+            _weapon.WeaponConfigVersion++; // D6 re-assembly trigger (live equipped-weapon resync)
             StateChanged?.Invoke();
         }
 

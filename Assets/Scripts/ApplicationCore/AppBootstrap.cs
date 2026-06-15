@@ -138,6 +138,13 @@ namespace ApplicationCore
             craftingMockupHost.AddComponent<CraftingMockupWindow>();
             craftingMockupHost.AddComponent<CraftingMockupHotkey>();
 
+            // Attachment editor modal — edit a weapon's attachments anywhere (P2.2). Hidden
+            // by default; opened via AttachmentEditorWindow.Instance.Open(weaponItem). Lazily
+            // builds its own presenter. See docs/ai/weapon-builder/attachments/.
+            var attachmentEditorHost = new GameObject("AttachmentEditorWindow");
+            attachmentEditorHost.transform.SetParent(transform, false);
+            attachmentEditorHost.AddComponent<View.UI.Attachments.AttachmentEditorWindow>();
+
             // Weapon Builder modal — hidden by default, opened by Workbench or DevCheats.
             var weaponBuilderHost = new GameObject("WeaponBuilderWindow");
             weaponBuilderHost.transform.SetParent(transform, false);

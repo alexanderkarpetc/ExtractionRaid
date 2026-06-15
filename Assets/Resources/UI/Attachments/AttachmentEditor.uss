@@ -1,0 +1,158 @@
+/* Attachment editor — Variant A (two-pane). Tokens from _tokens.uss (global via Theme.tss).
+ * Slots-left + mods/stats-right. Built in C# by AttachmentEditorWindow. */
+
+.ae-backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: var(--color-modal-backdrop);
+    align-items: center;
+    justify-content: center;
+}
+
+.ae-window {
+    width: 880px;
+    background-color: var(--color-window-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-window);
+    border-radius: var(--radius-window);
+    padding: var(--space-modal-pad-y) var(--space-modal-pad-x);
+}
+
+.ae-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.ae-title {
+    font-size: var(--font-section-heading);
+    -unity-font-style: bold;
+    color: var(--color-accent);
+}
+
+.ae-cores {
+    flex-direction: row;
+}
+
+.ae-core-chip {
+    font-size: var(--font-card-kind);
+    color: var(--color-text-secondary);
+    background-color: var(--color-card-bg);
+    border-left-width: 3px;
+    border-radius: 4px;
+    padding: 3px 9px;
+    margin-left: 8px;
+}
+
+.ae-body {
+    flex-direction: row;
+}
+
+.ae-pane {
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border-inset);
+    border-width: var(--border-inset);
+    border-radius: var(--radius-inset);
+    padding: 10px 12px;
+}
+
+.ae-pane-left  { width: 320px; margin-right: 12px; }
+.ae-pane-right { flex-grow: 1; }
+
+.ae-section-heading {
+    font-size: var(--font-tooltip-flavor);
+    color: var(--color-text-stat-label);
+    margin-bottom: 6px;
+    margin-top: 10px;
+}
+.ae-section-heading.first { margin-top: 0; }
+
+/* ── Slot rows (left) ─────────────────────────────── */
+.ae-slot-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 7px 9px;
+    margin-bottom: 5px;
+    border-radius: var(--radius-inset);
+    background-color: var(--color-card-bg);
+    border-width: 1px;
+    border-color: var(--color-card-bg);
+}
+.ae-slot-row:hover { background-color: var(--color-card-bg-hover); }
+.ae-slot-row--focused {
+    border-color: var(--color-hint);
+    background-color: var(--color-state-fill-bg);
+}
+.ae-slot-row--empty { background-color: var(--color-card-bg-disabled); }
+
+.ae-slot-name  { font-size: var(--font-card-kind); color: var(--color-text-secondary); }
+.ae-slot-value { font-size: var(--font-card-kind); -unity-font-style: bold; color: var(--color-text-body-strong); margin-left: auto; }
+.ae-slot-value--empty { -unity-font-style: italic; color: var(--color-text-empty); }
+
+/* ── Mod rows (right) ─────────────────────────────── */
+.ae-mod-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 7px 9px;
+    margin-bottom: 5px;
+    border-radius: var(--radius-inset);
+    background-color: var(--color-card-bg);
+    border-width: 1px;
+    border-color: var(--color-card-bg);
+}
+.ae-mod-row:hover { background-color: var(--color-card-bg-hover); border-color: var(--color-hint); }
+.ae-mod-row--installed { border-color: var(--color-state-fill-border); background-color: var(--color-state-fill-bg); }
+
+.ae-mod-name { font-size: var(--font-card-kind); -unity-font-style: bold; color: var(--color-text-body-strong); }
+.ae-mod-tags { flex-direction: row; margin-left: auto; }
+.ae-tag { font-size: 12px; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+.ae-tag--up   { color: rgb(80, 200, 120); }
+.ae-tag--down { color: rgb(220, 100, 100); }
+
+.ae-empty-note { font-size: var(--font-card-kind); color: var(--color-text-empty); -unity-font-style: italic; padding: 6px 2px; }
+
+/* ── Stats panel (right, below mods) ──────────────── */
+.ae-divider { height: 1px; background-color: var(--color-border-inset); margin-top: 12px; margin-bottom: 10px; }
+
+.ae-stat-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: var(--size-stat-row-mh);
+    padding: 2px 0;
+}
+.ae-stat-label { font-size: var(--font-tooltip-row); color: var(--color-text-stat-label); width: 90px; }
+.ae-stat-value { font-size: var(--font-tooltip-row); -unity-font-style: bold; color: var(--color-text-body-strong); }
+
+.ae-stat-bar {
+    flex-grow: 1;
+    flex-direction: row;
+    height: 6px;
+    background-color: var(--color-border-inset);
+    border-radius: 3px;
+    overflow: hidden;
+}
+/* Gold base fill — matches the in-menu tooltip stat bars (var(--color-accent)). */
+.ae-stat-bar-fill { height: 100%; background-color: var(--color-accent); }
+/* Compare-mode difference segment: green = improvement, red = worse. */
+.ae-stat-bar-delta { height: 100%; }
+.ae-stat-bar-delta--up   { background-color: rgb(80, 200, 120); }
+.ae-stat-bar-delta--down { background-color: rgb(220, 100, 100); }
+
+.ae-stat-delta { font-size: 12px; width: 46px; -unity-text-align: middle-right; margin-left: 6px; }
+.ae-stat-delta--up   { color: rgb(80, 200, 120); }
+.ae-stat-delta--down { color: rgb(220, 100, 100); }
+
+/* ── Footer ───────────────────────────────────────── */
+.ae-footer { flex-direction: row; justify-content: flex-end; margin-top: 14px; }
+.ae-close-btn {
+    font-size: var(--font-button);
+    height: var(--size-button-height);
+    min-width: var(--size-button-min-width);
+    background-color: var(--color-btn-cancel-bg);
+    border-color: var(--color-btn-cancel-border);
+    border-width: 1px;
+    border-radius: var(--radius-inset);
+    color: var(--color-text-button-cancel);
+}
+.ae-close-btn:hover { background-color: var(--color-btn-cancel-bg-hover); }
