@@ -19,24 +19,28 @@ namespace State
         menuName = "Weapon Builder/Core Definition Database")]
     public class CoreDefinitionDatabase : ScriptableObject
     {
-        [SerializeField] List<PayloadCoreDefinition>  _payloads  = new();
-        [SerializeField] List<DeliveryCoreDefinition> _deliveries = new();
-        [SerializeField] List<ExoticModDefinition>    _exotics   = new();
+        [SerializeField] List<PayloadCoreDefinition>  _payloads    = new();
+        [SerializeField] List<DeliveryCoreDefinition> _deliveries  = new();
+        [SerializeField] List<ExoticModDefinition>    _exotics     = new();
+        [SerializeField] List<AttachmentDefinition>   _attachments = new();
 
-        public IReadOnlyList<PayloadCoreDefinition>  Payloads   => _payloads;
-        public IReadOnlyList<DeliveryCoreDefinition> Deliveries => _deliveries;
-        public IReadOnlyList<ExoticModDefinition>    Exotics    => _exotics;
+        public IReadOnlyList<PayloadCoreDefinition>  Payloads    => _payloads;
+        public IReadOnlyList<DeliveryCoreDefinition> Deliveries  => _deliveries;
+        public IReadOnlyList<ExoticModDefinition>    Exotics     => _exotics;
+        public IReadOnlyList<AttachmentDefinition>   Attachments => _attachments;
 
 #if UNITY_EDITOR
         /// <summary>Editor-only helper used by tests and tooling to populate the database.</summary>
         public void SetEntries(
             List<PayloadCoreDefinition>  payloads,
             List<DeliveryCoreDefinition> deliveries,
-            List<ExoticModDefinition>    exotics)
+            List<ExoticModDefinition>    exotics,
+            List<AttachmentDefinition>   attachments = null)
         {
-            _payloads   = payloads   ?? new List<PayloadCoreDefinition>();
-            _deliveries = deliveries ?? new List<DeliveryCoreDefinition>();
-            _exotics    = exotics    ?? new List<ExoticModDefinition>();
+            _payloads    = payloads    ?? new List<PayloadCoreDefinition>();
+            _deliveries  = deliveries  ?? new List<DeliveryCoreDefinition>();
+            _exotics     = exotics     ?? new List<ExoticModDefinition>();
+            _attachments = attachments ?? new List<AttachmentDefinition>();
         }
 #endif
     }

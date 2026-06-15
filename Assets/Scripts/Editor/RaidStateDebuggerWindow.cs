@@ -744,8 +744,19 @@ namespace Editor
             if (!item.HasWeaponConfiguration) return item.DefinitionId;
             var cfg = item.WeaponConfiguration;
             var exotic = cfg.Exotic.HasValue ? $" +{cfg.Exotic.Value.DefinitionId}" : string.Empty;
+
+            var mods = string.Empty;
+            if (cfg.Attachments != null && cfg.Attachments.Length > 0)
+            {
+                var parts = new System.Collections.Generic.List<string>(cfg.Attachments.Length);
+                foreach (var a in cfg.Attachments)
+                    if (!string.IsNullOrEmpty(a.DefinitionId))
+                        parts.Add($"{a.Slot}:{a.DefinitionId}");
+                if (parts.Count > 0) mods = $", mods=[{string.Join(", ", parts)}]";
+            }
+
             return $"{item.DefinitionId} [{cfg.Payload.DefinitionId}/{cfg.Payload.Rarity}, " +
-                   $"{cfg.Delivery.DefinitionId}/{cfg.Delivery.Rarity}{exotic}, mag={cfg.AmmoInMagazine}]";
+                   $"{cfg.Delivery.DefinitionId}/{cfg.Delivery.Rarity}{exotic}, mag={cfg.AmmoInMagazine}{mods}]";
         }
     }
 }

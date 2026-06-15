@@ -24,10 +24,11 @@ namespace Game.Editor
     /// </summary>
     public static class WeaponBuilderStubAssets
     {
-        const string ResourcesFolder  = "Assets/Resources/WeaponBuilder";
-        const string PayloadsFolder   = ResourcesFolder + "/Payloads";
-        const string DeliveriesFolder = ResourcesFolder + "/Deliveries";
-        const string ExoticsFolder    = ResourcesFolder + "/Exotics";
+        const string ResourcesFolder    = "Assets/Resources/WeaponBuilder";
+        const string PayloadsFolder     = ResourcesFolder + "/Payloads";
+        const string DeliveriesFolder   = ResourcesFolder + "/Deliveries";
+        const string ExoticsFolder      = ResourcesFolder + "/Exotics";
+        const string AttachmentsFolder  = ResourcesFolder + "/Attachments";
 
         const string BallisticPath    = PayloadsFolder   + "/BallisticRound.asset";
         const string LaserPath        = PayloadsFolder   + "/LaserCharge.asset";
@@ -66,15 +67,66 @@ namespace Game.Editor
             var scatter = GetOrCreate<DeliveryCoreDefinition>(ScatterPath);
             PopulateScatter(scatter);
 
+            var attachments = CreateAttachmentStubs();
+
             var database = GetOrCreate<CoreDefinitionDatabase>(DatabasePath);
-            PopulateDatabase(database, ballistic, laser, single, auto, scatter);
+            PopulateDatabase(database, ballistic, laser, single, auto, scatter, attachments);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log("[WeaponBuilderStubAssets] Stub assets created / refreshed:\n" +
                       $"  {BallisticPath}\n  {LaserPath}\n  {SingleActionPath}\n  " +
-                      $"{AutoPath}\n  {ScatterPath}\n  {DatabasePath}");
+                      $"{AutoPath}\n  {ScatterPath}\n  {DatabasePath}\n" +
+                      $"  + {attachments.Count} attachment stubs in {AttachmentsFolder}");
+        }
+
+        // ── Attachments (P2.3 — base mods, existing-field only) ───────────
+        // Numbers are catalog.md placeholders, tunable later. All universal
+        // (CompatibleArchetype empty) for MVP; archetype-restricted unique mods = P3.
+
+        static System.Collections.Generic.List<AttachmentDefinition> CreateAttachmentStubs()
+        {
+            return new System.Collections.Generic.List<AttachmentDefinition>
+            {
+                MakeAttachment("PowerComp",     "Power Compensator", AttachmentSlot.Muzzle,
+                    (WeaponStatAxis.Damage, 12f), (WeaponStatAxis.Recoil, 15f), (WeaponStatAxis.Spread, 10f)),
+                MakeAttachment("MuzzleBrake",   "Muzzle Brake",      AttachmentSlot.Muzzle,
+                    (WeaponStatAxis.Recoil, -25f), (WeaponStatAxis.Ergonomics, -10f)),
+                MakeAttachment("VerticalGrip",  "Vertical Grip",     AttachmentSlot.Grip,
+                    (WeaponStatAxis.Recoil, -15f)),
+                MakeAttachment("AngledGrip",    "Angled Grip",       AttachmentSlot.Grip,
+                    (WeaponStatAxis.Ergonomics, 15f), (WeaponStatAxis.Recoil, -5f)),
+                MakeAttachment("HeavyStock",    "Heavy Stock",       AttachmentSlot.Buttstock,
+                    (WeaponStatAxis.Recoil, -25f), (WeaponStatAxis.Ergonomics, -20f)),
+                MakeAttachment("SkeletonStock", "Skeleton Stock",    AttachmentSlot.Buttstock,
+                    (WeaponStatAxis.Ergonomics, 20f), (WeaponStatAxis.Recoil, 10f)),
+                MakeAttachment("RedDot",        "Red Dot Sight",     AttachmentSlot.Optic,
+                    (WeaponStatAxis.Spread, -10f), (WeaponStatAxis.Ergonomics, 5f)),
+                MakeAttachment("ExtendedMag",   "Extended Magazine", AttachmentSlot.Magazine,
+                    (WeaponStatAxis.MagazineSize, 50f), (WeaponStatAxis.ReloadTime, 20f), (WeaponStatAxis.Ergonomics, -10f)),
+                MakeAttachment("QuickMag",      "Quick Magazine",    AttachmentSlot.Magazine,
+                    (WeaponStatAxis.ReloadTime, -25f), (WeaponStatAxis.Ergonomics, 5f), (WeaponStatAxis.MagazineSize, -20f)),
+            };
+        }
+
+        static AttachmentDefinition MakeAttachment(
+            string id, string displayName, AttachmentSlot slot,
+            params (WeaponStatAxis axis, float percent)[] deltas)
+        {
+            var def = GetOrCreate<AttachmentDefinition>($"{AttachmentsFolder}/{id}.asset");
+            SetField(def, "_id",                  id);
+            SetField(def, "_displayName",         displayName);
+            SetField(def, "_slot",                slot);
+            SetField(def, "_compatibleArchetype", string.Empty); // universal (MVP)
+
+            var mods = new StatDelta[deltas.Length];
+            for (int i = 0; i < deltas.Length; i++)
+                mods[i] = new StatDelta { Axis = deltas[i].axis, Percent = deltas[i].percent };
+            SetField(def, "_modifiers", mods);
+
+            EditorUtility.SetDirty(def);
+            return def;
         }
 
         // ── Folder setup ──────────────────────────────────────
@@ -86,6 +138,7 @@ namespace Game.Editor
             EnsureFolder(ResourcesFolder, "Payloads");
             EnsureFolder(ResourcesFolder, "Deliveries");
             EnsureFolder(ResourcesFolder, "Exotics");
+            EnsureFolder(ResourcesFolder, "Attachments");
         }
 
         static void EnsureFolder(string parent, string name)
@@ -289,12 +342,14 @@ namespace Game.Editor
             LaserPayloadDefinition laser,
             DeliveryCoreDefinition single,
             DeliveryCoreDefinition auto,
-            DeliveryCoreDefinition scatter)
+            DeliveryCoreDefinition scatter,
+            System.Collections.Generic.List<AttachmentDefinition> attachments)
         {
             db.SetEntries(
                 new System.Collections.Generic.List<PayloadCoreDefinition>  { ballistic, laser },
                 new System.Collections.Generic.List<DeliveryCoreDefinition> { single, auto, scatter },
-                new System.Collections.Generic.List<ExoticModDefinition>());
+                new System.Collections.Generic.List<ExoticModDefinition>(),
+                attachments);
             EditorUtility.SetDirty(db);
         }
 

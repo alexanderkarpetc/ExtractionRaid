@@ -46,6 +46,7 @@ namespace View.UI.Tooltip.Builders
                 + $"<color={RarityVisuals.Hex(dRarity)}>{deliveryDef.FormFactor} ({dRarity})</color>";
 
             var stats = WeaponStatComposer.Compose(payloadDef, pRarity, deliveryDef, dRarity);
+            stats = WeaponStatComposer.ApplyAttachments(stats, config, registry);
 
             var rows = new List<TooltipRow>();
 
