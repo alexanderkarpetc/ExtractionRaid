@@ -21,13 +21,16 @@ namespace Adapters
         PayloadCoreDefinition  GetPayload(string id);
         DeliveryCoreDefinition GetDelivery(string id);
         ExoticModDefinition    GetExotic(string id);
+        AttachmentDefinition   GetAttachment(string id);
 
         bool TryGetPayload(string id, out PayloadCoreDefinition definition);
         bool TryGetDelivery(string id, out DeliveryCoreDefinition definition);
         bool TryGetExotic(string id, out ExoticModDefinition definition);
+        bool TryGetAttachment(string id, out AttachmentDefinition definition);
 
-        IReadOnlyList<PayloadCoreDefinition>  AllPayloads   { get; }
-        IReadOnlyList<DeliveryCoreDefinition> AllDeliveries { get; }
-        IReadOnlyList<ExoticModDefinition>    AllExotics    { get; }
+        IReadOnlyList<PayloadCoreDefinition>  AllPayloads    { get; }
+        IReadOnlyList<DeliveryCoreDefinition> AllDeliveries  { get; }
+        IReadOnlyList<ExoticModDefinition>    AllExotics     { get; }
+        IReadOnlyList<AttachmentDefinition>   AllAttachments { get; }
     }
 }

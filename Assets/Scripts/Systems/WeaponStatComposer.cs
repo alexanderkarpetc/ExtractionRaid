@@ -1,4 +1,6 @@
+using Adapters;
 using State;
+using UnityEngine;
 
 namespace Systems
 {
@@ -61,6 +63,69 @@ namespace Systems
             _ = exotic;
 
             return stats;
+        }
+
+        /// <summary>
+        /// Applies installed attachment stat deltas on top of composed Payload+Delivery
+        /// stats (delta option A — player-facing axes mapped to raw fields here). Unknown
+        /// or empty attachment instances are skipped (attachments are non-critical, unlike
+        /// cores which fail the assembly). Returns a new <see cref="WeaponStats"/>.
+        /// See docs/ai/weapon-builder/attachments/stats.md.
+        /// </summary>
+        public static WeaponStats ApplyAttachments(
+            WeaponStats stats,
+            in WeaponConfiguration config,
+            ICoreDefinitionRegistry registry)
+        {
+            var mods = config.Attachments;
+            if (mods == null || registry == null) return stats;
+
+            for (int i = 0; i < mods.Length; i++)
+            {
+                if (string.IsNullOrEmpty(mods[i].DefinitionId)) continue;
+                if (!registry.TryGetAttachment(mods[i].DefinitionId, out var def) || def == null) continue;
+
+                var deltas = def.Modifiers;
+                for (int j = 0; j < deltas.Count; j++)
+                    stats = ApplyAxisDelta(stats, deltas[j].Axis, deltas[j].Percent);
+            }
+            return stats;
+        }
+
+        // Maps a player-facing axis delta (whole percent; raw-change semantics) onto the
+        // raw WeaponStats field(s) it drives. Factor clamped > 0 to stay safe past -100%.
+        static WeaponStats ApplyAxisDelta(WeaponStats s, WeaponStatAxis axis, float percent)
+        {
+            float f = Mathf.Max(0.01f, 1f + percent / 100f);
+            switch (axis)
+            {
+                case WeaponStatAxis.Damage:
+                    s.Damage *= f;
+                    break;
+                case WeaponStatAxis.RateOfFire:
+                    if (s.FireInterval > 0f) s.FireInterval /= f; // faster fire = lower interval
+                    break;
+                case WeaponStatAxis.MagazineSize:
+                    s.MagazineSize = Mathf.Max(1, Mathf.RoundToInt(s.MagazineSize * f));
+                    break;
+                case WeaponStatAxis.ReloadTime:
+                    s.ReloadTime *= f;
+                    break;
+                case WeaponStatAxis.Recoil:
+                    s.RecoilKickForward *= f;
+                    s.RecoilKickSide    *= f;
+                    break;
+                case WeaponStatAxis.Spread:
+                    s.SpreadAngle *= f;
+                    break;
+                case WeaponStatAxis.Ergonomics:
+                    // Higher ergonomics = better handling: faster draw/holster, faster turn.
+                    s.EquipTime         /= f;
+                    s.UnequipTime       /= f;
+                    s.BodyRotationSpeed *= f;
+                    break;
+            }
+            return s;
         }
     }
 }

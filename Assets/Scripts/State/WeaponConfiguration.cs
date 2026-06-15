@@ -28,6 +28,13 @@ namespace State
         [SerializeField] bool              _hasExotic;
         [SerializeField] ExoticModInstance _exotic;
 
+        /// <summary>
+        /// Installed attachments (mods). Null or empty = none. One entry per occupied
+        /// slot. Order is not significant. Stats are composed via
+        /// WeaponStatComposer.ApplyAttachments. See attachments/ docs.
+        /// </summary>
+        public AttachmentInstance[] Attachments;
+
         public int AmmoInMagazine;
 
         public ExoticModInstance? Exotic
@@ -51,6 +58,7 @@ namespace State
             _hasExotic     = exotic.HasValue;
             _exotic        = exotic ?? default;
             AmmoInMagazine = ammoInMagazine;
+            Attachments    = null;
         }
     }
 }

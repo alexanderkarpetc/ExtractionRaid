@@ -17,15 +17,17 @@ namespace Adapters
         Dictionary<string, PayloadCoreDefinition>  _payloadIndex;
         Dictionary<string, DeliveryCoreDefinition> _deliveryIndex;
         Dictionary<string, ExoticModDefinition>    _exoticIndex;
+        Dictionary<string, AttachmentDefinition>   _attachmentIndex;
 
         public DatabaseCoreDefinitionRegistry(CoreDefinitionDatabase database)
         {
             _database = database ?? throw new System.ArgumentNullException(nameof(database));
         }
 
-        public IReadOnlyList<PayloadCoreDefinition>  AllPayloads   => _database.Payloads;
-        public IReadOnlyList<DeliveryCoreDefinition> AllDeliveries => _database.Deliveries;
-        public IReadOnlyList<ExoticModDefinition>    AllExotics    => _database.Exotics;
+        public IReadOnlyList<PayloadCoreDefinition>  AllPayloads    => _database.Payloads;
+        public IReadOnlyList<DeliveryCoreDefinition> AllDeliveries  => _database.Deliveries;
+        public IReadOnlyList<ExoticModDefinition>    AllExotics     => _database.Exotics;
+        public IReadOnlyList<AttachmentDefinition>   AllAttachments => _database.Attachments;
 
         public PayloadCoreDefinition GetPayload(string id)
         {
@@ -48,6 +50,13 @@ namespace Adapters
             throw new KeyNotFoundException($"Exotic mod definition not found: '{id}'");
         }
 
+        public AttachmentDefinition GetAttachment(string id)
+        {
+            EnsureAttachmentIndex();
+            if (_attachmentIndex.TryGetValue(id, out var def)) return def;
+            throw new KeyNotFoundException($"Attachment definition not found: '{id}'");
+        }
+
         public bool TryGetPayload(string id, out PayloadCoreDefinition definition)
         {
             EnsurePayloadIndex();
@@ -64,6 +73,12 @@ namespace Adapters
         {
             EnsureExoticIndex();
             return _exoticIndex.TryGetValue(id, out definition);
+        }
+
+        public bool TryGetAttachment(string id, out AttachmentDefinition definition)
+        {
+            EnsureAttachmentIndex();
+            return _attachmentIndex.TryGetValue(id, out definition);
         }
 
         // ── Index builders ──────────────────────────────────────
@@ -104,6 +119,19 @@ namespace Adapters
                 if (_exoticIndex.ContainsKey(def.Id))
                     Debug.LogWarning($"[CoreDefinitionRegistry] Duplicate exotic id '{def.Id}'. Last occurrence wins.");
                 _exoticIndex[def.Id] = def;
+            }
+        }
+
+        void EnsureAttachmentIndex()
+        {
+            if (_attachmentIndex != null) return;
+            _attachmentIndex = new Dictionary<string, AttachmentDefinition>(_database.Attachments.Count);
+            foreach (var def in _database.Attachments)
+            {
+                if (def == null || string.IsNullOrEmpty(def.Id)) continue;
+                if (_attachmentIndex.ContainsKey(def.Id))
+                    Debug.LogWarning($"[CoreDefinitionRegistry] Duplicate attachment id '{def.Id}'. Last occurrence wins.");
+                _attachmentIndex[def.Id] = def;
             }
         }
     }

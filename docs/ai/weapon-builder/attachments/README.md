@@ -2,7 +2,7 @@
 
 Шар **модулів (attachments)** на зброю, зібрану у Weapon Builder. Покращення, що **тюнять характеристики й feel**, але **не міняють логіку** зброї (логіка = Payload + Delivery). Це активація шару **«Typed Attachments»** з [`../design.md`](../design.md) §6.4 (раніше deferred).
 
-> **Статус (2026-06-10):** 🎨 **дизайн завершено** (5 ітерацій аналізу) → 📋 **roadmap затверджено**, готові до імплементації. Жодного коду ще немає.
+> **Статус (2026-06-10):** 🎨 дизайн завершено (5 ітерацій) → 📋 roadmap затверджено → 🚧 **P1 shipped** (стат-readout у tooltip з барами + 2-core dual-rarity + inventory rarity-frame; 564 EditMode green). **Next: P2 — перші attachments.**
 >
 > **Термінологія:** цей шар = **Attachments / mods**. «Cores / modules» = Payload/Delivery (щоб не плутати — слово «module» зайняте під cores). Q9 — soft, лишаємо «attachments».
 
@@ -62,7 +62,7 @@ DELIVERY → [Muzzle]    [Grip]               к-ть = f(Delivery rarity)
 
 | Фаза | Скоуп | Нова механіка | Exit-критерій |
 |---|---|---|---|
-| **P1 — Візуалізація наявного** | Прокачати `WeaponTooltipBuilder`: стат-бари (8 параметрів + спецправила) + 2-core композиція + rarity. Compute **Ergonomics-агрегат** + per-stat **bar-ranges**. Inventory: **dual-rarity frame** (нуль арту). | — | Гравець бачить «зброя = 2 cores + ці стати» барами в tooltip, до будь-яких модів. |
+| ✅ **P1 — Візуалізація наявного** (shipped 2026-06-10) | `WeaponStatDisplay` (pure model) → tooltip стат-бари (Damage/RoF/Stability/Accuracy/Ergonomics + value; Headshot/Magazine/Charge value-only) + 2-core dual-rarity subtitle + inventory **dual-rarity corner frame** (`RarityVisuals`). Cheat + fresh-player loadout spawn random rarity (Common-fallback for unauthored tiers). | — | ✅ Гравець бачить «зброя = 2 cores + ці стати» барами + кольорами. 564 EditMode green. |
 | **P2 — Перші attachments** | **Foundation:** `AttachmentDefinition` SO + instance у `WeaponConfiguration` + mod-канал у `WeaponStatComposer` + re-assembly на install + Raid State Debugger. **Слоти** (мінімальний фікс. набір) у Builder inline під cores. **Base-моди (лише existing-field):** Extended/Quick Mag, Heavy/Skeleton Stock, Vertical/Angled Grip, Power Comp. **Live-delta** preview. Inventory: **mod-pips**. Grant через DevCheats. | — | Перший playable sidegrade-loop: встав мод → стати міняються з видимим give/take. |
 | **P3 — Rarity-слоти + unique** | Slot count = **f(core rarity)** + unlock-порядок + locked-slot UI. **Unique-моди** (`CompatibleArchetype`): Laser Focusing, Scatter Choke, Auto Heat-Sink (теж existing-field). Дозбір universal-каталогу. | — | Повний lateral build-canvas + identity-chase, усе на наявних полях. |
 | **P4 — Нові механіки** | **Noise→aggro:** боти реагують на `WeaponFired` у `NoiseRadius` → стат Noise → **Suppressor**. **Sight/FOV→fog-of-war:** per-weapon view-range/cone → **Sniper Scope** (модель ZS vs Duckov — Q14). Кожна — свій milestone. | ✅ 2 системи | Suppressor (стелс vs DPS) + Sniper Scope працюють як справжні sidegrade-и. |

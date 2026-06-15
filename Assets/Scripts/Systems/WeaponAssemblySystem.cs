@@ -84,6 +84,9 @@ namespace Systems
                 deliveryDef, config.Delivery.Rarity,
                 exoticDef);
 
+            // Attachments tune the composed stats (non-critical: unknown ones are skipped).
+            stats = WeaponStatComposer.ApplyAttachments(stats, config, registry);
+
             result = new AssemblyResult(stats, payloadDef, deliveryDef, exoticDef);
             return true;
         }
