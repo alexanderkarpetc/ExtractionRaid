@@ -73,7 +73,7 @@ namespace View.UI.Notes
                 Paragraphs = new[]
                 {
                     "Use WASD to move and hold Shift to sprint. Sprinting is faster but drains stamina.",
-                    "Tap Space to <b>dodge-roll</b> — a short burst of movement. Use it to break line of sight or escape a grenade.",
+                    "Tap Space to <b>dodge-roll</b> — a short burst of movement with brief invulnerability. Use it to dodge fire or escape a grenade.",
                 },
                 Callout = CalloutKind.Tip,
                 CalloutText = "Rolling costs stamina. Don't empty the bar — you still need it to sprint away.",
@@ -136,6 +136,7 @@ namespace View.UI.Notes
                 {
                     "Aim with the mouse, fire with LMB, hold RMB to steady your aim. Reload with R and throw a grenade with G.",
                     "Armour soaks hits but degrades as it takes damage. Unarmoured spots take full damage.",
+                    "Ammo matters: <b>AP</b> rounds punch through armour, <b>HP</b> rounds cause heavy bleeding but are useless against armour. Standard sits in between.",
                 },
                 Callout = CalloutKind.Warn,
                 CalloutText = "Reloading mid-fight takes time. Top up between fights, not during them.",
@@ -173,7 +174,7 @@ namespace View.UI.Notes
             },
             new NoteEntry
             {
-                Id = "quests", Category = "Hideout & Economy", Icon = "★", IconColor = new Color(0.90f, 0.78f, 0.55f), Title = "Quests & Traders", StartsUnread = true,
+                Id = "quests", Category = "Hideout & Economy", Icon = "★", IconColor = new Color(0.90f, 0.78f, 0.55f), Title = "Quests", StartsUnread = true,
                 Paragraphs = new[]
                 {
                     "NPCs offer <b>quests</b> — kill targets, find items, reach places. Press I to open your quest journal at any time.",
@@ -182,6 +183,30 @@ namespace View.UI.Notes
                 Callout = CalloutKind.Tip,
                 CalloutText = "Carry quest items in your bag — you hand them over directly in the NPC dialogue.",
                 Controls = new[] { new ControlHint("I", "Quests") },
+            },
+            new NoteEntry
+            {
+                Id = "trading", Category = "Hideout & Economy", Icon = "$", IconColor = new Color(0.30f, 0.82f, 0.50f), Title = "Trading",
+                Paragraphs = new[]
+                {
+                    "Some NPCs trade. Pick <b>Trade</b> in their dialogue to open the shop next to your inventory — drag stock out to buy, drag your items in to sell.",
+                    "Money persists between raids, so a profitable run pays for the next loadout.",
+                },
+                Callout = CalloutKind.Tip,
+                CalloutText = "Sell the loot you don't use — spare junk turns into the gear you actually want.",
+                Controls = new[] { new ControlHint("E", "Talk to NPC") },
+            },
+            new NoteEntry
+            {
+                Id = "crafting", Category = "Hideout & Economy", Icon = "+", IconColor = new Color(0.25f, 0.75f, 0.70f), Title = "Crafting & Materials",
+                Paragraphs = new[]
+                {
+                    "Crafting stations turn <b>materials</b> — adhesive, metal parts, electronics and the like — into meds, ammo, weapon mods and more.",
+                    "Materials also feed <b>hideout upgrades</b>: buildings level up by consuming materials, mostly straight from your stash.",
+                },
+                Callout = CalloutKind.Tip,
+                CalloutText = "That junk in the corner of a container is a recipe ingredient. Stash materials between raids instead of selling them all.",
+                Controls = new[] { new ControlHint("E", "Use station") },
             },
             new NoteEntry
             {
