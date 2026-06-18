@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8218419694538430755}
   - component: {fileID: 3000036820485515475}
   - component: {fileID: 8771562737294280512}
+  - component: {fileID: 3932666341279010193}
   m_Layer: 0
   m_Name: PlayerShell
   m_TagString: Untagged
@@ -45,8 +46,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 930956784f7bb40e589d33aaf385f726, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game::View.PlayerView
-  _body: {fileID: 9205513861454217505, guid: d5b06130063e44a518996bc34d8c8e2e, type: 3}
-  _animator: {fileID: 8804053307936657194, guid: 8854f4e6e7f55433997ae24a0f454b9a, type: 3}
 --- !u!136 &8771562737294280512
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -70,3 +69,17 @@ CapsuleCollider:
   m_Height: 2.059372
   m_Direction: 1
   m_Center: {x: 0, y: 0.94598055, z: 0}
+--- !u!114 &3932666341279010193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6816034409035728084}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6f95755f45a4ec398c987718f467db5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.GrassInteractionTrail
+  _recoveryTime: 0.5
+  _bendStrength: 1
