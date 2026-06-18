@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Constants;
 using Dev;
 using State;
 using Systems;
@@ -48,6 +49,7 @@ namespace View.UI.Hotbar
         // InventoryState.WeaponSlots). Click = equip/holster (writes PendingHotbarSlot);
         // drag weapon→weapon = swap via HotbarWeaponSystem. Separate from quick `_slots`.
         InventorySlotElement[] _weaponSlots;
+        ItemIconRegistryAsset _iconRegistry;
 
         VisualElement _pickerBackdrop;
         VisualElement _picker;
@@ -108,6 +110,19 @@ namespace View.UI.Hotbar
             if (Instance == this) Instance = null;
         }
 
+        public void SetIconRegistry(ItemIconRegistryAsset registry)
+        {
+            _iconRegistry = registry;
+
+            if (_weaponSlots != null)
+                foreach (var slot in _weaponSlots)
+                    slot?.SetIconRegistry(registry);
+
+            if (_slots != null)
+                foreach (var slot in _slots)
+                    slot?.SetIconRegistry(registry);
+        }
+
         void BuildDocument()
         {
             _doc = GetComponent<UIDocument>();
@@ -160,6 +175,7 @@ namespace View.UI.Hotbar
                 var slot = new InventorySlotElement(
                     InventorySlotElement.SlotKind.Backpack,
                     emptyPlaceholder: string.Empty);
+                slot.SetIconRegistry(_iconRegistry);
                 slot.name = $"slot-{qi}";
 
                 // Always-visible hotbar key hint. Distinct semantic from

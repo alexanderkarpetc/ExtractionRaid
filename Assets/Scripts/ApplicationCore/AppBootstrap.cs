@@ -35,6 +35,13 @@ namespace ApplicationCore
             _isOwner = true;
             App.Initialize();
             DontDestroyOnLoad(gameObject);
+
+            // Most test/raid scenes own their own AppBootstrap and do not serialize
+            // this optional reference. Keep the Resources asset as the shared default
+            // so inventory icons work regardless of which scene is launched directly.
+            if (_itemIconRegistry == null)
+                _itemIconRegistry = Resources.Load<ItemIconRegistryAsset>("Configs/ItemIconRegistry");
+
             if (_popupManagerPrefab != null)
             {
                 var pm = Instantiate(_popupManagerPrefab);
@@ -110,7 +117,8 @@ namespace ApplicationCore
             // Bind UX: right-click an inventory item → context menu offers "Bind to N".
             var hotbarHost = new GameObject("HotbarOverlay");
             hotbarHost.transform.SetParent(transform, false);
-            hotbarHost.AddComponent<HotbarOverlay>();
+            var hotbar = hotbarHost.AddComponent<HotbarOverlay>();
+            hotbar.SetIconRegistry(_itemIconRegistry);
 
             // Controls legend — top-right "[O] Controls" pill that expands into a
             // keybinding list. Passive HUD; toggled by the O key (handled in the
