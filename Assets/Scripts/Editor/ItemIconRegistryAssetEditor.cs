@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Constants;
 using State;
@@ -12,49 +13,99 @@ namespace Editor
     {
         SerializedProperty _entries;
 
+        // Foldout state per category — survives inspector redraws, resets on domain reload (fine).
+        readonly Dictionary<ItemCategory, bool> _foldouts = new();
+
         void OnEnable() => _entries = serializedObject.FindProperty("_entries");
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            DrawSyncButton();
+            DrawToolbar();
             EditorGUILayout.Space(4);
             DrawStats();
             EditorGUILayout.Space(6);
-            DrawEntries();
+            DrawEntriesByCategory();
 
             serializedObject.ApplyModifiedProperties();
         }
 
-        void DrawSyncButton()
+        void DrawToolbar()
         {
-            EditorGUILayout.LabelField("Sync", EditorStyles.boldLabel);
-            if (GUILayout.Button("Sync from ItemDefinition"))
+            EditorGUILayout.LabelField("Tools", EditorStyles.boldLabel);
+            using (new EditorGUILayout.HorizontalScope())
             {
-                var registry = ItemDefinition.Registry;
-                var existing = new HashSet<string>();
-                for (int i = 0; i < _entries.arraySize; i++)
-                    existing.Add(_entries.GetArrayElementAtIndex(i)
-                        .FindPropertyRelative("DefinitionId").stringValue);
+                if (GUILayout.Button("Sync from ItemDefinition"))
+                    SyncFromRegistry();
 
-                int added = 0;
-                foreach (var id in registry.Keys)
-                {
-                    if (existing.Contains(id)) continue;
-                    int idx = _entries.arraySize;
-                    _entries.InsertArrayElementAtIndex(idx);
-                    var e = _entries.GetArrayElementAtIndex(idx);
-                    e.FindPropertyRelative("DefinitionId").stringValue = id;
-                    e.FindPropertyRelative("Icon").objectReferenceValue = null;
-                    added++;
-                }
-
-                if (added > 0)
-                    Debug.Log($"[ItemIconRegistry] Added {added} new item entries.");
-                else
-                    Debug.Log("[ItemIconRegistry] Already up to date.");
+                if (GUILayout.Button("Sort by Category"))
+                    SortByCategory();
             }
+        }
+
+        void SyncFromRegistry()
+        {
+            var registry = ItemDefinition.Registry;
+            var existing = new HashSet<string>();
+            for (int i = 0; i < _entries.arraySize; i++)
+                existing.Add(_entries.GetArrayElementAtIndex(i)
+                    .FindPropertyRelative("DefinitionId").stringValue);
+
+            int added = 0;
+            foreach (var id in registry.Keys)
+            {
+                if (existing.Contains(id)) continue;
+                int idx = _entries.arraySize;
+                _entries.InsertArrayElementAtIndex(idx);
+                var e = _entries.GetArrayElementAtIndex(idx);
+                e.FindPropertyRelative("DefinitionId").stringValue = id;
+                e.FindPropertyRelative("Icon").objectReferenceValue = null;
+                added++;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            Debug.Log(added > 0
+                ? $"[ItemIconRegistry] Added {added} new item entries."
+                : "[ItemIconRegistry] Already up to date.");
+        }
+
+        void SortByCategory()
+        {
+            // Snapshot current data.
+            var snapshot = new List<(string id, UnityEngine.Object icon)>();
+            for (int i = 0; i < _entries.arraySize; i++)
+            {
+                var e = _entries.GetArrayElementAtIndex(i);
+                snapshot.Add((
+                    e.FindPropertyRelative("DefinitionId").stringValue,
+                    e.FindPropertyRelative("Icon").objectReferenceValue
+                ));
+            }
+
+            snapshot.Sort((a, b) =>
+            {
+                var defA = string.IsNullOrEmpty(a.id) ? null : ItemDefinition.Get(a.id);
+                var defB = string.IsNullOrEmpty(b.id) ? null : ItemDefinition.Get(b.id);
+                int catA = defA != null ? (int)defA.Category : int.MaxValue;
+                int catB = defB != null ? (int)defB.Category : int.MaxValue;
+                int cmp  = catA.CompareTo(catB);
+                if (cmp != 0) return cmp;
+                string nameA = defA?.DisplayName ?? a.id ?? "";
+                string nameB = defB?.DisplayName ?? b.id ?? "";
+                return string.Compare(nameA, nameB, StringComparison.OrdinalIgnoreCase);
+            });
+
+            // Write back.
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                var e = _entries.GetArrayElementAtIndex(i);
+                e.FindPropertyRelative("DefinitionId").stringValue   = snapshot[i].id;
+                e.FindPropertyRelative("Icon").objectReferenceValue  = snapshot[i].icon;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            Debug.Log("[ItemIconRegistry] Sorted by category.");
         }
 
         void DrawStats()
@@ -70,13 +121,73 @@ namespace Editor
             EditorGUILayout.LabelField($"Icons assigned: {assigned} / {total}", style);
         }
 
-        void DrawEntries()
+        // Build a per-category index so we can draw headers + collapse groups.
+        void DrawEntriesByCategory()
         {
-            EditorGUILayout.LabelField("Entries", EditorStyles.boldLabel);
+            // Group serialized-array indices by category.
+            var groups = new Dictionary<ItemCategory, List<int>>();
+            var unknownIndices = new List<int>();
 
             for (int i = 0; i < _entries.arraySize; i++)
             {
-                var entry = _entries.GetArrayElementAtIndex(i);
+                var id  = _entries.GetArrayElementAtIndex(i)
+                              .FindPropertyRelative("DefinitionId").stringValue;
+                var def = string.IsNullOrEmpty(id) ? null : ItemDefinition.Get(id);
+                if (def == null) { unknownIndices.Add(i); continue; }
+
+                if (!groups.TryGetValue(def.Category, out var list))
+                {
+                    list = new List<int>();
+                    groups[def.Category] = list;
+                }
+                list.Add(i);
+            }
+
+            // Draw in enum order.
+            foreach (ItemCategory cat in Enum.GetValues(typeof(ItemCategory)))
+            {
+                if (!groups.TryGetValue(cat, out var indices) || indices.Count == 0) continue;
+                DrawCategoryGroup(cat.ToString(), indices);
+            }
+
+            if (unknownIndices.Count > 0)
+                DrawCategoryGroup("Unknown / No ID", unknownIndices);
+
+            EditorGUILayout.Space(4);
+            if (GUILayout.Button("+ Add Entry"))
+            {
+                int idx = _entries.arraySize;
+                _entries.InsertArrayElementAtIndex(idx);
+                var e = _entries.GetArrayElementAtIndex(idx);
+                e.FindPropertyRelative("DefinitionId").stringValue = "";
+                e.FindPropertyRelative("Icon").objectReferenceValue = null;
+            }
+        }
+
+        void DrawCategoryGroup(string label, List<int> indices)
+        {
+            // Parse category for foldout key — fallback for "Unknown" group.
+            bool hasKey = Enum.TryParse(label, out ItemCategory cat);
+
+            if (!_foldouts.TryGetValue(cat, out bool open))
+                open = true; // expanded by default
+
+            int assigned = 0;
+            foreach (int i in indices)
+                if (_entries.GetArrayElementAtIndex(i)
+                        .FindPropertyRelative("Icon").objectReferenceValue != null)
+                    assigned++;
+
+            string header = $"{label}  ({assigned}/{indices.Count})";
+            bool newOpen = EditorGUILayout.Foldout(open, header, true, EditorStyles.foldoutHeader);
+            if (hasKey) _foldouts[cat] = newOpen;
+            if (!newOpen) return;
+
+            bool deleted = false;
+            foreach (int i in indices)
+            {
+                if (deleted) break; // array shifted — bail and repaint next frame
+                var entry    = _entries.GetArrayElementAtIndex(i);
                 var defIdProp = entry.FindPropertyRelative("DefinitionId");
                 var iconProp  = entry.FindPropertyRelative("Icon");
 
@@ -93,19 +204,9 @@ namespace Editor
                     if (GUILayout.Button("✕", GUILayout.Width(24)))
                     {
                         _entries.DeleteArrayElementAtIndex(i);
-                        break;
+                        deleted = true;
                     }
                 }
-            }
-
-            EditorGUILayout.Space(2);
-            if (GUILayout.Button("+ Add Entry"))
-            {
-                int idx = _entries.arraySize;
-                _entries.InsertArrayElementAtIndex(idx);
-                var e = _entries.GetArrayElementAtIndex(idx);
-                e.FindPropertyRelative("DefinitionId").stringValue = "";
-                e.FindPropertyRelative("Icon").objectReferenceValue = null;
             }
         }
 

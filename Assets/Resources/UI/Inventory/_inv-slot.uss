@@ -28,12 +28,12 @@
 
 .inv-slot__icon {
     position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    left: 6px;
+    right: 6px;
+    top: 20px;
+    bottom: 18px;
     -unity-background-scale-mode: scale-to-fit;
-    opacity: 0.35;
+    opacity: 0.6;
 }
 
 .inv-slot__empty {
