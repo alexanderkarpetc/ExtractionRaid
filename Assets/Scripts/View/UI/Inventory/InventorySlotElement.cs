@@ -1,4 +1,5 @@
 using Adapters;
+using Constants;
 using State;
 using Systems;
 using UnityEngine;
@@ -51,12 +52,15 @@ namespace View.UI.Inventory
         readonly Label _quickSlotKey;
         readonly Label _emptyLabel;
         readonly Label _priceBadge;
+        readonly VisualElement _icon;
         readonly VisualElement _quest;
         readonly VisualElement _durabilityRoot;
         readonly VisualElement _durabilityFill;
         readonly VisualElement _rarityTl;
         readonly VisualElement _rarityBr;
         readonly VisualElement _modPips;
+
+        ItemIconRegistryAsset _iconRegistry;
 
         public InventorySlotElement(SlotKind kind, string emptyPlaceholder = "")
         {
@@ -68,6 +72,12 @@ namespace View.UI.Inventory
             _emptyLabel.AddToClassList("inv-slot__empty");
             _emptyLabel.pickingMode = PickingMode.Ignore;
             Add(_emptyLabel);
+
+            _icon = new VisualElement();
+            _icon.AddToClassList("inv-slot__icon");
+            _icon.pickingMode = PickingMode.Ignore;
+            _icon.style.display = DisplayStyle.None;
+            Add(_icon);
 
             _name = new Label();
             _name.AddToClassList("inv-slot__name");
@@ -123,6 +133,8 @@ namespace View.UI.Inventory
             Add(_modPips);
         }
 
+        public void SetIconRegistry(ItemIconRegistryAsset registry) => _iconRegistry = registry;
+
         public void SetShopPrice(int price)
         {
             if (price < 0 || _priceBadge == null)
@@ -149,6 +161,7 @@ namespace View.UI.Inventory
                 _quest.style.display = DisplayStyle.None;
                 _durabilityRoot.style.display = DisplayStyle.None;
                 _priceBadge.style.display = DisplayStyle.None;
+                _icon.style.display = DisplayStyle.None;
                 UpdateRarityFrame(null);
                 UpdateModPips(null);
                 return;
@@ -164,6 +177,7 @@ namespace View.UI.Inventory
             UpdateQuestMarker(item);
             UpdateRarityFrame(item);
             UpdateModPips(item);
+            UpdateIcon(item);
         }
 
         void UpdateResource(ItemState item)
@@ -281,6 +295,23 @@ namespace View.UI.Inventory
                 _modPips.Add(pip);
             }
             _modPips.style.display = DisplayStyle.Flex;
+        }
+
+        void UpdateIcon(ItemState item)
+        {
+            if (_iconRegistry == null || item == null)
+            {
+                _icon.style.display = DisplayStyle.None;
+                return;
+            }
+            var sprite = _iconRegistry.GetIcon(item.DefinitionId);
+            if (sprite == null)
+            {
+                _icon.style.display = DisplayStyle.None;
+                return;
+            }
+            _icon.style.backgroundImage = new StyleBackground(sprite);
+            _icon.style.display = DisplayStyle.Flex;
         }
 
         // ── Drag visuals (Stage 2) ────────────────────────────

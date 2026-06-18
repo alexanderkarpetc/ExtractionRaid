@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ApplicationCore;
+using Constants;
 using State;
 using Systems;
 using UnityEngine;
@@ -87,6 +88,8 @@ namespace View.UI.Inventory
         bool _isDragging;
         VisualElement _dragGhost;
 
+        ItemIconRegistryAsset _iconRegistry;
+
         // ── Hover state (for tooltip + hover-key quick-slot bind) ─
         InventorySlotElement _hoveredSlot;
 
@@ -160,6 +163,18 @@ namespace View.UI.Inventory
         }
 
         // ── Public API ────────────────────────────────────────
+
+        public void SetIconRegistry(ItemIconRegistryAsset registry)
+        {
+            _iconRegistry = registry;
+            if (_weaponSlots != null)
+                foreach (var s in _weaponSlots) s.SetIconRegistry(registry);
+            _helmetSlot?.SetIconRegistry(registry);
+            _armorSlot?.SetIconRegistry(registry);
+            if (_backpackSlots != null)
+                foreach (var s in _backpackSlots) s.SetIconRegistry(registry);
+            foreach (var panel in _subPanels.Values) panel.SetIconRegistry(registry);
+        }
 
         public void Toggle()
         {
@@ -504,6 +519,7 @@ namespace View.UI.Inventory
             if (!_subPanels.TryGetValue(key, out var panel))
             {
                 panel = new LootSubPanelElement(WireSlotInteractions);
+                if (_iconRegistry != null) panel.SetIconRegistry(_iconRegistry);
                 _subPanels[key] = panel;
                 _subPanelsHost.Add(panel);
             }

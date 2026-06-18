@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Constants;
 using State;
 using UnityEngine.UIElements;
 
@@ -27,6 +28,8 @@ namespace View.UI.Inventory
         readonly List<InventorySlotElement> _slots = new();
         readonly Action<InventorySlotElement> _wire;
 
+        ItemIconRegistryAsset _iconRegistry;
+
         public IReadOnlyList<InventorySlotElement> Slots => _slots;
 
         public LootSubPanelElement(Action<InventorySlotElement> wireInteractions)
@@ -50,6 +53,12 @@ namespace View.UI.Inventory
         }
 
         public void SetTitle(string title) => _title.text = title ?? string.Empty;
+
+        public void SetIconRegistry(ItemIconRegistryAsset registry)
+        {
+            _iconRegistry = registry;
+            foreach (var s in _slots) s.SetIconRegistry(registry);
+        }
 
         public void SetSourceMeta(InventorySlotElement.SlotSource source, EId lootableId)
         {
@@ -83,6 +92,7 @@ namespace View.UI.Inventory
                 _grid.Add(s);
                 _slots.Add(s);
                 _wire?.Invoke(s);
+                if (_iconRegistry != null) s.SetIconRegistry(_iconRegistry);
             }
 
             for (int i = 0; i < _slots.Count; i++)

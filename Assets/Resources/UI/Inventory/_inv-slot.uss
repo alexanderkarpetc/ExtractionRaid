@@ -26,6 +26,16 @@
     overflow: hidden;
 }
 
+.inv-slot__icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    opacity: 0.35;
+}
+
 .inv-slot__empty {
     font-size: var(--font-empty-placeholder);
     color: var(--color-text-empty);

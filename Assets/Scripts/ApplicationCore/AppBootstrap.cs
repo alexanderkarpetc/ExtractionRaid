@@ -1,3 +1,4 @@
+using Constants;
 using UnityEngine;
 using View;
 using View.UI;
@@ -19,6 +20,7 @@ namespace ApplicationCore
         [SerializeField] LaunchMode _launchMode = LaunchMode.Raid;
         [SerializeField] string _defaultLevelId = "test_level";
         [SerializeField] PopupManager _popupManagerPrefab;
+        [SerializeField] ItemIconRegistryAsset _itemIconRegistry;
 
         bool _isOwner;
 
@@ -131,6 +133,7 @@ namespace ApplicationCore
             var inventoryWindowHost = new GameObject("InventoryWindow");
             inventoryWindowHost.transform.SetParent(transform, false);
             inventoryWindowHost.AddComponent<InventoryWindow>();
+            InventoryWindow.Instance?.SetIconRegistry(_itemIconRegistry);
 
             // Crafting UI Toolkit mockup — hidden by default, toggled via DevCheats or F10.
             var craftingMockupHost = new GameObject("CraftingMockupWindow");
