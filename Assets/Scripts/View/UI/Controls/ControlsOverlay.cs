@@ -105,6 +105,10 @@ namespace View.UI.Controls
             var kb = Keyboard.current;
             if (kb == null) return;
 
+            // Don't toggle behind the pause overlay (it owns input while up).
+            var pause = PauseMenu.PauseMenuWindow.Instance;
+            if (pause != null && pause.IsOpen) return;
+
             if (kb[Key.O].wasPressedThisFrame)
                 SetOpen(!_open);
             else if (_open && kb[Key.Escape].wasPressedThisFrame)

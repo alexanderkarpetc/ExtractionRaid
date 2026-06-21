@@ -28,12 +28,19 @@ namespace View
             bool popupOpen = _window.IsOpen;
 
             var kb = Keyboard.current;
-            if (kb != null && kb[Key.I].wasPressedThisFrame)
+            if (kb != null)
             {
-                if (popupOpen)
+                if (kb[Key.I].wasPressedThisFrame)
+                {
+                    if (popupOpen)
+                        _window.RequestClose();
+                    else if (!player.IsInMenu)
+                        _window.OpenJournal();
+                }
+                else if (popupOpen && kb[Key.Escape].wasPressedThisFrame)
+                {
                     _window.RequestClose();
-                else if (!player.IsInMenu)
-                    _window.OpenJournal();
+                }
             }
 
             popupOpen = _window.IsOpen;

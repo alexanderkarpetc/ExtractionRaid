@@ -54,9 +54,13 @@ namespace View
                 lootActive = false;
             }
 
-            // Tab handling.
+            // Tab / Esc handling. Suppressed while paused so the pause overlay
+            // (which runs earlier and owns Esc) isn't fought over and nothing opens
+            // behind it.
             var kb = Keyboard.current;
-            bool tabPressed = kb != null && kb[Key.Tab].wasPressedThisFrame;
+            bool paused = player.IsPaused;
+            bool tabPressed = !paused && kb != null && kb[Key.Tab].wasPressedThisFrame;
+            bool escPressed = !paused && kb != null && kb[Key.Escape].wasPressedThisFrame;
             if (tabPressed)
             {
                 if (View.UI.Attachments.AttachmentEditorWindow.Instance != null
@@ -85,6 +89,27 @@ namespace View
                     _openedByTab = true;
                     player.CraftTargetId = EId.None;
                     craftActive = false;
+                }
+            }
+            else if (escPressed)
+            {
+                // Esc mirrors Tab's close path but never opens — so it closes the
+                // topmost inventory surface, and the pause menu only opens once
+                // nothing is left to close.
+                if (View.UI.Attachments.AttachmentEditorWindow.Instance != null
+                    && View.UI.Attachments.AttachmentEditorWindow.Instance.IsOpen)
+                {
+                    View.UI.Attachments.AttachmentEditorWindow.Instance.Close();
+                }
+                else if (builderOpen)
+                {
+                    WeaponBuilderWindow.Instance?.Close();
+                }
+                else if (_openedByTab || lootActive)
+                {
+                    _openedByTab = false;
+                    player.LootTargetId = EId.None;
+                    lootActive = false;
                 }
             }
 

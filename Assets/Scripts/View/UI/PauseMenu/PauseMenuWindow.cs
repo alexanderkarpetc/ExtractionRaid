@@ -154,6 +154,7 @@ namespace View.UI.PauseMenu
             _savedTimeScale = Time.timeScale;
             Time.timeScale = 0f;
             if (App.IsInitialized) App.Instance.SetGameplayInputBlocked(true);
+            SetPausedFlag(true); // folds into IsInMenu → hotkeys can't open menus behind us
 
             _root.style.display = DisplayStyle.Flex;
         }
@@ -165,8 +166,16 @@ namespace View.UI.PauseMenu
 
             Time.timeScale = _savedTimeScale;
             if (App.IsInitialized) App.Instance.SetGameplayInputBlocked(false);
+            SetPausedFlag(false);
 
             _root.style.display = DisplayStyle.None;
+        }
+
+        static void SetPausedFlag(bool paused)
+        {
+            if (!App.IsInitialized) return;
+            var player = App.Instance.RaidSession?.RaidState?.PlayerEntity;
+            if (player != null) player.IsPaused = paused;
         }
 
         void OnExitClicked()

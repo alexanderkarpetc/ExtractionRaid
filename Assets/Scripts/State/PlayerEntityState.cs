@@ -61,6 +61,7 @@ namespace State
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
         public bool IsQuestLogOpen;
         public bool IsNotesOpen; // set by NotesPresenter (field notes popup, Key.N)
+        public bool IsPaused; // set by PauseMenuWindow while the Esc pause overlay is up
 
         public float Stamina;
         public float MaxStamina;
@@ -79,6 +80,7 @@ namespace State
         // через IsPointerOverUi flag.
         public bool IsInMenu => IsQuestLogOpen
             || IsNotesOpen
+            || IsPaused
             || CraftTargetId != EId.None
             || DeployTargetId != EId.None
             || NpcTargetId != EId.None;
