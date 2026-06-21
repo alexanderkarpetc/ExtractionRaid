@@ -1,0 +1,90 @@
+/* Pause menu — mirrors the MainMenu visual language (Assets/Resources/UI/MainMenu/MainMenu.uss)
+ * so the in-raid pause popup reads as the same family. Backdrop dims the live game
+ * (semi-transparent, unlike the opaque MainMenu backdrop) and blocks gameplay clicks. */
+
+.pm-root {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.pm-backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(8, 10, 14, 0.78);
+}
+
+.pm-panel {
+    width: 420px;
+    padding: 36px;
+    background-color: rgba(22, 27, 38, 0.97);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgb(45, 55, 75);
+    border-radius: 6px;
+    align-items: stretch;
+}
+
+.pm-title {
+    color: rgb(220, 230, 245);
+    font-size: 28px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+    letter-spacing: 4px;
+}
+
+.pm-subtitle {
+    color: rgb(140, 150, 170);
+    font-size: 12px;
+    -unity-text-align: middle-center;
+    letter-spacing: 6px;
+    margin-bottom: 28px;
+}
+
+.pm-buttons {
+    flex-direction: column;
+}
+
+.pm-btn {
+    height: 44px;
+    margin-top: 8px;
+    background-color: rgb(34, 42, 58);
+    color: rgb(220, 230, 245);
+    border-color: rgb(60, 72, 96);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-radius: 3px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.pm-btn:hover {
+    background-color: rgb(48, 60, 82);
+    border-color: rgb(95, 130, 180);
+}
+
+.pm-btn:active {
+    background-color: rgb(28, 36, 50);
+}
+
+.pm-btn:disabled {
+    color: rgb(90, 100, 115);
+    background-color: rgb(24, 30, 42);
+}
+
+/* Exit reuses the MainMenu danger accent so the destructive action is unmistakable. */
+.pm-btn--danger {
+    background-color: rgb(120, 40, 50);
+    border-color: rgb(170, 70, 80);
+}
+
+.pm-btn--danger:hover {
+    background-color: rgb(150, 55, 65);
+    border-color: rgb(210, 100, 110);
+}

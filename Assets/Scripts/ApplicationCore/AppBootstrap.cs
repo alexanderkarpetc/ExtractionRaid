@@ -1,5 +1,6 @@
 using Constants;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using View;
 using View.UI;
 using View.UI.CraftingMockup;
@@ -17,6 +18,11 @@ namespace ApplicationCore
     [DefaultExecutionOrder(1000)]
     public class AppBootstrap : MonoBehaviour
     {
+        const string MainMenuSceneName = "MainMenu";
+
+        /// <summary>The owning bootstrap (the one that initialized <see cref="App"/>).</summary>
+        public static AppBootstrap Instance { get; private set; }
+
         [SerializeField] LaunchMode _launchMode = LaunchMode.Raid;
         [SerializeField] string _defaultLevelId = "test_level";
         [SerializeField] PopupManager _popupManagerPrefab;
@@ -33,6 +39,7 @@ namespace ApplicationCore
             }
 
             _isOwner = true;
+            Instance = this;
             App.Initialize();
             DontDestroyOnLoad(gameObject);
 
@@ -127,6 +134,13 @@ namespace ApplicationCore
             controlsHost.transform.SetParent(transform, false);
             controlsHost.AddComponent<View.UI.Controls.ControlsOverlay>();
 
+            // Pause menu — Esc-driven overlay (Resume / Settings / Exit to menu). Own
+            // UIDocument host, rendered above all HUD/modals. Handles its own Esc input
+            // and open-gating (only opens when no other modal/overlay is up).
+            var pauseMenuHost = new GameObject("PauseMenuWindow");
+            pauseMenuHost.transform.SetParent(transform, false);
+            pauseMenuHost.AddComponent<View.UI.PauseMenu.PauseMenuWindow>();
+
             // Battle HUD overlay — UI Toolkit panel hosting status effect row (Stage 3+).
             // Replaces legacy IMGUI StatusEffectOverlay. Reuses TooltipController.ShowFromPanel
             // for hover tooltips. See docs/ai/gunplay/battle-hud.md.
@@ -206,6 +220,25 @@ namespace ApplicationCore
             App.Instance.LateTick();
         }
 
+        /// <summary>
+        /// Abandons the current session and returns to the main menu. Tears down the
+        /// persistent <see cref="App"/> and all DontDestroyOnLoad UI hosts (children of
+        /// this GameObject) by destroying the owning bootstrap, then loads the menu
+        /// scene. Called from the pause menu's Exit button.
+        /// </summary>
+        public static void QuitToMainMenu()
+        {
+            Time.timeScale = 1f;
+
+            var owner = Instance;
+            // Destroying the bootstrap GO triggers OnDestroy → App.Shutdown() and takes
+            // every child UI host down with it, so nothing leaks into the menu scene.
+            if (owner != null)
+                Destroy(owner.gameObject);
+
+            SceneManager.LoadScene(MainMenuSceneName);
+        }
+
         void OnApplicationQuit()
         {
             if (_isOwner)
@@ -214,6 +247,7 @@ namespace ApplicationCore
 
         void OnDestroy()
         {
+            if (Instance == this) Instance = null;
             if (_isOwner)
                 App.Shutdown();
         }

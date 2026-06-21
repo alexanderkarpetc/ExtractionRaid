@@ -77,6 +77,8 @@ namespace View.UI.WeaponBuilder
 
         bool _isVisible;
 
+        public bool IsOpen => _isVisible;
+
         void Awake()
         {
             Instance = this;

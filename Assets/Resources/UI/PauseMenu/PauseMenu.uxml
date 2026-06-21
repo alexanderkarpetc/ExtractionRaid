@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="PauseMenu.uss"/>
+    <ui:VisualElement name="root" class="pm-root" picking-mode="Position">
+
+        <ui:VisualElement name="backdrop" class="pm-backdrop" picking-mode="Position"/>
+
+        <ui:VisualElement name="panel" class="pm-panel">
+            <ui:Label text="PAUSED" class="pm-title"/>
+            <ui:Label text="EXTRACTION RAID" class="pm-subtitle"/>
+
+            <ui:VisualElement name="buttons" class="pm-buttons">
+                <ui:Button name="resumeBtn" text="RESUME" class="pm-btn"/>
+                <ui:Button name="settingsBtn" text="SETTINGS" class="pm-btn"/>
+                <ui:Button name="exitBtn" text="EXIT TO MENU" class="pm-btn pm-btn--danger"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

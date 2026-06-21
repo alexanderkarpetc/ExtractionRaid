@@ -33,6 +33,8 @@ namespace View.UI.Controls
 
         bool _open;
 
+        public bool IsOpen => _open;
+
         // ── Drag-to-scroll state ──
         const float DragThreshold = 4f;
         int _scrollPointerId = -1;
