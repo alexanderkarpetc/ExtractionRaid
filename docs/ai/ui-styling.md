@@ -181,11 +181,17 @@ so panels stack predictably:
 | Hotbar HUD | `50` | `Assets/Resources/UI/Hotbar/HotbarPanelSettings.asset` |
 | Crafting mockup | `100` | `Assets/Resources/UI/Crafting/CraftingMockupPanelSettings.asset` |
 | Weapon Builder modal | `110` | `Assets/Resources/UI/WeaponBuilder/WeaponBuilderPanelSettings.asset` |
+| End of Raid screen | `200` | `Assets/Resources/UI/EndOfRaid/EndOfRaidPanelSettings.asset` |
+| Pause menu (Esc) | `250` | `Assets/Resources/UI/PauseMenu/PauseMenuPanelSettings.asset` |
 | Tooltip overlay | `1000` | `Assets/Resources/UI/Tooltip/TooltipPanelSettings.asset` |
 
 Tooltip is always on top — it must float over every other UI Toolkit surface,
 including the open modal. Hotbar sits below modals so opening the Builder
-visually covers the HUD strip.
+visually covers the HUD strip. Pause sits above HUD/modals (it never coexists
+with EndOfRaid — see `PauseMenuWindow.CanOpen`).
+
+> For the structural recipe (files, controller skeleton, registration, Esc/pause
+> gating) when adding a new window, see [`ui-window-recipe.md`](ui-window-recipe.md).
 
 ---
 
