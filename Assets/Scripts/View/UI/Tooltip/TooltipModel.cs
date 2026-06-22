@@ -28,18 +28,27 @@ namespace View.UI.Tooltip
         /// </summary>
         public string Footer { get; }
 
+        /// <summary>
+        /// When true the footer is rendered in the yellow-orange "can upgrade" accent
+        /// instead of the muted default — used to flag a weapon that still has free
+        /// attachment slots. Ignored when <see cref="Footer"/> is empty.
+        /// </summary>
+        public bool FooterAccent { get; }
+
         public TooltipModel(
             string title,
             string subtitle = null,
             IReadOnlyList<TooltipSection> sections = null,
             string description = null,
-            string footer = null)
+            string footer = null,
+            bool footerAccent = false)
         {
-            Title       = title       ?? string.Empty;
-            Subtitle    = subtitle    ?? string.Empty;
-            Description = description ?? string.Empty;
-            Sections    = sections    ?? Array.Empty<TooltipSection>();
-            Footer      = footer      ?? string.Empty;
+            Title        = title       ?? string.Empty;
+            Subtitle     = subtitle    ?? string.Empty;
+            Description  = description ?? string.Empty;
+            Sections     = sections    ?? Array.Empty<TooltipSection>();
+            Footer       = footer      ?? string.Empty;
+            FooterAccent = footerAccent;
         }
 
         public bool IsEmpty => string.IsNullOrEmpty(Title) && Sections.Count == 0;

@@ -69,6 +69,13 @@
     display: none;
 }
 
+/* Free attachment slot available — same yellow-orange "can upgrade" call-to-action
+   as the inventory "!" pips. Non-italic so it reads as a clear prompt. */
+.tt-footer--accent {
+    color: var(--color-mod-hint);
+    -unity-font-style: normal;
+}
+
 .tt-sections {
     flex-direction: column;
 }

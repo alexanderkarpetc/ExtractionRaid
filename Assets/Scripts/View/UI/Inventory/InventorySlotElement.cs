@@ -4,6 +4,7 @@ using State;
 using Systems;
 using UnityEngine;
 using UnityEngine.UIElements;
+using View.UI.Attachments;
 
 namespace View.UI.Inventory
 {
@@ -265,35 +266,58 @@ namespace View.UI.Inventory
             _rarityBr.style.borderBottomColor = deliveryColor;
         }
 
-        // Mod pips (top-right) — one dot per installed attachment. At-a-glance "how kitted
-        // out" this weapon is. Hidden for non-weapons / weapons with no attachments.
+        // Total fixed attachment slots a built weapon exposes (MVP: not rarity-scaled).
+        // Single-sourced from the editor presenter so the inventory hint and the editor agree.
+        static readonly int TotalAttachmentSlots =
+            AttachmentEditorPresenter.PayloadSlots.Length + AttachmentEditorPresenter.DeliverySlots.Length;
+
+        // Mod indicators (top-right): one solid dot per installed attachment, then one
+        // yellow-orange "!" per still-free slot — an at-a-glance "kitted out" readout that
+        // doubles as a "you can still upgrade this" call-to-action. Hidden for non-weapons.
         void UpdateModPips(ItemState item)
         {
-            int count = 0;
-            if (item != null && item.HasWeaponConfiguration)
-            {
-                var atts = item.WeaponConfiguration.Attachments;
-                if (atts != null)
-                    for (int i = 0; i < atts.Length; i++)
-                        if (!string.IsNullOrEmpty(atts[i].DefinitionId)) count++;
-            }
+            _modPips.Clear();
 
-            if (count <= 0)
+            if (item == null || !item.HasWeaponConfiguration)
             {
                 _modPips.style.display = DisplayStyle.None;
-                _modPips.Clear();
                 return;
             }
 
-            _modPips.Clear();
-            int shown = count > 8 ? 8 : count; // defensive cap (≤5 slot categories in practice)
-            for (int i = 0; i < shown; i++)
+            int installed = 0;
+            var atts = item.WeaponConfiguration.Attachments;
+            if (atts != null)
+                for (int i = 0; i < atts.Length; i++)
+                    if (!string.IsNullOrEmpty(atts[i].DefinitionId)) installed++;
+
+            int free = TotalAttachmentSlots - installed;
+            if (free < 0) free = 0;
+            if (installed > TotalAttachmentSlots) installed = TotalAttachmentSlots;
+
+            if (installed <= 0 && free <= 0)
+            {
+                _modPips.style.display = DisplayStyle.None;
+                return;
+            }
+
+            // Installed slots → solid dots.
+            for (int i = 0; i < installed; i++)
             {
                 var pip = new VisualElement();
                 pip.AddToClassList("inv-slot__mod-pip");
                 pip.pickingMode = PickingMode.Ignore;
                 _modPips.Add(pip);
             }
+
+            // Free slots → yellow-orange exclamation marks (install-available hint).
+            for (int i = 0; i < free; i++)
+            {
+                var bang = new Label("!");
+                bang.AddToClassList("inv-slot__mod-free");
+                bang.pickingMode = PickingMode.Ignore;
+                _modPips.Add(bang);
+            }
+
             _modPips.style.display = DisplayStyle.Flex;
         }
 

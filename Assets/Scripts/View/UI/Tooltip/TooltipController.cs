@@ -220,6 +220,8 @@ namespace View.UI.Tooltip
 
             _footer.text = model.Footer;
             ToggleEmptyClass(_footer, string.IsNullOrEmpty(model.Footer));
+            if (model.FooterAccent) _footer.AddToClassList("tt-footer--accent");
+            else _footer.RemoveFromClassList("tt-footer--accent");
 
             _sections.Clear();
             for (int i = 0; i < model.Sections.Count; i++)

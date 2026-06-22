@@ -139,6 +139,17 @@
     background-color: var(--color-text-secondary);
 }
 
+/* Free attachment slot — yellow-orange "!" call-to-action ("can upgrade"). */
+.inv-slot__mod-free {
+    margin: 0;
+    margin-left: 2px;
+    padding: 0;
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--color-mod-hint);
+}
+
 .inv-slot__durability {
     position: absolute;
     left: 6px;

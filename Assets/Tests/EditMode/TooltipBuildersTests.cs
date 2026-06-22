@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using Adapters;
 using NUnit.Framework;
 using State;
 using Systems;
 using Tests.EditMode.Fakes;
+using View.UI.Attachments;
 using View.UI.Tooltip;
 using View.UI.Tooltip.Builders;
 
@@ -224,6 +226,57 @@ namespace Tests.EditMode
                 Assert.IsTrue(HasRow(model, "Optic", "Red Dot"));
             }
             finally { WeaponBuilderTestFactory.DestroyAll(redDot, db); }
+        }
+
+        [Test]
+        public void WeaponBuilder_HasFreeSlots_FooterIsAccented()
+        {
+            // Fresh weapon — every attachment slot empty → modify hint is the
+            // yellow-orange "can upgrade" call-to-action.
+            var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 8);
+            var model = WeaponTooltipBuilder.For(weapon, _registry);
+
+            StringAssert.Contains("modify", model.Footer);
+            Assert.IsTrue(model.FooterAccent,
+                "A weapon with empty slots should accent the modify hint.");
+        }
+
+        [Test]
+        public void WeaponBuilder_AllSlotsFilled_FooterNotAccented()
+        {
+            var slots = new List<AttachmentSlot>();
+            slots.AddRange(AttachmentEditorPresenter.PayloadSlots);
+            slots.AddRange(AttachmentEditorPresenter.DeliverySlots);
+
+            var mods      = new List<AttachmentDefinition>();
+            var installed = new List<AttachmentInstance>();
+            foreach (var s in slots)
+            {
+                string id = "Mod_" + s;
+                mods.Add(WeaponBuilderTestFactory.MakeAttachment(id, id, s));
+                installed.Add(new AttachmentInstance(s, id));
+            }
+
+            var db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:    new[] { _ballistic },
+                deliveries:  new[] { _singleAction },
+                attachments: mods.ToArray());
+            var reg = WeaponBuilderTestFactory.MakeRegistry(db);
+
+            var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 8);
+            weapon.WeaponConfiguration.Attachments = installed.ToArray();
+
+            try
+            {
+                var model = WeaponTooltipBuilder.For(weapon, reg);
+                Assert.IsFalse(model.FooterAccent,
+                    "A weapon with every slot filled should not accent the hint.");
+            }
+            finally
+            {
+                WeaponBuilderTestFactory.DestroyAll(mods.ToArray());
+                WeaponBuilderTestFactory.DestroyAll(db);
+            }
         }
 
         // ── ModuleTooltipBuilder ──────────────────────────────
