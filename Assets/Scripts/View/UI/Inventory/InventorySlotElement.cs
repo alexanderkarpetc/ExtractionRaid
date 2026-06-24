@@ -347,5 +347,13 @@ namespace View.UI.Inventory
             if (!hovering) return;
             AddToClassList(valid ? "inv-slot-drag-valid" : "inv-slot-drag-invalid");
         }
+
+        // Attachment compatibility highlight (yellow-orange) — set on weapons when hovering/
+        // dragging a mod that fits them, and on mods when hovering a weapon. See InventoryWindow.
+        public void SetCompatible(bool on)
+        {
+            if (on) AddToClassList("inv-slot--compat");
+            else    RemoveFromClassList("inv-slot--compat");
+        }
     }
 }

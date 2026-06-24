@@ -112,6 +112,12 @@
 
 .ae-empty-note { font-size: var(--font-card-kind); color: var(--color-text-empty); -unity-font-style: italic; padding: 6px 2px; }
 
+/* Owned count badge ("x3") next to a mod name in the candidate list. */
+.ae-mod-count { font-size: 12px; color: var(--color-text-muted); margin-left: 8px; }
+
+/* Transient action feedback (e.g. "Backpack full — …") below the mod list. */
+.ae-mod-status { font-size: var(--font-card-kind); color: rgb(220, 100, 100); -unity-font-style: italic; padding: 4px 2px; min-height: 16px; }
+
 /* ── Stats panel (right, below mods) ──────────────── */
 .ae-divider { height: 1px; background-color: var(--color-border-inset); margin-top: 12px; margin-bottom: 10px; }
 

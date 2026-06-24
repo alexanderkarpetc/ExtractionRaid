@@ -104,6 +104,17 @@ namespace Systems
             // One medkit (resource pool defaults to full via ItemDefinition.MaxResource).
             inventory.Backpack[6] = ItemState.Create(state.AllocateEId(), "Medkit");
             inventory.Backpack[7] = ItemState.Create(state.AllocateEId(), "Bandage");
+
+            // Attachment mods (loot-gated editor) — one of each so the install/remove flow is
+            // immediately testable on a fresh player without overstocking. Ids match the
+            // AttachmentDefinition SOs (and the ItemDefinition entries) 1:1.
+            string[] startingMods =
+            {
+                "PowerComp", "MuzzleBrake", "VerticalGrip", "AngledGrip", "HeavyStock",
+                "SkeletonStock", "RedDot", "ExtendedMag", "QuickMag",
+            };
+            for (int i = 0; i < startingMods.Length; i++)
+                inventory.Backpack[8 + i] = ItemState.Create(state.AllocateEId(), startingMods[i], 1);
         }
 
         static ItemState MakeWeapon(RaidState state, (string payload, string delivery, int magSize) combo)

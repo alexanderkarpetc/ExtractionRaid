@@ -795,6 +795,84 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                 },
 
+                // --- Attachments (loot-gated) ---
+                // Ids MUST match the AttachmentDefinition SOs in
+                // Resources/WeaponBuilder/Attachments so a backpack item resolves to its
+                // attachment 1:1. Stackable so a haul of duplicates collapses into one slot.
+                // The editor consumes one on install and returns one on remove.
+                ["PowerComp"] = new()
+                {
+                    Id = "PowerComp",
+                    DisplayName = "Power Compensator",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["MuzzleBrake"] = new()
+                {
+                    Id = "MuzzleBrake",
+                    DisplayName = "Muzzle Brake",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["VerticalGrip"] = new()
+                {
+                    Id = "VerticalGrip",
+                    DisplayName = "Vertical Grip",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["AngledGrip"] = new()
+                {
+                    Id = "AngledGrip",
+                    DisplayName = "Angled Grip",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["HeavyStock"] = new()
+                {
+                    Id = "HeavyStock",
+                    DisplayName = "Heavy Stock",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["SkeletonStock"] = new()
+                {
+                    Id = "SkeletonStock",
+                    DisplayName = "Skeleton Stock",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["RedDot"] = new()
+                {
+                    Id = "RedDot",
+                    DisplayName = "Red Dot Sight",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["ExtendedMag"] = new()
+                {
+                    Id = "ExtendedMag",
+                    DisplayName = "Extended Magazine",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["QuickMag"] = new()
+                {
+                    Id = "QuickMag",
+                    DisplayName = "Quick Magazine",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+
                 // --- Quest Items ---
                 ["Worn_Warehouse_Key"] = new()
                 {

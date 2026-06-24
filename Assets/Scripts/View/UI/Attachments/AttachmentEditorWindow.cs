@@ -30,6 +30,7 @@ namespace View.UI.Attachments
         VisualElement _cores;
         VisualElement _slotsHost;
         VisualElement _modsHost;
+        Label _modStatus;
         VisualElement _statsHost;
 
         AttachmentEditorPresenter _presenter;
@@ -57,7 +58,11 @@ namespace View.UI.Attachments
 
             if (_presenter == null)
             {
-                _presenter = new AttachmentEditorPresenter(App.Instance?.CoreDefinitions);
+                var app = App.Instance;
+                System.Func<EId> alloc = null;
+                if (app != null) alloc = app.AllocateEId;
+                _presenter = new AttachmentEditorPresenter(
+                    app?.CoreDefinitions, app?.Player?.Inventory, alloc);
                 _presenter.StateChanged += OnStateChanged;
             }
             _focusedSlot = AttachmentEditorPresenter.PayloadSlots[0];
@@ -132,8 +137,11 @@ namespace View.UI.Attachments
             right.AddToClassList("ae-pane");
             right.AddToClassList("ae-pane-right");
             _modsHost = new VisualElement();
+            _modStatus = new Label { text = string.Empty };
+            _modStatus.AddToClassList("ae-mod-status");
             _statsHost = new VisualElement();
             right.Add(_modsHost);
+            right.Add(_modStatus);
             right.Add(_statsHost);
             body.Add(right);
 
@@ -255,6 +263,7 @@ namespace View.UI.Attachments
         void RefreshDetail()
         {
             _modsHost.Clear();
+            if (_modStatus != null) _modStatus.text = string.Empty; // clear stale action feedback
             if (_presenter == null || !_presenter.HasWeapon) { _statsHost.Clear(); return; }
 
             var heading = new Label($"{_focusedSlot.ToString().ToUpperInvariant()} — CHOOSE A MOD");
@@ -292,6 +301,19 @@ namespace View.UI.Attachments
             name.AddToClassList("ae-mod-name");
             row.Add(name);
 
+            // Owned-count badge ("x3"). The installed mod has left the backpack, so it
+            // shows no count — its row is tagged installed instead.
+            if (!isInstalled)
+            {
+                int owned = _presenter.CountInBackpack(def.Id);
+                if (owned > 0)
+                {
+                    var count = new Label($"x{owned}");
+                    count.AddToClassList("ae-mod-count");
+                    row.Add(count);
+                }
+            }
+
             var tags = new VisualElement();
             tags.AddToClassList("ae-mod-tags");
             var mlist = def.Modifiers;
@@ -310,8 +332,10 @@ namespace View.UI.Attachments
             row.RegisterCallback<PointerLeaveEvent>(_ => RefreshStats(previewModId: null));
             row.RegisterCallback<ClickEvent>(_ =>
             {
-                if (isInstalled) _presenter.Remove(slot);
-                else _presenter.Install(slot, modId);
+                // Success fires StateChanged → RebuildAll (which clears the status line).
+                // On failure nothing rebuilds, so surface the reason inline here.
+                bool ok = isInstalled ? _presenter.Remove(slot) : _presenter.Install(slot, modId);
+                if (!ok && _modStatus != null) _modStatus.text = _presenter.LastError ?? string.Empty;
             });
             return row;
         }

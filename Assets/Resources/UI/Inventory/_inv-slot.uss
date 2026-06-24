@@ -223,6 +223,14 @@
     background-color: var(--color-drag-invalid-bg);
 }
 
+/* Attachment-compatibility highlight — yellow-orange (matches the mod "!" CTA + tooltip
+ * accent). Lit on weapons when hovering/dragging a fitting mod, and on mods when hovering
+ * a weapon. Drag-target valid/invalid (above) layers on top for the slot under the cursor. */
+.inv-slot--compat {
+    border-color: var(--color-mod-hint);
+    background-color: rgba(255, 170, 50, 0.12);
+}
+
 /* Ghost is a clone of the source slot that follows the cursor while dragging.
  * Mounted on _root (absolute coords) so it floats above the window. */
 .inv-drag-ghost {

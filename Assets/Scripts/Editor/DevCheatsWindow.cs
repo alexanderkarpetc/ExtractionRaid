@@ -381,6 +381,10 @@ namespace Editor
                 EditorGUILayout.Space(2);
                 if (GUILayout.Button("Spawn All Weapon Variations") && appReady)
                     SpawnAllWeaponVariations();
+
+                EditorGUILayout.Space(2);
+                if (GUILayout.Button("Give All Mods") && appReady)
+                    GiveAllMods();
             }
 
             EditorGUILayout.Space(8);
@@ -546,6 +550,30 @@ namespace Editor
                 Debug.LogWarning($"[DevCheats] Gave {added}/{count}× {def.DisplayName} ({defId}) — backpack full, {count - added} dropped.");
             else
                 Debug.Log($"[DevCheats] Gave {added}× {def.DisplayName} ({defId}).");
+        }
+
+        // Attachment mod ids — match the AttachmentDefinition SOs + ItemDefinition entries 1:1.
+        static readonly string[] AttachmentModIds =
+        {
+            "PowerComp", "MuzzleBrake", "VerticalGrip", "AngledGrip", "HeavyStock",
+            "SkeletonStock", "RedDot", "ExtendedMag", "QuickMag",
+        };
+
+        // Drops a stack of every attachment mod into the backpack so the loot-gated
+        // attachment editor can be exercised on an existing save.
+        static void GiveAllMods()
+        {
+            var player = App.Instance?.Player;
+            if (player?.Inventory == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot give mods — Player.Inventory not ready.");
+                return;
+            }
+
+            int total = 0;
+            foreach (var id in AttachmentModIds)
+                total += InventorySystem.AddToBackpack(player.Inventory, id, 3, App.Instance.AllocateEId);
+            Debug.Log($"[DevCheats] Gave {total} attachment mod units across {AttachmentModIds.Length} types.");
         }
 
         /// <summary>

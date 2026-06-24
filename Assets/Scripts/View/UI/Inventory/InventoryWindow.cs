@@ -588,6 +588,63 @@ namespace View.UI.Inventory
                 for (int i = 0; i < panel.Slots.Count; i++) yield return panel.Slots[i];
         }
 
+        // Player-pane slots that can hold a weapon or a mod (the only slots the attachment
+        // compatibility highlight touches). Helmet/armor + right-pane sources excluded.
+        IEnumerable<InventorySlotElement> EnumeratePlayerItemSlots()
+        {
+            if (_weaponSlots != null)
+                foreach (var s in _weaponSlots) if (s != null) yield return s;
+            if (_backpackSlots != null)
+                foreach (var s in _backpackSlots) if (s != null) yield return s;
+        }
+
+        // ── Attachment compatibility cross-highlight ──────────
+        // Hovering (or dragging) a mod lights up the weapons it can install on; hovering a
+        // weapon lights up the mods that fit it. Shared yellow-orange "can upgrade" accent.
+
+        void ApplyCompatHighlight(InventorySlotElement subject)
+        {
+            ClearCompatHighlight();
+            var item = subject?.CurrentItem;
+            if (item == null) return;
+            var reg = App.Instance?.CoreDefinitions;
+            if (reg == null) return;
+
+            var subjectMod = AttachmentInstallSystem.Resolve(reg, item.DefinitionId);
+            if (subjectMod != null)
+            {
+                // Subject is a mod → highlight weapons with a FREE matching slot (can add, not swap).
+                foreach (var s in EnumeratePlayerItemSlots())
+                {
+                    if (s == subject) continue;
+                    var w = s.CurrentItem;
+                    if (w != null && w.HasWeaponConfiguration && AttachmentInstallSystem.CanInstallIntoFreeSlot(w, subjectMod))
+                        s.SetCompatible(true);
+                }
+                return;
+            }
+
+            if (item.HasWeaponConfiguration)
+            {
+                // Subject is a weapon → highlight mods whose slot is FREE on it (can add, not swap).
+                foreach (var s in EnumeratePlayerItemSlots())
+                {
+                    if (s == subject) continue;
+                    var modItem = s.CurrentItem;
+                    if (modItem == null) continue;
+                    var md = AttachmentInstallSystem.Resolve(reg, modItem.DefinitionId);
+                    if (md != null && AttachmentInstallSystem.CanInstallIntoFreeSlot(item, md))
+                        s.SetCompatible(true);
+                }
+            }
+        }
+
+        void ClearCompatHighlight()
+        {
+            foreach (var s in EnumeratePlayerItemSlots())
+                s.SetCompatible(false);
+        }
+
         // ── Drag-and-drop ─────────────────────────────────────
 
         void WireSlotInteractions(InventorySlotElement slot)
@@ -627,12 +684,16 @@ namespace View.UI.Inventory
                 App.Instance?.CoreDefinitions, App.Instance?.QuestDatabase,
                 shopCtx, itemIsInShop);
             tooltip.ShowFromPanel(model, evt.position);
+
+            // Cross-highlight: hovering a mod lights up weapons it fits (and vice-versa).
+            ApplyCompatHighlight(slot);
         }
 
         void OnSlotPointerLeave(InventorySlotElement slot, PointerLeaveEvent _)
         {
             if (_hoveredSlot == slot) _hoveredSlot = null;
             TooltipController.Instance?.Hide();
+            if (!_isDragging) ClearCompatHighlight();
         }
 
         // While inventory open + cursor over a player-backpack consumable,
@@ -942,6 +1003,9 @@ namespace View.UI.Inventory
                 _isDragging = true;
                 TooltipController.Instance?.Hide();
                 CreateGhost(slot);
+                // Dragging a mod highlights the weapons it can fill; dragging a weapon highlights
+                // the mods that fit its free slots. No-op for other item kinds.
+                ApplyCompatHighlight(slot);
             }
 
             UpdateGhostPosition(evt.position);
@@ -1038,6 +1102,16 @@ namespace View.UI.Inventory
                 var inv = App.Instance?.Player?.Inventory;
                 var state = App.Instance?.RaidSession?.RaidState;
 
+                // Attachment install in EITHER direction (mod→weapon or weapon→mod) — ahead of the
+                // weapon-swap / plain-move paths. Same resolver + Install as CanDropOnTarget and
+                // the hover/drag highlight, so the two drag directions are identical by
+                // construction. Mutates the weapon's config + bumps inventory.Version, so
+                // RefreshAll re-binds (pips/icons) below.
+                ItemState installWeapon = null;
+                string installModId = null;
+                bool installMod = inv != null
+                    && TryResolveAttachmentInstall(_draggedSlot, target, out installWeapon, out installModId);
+
                 // Weapon↔weapon swap during a raid must route through HotbarWeaponSystem so the
                 // equipped weapon follows to its new slot + magazines are preserved (plain TryMove
                 // only swaps inventory refs → WeaponSyncSystem rebuilds → selection stuck on the
@@ -1045,7 +1119,12 @@ namespace View.UI.Inventory
                 // fall through to the plain inventory swap.
                 bool weaponSwap = _draggedSlot.SlotRef.Type == SlotType.Weapon
                                   && target.SlotRef.Type == SlotType.Weapon;
-                if (inv != null && weaponSwap && state?.PlayerEntity != null)
+                if (installMod)
+                {
+                    ok = AttachmentInstallSystem.Install(installWeapon,
+                        App.Instance.CoreDefinitions, inv, App.Instance.AllocateEId, installModId, out _);
+                }
+                else if (inv != null && weaponSwap && state?.PlayerEntity != null)
                 {
                     HotbarWeaponSystem.SwapWeaponSlots(state, inv,
                         _draggedSlot.SlotRef.Index, target.SlotRef.Index);
@@ -1278,6 +1357,43 @@ namespace View.UI.Inventory
         {
             foreach (var s in EnumerateAllSlots())
                 s.SetDragOver(false, false);
+            ClearCompatHighlight(); // also drop the drag-time attachment highlight
+        }
+
+        // Resolves an attachment-install from a (dragged, target) slot pair in EITHER direction —
+        // a mod dropped on a weapon, or a weapon dropped on a mod. Returns the weapon ItemState +
+        // the mod id to install when exactly one side is a built weapon and the other is an
+        // installable mod the weapon can take. Direction-agnostic on purpose: both drop
+        // directions funnel through this one resolver + AttachmentInstallSystem.Install, so the
+        // behaviour is identical by construction.
+        bool TryResolveAttachmentInstall(InventorySlotElement src, InventorySlotElement tgt,
+                                         out ItemState weapon, out string modId)
+        {
+            weapon = null;
+            modId  = null;
+            var reg = App.Instance?.CoreDefinitions;
+            if (reg == null || src?.CurrentItem == null || tgt?.CurrentItem == null) return false;
+
+            var srcItem = src.CurrentItem;
+            var tgtItem = tgt.CurrentItem;
+
+            // src is the mod, tgt is the weapon.
+            var srcMod = AttachmentInstallSystem.Resolve(reg, srcItem.DefinitionId);
+            if (srcMod != null && tgtItem.HasWeaponConfiguration
+                && AttachmentInstallSystem.CanInstall(tgtItem, srcMod))
+            {
+                weapon = tgtItem; modId = srcMod.Id; return true;
+            }
+
+            // src is the weapon, tgt is the mod.
+            var tgtMod = AttachmentInstallSystem.Resolve(reg, tgtItem.DefinitionId);
+            if (tgtMod != null && srcItem.HasWeaponConfiguration
+                && AttachmentInstallSystem.CanInstall(srcItem, tgtMod))
+            {
+                weapon = srcItem; modId = tgtMod.Id; return true;
+            }
+
+            return false;
         }
 
         // Hover-preview validity. Real drop logic re-validates inside the
@@ -1287,6 +1403,14 @@ namespace View.UI.Inventory
             if (target == null || _draggedSlot == null || target == _draggedSlot) return false;
             var item = _draggedSlot.CurrentItem;
             if (item?.Definition == null) return false;
+
+            // Attachment install (either direction — mod→weapon or weapon→mod), player→player.
+            // Valid even though a mod's AllowedSlots is Backpack (not the weapon slot type), so
+            // it's checked before the generic slot-type gate below.
+            if (_draggedSlot.Source == InventorySlotElement.SlotSource.Player
+                && target.Source == InventorySlotElement.SlotSource.Player
+                && TryResolveAttachmentInstall(_draggedSlot, target, out _, out _))
+                return true;
 
             var src = _draggedSlot;
             var tgtSlotType = target.SlotRef.ToItemSlotType();
