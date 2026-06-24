@@ -229,6 +229,28 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void ItemBuilder_AttachmentItem_ShowsEffectsSection()
+        {
+            var mag = WeaponBuilderTestFactory.MakeAttachment(
+                "ExtendedMag", "Extended Magazine", AttachmentSlot.Magazine,
+                (WeaponStatAxis.MagazineSize, 50f));
+            var db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:    new[] { _ballistic },
+                deliveries:  new[] { _singleAction },
+                attachments: new[] { mag });
+            var reg = WeaponBuilderTestFactory.MakeRegistry(db);
+
+            var item = ItemState.Create(new EId(99), "ExtendedMag");
+            try
+            {
+                var model = ItemTooltipBuilder.For(item, reg);
+                Assert.AreEqual("Extended Magazine", model.Title);
+                Assert.IsTrue(HasSection(model, "Effects"));
+            }
+            finally { WeaponBuilderTestFactory.DestroyAll(mag, db); }
+        }
+
+        [Test]
         public void WeaponBuilder_HasFreeSlots_FooterIsAccented()
         {
             // Fresh weapon — every attachment slot empty → modify hint is the

@@ -461,14 +461,9 @@ namespace View.UI.Attachments
         }
 
         // Higher-is-better axes improve when the percent is positive; lower-is-better worsen.
-        static bool DeltaIsGood(WeaponStatAxis axis, float percent)
-        {
-            bool higherBetter = axis == WeaponStatAxis.Damage
-                             || axis == WeaponStatAxis.RateOfFire
-                             || axis == WeaponStatAxis.MagazineSize
-                             || axis == WeaponStatAxis.Ergonomics;
-            return higherBetter ? percent > 0f : percent < 0f;
-        }
+        // Single-sourced with the item tooltip via AttachmentStatDisplay.
+        static bool DeltaIsGood(WeaponStatAxis axis, float percent) =>
+            AttachmentStatDisplay.DeltaIsGood(axis, percent);
 
         string ModDisplayName(string id)
         {

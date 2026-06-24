@@ -37,6 +37,13 @@ namespace View.UI.Tooltip.Builders
                     return ModuleTooltipBuilder.ForPayload(payloadDef);
                 if (registry.TryGetDelivery(item.DefinitionId, out var deliveryDef))
                     return ModuleTooltipBuilder.ForDelivery(deliveryDef);
+
+                // Attachment mods: show slot + stat deltas instead of a title-only generic view.
+                if (registry.TryGetAttachment(item.DefinitionId, out var attachmentDef) && attachmentDef != null)
+                {
+                    var attModel = AttachmentTooltipBuilder.For(attachmentDef, item);
+                    return AppendPrice(attModel, item, shopContext, itemIsInShop);
+                }
             }
 
             var def   = item.Definition;

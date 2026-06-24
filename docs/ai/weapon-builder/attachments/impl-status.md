@@ -43,8 +43,14 @@ install/remove мод (**споживає/повертає мод з backpack**)
 - **H2 — drag-drop install (двонапрямлено):** `InventoryWindow.TryResolveAttachmentInstall(src, tgt)` — direction-agnostic резолвер: визначає (weapon, modId) незалежно від того що тягнули (mod→weapon АБО weapon→mod). І `TryDropOnSlot`, і `CanDropOnTarget` тягнуть через цей **один** резолвер + один `AttachmentInstallSystem.Install` → обидва напрямки ідентичні by construction. Install перед weapon-swap/TryMove; drag-ghost зелений над валідними цілями (swap дозволено).
 - **H3 — cross-highlight:** hover мода → підсвічує weapon-слоти (`SetCompatible` → `.inv-slot--compat` yellow-orange); hover зброї → підсвічує моди в backpack; під час DRAG мода — всі сумісні weapon-слоти на час drag. **Підсвітка лише коли відповідний слот ВІЛЬНИЙ** (`AttachmentInstallSystem.CanInstallIntoFreeSlot` = CanInstall && !InstalledIn(slot)) — «можна додати», не swap. (Drag-drop install при цьому swap дозволяє.) Hooks: `OnSlotPointerEnter/Leave` (hover, skip during drag), drag-start у `OnSlotPointerMove` (mod-only), clear у `ClearAllSlotHover`. Iterate лише player-слоти (`EnumeratePlayerItemSlots` = weapon+backpack).
 
+### Attachment item tooltip (✅, 2026-06-24)
+Раніше attachment-предмет провалювався в generic-гілку `ItemTooltipBuilder` → лише title. Тепер:
+- **`View/UI/Tooltip/Builders/AttachmentTooltipBuilder.cs`** (pure) — title + "{Slot} Attachment" subtitle + секція **"Effects"** з рядком на кожну `StatDelta` (значення = `<color>±N%</color>`, green=покращення / red=мінус). Quantity при stack>1.
+- **`View/UI/AttachmentStatDisplay.cs`** (pure, спільний) — `AxisLabel`/`DeltaIsGood`/`FormatPercent`/`Hex(good)` (`GoodHex` #50C878 / `BadHex` #DC6464). Editor `AttachmentEditorWindow.DeltaIsGood` тепер делегує сюди (single-source good/bad-правила).
+- `ItemTooltipBuilder` делегує на `AttachmentTooltipBuilder.For` коли `registry.TryGetAttachment` резолвиться (+ AppendPrice).
+
 ### Tests
-`WeaponStatDisplayTests`, `AttachmentComposeTests`, `AttachmentEditorPresenterTests` (loot-gating: consume/return/swap/block-on-full/not-owned/already-installed/owned-list), `AttachmentInstallSystemTests` (Resolve/CanInstall/CanInstallIntoFreeSlot/derive-slot/not-owned), `RarityTierFallbackTests`, `TooltipBuildersTests` (extended + footer-accent), `WeaponBuilderTestFactory` (+`MakeAttachment`, `MakeDatabase` attachments param). **600 green.**
+`WeaponStatDisplayTests`, `AttachmentComposeTests`, `AttachmentEditorPresenterTests` (loot-gating: consume/return/swap/block-on-full/not-owned/already-installed/owned-list), `AttachmentInstallSystemTests` (Resolve/CanInstall/CanInstallIntoFreeSlot/derive-slot/not-owned), `AttachmentTooltipBuilderTests` (title/slot/effects/good-bad-color/recoil-neg/quantity), `RarityTierFallbackTests`, `TooltipBuildersTests` (extended + footer-accent + attachment-item delegation), `WeaponBuilderTestFactory` (+`MakeAttachment`, `MakeDatabase` attachments param). **607 green.**
 
 ## Паралельні зміни користувача (НЕ чіпати/будувати поверх)
 - **Item icons** у inventory slots: `InventorySlotElement._icon` + `ItemIconRegistryAsset` + `UpdateIcon()` + `.inv-slot__icon` USS + `SetIconRegistry()`. (Користувач додав окремо.)
@@ -68,4 +74,4 @@ install/remove мод (**споживає/повертає мод з backpack**)
 **Drag/highlight (без редактора):** наведи на мод у backpack → зброї з **вільним** відповідним слотом підсвічуються жовто-помаранчевим (і навпаки — наведи на зброю → моди, чий слот вільний); зайняті слоти НЕ підсвічуються. Перетягни мод на зброю **АБО зброю на мод** → ставиться (двонапрямлено, той самий результат; swap дозволено, лише підсвітка обмежена вільними слотами; drag-ghost зелений над валідними цілями).
 
 ## Verification команди (Unity bridge, порт 6401)
-`refresh_unity(compile=request, scope=all)` → `read_console(types=[error], filter=CS)` → `run_tests(EditMode)` → `get_test_job`. Очікувано 600 green.
+`refresh_unity(compile=request, scope=all)` → `read_console(types=[error], filter=CS)` → `run_tests(EditMode)` → `get_test_job`. Очікувано 607 green.
