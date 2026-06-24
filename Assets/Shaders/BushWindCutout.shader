@@ -15,6 +15,8 @@ Shader "ExtractShaders/BushWindCutout"
         _WindLeafFlutter("Leaf Flutter", Range(0, 1)) = 0.25
         _WindVertexColorMask("Vertex Color Mask", Range(0, 1)) = 0
 
+        _BackFaceLight("Back Face Light", Range(0, 1)) = 0.45
+        _AmbientBoost("Ambient Boost", Range(0, 1)) = 0.18
         _Smoothness("Smoothness", Range(0, 1)) = 0.25
         _Specular("Specular", Range(0, 1)) = 0.1
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 0
@@ -58,6 +60,8 @@ Shader "ExtractShaders/BushWindCutout"
             half _WindHeightFade;
             half _WindLeafFlutter;
             half _WindVertexColorMask;
+            half _BackFaceLight;
+            half _AmbientBoost;
             half _Smoothness;
             half _Specular;
         CBUFFER_END
@@ -122,13 +126,16 @@ Shader "ExtractShaders/BushWindCutout"
             return output;
         }
 
-        half4 WindLitFragment(Varyings input) : SV_Target
+        half4 WindLitFragment(Varyings input, FRONT_FACE_TYPE facing : FRONT_FACE_SEMANTIC) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
             half4 tex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
             clip(tex.a - _Cutoff);
+
+            half facingSign = IS_FRONT_VFACE(facing, 1.0h, -1.0h);
+            half3 normalWS = NormalizeNormalPerPixel(input.normalWS * facingSign);
 
             SurfaceData surfaceData = (SurfaceData)0;
             surfaceData.albedo = tex.rgb;
@@ -142,16 +149,18 @@ Shader "ExtractShaders/BushWindCutout"
             InputData inputData = (InputData)0;
             inputData.positionWS = input.positionWS;
             inputData.positionCS = input.positionCS;
-            inputData.normalWS = NormalizeNormalPerPixel(input.normalWS);
+            inputData.normalWS = normalWS;
             inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
             inputData.shadowCoord = input.shadowCoord;
             inputData.fogCoord = input.fogFactor;
             inputData.vertexLighting = VertexLighting(input.positionWS, inputData.normalWS);
-            inputData.bakedGI = SampleSH(inputData.normalWS);
+            inputData.bakedGI = SampleSH(inputData.normalWS) + tex.rgb * _AmbientBoost;
             inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
             inputData.shadowMask = half4(1, 1, 1, 1);
 
             half4 color = UniversalFragmentPBR(inputData, surfaceData);
+            half backFaceMask = 1.0h - saturate(facingSign);
+            color.rgb += tex.rgb * _BackFaceLight * backFaceMask;
             color.rgb = MixFog(color.rgb, inputData.fogCoord);
             return color;
         }
