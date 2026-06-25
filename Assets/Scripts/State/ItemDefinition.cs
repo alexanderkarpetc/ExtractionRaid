@@ -873,6 +873,32 @@ namespace State
                     MaxStackSize = 20,
                 },
 
+                // Unique (archetype-restricted) attachments — P3.
+                ["LaserFocusing"] = new()
+                {
+                    Id = "LaserFocusing",
+                    DisplayName = "Laser Focusing Optic",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["ScatterChoke"] = new()
+                {
+                    Id = "ScatterChoke",
+                    DisplayName = "Scatter Choke",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+                ["AutoHeatSink"] = new()
+                {
+                    Id = "AutoHeatSink",
+                    DisplayName = "Auto Heat-Sink",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
+
                 // --- Quest Items ---
                 ["Worn_Warehouse_Key"] = new()
                 {

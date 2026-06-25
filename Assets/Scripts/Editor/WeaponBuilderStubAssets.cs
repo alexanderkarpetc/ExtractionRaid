@@ -37,15 +37,12 @@ namespace Game.Editor
         const string ScatterPath      = DeliveriesFolder + "/Scatter.asset";
         const string DatabasePath     = ResourcesFolder  + "/CoreDefinitionDatabase.asset";
 
-        // Tier 8 Wave A: Delivery → weapon hand prefab. Wired here so
-        // `Create Stub Assets` is idempotent for fresh clones.
-        const string PistolPrefabPath  = "Assets/Resources/Prefabs/Weapons/Weapon_Pistol.prefab";
-        const string RiflePrefabPath   = "Assets/Resources/Prefabs/Weapons/Weapon_Rifle.prefab";
-        const string ShotgunPrefabPath = "Assets/Resources/Prefabs/Weapons/Weapon_Shotgun.prefab";
-
-        // Tier 8 Wave B/C: Payload → attachment prefab spawned at PayloadMount socket.
-        const string BallisticBarrelPrefabPath = "Assets/Resources/Prefabs/Modules/Module_Payload_BallisticBarrel.prefab";
-        const string LaserEmitterPrefabPath    = "Assets/Resources/Prefabs/Modules/Module_Payload_LaserEmitter.prefab";
+        // NOTE: weapon/barrel prefab wiring is NOT regenerated here. The old generator set
+        // `_attachmentPrefab` (payload) / `_weaponPrefab` (delivery), but the Tier-8 visualization
+        // refactor renamed those to `_basePrefab` / `_barrelPrefab` AND flipped the payload↔delivery
+        // roles — so the old assignments were dead (SetField no-op + console spam) and wrong-model.
+        // Prefab refs now live on the core assets directly (preserved across regen by GetOrCreate).
+        // A correct Tier-8 prefab generator pass is a separate task.
 
         [MenuItem("Tools/Weapon Builder/Create Stub Assets")]
         public static void CreateStubAssets()
@@ -81,9 +78,11 @@ namespace Game.Editor
                       $"  + {attachments.Count} attachment stubs in {AttachmentsFolder}");
         }
 
-        // ── Attachments (P2.3 — base mods, existing-field only) ───────────
-        // Numbers are catalog.md placeholders, tunable later. All universal
-        // (CompatibleArchetype empty) for MVP; archetype-restricted unique mods = P3.
+        // ── Attachments (P2.3 base mods + P3 unique mods) ─────────────────
+        // Numbers are catalog.md placeholders, tunable later. Universal mods leave
+        // CompatibleArchetype empty; the 3 unique mods (P3) restrict to a payload archetype
+        // ("Laser") or delivery firing pattern ("Scatter"/"Auto"). Unique-mod effects use
+        // existing stat axes as proxies — the true charge/heat versions await P4 mechanics.
 
         static System.Collections.Generic.List<AttachmentDefinition> CreateAttachmentStubs()
         {
@@ -107,6 +106,14 @@ namespace Game.Editor
                     (WeaponStatAxis.MagazineSize, 50f), (WeaponStatAxis.ReloadTime, 20f), (WeaponStatAxis.Ergonomics, -10f)),
                 MakeAttachment("QuickMag",      "Quick Magazine",    AttachmentSlot.Magazine,
                     (WeaponStatAxis.ReloadTime, -25f), (WeaponStatAxis.Ergonomics, 5f), (WeaponStatAxis.MagazineSize, -20f)),
+
+                // ── Unique (archetype-restricted) — P3. Existing-axis proxies for charge/heat. ──
+                MakeUniqueAttachment("LaserFocusing", "Laser Focusing Optic", AttachmentSlot.Optic, "Laser",
+                    (WeaponStatAxis.Damage, 12f), (WeaponStatAxis.Ergonomics, -12f)),
+                MakeUniqueAttachment("ScatterChoke",  "Scatter Choke",        AttachmentSlot.Muzzle, "Scatter",
+                    (WeaponStatAxis.Spread, -30f), (WeaponStatAxis.Recoil, 10f)),
+                MakeUniqueAttachment("AutoHeatSink",  "Auto Heat-Sink",       AttachmentSlot.Muzzle, "Auto",
+                    (WeaponStatAxis.Recoil, -20f), (WeaponStatAxis.Damage, -8f)),
             };
         }
 
@@ -125,6 +132,18 @@ namespace Game.Editor
                 mods[i] = new StatDelta { Axis = deltas[i].axis, Percent = deltas[i].percent };
             SetField(def, "_modifiers", mods);
 
+            EditorUtility.SetDirty(def);
+            return def;
+        }
+
+        // Unique (archetype-restricted) variant — builds like MakeAttachment, then stamps the
+        // CompatibleArchetype token (payload archetype / delivery form-factor / firing pattern).
+        static AttachmentDefinition MakeUniqueAttachment(
+            string id, string displayName, AttachmentSlot slot, string archetype,
+            params (WeaponStatAxis axis, float percent)[] deltas)
+        {
+            var def = MakeAttachment(id, displayName, slot, deltas);
+            SetField(def, "_compatibleArchetype", archetype);
             EditorUtility.SetDirty(def);
             return def;
         }
@@ -168,8 +187,6 @@ namespace Game.Editor
             SetField(def, "_archetype",   "Ballistic");
             SetField(def, "_displayName", "Ballistic");
             SetField(def, "_ammoType",    "Ammo_Rifle");
-            SetField(def, "_attachmentPrefab",
-                AssetDatabase.LoadAssetAtPath<GameObject>(BallisticBarrelPrefabPath));
 
             var stats = new CommonPayloadStats[5];
             stats[(int)RarityTier.Common] = new CommonPayloadStats
@@ -195,8 +212,6 @@ namespace Game.Editor
             SetField(def, "_archetype",   "Laser");
             SetField(def, "_displayName", "Laser");
             SetField(def, "_ammoType",    "Ammo_EnergyCell");
-            SetField(def, "_attachmentPrefab",
-                AssetDatabase.LoadAssetAtPath<GameObject>(LaserEmitterPrefabPath));
 
             // Common-tier payload stats: higher single-shot damage and projectile speed
             // than Ballistic — compensates for the charge-up overhead.
@@ -228,7 +243,6 @@ namespace Game.Editor
             SetField(def, "_id",         "SingleAction");
             SetField(def, "_formFactor", "Pistol");
             SetField(def, "_pattern",    FiringPattern.Single);
-            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(PistolPrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
@@ -266,7 +280,6 @@ namespace Game.Editor
             SetField(def, "_id",         "Auto");
             SetField(def, "_formFactor", "Rifle");
             SetField(def, "_pattern",    FiringPattern.Auto);
-            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(RiflePrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats
@@ -303,7 +316,6 @@ namespace Game.Editor
             SetField(def, "_id",         "Scatter");
             SetField(def, "_formFactor", "Shotgun");
             SetField(def, "_pattern",    FiringPattern.Scatter);
-            SetField(def, "_weaponPrefab", AssetDatabase.LoadAssetAtPath<GameObject>(ShotgunPrefabPath));
 
             var stats = new DeliveryStats[5];
             stats[(int)RarityTier.Common] = new DeliveryStats

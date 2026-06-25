@@ -557,6 +557,7 @@ namespace Editor
         {
             "PowerComp", "MuzzleBrake", "VerticalGrip", "AngledGrip", "HeavyStock",
             "SkeletonStock", "RedDot", "ExtendedMag", "QuickMag",
+            "LaserFocusing", "ScatterChoke", "AutoHeatSink", // unique (archetype-restricted)
         };
 
         // Drops a stack of every attachment mod into the backpack so the loot-gated

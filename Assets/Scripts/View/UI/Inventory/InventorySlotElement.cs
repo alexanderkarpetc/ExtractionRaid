@@ -4,7 +4,6 @@ using State;
 using Systems;
 using UnityEngine;
 using UnityEngine.UIElements;
-using View.UI.Attachments;
 
 namespace View.UI.Inventory
 {
@@ -266,14 +265,10 @@ namespace View.UI.Inventory
             _rarityBr.style.borderBottomColor = deliveryColor;
         }
 
-        // Total fixed attachment slots a built weapon exposes (MVP: not rarity-scaled).
-        // Single-sourced from the editor presenter so the inventory hint and the editor agree.
-        static readonly int TotalAttachmentSlots =
-            AttachmentEditorPresenter.PayloadSlots.Length + AttachmentEditorPresenter.DeliverySlots.Length;
-
         // Mod indicators (top-right): one solid dot per installed attachment, then one
-        // yellow-orange "!" per still-free slot — an at-a-glance "kitted out" readout that
-        // doubles as a "you can still upgrade this" call-to-action. Hidden for non-weapons.
+        // yellow-orange "!" per still-free UNLOCKED slot — an at-a-glance "kitted out" readout
+        // that doubles as a "you can still upgrade this" call-to-action. The unlocked-slot count
+        // is rarity-scaled (Systems.AttachmentSlots). Hidden for non-weapons.
         void UpdateModPips(ItemState item)
         {
             _modPips.Clear();
@@ -284,15 +279,17 @@ namespace View.UI.Inventory
                 return;
             }
 
+            int total = AttachmentSlots.TotalUnlocked(item);
+
             int installed = 0;
             var atts = item.WeaponConfiguration.Attachments;
             if (atts != null)
                 for (int i = 0; i < atts.Length; i++)
                     if (!string.IsNullOrEmpty(atts[i].DefinitionId)) installed++;
 
-            int free = TotalAttachmentSlots - installed;
+            int free = total - installed;
             if (free < 0) free = 0;
-            if (installed > TotalAttachmentSlots) installed = TotalAttachmentSlots;
+            if (installed > total) installed = total;
 
             if (installed <= 0 && free <= 0)
             {

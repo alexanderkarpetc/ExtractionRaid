@@ -65,7 +65,7 @@ namespace View.UI.Attachments
                     app?.CoreDefinitions, app?.Player?.Inventory, alloc);
                 _presenter.StateChanged += OnStateChanged;
             }
-            _focusedSlot = AttachmentEditorPresenter.PayloadSlots[0];
+            _focusedSlot = AttachmentSlots.PayloadOrder[0]; // Optic — always unlocked
             _presenter.Load(weapon);          // fires StateChanged → RebuildAll
             _root.style.display = DisplayStyle.Flex;
             _visible = true;
@@ -211,19 +211,26 @@ namespace View.UI.Attachments
             _slotsHost.Clear();
             if (_presenter == null || !_presenter.HasWeapon) return;
 
-            AppendSlotGroup("PAYLOAD", AttachmentEditorPresenter.PayloadSlots, first: true);
-            AppendSlotGroup("DELIVERY", AttachmentEditorPresenter.DeliverySlots, first: false);
+            // Only the slots unlocked by each core's rarity are shown (rarity-scaled).
+            var cfg = _presenter.Weapon.WeaponConfiguration;
+            AppendSlotGroup("PAYLOAD", AttachmentSlots.PayloadOrder,
+                AttachmentSlots.UnlockedPayloadCount(cfg.Payload.Rarity), first: true);
+            AppendSlotGroup("DELIVERY", AttachmentSlots.DeliveryOrder,
+                AttachmentSlots.UnlockedDeliveryCount(cfg.Delivery.Rarity), first: false);
         }
 
-        void AppendSlotGroup(string heading, AttachmentSlot[] slots, bool first)
+        void AppendSlotGroup(string heading, AttachmentSlot[] order, int unlockedCount, bool first)
         {
+            if (unlockedCount <= 0) return;
+
             var h = new Label(heading);
             h.AddToClassList("ae-section-heading");
             if (first) h.AddToClassList("first");
             _slotsHost.Add(h);
 
-            foreach (var slot in slots)
+            for (int s = 0; s < order.Length && s < unlockedCount; s++)
             {
+                var slot = order[s];
                 var installed = _presenter.InstalledIn(slot);
                 var row = new VisualElement();
                 row.AddToClassList("ae-slot-row");

@@ -112,6 +112,7 @@ namespace Systems
             {
                 "PowerComp", "MuzzleBrake", "VerticalGrip", "AngledGrip", "HeavyStock",
                 "SkeletonStock", "RedDot", "ExtendedMag", "QuickMag",
+                "LaserFocusing", "ScatterChoke", "AutoHeatSink", // unique (archetype-restricted)
             };
             for (int i = 0; i < startingMods.Length; i++)
                 inventory.Backpack[8 + i] = ItemState.Create(state.AllocateEId(), startingMods[i], 1);

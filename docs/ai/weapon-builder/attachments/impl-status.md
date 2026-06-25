@@ -6,12 +6,12 @@
 
 ## Поточний стан
 
-**P1 ✅ + P2 ✅ + Loot-gating ✅ + Inventory drag/highlight ✅ (функціонально завершені). 599 EditMode green.** Sidegrade-loop живий end-to-end:
+**P1 ✅ + P2 ✅ + Loot-gating ✅ + Inventory drag/highlight ✅ + P3 (unique mods + rarity-slots) ✅ (функціонально завершені). 614 EditMode green.** Sidegrade-loop живий end-to-end:
 інвентар (будь-де) → right-click зброю → **Modify** → editor (двопанельний, Variant A) → фокус слота →
 install/remove мод (**споживає/повертає мод з backpack**) → стати міняються з green/red give/take → equipped-зброя ресинкається live → в інвентарі pips + tooltip списком модів.
-**Або прямо в інвентарі:** drag мода на зброю → ставиться; hover мода/зброї → кросс-хайлайт сумісних слотів.
+**Або прямо в інвентарі:** drag мода на зброю (або зброю на мод) → ставиться; hover мода/зброї → кросс-хайлайт вільних сумісних слотів. **Слотів — f(rarity); унікальні моди лише під свій архетип.**
 
-**Verified:** compile + 599 EditMode + user-eyeball (P1/P2 — підтверджено; loot-gating + drag/highlight — фінальний in-game eyeball на користувачі).
+**Verified:** compile + 614 EditMode + user-eyeball (P1/P2 — підтверджено; loot-gating + drag/highlight + P3 — фінальний in-game eyeball на користувачі; потребує `Create Stub Assets` для unique-.asset).
 
 ## Що шипнуто — по фазах
 
@@ -49,29 +49,36 @@ install/remove мод (**споживає/повертає мод з backpack**)
 - **`View/UI/AttachmentStatDisplay.cs`** (pure, спільний) — `AxisLabel`/`DeltaIsGood`/`FormatPercent`/`Hex(good)` (`GoodHex` #50C878 / `BadHex` #DC6464). Editor `AttachmentEditorWindow.DeltaIsGood` тепер делегує сюди (single-source good/bad-правила).
 - `ItemTooltipBuilder` делегує на `AttachmentTooltipBuilder.For` коли `registry.TryGetAttachment` резолвиться (+ AppendPrice).
 
+### P3 — unique mods + rarity-scaled slots (✅, 2026-06-25)
+- **P3-1 — rarity-scaled слоти:** `Systems/AttachmentSlots.cs` — `PayloadOrder [Optic,Magazine,Buttstock]` + `DeliveryOrder [Muzzle,Grip]`; `CountForRarity` (Common/Uncommon 1, Rare/Epic 2, Legendary 3, cap=category count); `IsUnlocked(weapon, slot)` / `TotalUnlocked(weapon)`. Common/Common ≈ 2 слоти (Optic+Muzzle) → Legendary/Legendary = 5. `CanInstall`/`Install` reject locked slots; editor показує лише розблоковані; pips «!» + tooltip footer-total = `TotalUnlocked` (per-weapon). Видалено старі fixed `AttachmentEditorPresenter.PayloadSlots/DeliverySlots`.
+- **P3-2 — archetype enforcement:** `AttachmentInstallSystem.ArchetypeMatches(weapon, modDef, registry)` — empty token = universal; інакше case-insensitive match vs payload `Archetype` / delivery `FormFactor` / `Pattern`. `CanInstall`/`CanInstallIntoFreeSlot` тепер беруть `registry` + чекають archetype; `Install` guard'иться через CanInstall; presenter `CompatibleMods` фільтрує за archetype. Усі callers (InventoryWindow drop+highlight, tests) оновлені.
+- **P3-3 — unique mods:** 3 SO через `WeaponBuilderStubAssets.MakeUniqueAttachment` (Laser Focusing Optic: Optic/**Laser**; Scatter Choke: Muzzle/**Scatter**; Auto Heat-Sink: Muzzle/**Auto**) — ефекти на наявних осях (charge/heat = proxy, true-версії → P4). + matching `ItemDefinition` (LaserFocusing/ScatterChoke/AutoHeatSink, stackable 20) + grant у fresh loadout (12 модів, slots 8-19) + "Give All Mods". **Треба `Tools → Weapon Builder → Create Stub Assets` щоб згенерувати 3 нові .asset + оновити DB.**
+
 ### Tests
-`WeaponStatDisplayTests`, `AttachmentComposeTests`, `AttachmentEditorPresenterTests` (loot-gating: consume/return/swap/block-on-full/not-owned/already-installed/owned-list), `AttachmentInstallSystemTests` (Resolve/CanInstall/CanInstallIntoFreeSlot/derive-slot/not-owned), `AttachmentTooltipBuilderTests` (title/slot/effects/good-bad-color/recoil-neg/quantity), `RarityTierFallbackTests`, `TooltipBuildersTests` (extended + footer-accent + attachment-item delegation), `WeaponBuilderTestFactory` (+`MakeAttachment`, `MakeDatabase` attachments param). **607 green.**
+`WeaponStatDisplayTests`, `AttachmentComposeTests`, `AttachmentEditorPresenterTests` (loot-gating; weapon=Legendary so all slots unlocked), `AttachmentInstallSystemTests` (Resolve/CanInstall/free-slot/derive-slot/not-owned + **archetype match + install-reject**), `AttachmentSlotsTests` (rarity curve / cap / Common→Legendary unlock), `AttachmentTooltipBuilderTests`, `RarityTierFallbackTests`, `TooltipBuildersTests` (+ footer-accent + attachment-item delegation), `WeaponBuilderTestFactory`. **614 green.**
 
 ## Паралельні зміни користувача (НЕ чіпати/будувати поверх)
 - **Item icons** у inventory slots: `InventorySlotElement._icon` + `ItemIconRegistryAsset` + `UpdateIcon()` + `.inv-slot__icon` USS + `SetIconRegistry()`. (Користувач додав окремо.)
 - **Esc-close** у `InventoryUI` (дзеркалить Tab — закриває editor/builder).
 
 ## Наступні кроки (на вибір — обрати)
-1. **Playtest/balance** — числа модів = placeholders; протюнити на відчутті.
-2. **P4 — нові механіки:** Noise→Suppressor (боти чують `WeaponFired` у `NoiseRadius`) + Sight/FOV→Sniper Scope (fog-of-war). Розблоковують 2 відкладені моди.
-3. **P3 — unique-моди + rarity-scaled слоти:** `CompatibleArchetype` enforcement (Laser Focusing/Scatter Choke/Auto Heat-Sink) + к-ть слотів = f(core rarity) (зараз фіксований набір усіх 5).
-4. **Real loot-table drops для модів** — зараз моди роздаються лише через cheat-loadout + dev-cheat; вписати у LootSystem/loot-таблиці контейнерів/ботів.
+1. **Playtest/balance** — числа модів = placeholders; протюнити на відчутті (тепер ще й rarity-крива слотів + unique-моди).
+2. **P4 — нові механіки:** Noise→Suppressor (боти чують `WeaponFired` у `NoiseRadius`) + Sight/FOV→Sniper Scope (fog-of-war). Розблоковують відкладені моди + дають unique-модам справжні charge/heat-ефекти.
+3. **Real loot-table drops для модів** — зараз моди роздаються лише через cheat-loadout + dev-cheat; вписати у LootSystem/loot-таблиці контейнерів/ботів.
 
 ## Відкладене / спрощення MVP (треба памʼятати)
-- Slot count = **фіксований** (усі 5 категорій), не rarity-scaled. Q20.
-- Attachment supply = **loot-gated ✅** (backpack-consume, recoverable). АЛЕ моди ще не падають з лута — роздаються через cheat-loadout + dev-cheat "Give All Mods" (real drops → next step #4).
-- `CompatibleArchetype` — поле є, **НЕ enforced** (усі моди universal у P2). Enforcement → P3 unique-моди.
+- Slot count = **rarity-scaled ✅** (`AttachmentSlots`, Common/Uncommon 1 · Rare/Epic 2 · Legendary 3, cap=category count). Крива тюниться в плейтесті.
+- `CompatibleArchetype` — **enforced ✅** (P3-2). 3 unique-моди (Laser/Scatter/Auto). Інші моди universal.
+- Unique-моди використовують **наявні стат-осі як proxy** (Laser Focusing → Damage/Ergo замість ChargeTime; Auto Heat-Sink → Recoil/Damage замість Heat). Справжні charge/heat-ефекти → P4.
+- Attachment supply = **loot-gated ✅** (backpack-consume, recoverable). АЛЕ моди ще не падають з лута — роздаються через cheat-loadout + dev-cheat "Give All Mods" (real drops → next step #3).
 - Suppressor/Sniper Scope **не зроблені** (потребують Noise/FOV механік → P4).
 - "Right-click to modify" footer показується на ВСІХ weapon-тултіпах (навіть loot, де Modify ще нема в контекст-меню) — мінорна неточність.
 
 ## Як тестувати в грі
-Свіжий гравець (видали сейв) спавниться з 6 зброями random-rarity + **9 типів модів у backpack (slots 8-16, 1× кожного)**. На наявному сейві: Dev Cheats → **"Give All Mods"** (3× кожного). Tab → інвентар → right-click зброю → **Modify** → editor. Список модів = лише ті, що в backpack (з `xN` owned-count). Встав мод → споживається з backpack, стати/бар, pips у слоті, tooltip "Attachments" + footer. Зніми/поміняй → мод повертається в backpack. Забий backpack ущент → remove показує "Backpack full". Equip + Modify → live-оновлення.
+> ⚠️ Після P3: запусти `Tools → Weapon Builder → Create Stub Assets` (генерує 3 нові unique-.asset + оновлює DB), інакше LaserFocusing/ScatterChoke/AutoHeatSink не існуватимуть у грі.
+
+Свіжий гравець (видали сейв) спавниться з 6 зброями random-rarity + **12 типів модів у backpack (9 universal + 3 unique, slots 8-19, 1× кожного)**. На наявному сейві: Dev Cheats → **"Give All Mods"** (3× кожного). Tab → інвентар → right-click зброю → **Modify** → editor. Editor показує **лише розблоковані слоти** (к-ть = f(rarity) кожного core — Common-зброя ≈ 2 слоти, Legendary = 5). Список модів = лише ті, що в backpack + **archetype-сумісні** (Laser Focusing видно лише на Laser-зброї, Scatter Choke — на Scatter, Auto Heat-Sink — на Auto). Встав мод → споживається з backpack, стати/бар, pips у слоті, tooltip "Attachments" + footer. Зніми/поміняй → мод повертається в backpack. Забий backpack ущент → remove показує "Backpack full". Equip + Modify → live-оновлення.
 **Drag/highlight (без редактора):** наведи на мод у backpack → зброї з **вільним** відповідним слотом підсвічуються жовто-помаранчевим (і навпаки — наведи на зброю → моди, чий слот вільний); зайняті слоти НЕ підсвічуються. Перетягни мод на зброю **АБО зброю на мод** → ставиться (двонапрямлено, той самий результат; swap дозволено, лише підсвітка обмежена вільними слотами; drag-ghost зелений над валідними цілями).
 
 ## Verification команди (Unity bridge, порт 6401)
-`refresh_unity(compile=request, scope=all)` → `read_console(types=[error], filter=CS)` → `run_tests(EditMode)` → `get_test_job`. Очікувано 607 green.
+`refresh_unity(compile=request, scope=all)` → `read_console(types=[error], filter=CS)` → `run_tests(EditMode)` → `get_test_job`. Очікувано 614 green. (+ після P3: `Tools → Weapon Builder → Create Stub Assets` для unique-.asset.)

@@ -48,10 +48,12 @@ namespace Tests.EditMode
             _cleanup.Clear();
         }
 
+        // Legendary/Legendary so the Magazine slot is unlocked — these tests cover install
+        // mechanics; the rarity-scaled slot gate is covered in AttachmentSlotsTests.
         static ItemState Weapon() => ItemState.CreateWeapon(new EId(1), "Weapon",
             new WeaponConfiguration(
-                new PayloadCoreInstance("p", RarityTier.Common),
-                new DeliveryCoreInstance("d", RarityTier.Common),
+                new PayloadCoreInstance("p", RarityTier.Legendary),
+                new DeliveryCoreInstance("d", RarityTier.Legendary),
                 exotic: null, ammoInMagazine: 20));
 
         [Test]
@@ -66,9 +68,9 @@ namespace Tests.EditMode
         public void CanInstall_BuiltWeaponTrue_NonWeaponFalse_NullModFalse()
         {
             var modDef = AttachmentInstallSystem.Resolve(_registry, Mag);
-            Assert.IsTrue(AttachmentInstallSystem.CanInstall(Weapon(), modDef));
-            Assert.IsFalse(AttachmentInstallSystem.CanInstall(ItemState.Create(new EId(2), "Medkit"), modDef));
-            Assert.IsFalse(AttachmentInstallSystem.CanInstall(Weapon(), null));
+            Assert.IsTrue(AttachmentInstallSystem.CanInstall(Weapon(), modDef, _registry));
+            Assert.IsFalse(AttachmentInstallSystem.CanInstall(ItemState.Create(new EId(2), "Medkit"), modDef, _registry));
+            Assert.IsFalse(AttachmentInstallSystem.CanInstall(Weapon(), null, _registry));
         }
 
         [Test]
@@ -76,14 +78,14 @@ namespace Tests.EditMode
         {
             var modDef = AttachmentInstallSystem.Resolve(_registry, Mag);
             var w = Weapon();
-            Assert.IsTrue(AttachmentInstallSystem.CanInstallIntoFreeSlot(w, modDef)); // empty Magazine slot
+            Assert.IsTrue(AttachmentInstallSystem.CanInstallIntoFreeSlot(w, modDef, _registry)); // empty Magazine slot
 
             _inv.Backpack[0] = ItemState.Create(Alloc(), Mag, 1);
             Assert.IsTrue(AttachmentInstallSystem.Install(w, _registry, _inv, Alloc, Mag, out _));
 
             // Slot now occupied → not a free-slot target (highlight off), but a swap is still allowed.
-            Assert.IsFalse(AttachmentInstallSystem.CanInstallIntoFreeSlot(w, modDef));
-            Assert.IsTrue(AttachmentInstallSystem.CanInstall(w, modDef));
+            Assert.IsFalse(AttachmentInstallSystem.CanInstallIntoFreeSlot(w, modDef, _registry));
+            Assert.IsTrue(AttachmentInstallSystem.CanInstall(w, modDef, _registry));
         }
 
         [Test]
@@ -107,6 +109,89 @@ namespace Tests.EditMode
             Assert.IsFalse(ok);
             Assert.IsNotNull(err);
             Assert.IsFalse(AttachmentInstallSystem.InstalledIn(w, AttachmentSlot.Magazine).HasValue);
+        }
+
+        // ── CompatibleArchetype enforcement (P3-2) ────────────
+
+        AttachmentDefinition MkArchetypeMod(string id, AttachmentSlot slot, string archetype)
+        {
+            var def = WeaponBuilderTestFactory.MakeAttachment(id, id, slot);
+            WeaponBuilderTestFactory.SetPrivateField(def, "_compatibleArchetype", archetype);
+            _cleanup.Add(def);
+            return def;
+        }
+
+        [Test]
+        public void ArchetypeMatches_UniversalAndTokenGating()
+        {
+            // Weapon = Laser payload + Scatter delivery.
+            var laser   = WeaponBuilderTestFactory.MakeLaser(id: "lp",
+                commonStats: new CommonPayloadStats { Damage = 10f });
+            var scatter = WeaponBuilderTestFactory.MakeDelivery(id: "sd",
+                formFactor: "Shotgun", pattern: FiringPattern.Scatter,
+                commonStats: new DeliveryStats { FireInterval = 0.5f, MagazineSize = 6 });
+            _cleanup.Add(laser); _cleanup.Add(scatter);
+
+            var universal   = MkArchetypeMod("U",  AttachmentSlot.Optic,  "");
+            var laserOnly   = MkArchetypeMod("LO", AttachmentSlot.Optic,  "Laser");
+            var scatterOnly = MkArchetypeMod("SC", AttachmentSlot.Muzzle, "Scatter");
+            var autoOnly    = MkArchetypeMod("AH", AttachmentSlot.Muzzle, "Auto");
+
+            var db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:    new[] { laser },
+                deliveries:  new[] { scatter },
+                attachments: new[] { universal, laserOnly, scatterOnly, autoOnly });
+            _cleanup.Add(db);
+            var reg = WeaponBuilderTestFactory.MakeRegistry(db);
+
+            var w = ItemState.CreateWeapon(new EId(5), "Weapon",
+                new WeaponConfiguration(
+                    new PayloadCoreInstance("lp", RarityTier.Legendary),
+                    new DeliveryCoreInstance("sd", RarityTier.Legendary), null, 6));
+
+            Assert.IsTrue(AttachmentInstallSystem.ArchetypeMatches(w, universal, reg));   // universal
+            Assert.IsTrue(AttachmentInstallSystem.ArchetypeMatches(w, laserOnly, reg));   // payload archetype
+            Assert.IsTrue(AttachmentInstallSystem.ArchetypeMatches(w, scatterOnly, reg)); // delivery pattern
+            Assert.IsFalse(AttachmentInstallSystem.ArchetypeMatches(w, autoOnly, reg));   // not Auto
+
+            Assert.IsTrue(AttachmentInstallSystem.CanInstall(w, laserOnly, reg));
+            Assert.IsFalse(AttachmentInstallSystem.CanInstall(w, autoOnly, reg));
+        }
+
+        [Test]
+        public void Install_ArchetypeIncompatible_RejectedAndNotConsumed()
+        {
+            // Ballistic weapon + a Laser-only Optic mod owned → install rejected, mod kept.
+            var ball   = WeaponBuilderTestFactory.MakeBallistic(id: "bp",
+                commonStats: new CommonPayloadStats { Damage = 10f });
+            var single = WeaponBuilderTestFactory.MakeDelivery(id: "sd2",
+                formFactor: "Rifle", pattern: FiringPattern.Single,
+                commonStats: new DeliveryStats { FireInterval = 0.5f, MagazineSize = 20 });
+            _cleanup.Add(ball); _cleanup.Add(single);
+
+            var laserOptic = MkArchetypeMod("LaserOptic", AttachmentSlot.Optic, "Laser");
+
+            var db = WeaponBuilderTestFactory.MakeDatabase(
+                payloads:    new[] { ball },
+                deliveries:  new[] { single },
+                attachments: new[] { laserOptic });
+            _cleanup.Add(db);
+            var reg = WeaponBuilderTestFactory.MakeRegistry(db);
+
+            var inv = new InventoryState();
+            inv.Backpack[0] = ItemState.Create(Alloc(), "LaserOptic", 1);
+
+            var w = ItemState.CreateWeapon(new EId(6), "Weapon",
+                new WeaponConfiguration(
+                    new PayloadCoreInstance("bp", RarityTier.Legendary),
+                    new DeliveryCoreInstance("sd2", RarityTier.Legendary), null, 20));
+
+            bool ok = AttachmentInstallSystem.Install(w, reg, inv, Alloc, "LaserOptic", out var err);
+
+            Assert.IsFalse(ok);
+            Assert.IsNotNull(err);
+            Assert.IsFalse(AttachmentInstallSystem.InstalledIn(w, AttachmentSlot.Optic).HasValue);
+            Assert.AreEqual(1, inv.Backpack[0]?.StackCount); // not consumed
         }
     }
 }

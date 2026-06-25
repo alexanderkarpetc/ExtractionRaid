@@ -25,12 +25,8 @@ namespace View.UI.Attachments
     /// </summary>
     public class AttachmentEditorPresenter
     {
-        // Fixed MVP slot layout — grouped by the core that conceptually grants them
-        // (rarity-scaled slot count is a later refinement; see slots.md).
-        public static readonly AttachmentSlot[] PayloadSlots =
-            { AttachmentSlot.Optic, AttachmentSlot.Magazine, AttachmentSlot.Buttstock };
-        public static readonly AttachmentSlot[] DeliverySlots =
-            { AttachmentSlot.Muzzle, AttachmentSlot.Grip };
+        // Slot taxonomy + which slots are unlocked (rarity-scaled) lives in
+        // Systems.AttachmentSlots — shared with the inventory/tooltip.
 
         readonly ICoreDefinitionRegistry _registry;
         readonly InventoryState _inventory;
@@ -99,7 +95,8 @@ namespace View.UI.Attachments
                     var item = _inventory.Backpack[i];
                     if (item == null || string.IsNullOrEmpty(item.DefinitionId)) continue;
                     if (seen.Contains(item.DefinitionId)) continue;
-                    if (_registry.TryGetAttachment(item.DefinitionId, out var def) && def != null && def.Slot == slot)
+                    if (_registry.TryGetAttachment(item.DefinitionId, out var def) && def != null && def.Slot == slot
+                        && AttachmentInstallSystem.ArchetypeMatches(_weapon, def, _registry))
                     {
                         list.Add(def);
                         seen.Add(def.Id);

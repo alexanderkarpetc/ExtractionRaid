@@ -267,8 +267,8 @@ namespace Tests.EditMode
         public void WeaponBuilder_AllSlotsFilled_FooterNotAccented()
         {
             var slots = new List<AttachmentSlot>();
-            slots.AddRange(AttachmentEditorPresenter.PayloadSlots);
-            slots.AddRange(AttachmentEditorPresenter.DeliverySlots);
+            slots.AddRange(Systems.AttachmentSlots.PayloadOrder);
+            slots.AddRange(Systems.AttachmentSlots.DeliveryOrder);
 
             var mods      = new List<AttachmentDefinition>();
             var installed = new List<AttachmentInstance>();

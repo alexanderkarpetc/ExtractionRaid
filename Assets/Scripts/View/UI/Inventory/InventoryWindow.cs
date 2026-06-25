@@ -618,7 +618,7 @@ namespace View.UI.Inventory
                 {
                     if (s == subject) continue;
                     var w = s.CurrentItem;
-                    if (w != null && w.HasWeaponConfiguration && AttachmentInstallSystem.CanInstallIntoFreeSlot(w, subjectMod))
+                    if (w != null && w.HasWeaponConfiguration && AttachmentInstallSystem.CanInstallIntoFreeSlot(w, subjectMod, reg))
                         s.SetCompatible(true);
                 }
                 return;
@@ -633,7 +633,7 @@ namespace View.UI.Inventory
                     var modItem = s.CurrentItem;
                     if (modItem == null) continue;
                     var md = AttachmentInstallSystem.Resolve(reg, modItem.DefinitionId);
-                    if (md != null && AttachmentInstallSystem.CanInstallIntoFreeSlot(item, md))
+                    if (md != null && AttachmentInstallSystem.CanInstallIntoFreeSlot(item, md, reg))
                         s.SetCompatible(true);
                 }
             }
@@ -1380,7 +1380,7 @@ namespace View.UI.Inventory
             // src is the mod, tgt is the weapon.
             var srcMod = AttachmentInstallSystem.Resolve(reg, srcItem.DefinitionId);
             if (srcMod != null && tgtItem.HasWeaponConfiguration
-                && AttachmentInstallSystem.CanInstall(tgtItem, srcMod))
+                && AttachmentInstallSystem.CanInstall(tgtItem, srcMod, reg))
             {
                 weapon = tgtItem; modId = srcMod.Id; return true;
             }
@@ -1388,7 +1388,7 @@ namespace View.UI.Inventory
             // src is the weapon, tgt is the mod.
             var tgtMod = AttachmentInstallSystem.Resolve(reg, tgtItem.DefinitionId);
             if (tgtMod != null && srcItem.HasWeaponConfiguration
-                && AttachmentInstallSystem.CanInstall(srcItem, tgtMod))
+                && AttachmentInstallSystem.CanInstall(srcItem, tgtMod, reg))
             {
                 weapon = srcItem; modId = tgtMod.Id; return true;
             }

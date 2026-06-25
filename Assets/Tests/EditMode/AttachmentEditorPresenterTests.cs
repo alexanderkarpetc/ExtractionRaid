@@ -96,10 +96,12 @@ namespace Tests.EditMode
                     _inv.Backpack[i] = ItemState.Create(AllocEId(), fillerId, 1);
         }
 
+        // Legendary/Legendary so every slot is unlocked — these tests exercise install/remove
+        // logic, not the rarity-scaled slot gate (that's covered in AttachmentSlots tests).
         static ItemState Weapon() => ItemState.CreateWeapon(new EId(1), "Weapon",
             new WeaponConfiguration(
-                new PayloadCoreInstance("p", RarityTier.Common),
-                new DeliveryCoreInstance("d", RarityTier.Common),
+                new PayloadCoreInstance("p", RarityTier.Legendary),
+                new DeliveryCoreInstance("d", RarityTier.Legendary),
                 exotic: null, ammoInMagazine: 20));
 
         // ── Load ──────────────────────────────────────────────

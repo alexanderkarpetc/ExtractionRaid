@@ -3,7 +3,6 @@ using Adapters;
 using State;
 using Systems;
 using View.UI;
-using View.UI.Attachments;
 
 namespace View.UI.Tooltip.Builders
 {
@@ -87,11 +86,9 @@ namespace View.UI.Tooltip.Builders
             if (attachRows.Count > 0)
                 sections.Add(new TooltipSection("Attachments", attachRows));
 
-            // Accent the modify hint while the weapon still has an empty slot to fill
-            // (attachRows.Count == installed mods; total = fixed MVP slot set).
-            int totalSlots = AttachmentEditorPresenter.PayloadSlots.Length
-                           + AttachmentEditorPresenter.DeliverySlots.Length;
-            bool hasFreeSlot = attachRows.Count < totalSlots;
+            // Accent the modify hint while the weapon still has an empty unlocked slot to fill
+            // (attachRows.Count == installed mods; total = rarity-scaled unlocked slot count).
+            bool hasFreeSlot = attachRows.Count < AttachmentSlots.TotalUnlocked(item);
 
             return new TooltipModel(title, subtitle, sections,
                 footer: "Right-click to modify", footerAccent: hasFreeSlot);

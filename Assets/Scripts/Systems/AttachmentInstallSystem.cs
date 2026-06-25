@@ -13,10 +13,10 @@ namespace Systems
     /// (<c>AttachmentEditorPresenter</c>) and inventory drag-drop install so the behaviour is
     /// single-sourced.
     ///
-    /// MVP scope (see docs/ai/weapon-builder/attachments): the slot is derived from the mod
-    /// definition; <see cref="CanInstall"/> accepts any built weapon — CompatibleArchetype
-    /// gating arrives in P3. Mutations bump <see cref="ItemState.WeaponConfigVersion"/> (D6
-    /// live equipped-weapon resync) and <see cref="InventoryState.Version"/>.
+    /// The slot is derived from the mod definition; <see cref="CanInstall"/> gates on the
+    /// rarity-unlocked slot (<see cref="AttachmentSlots"/>) AND the mod's CompatibleArchetype
+    /// (P3). Mutations bump <see cref="ItemState.WeaponConfigVersion"/> (D6 live equipped-weapon
+    /// resync) and <see cref="InventoryState.Version"/>.
     /// </summary>
     public static class AttachmentInstallSystem
     {
@@ -29,14 +29,17 @@ namespace Systems
 
         /// <summary>
         /// Whether <paramref name="weapon"/> can currently accept <paramref name="modDef"/> —
-        /// the drop-target / cross-highlight predicate. MVP: any built weapon accepts any mod;
-        /// archetype compatibility is enforced from P3.
+        /// the drop-target / cross-highlight predicate: the mod's slot must be unlocked at the
+        /// weapon's core rarity AND the mod's CompatibleArchetype (if any) must match. Allows a
+        /// swap (occupied slot) — see <see cref="CanInstallIntoFreeSlot"/> for the add-only check.
         /// </summary>
-        public static bool CanInstall(ItemState weapon, AttachmentDefinition modDef)
+        public static bool CanInstall(ItemState weapon, AttachmentDefinition modDef, ICoreDefinitionRegistry registry)
         {
             if (weapon == null || !weapon.HasWeaponConfiguration || modDef == null) return false;
-            // P3: gate on modDef.CompatibleArchetype vs the weapon's payload/delivery archetype.
-            return true;
+            // Rarity-scaled: the mod's slot must be unlocked on this weapon …
+            if (!AttachmentSlots.IsUnlocked(weapon, modDef.Slot)) return false;
+            // … and the mod's archetype restriction (if any) must match.
+            return ArchetypeMatches(weapon, modDef, registry);
         }
 
         /// <summary>
@@ -44,9 +47,36 @@ namespace Systems
         /// <b>empty</b> — i.e. the mod can be added without displacing an existing one.
         /// Used by the inventory cross-highlight ("can fill" vs "would swap").
         /// </summary>
-        public static bool CanInstallIntoFreeSlot(ItemState weapon, AttachmentDefinition modDef)
+        public static bool CanInstallIntoFreeSlot(ItemState weapon, AttachmentDefinition modDef, ICoreDefinitionRegistry registry)
         {
-            return CanInstall(weapon, modDef) && !InstalledIn(weapon, modDef.Slot).HasValue;
+            return CanInstall(weapon, modDef, registry) && !InstalledIn(weapon, modDef.Slot).HasValue;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="modDef"/>'s <see cref="AttachmentDefinition.CompatibleArchetype"/>
+        /// restriction is satisfied by this weapon. Empty token = universal. Otherwise the token
+        /// must (case-insensitively) match the weapon's payload archetype, the delivery form-factor,
+        /// or the delivery firing pattern (e.g. "Laser", "Shotgun", "Scatter", "Auto").
+        /// </summary>
+        public static bool ArchetypeMatches(ItemState weapon, AttachmentDefinition modDef, ICoreDefinitionRegistry registry)
+        {
+            if (modDef == null) return false;
+            var token = modDef.CompatibleArchetype;
+            if (string.IsNullOrEmpty(token)) return true; // universal
+            if (weapon == null || !weapon.HasWeaponConfiguration || registry == null) return false;
+
+            var cfg = weapon.WeaponConfiguration;
+            if (registry.TryGetPayload(cfg.Payload.DefinitionId, out var p) && p != null
+                && string.Equals(token, p.Archetype, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (registry.TryGetDelivery(cfg.Delivery.DefinitionId, out var d) && d != null)
+            {
+                if (string.Equals(token, d.FormFactor, StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals(token, d.Pattern.ToString(), StringComparison.OrdinalIgnoreCase)) return true;
+            }
+
+            return false;
         }
 
         /// <summary>The attachment installed in <paramref name="slot"/> on this weapon, or null.</summary>
@@ -77,6 +107,14 @@ namespace Systems
             if (def == null) return false;
 
             var slot = def.Slot;
+            if (!CanInstall(weapon, def, registry))
+            {
+                error = AttachmentSlots.IsUnlocked(weapon, slot)
+                    ? "Not compatible with this weapon."
+                    : "Slot is locked at this rarity.";
+                return false;
+            }
+
             var prev = InstalledIn(weapon, slot);
             if (prev.HasValue && prev.Value.DefinitionId == modId) return false; // already installed
 
