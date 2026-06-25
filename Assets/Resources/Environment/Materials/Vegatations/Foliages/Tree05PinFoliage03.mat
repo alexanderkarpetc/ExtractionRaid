@@ -7,13 +7,14 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: BushWall01FoliageMain
+  m_Name: Tree05PinFoliage03
   m_Shader: {fileID: 4800000, guid: feb7ca4dc0b3a634d9acb554c3bf9746, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
+  - _RECEIVE_SHADOWS_OFF
   - _TWOSIDEDLIGHTING_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -27,8 +28,8 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 30e8603915bab014e8f6a7ee7c10dd8d, type: 3}
-        m_Scale: {x: 2, y: 1}
+        m_Texture: {fileID: 2800000, guid: dd5f273c56446174797a9a1711f9fd92, type: 3}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
@@ -99,10 +100,14 @@ Material:
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DisableReceiveShadows: 0
+    - _DisableReceiveShadows: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
+    - _FakeBottomHeightFade: 1.23
+    - _FakeBottomShade: 0.296
+    - _FakeShadeMin: 0.743
+    - _FakeVolumeShade: 0.299
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -110,11 +115,11 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
-    - _ReceiveShadowMin: 0.45
-    - _ReceiveShadowStrength: 0.55
+    - _ReceiveShadowMin: 0
+    - _ReceiveShadowStrength: 1
     - _ReceiveShadows: 1
     - _SampleGI: 0
-    - _ShadowAlphaCutoff: 0.62
+    - _ShadowAlphaCutoff: 0.5
     - _ShadowCull: 2
     - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
@@ -125,17 +130,17 @@ Material:
     - _Surface: 0
     - _TwoSidedLighting: 1
     - _WindHeightFade: 5
-    - _WindLeafFlutter: 0.6
-    - _WindPivotY: 0
-    - _WindScale: 2
-    - _WindSpeed: 0.2
-    - _WindStrength: 0.1
+    - _WindLeafFlutter: 0.332
+    - _WindPivotY: -4
+    - _WindScale: 1
+    - _WindSpeed: 0.7
+    - _WindStrength: 0.05
     - _WindVertexColorMask: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.9310064, g: 1, b: 0.6179246, a: 1}
     - _Color: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
