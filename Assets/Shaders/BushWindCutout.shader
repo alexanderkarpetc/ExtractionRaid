@@ -21,6 +21,8 @@ Shader "ExtractShaders/BushWindCutout"
 
         _Smoothness("Smoothness", Range(0, 1)) = 0.25
         _Specular("Specular", Range(0, 1)) = 0.1
+        Dither("Dither", Range(0, 1)) = 0
+        _Dither("Dither Fallback", Range(0, 1)) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 0
     }
 
@@ -67,10 +69,58 @@ Shader "ExtractShaders/BushWindCutout"
             half _AmbientBoost;
             half _Smoothness;
             half _Specular;
+            half Dither;
+            half _Dither;
         CBUFFER_END
 
         float3 _LightDirection;
         float3 _LightPosition;
+        float4 _PlayerFoliageDitherPosition;
+        float4 _PlayerFoliageDitherParams;
+        float4 _CursorFoliageDitherPosition;
+        float4 _CursorFoliageDitherParams;
+
+        half ScreenDither4x4(float2 positionSS)
+        {
+            uint2 pixel = (uint2)positionSS & 3;
+            uint lowBits = (((pixel.x & 1u) ^ (pixel.y & 1u)) << 1) | (pixel.y & 1u);
+            uint highBits = ((((pixel.x >> 1) & 1u) ^ ((pixel.y >> 1) & 1u)) << 1) | ((pixel.y >> 1) & 1u);
+            return (half)(lowBits * 4u + highBits) * 0.0625h + 0.03125h;
+        }
+
+        half MaterialDither()
+        {
+            return saturate(max(Dither, _Dither));
+        }
+
+        half PlayerZoneDither(float4 positionCS)
+        {
+            half radius = max((half)_PlayerFoliageDitherParams.x, 0.0h);
+            half softness = max((half)_PlayerFoliageDitherParams.y, 0.01h);
+            half amount = saturate((half)_PlayerFoliageDitherParams.z);
+
+            float4 playerCS = TransformWorldToHClip(_PlayerFoliageDitherPosition.xyz);
+            float4 playerScreen = ComputeScreenPos(playerCS);
+            float2 playerPixel = playerScreen.xy / max(playerScreen.w, 0.0001) * _ScreenParams.xy;
+            half dist = (half)distance(positionCS.xy, playerPixel);
+
+            return (1.0h - smoothstep(radius, radius + softness, dist)) * amount;
+        }
+
+        half CursorZoneDither(float4 positionCS)
+        {
+            half radius = max((half)_CursorFoliageDitherParams.x, 0.0h);
+            half softness = max((half)_CursorFoliageDitherParams.y, 0.01h);
+            half amount = saturate((half)_CursorFoliageDitherParams.z);
+            half dist = (half)distance(positionCS.xy, _CursorFoliageDitherPosition.xy);
+
+            return (1.0h - smoothstep(radius, radius + softness, dist)) * amount;
+        }
+
+        void ClipDither(float4 positionCS, half dither)
+        {
+            clip(ScreenDither4x4(positionCS.xy) - dither);
+        }
 
         struct Attributes
         {
@@ -143,6 +193,9 @@ Shader "ExtractShaders/BushWindCutout"
 
             half4 tex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
             clip(tex.a - _Cutoff);
+            ClipDither(
+                input.positionCS,
+                saturate(max(max(MaterialDither(), PlayerZoneDither(input.positionCS)), CursorZoneDither(input.positionCS))));
 
             half facingSign = IS_FRONT_VFACE(facing, 1.0h, -1.0h);
             half normalSign = lerp(1.0h, facingSign, _TwoSidedLighting);
@@ -185,6 +238,7 @@ Shader "ExtractShaders/BushWindCutout"
         struct DepthVaryings
         {
             float4 positionCS : SV_POSITION;
+            float3 positionWS : TEXCOORD1;
             float2 uv : TEXCOORD0;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
@@ -198,7 +252,8 @@ Shader "ExtractShaders/BushWindCutout"
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
             float3 windPositionOS = ApplyBushWind(input.positionOS.xyz, input.color);
-            output.positionCS = TransformObjectToHClip(windPositionOS);
+            output.positionWS = TransformObjectToWorld(windPositionOS);
+            output.positionCS = TransformWorldToHClip(output.positionWS);
             output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
             return output;
         }
@@ -222,6 +277,7 @@ Shader "ExtractShaders/BushWindCutout"
 
             output.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
             output.positionCS = ApplyShadowClamping(output.positionCS);
+            output.positionWS = positionWS;
             output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
             return output;
         }
@@ -233,6 +289,7 @@ Shader "ExtractShaders/BushWindCutout"
 
             half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
             clip(alpha - _Cutoff);
+            ClipDither(input.positionCS, MaterialDither());
             return 0;
         }
         ENDHLSL

@@ -54,6 +54,16 @@ namespace Editor
             EditorGUILayout.Space(6f);
             DrawProperty("_dissolveCurve");
             DrawProperty("_restoreCurve");
+            EditorGUILayout.Space(6f);
+            DrawProperty("_playerFoliageZoneEnabled");
+            DrawProperty("_playerFoliageZoneRadius");
+            DrawProperty("_playerFoliageZoneSoftness");
+            DrawProperty("_playerFoliageZoneDither");
+            EditorGUILayout.Space(6f);
+            DrawProperty("_cursorFoliageZoneEnabled");
+            DrawProperty("_cursorFoliageZoneRadius");
+            DrawProperty("_cursorFoliageZoneSoftness");
+            DrawProperty("_cursorFoliageZoneDither");
             _serializedSettings.ApplyModifiedProperties();
 
             EditorGUILayout.Space(10f);
@@ -104,6 +114,14 @@ namespace Editor
             so.FindProperty("_restoreDuration").floatValue = 0.2f;
             so.FindProperty("_dissolveCurve").animationCurveValue = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
             so.FindProperty("_restoreCurve").animationCurveValue = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+            so.FindProperty("_playerFoliageZoneEnabled").boolValue = true;
+            so.FindProperty("_playerFoliageZoneRadius").floatValue = 110f;
+            so.FindProperty("_playerFoliageZoneSoftness").floatValue = 70f;
+            so.FindProperty("_playerFoliageZoneDither").floatValue = 1f;
+            so.FindProperty("_cursorFoliageZoneEnabled").boolValue = true;
+            so.FindProperty("_cursorFoliageZoneRadius").floatValue = 90f;
+            so.FindProperty("_cursorFoliageZoneSoftness").floatValue = 60f;
+            so.FindProperty("_cursorFoliageZoneDither").floatValue = 1f;
             so.ApplyModifiedProperties();
             EditorUtility.SetDirty(_settings);
             AssetDatabase.SaveAssets();

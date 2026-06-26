@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace View
 {
@@ -10,6 +11,10 @@ namespace View
     public class CameraObstacleHider : MonoBehaviour
     {
         const int HitBufferSize = 64;
+        static readonly int FoliageDitherPositionId = Shader.PropertyToID("_PlayerFoliageDitherPosition");
+        static readonly int FoliageDitherParamsId = Shader.PropertyToID("_PlayerFoliageDitherParams");
+        static readonly int CursorDitherPositionId = Shader.PropertyToID("_CursorFoliageDitherPosition");
+        static readonly int CursorDitherParamsId = Shader.PropertyToID("_CursorFoliageDitherParams");
 
         [SerializeField] string _hideTag = "CameraHide";
         [SerializeField] Vector3 _targetOffset = new Vector3(0f, 1.2f, 0f);
@@ -50,9 +55,11 @@ namespace View
             if (_target == null)
             {
                 ResetAll();
+                ResetGlobalFoliageDither();
                 return;
             }
 
+            UpdateGlobalFoliageDither();
             _blockedThisFrame.Clear();
 
             var from = transform.position;
@@ -193,11 +200,72 @@ namespace View
         void OnDisable()
         {
             ResetAll();
+            ResetGlobalFoliageDither();
         }
 
         void OnDestroy()
         {
             ResetAll();
+            ResetGlobalFoliageDither();
+        }
+
+        void UpdateGlobalFoliageDither()
+        {
+            var settings = Settings;
+            if (settings == null || !settings.PlayerFoliageZoneEnabled || _target == null)
+            {
+                ResetGlobalPlayerFoliageDither();
+            }
+            else
+            {
+                var position = _target.position;
+                Shader.SetGlobalVector(FoliageDitherPositionId, new Vector4(position.x, position.y, position.z, 1f));
+                Shader.SetGlobalVector(
+                    FoliageDitherParamsId,
+                    new Vector4(
+                        Mathf.Max(0f, settings.PlayerFoliageZoneRadius),
+                        Mathf.Max(0.01f, settings.PlayerFoliageZoneSoftness),
+                        Mathf.Clamp01(settings.PlayerFoliageZoneDither),
+                        0f));
+            }
+
+            UpdateGlobalCursorFoliageDither(settings);
+        }
+
+        static void ResetGlobalFoliageDither()
+        {
+            ResetGlobalPlayerFoliageDither();
+            ResetGlobalCursorFoliageDither();
+        }
+
+        static void ResetGlobalPlayerFoliageDither()
+        {
+            Shader.SetGlobalVector(FoliageDitherParamsId, Vector4.zero);
+        }
+
+        static void ResetGlobalCursorFoliageDither()
+        {
+            Shader.SetGlobalVector(CursorDitherParamsId, Vector4.zero);
+        }
+
+        static void UpdateGlobalCursorFoliageDither(CameraObstacleHiderSettings settings)
+        {
+            var mouse = Mouse.current;
+            if (settings == null || !settings.CursorFoliageZoneEnabled || mouse == null)
+            {
+                ResetGlobalCursorFoliageDither();
+                return;
+            }
+
+            Vector2 position = mouse.position.ReadValue();
+            Shader.SetGlobalVector(CursorDitherPositionId, new Vector4(position.x, position.y, 0f, 1f));
+            Shader.SetGlobalVector(
+                CursorDitherParamsId,
+                new Vector4(
+                    Mathf.Max(0f, settings.CursorFoliageZoneRadius),
+                    Mathf.Max(0.01f, settings.CursorFoliageZoneSoftness),
+                    Mathf.Clamp01(settings.CursorFoliageZoneDither),
+                    0f));
         }
 
         static void SetDitherFloat(MaterialPropertyBlock block, string propertyName, float value)
