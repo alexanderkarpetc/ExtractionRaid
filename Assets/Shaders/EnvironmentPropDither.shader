@@ -1,30 +1,24 @@
-Shader "ExtractShaders/BushWindCutout"
+Shader "ExtractShaders/EnvironmentPropDither"
 {
     Properties
     {
-        [MainTexture] _BaseMap("Texture", 2D) = "white" {}
-        [MainColor] _BaseColor("Color", Color) = (1, 1, 1, 1)
-        _Cutoff("Alpha Cutoff", Range(0, 1)) = 0.5
+        [MainTexture] _Texture("Texture", 2D) = "white" {}
+        [MainColor] _Color2("Color", Color) = (1, 1, 1, 1)
+        _ColorStreng("Color Strength", Float) = 0
+        _Saturate("Saturate", Float) = 0
 
-        _WindStrength("Wind Strength", Range(0, 1)) = 0.08
-        _WindSpeed("Wind Speed", Range(0, 10)) = 1.8
-        _WindScale("Wind Scale", Range(0.01, 5)) = 0.7
-        _WindDirection("Wind Direction XZ", Vector) = (1, 0, 0.35, 0)
-        _WindPivotY("Wind Pivot Y", Float) = 0
-        _WindHeightFade("Wind Height Fade", Range(0.01, 10)) = 1.5
-        _WindLeafFlutter("Leaf Flutter", Range(0, 1)) = 0.25
-        _WindVertexColorMask("Vertex Color Mask", Range(0, 1)) = 0
+        _Metallic("Metallic", Range(0, 1)) = 0
+        _Smoothness("Smoothness", Range(0, 1)) = 0.35
+        _Occlusion("Occlusion", Range(0, 1)) = 1
 
-        [Toggle] _TwoSidedLighting("Two Sided Lighting", Float) = 1
-        _BackFaceLight("Back Face Light", Range(0, 1)) = 0.45
-        _AmbientBoost("Ambient Boost", Range(0, 1)) = 0.18
+        [HDR] _ColorEmission("Emission Color", Color) = (1, 1, 1, 0)
+        _Emission("Emission", Float) = 0
 
-        _Smoothness("Smoothness", Range(0, 1)) = 0.25
-        _Specular("Specular", Range(0, 1)) = 0.1
         Dither("Dither", Range(0, 1)) = 0
         _Dither("Dither Fallback", Range(0, 1)) = 0
-        _FoliageDitherPatternScale("Dither Pattern Scale", Range(0, 0.03)) = 0.003
-        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 0
+        _DitherPatternScale("Dither Pattern Scale", Range(0, 0.03)) = 0.003
+
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 2
     }
 
     SubShader
@@ -32,15 +26,17 @@ Shader "ExtractShaders/BushWindCutout"
         Tags
         {
             "RenderPipeline" = "UniversalPipeline"
-            "RenderType" = "TransparentCutout"
-            "Queue" = "AlphaTest"
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry"
             "UniversalMaterialType" = "Lit"
         }
 
-        LOD 300
+        LOD 250
         Cull [_Cull]
         ZWrite On
-        AlphaToMask On
+        ZTest LEqual
+        Blend One Zero
+        AlphaToMask Off
 
         HLSLINCLUDE
         #pragma target 3.5
@@ -50,29 +46,22 @@ Shader "ExtractShaders/BushWindCutout"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
-        TEXTURE2D(_BaseMap);
-        SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_Texture);
+        SAMPLER(sampler_Texture);
 
         CBUFFER_START(UnityPerMaterial)
-            float4 _BaseMap_ST;
-            half4 _BaseColor;
-            half _Cutoff;
-            half _WindStrength;
-            half _WindSpeed;
-            half _WindScale;
-            float4 _WindDirection;
-            half _WindPivotY;
-            half _WindHeightFade;
-            half _WindLeafFlutter;
-            half _WindVertexColorMask;
-            half _TwoSidedLighting;
-            half _BackFaceLight;
-            half _AmbientBoost;
+            float4 _Texture_ST;
+            half4 _Color2;
+            half4 _ColorEmission;
+            half _ColorStreng;
+            half _Saturate;
+            half _Metallic;
             half _Smoothness;
-            half _Specular;
+            half _Occlusion;
+            half _Emission;
             half Dither;
             half _Dither;
-            float _FoliageDitherPatternScale;
+            float _DitherPatternScale;
         CBUFFER_END
 
         float3 _LightDirection;
@@ -85,7 +74,7 @@ Shader "ExtractShaders/BushWindCutout"
         half ScreenDither4x4(float2 positionSS)
         {
             float screenScale = max(min(_ScreenParams.x, _ScreenParams.y), 1.0);
-            float cellSize = max(_FoliageDitherPatternScale * screenScale, 1.0);
+            float cellSize = max(_DitherPatternScale * screenScale, 1.0);
             uint2 pixel = (uint2)floor(positionSS / cellSize) & 3;
             uint lowBits = (((pixel.x & 1u) ^ (pixel.y & 1u)) << 1) | (pixel.y & 1u);
             uint highBits = ((((pixel.x >> 1) & 1u) ^ ((pixel.y >> 1) & 1u)) << 1) | ((pixel.y >> 1) & 1u);
@@ -122,10 +111,18 @@ Shader "ExtractShaders/BushWindCutout"
 
         void ClipDither(float4 positionCS, half dither)
         {
-            if (dither <= 0.0h)
+            if (dither <= 0.001h)
                 return;
 
             clip(ScreenDither4x4(positionCS.xy) - dither);
+        }
+
+        half3 ApplyColorControls(half3 albedo)
+        {
+            half luminance = dot(albedo, half3(0.2126h, 0.7152h, 0.0722h));
+            half saturation = max(_Saturate + 1.0h, 0.0h);
+            half3 saturated = lerp(luminance.xxx, albedo, saturation);
+            return lerp(saturated, saturated * _Color2.rgb, _ColorStreng);
         }
 
         struct Attributes
@@ -134,7 +131,6 @@ Shader "ExtractShaders/BushWindCutout"
             half3 normalOS : NORMAL;
             half4 tangentOS : TANGENT;
             float2 texcoord : TEXCOORD0;
-            half4 color : COLOR;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
@@ -143,48 +139,29 @@ Shader "ExtractShaders/BushWindCutout"
             float4 positionCS : SV_POSITION;
             float3 positionWS : TEXCOORD0;
             half3 normalWS : TEXCOORD1;
-            half4 tangentWS : TEXCOORD2;
-            float2 uv : TEXCOORD3;
-            half fogFactor : TEXCOORD4;
+            float2 uv : TEXCOORD2;
+            half fogFactor : TEXCOORD3;
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-            float4 shadowCoord : TEXCOORD5;
+            float4 shadowCoord : TEXCOORD4;
             #endif
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
 
-        float3 ApplyBushWind(float3 positionOS, half4 vertexColor)
-        {
-            float3 positionWS = TransformObjectToWorld(positionOS);
-            float2 windDir = normalize(_WindDirection.xz + float2(0.0001, 0.0001));
-            float heightMask = saturate((positionOS.y - _WindPivotY) * _WindHeightFade);
-            float vertexMask = lerp(1.0, vertexColor.r, _WindVertexColorMask);
-
-            float phase = dot(positionWS.xz, windDir) * _WindScale + _Time.y * _WindSpeed;
-            float sway = sin(phase) * 0.7 + sin(phase * 2.17 + positionWS.y) * 0.3;
-            float flutter = sin(phase * 5.0 + positionOS.x * 3.0 + positionOS.z * 2.0) * _WindLeafFlutter;
-            float amount = (sway + flutter) * _WindStrength * heightMask * vertexMask;
-
-            float3 offsetWS = float3(windDir.x, 0.0, windDir.y) * amount;
-            return positionOS + mul((float3x3)GetWorldToObjectMatrix(), offsetWS);
-        }
-
-        Varyings WindLitVertex(Attributes input)
+        Varyings LitVertex(Attributes input)
         {
             Varyings output = (Varyings)0;
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
-            float3 windPositionOS = ApplyBushWind(input.positionOS.xyz, input.color);
-            VertexPositionInputs positionInputs = GetVertexPositionInputs(windPositionOS);
+            VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
             VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
             output.positionCS = positionInputs.positionCS;
             output.positionWS = positionInputs.positionWS;
             output.normalWS = normalInputs.normalWS;
-            output.tangentWS = half4(normalInputs.tangentWS, input.tangentOS.w * GetOddNegativeScale());
-            output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            output.uv = TRANSFORM_TEX(input.texcoord, _Texture);
             output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             output.shadowCoord = GetShadowCoord(positionInputs);
@@ -192,29 +169,28 @@ Shader "ExtractShaders/BushWindCutout"
             return output;
         }
 
-        half4 WindLitFragment(Varyings input, FRONT_FACE_TYPE facing : FRONT_FACE_SEMANTIC) : SV_Target
+        half4 LitFragment(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            half4 tex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
-            clip(tex.a - _Cutoff);
-            ClipDither(
-                input.positionCS,
-                saturate(max(max(MaterialDither(), PlayerZoneDither(input.positionCS)), CursorZoneDither(input.positionCS))));
+            half dither = saturate(max(max(MaterialDither(), PlayerZoneDither(input.positionCS)), CursorZoneDither(input.positionCS)));
+            ClipDither(input.positionCS, dither);
 
-            half facingSign = IS_FRONT_VFACE(facing, 1.0h, -1.0h);
-            half normalSign = lerp(1.0h, facingSign, _TwoSidedLighting);
-            half3 normalWS = NormalizeNormalPerPixel(input.normalWS * normalSign);
+            half3 normalWS = NormalizeNormalPerPixel(input.normalWS);
+            half3 albedo = ApplyColorControls(SAMPLE_TEXTURE2D(_Texture, sampler_Texture, input.uv).rgb);
 
             SurfaceData surfaceData = (SurfaceData)0;
-            surfaceData.albedo = tex.rgb;
-            surfaceData.alpha = tex.a;
-            surfaceData.metallic = 0;
-            surfaceData.specular = _Specular.xxx;
+            surfaceData.albedo = albedo;
+            surfaceData.alpha = 1.0h;
+            surfaceData.metallic = _Metallic;
+            surfaceData.specular = 0;
             surfaceData.smoothness = _Smoothness;
-            surfaceData.occlusion = 1;
-            surfaceData.emission = 0;
+            surfaceData.normalTS = half3(0, 0, 1);
+            surfaceData.occlusion = _Occlusion;
+            surfaceData.emission = _ColorEmission.rgb * _Emission;
+            surfaceData.clearCoatMask = 0;
+            surfaceData.clearCoatSmoothness = 0;
 
             InputData inputData = (InputData)0;
             inputData.positionWS = input.positionWS;
@@ -229,50 +205,46 @@ Shader "ExtractShaders/BushWindCutout"
             inputData.shadowCoord = float4(0, 0, 0, 0);
             #endif
             inputData.fogCoord = input.fogFactor;
-            inputData.vertexLighting = VertexLighting(input.positionWS, inputData.normalWS);
-            inputData.bakedGI = SampleSH(inputData.normalWS) + tex.rgb * _AmbientBoost;
+            inputData.vertexLighting = VertexLighting(input.positionWS, normalWS);
+            inputData.bakedGI = SampleSH(normalWS);
             inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
             inputData.shadowMask = half4(1, 1, 1, 1);
 
             half4 color = UniversalFragmentPBR(inputData, surfaceData);
-            half backFaceMask = (1.0h - saturate(facingSign)) * _TwoSidedLighting;
-            color.rgb += tex.rgb * _BackFaceLight * backFaceMask;
             color.rgb = MixFog(color.rgb, inputData.fogCoord);
+            color.a = 1.0h;
             return color;
         }
 
         struct DepthVaryings
         {
             float4 positionCS : SV_POSITION;
-            float3 positionWS : TEXCOORD1;
-            float2 uv : TEXCOORD0;
+            half3 normalWS : TEXCOORD0;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
 
-        DepthVaryings WindDepthVertex(Attributes input)
+        DepthVaryings DepthVertex(Attributes input)
         {
             DepthVaryings output = (DepthVaryings)0;
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
-            float3 windPositionOS = ApplyBushWind(input.positionOS.xyz, input.color);
-            output.positionWS = TransformObjectToWorld(windPositionOS);
-            output.positionCS = TransformWorldToHClip(output.positionWS);
-            output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
+            output.positionCS = positionInputs.positionCS;
+            output.normalWS = TransformObjectToWorldNormal(input.normalOS);
             return output;
         }
 
-        DepthVaryings WindShadowVertex(Attributes input)
+        DepthVaryings ShadowVertex(Attributes input)
         {
             DepthVaryings output = (DepthVaryings)0;
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
-            float3 windPositionOS = ApplyBushWind(input.positionOS.xyz, input.color);
-            float3 positionWS = TransformObjectToWorld(windPositionOS);
+            float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
             float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
 
             #if _CASTING_PUNCTUAL_LIGHT_SHADOW
@@ -283,20 +255,35 @@ Shader "ExtractShaders/BushWindCutout"
 
             output.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
             output.positionCS = ApplyShadowClamping(output.positionCS);
-            output.positionWS = positionWS;
-            output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            output.normalWS = normalWS;
             return output;
         }
 
-        half4 WindDepthFragment(DepthVaryings input) : SV_Target
+        half4 DepthFragment(DepthVaryings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
-            clip(alpha - _Cutoff);
             ClipDither(input.positionCS, MaterialDither());
             return 0;
+        }
+
+        half4 DepthNormalsFragment(DepthVaryings input) : SV_Target
+        {
+            UNITY_SETUP_INSTANCE_ID(input);
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+            ClipDither(input.positionCS, MaterialDither());
+
+            float3 normalWS = NormalizeNormalPerPixel(input.normalWS);
+            #if defined(_GBUFFER_NORMALS_OCT)
+                float2 octNormalWS = PackNormalOctQuadEncode(normalWS);
+                float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);
+                half3 packedNormalWS = PackFloat2To888(remappedOctNormalWS);
+                return half4(packedNormalWS, 0.0h);
+            #else
+                return half4(normalWS, 0.0h);
+            #endif
         }
         ENDHLSL
 
@@ -305,15 +292,23 @@ Shader "ExtractShaders/BushWindCutout"
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
 
+            Blend One Zero
+            ZWrite On
+            ZTest LEqual
+            ColorMask RGBA
+            AlphaToMask Off
+
             HLSLPROGRAM
-            #pragma vertex WindLitVertex
-            #pragma fragment WindLitFragment
+            #pragma vertex LitVertex
+            #pragma fragment LitFragment
             #pragma multi_compile_instancing
             #pragma multi_compile_fog
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT
+            #pragma multi_compile_fragment _ _REFLECTION_PROBE_BLENDING
+            #pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             ENDHLSL
         }
@@ -326,10 +321,11 @@ Shader "ExtractShaders/BushWindCutout"
             ZWrite On
             ZTest LEqual
             ColorMask 0
+            AlphaToMask Off
 
             HLSLPROGRAM
-            #pragma vertex WindShadowVertex
-            #pragma fragment WindDepthFragment
+            #pragma vertex ShadowVertex
+            #pragma fragment DepthFragment
             #pragma multi_compile_instancing
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
             ENDHLSL
@@ -341,11 +337,30 @@ Shader "ExtractShaders/BushWindCutout"
             Tags { "LightMode" = "DepthOnly" }
 
             ZWrite On
+            ZTest LEqual
             ColorMask 0
+            AlphaToMask Off
 
             HLSLPROGRAM
-            #pragma vertex WindDepthVertex
-            #pragma fragment WindDepthFragment
+            #pragma vertex DepthVertex
+            #pragma fragment DepthFragment
+            #pragma multi_compile_instancing
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode" = "DepthNormals" }
+
+            ZWrite On
+            ZTest LEqual
+            ColorMask RGBA
+            AlphaToMask Off
+
+            HLSLPROGRAM
+            #pragma vertex DepthVertex
+            #pragma fragment DepthNormalsFragment
             #pragma multi_compile_instancing
             ENDHLSL
         }

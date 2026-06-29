@@ -50,6 +50,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FoliageDitherPatternTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: dc7d2c4af78a31047a90ad8470e5536b, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -84,6 +88,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - Dither: 0
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 1
     - _AlphaToMask: 1
@@ -100,9 +105,11 @@ Material:
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DisableReceiveShadows: 0
+    - _Dither: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
+    - _FoliageDitherPatternScale: 0.003
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -124,6 +131,7 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _TwoSidedLighting: 1
+    - _UseFoliageDitherPatternTex: 0
     - _WindHeightFade: 5
     - _WindLeafFlutter: 0.332
     - _WindPivotY: 0

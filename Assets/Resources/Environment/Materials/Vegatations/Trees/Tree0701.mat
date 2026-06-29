@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Tree0701
-  m_Shader: {fileID: 4800000, guid: feb7ca4dc0b3a634d9acb554c3bf9746, type: 3}
+  m_Shader: {fileID: 4800000, guid: 9f574f0a1f1b7be4f9cb60d4d69f3e42, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -18,7 +18,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 2999
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
@@ -50,6 +50,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _FoliageDitherPatternTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: dc7d2c4af78a31047a90ad8470e5536b, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -68,6 +72,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture:
+        m_Texture: {fileID: 2800000, guid: 1d3a95302ef1ef04ebfc7aa807e8d4ce, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -96,23 +104,28 @@ Material:
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
+    - _ColorStreng: 0
     - _Cull: 0
     - _Cutoff: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DisableReceiveShadows: 1
     - _Dither: 0
+    - _DitherPatternScale: 0.003
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _Emission: 0
     - _EnvironmentReflections: 1
     - _FakeBottomHeightFade: 1.23
     - _FakeBottomShade: 0.296
     - _FakeShadeMin: 0.743
     - _FakeVolumeShade: 0.299
+    - _FoliageDitherPatternScale: 0.003
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Metallic: 0
+    - _Occlusion: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
@@ -120,6 +133,7 @@ Material:
     - _ReceiveShadowStrength: 1
     - _ReceiveShadows: 1
     - _SampleGI: 0
+    - _Saturate: 0.3
     - _ShadowAlphaCutoff: 0.5
     - _ShadowCull: 2
     - _Smoothness: 0
@@ -130,10 +144,11 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _TwoSidedLighting: 0
+    - _UseFoliageDitherPatternTex: 0
     - _WindHeightFade: 10
     - _WindLeafFlutter: 0.2
     - _WindPivotY: 3
-    - _WindScale: 1
+    - _WindScale: 0.01
     - _WindSpeed: 0.5
     - _WindStrength: 0.05
     - _WindVertexColorMask: 0
@@ -143,6 +158,8 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 0.80797786, b: 0.7311321, a: 1}
     - _Color: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
+    - _Color2: {r: 1, g: 0.88714653, b: 0.5990566, a: 1}
+    - _ColorEmission: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _WindDirection: {r: 1, g: 0, b: 0, a: 0}

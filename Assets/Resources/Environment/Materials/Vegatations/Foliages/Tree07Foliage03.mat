@@ -1,18 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5194425620583709061
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
-  version: 10
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -20,24 +7,28 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SeaContainerAtlasBlue02
-  m_Shader: {fileID: 4800000, guid: 36fed6af82d4c2444bf25a8ac18e73e5, type: 3}
+  m_Name: Tree07Foliage03
+  m_Shader: {fileID: 4800000, guid: feb7ca4dc0b3a634d9acb554c3bf9746, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _ALPHATEST_ON
+  - _RECEIVE_SHADOWS_OFF
+  - _USEFOLIAGEDITHERPATTERNTEX_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_DoubleSidedGI: 1
+  m_CustomRenderQueue: 2999
   stringTagMap: {}
-  disabledShaderPasses: []
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: af13fd1a7bbde0749892a7c5d37a93e7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -60,27 +51,15 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _EmmMask:
-        m_Texture: {fileID: 0}
+    - _FoliageDitherPatternTex:
+        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: dc7d2c4af78a31047a90ad8470e5536b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Noise:
-        m_Texture: {fileID: 2800000, guid: 73c54ab06a34357468ca44dec8789a8f, type: 3}
-        m_Scale: {x: 20, y: 20}
-        m_Offset: {x: 0, y: 0}
-    - _NoiseDither:
-        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
-        m_Scale: {x: 2, y: 2}
-        m_Offset: {x: 0, y: 0}
-    - _NosieEmission:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -93,14 +72,6 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _Texture:
-        m_Texture: {fileID: 2800000, guid: 27c1c5b639c7cbb4f81c4b5f2e8923e8, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _texcoord:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -118,60 +89,82 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - Dither: 0
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaCutoff: 0.5
-    - _AlphaToMask: 0
+    - _AlphaClip: 1
+    - _AlphaToMask: 1
+    - _AmbientBoost: 0
+    - _BackFaceLight: 0.439
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
-    - _Brightness: 0
-    - _BrightnessEmission: 0
+    - _BlendOp: 0
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorStreng: 2
-    - _Cull: 2
+    - _Cull: 0
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _DisableReceiveShadows: 1
     - _Dither: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _Emission: 0
     - _EnvironmentReflections: 1
-    - _Float0: 0.5
-    - _Frensel: 0
+    - _FakeBottomHeightFade: 1.23
+    - _FakeBottomShade: 0.296
+    - _FakeShadeMin: 0.743
+    - _FakeVolumeShade: 0.299
+    - _FoliageDitherPatternScale: 0.0021
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _MaskIvert: 0
     - _Metallic: 0
-    - _NoiseTilling: 50
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _QueueControl: 0
     - _QueueOffset: 0
+    - _ReceiveShadowMin: 0
+    - _ReceiveShadowStrength: 1
     - _ReceiveShadows: 1
-    - _Saturate: 2
-    - _Smoothness: 0.5
+    - _SampleGI: 0
+    - _ShadowAlphaCutoff: 0.5
+    - _ShadowCull: 2
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
+    - _Specular: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _UseAlpha: 0
-    - _Vertex_Coord: 0
+    - _TwoSidedLighting: 0
+    - _UseFoliageDitherPatternTex: 1
+    - _WindHeightFade: 10
+    - _WindLeafFlutter: 0.183
+    - _WindPivotY: -4.36
+    - _WindScale: 2
+    - _WindSpeed: 0.5
+    - _WindStrength: 0.04
+    - _WindVertexColorMask: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Bias_Scale_PowerFrensel: {r: 0, g: 1, b: 5, a: 0}
-    - _Color: {r: 0, g: 0, b: 0, a: 1}
-    - _Color1: {r: 0, g: 0, b: 0, a: 0}
-    - _Color2: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorEmission: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.55784696, g: 0.6698113, b: 0.20536669, a: 1}
+    - _Color: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _WindDirection: {r: 1, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!114 &2389219710314810756
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
+  version: 10
