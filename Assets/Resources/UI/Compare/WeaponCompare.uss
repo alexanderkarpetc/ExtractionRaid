@@ -1,0 +1,77 @@
+/* Weapon comparison panel — two columns (hovered | baseline) positioned by WeaponComparePanel.
+ * Card look mirrors the tooltip (var(--color-inset-bg) etc.); stat bars mirror the attachment
+ * editor (gold fill + green/red delta segment). Tokens: Resources/UI/Theme/_tokens.uss. */
+
+.wc-card {
+    position: absolute;
+    background-color: var(--color-inset-bg);
+    border-color: var(--color-border);
+    border-width: var(--border-tooltip);
+    border-radius: var(--radius-tooltip);
+    padding: var(--space-tooltip-pad-y) var(--space-tooltip-pad-x);
+}
+
+.wc-cols { flex-direction: row; }
+
+.wc-col { width: 232px; }
+.wc-col--baseline {
+    margin-left: 18px;
+    padding-left: 18px;
+    border-left-width: 1px;
+    border-left-color: var(--color-border-inset);
+}
+
+.wc-head { flex-direction: row; align-items: center; }
+.wc-title {
+    font-size: var(--font-tooltip-title);
+    -unity-font-style: bold;
+    flex-grow: 1;
+    white-space: normal;
+}
+.wc-tag { font-size: 10px; color: var(--color-text-muted); margin-left: 6px; }
+.wc-subtitle {
+    font-size: var(--font-tooltip-flavor);
+    color: var(--color-text-muted);
+    white-space: normal;
+    margin-bottom: 6px;
+}
+.wc-divider { height: 1px; background-color: var(--color-border-inset); margin-bottom: 6px; }
+
+.wc-row { flex-direction: row; align-items: center; min-height: 20px; padding: 3px 0; }
+.wc-label {
+    font-size: var(--font-tooltip-row);
+    color: var(--color-text-stat-label);
+    width: 96px;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+.wc-value {
+    font-size: var(--font-tooltip-row);
+    -unity-font-style: bold;
+    color: var(--color-text-body-strong);
+    flex-grow: 1;
+}
+
+.wc-bar {
+    flex-grow: 1;
+    flex-direction: row;
+    height: 6px;
+    background-color: var(--color-border-inset);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.wc-bar-fill { height: 100%; background-color: var(--color-accent); }
+.wc-bar-delta { height: 100%; }
+.wc-bar-delta--up   { background-color: rgb(80, 200, 120); }
+.wc-bar-delta--down { background-color: rgb(220, 100, 100); }
+
+.wc-delta { font-size: 11px; width: 42px; -unity-text-align: middle-right; margin-left: 10px; }
+.wc-delta--up   { color: rgb(80, 200, 120); }
+.wc-delta--down { color: rgb(220, 100, 100); }
+
+.wc-footer {
+    font-size: var(--font-tooltip-flavor);
+    -unity-font-style: italic;
+    color: var(--color-text-muted);
+    margin-top: 8px;
+}

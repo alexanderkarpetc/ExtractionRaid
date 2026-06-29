@@ -6,6 +6,7 @@ using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using View.UI.Compare;
 using View.UI.Hotbar;
 using View.UI.Tooltip;
 using View.UI.Tooltip.Builders;
@@ -93,6 +94,12 @@ namespace View.UI.Inventory
         // ── Hover state (for tooltip + hover-key quick-slot bind) ─
         InventorySlotElement _hoveredSlot;
 
+        // ── Weapon-compare state (hovering a weapon → side-by-side vs equipped baseline) ─
+        ItemState _compareItem;
+        Vector2 _comparePos;
+        bool _compareAltHeld;
+        IReadOnlyList<ItemState> _compareCandidates;
+
         // Quick-slot keys 3..9 → bindings index 0..6.
         static readonly Key[] QuickSlotKeys =
         {
@@ -130,6 +137,24 @@ namespace View.UI.Inventory
             RefreshAll();
             HandleQuickSlotKeys();
             HandleFKey();
+            HandleCompareFlip();
+        }
+
+        // Holding Alt peeks the other equipped weapon as the baseline; releasing returns to the
+        // active one. Re-renders only on the press/release edge while the panel is up.
+        void HandleCompareFlip()
+        {
+            if (_compareItem == null || _compareCandidates == null || _compareCandidates.Count <= 1) return;
+            var panel = WeaponComparePanel.Instance;
+            if (panel == null || !panel.IsVisible) return;
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            bool held = kb[Key.LeftAlt].isPressed;
+            if (held == _compareAltHeld) return;
+            _compareAltHeld = held;
+            panel.Show(_compareItem, WeaponCompareTarget.Pick(_compareCandidates, held ? 1 : 0),
+                       hasMore: true, _comparePos);
         }
 
         void HandleFKey()
@@ -662,6 +687,11 @@ namespace View.UI.Inventory
             _hoveredSlot = slot;
             if (_isDragging) return;
             if (slot.CurrentItem == null) return;
+
+            // Weapon → side-by-side compare vs the equipped baseline (auto). Falls back to the
+            // normal single tooltip when nothing is equipped to compare against.
+            if (TryShowWeaponCompare(slot, evt.position)) return;
+
             var tooltip = TooltipController.Instance;
             if (tooltip == null) return;
             // Resolve shop context: if hovering a shop slot use that shop directly
@@ -694,6 +724,42 @@ namespace View.UI.Inventory
             if (_hoveredSlot == slot) _hoveredSlot = null;
             TooltipController.Instance?.Hide();
             if (!_isDragging) ClearCompatHighlight();
+            HideWeaponCompare();
+        }
+
+        // Shows the two-column weapon compare (hovered vs equipped baseline) and returns true
+        // when it took over from the normal tooltip. False → caller shows the normal tooltip
+        // (item isn't a weapon, or nothing is equipped to compare against).
+        bool TryShowWeaponCompare(InventorySlotElement slot, Vector2 panelPos)
+        {
+            var panel = WeaponComparePanel.Instance;
+            var item = slot.CurrentItem;
+            if (panel == null || item == null || !item.HasWeaponConfiguration) return false;
+
+            var inv = App.Instance?.Player?.Inventory;
+            if (inv == null) return false;
+            int selected = App.Instance?.RaidSession?.RaidState?.PlayerEntity?.SelectedHotbarSlot ?? -1;
+
+            var candidates = WeaponCompareTarget.Candidates(inv.WeaponSlots, selected, item);
+            if (candidates.Count == 0) return false; // nothing equipped → fall back to normal tooltip
+
+            _compareItem = item;
+            _comparePos = panelPos;
+            _compareCandidates = candidates;
+            // If Alt is already held when the hover starts, open straight on the alternative.
+            _compareAltHeld = Keyboard.current != null && Keyboard.current[Key.LeftAlt].isPressed;
+
+            TooltipController.Instance?.Hide(); // make sure the single tooltip isn't also up
+            panel.Show(item, WeaponCompareTarget.Pick(candidates, _compareAltHeld ? 1 : 0),
+                       candidates.Count > 1, panelPos);
+            return true;
+        }
+
+        void HideWeaponCompare()
+        {
+            _compareItem = null;
+            _compareCandidates = null;
+            WeaponComparePanel.Instance?.Hide();
         }
 
         // While inventory open + cursor over a player-backpack consumable,
@@ -1002,6 +1068,7 @@ namespace View.UI.Inventory
                 if (delta.sqrMagnitude < DragThreshold * DragThreshold) return;
                 _isDragging = true;
                 TooltipController.Instance?.Hide();
+                HideWeaponCompare();
                 CreateGhost(slot);
                 // Dragging a mod highlights the weapons it can fill; dragging a weapon highlights
                 // the mods that fit its free slots. No-op for other item kinds.

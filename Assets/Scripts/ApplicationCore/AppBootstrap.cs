@@ -119,6 +119,12 @@ namespace ApplicationCore
             tooltipHost.transform.SetParent(transform, false);
             tooltipHost.AddComponent<TooltipController>();
 
+            // Weapon comparison panel — floating two-column compare shown on inventory hover of
+            // a weapon (hovered vs equipped baseline). Reachable via WeaponComparePanel.Instance.
+            var compareHost = new GameObject("WeaponComparePanel");
+            compareHost.transform.SetParent(transform, false);
+            compareHost.AddComponent<View.UI.Compare.WeaponComparePanel>();
+
             // Hotbar HUD strip — UI Toolkit replacement for the legacy uGUI hotbar.
             // Display-only; activation continues to flow through QuickSlotSystem keys 3-9.
             // Bind UX: right-click an inventory item → context menu offers "Bind to N".
