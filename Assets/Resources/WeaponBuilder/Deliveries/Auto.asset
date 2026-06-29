@@ -20,6 +20,58 @@ MonoBehaviour:
     ProjectilesPerShot: 1
     SpreadAngle: 0
     ConeHalfAngle: 45
+    BodyRotationSpeed: 135
+    AimFollowSharpness: 5
+    RecoilKickForward: 3
+    RecoilKickSide: 2.25
+    RecoilRecoverySpeed: 1
+    EquipTime: 0.45000002
+    UnequipTime: 0.3
+    MagazineSize: 15
+    ReloadTime: 3
+  - FireInterval: 0.2
+    ProjectilesPerShot: 1
+    SpreadAngle: 0
+    ConeHalfAngle: 45
+    BodyRotationSpeed: 143.4375
+    AimFollowSharpness: 5.3125
+    RecoilKickForward: 2.9375
+    RecoilKickSide: 2.203125
+    RecoilRecoverySpeed: 1.0625
+    EquipTime: 0.440625
+    UnequipTime: 0.29375002
+    MagazineSize: 16
+    ReloadTime: 2.9375
+  - FireInterval: 0.2
+    ProjectilesPerShot: 1
+    SpreadAngle: 0
+    ConeHalfAngle: 45
+    BodyRotationSpeed: 168.75
+    AimFollowSharpness: 6.25
+    RecoilKickForward: 2.75
+    RecoilKickSide: 2.0625
+    RecoilRecoverySpeed: 1.25
+    EquipTime: 0.41250002
+    UnequipTime: 0.275
+    MagazineSize: 19
+    ReloadTime: 2.75
+  - FireInterval: 0.2
+    ProjectilesPerShot: 1
+    SpreadAngle: 0
+    ConeHalfAngle: 45
+    BodyRotationSpeed: 210.9375
+    AimFollowSharpness: 7.8125
+    RecoilKickForward: 2.4375
+    RecoilKickSide: 1.828125
+    RecoilRecoverySpeed: 1.5625
+    EquipTime: 0.36562502
+    UnequipTime: 0.24375
+    MagazineSize: 23
+    ReloadTime: 2.4375
+  - FireInterval: 0.2
+    ProjectilesPerShot: 1
+    SpreadAngle: 0
+    ConeHalfAngle: 45
     BodyRotationSpeed: 270
     AimFollowSharpness: 10
     RecoilKickForward: 2
@@ -29,58 +81,6 @@ MonoBehaviour:
     UnequipTime: 0.2
     MagazineSize: 30
     ReloadTime: 2
-  - FireInterval: 0
-    ProjectilesPerShot: 0
-    SpreadAngle: 0
-    ConeHalfAngle: 0
-    BodyRotationSpeed: 0
-    AimFollowSharpness: 0
-    RecoilKickForward: 0
-    RecoilKickSide: 0
-    RecoilRecoverySpeed: 0
-    EquipTime: 0
-    UnequipTime: 0
-    MagazineSize: 0
-    ReloadTime: 0
-  - FireInterval: 0
-    ProjectilesPerShot: 0
-    SpreadAngle: 0
-    ConeHalfAngle: 0
-    BodyRotationSpeed: 0
-    AimFollowSharpness: 0
-    RecoilKickForward: 0
-    RecoilKickSide: 0
-    RecoilRecoverySpeed: 0
-    EquipTime: 0
-    UnequipTime: 0
-    MagazineSize: 0
-    ReloadTime: 0
-  - FireInterval: 0
-    ProjectilesPerShot: 0
-    SpreadAngle: 0
-    ConeHalfAngle: 0
-    BodyRotationSpeed: 0
-    AimFollowSharpness: 0
-    RecoilKickForward: 0
-    RecoilKickSide: 0
-    RecoilRecoverySpeed: 0
-    EquipTime: 0
-    UnequipTime: 0
-    MagazineSize: 0
-    ReloadTime: 0
-  - FireInterval: 0
-    ProjectilesPerShot: 0
-    SpreadAngle: 0
-    ConeHalfAngle: 0
-    BodyRotationSpeed: 0
-    AimFollowSharpness: 0
-    RecoilKickForward: 0
-    RecoilKickSide: 0
-    RecoilRecoverySpeed: 0
-    EquipTime: 0
-    UnequipTime: 0
-    MagazineSize: 0
-    ReloadTime: 0
   _barrelPrefab: {fileID: 4644150681260790638, guid: 9858d1ec7f7f94e38a6d61c46edcdb17, type: 3}
   _spinUpTime: 0
   _spinDownTime: 0

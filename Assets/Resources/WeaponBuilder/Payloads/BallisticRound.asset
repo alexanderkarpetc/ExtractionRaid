@@ -17,39 +17,39 @@ MonoBehaviour:
   _displayName: Ballistic
   _ammoType: Ammo_Rifle
   _statsByTier:
+  - Damage: 7.5
+    ProjectileSpeed: 25
+    ProjectileLifetime: 2.5
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 7.5
+    BaseArmorDamage: 2.5
+    BaseBleedChance: 0
+  - Damage: 7.96875
+    ProjectileSpeed: 25
+    ProjectileLifetime: 2.5
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 7.96875
+    BaseArmorDamage: 2.65625
+    BaseBleedChance: 0
+  - Damage: 9.375
+    ProjectileSpeed: 25
+    ProjectileLifetime: 2.5
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 9.375
+    BaseArmorDamage: 3.125
+    BaseBleedChance: 0
+  - Damage: 11.71875
+    ProjectileSpeed: 25
+    ProjectileLifetime: 2.5
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 11.71875
+    BaseArmorDamage: 3.90625
+    BaseBleedChance: 0
   - Damage: 15
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2
     BasePenetration: 15
     BaseArmorDamage: 5
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
     BaseBleedChance: 0
   _basePrefab: {fileID: 1521445269741888015, guid: dadaaca3b5f8b4d7fb6acdbbf7bc87ab, type: 3}

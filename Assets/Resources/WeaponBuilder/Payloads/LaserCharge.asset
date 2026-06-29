@@ -17,6 +17,34 @@ MonoBehaviour:
   _displayName: Laser
   _ammoType: Ammo_EnergyCell
   _statsByTier:
+  - Damage: 12.5
+    ProjectileSpeed: 50
+    ProjectileLifetime: 3
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 12.5
+    BaseArmorDamage: 4
+    BaseBleedChance: 0
+  - Damage: 13.28125
+    ProjectileSpeed: 50
+    ProjectileLifetime: 3
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 13.28125
+    BaseArmorDamage: 4.25
+    BaseBleedChance: 0
+  - Damage: 15.625
+    ProjectileSpeed: 50
+    ProjectileLifetime: 3
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 15.625
+    BaseArmorDamage: 5
+    BaseBleedChance: 0
+  - Damage: 19.53125
+    ProjectileSpeed: 50
+    ProjectileLifetime: 3
+    HeadshotDamageMultiplier: 2
+    BasePenetration: 19.53125
+    BaseArmorDamage: 6.25
+    BaseBleedChance: 0
   - Damage: 25
     ProjectileSpeed: 50
     ProjectileLifetime: 3
@@ -24,38 +52,10 @@ MonoBehaviour:
     BasePenetration: 25
     BaseArmorDamage: 8
     BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
-  - Damage: 0
-    ProjectileSpeed: 0
-    ProjectileLifetime: 0
-    HeadshotDamageMultiplier: 0
-    BasePenetration: 0
-    BaseArmorDamage: 0
-    BaseBleedChance: 0
   _basePrefab: {fileID: 5782237848918049170, guid: d651741cfc4a147d89abfbfee3d7a765, type: 3}
   _specificByTier:
+  - ChargeTime: 1.5
+  - ChargeTime: 1.46875
+  - ChargeTime: 1.375
+  - ChargeTime: 1.21875
   - ChargeTime: 1
-  - ChargeTime: 0
-  - ChargeTime: 0
-  - ChargeTime: 0
-  - ChargeTime: 0

@@ -181,6 +181,60 @@ namespace Game.Editor
 
         // ── Payload: Ballistic ────────────────────────────────
 
+        // ── Rarity balance curve (docs/ai/weapon-builder/attachments/balance.md) ──────────
+        // The authored values below are the LEGENDARY baseline; lower tiers scale DOWN
+        // parabolically — slow growth at the bottom (Common/Uncommon/Rare clustered), steep at
+        // Epic/Legendary. Two knobs: RarityBaseFloor (Common floor) + RarityCurvePow (steepness).
+        const float RarityBaseFloor = 0.5f; // Common power = 50% of Legendary
+        const float RarityCurvePow  = 2.0f; // parabola exponent (higher = more top-heavy)
+
+        // Higher-is-better stats: base..1.0 across Common..Legendary.
+        static float PowerMul(int tier) =>
+            RarityBaseFloor + (1f - RarityBaseFloor) * Mathf.Pow(tier / 4f, RarityCurvePow);
+
+        // Lower-is-better stats (recoil / reload / spread / charge): mirror of PowerMul above
+        // 1.0, so Common is worst (e.g. 1.5×) and Legendary = 1.0×.
+        static float PenaltyMul(int tier) => 2f - PowerMul(tier);
+
+        // 5-tier table from a Legendary-baseline payload. Damage/Penetration/ArmorDamage scale
+        // (power); HeadshotMult, ProjectileSpeed/Lifetime, BleedChance stay flat (identity).
+        static CommonPayloadStats[] ScalePayloadByRarity(CommonPayloadStats legendary)
+        {
+            var arr = new CommonPayloadStats[5];
+            for (int t = 0; t < 5; t++)
+            {
+                float g = PowerMul(t);
+                arr[t] = legendary; // copies the flat/identity fields
+                arr[t].Damage          = legendary.Damage * g;
+                arr[t].BasePenetration = legendary.BasePenetration * g;
+                arr[t].BaseArmorDamage = legendary.BaseArmorDamage * g;
+            }
+            return arr;
+        }
+
+        // 5-tier table from a Legendary-baseline delivery. FireInterval (RoF), ProjectilesPerShot
+        // and ConeHalfAngle stay flat (archetype identity); the rest scale by power/penalty.
+        static DeliveryStats[] ScaleDeliveryByRarity(DeliveryStats legendary)
+        {
+            var arr = new DeliveryStats[5];
+            for (int t = 0; t < 5; t++)
+            {
+                float g = PowerMul(t), b = PenaltyMul(t);
+                arr[t] = legendary; // copies the flat/identity fields
+                arr[t].MagazineSize        = Mathf.RoundToInt(legendary.MagazineSize * g);
+                arr[t].RecoilRecoverySpeed = legendary.RecoilRecoverySpeed * g;
+                arr[t].BodyRotationSpeed   = legendary.BodyRotationSpeed * g;
+                arr[t].AimFollowSharpness  = legendary.AimFollowSharpness * g;
+                arr[t].RecoilKickForward   = legendary.RecoilKickForward * b;
+                arr[t].RecoilKickSide      = legendary.RecoilKickSide * b;
+                arr[t].SpreadAngle         = legendary.SpreadAngle * b;
+                arr[t].ReloadTime          = legendary.ReloadTime * b;
+                arr[t].EquipTime           = legendary.EquipTime * b;
+                arr[t].UnequipTime         = legendary.UnequipTime * b;
+            }
+            return arr;
+        }
+
         static void PopulateBallistic(BallisticPayloadDefinition def)
         {
             SetField(def, "_id",          "BallisticRound");
@@ -188,8 +242,8 @@ namespace Game.Editor
             SetField(def, "_displayName", "Ballistic");
             SetField(def, "_ammoType",    "Ammo_Rifle");
 
-            var stats = new CommonPayloadStats[5];
-            stats[(int)RarityTier.Common] = new CommonPayloadStats
+            // Legendary baseline; lower tiers scaled down parabolically (see balance below).
+            var legendary = new CommonPayloadStats
             {
                 Damage                   = 15f,
                 ProjectileSpeed          = 25f,
@@ -199,7 +253,7 @@ namespace Game.Editor
                 BaseArmorDamage          = 5f,
                 BaseBleedChance          = 0f,
             };
-            SetField(def, "_statsByTier", stats);
+            SetField(def, "_statsByTier", ScalePayloadByRarity(legendary));
 
             EditorUtility.SetDirty(def);
         }
@@ -215,8 +269,7 @@ namespace Game.Editor
 
             // Common-tier payload stats: higher single-shot damage and projectile speed
             // than Ballistic — compensates for the charge-up overhead.
-            var stats = new CommonPayloadStats[5];
-            stats[(int)RarityTier.Common] = new CommonPayloadStats
+            var legendary = new CommonPayloadStats
             {
                 Damage                   = 25f,
                 ProjectileSpeed          = 50f,
@@ -226,11 +279,13 @@ namespace Game.Editor
                 BaseArmorDamage          = 8f,
                 BaseBleedChance          = 0f, // energy — no bleed
             };
-            SetField(def, "_statsByTier", stats);
+            SetField(def, "_statsByTier", ScalePayloadByRarity(legendary));
 
-            // Laser-specific: ChargeTime. 1s is a sensible starting point for MVP feel.
+            // Laser-specific: ChargeTime (lower-is-better → penalty curve; Legendary = 1.0s).
+            const float legendaryChargeTime = 1.0f;
             var specific = new LaserSpecificStats[5];
-            specific[(int)RarityTier.Common] = new LaserSpecificStats { ChargeTime = 1.0f };
+            for (int t = 0; t < 5; t++)
+                specific[t] = new LaserSpecificStats { ChargeTime = legendaryChargeTime * PenaltyMul(t) };
             SetField(def, "_specificByTier", specific);
 
             EditorUtility.SetDirty(def);
@@ -244,8 +299,7 @@ namespace Game.Editor
             SetField(def, "_formFactor", "Pistol");
             SetField(def, "_pattern",    FiringPattern.Single);
 
-            var stats = new DeliveryStats[5];
-            stats[(int)RarityTier.Common] = new DeliveryStats
+            var legendary = new DeliveryStats
             {
                 // Values sourced from pre-migration Pistol stats (Ballistic + SingleAction, Common tier)
                 FireInterval        = 0.4f,
@@ -262,7 +316,7 @@ namespace Game.Editor
                 MagazineSize        = 12,
                 ReloadTime          = 1.5f,
             };
-            SetField(def, "_statsByTier", stats);
+            SetField(def, "_statsByTier", ScaleDeliveryByRarity(legendary));
 
             // Pattern-specific params (Single uses none)
             SetField(def, "_spinUpTime",     0f);
@@ -281,8 +335,7 @@ namespace Game.Editor
             SetField(def, "_formFactor", "Rifle");
             SetField(def, "_pattern",    FiringPattern.Auto);
 
-            var stats = new DeliveryStats[5];
-            stats[(int)RarityTier.Common] = new DeliveryStats
+            var legendary = new DeliveryStats
             {
                 // Values sourced from pre-migration Rifle stats (Ballistic + Auto, Common tier)
                 FireInterval        = 0.2f,
@@ -299,7 +352,7 @@ namespace Game.Editor
                 MagazineSize        = 30,
                 ReloadTime          = 2.0f,
             };
-            SetField(def, "_statsByTier", stats);
+            SetField(def, "_statsByTier", ScaleDeliveryByRarity(legendary));
 
             SetField(def, "_spinUpTime",     0f);
             SetField(def, "_spinDownTime",   0f);
@@ -317,8 +370,7 @@ namespace Game.Editor
             SetField(def, "_formFactor", "Shotgun");
             SetField(def, "_pattern",    FiringPattern.Scatter);
 
-            var stats = new DeliveryStats[5];
-            stats[(int)RarityTier.Common] = new DeliveryStats
+            var legendary = new DeliveryStats
             {
                 // Shotgun-like: slow cadence, heavy recoil, multiple pellets in a wide cone.
                 // Values mirror pre-migration Shotgun tuning where applicable.
@@ -336,7 +388,7 @@ namespace Game.Editor
                 MagazineSize        = 5,
                 ReloadTime          = 2.5f,
             };
-            SetField(def, "_statsByTier", stats);
+            SetField(def, "_statsByTier", ScaleDeliveryByRarity(legendary));
 
             SetField(def, "_spinUpTime",     0f);
             SetField(def, "_spinDownTime",   0f);
