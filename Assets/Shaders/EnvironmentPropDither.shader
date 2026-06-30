@@ -14,8 +14,10 @@ Shader "ExtractShaders/EnvironmentPropDither"
         [HDR] _ColorEmission("Emission Color", Color) = (1, 1, 1, 0)
         _Emission("Emission", Float) = 0
 
+        [Toggle] _DitherEnabled("Dither Enabled", Float) = 1
         Dither("Dither", Range(0, 1)) = 0
         _Dither("Dither Fallback", Range(0, 1)) = 0
+        [HideInInspector] _ZoneDitherEnabled("Zone Dither Enabled", Float) = 1
         _DitherPatternScale("Dither Pattern Scale", Range(0, 0.03)) = 0.003
 
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 2
@@ -59,8 +61,10 @@ Shader "ExtractShaders/EnvironmentPropDither"
             half _Smoothness;
             half _Occlusion;
             half _Emission;
+            half _DitherEnabled;
             half Dither;
             half _Dither;
+            half _ZoneDitherEnabled;
             float _DitherPatternScale;
         CBUFFER_END
 
@@ -83,14 +87,14 @@ Shader "ExtractShaders/EnvironmentPropDither"
 
         half MaterialDither()
         {
-            return saturate(max(Dither, _Dither));
+            return saturate(max(Dither, _Dither)) * saturate(_DitherEnabled);
         }
 
         half PlayerZoneDither(float4 positionCS)
         {
             half radius = max((half)_PlayerFoliageDitherParams.x, 0.0h);
             half softness = max((half)_PlayerFoliageDitherParams.y, 0.01h);
-            half amount = saturate((half)_PlayerFoliageDitherParams.z);
+            half amount = saturate((half)_PlayerFoliageDitherParams.z) * saturate(_ZoneDitherEnabled) * saturate(_DitherEnabled);
             float4 playerCS = TransformWorldToHClip(_PlayerFoliageDitherPosition.xyz);
             float4 playerScreen = ComputeScreenPos(playerCS);
             float2 playerPixel = playerScreen.xy / max(playerScreen.w, 0.0001) * _ScreenParams.xy;
@@ -103,7 +107,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
         {
             half radius = max((half)_CursorFoliageDitherParams.x, 0.0h);
             half softness = max((half)_CursorFoliageDitherParams.y, 0.01h);
-            half amount = saturate((half)_CursorFoliageDitherParams.z);
+            half amount = saturate((half)_CursorFoliageDitherParams.z) * saturate(_ZoneDitherEnabled) * saturate(_DitherEnabled);
             half dist = (half)distance(positionCS.xy, _CursorFoliageDitherPosition.xy);
 
             return (1.0h - smoothstep(radius, radius + softness, dist)) * amount;

@@ -14,6 +14,7 @@ Material:
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
+  - _DITHERENABLED_ON
   - _RECEIVE_SHADOWS_OFF
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -111,6 +112,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DisableReceiveShadows: 1
     - _Dither: 0
+    - _DitherEnabled: 1
     - _DitherPatternScale: 0.003
     - _DstBlend: 0
     - _DstBlendAlpha: 0
@@ -155,6 +157,7 @@ Material:
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
+    - _ZoneDitherEnabled: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 0.80797786, b: 0.7311321, a: 1}
     - _Color: {r: 0.6792453, g: 0.6792453, b: 0.6792453, a: 1}
