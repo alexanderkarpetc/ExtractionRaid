@@ -18,6 +18,10 @@ namespace Systems
     {
         public const float LootRange = 3f;
 
+        // Chance a killed bot also drops one weapon attachment mod (loot-gated economy).
+        // Placeholder — promote to DevCheats if runtime tuning is wanted.
+        const float BotModDropChance = 0.25f;
+
         public static void CreateContainer(RaidState state, in ContainerTypeConfig config, Vector3 position,
             IRaidEvents events)
         {
@@ -146,6 +150,20 @@ namespace Systems
                     armorItem.CurrentDurability = armorSlots.BodyArmor.CurrentDurability;
                     armorItem.MaxDurability = armorSlots.BodyArmor.MaxDurability;
                     inventory.BodyArmorSlot = armorItem;
+                }
+            }
+
+            // Chance to also drop a weapon attachment mod (universal common, unique rare — see
+            // ContainerConstants.AttachmentModDrops). Weighted pick from the shared mod pool.
+            if (backpackSlot < InventoryState.BackpackSize && Random.value < BotModDropChance)
+            {
+                var modPool = ContainerConstants.AttachmentModDrops();
+                float total = 0f;
+                for (int i = 0; i < modPool.Length; i++) total += modPool[i].Weight;
+                if (total > 0f)
+                {
+                    var drop = PickWeighted(modPool, total);
+                    inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), drop.DefinitionId, 1);
                 }
             }
 

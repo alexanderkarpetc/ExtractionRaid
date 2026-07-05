@@ -72,6 +72,34 @@ namespace Constants
             new LootDrop("Scatter",        1, 1),
         };
 
+        // Attachment mods (loot-gated economy). Ids match the AttachmentDefinition SOs +
+        // ItemDefinition entries. Universal mods drop at full weight; the 3 unique
+        // (archetype-restricted) mods are rarer (×0.4). `scale` tunes the whole pool's share
+        // when concatenated into a mixed container. See docs/ai/weapon-builder/attachments.
+        public static LootDrop[] AttachmentModDrops(float scale = 1f) => new[]
+        {
+            new LootDrop("PowerComp",     1, 1, 1f * scale),
+            new LootDrop("MuzzleBrake",   1, 1, 1f * scale),
+            new LootDrop("VerticalGrip",  1, 1, 1f * scale),
+            new LootDrop("AngledGrip",    1, 1, 1f * scale),
+            new LootDrop("HeavyStock",    1, 1, 1f * scale),
+            new LootDrop("SkeletonStock", 1, 1, 1f * scale),
+            new LootDrop("RedDot",        1, 1, 1f * scale),
+            new LootDrop("ExtendedMag",   1, 1, 1f * scale),
+            new LootDrop("QuickMag",      1, 1, 1f * scale),
+            new LootDrop("LaserFocusing", 1, 1, 0.4f * scale),
+            new LootDrop("ScatterChoke",  1, 1, 0.4f * scale),
+            new LootDrop("AutoHeatSink",  1, 1, 0.4f * scale),
+        };
+
+        static LootDrop[] Concat(LootDrop[] a, LootDrop[] b)
+        {
+            var r = new LootDrop[a.Length + b.Length];
+            a.CopyTo(r, 0);
+            b.CopyTo(r, a.Length);
+            return r;
+        }
+
         public static readonly ContainerTypeConfig MedContainer = new(
             typeId: "MedContainer",
             displayName: "Medical Supplies",
@@ -99,10 +127,9 @@ namespace Constants
             typeId: "RandomLootBox",
             displayName: "Loot Box",
             minDrops: 2, maxDrops: 4,
-            // Tier 6 G2: weapon modules added alongside meds/ammo/grenades.
-            // Uniform random pick ⇒ ~50% chance per drop slot is a module.
-            // Per-module weighting → Tier 4 (з rarity layer).
-            possibleDrops: new[]
+            // Meds/ammo/grenades + weapon modules + attachment mods (half-weight so mods stay a
+            // modest slice of the general box; the ModuleCache is the mod-dense source).
+            possibleDrops: Concat(new[]
             {
                 new LootDrop("Medkit",         1, 1),
                 new LootDrop("Bandage",        1, 1),
@@ -113,17 +140,17 @@ namespace Constants
                 new LootDrop("SingleAction",   1, 1),
                 new LootDrop("Auto",           1, 1),
                 new LootDrop("Scatter",        1, 1),
-            }
+            }, AttachmentModDrops(0.5f))
         );
 
-        // Tier 6 G2 — dedicated cache for weapon modules. Smaller drop count
-        // (1-2) but pool is module-only, so opening one always nets at least
-        // one build-relevant part. Higher-value rarity than RandomLootBox.
+        // Dedicated build-parts cache: cores + attachment mods (full mod weight). Pool is
+        // build-only, so opening one always nets a build-relevant part — the mod-dense source
+        // vs the general RandomLootBox.
         public static readonly ContainerTypeConfig ModuleCache = new(
             typeId: "ModuleCache",
             displayName: "Module Cache",
-            minDrops: 1, maxDrops: 2,
-            possibleDrops: WeaponModuleDrops
+            minDrops: 1, maxDrops: 3,
+            possibleDrops: Concat(WeaponModuleDrops, AttachmentModDrops(1f))
         );
 
         static readonly Dictionary<string, ContainerTypeConfig> Registry = new()

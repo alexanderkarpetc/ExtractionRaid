@@ -64,13 +64,13 @@ install/remove мод (**споживає/повертає мод з backpack**)
 ## Наступні кроки (на вибір — обрати)
 1. **Playtest/balance** — числа модів = placeholders; протюнити на відчутті (тепер ще й rarity-крива слотів + unique-моди).
 2. **P4 — нові механіки:** Noise→Suppressor (боти чують `WeaponFired` у `NoiseRadius`) + Sight/FOV→Sniper Scope (fog-of-war). Розблоковують відкладені моди + дають unique-модам справжні charge/heat-ефекти.
-3. **Real loot-table drops для модів** — зараз моди роздаються лише через cheat-loadout + dev-cheat; вписати у LootSystem/loot-таблиці контейнерів/ботів.
+3. **Розширити compare-diff** на рядки attachments/ammo-type (зараз лише bar-стати) — `WeaponComparePanel`.
 
 ## Відкладене / спрощення MVP (треба памʼятати)
 - Slot count = **rarity-scaled ✅** (`AttachmentSlots`, Common/Uncommon 1 · Rare/Epic 2 · Legendary 3, cap=category count). Крива тюниться в плейтесті.
 - `CompatibleArchetype` — **enforced ✅** (P3-2). 3 unique-моди (Laser/Scatter/Auto). Інші моди universal.
 - Unique-моди використовують **наявні стат-осі як proxy** (Laser Focusing → Damage/Ergo замість ChargeTime; Auto Heat-Sink → Recoil/Damage замість Heat). Справжні charge/heat-ефекти → P4.
-- Attachment supply = **loot-gated ✅** (backpack-consume, recoverable). АЛЕ моди ще не падають з лута — роздаються через cheat-loadout + dev-cheat "Give All Mods" (real drops → next step #3).
+- Attachment supply = **loot-gated ✅** (backpack-consume, recoverable) + **drop from loot ✅** (2026-06-26): `ContainerConstants.AttachmentModDrops` in RandomLootBox (×0.5) + ModuleCache (cores+mods) + 25% bot drop (`LootSystem.CreateLootable`). Fresh-player starting mods removed; "Give All Mods" cheat stays. Drop-rates = placeholders (`BotModDropChance`, mod weights).
 - Suppressor/Sniper Scope **не зроблені** (потребують Noise/FOV механік → P4).
 - "Right-click to modify" footer показується на ВСІХ weapon-тултіпах (навіть loot, де Modify ще нема в контекст-меню) — мінорна неточність.
 

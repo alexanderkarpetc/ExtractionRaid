@@ -245,14 +245,17 @@ namespace Tests.EditMode
             Assert.AreEqual("ModuleCache",  config.TypeId);
             Assert.AreEqual("Module Cache", config.DisplayName);
             Assert.AreEqual(1, config.MinDrops);
-            Assert.AreEqual(2, config.MaxDrops);
+            Assert.AreEqual(3, config.MaxDrops);
 
-            Assert.AreEqual(5, config.PossibleDrops.Length, "ModuleCache pool should hold 5 modules.");
+            // Build-parts cache = 5 cores + 12 attachment mods; all are WeaponMod-category items.
+            Assert.AreEqual(17, config.PossibleDrops.Length, "ModuleCache pool = 5 cores + 12 mods.");
             foreach (var drop in config.PossibleDrops)
             {
-                Assert.Contains(drop.DefinitionId, new System.Collections.Generic.List<string>(ExpectedModuleIds),
-                    $"ModuleCache pool entry '{drop.DefinitionId}' is not a known weapon module.");
-                Assert.AreEqual(1, drop.MinCount, "Modules are non-stackable — min/max=1.");
+                var def = ItemDefinition.Get(drop.DefinitionId);
+                Assert.IsNotNull(def, drop.DefinitionId);
+                Assert.AreEqual(ItemCategory.WeaponMod, def.Category,
+                    $"ModuleCache pool entry '{drop.DefinitionId}' is not a WeaponMod item.");
+                Assert.AreEqual(1, drop.MinCount, "Cores + mods drop as single units — min/max=1.");
                 Assert.AreEqual(1, drop.MaxCount);
             }
         }
@@ -271,10 +274,9 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void CreateContainer_ModuleCache_DropsOnlyWeaponModules()
+        public void CreateContainer_ModuleCache_DropsOnlyBuildParts()
         {
-            // Force deterministic Random.Range so we cover all 5 module entries
-            // (10 iterations × 1-2 drops each → reliably hits every pool index).
+            // Deterministic RNG so the 10 runs cover the pool (cores + mods).
             UnityEngine.Random.InitState(0xC0FFEE);
 
             ContainerConstants.TryGetConfig(ContainerType.ModuleCache, out var config);
@@ -292,10 +294,10 @@ namespace Tests.EditMode
                 {
                     var item = inv.Backpack[slot];
                     if (item == null) continue;
-                    Assert.Contains(item.DefinitionId, new System.Collections.Generic.List<string>(ExpectedModuleIds),
-                        $"ModuleCache produced non-module item '{item.DefinitionId}'.");
+                    Assert.AreEqual(ItemCategory.WeaponMod, item.Definition.Category,
+                        $"ModuleCache produced non-build-part item '{item.DefinitionId}'.");
                     Assert.IsFalse(item.HasWeaponConfiguration,
-                        "Loose modules ride as plain items, not assembled weapons.");
+                        "Loose cores/mods ride as plain items, not assembled weapons.");
                     spawnedThisRun++;
                 }
                 Assert.GreaterOrEqual(spawnedThisRun, config.MinDrops);
