@@ -90,5 +90,9 @@ green/red delta segment) + numeric delta chips** (like the attachment editor).
   equipped weapon (release returns to active); hidden on leave / drag-start.
 - 622 EditMode green (WeaponCompareTests covers target + diff).
 
-Still open / future: diff currently covers the bar stats only (not attachments/ammo-type lines);
-dual-delta (both slots at once) remains the fallback if active+flip feels off in playtest.
+- `Systems/WeaponLoadoutSummary.cs` (2026-06-26) — per-weapon ammo type + player reserve + installed
+  mods. `WeaponComparePanel.AppendLoadout` renders it below the stat bars in each column: **Ammo**
+  row (name + `×reserve`, red when 0) + **Mods** chips (slot · name, or "None").
+
+Still open / future: dual-delta (both slots at once) remains the fallback if active+flip feels off;
+mod-diff highlighting (which mods differ) intentionally skipped — mods are swappable, "has mod" ≠ better.

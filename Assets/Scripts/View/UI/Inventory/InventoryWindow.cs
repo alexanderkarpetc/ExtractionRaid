@@ -99,6 +99,8 @@ namespace View.UI.Inventory
         Vector2 _comparePos;
         bool _compareAltHeld;
         IReadOnlyList<ItemState> _compareCandidates;
+        string _compareHoveredTag;
+        int _compareSelectedSlot;
 
         // Quick-slot keys 3..9 → bindings index 0..6.
         static readonly Key[] QuickSlotKeys =
@@ -153,7 +155,9 @@ namespace View.UI.Inventory
             bool held = kb[Key.LeftAlt].isPressed;
             if (held == _compareAltHeld) return;
             _compareAltHeld = held;
-            panel.Show(_compareItem, WeaponCompareTarget.Pick(_compareCandidates, held ? 1 : 0),
+            var baseline = WeaponCompareTarget.Pick(_compareCandidates, held ? 1 : 0);
+            panel.Show(_compareItem, _compareHoveredTag, baseline,
+                       BaselineTag(baseline, App.Instance?.Player?.Inventory, _compareSelectedSlot),
                        hasMore: true, _comparePos);
         }
 
@@ -746,13 +750,34 @@ namespace View.UI.Inventory
             _compareItem = item;
             _comparePos = panelPos;
             _compareCandidates = candidates;
+            _compareSelectedSlot = selected;
+            _compareHoveredTag = HoveredTag(slot);
             // If Alt is already held when the hover starts, open straight on the alternative.
             _compareAltHeld = Keyboard.current != null && Keyboard.current[Key.LeftAlt].isPressed;
 
+            var baseline = WeaponCompareTarget.Pick(candidates, _compareAltHeld ? 1 : 0);
             TooltipController.Instance?.Hide(); // make sure the single tooltip isn't also up
-            panel.Show(item, WeaponCompareTarget.Pick(candidates, _compareAltHeld ? 1 : 0),
+            panel.Show(item, _compareHoveredTag, baseline, BaselineTag(baseline, inv, selected),
                        candidates.Count > 1, panelPos);
             return true;
+        }
+
+        // Tag for the hovered column: LOOT when it's from a lootable source, else EQUIPPED /
+        // BACKPACK by which player slot it sits in.
+        static string HoveredTag(InventorySlotElement slot)
+        {
+            if (slot.Source != InventorySlotElement.SlotSource.Player) return "LOOT";
+            return slot.SlotRef.Type == SlotType.Weapon ? "EQUIPPED" : "BACKPACK";
+        }
+
+        // Tag for the baseline column: IN HAND only when it's the currently-selected weapon,
+        // otherwise it's the other equipped weapon → EQUIPPED.
+        static string BaselineTag(ItemState baseline, InventoryState inv, int selectedSlot)
+        {
+            if (inv != null && selectedSlot >= 0 && selectedSlot < inv.WeaponSlots.Length
+                && ReferenceEquals(inv.WeaponSlots[selectedSlot], baseline))
+                return "IN HAND";
+            return "EQUIPPED";
         }
 
         void HideWeaponCompare()

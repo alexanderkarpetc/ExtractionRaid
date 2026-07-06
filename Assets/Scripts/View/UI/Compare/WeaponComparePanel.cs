@@ -53,7 +53,8 @@ namespace View.UI.Compare
         /// <paramref name="panelPos"/> (PointerEnter coords). <paramref name="hasMore"/> shows
         /// the "Alt — vs other slot" hint when more than one equipped weapon exists.
         /// </summary>
-        public void Show(ItemState hovered, ItemState baseline, bool hasMore, Vector2 panelPos)
+        public void Show(ItemState hovered, string hoveredTag, ItemState baseline, string baselineTag,
+                         bool hasMore, Vector2 panelPos)
         {
             if (_root == null || hovered == null || !hovered.HasWeaponConfiguration
                 || baseline == null || !baseline.HasWeaponConfiguration)
@@ -62,7 +63,7 @@ namespace View.UI.Compare
                 return;
             }
 
-            Populate(hovered, baseline, hasMore);
+            Populate(hovered, hoveredTag, baseline, baselineTag, hasMore);
             _root.style.display = DisplayStyle.Flex;
             _visible = true;
             _pendingPos = panelPos;
@@ -121,7 +122,7 @@ namespace View.UI.Compare
 
         // ── Render ────────────────────────────────────────────
 
-        void Populate(ItemState hovered, ItemState baseline, bool hasMore)
+        void Populate(ItemState hovered, string hoveredTag, ItemState baseline, string baselineTag, bool hasMore)
         {
             var reg = App.Instance?.CoreDefinitions;
             _cols.Clear();
@@ -134,36 +135,89 @@ namespace View.UI.Compare
             var bRows = WeaponStatDisplay.Build(bStats.Value);
             var diff  = WeaponStatComparison.Build(hRows, bRows);
 
-            _cols.Add(BuildHoveredColumn(hovered, reg, diff));
-            _cols.Add(BuildBaselineColumn(baseline, reg, bRows));
+            _cols.Add(BuildHoveredColumn(hovered, hoveredTag, reg, diff));
+            _cols.Add(BuildBaselineColumn(baseline, baselineTag, reg, bRows));
 
             _footer.text = hasMore ? "Hold Alt — compare vs other weapon" : string.Empty;
             _footer.style.display = hasMore ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        VisualElement BuildHoveredColumn(ItemState item, ICoreDefinitionRegistry reg,
+        VisualElement BuildHoveredColumn(ItemState item, string tag, ICoreDefinitionRegistry reg,
             System.Collections.Generic.IReadOnlyList<WeaponStatComparison.Row> diff)
         {
             var col = new VisualElement();
             col.AddToClassList("wc-col");
-            AppendHeader(col, item, reg, tag: "LOOT");
+            AppendHeader(col, item, reg, tag);
 
             for (int i = 0; i < diff.Count; i++)
                 col.Add(BuildCompareRow(diff[i]));
+            AppendLoadout(col, item, reg);
             return col;
         }
 
-        VisualElement BuildBaselineColumn(ItemState item, ICoreDefinitionRegistry reg,
+        VisualElement BuildBaselineColumn(ItemState item, string tag, ICoreDefinitionRegistry reg,
             System.Collections.Generic.IReadOnlyList<WeaponStatDisplay.StatDisplayRow> rows)
         {
             var col = new VisualElement();
             col.AddToClassList("wc-col");
             col.AddToClassList("wc-col--baseline");
-            AppendHeader(col, item, reg, tag: "IN HAND");
+            AppendHeader(col, item, reg, tag);
 
             for (int i = 0; i < rows.Count; i++)
                 col.Add(BuildPlainRow(rows[i]));
+            AppendLoadout(col, item, reg);
             return col;
+        }
+
+        // Non-stat loadout footer per column: ammo type + player reserve (red when 0) + installed mods.
+        void AppendLoadout(VisualElement col, ItemState item, ICoreDefinitionRegistry reg)
+        {
+            var s = WeaponLoadoutSummary.Build(item, reg, App.Instance?.Player?.Inventory);
+
+            var div = new VisualElement();
+            div.AddToClassList("wc-divider");
+            col.Add(div);
+
+            // Ammo row.
+            var ammoRow = new VisualElement();
+            ammoRow.AddToClassList("wc-row");
+            var ammoLabel = new Label("Ammo");
+            ammoLabel.AddToClassList("wc-label");
+            ammoRow.Add(ammoLabel);
+            var ammoName = new Label(string.IsNullOrEmpty(s.AmmoName) ? "—" : s.AmmoName);
+            ammoName.AddToClassList("wc-value");
+            ammoRow.Add(ammoName);
+            var reserve = new Label("×" + s.AmmoReserve);
+            reserve.AddToClassList("wc-reserve");
+            if (s.AmmoReserve <= 0) reserve.AddToClassList("wc-reserve--empty");
+            ammoRow.Add(reserve);
+            col.Add(ammoRow);
+
+            // Mods row.
+            var modsRow = new VisualElement();
+            modsRow.AddToClassList("wc-mods-row");
+            var modsLabel = new Label("Mods");
+            modsLabel.AddToClassList("wc-label");
+            modsRow.Add(modsLabel);
+            var chips = new VisualElement();
+            chips.AddToClassList("wc-mods");
+            if (s.Mods.Count == 0)
+            {
+                var none = new Label("None");
+                none.AddToClassList("wc-none");
+                chips.Add(none);
+            }
+            else
+            {
+                for (int i = 0; i < s.Mods.Count; i++)
+                {
+                    var chip = new Label($"{s.Mods[i].Slot} · {s.Mods[i].Name}");
+                    chip.AddToClassList("wc-mod-chip");
+                    chips.Add(chip);
+                }
+            }
+            modsRow.Add(chips);
+            col.Add(modsRow);
         }
 
         void AppendHeader(VisualElement col, ItemState item, ICoreDefinitionRegistry reg, string tag)
@@ -196,75 +250,96 @@ namespace View.UI.Compare
             col.Add(div);
         }
 
+        // Hovered column. Bar stats are stacked (value + Δ header over a full-width comparison
+        // bar); value-only stats (Headshot/Magazine) stay a single line.
         VisualElement BuildCompareRow(WeaponStatComparison.Row r)
         {
-            var row = new VisualElement();
-            row.AddToClassList("wc-row");
-
-            var label = new Label(r.Label);
-            label.AddToClassList("wc-label");
-            row.Add(label);
-
-            if (r.HasBar)
+            if (!r.HasBar)
             {
-                float lo = Mathf.Min(r.HoveredBar, r.BaselineBar);
-                float hi = Mathf.Max(r.HoveredBar, r.BaselineBar);
-
-                var bar = new VisualElement();
-                bar.AddToClassList("wc-bar");
-
-                var fill = new VisualElement();
-                fill.AddToClassList("wc-bar-fill");
-                fill.style.width = new Length(Mathf.Clamp01(lo) * 100f, LengthUnit.Percent);
-                bar.Add(fill);
-
-                if (hi > lo + 1e-4f)
-                {
-                    var delta = new VisualElement();
-                    delta.AddToClassList("wc-bar-delta");
-                    delta.AddToClassList(r.Improved ? "wc-bar-delta--up" : "wc-bar-delta--down");
-                    delta.style.width = new Length(Mathf.Clamp01(hi - lo) * 100f, LengthUnit.Percent);
-                    bar.Add(delta);
-                }
-                row.Add(bar);
-            }
-            else
-            {
-                var value = new Label(r.Value);
-                value.AddToClassList("wc-value");
-                row.Add(value);
+                var row = new VisualElement();
+                row.AddToClassList("wc-statrow");
+                row.Add(StatHead(r.Label, r.Value, DeltaChip(r)));
+                return row;
             }
 
-            row.Add(DeltaChip(r));
-            return row;
+            var sr = new VisualElement();
+            sr.AddToClassList("wc-statrow");
+            sr.Add(StatHead(r.Label, r.Value, DeltaChip(r)));
+            sr.Add(ComparisonBar(r.HoveredBar, r.BaselineBar, r.Improved));
+            return sr;
         }
 
+        // Baseline column — same layout, no deltas (it's the reference).
         VisualElement BuildPlainRow(WeaponStatDisplay.StatDisplayRow r)
         {
-            var row = new VisualElement();
-            row.AddToClassList("wc-row");
-
-            var label = new Label(r.Label);
-            label.AddToClassList("wc-label");
-            row.Add(label);
-
-            if (r.HasBar)
+            if (!r.HasBar)
             {
-                var bar = new VisualElement();
-                bar.AddToClassList("wc-bar");
-                var fill = new VisualElement();
-                fill.AddToClassList("wc-bar-fill");
-                fill.style.width = new Length(Mathf.Clamp01(r.BarRatio01) * 100f, LengthUnit.Percent);
-                bar.Add(fill);
-                row.Add(bar);
+                var row = new VisualElement();
+                row.AddToClassList("wc-statrow");
+                row.Add(StatHead(r.Label, r.Value, null));
+                return row;
             }
-            else
+
+            var sr = new VisualElement();
+            sr.AddToClassList("wc-statrow");
+            sr.Add(StatHead(r.Label, r.Value, null));
+            sr.Add(PlainBar(r.BarRatio01));
+            return sr;
+        }
+
+        // Header line for a stacked stat row: label (left) + value + optional delta chip (right).
+        static VisualElement StatHead(string label, string value, VisualElement delta)
+        {
+            var head = new VisualElement();
+            head.AddToClassList("wc-stat-head");
+
+            var lbl = new Label(label);
+            lbl.AddToClassList("wc-stat-label");
+            head.Add(lbl);
+
+            var val = new Label(value);
+            val.AddToClassList("wc-stat-value");
+            head.Add(val);
+
+            if (delta != null) head.Add(delta);
+            return head;
+        }
+
+        // Comparison bar: gold fill up to min(hovered, baseline), then a green (improved) /
+        // red (worse) segment spanning the difference.
+        static VisualElement ComparisonBar(float hoveredBar, float baselineBar, bool improved)
+        {
+            float lo = Mathf.Min(hoveredBar, baselineBar);
+            float hi = Mathf.Max(hoveredBar, baselineBar);
+
+            var bar = new VisualElement();
+            bar.AddToClassList("wc-bar");
+
+            var fill = new VisualElement();
+            fill.AddToClassList("wc-bar-fill");
+            fill.style.width = new Length(Mathf.Clamp01(lo) * 100f, LengthUnit.Percent);
+            bar.Add(fill);
+
+            if (hi > lo + 1e-4f)
             {
-                var value = new Label(r.Value);
-                value.AddToClassList("wc-value");
-                row.Add(value);
+                var delta = new VisualElement();
+                delta.AddToClassList("wc-bar-delta");
+                delta.AddToClassList(improved ? "wc-bar-delta--up" : "wc-bar-delta--down");
+                delta.style.width = new Length(Mathf.Clamp01(hi - lo) * 100f, LengthUnit.Percent);
+                bar.Add(delta);
             }
-            return row;
+            return bar;
+        }
+
+        static VisualElement PlainBar(float ratio)
+        {
+            var bar = new VisualElement();
+            bar.AddToClassList("wc-bar");
+            var fill = new VisualElement();
+            fill.AddToClassList("wc-bar-fill");
+            fill.style.width = new Length(Mathf.Clamp01(ratio) * 100f, LengthUnit.Percent);
+            bar.Add(fill);
+            return bar;
         }
 
         // Signed delta chip (+N / −N), green=improvement / red=worse. Empty when unchanged.

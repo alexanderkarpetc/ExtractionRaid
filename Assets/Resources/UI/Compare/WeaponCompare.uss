@@ -13,10 +13,10 @@
 
 .wc-cols { flex-direction: row; }
 
-.wc-col { width: 232px; }
+.wc-col { width: 272px; }
 .wc-col--baseline {
-    margin-left: 18px;
-    padding-left: 18px;
+    margin-left: 22px;
+    padding-left: 22px;
     border-left-width: 1px;
     border-left-color: var(--color-border-inset);
 }
@@ -52,6 +52,18 @@
     flex-grow: 1;
 }
 
+/* Stacked stat row (variant B): value + Δ header line over a full-width bar. */
+.wc-statrow { flex-direction: column; padding: 4px 0; }
+.wc-stat-head { flex-direction: row; align-items: baseline; }
+.wc-stat-label { font-size: var(--font-tooltip-row); color: var(--color-text-stat-label); flex-grow: 1; }
+.wc-stat-value {
+    font-size: var(--font-tooltip-row);
+    -unity-font-style: bold;
+    color: var(--color-text-body-strong);
+    margin-left: 8px;
+}
+.wc-statrow .wc-bar { flex-grow: 0; margin-top: 5px; }
+
 .wc-bar {
     flex-grow: 1;
     flex-direction: row;
@@ -74,4 +86,30 @@
     -unity-font-style: italic;
     color: var(--color-text-muted);
     margin-top: 8px;
+}
+
+/* ── Loadout footer (ammo + installed mods) ────────── */
+.wc-reserve {
+    margin-left: 8px;
+    font-size: var(--font-tooltip-row);
+    color: var(--color-text-secondary);
+}
+.wc-reserve--empty { color: rgb(220, 100, 100); -unity-font-style: bold; }
+
+/* Mods stack (label above, chips full-width below) so long mod names get the whole column. */
+.wc-mods-row { flex-direction: column; align-items: stretch; padding: 3px 0; }
+.wc-mods-row .wc-label { margin-bottom: 4px; }
+.wc-mods { flex-direction: row; flex-wrap: wrap; }
+.wc-mod-chip {
+    font-size: 11px;
+    padding: 1px 6px;
+    margin: 0 4px 3px 0;
+    border-radius: 4px;
+    background-color: var(--color-border-inset);
+    color: var(--color-text-secondary);
+}
+.wc-none {
+    font-size: var(--font-tooltip-row);
+    color: var(--color-text-empty);
+    -unity-font-style: italic;
 }
