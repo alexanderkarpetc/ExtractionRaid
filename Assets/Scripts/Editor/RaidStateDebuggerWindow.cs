@@ -281,7 +281,24 @@ namespace Editor
                     {
                         Field("Distance", $"{bb.DistanceToTarget:F1}");
                         Field("Last Known Pos", bb.LastKnownTargetPos);
+                        Field("IsAlert", bb.IsAlert);
                     }
+                    if (bb.VisionAwareness01 > 0f && bb.VisionAwareness01 < 1f)
+                        Field("Vision Awareness", $"{bb.VisionAwareness01:P0}");
+
+                    // Personality (rolled per spawn)
+                    Field("Personality", $"react ×{bb.ReactionTimeMult:F2}  acc ×{bb.AccuracyMult:F2}  aggr ×{bb.Aggression:F2}");
+
+                    if (bb.EffectiveAccuracy > 0f)
+                        Field("Eff. Accuracy", $"{bb.EffectiveAccuracy:F2} (settle {bb.AimSettle01:P0})");
+                    if (bb.BurstShotsLeft > 0)
+                        Field("Burst Left", bb.BurstShotsLeft);
+                    else if (bb.NextBurstTime > state.ElapsedTime)
+                        Field("Burst Pause", $"{bb.NextBurstTime - state.ElapsedTime:F2}s");
+                    if (bb.HealCastEndTime >= 0f)
+                        Field("Heal Cast", $"{Mathf.Max(0f, bb.HealCastEndTime - state.ElapsedTime):F1}s left");
+                    if (bb.SearchEndTime >= 0f)
+                        Field("Searching", $"{Mathf.Max(0f, bb.SearchEndTime - state.ElapsedTime):F1}s left");
 
                     if (bb.HealCooldownTimer > 0f)
                         Field("Heal CD", $"{bb.HealCooldownTimer:F1}s");

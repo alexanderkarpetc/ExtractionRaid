@@ -49,7 +49,16 @@ namespace Systems.Bot.Nodes
 
             bb.GrenadeThrowDelayTimer = -1f;
             bot.WantsToThrowGrenade = true;
-            bot.GrenadeThrowTarget = bb.LastKnownTargetPos;
+
+            // Land near the last known position, not on it — the throw error grows the
+            // longer the target has been unseen. A pinpoint grenade at an unseen player
+            // reads as aimbot.
+            float scatter = Mathf.Min(
+                BotConstants.GrenadeScatterBase
+                    + bb.TimeSinceTargetSeen * BotConstants.GrenadeScatterPerUnseenSec,
+                BotConstants.GrenadeScatterMax);
+            var offset = Random.insideUnitCircle * scatter;
+            bot.GrenadeThrowTarget = bb.LastKnownTargetPos + new Vector3(offset.x, 0f, offset.y);
             bb.DebugStatus = "ThrowGrenade";
             return this.Traced(bot, BTStatus.Success);
         }

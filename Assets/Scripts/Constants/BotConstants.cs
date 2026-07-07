@@ -148,6 +148,102 @@ namespace Constants
         // --- Perception tuning ---
         public const float PerceptionTickInterval = 0.2f;
 
+        // --- Graduated vision (TLOU-style awareness accumulator) ---
+        // Within InstantFraction of VisionRange detection is immediate; beyond it,
+        // detection takes DetectTimeMin..DetectTimeMax seconds scaled by distance
+        // (TLOU used ~1-2 s for an unaware NPC at range). Peripheral targets (outer
+        // band of the cone) detect slower. Awareness decays when sight is broken.
+        public const float VisionInstantFraction     = 0.35f;
+        public const float VisionDetectTimeMin       = 0.15f;
+        public const float VisionDetectTimeMax       = 1.1f;
+        public const float PeripheralAngleFraction   = 0.6f;   // of half-angle; beyond = peripheral
+        public const float PeripheralDetectTimeMult  = 1.6f;
+        public const float CombatDetectTimeMult      = 0.25f;  // already tracking a target → notice much faster
+        public const float VisionAwarenessDecayPerSec = 0.5f;
+        // 360° close-presence sense — humans notice someone standing next to them
+        // regardless of facing (TLOU widened the cone at close range for the same reason).
+        public const float CloseSenseRadius = 2.5f;
+
+        // --- Hearing (noise tiers + gunshots) ---
+        // Player noise radius: config.HearingRange is the base for normal movement.
+        // Slow movement is quieter, sprinting much louder, gunshots are map-scale events.
+        public const float SneakSpeedThreshold = 2.0f;   // m/s — below this movement is "quiet"
+        public const float SneakNoiseMult      = 0.45f;
+        public const float SprintNoiseMult     = 2.2f;
+        public const float GunshotHearingRange = 40f;
+        // A shot is "recent" for this long — must be >= PerceptionTickInterval so a
+        // perception tick never misses a shot fired between ticks.
+        public const float GunshotRecencyWindow = 0.25f;
+
+        // --- Sound localization error ---
+        // Heard-but-unseen contacts store a fuzzed position, not a GPS pin: error radius
+        // scales with distance (louder = easier to localize). Damage from an unseen
+        // shooter gives a direction-quality fix, not an exact one.
+        public const float HeardPosErrorFraction   = 0.2f;   // of distance, movement noise
+        public const float GunshotPosErrorFraction = 0.1f;   // of distance, gunshots are easier to place
+        public const float DamagePosError          = 2.5f;   // meters, flat
+
+        // --- Trigger discipline (burst fire) ---
+        // Humans fire 2-5 round bursts with 0.3-0.9 s pauses, not a metronomic stream.
+        // Aggression (per-bot personality) lengthens bursts and shortens pauses.
+        public const int   BurstShotsMin = 2;
+        public const int   BurstShotsMax = 5;
+        public const float BurstPauseMin = 0.35f;
+        public const float BurstPauseMax = 0.9f;
+
+        // --- Aim settle ---
+        // Accuracy ramps from StartMult -> 1 over AimSettleTime once the target is visible;
+        // resets when the target re-appears after ResetUnseenTime out of sight. First
+        // shots miss more — the classic Halo/Bioshock fairness trick, and it reads human.
+        public const float AimSettleTime             = 0.9f;
+        public const float AimSettleResetUnseenTime  = 1.2f;
+        public const float AimSettleStartAccuracyMult = 0.45f;
+        // Accuracy penalties: shooting while moving fast, or right after taking a hit.
+        public const float MovingAccuracyMult           = 0.75f;
+        public const float MovingAccuracySpeedThreshold = 1.5f;  // m/s
+        public const float RecentDamageAccuracyMult     = 0.85f;
+        public const float RecentDamageAccuracyWindow   = 1.5f;  // s
+
+        // --- Reload ---
+        // Bots consume magazine ammo and reload (infinite reserves). Tactical reload
+        // when the mag runs low and the target is out of sight — like a player topping
+        // up between peeks.
+        public const float TacticalReloadFraction = 0.3f;
+
+        // --- Heal cast ---
+        // Medkit takes time; the bot retreats and cannot fire while casting — gives the
+        // player the same counterplay window the player's own medkit cast has.
+        public const float HealCastTime            = 2.0f;
+        public const float HealRetreatSpeedFraction = 0.6f;
+
+        // --- Grenade scatter ---
+        // Grenades land near the last known position, not on it — error grows the longer
+        // the target has been unseen.
+        public const float GrenadeScatterBase          = 1.5f;
+        public const float GrenadeScatterPerUnseenSec  = 0.4f;
+        public const float GrenadeScatterMax           = 4f;
+
+        // --- Search (after losing the target at last-known-position) ---
+        public const float SearchDuration        = 4.5f;
+        public const float SearchArriveDistance  = 1.5f;
+        public const float SearchScanAmplitudeDeg = 80f;
+        public const float SearchScanPeriod      = 2.2f;
+
+        // --- Chase pathing (NavMesh) ---
+        public const int   ChaseMaxPathCorners      = 32;
+        public const float ChaseRepathInterval      = 0.75f;
+        public const float ChaseRepathMoveThreshold = 2f;    // repath when LKP drifts this far from cached path target
+        public const float ChaseCornerArrivalDistance = 0.5f;
+        public const float ChaseArriveDistance        = 1f;
+
+        // --- Personality (rolled once per spawn) ---
+        public const float ReactionTimeMultMin = 0.85f;
+        public const float ReactionTimeMultMax = 1.3f;
+        public const float AccuracyMultMin     = 0.9f;
+        public const float AccuracyMultMax     = 1.08f;
+        public const float AggressionMin       = 0.7f;
+        public const float AggressionMax       = 1.3f;
+
         // Layer mask for vision raycasts — only these layers block line of sight.
         // Default: layer 0 ("Default"). Set via BotConstants or a ScriptableObject
         // if your obstacles live on a different layer.

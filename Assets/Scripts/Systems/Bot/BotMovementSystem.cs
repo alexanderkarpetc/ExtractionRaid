@@ -51,7 +51,11 @@ namespace Systems.Bot
                 Vector3 desiredFacing = Vector3.zero;
                 if (!config.Has(BotBehaviorFlags.FireForward))
                 {
-                    if (bot.Blackboard.HasTarget)
+                    var bb = bot.Blackboard;
+                    // Face the target only once the reaction gate has opened (IsAlert) —
+                    // whipping around before "noticing" was the biggest robot tell.
+                    // SearchNode drives facing directly while it scans; don't fight it.
+                    if (bb.HasTarget && bb.IsAlert && bb.SearchEndTime < 0f)
                     {
                         var toTarget = bot.Blackboard.LastKnownTargetPos - bot.Position;
                         toTarget.y = 0f;

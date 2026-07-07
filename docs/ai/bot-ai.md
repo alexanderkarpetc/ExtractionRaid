@@ -94,7 +94,14 @@ Root (Selector)
 | ThrowGrenade  | 6   |
 | MeleeAttack   | 7   |
 
-Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
+Priority order: Heal > Dodge > Combat (Grenade > Melee > Shoot > Chase > Search) > Patrol.
+
+**Humanization pass (2026-07-07)** — the Combat sequence is gated by `Alert?`
+(`HasTarget && IsAlert`) instead of `HasTarget?`: the reaction window (accumulated in
+`BotBrainSystem`, personality-scaled) must elapse before the bot chases, fires, or even
+turns toward the target. A `SearchNode` after `ChaseNode` handles arriving at the last
+known position without regaining sight (scan sweep → give up → patrol). See
+`bot-humanization.md` for the full design rationale and tuning values.
 
 ---
 
@@ -109,17 +116,33 @@ Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
 
 ### ChaseNode
 
-- **Purpose**: Move toward the last known target position.
+- **Purpose**: Move toward the last known target position along NavMesh path corners
+  (straight-line fallback without navmesh).
 - **Conditions**: `HasTarget` must be true; returns Failure otherwise.
-- **Behavior**: Moves at `ChaseSpeed` toward `LastKnownTargetPos`. Returns Success when within 1 m, Running while moving.
+- **Behavior**: Path-follows at `ChaseSpeed`; repaths every 0.75 s or when the LKP
+  drifts > 2 m from the cached path target. On arrival (< 1 m): Success if the target
+  is visible, **Failure if not** — falls through to SearchNode.
 - **Intents**: Sets `DesiredVelocity`.
+
+### SearchNode (2026-07-07)
+
+- **Purpose**: Investigate the last known position instead of freezing there.
+- **Conditions**: `HasTarget && !CanSeeTarget` and within `SearchArriveDistance` of LKP.
+- **Behavior**: Sweeps facing ±80° around the arrival heading for `SearchDuration`
+  (4.5 s), then calls `bb.ClearTarget()` — the bot gives up and resumes patrol.
+  BotMovementSystem skips its face-the-target override while `SearchEndTime >= 0`.
 
 ### ShootNode
 
-- **Purpose**: Fire weapon at visible target.
-- **Conditions**: `HasTarget && CanSeeTarget && DistanceToTarget <= EngageRange`. Fails otherwise.
-- **Behavior**: First waits `ReactionTime` seconds (returns Running). Then sets fire intent. Returns Success.
-- **Intents**: Sets `DesiredAimPoint` to `LastKnownTargetPos`, sets `WantsToFire = true`.
+- **Purpose**: Fire weapon at visible target with human trigger discipline.
+- **Conditions**: `HasTarget && CanSeeTarget && DistanceToTarget <= EngageRange` (plus
+  the global engagement-radius gate). Reaction is handled tree-wide by the `Alert?`
+  condition, not here.
+- **Behavior**: Strafes (aggression-scaled), sways aim (Perlin), and fires in
+  **bursts** of 2–5 shots (aggression-scaled) with 0.35–0.9 s pauses. Computes
+  `bb.EffectiveAccuracy` = config accuracy × personality × aim-settle ramp
+  (×0.45→×1 over 0.9 s of continuous sight) × moving penalty × recently-hit penalty.
+- **Intents**: Sets `DesiredAimPoint`, `WantsToFire` (only during a burst window).
 
 ### MeleeAttackNode (2026-05-10)
 
@@ -160,19 +183,24 @@ Priority order: Heal > Dodge > Combat (Grenade > Shoot > Chase) > Patrol.
 
 Runs on a **fixed interval** of `PerceptionTickInterval` (0.2 s) per bot, not every frame.
 
-### Detection Sources
+### Detection Sources (humanization pass 2026-07-07)
 
-| Source        | Condition                                                  |
-|---------------|------------------------------------------------------------|
-| Vision        | Distance <= `VisionRange` AND angle <= `VisionAngle/2` AND linecast clear (eye at +1.5 y, target at +1.0 y) |
-| Hearing       | Distance <= `HearingRange` AND player velocity > 0.1       |
-| Damage alert  | `WasDamaged` flag (set externally when bot takes damage)   |
+| Source        | Condition |
+|---------------|-----------|
+| Vision        | In cone (range + angle, or within 2.5 m 360° close-sense) AND linecast clear AND **`VisionAwareness01` reached 1**. Awareness is instant inside 35 % of `VisionRange`, takes 0.15–1.1 s toward the edge, ×1.6 in the peripheral band, ×0.25 if already tracking a target; decays 0.5/s when sight breaks. |
+| Hearing       | Distance <= noise radius: `HearingRange` walking, ×0.45 slow movement, ×2.2 sprinting, and **gunshots** (player fired within last 0.25 s) audible to `GunshotHearingRange` (40 m). |
+| Damage alert  | `WasDamaged` flag (set externally when bot takes damage) |
 
-Detection = vision OR hearing OR damage alert.
+Detection = seen OR heard OR damage alert.
 
 ### Target Memory
 
-When detected, blackboard is updated: `TargetEId`, `LastKnownTargetPos`, `HasTarget`, `CanSeeTarget`, `DistanceToTarget`, `TimeSinceTargetSeen = 0`.
+When detected, blackboard is updated: `TargetEId`, `HasTarget`, `CanSeeTarget`, `DistanceToTarget`, `TimeSinceTargetSeen = 0`.
+
+`LastKnownTargetPos` is **exact only when seen**. Heard/damage contacts store a fuzzed
+position (error: 20 % of distance for movement noise, 10 % for gunshots, 2.5 m flat for
+damage) — no more through-wall GPS pins. Re-acquiring sight after ≥1.2 s unseen resets
+the aim-settle ramp (`AimSettle01 = 0`).
 
 When not detected, `TimeSinceTargetSeen` increments each perception tick. After `TargetMemoryDuration` seconds the target is fully cleared (all tracking fields reset, `ReactionTimer` reset).
 
@@ -190,7 +218,9 @@ Runs every frame after the brain tick.
 - Clamps speed to `ChaseSpeed` maximum.
 - **Roll override**: If `IsRolling`, uses `RollDirection * DodgeConstants.Speed` instead.
 - Applies NavMesh clamping via `ctx.NavMesh.SamplePosition(candidatePos, 1f)`.
-- Updates `FacingDirection` from velocity when moving.
+- Facing: turns toward `LastKnownTargetPos` at `FacingTurnRateDeg` (540°/s) **only when
+  `IsAlert`** and no search is active (SearchNode drives facing itself); otherwise faces
+  the movement direction. Pre-alert bots don't snap-turn to targets they haven't noticed.
 
 ---
 
@@ -200,21 +230,33 @@ Runs every frame, processes three intent flags:
 
 ### Fire
 
-- Checks `WantsToFire` and weapon fire interval cooldown.
-- Computes aim direction from bot position to `DesiredAimPoint`.
+- Checks `WantsToFire`, weapon fire interval, **reload phase and magazine**.
+- Bots consume `AmmoInMagazine` (infinite reserves): empty mag → `WeaponPhase.Reloading`
+  for `Stats.ReloadTime`, then refill. `TickReload` also starts a **tactical reload**
+  when the mag is < 30 % and the target is out of sight. FireForward test turrets opt
+  out of ammo tracking.
+- Accuracy: uses `bb.EffectiveAccuracy` published by ShootNode (settle/movement/pressure
+  adjusted); falls back to raw `config.Accuracy` when unset.
+- Burst bookkeeping: each fired shot decrements `bb.BurstShotsLeft`; when the burst is
+  spent, rolls `bb.NextBurstTime` pause (shorter for aggressive personalities).
 - Spawns `ProjectilesPerShot` projectiles with:
   - **Weapon spread**: `SpreadAngle * 0.5` random yaw per pellet.
-  - **Accuracy spread**: `(1 - Accuracy) * 10` degrees random rotation on both axes.
+  - **Accuracy spread**: `(1 - accuracy) * 10` degrees random rotation on both axes.
 - Projectile spawn position: bot position + 0.5 m forward + 1.2 m up.
 
 ### Heal
 
-- Instantly sets `CurrentHp = MaxHp`.
-- Decrements `MedkitsRemaining`.
+- `ProcessHeal` starts a **2 s cast** (`bb.HealCastEndTime`) and commits the medkit.
+- While casting, HealNode holds the tree in Running: the bot retreats from the threat
+  at 60 % speed and cannot fire — the same punish window a healing player gives.
+- `TickHealCast` applies **`config.HealAmount`** (not full HP; 50 % of max if the
+  config has no amount) when the cast completes.
 
 ### Grenade
 
 - Clamps throw distance to `[GrenadeConstants.MinThrowRange, MaxThrowRange]`.
+- Throw target is scattered around the LKP: 1.5 m base + 0.4 m per unseen-second,
+  capped at 4 m (set in ThrowGrenadeNode).
 - Uses `GrenadeSystem.ComputeThrowVelocity` for ballistic arc.
 - Spawns `GrenadeEntityState` with standard fuse time, damage, and explosion radius.
 - Decrements `GrenadesRemaining`.
@@ -229,6 +271,8 @@ Runs every frame, processes three intent flags:
 2. Creates `BotEntityState` with id, position, patrol waypoints.
 3. Creates `WeaponEntityState` from config (fire interval, damage, speed, spread, pellets).
 4. Sets `MedkitsRemaining` and `GrenadesRemaining` from config.
+4a. Rolls per-spawn **personality**: `ReactionTimeMult` (0.85–1.3), `AccuracyMult`
+    (0.9–1.08), `Aggression` (0.7–1.3) — same-type bots are individuals, not clones.
 5. Adds to `state.Bots` and `state.HealthMap`.
 6. If config has `HelmetDefinitionId` or `BodyArmorDefinitionId`, looks up `ItemDefinition` and creates `ArmorSlotState` in `state.ArmorMap`.
 7. Fires `BotSpawned` event.
@@ -298,6 +342,15 @@ All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never
 | `RunningNodeId`         | int       | Reserved for BT re-entry (not currently used)              |
 | `DebugStatus`           | string    | Human-readable label for current behavior (debug overlay)  |
 | `Trace`                 | BTTrace   | Records each node's BTStatus per tick for debug viz        |
+| `VisionAwareness01`     | float     | Graduated detection accumulator (1 = seen)                 |
+| `IsAlert`               | bool      | Reaction window elapsed — gates combat + target-facing     |
+| `LastCanSeeTime`        | float     | Last ElapsedTime with eyes-on; drives aim-settle reset     |
+| `ReactionTimeMult` / `AccuracyMult` / `Aggression` | float | Per-spawn personality rolls |
+| `BurstShotsLeft` / `NextBurstTime` | int / float | Trigger-discipline burst state           |
+| `AimSettle01` / `EffectiveAccuracy` | float | Aim-settle ramp and published final accuracy    |
+| `HealCastEndTime`       | float     | -1 idle; heal completes at this ElapsedTime                |
+| `ChasePath*`            | —         | NavMesh corner buffer for chase path-following             |
+| `SearchEndTime` / `SearchScanBaseDir` | float / Vector3 | Search-at-LKP scan state             |
 
 ---
 
@@ -319,7 +372,8 @@ All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never
 | `Assets/Scripts/Systems/Bot/BT/BTStatus.cs` | Success / Failure / Running enum |
 | `Assets/Scripts/Systems/Bot/BT/BTTraceExtensions.cs` | Debug trace recording extension |
 | `Assets/Scripts/Systems/Bot/Nodes/PatrolNode.cs` | Waypoint patrol loop |
-| `Assets/Scripts/Systems/Bot/Nodes/ChaseNode.cs` | Move to last known target position |
+| `Assets/Scripts/Systems/Bot/Nodes/ChaseNode.cs` | NavMesh path-follow to last known target position |
+| `Assets/Scripts/Systems/Bot/Nodes/SearchNode.cs` | Scan sweep at lost-contact position, then give up |
 | `Assets/Scripts/Systems/Bot/Nodes/ShootNode.cs` | Aim and fire at visible target |
 | `Assets/Scripts/Systems/Bot/Nodes/DodgeNode.cs` | Lateral dodge roll |
 | `Assets/Scripts/Systems/Bot/Nodes/HealNode.cs` | Emergency / safe heal logic |

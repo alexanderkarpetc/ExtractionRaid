@@ -34,6 +34,13 @@ namespace Systems.Bot
             // Every enemy carries 0-4 bandages so they're easy to scavenge.
             bot.Blackboard.BandagesRemaining = Random.Range(0, 5);
 
+            // Personality: one dice-roll per spawn so bots of the same type aren't clones.
+            // Slow-twitch vs jumpy (reaction), sharp vs sloppy (accuracy), and aggression
+            // (burst length/pause, strafe energy) all vary per individual.
+            bot.Blackboard.ReactionTimeMult = Random.Range(BotConstants.ReactionTimeMultMin, BotConstants.ReactionTimeMultMax);
+            bot.Blackboard.AccuracyMult     = Random.Range(BotConstants.AccuracyMultMin,     BotConstants.AccuracyMultMax);
+            bot.Blackboard.Aggression       = Random.Range(BotConstants.AggressionMin,       BotConstants.AggressionMax);
+
             state.Bots.Add(bot);
             state.HealthMap[id] = HealthState.Create(config.MaxHp);
 

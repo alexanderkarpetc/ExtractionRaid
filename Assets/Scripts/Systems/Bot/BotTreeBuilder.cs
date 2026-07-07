@@ -89,13 +89,21 @@ namespace Systems.Bot
                     engageBranch.Add(new ShootNode());
 
                 if (config.Has(BotBehaviorFlags.Chase))
+                {
                     engageBranch.Add(new ChaseNode());
+                    // Chase fails at the last-known-position when the target isn't
+                    // visible — SearchNode takes over (scan around, then give up)
+                    // instead of the old freeze-until-memory-expires statue.
+                    engageBranch.Add(new SearchNode());
+                }
 
                 if (engageBranch.Count > 0)
                     combatBranches.Add(new BTSelector("Engage", engageBranch.ToArray()));
 
+                // Alert? — reaction gate. Until the reaction window elapses the bot
+                // hasn't "noticed" yet: no chasing, no shooting, no snap-to-target.
                 branches.Add(new BTSequence("Combat",
-                    new BTCondition("HasTarget?", (bot, _, _) => bot.Blackboard.HasTarget),
+                    new BTCondition("Alert?", (bot, _, _) => bot.Blackboard.HasTarget && bot.Blackboard.IsAlert),
                     new BTSelector("Tactics", combatBranches.ToArray())
                 ));
             }

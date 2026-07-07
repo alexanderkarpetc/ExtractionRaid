@@ -49,7 +49,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void Tick_BotWantsToHeal_HealsToFullAndConsumesMedkit()
+        public void Tick_BotWantsToHeal_StartsCastThenHealsByAmount()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
             var events = new FakeRaidEvents();
@@ -65,10 +65,62 @@ namespace Tests.EditMode
 
             BotCombatSystem.Tick(state, in ctx);
 
-            Assert.AreEqual(hp.MaxHp, hp.CurrentHp, 0.01f, "Should heal to full HP");
+            // Cast started: medkit committed, HP not applied yet — vulnerability window.
             Assert.AreEqual(medkitsBefore - 1, bot.Blackboard.MedkitsRemaining);
+            Assert.GreaterOrEqual(bot.Blackboard.HealCastEndTime, 0f, "Heal cast should be running");
+            Assert.AreEqual(50f, hp.CurrentHp, 0.01f, "HP applies at cast end, not instantly");
+
+            // Cast completes: heals by HealAmount (30), not to full.
+            bot.WantsToHeal = false;
+            state.ElapsedTime = bot.Blackboard.HealCastEndTime + 0.1f;
+            BotCombatSystem.Tick(state, in ctx);
+
+            var config = Constants.BotConstants.GetConfig("PMC");
+            Assert.AreEqual(50f + config.HealAmount, hp.CurrentHp, 0.01f,
+                "Should heal by HealAmount, not snap to full");
+            Assert.Less(bot.Blackboard.HealCastEndTime, 0f, "Cast state should clear");
             Assert.AreEqual(0f, bot.Blackboard.TimeSinceTargetSeen,
                 "Should reset target memory so bot doesn't lose target after healing");
+        }
+
+        [Test]
+        public void Tick_EmptyMagazine_StartsReloadInsteadOfFiring()
+        {
+            var state = CreateStateWithBotWantingToFire();
+            var bot = state.Bots[0];
+            bot.Weapon.AmmoInMagazine = 0;
+            var ctx = TestContextFactory.Create();
+
+            BotCombatSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(0, state.Projectiles.Count, "Empty mag must not fire");
+            Assert.AreEqual(WeaponPhase.Reloading, bot.Weapon.Phase);
+
+            // Reload completes after ReloadTime → mag refilled, firing resumes.
+            state.ElapsedTime = bot.Weapon.PhaseStartTime + bot.Weapon.Stats.ReloadTime + 0.1f;
+            BotCombatSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(WeaponPhase.Ready, bot.Weapon.Phase);
+            Assert.AreEqual(bot.Weapon.Stats.MagazineSize, bot.Weapon.AmmoInMagazine + state.Projectiles.Count,
+                "Mag refills to full, then the queued shot fires");
+            Assert.GreaterOrEqual(state.Projectiles.Count, 1, "Bot fires again after reloading");
+        }
+
+        [Test]
+        public void Tick_FiringConsumesAmmo_AndCountsDownBurst()
+        {
+            var state = CreateStateWithBotWantingToFire();
+            var bot = state.Bots[0];
+            int ammoBefore = bot.Weapon.AmmoInMagazine;
+            bot.Blackboard.BurstShotsLeft = 1;
+            var ctx = TestContextFactory.Create();
+
+            BotCombatSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(ammoBefore - 1, bot.Weapon.AmmoInMagazine);
+            Assert.AreEqual(0, bot.Blackboard.BurstShotsLeft);
+            Assert.Greater(bot.Blackboard.NextBurstTime, state.ElapsedTime,
+                "Burst spent → pause before the next burst");
         }
 
         [Test]

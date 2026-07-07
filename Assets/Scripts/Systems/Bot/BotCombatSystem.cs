@@ -19,8 +19,11 @@ namespace Systems.Bot
                 if (!BotConstants.TryGetConfig(bot.TypeId, out var config))
                     continue;
 
+                TickReload(bot, state, in config);
+                TickHealCast(bot, hp, state, in config);
+
                 if (bot.WantsToHeal)
-                    ProcessHeal(bot, hp, config);
+                    ProcessHeal(bot, state, in config);
 
                 // Stagger lockout (B.4): bot cannot fire while staggered. Headshots are
                 // longest stagger — gives player meaningful counter-play. AI keeps WantsToFire
@@ -57,17 +60,74 @@ namespace Systems.Bot
                 attackerId: bot.Id, hitPoint: hitPoint, hitDirection: hitDir, in ctx);
         }
 
-        static void ProcessHeal(BotEntityState bot, HealthState hp, in BotTypeConfig config)
+        /// <summary>
+        /// Magazine + reload state for bot weapons (infinite reserves). Runs every tick
+        /// so a reload completes even when the bot isn't trying to fire. Also starts a
+        /// tactical reload when the mag runs low and the target is out of sight — like
+        /// a player topping up between peeks. FireForward test turrets opt out.
+        /// </summary>
+        static void TickReload(BotEntityState bot, RaidState state, in BotTypeConfig config)
         {
-            hp.CurrentHp = hp.MaxHp;
-            bot.Blackboard.MedkitsRemaining--;
-            bot.Blackboard.TimeSinceTargetSeen = 0f;
+            var weapon = bot.Weapon;
+            if (weapon == null || config.Has(BotBehaviorFlags.FireForward)) return;
+            if (weapon.Stats.MagazineSize <= 0) return; // legacy/degenerate stats → infinite mag
+
+            if (weapon.Phase == WeaponPhase.Reloading)
+            {
+                if (state.ElapsedTime - weapon.PhaseStartTime >= weapon.Stats.ReloadTime)
+                {
+                    weapon.AmmoInMagazine = weapon.Stats.MagazineSize;
+                    weapon.Phase = WeaponPhase.Ready;
+                    weapon.PhaseStartTime = state.ElapsedTime;
+                }
+                return;
+            }
+
+            var bb = bot.Blackboard;
+            bool magEmpty = weapon.AmmoInMagazine <= 0;
+            bool lowAndSafe = weapon.AmmoInMagazine < weapon.Stats.MagazineSize * BotConstants.TacticalReloadFraction
+                              && !bb.CanSeeTarget;
+            if (magEmpty || lowAndSafe)
+            {
+                weapon.Phase = WeaponPhase.Reloading;
+                weapon.PhaseStartTime = state.ElapsedTime;
+            }
+        }
+
+        /// <summary>
+        /// Completes a running heal cast (started by ProcessHeal). Heals by
+        /// config.HealAmount — not to full — so a mag-dumped bot stays hurt.
+        /// </summary>
+        static void TickHealCast(BotEntityState bot, HealthState hp, RaidState state, in BotTypeConfig config)
+        {
+            var bb = bot.Blackboard;
+            if (bb.HealCastEndTime < 0f || state.ElapsedTime < bb.HealCastEndTime) return;
+
+            float amount = config.HealAmount > 0f ? config.HealAmount : hp.MaxHp * 0.5f;
+            hp.CurrentHp = Mathf.Min(hp.MaxHp, hp.CurrentHp + amount);
+            bb.HealCastEndTime = -1f;
+            bb.TimeSinceTargetSeen = 0f;
+        }
+
+        static void ProcessHeal(BotEntityState bot, RaidState state, in BotTypeConfig config)
+        {
+            var bb = bot.Blackboard;
+            if (bb.HealCastEndTime >= 0f) return; // already casting
+
+            // Commit the medkit up front and start the cast; HealNode holds the bot in
+            // a retreating, non-firing state until TickHealCast applies the HP.
+            bb.HealCastEndTime = state.ElapsedTime + BotConstants.HealCastTime;
+            bb.MedkitsRemaining--;
         }
 
         static void ProcessFire(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)
         {
             var weapon = bot.Weapon;
             if (weapon == null) return;
+
+            if (weapon.Phase == WeaponPhase.Reloading) return;
+            bool tracksAmmo = !config.Has(BotBehaviorFlags.FireForward) && weapon.Stats.MagazineSize > 0;
+            if (tracksAmmo && weapon.AmmoInMagazine <= 0) return; // TickReload starts the reload
 
             if (state.ElapsedTime - weapon.LastFireTime < weapon.Stats.FireInterval) return;
 
@@ -80,7 +140,12 @@ namespace Systems.Bot
             var count = Mathf.Max(1, weapon.Stats.ProjectilesPerShot);
             var halfSpread = weapon.Stats.SpreadAngle * 0.5f;
 
-            float accuracySpread = (1f - config.Accuracy) * 10f;
+            // ShootNode publishes settle/movement/pressure-adjusted accuracy; nodes that
+            // bypass it (FireForward, tests setting WantsToFire directly) fall back to raw config.
+            float accuracy = bot.Blackboard.EffectiveAccuracy > 0f
+                ? bot.Blackboard.EffectiveAccuracy
+                : config.Accuracy;
+            float accuracySpread = (1f - accuracy) * 10f;
 
             // Bleed parity з player: bots не consume ammo, але читаємо BleedChance з compatible
             // AmmoType (Ammo_Rifle / Ammo_EnergyCell) щоб baseline 5% з ItemDefinition застосовувався
@@ -131,6 +196,21 @@ namespace Systems.Bot
             }
 
             weapon.LastFireTime = state.ElapsedTime;
+
+            if (tracksAmmo)
+                weapon.AmmoInMagazine--;
+
+            // Burst bookkeeping: count the shot; when the burst is spent, roll the pause
+            // before the next one (aggressive personalities pause less).
+            var bb = bot.Blackboard;
+            if (bb.BurstShotsLeft > 0)
+            {
+                bb.BurstShotsLeft--;
+                if (bb.BurstShotsLeft <= 0)
+                    bb.NextBurstTime = state.ElapsedTime
+                        + Random.Range(BotConstants.BurstPauseMin, BotConstants.BurstPauseMax)
+                          / Mathf.Max(0.1f, bb.Aggression);
+            }
         }
 
         static void ProcessThrowGrenade(BotEntityState bot, RaidState state, in RaidContext ctx)

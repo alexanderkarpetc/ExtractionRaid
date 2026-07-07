@@ -12,6 +12,17 @@ namespace State
         public float DistanceToTarget;
         public float TimeSinceTargetSeen;
 
+        // Graduated perception — humans don't detect targets instantly at range.
+        // VisionAwareness01 accumulates while the player is in cone+LoS (rate scales with
+        // distance/peripheral angle) and decays when not. Target counts as "seen" at 1.
+        public float VisionAwareness01;
+        // Reaction gate: true once ReactionTimer passed the per-bot threshold. Gates the
+        // whole response chain (facing, chase, fire) — not just the first shot.
+        public bool IsAlert;
+        // ElapsedTime when CanSeeTarget was last true — drives aim-settle reset after
+        // the target re-appears from behind cover.
+        public float LastCanSeeTime = -999f;
+
         // Patrol
         public Vector3[] PatrolWaypoints;
         public int PatrolWaypointIndex;
@@ -43,6 +54,35 @@ namespace State
         public float StrafeChangeTime;      // ElapsedTime at which to flip strafe direction
         public float AimSwaySeed;           // per-bot phase offset for aim-sway noise
 
+        // Personality — rolled once per spawn so each bot is an individual, not a clone
+        public float ReactionTimeMult = 1f; // scales config.ReactionTime
+        public float AccuracyMult    = 1f;  // scales config.Accuracy
+        public float Aggression      = 1f;  // scales burst length up / burst pause down / strafe speed
+
+        // Trigger discipline — bots fire in bursts with pauses, not a continuous stream
+        public int   BurstShotsLeft;        // shots remaining in current burst (0 = between bursts)
+        public float NextBurstTime;         // ElapsedTime at which the next burst may start
+
+        // Aim settle — accuracy ramps up over AimSettleTime after target (re)appears
+        public float AimSettle01;
+        // Effective accuracy computed by ShootNode (settle/movement/pressure applied);
+        // 0 = unset → BotCombatSystem falls back to raw config.Accuracy.
+        public float EffectiveAccuracy;
+
+        // Heal cast — medkit takes time; bot is vulnerable (retreats, can't fire) while it runs
+        public float HealCastEndTime = -1f; // -1 = idle; ElapsedTime at which heal completes
+
+        // Chase path-following: NavMesh corners toward LastKnownTargetPos
+        public Vector3[] ChasePathCorners;
+        public int ChasePathCornerCount;
+        public int ChasePathCornerIndex;
+        public float ChaseRepathTimer;
+        public Vector3 ChasePathTarget;     // LKP snapshot the cached path was computed for
+
+        // Search at last-known-position after losing the target
+        public float SearchEndTime = -1f;   // -1 = idle
+        public Vector3 SearchScanBaseDir;   // facing captured at search start; scan oscillates around it
+
         // Dodge state
         public bool IsDodging;
         public Vector3 DodgeDirection;
@@ -67,6 +107,31 @@ namespace State
         public string DebugStatus;
         public BTTrace Trace;
 
+        /// <summary>
+        /// Forget the current target and all engagement-scoped state. Used by
+        /// BotPerceptionSystem when target memory expires and by SearchNode when
+        /// the bot gives up searching.
+        /// </summary>
+        public void ClearTarget()
+        {
+            HasTarget = false;
+            TargetEId = EId.None;
+            CanSeeTarget = false;
+            DistanceToTarget = float.MaxValue;
+            TimeSinceTargetSeen = float.MaxValue;
+            ReactionTimer = 0f;
+            VisionAwareness01 = 0f;
+            IsAlert = false;
+            AimSettle01 = 0f;
+            EffectiveAccuracy = 0f;
+            BurstShotsLeft = 0;
+            NextBurstTime = 0f;
+            ChasePathCornerCount = 0;
+            ChasePathCornerIndex = 0;
+            ChaseRepathTimer = 0f;
+            SearchEndTime = -1f;
+        }
+
         public void Reset()
         {
             TargetEId = EId.None;
@@ -75,6 +140,9 @@ namespace State
             CanSeeTarget = false;
             DistanceToTarget = float.MaxValue;
             TimeSinceTargetSeen = float.MaxValue;
+            VisionAwareness01 = 0f;
+            IsAlert = false;
+            LastCanSeeTime = -999f;
             PatrolWaypointIndex = 0;
             PatrolWaitTimer = 0f;
             PatrolWaitDuration = 0f;
@@ -94,6 +162,20 @@ namespace State
             StrafeDirection = 0;
             StrafeChangeTime = 0f;
             AimSwaySeed = 0f;
+            ReactionTimeMult = 1f;
+            AccuracyMult = 1f;
+            Aggression = 1f;
+            BurstShotsLeft = 0;
+            NextBurstTime = 0f;
+            AimSettle01 = 0f;
+            EffectiveAccuracy = 0f;
+            HealCastEndTime = -1f;
+            ChasePathCornerCount = 0;
+            ChasePathCornerIndex = 0;
+            ChaseRepathTimer = 0f;
+            ChasePathTarget = Vector3.zero;
+            SearchEndTime = -1f;
+            SearchScanBaseDir = Vector3.zero;
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;

@@ -26,13 +26,8 @@ namespace Systems.Bot.Nodes
             if (ctx.BotEngagementConfig.Enabled && maxR > 0f && bb.DistanceToTarget > maxR)
                 return this.Traced(bot, BTStatus.Failure);
 
-            float reactionThreshold = config.ReactionTime + bb.ReactionJitter;
-            if (bb.ReactionTimer < reactionThreshold)
-            {
-                bb.DebugStatus = "Reacting...";
-                bb.ReactionTimer += ctx.DeltaTime;
-                return this.Traced(bot, BTStatus.Running);
-            }
+            // Reaction is gated tree-wide by the "Alert?" condition (see BotTreeBuilder);
+            // by the time this node runs the bot has already noticed the target.
 
             // Lateral axis relative to the target — both strafe and aim sway use it.
             var toTarget = bb.LastKnownTargetPos - bot.Position;
@@ -57,7 +52,8 @@ namespace Systems.Bot.Nodes
                 bb.StrafeChangeTime = state.ElapsedTime
                     + Random.Range(BotConstants.ShootStrafeMinDuration, BotConstants.ShootStrafeMaxDuration);
             }
-            bot.DesiredVelocity = perp * (bb.StrafeDirection * config.ChaseSpeed * BotConstants.ShootStrafeSpeedFraction);
+            bot.DesiredVelocity = perp * (bb.StrafeDirection * config.ChaseSpeed
+                                          * BotConstants.ShootStrafeSpeedFraction * bb.Aggression);
 
             // Aim sway: slow Perlin-noise lateral wobble around LastKnownTargetPos. Combined
             // with existing per-pellet accuracy spread it gives a "tracking, not snapping"
@@ -68,8 +64,39 @@ namespace Systems.Bot.Nodes
             var swayOffset = perp * (swayX * BotConstants.AimSwayAmplitude)
                            + Vector3.up * (swayZ * BotConstants.AimSwayAmplitude * 0.5f);
 
-            bb.DebugStatus = "Shoot";
+            // Aim settle: accuracy ramps up while the target stays visible. Reset on
+            // re-acquisition happens in BotPerceptionSystem (LastCanSeeTime gap check).
+            bb.AimSettle01 = Mathf.Min(1f, bb.AimSettle01 + ctx.DeltaTime / BotConstants.AimSettleTime);
+
+            // Effective accuracy = base * personality * settle * movement * pressure.
+            // BotCombatSystem reads this instead of raw config.Accuracy (0 = unset).
+            float acc = config.Accuracy * bb.AccuracyMult;
+            acc *= Mathf.Lerp(BotConstants.AimSettleStartAccuracyMult, 1f, bb.AimSettle01);
+            if (bot.Velocity.magnitude > BotConstants.MovingAccuracySpeedThreshold)
+                acc *= BotConstants.MovingAccuracyMult;
+            if (state.ElapsedTime - bb.LastDamageTime < BotConstants.RecentDamageAccuracyWindow)
+                acc *= BotConstants.RecentDamageAccuracyMult;
+            bb.EffectiveAccuracy = Mathf.Clamp01(acc);
+
             bot.DesiredAimPoint = bb.LastKnownTargetPos + swayOffset;
+
+            // Trigger discipline: fire in bursts with pauses instead of a continuous
+            // stream. Aggressive bots run longer bursts and shorter pauses. The shot
+            // countdown/pause rolls live in BotCombatSystem where shots actually fire.
+            if (bb.BurstShotsLeft <= 0 && state.ElapsedTime < bb.NextBurstTime)
+            {
+                bb.DebugStatus = "Shoot (pause)";
+                return this.Traced(bot, BTStatus.Running);
+            }
+
+            if (bb.BurstShotsLeft <= 0)
+            {
+                float burst = Random.Range(BotConstants.BurstShotsMin, BotConstants.BurstShotsMax + 1)
+                              * bb.Aggression;
+                bb.BurstShotsLeft = Mathf.Max(1, Mathf.RoundToInt(burst));
+            }
+
+            bb.DebugStatus = "Shoot";
             bot.WantsToFire = true;
             return this.Traced(bot, BTStatus.Success);
         }

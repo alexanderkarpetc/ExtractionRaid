@@ -60,12 +60,78 @@ namespace Tests.EditMode
             bot.Blackboard.CanSeeTarget = true;
             bot.Blackboard.DistanceToTarget = 40f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
-            bot.Blackboard.ReactionTimer = 0f;
+            bot.Blackboard.ReactionTimer = 999f;
             var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
 
             Assert.IsTrue(bot.DesiredVelocity.z < 0f, "Bot should move toward player (negative Z)");
+        }
+
+        [Test]
+        public void Tick_ReactionWindowNotElapsed_NoCombatResponse()
+        {
+            // Reaction gates the whole chain — no chasing, no firing, until it elapses.
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 0f;
+            var ctx = TestContextFactory.Create();
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bot.WantsToFire, "Bot should not fire before reacting");
+            Assert.IsFalse(bot.Blackboard.IsAlert);
+        }
+
+        [Test]
+        public void Tick_ReactionAccumulates_ThenBotEngages()
+        {
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimeMult = 1f; // pin the spawn-rolled personality
+            bot.Blackboard.ReactionJitter = 0f;
+            var ctx = TestContextFactory.Create(deltaTime: 0.5f);
+
+            BotBrainSystem.Tick(state, in ctx); // 0.5 s < 0.8 s Scav reaction
+            Assert.IsFalse(bot.WantsToFire);
+
+            BotBrainSystem.Tick(state, in ctx); // 1.0 s ≥ 0.8 s
+            Assert.IsTrue(bot.Blackboard.IsAlert, "Reaction window elapsed → alert");
+            Assert.IsTrue(bot.WantsToFire);
+        }
+
+        [Test]
+        public void Tick_ArrivedAtLastKnownPos_SearchesThenGivesUp()
+        {
+            // Target unseen and bot standing on the last known position → search scan,
+            // then forget the target instead of freezing until memory expiry.
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = false;
+            bot.Blackboard.LastKnownTargetPos = bot.Position;
+            bot.Blackboard.ReactionTimer = 999f;
+            bot.Blackboard.TimeSinceTargetSeen = 1f;
+            var ctx = TestContextFactory.Create();
+
+            BotBrainSystem.Tick(state, in ctx);
+            Assert.AreEqual("Search", bot.Blackboard.DebugStatus);
+            Assert.GreaterOrEqual(bot.Blackboard.SearchEndTime, 0f);
+
+            state.ElapsedTime = bot.Blackboard.SearchEndTime + 0.1f;
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bot.Blackboard.HasTarget, "Bot should give up and forget the target");
         }
 
         [Test]
