@@ -57,9 +57,10 @@ namespace Tests.EditMode
             var inv = new InventoryState();
             inv.Backpack[0] = ItemState.Create(new EId(50), "Ammo_Rifle", 40);
 
-            var s = WeaponLoadoutSummary.Build(w, _registry, inv);
+            var s = WeaponLoadoutSummary.Build(w, _registry, inv, loadedRounds: 12);
 
             Assert.AreEqual(40, s.AmmoReserve);
+            Assert.AreEqual(12, s.AmmoLoaded); // comes from the passed live count, not the config's 20
             StringAssert.Contains("Rifle", s.AmmoName); // resolved display name (e.g. "Rifle Ammo")
             Assert.AreEqual(1, s.Mods.Count);
             Assert.AreEqual("Magazine", s.Mods[0].Slot);
@@ -69,8 +70,9 @@ namespace Tests.EditMode
         [Test]
         public void Build_NoAmmoNoMods_ReserveZeroEmpty()
         {
-            var s = WeaponLoadoutSummary.Build(Weapon(), _registry, new InventoryState());
+            var s = WeaponLoadoutSummary.Build(Weapon(), _registry, new InventoryState(), loadedRounds: 20);
             Assert.AreEqual(0, s.AmmoReserve);
+            Assert.AreEqual(20, s.AmmoLoaded); // magazine still loaded even with 0 reserve
             Assert.AreEqual(0, s.Mods.Count);
             StringAssert.Contains("Rifle", s.AmmoName); // ammo type still resolved even with 0 reserve
         }
@@ -78,8 +80,9 @@ namespace Tests.EditMode
         [Test]
         public void Build_NonWeapon_Empty()
         {
-            var s = WeaponLoadoutSummary.Build(ItemState.Create(new EId(2), "Medkit"), _registry, new InventoryState());
+            var s = WeaponLoadoutSummary.Build(ItemState.Create(new EId(2), "Medkit"), _registry, new InventoryState(), loadedRounds: 20);
             Assert.AreEqual(0, s.AmmoReserve);
+            Assert.AreEqual(0, s.AmmoLoaded); // non-weapon ignores the passed loaded count
             Assert.AreEqual(0, s.Mods.Count);
             Assert.AreEqual(string.Empty, s.AmmoName);
         }

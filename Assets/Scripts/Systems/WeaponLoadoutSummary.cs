@@ -23,27 +23,36 @@ namespace Systems
         public readonly struct Summary
         {
             public readonly string AmmoName;    // display name (e.g. "Rifle Ammo"); empty if unknown
+            public readonly int AmmoLoaded;     // rounds currently in the weapon's magazine
             public readonly int AmmoReserve;    // player's reserve count of that ammo type
             public readonly IReadOnlyList<ModEntry> Mods;
 
-            public Summary(string ammoName, int ammoReserve, IReadOnlyList<ModEntry> mods)
+            public Summary(string ammoName, int ammoLoaded, int ammoReserve, IReadOnlyList<ModEntry> mods)
             {
                 AmmoName = ammoName ?? string.Empty;
+                AmmoLoaded = ammoLoaded;
                 AmmoReserve = ammoReserve;
                 Mods = mods ?? Array.Empty<ModEntry>();
             }
         }
 
-        public static Summary Build(ItemState weapon, ICoreDefinitionRegistry registry, InventoryState playerInventory)
+        /// <param name="loadedRounds">
+        /// Rounds in the magazine. The caller supplies this because the LIVE count of an equipped
+        /// weapon lives in the runtime <c>WeaponEntityState.Hotbar</c> (the config's stored value
+        /// is stale mid-raid); for loot/backpack weapons it's the config's AmmoInMagazine.
+        /// </param>
+        public static Summary Build(ItemState weapon, ICoreDefinitionRegistry registry,
+                                    InventoryState playerInventory, int loadedRounds)
         {
             string ammoName = string.Empty;
             int reserve = 0;
             var mods = new List<ModEntry>();
 
             if (weapon == null || !weapon.HasWeaponConfiguration)
-                return new Summary(ammoName, reserve, mods);
+                return new Summary(ammoName, 0, reserve, mods);
 
             var cfg = weapon.WeaponConfiguration;
+            int loaded = loadedRounds;
 
             // Ammo type is a property of the payload core.
             if (registry != null
@@ -72,7 +81,7 @@ namespace Systems
                 }
             }
 
-            return new Summary(ammoName, reserve, mods);
+            return new Summary(ammoName, loaded, reserve, mods);
         }
     }
 }

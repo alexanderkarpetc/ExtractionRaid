@@ -172,7 +172,7 @@ namespace View.UI.Compare
         // Non-stat loadout footer per column: ammo type + player reserve (red when 0) + installed mods.
         void AppendLoadout(VisualElement col, ItemState item, ICoreDefinitionRegistry reg)
         {
-            var s = WeaponLoadoutSummary.Build(item, reg, App.Instance?.Player?.Inventory);
+            var s = WeaponLoadoutSummary.Build(item, reg, App.Instance?.Player?.Inventory, LoadedRounds(item));
 
             var div = new VisualElement();
             div.AddToClassList("wc-divider");
@@ -187,9 +187,11 @@ namespace View.UI.Compare
             var ammoName = new Label(string.IsNullOrEmpty(s.AmmoName) ? "—" : s.AmmoName);
             ammoName.AddToClassList("wc-value");
             ammoRow.Add(ammoName);
-            var reserve = new Label("×" + s.AmmoReserve);
+            // Loaded / reserve (like the HUD ammo counter); red only when the weapon truly
+            // can't fire — nothing chambered AND no reserve.
+            var reserve = new Label(s.AmmoLoaded + " / " + s.AmmoReserve);
             reserve.AddToClassList("wc-reserve");
-            if (s.AmmoReserve <= 0) reserve.AddToClassList("wc-reserve--empty");
+            if (s.AmmoLoaded + s.AmmoReserve <= 0) reserve.AddToClassList("wc-reserve--empty");
             ammoRow.Add(reserve);
             col.Add(ammoRow);
 
@@ -218,6 +220,26 @@ namespace View.UI.Compare
             }
             modsRow.Add(chips);
             col.Add(modsRow);
+        }
+
+        // Live rounds in the weapon's magazine: for an equipped weapon read the runtime Hotbar
+        // entry (the config value goes stale as you fire); otherwise the config's stored count.
+        static int LoadedRounds(ItemState weapon)
+        {
+            if (weapon == null || !weapon.HasWeaponConfiguration) return 0;
+            var inv = App.Instance?.Player?.Inventory;
+            var entity = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+            if (inv != null && entity?.Hotbar != null)
+            {
+                for (int i = 0; i < inv.WeaponSlots.Length && i < entity.Hotbar.Length; i++)
+                {
+                    if (!ReferenceEquals(inv.WeaponSlots[i], weapon)) continue;
+                    var rt = entity.Hotbar[i];
+                    if (rt != null) return rt.AmmoInMagazine; // live magazine
+                    break;
+                }
+            }
+            return weapon.WeaponConfiguration.AmmoInMagazine; // loot / backpack (not equipped)
         }
 
         void AppendHeader(VisualElement col, ItemState item, ICoreDefinitionRegistry reg, string tag)
