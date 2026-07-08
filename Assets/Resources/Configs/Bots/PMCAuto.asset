@@ -10,12 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6182647053cc70479189d48153a00a6, type: 3}
-  m_Name: PMC
+  m_Name: PMCAuto
   m_EditorClassIdentifier: Game::Constants.BotTypeConfigAsset
   _typeId: PMC
   _shellPrefabId: BotShell
   _bodyPrefab: {fileID: 1612062852821883575, guid: 7207586e38ebd104d8e73bccf905c8dc, type: 3}
-  _weapon: 1
+  _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
+  _delivery: {fileID: 11400000, guid: 3a80c2b7e30c84ee888ff3f9d4185ccd, type: 2}
+  _exotic: {fileID: 0}
+  _weaponRarity: 0
+  _magazineAmmo: 30
   _maxHp: 100
   _healAmount: 30
   _healThreshold: 0.5

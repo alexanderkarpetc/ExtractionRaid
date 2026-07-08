@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace Constants
 {
-    public enum BotWeaponPreset
-    {
-        Pistol,
-        Rifle,
-        Shotgun,
-    }
-
     [CreateAssetMenu(fileName = "BotTypeConfig", menuName = "Bots/Bot Type Config")]
     public class BotTypeConfigAsset : ScriptableObject
     {
@@ -22,7 +15,18 @@ namespace Constants
         [SerializeField] GameObject _bodyPrefab;
 
         [Header("Weapon")]
-        [SerializeField] BotWeaponPreset _weapon = BotWeaponPreset.Rifle;
+        [Tooltip("Payload core — the projectile/ammo nature (Ballistic, Laser, ...). Drives damage, " +
+                 "penetration, bleed, headshot multiplier. Leave null to fall back to Ballistic Round.")]
+        [SerializeField] PayloadCoreDefinition _payload;
+        [Tooltip("Delivery core — the firing mechanism (Single-Action, Auto, Scatter, ...). Drives fire " +
+                 "rate, spread, magazine size, recoil. Leave null to fall back to Auto.")]
+        [SerializeField] DeliveryCoreDefinition _delivery;
+        [Tooltip("Optional Exotic mod. Leave null for none.")]
+        [SerializeField] ExoticModDefinition _exotic;
+        [Tooltip("Rarity tier applied to both cores (visual-only until per-tier stats are authored).")]
+        [SerializeField] RarityTier _weaponRarity = RarityTier.Common;
+        [Tooltip("Rounds loaded in the magazine at spawn.")]
+        [SerializeField] int _magazineAmmo = 30;
 
         [Header("Health")]
         [SerializeField] float _maxHp = 100f;
@@ -80,7 +84,7 @@ namespace Constants
             return new BotTypeConfig(
                 typeId: _typeId,
                 prefabId: _shellPrefabId,
-                weaponConfig: BotConstants.GetWeaponPreset(_weapon),
+                weaponConfig: BuildWeaponConfig(),
                 bodyPrefabId: _bodyPrefab != null ? _bodyPrefab.name : "CharacterBody",
                 maxHp: _maxHp,
                 healAmount: _healAmount,
@@ -112,6 +116,25 @@ namespace Constants
                 helmetDefinitionId: string.IsNullOrEmpty(_helmetDefinitionId) ? null : _helmetDefinitionId,
                 bodyArmorDefinitionId: string.IsNullOrEmpty(_bodyArmorDefinitionId) ? null : _bodyArmorDefinitionId,
                 behaviors: _behaviors);
+        }
+
+        // Composes the bot's weapon from the chosen Payload + Delivery cores — same
+        // WeaponConfiguration the player's Weapon Builder produces, so bot weapon stats
+        // flow through the identical assembly pipeline. Null cores fall back to a plain
+        // Ballistic + Auto rifle so a half-authored asset still spawns a functional bot.
+        WeaponConfiguration BuildWeaponConfig()
+        {
+            string payloadId  = _payload  != null ? _payload.Id  : "BallisticRound";
+            string deliveryId = _delivery != null ? _delivery.Id : "Auto";
+            ExoticModInstance? exotic = _exotic != null
+                ? new ExoticModInstance(_exotic.Id)
+                : (ExoticModInstance?)null;
+
+            return new WeaponConfiguration(
+                payload:        new PayloadCoreInstance(payloadId, _weaponRarity),
+                delivery:       new DeliveryCoreInstance(deliveryId, _weaponRarity),
+                exotic:         exotic,
+                ammoInMagazine: _magazineAmmo);
         }
 
         public void ApplyToRegistry()

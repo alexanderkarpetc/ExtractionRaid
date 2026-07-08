@@ -10,43 +10,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6182647053cc70479189d48153a00a6, type: 3}
-  m_Name: Scav
+  m_Name: PMCShotGun
   m_EditorClassIdentifier: Game::Constants.BotTypeConfigAsset
-  _typeId: Scav
+  _typeId: PMC
   _shellPrefabId: BotShell
-  _bodyPrefab: {fileID: 1612062852821883575, guid: d5b06130063e44a518996bc34d8c8e2e, type: 3}
+  _bodyPrefab: {fileID: 1612062852821883575, guid: 9d0d61df40acd69429169b5298c9b066, type: 3}
   _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
-  _delivery: {fileID: 11400000, guid: 0b858c1acb1a84316b516707412f2a6b, type: 2}
+  _delivery: {fileID: 11400000, guid: 210b0f10101e442f9800dfab755267a6, type: 2}
   _exotic: {fileID: 0}
-  _weaponRarity: 0
+  _weaponRarity: 2
   _magazineAmmo: 30
-  _maxHp: 80
-  _healAmount: 0
-  _healThreshold: 0
-  _healCooldown: 0
+  _maxHp: 100
+  _healAmount: 30
+  _healThreshold: 0.5
+  _healCooldown: 15
   _emergencyHealThreshold: 0.3
   _emergencyHealDelay: 1.5
   _emergencyHealCooldown: 8
   _healSafeDelay: 3
   _healSafeEnemyDistance: 10
-  _medkitCount: 0
-  _moveSpeed: 3.5
-  _patrolSpeed: 2
-  _chaseSpeed: 4
-  _visionRange: 25
-  _visionAngle: 110
+  _medkitCount: 2
+  _moveSpeed: 4.5
+  _patrolSpeed: 2.5
+  _chaseSpeed: 5
+  _visionRange: 35
+  _visionAngle: 120
   _hearingRange: 6
-  _targetMemoryDuration: 5
-  _reactionTime: 0.8
-  _accuracy: 0.5
-  _engageRange: 20
-  _dodgeCooldown: 0
-  _grenadeCount: 0
-  _grenadeCooldown: 0
+  _targetMemoryDuration: 8
+  _reactionTime: 0.4
+  _accuracy: 0.75
+  _engageRange: 28
+  _dodgeCooldown: 5
+  _grenadeCount: 2
+  _grenadeCooldown: 20
   _grenadeMinThrowDist: 5
   _meleeAttackRadius: 1.5
   _meleeAttackDamage: 10
   _meleeAttackCooldown: 1
   _helmetDefinitionId: Helmet_Basic
-  _bodyArmorDefinitionId: 
-  _behaviors: 7
+  _bodyArmorDefinitionId: Armor_Basic
+  _behaviors: 119

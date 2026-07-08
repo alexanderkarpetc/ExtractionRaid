@@ -2244,10 +2244,10 @@ PrefabInstance:
     - target: {fileID: 1602644184442492092, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: config
       value: 
-      objectReference: {fileID: 11400000, guid: 9a1c4b7e5a2f4d0c9b3e1a8d4f6c0a02, type: 2}
+      objectReference: {fileID: 11400000, guid: eae5beea062dbde40a97ecffbc3a10e0, type: 2}
     - target: {fileID: 7023478828007979222, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: m_Name
-      value: BotSpawnPoint (1)
+      value: SpawnPointPMCShotgun
       objectReference: {fileID: 0}
     - target: {fileID: 7023478828007979222, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: m_IsActive
@@ -4291,11 +4291,11 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 9a1c4b7e5a2f4d0c9b3e1a8d4f6c0a02, type: 2}
     - target: {fileID: 7023478828007979222, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: m_Name
-      value: BotSpawnPoint
+      value: SpawnPointPMCAuto
       objectReference: {fileID: 0}
     - target: {fileID: 7023478828007979222, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8894731452455955457, guid: 01460466311fe034fb42736dd89dd156, type: 3}
       propertyPath: m_LocalPosition.x

@@ -317,16 +317,6 @@ namespace Constants
         // WeaponSyncSystem.BuildWeaponForItem. Stats (Damage, FireInterval, Spread,
         // Penetration, ArmorDamage, BleedChance, Headshot multiplier) all derived from cores.
 
-        public static WeaponConfiguration GetWeaponPreset(BotWeaponPreset preset)
-        {
-            switch (preset)
-            {
-                case BotWeaponPreset.Pistol:  return PistolWeapon;
-                case BotWeaponPreset.Shotgun: return ShotgunWeapon;
-                default:                      return RifleWeapon;
-            }
-        }
-
         public static void RegisterOrOverride(BotTypeConfig config)
         {
             Registry[config.TypeId] = config;
