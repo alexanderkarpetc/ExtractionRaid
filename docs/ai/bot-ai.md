@@ -67,8 +67,7 @@ Root (Selector)
  +-- [if Heal]                       HealNode
  +-- [if Dodge]                      Sequence "Dodge"
  |                                     Condition "Damaged?" -> WasDamaged || IsRolling
- |                                     Cooldown (DodgeCooldown)
- |                                       DodgeNode
+ |                                     DodgeNode (owns config.DodgeCooldown via NextDodgeTime timestamp)
  +-- [if Shoot|Chase|MeleeAttack]    Sequence "Combat"
  |                                     Condition "HasTarget?"
  |                                     Selector "Tactics"
@@ -156,7 +155,11 @@ known position without regaining sight (scan sweep → give up → patrol). See
 ### DodgeNode
 
 - **Purpose**: Perform a dodge roll perpendicular to the player direction.
-- **Conditions**: Guarded by BTCondition (`WasDamaged || IsRolling`) and BTCooldown.
+- **Conditions**: Guarded by BTCondition (`WasDamaged || IsRolling`); cooldown is owned
+  by the node itself — `bb.NextDodgeTime = ElapsedTime + config.DodgeCooldown`, armed
+  when a roll actually starts. (Fixed 2026-07-08: the old BTCooldown wrapper armed only
+  on Success, but the node returns Running — the per-type cooldown never applied and
+  bots dodged as often as the global 0.8 s `DodgeConstants.Cooldown` allowed.)
 - **Behavior**: If already rolling, returns Running. Otherwise picks a random lateral direction (left or right relative to player) and calls `RollSystem.StartBotRoll`. Returns Running on success, Failure if roll could not start.
 - **Intents**: Triggers roll state on `BotEntityState`.
 

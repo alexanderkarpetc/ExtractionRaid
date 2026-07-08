@@ -47,14 +47,12 @@ namespace Systems.Bot
 
             if (config.Has(BotBehaviorFlags.Dodge))
             {
+                // Cooldown lives inside DodgeNode (timestamp gate on NextDodgeTime).
+                // A BTCooldown wrapper doesn't work here: it arms on Success, but the
+                // node returns Running when the roll starts.
                 branches.Add(new BTSequence("Dodge",
                     new BTCondition("Damaged?", (bot, _, _) => bot.Blackboard.WasDamaged || bot.IsRolling),
-                    new BTCooldown("Dodge CD",
-                        new DodgeNode(),
-                        config.DodgeCooldown,
-                        bb => bb.DodgeCooldownTimer,
-                        (bb, v) => bb.DodgeCooldownTimer = v
-                    )
+                    new DodgeNode()
                 ));
             }
 

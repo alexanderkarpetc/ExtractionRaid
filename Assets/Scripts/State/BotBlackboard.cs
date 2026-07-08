@@ -44,7 +44,7 @@ namespace State
 
         // Timers
         public float ReactionTimer;
-        public float DodgeCooldownTimer;
+        public float NextDodgeTime;         // ElapsedTime gate for the next dodge roll (config.DodgeCooldown)
         public float HealCooldownTimer;
         public float PerceptionTimer;
 
@@ -155,7 +155,7 @@ namespace State
             PatrolLastPosition = Vector3.zero;
             PatrolSpeedScale = 1f;
             ReactionTimer = 0f;
-            DodgeCooldownTimer = 0f;
+            NextDodgeTime = 0f;
             HealCooldownTimer = 0f;
             PerceptionTimer = 0f;
             ReactionJitter = 0f;

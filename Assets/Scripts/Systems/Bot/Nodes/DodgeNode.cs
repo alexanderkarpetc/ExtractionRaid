@@ -20,6 +20,13 @@ namespace Systems.Bot.Nodes
                 return this.Traced(bot, BTStatus.Running);
             }
 
+            // Per-type cooldown gate (config.DodgeCooldown). Owned here, timestamp-based:
+            // the old BTCooldown wrapper armed only on Success, but this node returns
+            // Running when a roll starts — so the config cooldown never applied and bots
+            // dodged as often as the global 0.8 s roll cap allowed.
+            if (state.ElapsedTime < bb.NextDodgeTime)
+                return this.Traced(bot, BTStatus.Failure);
+
             var player = state.PlayerEntity;
             if (player == null) return this.Traced(bot, BTStatus.Failure);
 
@@ -35,6 +42,7 @@ namespace Systems.Bot.Nodes
             if (!bot.IsRolling)
                 return this.Traced(bot, BTStatus.Failure);
 
+            bb.NextDodgeTime = state.ElapsedTime + config.DodgeCooldown;
             bb.DebugStatus = "Dodge";
             return this.Traced(bot, BTStatus.Running);
         }
