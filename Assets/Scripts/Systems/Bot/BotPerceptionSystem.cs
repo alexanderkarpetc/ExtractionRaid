@@ -176,7 +176,12 @@ namespace Systems.Bot
                             : dist * (gunshot ? BotConstants.GunshotPosErrorFraction
                                               : BotConstants.HeardPosErrorFraction);
                         var offset2 = Random.insideUnitCircle * err;
-                        bb.LastKnownTargetPos = player.Position + new Vector3(offset2.x, 0f, offset2.y);
+                        var fuzzed = player.Position + new Vector3(offset2.x, 0f, offset2.y);
+                        // Clamp to the navmesh so the fuzz never points inside a wall —
+                        // chase would path to an unreachable spot and grind on geometry.
+                        if (ctx.NavMesh != null && ctx.NavMesh.SamplePosition(fuzzed, 2f, out var onMesh))
+                            fuzzed = onMesh;
+                        bb.LastKnownTargetPos = fuzzed;
                     }
 
                     if (bb.CanSeeTarget)

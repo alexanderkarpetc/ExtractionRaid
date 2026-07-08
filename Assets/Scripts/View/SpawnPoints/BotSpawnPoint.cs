@@ -19,28 +19,99 @@ namespace View.SpawnPoints
         [Tooltip("Radius for auto-generated patrol points when no waypoints are set")]
         public float patrolRadius = 10f;
 
+        // NavMesh validation for patrol points. A point is usable only if it snaps to
+        // the mesh AND a complete path exists from the (snapped) spawn position —
+        // partial paths mean "walk into a wall and get stuck-skipped", so they're
+        // rejected too.
+        const float NavSnapDistance = 1.5f;
+        const int   AutoPointAttempts = 8;
+
+        // Lazy — Unity forbids NavMeshPath construction in field initializers/static ctors
+        // of MonoBehaviours ("InitializeNavMeshPath is not allowed...").
+        static UnityEngine.AI.NavMeshPath _scratchPath;
+
         public Vector3[] GetPatrolPositions()
         {
-            if (patrolWaypoints != null && patrolWaypoints.Length > 0)
-            {
-                var positions = new Vector3[patrolWaypoints.Length];
-                for (int i = 0; i < patrolWaypoints.Length; i++)
-                    positions[i] = patrolWaypoints[i] != null ? patrolWaypoints[i].position : transform.position;
-                return positions;
-            }
-
             var origin = transform.position;
+            bool originOnMesh = UnityEngine.AI.NavMesh.SamplePosition(
+                origin, out var originHit, NavSnapDistance * 2f, UnityEngine.AI.NavMesh.AllAreas);
+            if (originOnMesh) origin = originHit.position;
+
+            if (patrolWaypoints != null && patrolWaypoints.Length > 0)
+                return GetAuthoredPositions(origin, originOnMesh);
+
+            // Auto-generated ring: re-roll each point until it lands somewhere the bot
+            // can actually reach (walls/rooms around the spawn eat naive ring points).
             int count = Random.Range(3, 5);
-            var pts = new Vector3[count];
+            var pts = new System.Collections.Generic.List<Vector3>(count);
             float angleStep = 360f / count;
             float baseAngle = Random.Range(0f, 360f);
             for (int i = 0; i < count; i++)
             {
-                float angle = (baseAngle + angleStep * i + Random.Range(-20f, 20f)) * Mathf.Deg2Rad;
-                float dist = patrolRadius * Random.Range(0.5f, 1f);
-                pts[i] = origin + new Vector3(Mathf.Cos(angle) * dist, 0f, Mathf.Sin(angle) * dist);
+                for (int attempt = 0; attempt < AutoPointAttempts; attempt++)
+                {
+                    float angle = (baseAngle + angleStep * i + Random.Range(-20f, 20f)) * Mathf.Deg2Rad;
+                    float dist = patrolRadius * Random.Range(0.5f, 1f);
+                    var candidate = origin + new Vector3(Mathf.Cos(angle) * dist, 0f, Mathf.Sin(angle) * dist);
+
+                    if (TrySnapReachable(origin, originOnMesh, candidate, out var valid))
+                    {
+                        pts.Add(valid);
+                        break;
+                    }
+                }
             }
-            return pts;
+
+            if (pts.Count == 0)
+                pts.Add(origin); // boxed-in spawn: idle in place instead of wall-grinding
+
+            return pts.ToArray();
+        }
+
+        Vector3[] GetAuthoredPositions(Vector3 origin, bool originOnMesh)
+        {
+            var positions = new System.Collections.Generic.List<Vector3>(patrolWaypoints.Length);
+            for (int i = 0; i < patrolWaypoints.Length; i++)
+            {
+                var raw = patrolWaypoints[i] != null ? patrolWaypoints[i].position : transform.position;
+                if (TrySnapReachable(origin, originOnMesh, raw, out var valid))
+                {
+                    positions.Add(valid);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"BotSpawnPoint '{name}': patrol waypoint {i} at {raw} is off-navmesh or " +
+                        "unreachable from the spawn — dropped.", this);
+                }
+            }
+            if (positions.Count == 0)
+                positions.Add(origin);
+            return positions.ToArray();
+        }
+
+        static bool TrySnapReachable(Vector3 origin, bool originOnMesh, Vector3 candidate, out Vector3 result)
+        {
+            result = candidate;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(
+                    candidate, out var hit, NavSnapDistance, UnityEngine.AI.NavMesh.AllAreas))
+                return false;
+
+            // No baked navmesh under the spawn (test scenes) → snap-only validation.
+            if (!originOnMesh)
+            {
+                result = hit.position;
+                return true;
+            }
+
+            _scratchPath ??= new UnityEngine.AI.NavMeshPath();
+            if (!UnityEngine.AI.NavMesh.CalculatePath(
+                    origin, hit.position, UnityEngine.AI.NavMesh.AllAreas, _scratchPath)
+                || _scratchPath.status != UnityEngine.AI.NavMeshPathStatus.PathComplete)
+                return false;
+
+            result = hit.position;
+            return true;
         }
 
 #if UNITY_EDITOR
