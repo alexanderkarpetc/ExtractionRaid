@@ -24,8 +24,13 @@ namespace Systems.Bot
             // Fallback на App.Instance.CoreDefinitions if registry not passed — match'ить
             // pattern PlayerSpawnSystem.cs which also resolves через App. Tests can override
             // by passing explicit registry.
+            // Weapon: roll from the weighted equipment pool if this type provides one,
+            // otherwise use the fixed WeaponConfig.
+            var weaponConfig = TryPickWeighted(config.WeaponPool, w => w.Weight, out var rolledWeapon)
+                ? rolledWeapon.Config
+                : config.WeaponConfig;
             var weaponId   = state.AllocateEId();
-            var weaponItem = ItemState.CreateWeapon(weaponId, "Weapon", config.WeaponConfig);
+            var weaponItem = ItemState.CreateWeapon(weaponId, "Weapon", weaponConfig);
             var registry   = coreDefinitions ?? (App.IsInitialized ? App.Instance.CoreDefinitions : null);
             bot.Weapon     = WeaponSyncSystem.BuildWeaponForItem(weaponItem, registry, events);
 
@@ -44,18 +49,27 @@ namespace Systems.Bot
             state.Bots.Add(bot);
             state.HealthMap[id] = HealthState.Create(config.MaxHp);
 
-            if (config.HelmetDefinitionId != null || config.BodyArmorDefinitionId != null)
+            // Armor: pools (when supplied) override the fixed ids and are rolled per spawn;
+            // a rolled entry with a null id means "no item" (bare head / no vest).
+            string helmetId = TryPickWeighted(config.HelmetPool, h => h.Weight, out var rolledHelmet)
+                ? rolledHelmet.Id
+                : config.HelmetDefinitionId;
+            string bodyArmorId = TryPickWeighted(config.BodyArmorPool, a => a.Weight, out var rolledArmor)
+                ? rolledArmor.Id
+                : config.BodyArmorDefinitionId;
+
+            if (helmetId != null || bodyArmorId != null)
             {
                 var armorSlots = new ArmorSlotState();
-                if (config.HelmetDefinitionId != null)
+                if (helmetId != null)
                 {
-                    var def = ItemDefinition.Get(config.HelmetDefinitionId);
+                    var def = ItemDefinition.Get(helmetId);
                     if (def != null)
                         armorSlots.Helmet = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
                 }
-                if (config.BodyArmorDefinitionId != null)
+                if (bodyArmorId != null)
                 {
-                    var def = ItemDefinition.Get(config.BodyArmorDefinitionId);
+                    var def = ItemDefinition.Get(bodyArmorId);
                     if (def != null)
                         armorSlots.BodyArmor = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
                 }
@@ -64,6 +78,28 @@ namespace Systems.Bot
             }
 
             events.BotSpawned(id, position, typeId);
+        }
+
+        // Weighted random pick over a pool. Returns false (picked = default) when the pool
+        // is empty or all weights are non-positive, so callers fall back to fixed config.
+        static bool TryPickWeighted<T>(T[] pool, System.Func<T, float> weightOf, out T picked)
+        {
+            picked = default;
+            if (pool == null || pool.Length == 0) return false;
+
+            float total = 0f;
+            for (int i = 0; i < pool.Length; i++)
+                total += Mathf.Max(0f, weightOf(pool[i]));
+            if (total <= 0f) return false;
+
+            float r = Random.value * total;
+            for (int i = 0; i < pool.Length; i++)
+            {
+                r -= Mathf.Max(0f, weightOf(pool[i]));
+                if (r <= 0f) { picked = pool[i]; return true; }
+            }
+            picked = pool[pool.Length - 1]; // float drift guard
+            return true;
         }
     }
 }

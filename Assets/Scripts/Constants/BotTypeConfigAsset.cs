@@ -3,6 +3,14 @@ using UnityEngine;
 
 namespace Constants
 {
+    public enum BotWeaponSource
+    {
+        // Use the Payload + Delivery configured on this asset directly.
+        FromThisConfig,
+        // Roll a weapon from the assigned Equipment config's weighted weapon pool.
+        RandomFromEquipment,
+    }
+
     [CreateAssetMenu(fileName = "BotTypeConfig", menuName = "Bots/Bot Type Config")]
     public class BotTypeConfigAsset : ScriptableObject
     {
@@ -27,6 +35,15 @@ namespace Constants
         [SerializeField] RarityTier _weaponRarity = RarityTier.Common;
         [Tooltip("Rounds loaded in the magazine at spawn.")]
         [SerializeField] int _magazineAmmo = 30;
+
+        [Header("Equipment")]
+        [Tooltip("Optional shared equipment pools (weapon / helmet / armor) rolled per spawn. " +
+                 "Helmet & armor pools, when non-empty, override the fixed Armor fields below. " +
+                 "Weapon pool is used only when Weapon Source is RandomFromEquipment.")]
+        [SerializeField] BotEquipmentConfigAsset _equipment;
+        [Tooltip("FromThisConfig: every bot of this type carries the weapon configured above. " +
+                 "RandomFromEquipment: each bot rolls a weapon from the Equipment config's weapon pool.")]
+        [SerializeField] BotWeaponSource _weaponSource = BotWeaponSource.FromThisConfig;
 
         [Header("Health")]
         [SerializeField] float _maxHp = 100f;
@@ -81,6 +98,14 @@ namespace Constants
 
         public BotTypeConfig ToBotTypeConfig()
         {
+            // Equipment pools: weapon pool only when explicitly opted in; helmet/armor pools
+            // override the fixed Armor fields whenever the equipment config supplies them.
+            WeightedWeapon[] weaponPool = _equipment != null && _weaponSource == BotWeaponSource.RandomFromEquipment
+                ? _equipment.BuildWeaponPool()
+                : null;
+            WeightedId[] helmetPool    = _equipment != null ? _equipment.BuildHelmetPool()    : null;
+            WeightedId[] bodyArmorPool = _equipment != null ? _equipment.BuildBodyArmorPool() : null;
+
             return new BotTypeConfig(
                 typeId: _typeId,
                 prefabId: _shellPrefabId,
@@ -115,26 +140,37 @@ namespace Constants
                 meleeAttackCooldown: _meleeAttackCooldown,
                 helmetDefinitionId: string.IsNullOrEmpty(_helmetDefinitionId) ? null : _helmetDefinitionId,
                 bodyArmorDefinitionId: string.IsNullOrEmpty(_bodyArmorDefinitionId) ? null : _bodyArmorDefinitionId,
-                behaviors: _behaviors);
+                behaviors: _behaviors,
+                weaponPool: weaponPool,
+                helmetPool: helmetPool,
+                bodyArmorPool: bodyArmorPool);
         }
 
-        // Composes the bot's weapon from the chosen Payload + Delivery cores — same
-        // WeaponConfiguration the player's Weapon Builder produces, so bot weapon stats
-        // flow through the identical assembly pipeline. Null cores fall back to a plain
-        // Ballistic + Auto rifle so a half-authored asset still spawns a functional bot.
-        WeaponConfiguration BuildWeaponConfig()
+        WeaponConfiguration BuildWeaponConfig() =>
+            ComposeWeapon(_payload, _delivery, _exotic, _weaponRarity, _magazineAmmo);
+
+        /// <summary>
+        /// Composes a <see cref="WeaponConfiguration"/> from Payload + Delivery cores — the same
+        /// assembly the player's Weapon Builder produces, so bot weapon stats flow through the
+        /// identical pipeline. Null cores fall back to a plain Ballistic + Auto rifle so a
+        /// half-authored asset still spawns a functional bot. Shared by this asset and
+        /// <see cref="BotEquipmentConfigAsset"/> so the fallback logic lives in one place.
+        /// </summary>
+        public static WeaponConfiguration ComposeWeapon(
+            PayloadCoreDefinition payload, DeliveryCoreDefinition delivery,
+            ExoticModDefinition exotic, RarityTier rarity, int magazineAmmo)
         {
-            string payloadId  = _payload  != null ? _payload.Id  : "BallisticRound";
-            string deliveryId = _delivery != null ? _delivery.Id : "Auto";
-            ExoticModInstance? exotic = _exotic != null
-                ? new ExoticModInstance(_exotic.Id)
+            string payloadId  = payload  != null ? payload.Id  : "BallisticRound";
+            string deliveryId = delivery != null ? delivery.Id : "Auto";
+            ExoticModInstance? exoticInstance = exotic != null
+                ? new ExoticModInstance(exotic.Id)
                 : (ExoticModInstance?)null;
 
             return new WeaponConfiguration(
-                payload:        new PayloadCoreInstance(payloadId, _weaponRarity),
-                delivery:       new DeliveryCoreInstance(deliveryId, _weaponRarity),
-                exotic:         exotic,
-                ammoInMagazine: _magazineAmmo);
+                payload:        new PayloadCoreInstance(payloadId, rarity),
+                delivery:       new DeliveryCoreInstance(deliveryId, rarity),
+                exotic:         exoticInstance,
+                ammoInMagazine: magazineAmmo);
         }
 
         public void ApplyToRegistry()

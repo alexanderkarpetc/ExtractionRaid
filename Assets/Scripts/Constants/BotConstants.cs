@@ -21,6 +21,32 @@ namespace Constants
         FireForward  = 1 << 8,
     }
 
+    /// <summary>A weapon assembly paired with a relative pick weight (weighted random loadout).</summary>
+    public readonly struct WeightedWeapon
+    {
+        public readonly WeaponConfiguration Config;
+        public readonly float Weight;
+
+        public WeightedWeapon(WeaponConfiguration config, float weight)
+        {
+            Config = config;
+            Weight = weight > 0f ? weight : 0f;
+        }
+    }
+
+    /// <summary>An item definition id paired with a relative pick weight. Null id = "no item".</summary>
+    public readonly struct WeightedId
+    {
+        public readonly string Id;
+        public readonly float  Weight;
+
+        public WeightedId(string id, float weight)
+        {
+            Id = id;
+            Weight = weight > 0f ? weight : 0f;
+        }
+    }
+
     public readonly struct BotTypeConfig
     {
         public readonly string TypeId;
@@ -31,6 +57,13 @@ namespace Constants
         // Same pipeline as player; bot weapon stats are now derived from Payload + Delivery cores
         // (full Penetration / ArmorDamage / BleedChance / HeadshotMultiplier support).
         public readonly WeaponConfiguration WeaponConfig;
+
+        // Optional weighted equipment pools (from a BotEquipmentConfigAsset). When a pool is
+        // non-null/non-empty, BotSpawnSystem rolls that slot per spawn instead of using the
+        // fixed WeaponConfig / HelmetDefinitionId / BodyArmorDefinitionId below.
+        public readonly WeightedWeapon[] WeaponPool;
+        public readonly WeightedId[]     HelmetPool;
+        public readonly WeightedId[]     BodyArmorPool;
 
         // Health
         public readonly float MaxHp;
@@ -100,12 +133,16 @@ namespace Constants
             int grenadeCount = 0, float grenadeCooldown = 0f, float grenadeMinThrowDist = 5f,
             float meleeAttackRadius = 1.5f, float meleeAttackDamage = 10f, float meleeAttackCooldown = 1f,
             string helmetDefinitionId = null, string bodyArmorDefinitionId = null,
-            BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot)
+            BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot,
+            WeightedWeapon[] weaponPool = null, WeightedId[] helmetPool = null, WeightedId[] bodyArmorPool = null)
         {
             TypeId = typeId;
             PrefabId = prefabId;
             BodyPrefabId = bodyPrefabId;
             WeaponConfig = weaponConfig;
+            WeaponPool = weaponPool;
+            HelmetPool = helmetPool;
+            BodyArmorPool = bodyArmorPool;
             MaxHp = maxHp;
             HealAmount = healAmount;
             HealThreshold = healThreshold;

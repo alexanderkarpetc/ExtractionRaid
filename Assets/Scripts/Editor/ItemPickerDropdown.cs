@@ -13,11 +13,20 @@ namespace Editor
     public class ItemPickerDropdown : AdvancedDropdown
     {
         readonly Action<string> _onPick;
+        readonly Func<ItemDefinition, bool> _filter;
+        readonly bool _includeNone;
 
-        public ItemPickerDropdown(AdvancedDropdownState state, Action<string> onPick)
+        /// <param name="filter">Optional predicate — only matching definitions are listed
+        /// (e.g. armor-slot filtering). Null = all items.</param>
+        /// <param name="includeNone">When true, a top-level "(None)" entry is added that
+        /// picks an empty id — used where "no item" is a valid choice.</param>
+        public ItemPickerDropdown(AdvancedDropdownState state, Action<string> onPick,
+            Func<ItemDefinition, bool> filter = null, bool includeNone = false)
             : base(state)
         {
             _onPick = onPick;
+            _filter = filter;
+            _includeNone = includeNone;
             minimumSize = new Vector2(320, 420);
         }
 
@@ -25,7 +34,14 @@ namespace Editor
         {
             var root = new AdvancedDropdownItem("Items");
 
-            var byCategory = ItemDefinition.Registry.Values
+            if (_includeNone)
+                root.AddChild(new ItemEntry("(None)", ""));
+
+            var values = ItemDefinition.Registry.Values.AsEnumerable();
+            if (_filter != null)
+                values = values.Where(_filter);
+
+            var byCategory = values
                 .GroupBy(d => d.Category)
                 .OrderBy(g => g.Key.ToString());
 
@@ -49,10 +65,17 @@ namespace Editor
         class ItemEntry : AdvancedDropdownItem
         {
             public string ItemId { get; }
+
             public ItemEntry(ItemDefinition def)
                 : base($"{def.DisplayName}  ({def.Id})")
             {
                 ItemId = def.Id;
+            }
+
+            public ItemEntry(string label, string id)
+                : base(label)
+            {
+                ItemId = id;
             }
         }
     }
