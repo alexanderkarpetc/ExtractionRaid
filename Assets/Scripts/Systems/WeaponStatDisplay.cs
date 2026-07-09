@@ -104,8 +104,10 @@ namespace Systems
         static float AccuracyGoodness(in WeaponStats s)
             => 1f - Mathf.Clamp01(s.SpreadAngle / SpreadRefMax);
 
-        /// <summary>Aggregate of existing handling fields (P1).</summary>
-        static float ErgonomicsGoodness(in WeaponStats s)
+        /// <summary>Aggregate of existing handling fields (P1). Public so gameplay (e.g. the
+        /// sniper-scope aim heaviness in AimingSystem) keys off the SAME 0..1 "ergonomics" the
+        /// player sees on the stat bar — no separate, mismatched mapping.</summary>
+        public static float ErgonomicsGoodness(in WeaponStats s)
         {
             float equipGood   = 1f - InverseLerp01(EquipMin, EquipMax, s.EquipTime);
             float unequipGood = 1f - InverseLerp01(UnequipMin, UnequipMax, s.UnequipTime);

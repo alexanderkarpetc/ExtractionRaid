@@ -415,6 +415,84 @@ namespace Dev
             set => Config.ADS.AdsVignetteIntensity = value;
         }
 
+        public static float ScopeNearDistance
+        {
+            get => Config.Scope.NearDistance;
+            set => Config.Scope.NearDistance = value;
+        }
+
+        public static float ScopeFarDistance
+        {
+            get => Config.Scope.FarDistance;
+            set => Config.Scope.FarDistance = value;
+        }
+
+        public static float ScopeCursorInfluenceMul
+        {
+            get => Config.Scope.CursorInfluenceMul;
+            set => Config.Scope.CursorInfluenceMul = value;
+        }
+
+        public static float ScopeZoomMul
+        {
+            get => Config.Scope.ZoomMul;
+            set => Config.Scope.ZoomMul = value;
+        }
+
+        public static float ScopeSpringStiffnessLow
+        {
+            get => Config.Scope.SpringStiffnessLow;
+            set => Config.Scope.SpringStiffnessLow = value;
+        }
+
+        public static float ScopeSpringStiffnessHigh
+        {
+            get => Config.Scope.SpringStiffnessHigh;
+            set => Config.Scope.SpringStiffnessHigh = value;
+        }
+
+        public static float ScopeSpringDampingLow
+        {
+            get => Config.Scope.SpringDampingLow;
+            set => Config.Scope.SpringDampingLow = value;
+        }
+
+        public static float ScopeSpringDampingHigh
+        {
+            get => Config.Scope.SpringDampingHigh;
+            set => Config.Scope.SpringDampingHigh = value;
+        }
+
+        public static float ScopeErgoImpact
+        {
+            get => Config.Scope.ErgoImpact;
+            set => Config.Scope.ErgoImpact = value;
+        }
+
+        public static float ScopeCircleRadius
+        {
+            get => Config.Scope.CircleRadius;
+            set => Config.Scope.CircleRadius = value;
+        }
+
+        public static float ScopeCircleDark
+        {
+            get => Config.Scope.CircleDark;
+            set => Config.Scope.CircleDark = value;
+        }
+
+        public static float ScopeRingThickness
+        {
+            get => Config.Scope.RingThickness;
+            set => Config.Scope.RingThickness = value;
+        }
+
+        public static float ScopeRingBright
+        {
+            get => Config.Scope.RingBright;
+            set => Config.Scope.RingBright = value;
+        }
+
         // ── Health Bar ─────────────────────────────────────
         public static float HBarWidth { get => Config.HealthBar.HBarWidth; set => Config.HealthBar.HBarWidth = value; }
         public static float HBarHeight { get => Config.HealthBar.HBarHeight; set => Config.HealthBar.HBarHeight = value; }

@@ -14,5 +14,6 @@ namespace Dev
         public float AdsBaseGap = 8f;
         public float AdsBloomExtraGap = 15f;
         public float AdsVignetteIntensity = 0.55f;
+        // Sniper-scope knobs moved to their own DevCheatsScopeSection (friendly grouped editor).
     }
 }

@@ -23,6 +23,7 @@ namespace View.UI
             WeaponStatAxis.Recoil       => "Recoil",
             WeaponStatAxis.Spread       => "Spread",
             WeaponStatAxis.Ergonomics   => "Ergonomics",
+            WeaponStatAxis.SightRange   => "Sight Range",
             _                           => axis.ToString(),
         };
 
@@ -36,7 +37,8 @@ namespace View.UI
             bool higherBetter = axis == WeaponStatAxis.Damage
                              || axis == WeaponStatAxis.RateOfFire
                              || axis == WeaponStatAxis.MagazineSize
-                             || axis == WeaponStatAxis.Ergonomics;
+                             || axis == WeaponStatAxis.Ergonomics
+                             || axis == WeaponStatAxis.SightRange;
             return higherBetter ? percent > 0f : percent < 0f;
         }
 

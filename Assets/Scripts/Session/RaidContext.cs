@@ -12,6 +12,19 @@ namespace Session
         public float RecoilRecoveryMultiplier;
         public float AdsRecoilRecoveryMultiplier;
         public float MinAimDistance;
+        // Sniper scope — while scoped, the aim is a damped spring chasing the cursor so it has
+        // weight: low ergo = soft + underdamped (laggy, overshoots + bounces on stop); high ergo
+        // = stiff + critically damped (snaps, no bounce). Stiffness = reach speed; Damping = ζ
+        // ratio (below 1 → overshoot). Ends are lerped by the weapon's 0..1 ergonomics, shaped by
+        // ScopeErgoImpact (curve exponent; 1 = linear, >1 = only high ergo feels tight).
+        public float ScopeSpringStiffnessLow;
+        public float ScopeSpringStiffnessHigh;
+        public float ScopeSpringDampingLow;
+        public float ScopeSpringDampingHigh;
+        public float ScopeErgoImpact;
+        // Aim-distance blend window (meters, XZ): cursor within Near → no scope; past Far → full.
+        public float ScopeNearDistance;
+        public float ScopeFarDistance;
 
         public static AimConfig Default => new AimConfig
         {
@@ -21,6 +34,13 @@ namespace Session
             RecoilRecoveryMultiplier = 1f,
             AdsRecoilRecoveryMultiplier = 1.5f,
             MinAimDistance = 1.5f,
+            ScopeSpringStiffnessLow = 120f,
+            ScopeSpringStiffnessHigh = 900f,
+            ScopeSpringDampingLow = 0.45f,
+            ScopeSpringDampingHigh = 1f,
+            ScopeErgoImpact = 1f,
+            ScopeNearDistance = 4f,
+            ScopeFarDistance = 13f,
         };
     }
 

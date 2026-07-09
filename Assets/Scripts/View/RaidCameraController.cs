@@ -10,7 +10,7 @@ namespace View
     public class RaidCameraController : MonoBehaviour
     {
         [Header("Offset")]
-        [SerializeField] Vector3 _offset = new Vector3(0f, 15.6f, -11.7f);
+        [SerializeField] Vector3 _offset = new Vector3(0f, 25.3f, -18.4f);
         [SerializeField] float _pitch = 55f;
 
         [Header("Follow")]
@@ -20,6 +20,10 @@ namespace View
         [SerializeField] float _cursorInfluence = 4f;
         [SerializeField] float _cursorSmoothing = 8f;
         [SerializeField] [Range(0f, 1f)] float _deadZone = 0.3f;
+
+        // Sniper scope (P4) — camera lean/zoom multipliers live in DevCheats.ADS (runtime-tunable).
+        // The scope "lag" itself lives in AimingSystem (the aim gets heavy by ergo), so the camera
+        // just follows the aim at its normal smoothing.
 
         Transform _target;
         Vector3 _cursorOffset;
@@ -76,9 +80,12 @@ namespace View
             float adsSpeed = 1f / Mathf.Max(0.01f, DevCheats.AdsTransitionTime);
             _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.deltaTime * adsSpeed);
 
-            // ADS-scaled cursor influence
+            // ADS-scaled cursor influence, amplified further while scoped so the camera
+            // travels far toward the aim point (the "look through the scope" reach).
+            float scope = player != null ? player.ScopeReveal : 0f;
             float effectiveInfluence = _cursorInfluence
-                * Mathf.Lerp(1f, DevCheats.AdsCursorInfluenceMultiplier, _adsAmount);
+                * Mathf.Lerp(1f, DevCheats.AdsCursorInfluenceMultiplier, _adsAmount)
+                * Mathf.Lerp(1f, DevCheats.ScopeCursorInfluenceMul, scope);
 
             var desiredCursorOffset = Vector3.zero;
 
@@ -110,8 +117,9 @@ namespace View
             _cursorOffset = Vector3.Lerp(_cursorOffset, desiredCursorOffset,
                 Time.deltaTime * _cursorSmoothing);
 
-            // ADS zoom — scale offset to bring camera closer
-            float zoomFactor = Mathf.Lerp(1f, DevCheats.AdsZoomFactor, _adsAmount);
+            // ADS zoom — scale offset to bring camera closer; scoped zooms in further.
+            float zoomFactor = Mathf.Lerp(1f, DevCheats.AdsZoomFactor, _adsAmount)
+                * Mathf.Lerp(1f, DevCheats.ScopeZoomMul, scope);
             var effectiveOffset = _offset * zoomFactor;
 
             var desiredPos = _target.position + _cursorOffset + effectiveOffset;

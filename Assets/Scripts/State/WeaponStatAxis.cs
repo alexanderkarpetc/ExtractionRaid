@@ -18,5 +18,8 @@ namespace State
         Recoil,
         Spread,
         Ergonomics,
+        // Sight range is additive raw meters (not a percent of a base) — it grants the
+        // sniper-scope reveal radius. The delta value is read as meters, higher-is-better.
+        SightRange,
     }
 }

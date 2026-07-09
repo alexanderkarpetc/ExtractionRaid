@@ -124,6 +124,11 @@ namespace Systems
                     s.UnequipTime       /= f;
                     s.BodyRotationSpeed *= f;
                     break;
+                case WeaponStatAxis.SightRange:
+                    // Additive raw meters (base is 0 — a scope grants reveal radius outright),
+                    // so the percent value is read as meters, not a multiplier.
+                    s.SightRangeBonus += percent;
+                    break;
             }
             return s;
         }

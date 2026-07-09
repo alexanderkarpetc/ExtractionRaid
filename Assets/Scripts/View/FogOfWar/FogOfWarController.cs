@@ -1,3 +1,4 @@
+using ApplicationCore;
 using Constants;
 using Dev;
 using UnityEngine;
@@ -19,6 +20,16 @@ namespace View.FogOfWar
         const string GlobalTextureName = "_FoWVisibility";
 
         static readonly int FoWPrevBlurredId = Shader.PropertyToID("_FoWPrevBlurred");
+        // Sniper-scope screen-space circle (drawn crisply in the composite, NOT the blurred mask).
+        static readonly int ScopeBlackoutId  = Shader.PropertyToID("_FoWScopeBlackout"); // 0..1 scoped amount
+        static readonly int ScopeCenterId    = Shader.PropertyToID("_ScopeCenter");      // screen UV (xy)
+        static readonly int ScopeRadiusId    = Shader.PropertyToID("_ScopeRadius");      // UV height-fraction
+        static readonly int ScopeRingId      = Shader.PropertyToID("_ScopeRing");        // ring thickness (UV)
+        static readonly int ScopeDarkId      = Shader.PropertyToID("_ScopeDark");        // outside darkening 0..1
+        static readonly int ScopeRingBrightId = Shader.PropertyToID("_ScopeRingBright"); // ring highlight
+        static readonly int ScreenAspectId   = Shader.PropertyToID("_ScreenAspect");     // width/height
+
+        // Scope reticle visuals live in DevCheats.Scope (friendly grouped editor).
 
         Camera _fovCamera;
         RenderTexture _rawRT;         // FOV camera target (has depth for URP)
@@ -133,6 +144,36 @@ namespace View.FogOfWar
             _meshBuilder = meshGo.AddComponent<FOVMeshBuilder>();
         }
 
+        // Pushes the sniper-scope screen-space circle uniforms to the composite shader. The
+        // circle is drawn crisply in the composite (screen space, procedural SDF) rather than
+        // baked into the blurred visibility mask — that kept it a sharp scope ring instead of a
+        // soft "floodlight" blob. Centered on the cursor; darkens everything outside.
+        void UpdateScopeUniforms(State.PlayerEntityState player)
+        {
+            float scopeReveal = player != null ? Mathf.Clamp01(player.ScopeReveal) : 0f;
+
+            // Anchor the scope circle to the crosshair dot — the weapon aim point projected to
+            // screen (CrosshairPresenter uses this too). The scope "lag" now lives in the aim
+            // itself (AimingSystem slows WeaponAimPoint under scope by ergo), so the circle, dot
+            // and bullet all lag together as one — no separate view-side smoothing needed here.
+            Vector2 centerUV = new Vector2(0.5f, 0.5f);
+            var cam = Camera.main;
+            if (cam != null && player != null && Screen.width > 0 && Screen.height > 0)
+            {
+                var sp = cam.WorldToScreenPoint(player.WeaponAimPoint);
+                centerUV = new Vector2(sp.x / Screen.width, sp.y / Screen.height);
+            }
+            float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;
+
+            Shader.SetGlobalFloat(ScopeBlackoutId, scopeReveal);
+            Shader.SetGlobalVector(ScopeCenterId, new Vector4(centerUV.x, centerUV.y, 0f, 0f));
+            Shader.SetGlobalFloat(ScopeRadiusId, DevCheats.ScopeCircleRadius);
+            Shader.SetGlobalFloat(ScopeRingId, DevCheats.ScopeRingThickness);
+            Shader.SetGlobalFloat(ScopeDarkId, DevCheats.ScopeCircleDark);
+            Shader.SetGlobalFloat(ScopeRingBrightId, DevCheats.ScopeRingBright);
+            Shader.SetGlobalFloat(ScreenAspectId, aspect);
+        }
+
         void ExcludeFOVLayerFromMainCamera()
         {
             var mainCam = Camera.main;
@@ -150,6 +191,7 @@ namespace View.FogOfWar
             if (!DevCheats.FOVEnabled || !DevCheats.FogOfWarEnabled)
             {
                 ToggleFOVCamera(false);
+                Shader.SetGlobalFloat(ScopeBlackoutId, 0f);
                 // Set white texture so composite has no effect
                 Shader.SetGlobalTexture(GlobalTextureName, Texture2D.whiteTexture);
                 return;
@@ -159,9 +201,12 @@ namespace View.FogOfWar
             if (_currentRTScale != DevCheats.FoWRTScale)
                 CreateRenderTexture(DevCheats.FoWRTScale);
 
+            var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
+
             ToggleFOVCamera(true);
             SyncFOVCamera();
             RebuildVisibilityMesh();
+            UpdateScopeUniforms(player);
             // Copy camera output (has depth) to color-only RT (no depth) for RenderGraph import.
             Graphics.Blit(_rawRT, _rawColorRT);
             Shader.SetGlobalTexture(GlobalTextureName, _rawColorRT);
@@ -228,6 +273,7 @@ namespace View.FogOfWar
             if (_fovMeshMaterial != null)
                 Destroy(_fovMeshMaterial);
 
+            Shader.SetGlobalFloat(ScopeBlackoutId, 0f);
             Shader.SetGlobalTexture(GlobalTextureName, Texture2D.whiteTexture);
         }
     }

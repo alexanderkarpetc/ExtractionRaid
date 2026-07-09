@@ -58,6 +58,14 @@ namespace State
         public bool IsADS;
         public float AdsBlend; // 0 = hip, 1 = fully ADS — lerped each tick
 
+        // Sniper-scope reveal — resolved each tick by PlayerVisionSystem from the equipped
+        // weapon's SightRangeBonus + ADS. Consumed by PlayerFOVSystem (spotting through the
+        // scope) and by the camera / fog-of-war view (pan-to-cursor + circular reveal).
+        public float ScopeReveal;   // 0 = no scope effect, 1 = fully scoped (= AdsBlend when a scope is equipped)
+        public float ScopeRadius;   // world-space radius of the scoped reveal circle (meters)
+        public Vector3 ScopeCenter; // world point the scope reveals around (follows the cursor / RawAimPoint)
+        public Vector3 WeaponAimVelocity; // spring velocity of the scoped aim (AimingSystem damped-spring lag)
+
         public bool IsInventoryOpen; // set by InventoryUI (Tab-opened inventory without loot target)
         public bool IsQuestLogOpen;
         public bool IsNotesOpen; // set by NotesPresenter (field notes popup, Key.N)

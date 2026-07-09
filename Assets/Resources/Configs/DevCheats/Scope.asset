@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 707ecd38a4a85426dbbc7172f113cb68, type: 3}
+  m_Name: Scope
+  m_EditorClassIdentifier: Game::Dev.DevCheatsScopeSection
+  NearDistance: 4
+  FarDistance: 13
+  SpringStiffnessLow: 120
+  SpringStiffnessHigh: 900
+  SpringDampingLow: 0.45
+  SpringDampingHigh: 1
+  ErgoImpact: 1
+  CursorInfluenceMul: 1.6
+  ZoomMul: 0.92
+  CircleRadius: 0.2
+  CircleDark: 0.9
+  RingThickness: 0.006
+  RingBright: 0.3

@@ -147,6 +147,7 @@ namespace Editor
                 DrawSection("💢 Recoil", _config.Recoil);
                 DrawSection("🎯 Aim", _config.Aim);
                 DrawSection("🔍 ADS", _config.ADS);
+                DrawSection("🎯 Scope", _config.Scope);
                 DrawSection("✛ Crosshair", _config.Crosshair);
                 if (view != null) DrawSection("✛ Crosshair v2 (SDF)", view.CrosshairV2);
                 if (view != null) DrawSection("🩸 HUD damage feedback", view.HudDamage);
@@ -556,7 +557,7 @@ namespace Editor
         static readonly string[] AttachmentModIds =
         {
             "PowerComp", "MuzzleBrake", "VerticalGrip", "AngledGrip", "HeavyStock",
-            "SkeletonStock", "RedDot", "ExtendedMag", "QuickMag",
+            "SkeletonStock", "RedDot", "SniperScope", "ExtendedMag", "QuickMag",
             "LaserFocusing", "ScatterChoke", "AutoHeatSink", // unique (archetype-restricted)
         };
 
@@ -842,6 +843,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsFogSection>(so, "_fog", folder, "Fog");
             CreateSectionIfMissing<DevCheatsCrosshairSection>(so, "_crosshair", folder, "Crosshair");
             CreateSectionIfMissing<DevCheatsADSSection>(so, "_ads", folder, "ADS");
+            CreateSectionIfMissing<DevCheatsScopeSection>(so, "_scope", folder, "Scope");
             CreateSectionIfMissing<DevCheatsHealthBarSection>(so, "_healthBar", folder, "HealthBar");
             CreateSectionIfMissing<DevCheatsParallaxSection>(so, "_parallax", folder, "Parallax");
             CreateSectionIfMissing<DevCheatsStatusEffectsSection>(so, "_statusEffects", folder, "StatusEffects");

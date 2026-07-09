@@ -332,6 +332,13 @@ namespace View
             // Rolling — lower alpha
             if (player.IsRolling) alpha *= cfg.RollingAlpha;
 
+            // Sniper scope — the reticle collapses to a clean centre dot (no 4-arm cross). That
+            // dot is the constant anchor across every state: no-ADS, ADS-near-player, and full
+            // sniper mode. The scope's ring + crosshair arms (drawn in the FoW composite) blend
+            // in AROUND this dot by distance (ScopeReveal); the dot itself never changes.
+            if (weapon != null && weapon.Stats.SightRangeBonus > 0f)
+                linesHidden = 1f;
+
             // Overheat tremble — perlin-driven jitter on cursor center при near-max charge.
             Vector2 trembleOffset = Vector2.zero;
             if (chargeFill >= cfg.ChargeOverheatThreshold && cfg.ChargeOverheatTremblePx > 0f)

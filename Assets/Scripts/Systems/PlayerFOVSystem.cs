@@ -69,7 +69,31 @@ namespace Systems
                 bot.IsVisibleToPlayer = !checkOcclusion
                     || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
             }
+
+            // Sniper-scope spotting — reveal bots inside the scoped circle around the aim
+            // point, even when they're outside the normal cone (the "look far through the
+            // scope" mechanic). Only additive: never hides a bot the cone already sees.
+            if (player.ScopeReveal >= ScopeSpotThreshold && player.ScopeRadius > 0f)
+            {
+                float scopeR2 = player.ScopeRadius * player.ScopeRadius;
+                for (int i = 0; i < state.Bots.Count; i++)
+                {
+                    var bot = state.Bots[i];
+                    if (bot.IsVisibleToPlayer) continue;
+
+                    var toCenter = bot.Position - player.ScopeCenter;
+                    toCenter.y = 0f;
+                    if (toCenter.sqrMagnitude > scopeR2) continue;
+
+                    bot.IsVisibleToPlayer = !checkOcclusion
+                        || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                }
+            }
         }
+
+        // Min ScopeReveal (ADS blend) before the scope circle starts spotting — avoids
+        // pop-in the instant the player taps aim.
+        const float ScopeSpotThreshold = 0.5f;
 
         // Character-collider ignore radius for FOV sight checks: CapsuleColliders on Default
         // layer would otherwise spuriously block vision near player/bot positions.

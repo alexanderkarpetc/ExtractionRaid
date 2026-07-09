@@ -133,6 +133,13 @@ namespace Editor
             Field("Aim", p.AimDirection);
             Field("Raw Aim Point", p.RawAimPoint);
             Field("Weapon Aim Point", p.WeaponAimPoint);
+            if (p.ScopeReveal > 0f || p.ScopeRadius > 0f)
+            {
+                Field("Scope Reveal", $"{p.ScopeReveal:F2}");
+                Field("Scope Radius", $"{p.ScopeRadius:F1}m");
+                Field("Scope Center", p.ScopeCenter);
+                Field("Aim Spring Vel", $"{p.WeaponAimVelocity.magnitude:F2}");
+            }
             Field("Selected Slot", p.SelectedHotbarSlot);
             Field("Pending Slot", p.PendingHotbarSlot);
             Field("Is Rolling", p.IsRolling);

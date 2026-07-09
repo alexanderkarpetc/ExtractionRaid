@@ -856,6 +856,14 @@ namespace State
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 20,
                 },
+                ["SniperScope"] = new()
+                {
+                    Id = "SniperScope",
+                    DisplayName = "Sniper Scope",
+                    Category = ItemCategory.WeaponMod,
+                    AllowedSlots = ItemSlotType.Backpack,
+                    MaxStackSize = 20,
+                },
                 ["ExtendedMag"] = new()
                 {
                     Id = "ExtendedMag",

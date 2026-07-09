@@ -564,6 +564,13 @@ namespace Session
                     RecoilRecoveryMultiplier = DevCheats.RecoilRecoveryMultiplier,
                     AdsRecoilRecoveryMultiplier = DevCheats.AdsRecoilRecoveryMultiplier,
                     MinAimDistance = DevCheats.MinAimDistance,
+                    ScopeSpringStiffnessLow = DevCheats.ScopeSpringStiffnessLow,
+                    ScopeSpringStiffnessHigh = DevCheats.ScopeSpringStiffnessHigh,
+                    ScopeSpringDampingLow = DevCheats.ScopeSpringDampingLow,
+                    ScopeSpringDampingHigh = DevCheats.ScopeSpringDampingHigh,
+                    ScopeErgoImpact = DevCheats.ScopeErgoImpact,
+                    ScopeNearDistance = DevCheats.ScopeNearDistance,
+                    ScopeFarDistance = DevCheats.ScopeFarDistance,
                 },
                 shootingConfig: new ShootingConfig
                 {
@@ -689,6 +696,7 @@ namespace Session
             WeaponHeatSystem.Tick(RaidState, in context);
             ShootingSystem.Tick(RaidState, in context);
 
+            PlayerVisionSystem.Tick(RaidState, in context); // resolve sniper-scope reveal before FOV
             PlayerFOVSystem.Tick(RaidState, in context);
             BotPerceptionSystem.Tick(RaidState, in context);
             BotBrainSystem.Tick(RaidState, in context);

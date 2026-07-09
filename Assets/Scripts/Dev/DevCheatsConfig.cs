@@ -19,6 +19,7 @@ namespace Dev
         [SerializeField] DevCheatsFogSection _fog;
         [SerializeField] DevCheatsCrosshairSection _crosshair;
         [SerializeField] DevCheatsADSSection _ads;
+        [SerializeField] DevCheatsScopeSection _scope;
         [SerializeField] DevCheatsHealthBarSection _healthBar;
         [SerializeField] DevCheatsParallaxSection _parallax;
         [SerializeField] DevCheatsStatusEffectsSection _statusEffects;
@@ -42,6 +43,7 @@ namespace Dev
         public DevCheatsFogSection Fog => _fog ? _fog : (_fog = CreateInstance<DevCheatsFogSection>());
         public DevCheatsCrosshairSection Crosshair => _crosshair ? _crosshair : (_crosshair = CreateInstance<DevCheatsCrosshairSection>());
         public DevCheatsADSSection ADS => _ads ? _ads : (_ads = CreateInstance<DevCheatsADSSection>());
+        public DevCheatsScopeSection Scope => _scope ? _scope : (_scope = CreateInstance<DevCheatsScopeSection>());
         public DevCheatsHealthBarSection HealthBar => _healthBar ? _healthBar : (_healthBar = CreateInstance<DevCheatsHealthBarSection>());
         public DevCheatsParallaxSection Parallax => _parallax ? _parallax : (_parallax = CreateInstance<DevCheatsParallaxSection>());
         public DevCheatsStatusEffectsSection StatusEffects => _statusEffects ? _statusEffects : (_statusEffects = CreateInstance<DevCheatsStatusEffectsSection>());

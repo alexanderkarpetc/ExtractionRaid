@@ -81,11 +81,35 @@ namespace Systems
 
                 // Strip recoil to get clean base position
                 var recoilOffset = weapon != null ? weapon.RecoilOffset : Vector3.zero;
-                var cleanAim = player.WeaponAimPoint - recoilOffset;
+                var prevClean = player.WeaponAimPoint - recoilOffset;
 
-                // Smooth clean position toward mouse
+                // Base follow — exponential smoothing toward the cursor (hip / no-scope feel, unchanged).
                 float smoothFactor = 1f - Mathf.Exp(-aimFollowSharpness * context.DeltaTime);
-                cleanAim = Vector3.Lerp(cleanAim, aimPoint, smoothFactor);
+                var expClean = Vector3.Lerp(prevClean, aimPoint, smoothFactor);
+
+                // Sniper scope — swap the base follow for a damped spring so the aim has WEIGHT:
+                // low ergonomics = soft + underdamped (the aim lags, overshoots past the target on
+                // a sudden stop, then bounces back and settles); high ergo = stiff + critically
+                // damped (snaps, no bounce). Blended in by ScopeReveal so hip / no-scope aiming
+                // keeps the crisp exponential feel. Everything (dot / scope circle / bullet) derives
+                // from WeaponAimPoint, so the weight is honest and affects the shot.
+                float reveal = weapon != null ? Mathf.Clamp01(player.ScopeReveal) : 0f;
+                Vector3 cleanAim;
+                if (reveal > 0.01f)
+                {
+                    float ergo01 = WeaponStatDisplay.ErgonomicsGoodness(weapon.Stats); // 0 bad .. 1 good, matches stat bar
+                    float shaped = Mathf.Pow(Mathf.Clamp01(ergo01), Mathf.Max(0.01f, aimCfg.ScopeErgoImpact));
+                    float stiffness = Mathf.Lerp(aimCfg.ScopeSpringStiffnessLow, aimCfg.ScopeSpringStiffnessHigh, shaped);
+                    float dampingRatio = Mathf.Lerp(aimCfg.ScopeSpringDampingLow, aimCfg.ScopeSpringDampingHigh, shaped);
+                    var springClean = SpringToward(prevClean, ref player.WeaponAimVelocity, aimPoint,
+                                                   stiffness, dampingRatio, context.DeltaTime);
+                    cleanAim = Vector3.Lerp(expClean, springClean, reveal);
+                }
+                else
+                {
+                    player.WeaponAimVelocity = Vector3.zero; // reset so re-engaging the scope starts settled
+                    cleanAim = expClean;
+                }
 
                 // Decay recoil independently
                 if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
@@ -110,24 +134,55 @@ namespace Systems
                 ? weaponAimDir.normalized
                 : rawDir;
 
-            // 4. FacingDirection — follows raw aim (body faces player intent)
+            // 4. FacingDirection — normally follows the raw cursor (body faces player intent).
+            // While scoped, follow the (lagged) WEAPON aim instead, so the body points where the
+            // gun actually shoots — otherwise the sluggish body + instant aim read as "facing
+            // forward, firing from the back". Blended by ScopeReveal.
             var coneHalfAngle = weapon != null ? weapon.Stats.ConeHalfAngle : UnarmedConeHalfAngle;
             var bodyRotationSpeed = weapon != null ? weapon.Stats.BodyRotationSpeed : UnarmedBodyRotationSpeed;
+
+            var facingTarget = rawDir;
+            float scopedFacing = Mathf.Clamp01(player.ScopeReveal);
+            if (scopedFacing > 0.01f && player.AimDirection.sqrMagnitude > 0.001f)
+                facingTarget = Vector3.Slerp(rawDir, player.AimDirection, scopedFacing).normalized;
 
             var currentFacing = player.FacingDirection;
             if (currentFacing.sqrMagnitude < 0.001f)
             {
-                player.FacingDirection = rawDir;
+                player.FacingDirection = facingTarget;
                 return;
             }
 
-            var bodyAngle = Vector3.Angle(currentFacing, rawDir);
+            var bodyAngle = Vector3.Angle(currentFacing, facingTarget);
 
             var t = bodyAngle / coneHalfAngle;
             var speed = bodyRotationSpeed * t;
             var maxStep = speed * context.DeltaTime * Mathf.Deg2Rad;
             player.FacingDirection = Vector3.RotateTowards(
-                currentFacing, rawDir, maxStep, 0f).normalized;
+                currentFacing, facingTarget, maxStep, 0f).normalized;
+        }
+
+        // Damped-spring step toward a target (mass = 1). stiffness = pull toward target;
+        // dampingRatio ζ = resistance to velocity (ζ<1 → overshoot + bounce, ζ=1 → critical, no
+        // overshoot). Semi-implicit Euler, substepped to a fixed max step so it stays stable and
+        // framerate-consistent regardless of the tick dt. Velocity is carried in state.
+        static Vector3 SpringToward(Vector3 pos, ref Vector3 vel, Vector3 target,
+                                    float stiffness, float dampingRatio, float dt)
+        {
+            if (dt <= 0f) return pos;
+            float k = Mathf.Max(0.0001f, stiffness);
+            float c = 2f * dampingRatio * Mathf.Sqrt(k); // damping coefficient for mass = 1
+
+            const float maxStep = 1f / 120f;
+            int steps = Mathf.Clamp(Mathf.CeilToInt(dt / maxStep), 1, 8);
+            float h = dt / steps;
+            for (int i = 0; i < steps; i++)
+            {
+                Vector3 accel = -k * (pos - target) - c * vel;
+                vel += accel * h;
+                pos += vel * h;
+            }
+            return pos;
         }
     }
 }

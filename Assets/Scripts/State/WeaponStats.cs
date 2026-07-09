@@ -85,5 +85,10 @@ namespace State
         public float UnequipTime;
         public int   MagazineSize;
         public float ReloadTime;
+
+        // ---- From Attachments (no core baseline) ----
+        // Sniper-scope reveal radius in meters, granted by an optic mod. 0 = no scope.
+        // Consumed by PlayerVisionSystem → PlayerFOVSystem + camera/fog-of-war view.
+        public float SightRangeBonus;
     }
 }
