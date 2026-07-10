@@ -12,6 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d5d67f013a50094c99b11f9a63b834d, type: 3}
   m_Name: TestBotEquipmentConfig
   m_EditorClassIdentifier: Game::Constants.BotEquipmentConfigAsset
-  _weapons: []
-  _helmets: []
-  _bodyArmors: []
+  _weapons:
+  - weight: 1
+    payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
+    delivery: {fileID: 11400000, guid: 3a80c2b7e30c84ee888ff3f9d4185ccd, type: 2}
+    exotic: {fileID: 0}
+    rarity: 1
+    magazineAmmo: 30
+  _helmets:
+  - weight: 1
+    definitionId: Helmet_Basic
+  _bodyArmors:
+  - weight: 1
+    definitionId: Armor_Basic
