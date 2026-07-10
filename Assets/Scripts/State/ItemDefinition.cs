@@ -35,6 +35,12 @@ namespace State
         public int MaxStackSize = 1;
         public string AmmoType;
 
+        // Intrinsic worth of one unit. Drives loot weighting (pricier = rarer drop, see
+        // LootConstants.ValueWeight) and is a sensible base for economy. Separate from
+        // per-vendor shop prices (ShopDefinitionAsset), which can mark up/down freely.
+        // Baseline here; per-item values are assigned in ApplyLootValues.
+        public int Value = 10;
+
         // Consumable resource pool (e.g. medkit healing charge). 0 = not a resource
         // item. When > 0 the item is a single, non-stackable unit whose resource
         // drains on use and is shown as "current/max" rather than a stack count.
@@ -78,7 +84,7 @@ namespace State
         static Dictionary<string, ItemDefinition> BuildRegistry()
         {
 #pragma warning disable CS0618 // Rifle/Pistol legacy entries still set WeaponPrefabId until Tier 4 bot migration
-            return new Dictionary<string, ItemDefinition>
+            var reg = new Dictionary<string, ItemDefinition>
             {
                 // Generic weapon entry for Builder-created weapons. PrefabId is left
                 // empty here; WeaponSyncSystem derives it from the Delivery FormFactor
@@ -969,6 +975,58 @@ namespace State
                 },
             };
 #pragma warning restore CS0618
+
+            ApplyLootValues(reg);
+            return reg;
         }
+
+        // Central "values file": intrinsic worth per item. Anything not listed keeps the
+        // baseline Value (10). Higher value → rarer in value-weighted loot picks. Grouped
+        // by the same tiers the crafting-material sections use. Ids here mirror the
+        // registry keys above — keep them in sync when renaming an item.
+        static void ApplyLootValues(Dictionary<string, ItemDefinition> reg)
+        {
+            void Set(string id, int value)
+            {
+                if (reg.TryGetValue(id, out var d)) d.Value = value;
+            }
+
+            // Ammo — AP/HP variants are worth more than standard.
+            Set("Ammo_Rifle", 12);  Set("Ammo_Rifle_AP", 32);  Set("Ammo_Rifle_HP", 26);
+            Set("Ammo_Pistol", 10); Set("Ammo_Pistol_AP", 28); Set("Ammo_Pistol_HP", 22);
+            Set("Ammo_EnergyCell", 16);
+
+            // Meds / throwables / armor.
+            Set("Bandage", 8); Set("Medkit", 45); Set("Advanced_Medkit", 110);
+            Set("Grenade", 35);
+            Set("Helmet_Basic", 60); Set("Armor_Basic", 85);
+
+            // Weapon-builder modules — valuable weapon parts.
+            Set("BallisticRound", 55); Set("LaserCharge", 70);
+            Set("SingleAction", 45);   Set("Auto", 60); Set("Scatter", 55);
+
+            // Uncommon crafting materials.
+            foreach (var id in UncommonMaterials) Set(id, 40);
+            // Rare crafting materials.
+            foreach (var id in RareMaterials) Set(id, 120);
+            // Specialty / intel.
+            Set("Military_Intel", 220); Set("Bio_Sample_Case", 190);
+        }
+
+        static readonly string[] UncommonMaterials =
+        {
+            "Hydraulic_Seals", "Gear_Cluster", "Rotary_Motor", "Pneumatic_Valve", "Cooling_Fan",
+            "Sensor_Module", "Motion_Sensor", "Camera_Optics", "Flux_Coil", "Pulse_Converter",
+            "Ion_Battery", "Conductive_Gel", "Energy_Relay", "Chemical_Catalyst", "Bio_Compound",
+            "Filtration_Membrane", "Sterile_Wrap", "Military_Components", "Energy_Core",
+        };
+
+        static readonly string[] RareMaterials =
+        {
+            "Gyro_Stabilizer", "Smart_Targeting_Unit", "Pulse_Emitter", "Adaptive_Circuit",
+            "Nano_Filament", "Magnetic_Alloy", "Resonance_Plate", "Synthetic_Quartz",
+            "Crystal_Matrix", "Phase_Shard", "Phase_Battery", "Quantum_Relay", "Plasma_Residue",
+            "Irradiated_Dust", "Neural_Gel", "Bio_Foam",
+        };
     }
 }

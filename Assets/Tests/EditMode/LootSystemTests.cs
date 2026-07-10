@@ -250,6 +250,74 @@ namespace Tests.EditMode
             return null;
         }
 
+        static int CountInBackpack(InventoryState inv, string definitionId)
+        {
+            int n = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inv.Backpack[i]?.DefinitionId == definitionId) n++;
+            return n;
+        }
+
+        // ── Loot table (BotLootConfigAsset → BotTypeConfig loot rules) ──────────
+
+        [Test]
+        public void CreateLootable_AmmoLootTable_DropsWeightedCaliberVariant()
+        {
+            BotConstants.TryGetConfig("Scav", out var scav);   // Scav = BallisticRound → Ammo_Rifle
+            var bot = CreateBot("Scav", Vector3.zero);
+
+            // AP-only weights → must resolve to the caliber's AP variant, never pistol ammo.
+            var config = new BotTypeConfig(
+                typeId: "Scav", prefabId: "BotShell", weaponConfig: scav.WeaponConfig,
+                ammoLoot: new AmmoLootRule(standardWeight: 0f, apWeight: 1f, hpWeight: 0f,
+                    minRounds: 10, maxRounds: 10));
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            var inv = _state.Lootables[0].Inventory;
+            Assert.IsNotNull(FindInBackpack(inv, "Ammo_Rifle_AP"), "AP-weighted ammo should drop the rifle AP variant");
+            Assert.IsNull(FindInBackpack(inv, "Ammo_Rifle"), "Standard weight was 0 — no standard rounds");
+        }
+
+        [Test]
+        public void CreateLootable_GuaranteedItems_DropExactCount()
+        {
+            BotConstants.TryGetConfig("Scav", out var scav);
+            var bot = CreateBot("Scav", Vector3.zero);
+
+            var config = new BotTypeConfig(
+                typeId: "Scav", prefabId: "BotShell", weaponConfig: scav.WeaponConfig,
+                guaranteedItems: new[] { new ItemCountRule("Medkit", 2, 2) });
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            // Medkit is non-stackable → 2 units occupy 2 slots.
+            Assert.AreEqual(2, CountInBackpack(_state.Lootables[0].Inventory, "Medkit"));
+        }
+
+        [Test]
+        public void CreateLootable_CategoryLoot_PicksFromCategory()
+        {
+            BotConstants.TryGetConfig("Scav", out var scav);
+            var bot = CreateBot("Scav", Vector3.zero);
+
+            var config = new BotTypeConfig(
+                typeId: "Scav", prefabId: "BotShell", weaponConfig: scav.WeaponConfig,
+                categoryLoot: new[] { new CategoryLootRule(LootCategory.Materials, 2, 2) });
+
+            LootSystem.CreateLootable(_state, bot, in config, _events);
+
+            int materials = 0;
+            var inv = _state.Lootables[0].Inventory;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                var item = inv.Backpack[i];
+                if (item != null && ItemDefinition.Get(item.DefinitionId)?.Category == ItemCategory.Material)
+                    materials++;
+            }
+            Assert.AreEqual(2, materials, "Should pick exactly 2 distinct Material-category items");
+        }
+
         // ── Tier 6 G2: Module Loot Economy ────────────────────
 
         static readonly System.Collections.Generic.HashSet<string> ExpectedModuleIds =

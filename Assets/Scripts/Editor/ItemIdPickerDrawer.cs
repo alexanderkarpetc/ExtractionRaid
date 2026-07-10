@@ -36,7 +36,18 @@ namespace Editor
             {
                 var so = property.serializedObject;
                 var path = property.propertyPath;
-                var slot = attr.Slot;
+                System.Func<ItemDefinition, bool> filter = null;
+                if (attr.HasSlotFilter)
+                {
+                    var slot = attr.Slot;
+                    filter = d => (d.AllowedSlots & slot) != 0;
+                }
+                else if (attr.HasCategoryFilter)
+                {
+                    var category = attr.Category;
+                    filter = d => d.Category == category;
+                }
+
                 var dropdown = new ItemPickerDropdown(
                     new AdvancedDropdownState(),
                     pickedId =>
@@ -45,7 +56,7 @@ namespace Editor
                         so.FindProperty(path).stringValue = pickedId;
                         so.ApplyModifiedProperties();
                     },
-                    filter: d => (d.AllowedSlots & slot) != 0,
+                    filter: filter,
                     includeNone: true);
                 dropdown.Show(ctrlRect);
             }

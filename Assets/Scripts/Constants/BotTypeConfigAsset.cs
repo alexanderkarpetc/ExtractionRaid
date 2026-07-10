@@ -45,6 +45,10 @@ namespace Constants
                  "RandomFromEquipment: each bot rolls a weapon from the Equipment config's weapon pool.")]
         [SerializeField] BotWeaponSource _weaponSource = BotWeaponSource.FromThisConfig;
 
+        [Tooltip("Optional loot table — what this bot drops beyond its weapon and armor " +
+                 "(ammo mix, specific items, category loot). Leave null for the default drop.")]
+        [SerializeField] BotLootConfigAsset _loot;
+
         [Header("Health")]
         [SerializeField] float _maxHp = 100f;
         [SerializeField] float _healAmount = 0f;
@@ -76,8 +80,7 @@ namespace Constants
         [Header("Dodge")]
         [SerializeField] float _dodgeCooldown = 0f;
 
-        [Header("Grenade")]
-        [SerializeField] int _grenadeCount = 0;
+        [Header("Grenade (combat tuning — carried count lives in the Loot config)")]
         [SerializeField] float _grenadeCooldown = 0f;
         [SerializeField] float _grenadeMinThrowDist = 5f;
 
@@ -106,6 +109,16 @@ namespace Constants
             WeightedId[] helmetPool    = _equipment != null ? _equipment.BuildHelmetPool()    : null;
             WeightedId[] bodyArmorPool = _equipment != null ? _equipment.BuildBodyArmorPool() : null;
 
+            // Loot table (optional). Null asset → null rules → LootSystem uses the legacy default drop.
+            AmmoLootRule?      ammoLoot        = _loot != null ? _loot.BuildAmmoRule()      : (AmmoLootRule?)null;
+            ItemCountRule[]    guaranteedItems = _loot != null ? _loot.BuildItemRules()     : null;
+            CategoryLootRule[] categoryLoot    = _loot != null ? _loot.BuildCategoryRules() : null;
+
+            // Grenades the bot carries (thrown in combat + dropped as leftovers) — count lives
+            // in the loot config. 0..0 when no loot config, so asset bots carry none by default.
+            int grenadeMin = _loot != null ? _loot.grenadeMinCount : 0;
+            int grenadeMax = _loot != null ? _loot.grenadeMaxCount : 0;
+
             return new BotTypeConfig(
                 typeId: _typeId,
                 prefabId: _shellPrefabId,
@@ -132,7 +145,6 @@ namespace Constants
                 accuracy: _accuracy,
                 engageRange: _engageRange,
                 dodgeCooldown: _dodgeCooldown,
-                grenadeCount: _grenadeCount,
                 grenadeCooldown: _grenadeCooldown,
                 grenadeMinThrowDist: _grenadeMinThrowDist,
                 meleeAttackRadius: _meleeAttackRadius,
@@ -143,7 +155,12 @@ namespace Constants
                 behaviors: _behaviors,
                 weaponPool: weaponPool,
                 helmetPool: helmetPool,
-                bodyArmorPool: bodyArmorPool);
+                bodyArmorPool: bodyArmorPool,
+                ammoLoot: ammoLoot,
+                guaranteedItems: guaranteedItems,
+                categoryLoot: categoryLoot,
+                grenadeMinCount: grenadeMin,
+                grenadeMaxCount: grenadeMax);
         }
 
         WeaponConfiguration BuildWeaponConfig() =>

@@ -65,6 +65,14 @@ namespace Constants
         public readonly WeightedId[]     HelmetPool;
         public readonly WeightedId[]     BodyArmorPool;
 
+        // Optional loot table (from a BotLootConfigAsset). When null, LootSystem falls
+        // back to the legacy default drop (caliber ammo + carried meds/bandages).
+        public readonly AmmoLootRule?     AmmoLoot;
+        public readonly ItemCountRule[]   GuaranteedItems;
+        public readonly CategoryLootRule[] CategoryLoot;
+
+        public bool HasLootTable => AmmoLoot.HasValue || GuaranteedItems != null || CategoryLoot != null;
+
         // Health
         public readonly float MaxHp;
         public readonly float HealAmount;
@@ -96,8 +104,13 @@ namespace Constants
         // Dodge
         public readonly float DodgeCooldown;
 
-        // Grenade
+        // Grenade — GrenadeCount is the built-in/legacy carried count. Asset bots instead
+        // source the count from their loot config as a per-spawn range (GrenadeMin/MaxCount);
+        // BotSpawnSystem prefers the range when GrenadeMaxCount > 0. GrenadeCooldown /
+        // GrenadeMinThrowDist are combat tuning (throwing), not loot.
         public readonly int   GrenadeCount;
+        public readonly int   GrenadeMinCount;
+        public readonly int   GrenadeMaxCount;
         public readonly float GrenadeCooldown;
         public readonly float GrenadeMinThrowDist;
 
@@ -134,7 +147,9 @@ namespace Constants
             float meleeAttackRadius = 1.5f, float meleeAttackDamage = 10f, float meleeAttackCooldown = 1f,
             string helmetDefinitionId = null, string bodyArmorDefinitionId = null,
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot,
-            WeightedWeapon[] weaponPool = null, WeightedId[] helmetPool = null, WeightedId[] bodyArmorPool = null)
+            WeightedWeapon[] weaponPool = null, WeightedId[] helmetPool = null, WeightedId[] bodyArmorPool = null,
+            AmmoLootRule? ammoLoot = null, ItemCountRule[] guaranteedItems = null, CategoryLootRule[] categoryLoot = null,
+            int grenadeMinCount = 0, int grenadeMaxCount = 0)
         {
             TypeId = typeId;
             PrefabId = prefabId;
@@ -143,6 +158,9 @@ namespace Constants
             WeaponPool = weaponPool;
             HelmetPool = helmetPool;
             BodyArmorPool = bodyArmorPool;
+            AmmoLoot = ammoLoot;
+            GuaranteedItems = guaranteedItems;
+            CategoryLoot = categoryLoot;
             MaxHp = maxHp;
             HealAmount = healAmount;
             HealThreshold = healThreshold;
@@ -165,6 +183,8 @@ namespace Constants
             EngageRange = engageRange;
             DodgeCooldown = dodgeCooldown;
             GrenadeCount = grenadeCount;
+            GrenadeMinCount = grenadeMinCount;
+            GrenadeMaxCount = grenadeMaxCount;
             GrenadeCooldown = grenadeCooldown;
             GrenadeMinThrowDist = grenadeMinThrowDist;
             MeleeAttackRadius = meleeAttackRadius;

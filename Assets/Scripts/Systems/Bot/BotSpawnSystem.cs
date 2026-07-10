@@ -35,7 +35,11 @@ namespace Systems.Bot
             bot.Weapon     = WeaponSyncSystem.BuildWeaponForItem(weaponItem, registry, events);
 
             bot.Blackboard.MedkitsRemaining = config.MedkitCount;
-            bot.Blackboard.GrenadesRemaining = config.GrenadeCount;
+            // Grenade count: loot-config range (rolled per spawn) takes precedence over the
+            // built-in/legacy fixed GrenadeCount. Drives both throwing behaviour and leftover drop.
+            bot.Blackboard.GrenadesRemaining = config.GrenadeMaxCount > 0
+                ? Random.Range(config.GrenadeMinCount, config.GrenadeMaxCount + 1)
+                : config.GrenadeCount;
             // Every enemy carries 0-4 bandages so they're easy to scavenge.
             bot.Blackboard.BandagesRemaining = Random.Range(0, 5);
 

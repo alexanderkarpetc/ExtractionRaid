@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54316716e6188a1499d3b8829435141c, type: 3}
+  m_Name: BotLootConfig
+  m_EditorClassIdentifier: Game::Constants.BotLootConfigAsset
+  grenadeMinCount: 1
+  grenadeMaxCount: 2
+  ammoStandardWeight: 0.75
+  ammoApWeight: 0.25
+  ammoHpWeight: 0
+  ammoMinRounds: 20
+  ammoMaxRounds: 40
+  _items:
+  - definitionId: Medkit
+    minCount: 0
+    maxCount: 2
+  - definitionId: Bandage
+    minCount: 1
+    maxCount: 3
+  _categories:
+  - category: 0
+    minPicks: 1
+    maxPicks: 3

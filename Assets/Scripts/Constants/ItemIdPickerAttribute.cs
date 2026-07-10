@@ -14,10 +14,25 @@ namespace Constants
     public class ItemIdPickerAttribute : PropertyAttribute
     {
         public readonly ItemSlotType Slot;
+        public readonly ItemCategory Category;
+        public readonly bool HasSlotFilter;
+        public readonly bool HasCategoryFilter;
 
+        /// <summary>Dropdown over every item.</summary>
+        public ItemIdPickerAttribute() { }
+
+        /// <summary>Dropdown filtered to items whose AllowedSlots include <paramref name="slot"/>.</summary>
         public ItemIdPickerAttribute(ItemSlotType slot)
         {
             Slot = slot;
+            HasSlotFilter = true;
+        }
+
+        /// <summary>Dropdown filtered to items of the given <paramref name="category"/>.</summary>
+        public ItemIdPickerAttribute(ItemCategory category)
+        {
+            Category = category;
+            HasCategoryFilter = true;
         }
     }
 }

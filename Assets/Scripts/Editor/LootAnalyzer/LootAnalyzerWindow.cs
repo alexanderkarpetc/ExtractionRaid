@@ -282,7 +282,11 @@ namespace Editor.LootAnalyzer
             // capped at 30 (see LootSystem.CreateLootable). Mirror that here.
             Add(yield, "Ammo_Rifle", 30);
             if (cfg.MedkitCount > 0) Add(yield, "Medkit", cfg.MedkitCount);
-            if (cfg.GrenadeCount > 0) Add(yield, "Grenade", cfg.GrenadeCount);
+            // Grenades: loot-config range (average) takes precedence over the legacy fixed count.
+            double grenades = cfg.GrenadeMaxCount > 0
+                ? (cfg.GrenadeMinCount + cfg.GrenadeMaxCount) / 2.0
+                : cfg.GrenadeCount;
+            if (grenades > 0) Add(yield, "Grenade", grenades);
             if (!string.IsNullOrEmpty(cfg.HelmetDefinitionId)) Add(yield, cfg.HelmetDefinitionId, 1);
             if (!string.IsNullOrEmpty(cfg.BodyArmorDefinitionId)) Add(yield, cfg.BodyArmorDefinitionId, 1);
             return yield;
