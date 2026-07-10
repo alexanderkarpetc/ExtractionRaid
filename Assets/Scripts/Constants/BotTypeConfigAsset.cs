@@ -1,13 +1,14 @@
 using State;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Constants
 {
-    public enum BotWeaponSource
+    public enum BotEquipmentSource
     {
-        // Use the Payload + Delivery configured on this asset directly.
+        // Use the weapon + armor configured directly on this asset.
         FromThisConfig,
-        // Roll a weapon from the assigned Equipment config's weighted weapon pool.
+        // Roll weapon + armor from the assigned Equipment config's weighted pools.
         RandomFromEquipment,
     }
 
@@ -22,7 +23,18 @@ namespace Constants
         [Tooltip("CharacterBody prefab instantiated under the bot shell. Direct reference — bypasses Resources.Load when set.")]
         [SerializeField] GameObject _bodyPrefab;
 
-        [Header("Weapon")]
+        // ── Loadout (weapon + armor). Drawn by BotTypeConfigAssetEditor, which shows the
+        // inline fields below only when EquipmentSource == FromThisConfig, and the Equipment
+        // config link only when RandomFromEquipment. Headers come from the editor. ──────────
+        [Tooltip("FromThisConfig: this bot uses the weapon + armor set directly below. " +
+                 "RandomFromEquipment: each bot rolls its weapon + armor from the Equipment config.")]
+        [FormerlySerializedAs("_weaponSource")]
+        [SerializeField] BotEquipmentSource _equipmentSource = BotEquipmentSource.FromThisConfig;
+
+        [Tooltip("Shared equipment pools (weapon / helmet / armor) rolled per spawn. Used when " +
+                 "Equipment Source is RandomFromEquipment.")]
+        [SerializeField] BotEquipmentConfigAsset _equipment;
+
         [Tooltip("Payload core — the projectile/ammo nature (Ballistic, Laser, ...). Drives damage, " +
                  "penetration, bleed, headshot multiplier. Leave null to fall back to Ballistic Round.")]
         [SerializeField] PayloadCoreDefinition _payload;
@@ -36,15 +48,14 @@ namespace Constants
         [Tooltip("Rounds loaded in the magazine at spawn.")]
         [SerializeField] int _magazineAmmo = 30;
 
-        [Header("Equipment")]
-        [Tooltip("Optional shared equipment pools (weapon / helmet / armor) rolled per spawn. " +
-                 "Helmet & armor pools, when non-empty, override the fixed Armor fields below. " +
-                 "Weapon pool is used only when Weapon Source is RandomFromEquipment.")]
-        [SerializeField] BotEquipmentConfigAsset _equipment;
-        [Tooltip("FromThisConfig: every bot of this type carries the weapon configured above. " +
-                 "RandomFromEquipment: each bot rolls a weapon from the Equipment config's weapon pool.")]
-        [SerializeField] BotWeaponSource _weaponSource = BotWeaponSource.FromThisConfig;
+        [Tooltip("Helmet worn (and dropped on death). (None) for a bare head.")]
+        [ItemIdPicker(ItemSlotType.Helmet)]
+        [SerializeField] string _helmetDefinitionId;
+        [Tooltip("Body armor worn (and dropped on death). (None) for no vest.")]
+        [ItemIdPicker(ItemSlotType.BodyArmor)]
+        [SerializeField] string _bodyArmorDefinitionId;
 
+        [Header("Loot")]
         [Tooltip("Optional loot table — what this bot drops beyond its weapon and armor " +
                  "(ammo mix, specific items, category loot). Leave null for the default drop.")]
         [SerializeField] BotLootConfigAsset _loot;
@@ -89,10 +100,6 @@ namespace Constants
         [SerializeField] float _meleeAttackDamage = 10f;
         [SerializeField] float _meleeAttackCooldown = 1f;
 
-        [Header("Armor")]
-        [SerializeField] string _helmetDefinitionId;
-        [SerializeField] string _bodyArmorDefinitionId;
-
         [Header("Behavior")]
         [SerializeField] BotBehaviorFlags _behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot;
 
@@ -101,13 +108,12 @@ namespace Constants
 
         public BotTypeConfig ToBotTypeConfig()
         {
-            // Equipment pools: weapon pool only when explicitly opted in; helmet/armor pools
-            // override the fixed Armor fields whenever the equipment config supplies them.
-            WeightedWeapon[] weaponPool = _equipment != null && _weaponSource == BotWeaponSource.RandomFromEquipment
-                ? _equipment.BuildWeaponPool()
-                : null;
-            WeightedId[] helmetPool    = _equipment != null ? _equipment.BuildHelmetPool()    : null;
-            WeightedId[] bodyArmorPool = _equipment != null ? _equipment.BuildBodyArmorPool() : null;
+            // Equipment Source governs weapon AND armor together: RandomFromEquipment rolls
+            // both from the Equipment config's pools; FromThisConfig uses the inline fields.
+            bool useEquipment = _equipment != null && _equipmentSource == BotEquipmentSource.RandomFromEquipment;
+            WeightedWeapon[] weaponPool    = useEquipment ? _equipment.BuildWeaponPool()    : null;
+            WeightedId[]     helmetPool    = useEquipment ? _equipment.BuildHelmetPool()    : null;
+            WeightedId[]     bodyArmorPool = useEquipment ? _equipment.BuildBodyArmorPool() : null;
 
             // Loot table (optional). Null asset → null rules → LootSystem uses the legacy default drop.
             AmmoLootRule?      ammoLoot        = _loot != null ? _loot.BuildAmmoRule()      : (AmmoLootRule?)null;
