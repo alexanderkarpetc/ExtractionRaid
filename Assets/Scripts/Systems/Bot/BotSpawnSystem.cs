@@ -65,13 +65,19 @@ namespace Systems.Bot
                 {
                     var def = ItemDefinition.Get(helmetId);
                     if (def != null)
+                    {
                         armorSlots.Helmet = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                        armorSlots.HelmetDefinitionId = helmetId;
+                    }
                 }
                 if (bodyArmorId != null)
                 {
                     var def = ItemDefinition.Get(bodyArmorId);
                     if (def != null)
+                    {
                         armorSlots.BodyArmor = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                        armorSlots.BodyArmorDefinitionId = bodyArmorId;
+                    }
                 }
                 if (armorSlots.Helmet != null || armorSlots.BodyArmor != null)
                     state.ArmorMap[id] = armorSlots;

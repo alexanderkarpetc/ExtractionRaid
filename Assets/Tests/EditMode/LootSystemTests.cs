@@ -62,7 +62,16 @@ namespace Tests.EditMode
             Assert.AreEqual("Scav", lootable.TypeId);
             Assert.AreEqual(bot.Position, lootable.Position);
 
-            Assert.IsNotNull(lootable.Inventory.WeaponSlots[0], "Scav loot should contain a weapon");
+            bool hasWeapon = false;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+            {
+                if (lootable.Inventory.Backpack[i]?.DefinitionId == "Weapon")
+                {
+                    hasWeapon = true;
+                    break;
+                }
+            }
+            Assert.IsTrue(hasWeapon, "Scav loot should contain a weapon in the backpack");
 
             bool hasAmmo = false;
             for (int i = 0; i < InventoryState.BackpackSize; i++)
@@ -195,8 +204,8 @@ namespace Tests.EditMode
             LootSystem.CreateLootable(_state, bot, in config, _events);
 
             var loot = _state.Lootables[0];
-            Assert.IsNotNull(loot.Inventory.HelmetSlot, "Loot should contain helmet");
-            Assert.IsNotNull(loot.Inventory.BodyArmorSlot, "Loot should contain body armor");
+            Assert.IsNotNull(FindInBackpack(loot.Inventory, "Helmet_Basic"), "Loot should contain helmet");
+            Assert.IsNotNull(FindInBackpack(loot.Inventory, "Armor_Basic"), "Loot should contain body armor");
         }
 
         [Test]
@@ -211,7 +220,7 @@ namespace Tests.EditMode
 
             LootSystem.CreateLootable(_state, bot, in config, _events);
 
-            var lootedHelmet = _state.Lootables[0].Inventory.HelmetSlot;
+            var lootedHelmet = FindInBackpack(_state.Lootables[0].Inventory, "Helmet_Basic");
             Assert.IsNotNull(lootedHelmet);
             Assert.AreEqual(45f, lootedHelmet.CurrentDurability, 0.001f);
             Assert.AreEqual(100f, lootedHelmet.MaxDurability, 0.001f);
@@ -229,8 +238,16 @@ namespace Tests.EditMode
 
             LootSystem.CreateLootable(_state, bot, in config, _events);
 
-            Assert.IsNull(_state.Lootables[0].Inventory.HelmetSlot,
+            Assert.IsNull(FindInBackpack(_state.Lootables[0].Inventory, "Helmet_Basic"),
                 "Broken armor should not appear in loot");
+        }
+
+        static ItemState FindInBackpack(InventoryState inv, string definitionId)
+        {
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inv.Backpack[i]?.DefinitionId == definitionId)
+                    return inv.Backpack[i];
+            return null;
         }
 
         // ── Tier 6 G2: Module Loot Economy ────────────────────

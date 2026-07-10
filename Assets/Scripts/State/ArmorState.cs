@@ -24,5 +24,11 @@ namespace State
     {
         public ArmorState Helmet;
         public ArmorState BodyArmor;
+
+        // ItemDefinition ids of the equipped armor, recorded at spawn so death loot can
+        // reconstruct the exact items — including armor rolled from an equipment pool,
+        // which is not present on the static BotTypeConfig fields.
+        public string HelmetDefinitionId;
+        public string BodyArmorDefinitionId;
     }
 }

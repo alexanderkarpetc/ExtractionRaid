@@ -82,9 +82,13 @@ namespace Systems
             var id = state.AllocateEId();
             var inventory = new InventoryState();
 
+            int backpackSlot = 0;
+
             // Tier 4a — drop bot's actual weapon з current ammo state. Reconstruct
             // WeaponConfiguration from bot.Weapon fields → ItemState carries that config.
-            // Player can pick up + equip → goes through same WeaponSyncSystem.BuildWeaponForItem.
+            // Placed in the BACKPACK (not an equipment slot): the loot panel only renders
+            // backpack slots, so equipment-slot loot would be invisible/unlootable. The
+            // player drags it onto a weapon slot after looting (AllowedSlots = Weapon|Backpack).
             if (bot.Weapon != null)
             {
                 var droppedConfig = new WeaponConfiguration(
@@ -93,10 +97,8 @@ namespace Systems
                     exotic:         bot.Weapon.HasExotic ? bot.Weapon.ExoticMod : (ExoticModInstance?)null,
                     ammoInMagazine: bot.Weapon.AmmoInMagazine);
                 var weaponItemId = state.AllocateEId();
-                inventory.WeaponSlots[0] = ItemState.CreateWeapon(weaponItemId, "Weapon", droppedConfig);
+                inventory.Backpack[backpackSlot++] = ItemState.CreateWeapon(weaponItemId, "Weapon", droppedConfig);
             }
-
-            int backpackSlot = 0;
 
             // Ammo derived з payload's AmmoType (e.g. BallisticRound → "Ammo_Rifle").
             var ammoDefId = bot.Weapon?.PayloadDefinition?.AmmoType;
@@ -132,24 +134,35 @@ namespace Systems
                 bandages -= add;
             }
 
-            // Armor loot — preserve durability from combat
+            // Armor loot — dropped into the backpack (same reason as the weapon above),
+            // preserving combat durability. Prefer the armor id recorded at spawn (covers
+            // armor rolled from an equipment pool); fall back to the static config id.
             if (state.ArmorMap.TryGetValue(bot.Id, out var armorSlots))
             {
+                var helmetId = !string.IsNullOrEmpty(armorSlots.HelmetDefinitionId)
+                    ? armorSlots.HelmetDefinitionId
+                    : config.HelmetDefinitionId;
                 if (armorSlots.Helmet != null && !armorSlots.Helmet.IsBroken
-                    && config.HelmetDefinitionId != null)
+                    && !string.IsNullOrEmpty(helmetId)
+                    && backpackSlot < InventoryState.BackpackSize)
                 {
-                    var helmetItem = ItemState.Create(state.AllocateEId(), config.HelmetDefinitionId);
+                    var helmetItem = ItemState.Create(state.AllocateEId(), helmetId);
                     helmetItem.CurrentDurability = armorSlots.Helmet.CurrentDurability;
                     helmetItem.MaxDurability = armorSlots.Helmet.MaxDurability;
-                    inventory.HelmetSlot = helmetItem;
+                    inventory.Backpack[backpackSlot++] = helmetItem;
                 }
+
+                var bodyArmorId = !string.IsNullOrEmpty(armorSlots.BodyArmorDefinitionId)
+                    ? armorSlots.BodyArmorDefinitionId
+                    : config.BodyArmorDefinitionId;
                 if (armorSlots.BodyArmor != null && !armorSlots.BodyArmor.IsBroken
-                    && config.BodyArmorDefinitionId != null)
+                    && !string.IsNullOrEmpty(bodyArmorId)
+                    && backpackSlot < InventoryState.BackpackSize)
                 {
-                    var armorItem = ItemState.Create(state.AllocateEId(), config.BodyArmorDefinitionId);
+                    var armorItem = ItemState.Create(state.AllocateEId(), bodyArmorId);
                     armorItem.CurrentDurability = armorSlots.BodyArmor.CurrentDurability;
                     armorItem.MaxDurability = armorSlots.BodyArmor.MaxDurability;
-                    inventory.BodyArmorSlot = armorItem;
+                    inventory.Backpack[backpackSlot++] = armorItem;
                 }
             }
 
