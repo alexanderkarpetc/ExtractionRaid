@@ -148,7 +148,7 @@ All deterministic, EditMode-tested, no new dependencies. Tuning in
 | Fuzzy sound localization | P3, P5 | Heard-only contact stores LKP + error: 20 % of distance (movement), 10 % (gunshot), 2.5 m flat (damage alert). Exact position only from eyes-on. |
 | Reaction gates everything | P6 | `IsAlert` computed in `BotBrainSystem`; BT Combat branch + movement target-facing both gated. Personality-scaled threshold + per-acquisition jitter. |
 | Burst fire + ammo + reload | C1 | 2–5 shot bursts (aggression-scaled), 0.35–0.9 s pauses; magazine consumed, auto reload on empty + tactical reload when low & target unseen (infinite reserves). (`ShootNode` + `BotCombatSystem`) |
-| Aim settle + penalties | C2 | Accuracy ramps ×0.45→×1 over 0.9 s of continuous sight, resets after 1.2 s unseen; ×0.75 while moving fast; ×0.85 within 1.5 s of taking damage. |
+| Aim settle + penalties | C2 | Accuracy ramps ×0.45→×1 over 0.9 s of continuous sight, resets after 1.2 s unseen; ×0.75 while moving fast; ×0.85 within 1.5 s of taking damage. A deeper Tarkov/SAIN-style scatter-cone replacement (converging cone + per-shot recoil kick + anti-luck sampling) was built 2026-07-08 and rolled back after playtest — full re-appliable spec in `bot-scatter-cone.md`. |
 | Grenade scatter | C3 | Throw error 1.5 m + 0.4 m per unseen-second, cap 4 m. |
 | Heal = cast + partial | C4 | 2 s cast, medkit committed up front, bot retreats and cannot fight during it; heals by `HealAmount`, not to full. |
 | Chase pathfinding | M1 | NavMesh corner-following (same pattern as patrol), repath on 0.75 s cadence or 2 m LKP drift. |
