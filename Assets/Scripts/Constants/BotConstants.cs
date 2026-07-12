@@ -19,6 +19,9 @@ namespace Constants
         // Fires continuously in the bot's current facing direction. No target tracking,
         // no rotation toward target. Used by FeedbackRange test turrets.
         FireForward  = 1 << 8,
+        // Fight from cover: pick a spot the enemy can't see, run there, then cycle
+        // hide → peek → shoot → duck back (TakeCoverNode, SAIN-inspired).
+        TakeCover    = 1 << 9,
     }
 
     /// <summary>A weapon assembly paired with a relative pick weight (weighted random loadout).</summary>
@@ -280,6 +283,66 @@ namespace Constants
         public const float GrenadeScatterPerUnseenSec  = 0.4f;
         public const float GrenadeScatterMax           = 4f;
 
+        // --- Fight-from-cover (TakeCoverNode, SAIN-inspired) ---
+        // Cover search: sample a ring of candidate points around the bot, snap each to
+        // the navmesh, and keep the ones the enemy's eye can't draw a line to. Scored
+        // by run distance, with a penalty for sitting too close to the enemy and a
+        // bonus when the head-height ray is blocked too (full cover vs torso-only).
+        public static readonly float[] CoverSearchRadii = { 2.5f, 5f, 8f, 11f };
+        public const int   CoverSearchDirections     = 12;
+        public const float CoverNavSampleDistance    = 1.5f;
+        public const float CoverMinEnemyDistance     = 4f;    // reject spots this close to the enemy
+        public const float CoverPreferredEnemyDistance = 10f; // closer than this → scored down
+        public const float CoverEnemyClosePenaltyWeight = 1.5f;
+        public const float CoverFullCoverBonus       = 3f;    // score meters credited for head-height cover
+        public const float CoverMaxEngageFraction    = 0.9f;  // spots must stay inside EngageRange × this
+        public const float CoverSearchCooldown       = 1.5f;  // after a failed search — no raycast storms
+
+        // Line-of-sight probe heights. The enemy is the player, so the "can they see
+        // me there" ray starts at PlayerEyeHeight. Torso blocked = usable cover;
+        // head blocked too = full cover (preferred — there is no crouch to hide the rest).
+        public const float CoverBodyCheckHeight = 1.1f;
+        public const float CoverHeadCheckHeight = 1.7f;
+
+        // Peek: lateral step-out spot next to the cover point with a clear line to the
+        // enemy. A cover point with no workable peek side is rejected outright — the
+        // point of cover is shooting from it, not turtling.
+        public const float CoverPeekOffset      = 1.6f;
+        public const float CoverPeekSpeedFraction = 0.8f;     // of ChaseSpeed while stepping out/back
+        public const float CoverPeekTimeout     = 2f;         // can't reach the peek spot → duck back
+
+        // Hide/expose cycle. Hold is how long the bot stays fully hidden between peeks;
+        // exposure is how long it fires before ducking back. Both windows are cut short
+        // by taking a hit or starting a reload, and aggression shortens hold times.
+        public const float CoverHoldTimeMin   = 1.2f;
+        public const float CoverHoldTimeMax   = 2.8f;
+        public const float CoverExposeTimeMin = 1.5f;
+        public const float CoverExposeTimeMax = 3f;
+        public const float CoverReloadHoldExtension = 0.4f;   // keep hiding while the mag refills
+
+        // Fire on the move: while running to cover with eyes on the target, bots keep
+        // shooting with a heavy accuracy penalty — running silently reads as passive.
+        public const float CoverMoveFireAccuracyMult = 0.5f;
+
+        // Only fight from cover while contact is fresh; stale memory falls through to
+        // Chase/Search instead of camping an empty map.
+        public const float CoverEngageMemoryTime = 4f;
+
+        // Shot while "hidden" → the spot is compromised even though the raycast model
+        // still calls it cover. Blacklist it briefly so the re-search picks elsewhere
+        // (SAIN's "spotted point" mechanic, 2 s / ~1.4 m there).
+        public const float CoverSpotBlacklistRadius   = 2f;
+        public const float CoverSpotBlacklistDuration = 3f;
+
+        // Movement / validation plumbing.
+        public const int   CoverMaxPathCorners       = 32;
+        public const float CoverRepathInterval       = 1f;
+        public const float CoverCornerArrivalDistance = 0.5f;
+        public const float CoverArriveDistance       = 0.6f;
+        public const float CoverStuckAbandonTime     = 2f;    // pinned en route → drop this cover point
+        public const float CoverRevalidateInterval   = 0.5f;
+        public const float CoverEnemyMoveInvalidate  = 3f;    // LKP drifted this far → re-check the point
+
         // --- Search (after losing the target at last-known-position) ---
         public const float SearchDuration        = 4.5f;
         public const float SearchArriveDistance  = 1.5f;
@@ -451,7 +514,7 @@ namespace Constants
             medkitCount: 2,
             behaviors: BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
                      | BotBehaviorFlags.Heal | BotBehaviorFlags.Dodge
-                     | BotBehaviorFlags.ThrowGrenade
+                     | BotBehaviorFlags.ThrowGrenade | BotBehaviorFlags.TakeCover
         );
 
         public static readonly BotTypeConfig Boss = new(
@@ -624,7 +687,7 @@ namespace Constants
             visionRange: 70f, visionAngle: 120f, hearingRange: 30f,
             targetMemoryDuration: 8f, reactionTime: 0.5f, accuracy: 0.6f, engageRange: 50f,
             helmetDefinitionId: "Helmet_Basic",
-            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot
+            behaviors: BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot | BotBehaviorFlags.TakeCover
         );
 
         // --- FeedbackRange targets (6 archetypes) ---

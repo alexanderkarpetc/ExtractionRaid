@@ -7,6 +7,10 @@ namespace Tests.EditMode.Fakes
     {
         public bool Blocked;
 
+        // Optional geometry hook — cover tests need per-ray answers ("ray to the
+        // cover point blocked, ray to the peek point clear"), not one global flag.
+        public System.Func<Vector3, Vector3, bool> LinecastFunc;
+
         // RaycastFirstWallHit canned result
         public bool WallHit;
         public Vector3 WallHitPoint;
@@ -14,7 +18,7 @@ namespace Tests.EditMode.Fakes
 
         public bool Linecast(Vector3 from, Vector3 to, int layerMask)
         {
-            return Blocked;
+            return LinecastFunc?.Invoke(from, to) ?? Blocked;
         }
 
         public bool LinecastIgnoring(Vector3 from, Vector3 to, int layerMask,

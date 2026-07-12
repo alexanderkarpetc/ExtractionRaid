@@ -76,6 +76,7 @@ Root (Selector)
  |                                       Selector "Engage"
  |                                         [if MeleeAttack] Cooldown (MeleeAttackCooldown)
  |                                                            MeleeAttackNode
+ |                                         [if TakeCover]   TakeCoverNode
  |                                         [if Shoot]       ShootNode
  |                                         [if Chase]       ChaseNode
  +-- [if Patrol]                     PatrolNode
@@ -92,8 +93,10 @@ Root (Selector)
 | Dodge         | 5   |
 | ThrowGrenade  | 6   |
 | MeleeAttack   | 7   |
+| FireForward   | 8   |
+| TakeCover     | 9   |
 
-Priority order: Heal > Dodge > Combat (Grenade > Melee > Shoot > Chase > Search) > Patrol.
+Priority order: Heal > Dodge > Combat (Grenade > Melee > TakeCover > Shoot > Chase > Search) > Patrol.
 
 **Humanization pass (2026-07-07)** — the Combat sequence is gated by `Alert?`
 (`HasTarget && IsAlert`) instead of `HasTarget?`: the reaction window (accumulated in
@@ -142,6 +145,41 @@ known position without regaining sight (scan sweep → give up → patrol). See
   `bb.EffectiveAccuracy` = config accuracy × personality × aim-settle ramp
   (×0.45→×1 over 0.9 s of continuous sight) × moving penalty × recently-hit penalty.
 - **Intents**: Sets `DesiredAimPoint`, `WantsToFire` (only during a burst window).
+
+### TakeCoverNode (2026-07-12)
+
+- **Purpose**: SAIN-inspired fight-from-cover — pick a spot the enemy can't see, run
+  there, then cycle hide → peek → shoot → duck back. Sits before `ShootNode` in the
+  Engage selector.
+- **Conditions**: `HasTarget && TimeSinceTargetSeen <= CoverEngageMemoryTime (4 s)
+  && DistanceToTarget <= EngageRange`, plus Physics/NavMesh ports present. Fails
+  otherwise → falls through to plain Shoot/Chase. Stale contact means the bot
+  investigates (Chase/Search) instead of turtling.
+- **Cover search**: ring-samples candidates around the bot (12 directions ×
+  radii 2.5/5/8/11 m), navmesh-snaps each, keeps points where the ray from the
+  **enemy eye** (`PlayerEyeHeight`) to the point at torso height (1.1 m) is blocked.
+  Head-height (1.7 m) blocked too = full cover (score bonus). A point must also have
+  a workable **peek spot** — a ±1.6 m lateral step with a CLEAR torso-height line to
+  the enemy — otherwise it's rejected (cover you can't shoot from is a turtle spot).
+  Score = run distance + penalty for being closer than 10 m to the enemy − full-cover
+  bonus; candidates beyond `EngageRange × 0.9` from the enemy or closer than 4 m are
+  rejected, as are spots **behind the enemy** (dot gate — reaching them means running
+  through the target's line of fire; straight from SAIN's CoverAnalyzer) and spots
+  near a recently blacklisted point. Failed search → 1.5 s cooldown before retrying.
+- **Phase machine** (`bb.CoverPhase`): `MoveTo` (path-follow at ChaseSpeed, fires
+  bursts on the move at ×0.5 accuracy while target visible; stuck ≥ 2 s → abandon
+  point) → `Hold` (hidden, velocity zero, 1.2–2.8 s ÷ aggression; extended while
+  reloading; **shot while hidden → the spot is compromised: blacklist it for 3 s
+  (2 m radius, SAIN's "spotted point") and re-search**) → `Peek`
+  (sidestep to peek spot at 0.8× ChaseSpeed) → `Exposed` (returns **Failure** so
+  ShootNode owns the trigger; ducks back on: timer 1.5–3 s, taking a hit, reload
+  start, or losing sight of the target) → `Return` (sidestep back) → `Hold` …
+- **Revalidation**: every 0.5 s, or immediately when the LKP drifts > 3 m from the
+  snapshot the cover was picked against — re-checks the blocked ray, min enemy
+  distance, and recomputes the peek side. Broken cover → immediate re-search.
+- **Intents**: Sets `DesiredVelocity`; during MoveTo also `DesiredAimPoint`,
+  `WantsToFire`, `EffectiveAccuracy` (shared burst gates with ShootNode).
+- **Enabled on**: PMC, RangedTarget.
 
 ### MeleeAttackNode (2026-05-10)
 
@@ -354,6 +392,13 @@ All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never
 | `HealCastEndTime`       | float     | -1 idle; heal completes at this ElapsedTime                |
 | `ChasePath*`            | —         | NavMesh corner buffer for chase path-following             |
 | `SearchEndTime` / `SearchScanBaseDir` | float / Vector3 | Search-at-LKP scan state             |
+| `CoverPhase`            | CoverPhase | Fight-from-cover state machine (None/MoveTo/Hold/Peek/Exposed/Return) |
+| `CoverPoint` / `CoverPeekPos` | Vector3 | Hidden spot + lateral shooting spot                    |
+| `CoverEnemyAnchor`      | Vector3   | LKP snapshot the cover was validated against               |
+| `CoverPhaseStartTime` / `CoverPhaseEndTime` | float | Phase entry time + hold/expose deadline |
+| `CoverNextSearchTime` / `CoverRevalidateTimer` | float | Failed-search gate + periodic re-check |
+| `CoverBlacklistPos` / `CoverBlacklistUntil` | Vector3 / float | Compromised-spot blacklist (shot while hidden) |
+| `CoverPath*` / `CoverStuckTimer` / `CoverLastPosition` | — | NavMesh corner buffer + stuck watchdog for the run to cover |
 
 ---
 
@@ -378,6 +423,7 @@ All targets have 0 vision/hearing/accuracy and 999 s reaction time -- they never
 | `Assets/Scripts/Systems/Bot/Nodes/ChaseNode.cs` | NavMesh path-follow to last known target position |
 | `Assets/Scripts/Systems/Bot/Nodes/SearchNode.cs` | Scan sweep at lost-contact position, then give up |
 | `Assets/Scripts/Systems/Bot/Nodes/ShootNode.cs` | Aim and fire at visible target |
+| `Assets/Scripts/Systems/Bot/Nodes/TakeCoverNode.cs` | Fight-from-cover: pick → run → hide → peek → duck cycle |
 | `Assets/Scripts/Systems/Bot/Nodes/DodgeNode.cs` | Lateral dodge roll |
 | `Assets/Scripts/Systems/Bot/Nodes/HealNode.cs` | Emergency / safe heal logic |
 | `Assets/Scripts/Systems/Bot/Nodes/ThrowGrenadeNode.cs` | Delayed grenade throw at cover targets |

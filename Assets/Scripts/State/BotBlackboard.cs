@@ -2,6 +2,20 @@ using UnityEngine;
 
 namespace State
 {
+    /// <summary>
+    /// Fight-from-cover state machine phases (TakeCoverNode). None = no cover picked;
+    /// the node searches for one on its next eligible tick.
+    /// </summary>
+    public enum CoverPhase : byte
+    {
+        None,        // no valid cover point — search when gates allow
+        MoveTo,      // running to the picked cover point (may fire on the move)
+        Hold,        // hidden behind cover, waiting out the hold timer
+        Peek,        // stepping sideways to the peek position to regain line of sight
+        Exposed,     // at the peek spot — TakeCoverNode yields so ShootNode fires
+        Return,      // ducking back behind cover after the exposure window
+    }
+
     public class BotBlackboard
     {
         // Target tracking
@@ -83,6 +97,30 @@ namespace State
         public float SearchEndTime = -1f;   // -1 = idle
         public Vector3 SearchScanBaseDir;   // facing captured at search start; scan oscillates around it
 
+        // Fight-from-cover (TakeCoverNode) — SAIN-inspired pick/peek/duck cycle
+        public CoverPhase CoverPhase;
+        public Vector3 CoverPoint;          // hidden spot the enemy has no line of sight to
+        public Vector3 CoverPeekPos;        // lateral step-out spot with clear line of sight
+        public Vector3 CoverEnemyAnchor;    // LKP snapshot the cover was validated against
+        public float CoverPhaseStartTime;   // ElapsedTime when the current phase began
+        public float CoverPhaseEndTime;     // hold/expose deadline (ElapsedTime)
+        public float CoverNextSearchTime;   // gate after a failed search — no per-tick raycast storms
+        public float CoverRevalidateTimer;  // countdown to the next is-this-still-cover check
+
+        // Spot blacklist — a point the bot was shot at while "hidden" is compromised
+        // even though the raycast model still calls it cover. Survives ResetCover so
+        // the immediate re-search can't just pick the same spot again.
+        public Vector3 CoverBlacklistPos;
+        public float CoverBlacklistUntil;   // ElapsedTime; 0 = no blacklist
+
+        // Cover path-following: NavMesh corners toward CoverPoint
+        public Vector3[] CoverPathCorners;
+        public int CoverPathCornerCount;
+        public int CoverPathCornerIndex;
+        public float CoverRepathTimer;
+        public float CoverStuckTimer;       // commanded-move with no displacement → abandon this cover
+        public Vector3 CoverLastPosition;
+
         // Dodge state
         public bool IsDodging;
         public Vector3 DodgeDirection;
@@ -130,6 +168,25 @@ namespace State
             ChasePathCornerIndex = 0;
             ChaseRepathTimer = 0f;
             SearchEndTime = -1f;
+            ResetCover();
+        }
+
+        /// <summary>Drop the current cover point and all cover-cycle progress.</summary>
+        public void ResetCover()
+        {
+            CoverPhase = CoverPhase.None;
+            CoverPoint = Vector3.zero;
+            CoverPeekPos = Vector3.zero;
+            CoverEnemyAnchor = Vector3.zero;
+            CoverPhaseStartTime = 0f;
+            CoverPhaseEndTime = 0f;
+            CoverNextSearchTime = 0f;
+            CoverRevalidateTimer = 0f;
+            CoverPathCornerCount = 0;
+            CoverPathCornerIndex = 0;
+            CoverRepathTimer = 0f;
+            CoverStuckTimer = 0f;
+            CoverLastPosition = Vector3.zero;
         }
 
         public void Reset()
@@ -176,6 +233,9 @@ namespace State
             ChasePathTarget = Vector3.zero;
             SearchEndTime = -1f;
             SearchScanBaseDir = Vector3.zero;
+            ResetCover();
+            CoverBlacklistPos = Vector3.zero;
+            CoverBlacklistUntil = 0f;
             IsDodging = false;
             DodgeDirection = Vector3.zero;
             DodgeTimer = 0f;

@@ -306,6 +306,14 @@ namespace Editor
                         Field("Heal Cast", $"{Mathf.Max(0f, bb.HealCastEndTime - state.ElapsedTime):F1}s left");
                     if (bb.SearchEndTime >= 0f)
                         Field("Searching", $"{Mathf.Max(0f, bb.SearchEndTime - state.ElapsedTime):F1}s left");
+                    if (bb.CoverPhase != CoverPhase.None)
+                    {
+                        Field("Cover Phase", bb.CoverPhase.ToString());
+                        Field("Cover Point", bb.CoverPoint);
+                        Field("Cover Peek", bb.CoverPeekPos);
+                        if (bb.CoverPhaseEndTime > state.ElapsedTime)
+                            Field("Cover Timer", $"{bb.CoverPhaseEndTime - state.ElapsedTime:F1}s");
+                    }
 
                     if (bb.HealCooldownTimer > 0f)
                         Field("Heal CD", $"{bb.HealCooldownTimer:F1}s");

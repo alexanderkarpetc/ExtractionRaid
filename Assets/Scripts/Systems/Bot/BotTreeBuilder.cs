@@ -83,6 +83,13 @@ namespace Systems.Bot
                         (bb, v) => bb.MeleeAttackCooldownTimer = v
                     ));
 
+                // Cover sits before Shoot: it returns Running while it owns movement
+                // (seek / hide / peek / duck) and Failure when exposed at the peek
+                // spot — falling through so ShootNode fires — or when no usable
+                // cover exists, falling through to plain shoot/chase.
+                if (config.Has(BotBehaviorFlags.TakeCover))
+                    engageBranch.Add(new TakeCoverNode());
+
                 if (config.Has(BotBehaviorFlags.Shoot))
                     engageBranch.Add(new ShootNode());
 

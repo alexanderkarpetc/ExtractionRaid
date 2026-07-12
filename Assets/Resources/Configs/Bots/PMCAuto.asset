@@ -15,13 +15,15 @@ MonoBehaviour:
   _typeId: PMC
   _shellPrefabId: BotShell
   _bodyPrefab: {fileID: 1612062852821883575, guid: 7207586e38ebd104d8e73bccf905c8dc, type: 3}
+  _equipmentSource: 0
+  _equipment: {fileID: 11400000, guid: ccdba8ee2cfafcd4ab60eb38557c3f93, type: 2}
   _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
   _delivery: {fileID: 11400000, guid: 3a80c2b7e30c84ee888ff3f9d4185ccd, type: 2}
   _exotic: {fileID: 0}
   _weaponRarity: 0
   _magazineAmmo: 30
-  _equipment: {fileID: 11400000, guid: ccdba8ee2cfafcd4ab60eb38557c3f93, type: 2}
-  _weaponSource: 0
+  _helmetDefinitionId: Helmet_Basic
+  _bodyArmorDefinitionId: Armor_Basic
   _loot: {fileID: 11400000, guid: 623a5a546204f8c45acd9f258d7882f1, type: 2}
   _maxHp: 100
   _healAmount: 30
@@ -44,12 +46,9 @@ MonoBehaviour:
   _accuracy: 0.75
   _engageRange: 28
   _dodgeCooldown: 5
-  _grenadeCount: 2
   _grenadeCooldown: 20
   _grenadeMinThrowDist: 5
   _meleeAttackRadius: 1.5
   _meleeAttackDamage: 10
   _meleeAttackCooldown: 1
-  _helmetDefinitionId: Helmet_Basic
-  _bodyArmorDefinitionId: Armor_Basic
-  _behaviors: 119
+  _behaviors: 631
