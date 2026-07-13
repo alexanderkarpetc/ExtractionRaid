@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6182647053cc70479189d48153a00a6, type: 3}
+  m_Name: RegularBots
+  m_EditorClassIdentifier: Game::Constants.BotTypeConfigAsset
+  _typeId: ScavRegular
+  _shellPrefabId: BotShell
+  _bodyPrefab: {fileID: 1612062852821883575, guid: 0f6f427b559b77e43a25c0d4ed59082c, type: 3}
+  _equipmentSource: 0
+  _equipment: {fileID: 0}
+  _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
+  _delivery: {fileID: 11400000, guid: 0b858c1acb1a84316b516707412f2a6b, type: 2}
+  _exotic: {fileID: 0}
+  _weaponRarity: 0
+  _magazineAmmo: 30
+  _helmetDefinitionId: 
+  _bodyArmorDefinitionId: 
+  _loot: {fileID: 0}
+  _maxHp: 80
+  _healAmount: 0
+  _healThreshold: 0
+  _healCooldown: 0
+  _emergencyHealThreshold: 0.3
+  _emergencyHealDelay: 1.5
+  _emergencyHealCooldown: 8
+  _healSafeDelay: 3
+  _healSafeEnemyDistance: 10
+  _medkitCount: 0
+  _moveSpeed: 3.5
+  _patrolSpeed: 2
+  _chaseSpeed: 4
+  _visionRange: 25
+  _visionAngle: 110
+  _hearingRange: 6
+  _targetMemoryDuration: 5
+  _reactionTime: 0.8
+  _accuracy: 0.5
+  _engageRange: 20
+  _dodgeCooldown: 0
+  _grenadeCooldown: 0
+  _grenadeMinThrowDist: 5
+  _meleeAttackRadius: 1.5
+  _meleeAttackDamage: 10
+  _meleeAttackCooldown: 1
+  _behaviors: 7
