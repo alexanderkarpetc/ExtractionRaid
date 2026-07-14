@@ -131,6 +131,38 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void SightRange_AddsRawMeters_NotPercent()
+        {
+            // Sniper scope: SightRange is additive meters (base is 0), not a percent multiplier.
+            var def = MakeAtt("scope", AttachmentSlot.Optic, (WeaponStatAxis.SightRange, 15f));
+            var s = WeaponStatComposer.ApplyAttachments(Baseline(),
+                Config(new AttachmentInstance(AttachmentSlot.Optic, "scope")), RegistryWith(def));
+            Assert.AreEqual(15f, s.SightRangeBonus, 1e-4f);
+        }
+
+        [Test]
+        public void ProjectileSpeed_Plus75_Scales()
+        {
+            var baseStats = Baseline();
+            baseStats.ProjectileSpeed = 20f;
+            var def = MakeAtt("vel", AttachmentSlot.Optic, (WeaponStatAxis.ProjectileSpeed, 75f));
+            var s = WeaponStatComposer.ApplyAttachments(baseStats,
+                Config(new AttachmentInstance(AttachmentSlot.Optic, "vel")), RegistryWith(def));
+            Assert.AreEqual(35f, s.ProjectileSpeed, 1e-3f); // 20 × 1.75
+        }
+
+        [Test]
+        public void Headshot_Plus50_Scales()
+        {
+            var baseStats = Baseline();
+            baseStats.HeadshotDamageMultiplier = 2f;
+            var def = MakeAtt("hs", AttachmentSlot.Optic, (WeaponStatAxis.Headshot, 50f));
+            var s = WeaponStatComposer.ApplyAttachments(baseStats,
+                Config(new AttachmentInstance(AttachmentSlot.Optic, "hs")), RegistryWith(def));
+            Assert.AreEqual(3f, s.HeadshotDamageMultiplier, 1e-3f); // 2 × 1.5
+        }
+
+        [Test]
         public void Spread_Plus10_Widens()
         {
             var def = MakeAtt("sp", AttachmentSlot.Muzzle, (WeaponStatAxis.Spread, 10f));

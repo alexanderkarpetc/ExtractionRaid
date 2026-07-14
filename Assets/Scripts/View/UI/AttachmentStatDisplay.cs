@@ -24,6 +24,8 @@ namespace View.UI
             WeaponStatAxis.Spread       => "Spread",
             WeaponStatAxis.Ergonomics   => "Ergonomics",
             WeaponStatAxis.SightRange   => "Sight Range",
+            WeaponStatAxis.ProjectileSpeed => "Projectile Speed",
+            WeaponStatAxis.Headshot     => "Headshot",
             _                           => axis.ToString(),
         };
 
@@ -38,7 +40,9 @@ namespace View.UI
                              || axis == WeaponStatAxis.RateOfFire
                              || axis == WeaponStatAxis.MagazineSize
                              || axis == WeaponStatAxis.Ergonomics
-                             || axis == WeaponStatAxis.SightRange;
+                             || axis == WeaponStatAxis.SightRange
+                             || axis == WeaponStatAxis.ProjectileSpeed
+                             || axis == WeaponStatAxis.Headshot;
             return higherBetter ? percent > 0f : percent < 0f;
         }
 
@@ -49,6 +53,17 @@ namespace View.UI
         {
             string sign = percent > 0f ? "+" : "";
             return sign + percent.ToString("0.#", CultureInfo.InvariantCulture) + "%";
+        }
+
+        /// <summary>
+        /// Signed delta with the axis's natural unit — SightRange is raw meters ("+16.5m"),
+        /// every other axis is a percent ("+50%"). Single-sourced so tooltip + editor agree.
+        /// </summary>
+        public static string FormatDelta(WeaponStatAxis axis, float value)
+        {
+            string sign = value > 0f ? "+" : "";
+            string unit = axis == WeaponStatAxis.SightRange ? "m" : "%";
+            return sign + value.ToString("0.#", CultureInfo.InvariantCulture) + unit;
         }
     }
 }

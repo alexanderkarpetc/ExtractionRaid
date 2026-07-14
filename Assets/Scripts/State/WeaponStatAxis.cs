@@ -21,5 +21,9 @@ namespace State
         // Sight range is additive raw meters (not a percent of a base) — it grants the
         // sniper-scope reveal radius. The delta value is read as meters, higher-is-better.
         SightRange,
+        // Ballistic axes (percent, multiplicative on the base) — appended so existing serialized
+        // asset indices stay stable. Both higher-is-better.
+        ProjectileSpeed, // flat/fast rounds — reach distant targets sooner, less lead
+        Headshot,        // HeadshotDamageMultiplier — precise shots rewarded harder
     }
 }

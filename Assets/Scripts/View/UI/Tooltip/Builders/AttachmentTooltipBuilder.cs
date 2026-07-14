@@ -33,7 +33,7 @@ namespace View.UI.Tooltip.Builders
                     var d = mods[i];
                     bool good = AttachmentStatDisplay.DeltaIsGood(d.Axis, d.Percent);
                     string value =
-                        $"<color={AttachmentStatDisplay.Hex(good)}>{AttachmentStatDisplay.FormatPercent(d.Percent)}</color>";
+                        $"<color={AttachmentStatDisplay.Hex(good)}>{AttachmentStatDisplay.FormatDelta(d.Axis, d.Percent)}</color>";
                     rows.Add(new TooltipRow(AttachmentStatDisplay.AxisLabel(d.Axis), value));
                 }
                 sections.Add(new TooltipSection("Effects", rows));

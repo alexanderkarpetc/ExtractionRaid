@@ -102,10 +102,14 @@ namespace Game.Editor
                     (WeaponStatAxis.Ergonomics, 20f), (WeaponStatAxis.Recoil, 10f)),
                 MakeAttachment("RedDot",        "Red Dot Sight",     AttachmentSlot.Optic,
                     (WeaponStatAxis.Spread, -10f), (WeaponStatAxis.Ergonomics, 5f)),
-                // Sniper scope — grants a scoped reveal circle (SightRange = radius in meters,
-                // additive) at the cost of handling. P4-Scope; numbers are placeholders.
+                // Sniper scope — marksman conversion. Give: scoped reveal circle (SightRange =
+                // radius in meters, additive), fast/flat rounds, big headshots, pinpoint spread.
+                // Take: slow deliberate fire, heavy per-shot kick, poor handling. Placeholders.
                 MakeAttachment("SniperScope",   "Sniper Scope",      AttachmentSlot.Optic,
-                    (WeaponStatAxis.SightRange, 16.5f), (WeaponStatAxis.Spread, -20f), (WeaponStatAxis.Ergonomics, -25f)),
+                    (WeaponStatAxis.SightRange, 16.5f), (WeaponStatAxis.ProjectileSpeed, 75f),
+                    (WeaponStatAxis.Headshot, 50f), (WeaponStatAxis.Spread, -25f),
+                    (WeaponStatAxis.RateOfFire, -45f), (WeaponStatAxis.Recoil, 60f),
+                    (WeaponStatAxis.Ergonomics, -25f)),
                 MakeAttachment("ExtendedMag",   "Extended Magazine", AttachmentSlot.Magazine,
                     (WeaponStatAxis.MagazineSize, 50f), (WeaponStatAxis.ReloadTime, 20f), (WeaponStatAxis.Ergonomics, -10f)),
                 MakeAttachment("QuickMag",      "Quick Magazine",    AttachmentSlot.Magazine,

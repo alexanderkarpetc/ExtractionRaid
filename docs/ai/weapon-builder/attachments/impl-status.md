@@ -6,7 +6,7 @@
 
 ## Поточний стан
 
-**P1 ✅ + P2 ✅ + Loot-gating ✅ + Inventory drag/highlight ✅ + P3 (unique mods + rarity-slots) ✅ (функціонально завершені). 614 EditMode green.** Sidegrade-loop живий end-to-end:
+**P1 ✅ + P2 ✅ + Loot-gating ✅ + Inventory drag/highlight ✅ + P3 (unique mods + rarity-slots) ✅ + P4-Scope (Sniper Scope) ✅ (функціонально завершені). ~638 EditMode green (re-run після P4-Scope).** Sidegrade-loop живий end-to-end:
 інвентар (будь-де) → right-click зброю → **Modify** → editor (двопанельний, Variant A) → фокус слота →
 install/remove мод (**споживає/повертає мод з backpack**) → стати міняються з green/red give/take → equipped-зброя ресинкається live → в інвентарі pips + tooltip списком модів.
 **Або прямо в інвентарі:** drag мода на зброю (або зброю на мод) → ставиться; hover мода/зброї → кросс-хайлайт вільних сумісних слотів. **Слотів — f(rarity); унікальні моди лише під свій архетип.**
@@ -61,10 +61,25 @@ install/remove мод (**споживає/повертає мод з backpack**)
 - **Item icons** у inventory slots: `InventorySlotElement._icon` + `ItemIconRegistryAsset` + `UpdateIcon()` + `.inv-slot__icon` USS + `SetIconRegistry()`. (Користувач додав окремо.)
 - **Esc-close** у `InventoryUI` (дзеркалить Tab — закриває editor/builder).
 
+## P4-Scope — Sniper Scope (✅, 2026-07-10)
+Снайп-скоуп = Optic-мод. Механіка (розвідка: ZERO Sievert + Duckov — круговий scoped-reveal біля курсора, НЕ звужений конус):
+- **Стат-вісь `SightRange`** (адитивні метри, не %) → `WeaponStats.SightRangeBonus` → `WeaponStatComposer` (additive case). Тултіп/редактор показують «+16.5m» через `AttachmentStatDisplay.FormatDelta`.
+- **`Systems/PlayerVisionSystem`** (pure, tick перед `PlayerFOVSystem`): `ScopeReveal = AdsBlend × distBlend`, де `distBlend = InverseLerp(Near, Far, |cursor−player|)`. Тобто **курсор поруч → точка; далі → снайп** (без окремої клавіші). Пише `ScopeReveal/ScopeRadius/ScopeCenter`.
+- **Круг** — чіткий **екранний SDF-круг** у composite-шейдері (`FogOfWarComposite`: `_FoWScopeBlackout` + `_ScopeCenter/Radius/Ring/Dark/RingBright`), центр = `WorldToScreenPoint(WeaponAimPoint)` (клеїться до точки). Обідок + снайп-хрест; зовні — затемнення. **НЕ** світовий блюр-диск (той давав «пляму-прожектор»).
+- **Приціл**: скоуп-зброя → базовий курсор згортається до **однієї точки** (`CrosshairPresenter` `linesHidden`), снайп-хрест малюється в шейдері навколо неї.
+- **Аім = демпфована пружина** (`AimingSystem`, `SpringToward`): під скоуп аім важчає за ergo — низьке ergo → soft+underdamped (лаг, овершут+bounce), високе → stiff+critical (снап). Блендиться по `ScopeReveal`. **Куля/дот/круг усі з `WeaponAimPoint`** → вага чесна, впливає на постріл. Тіло розвертається за (лаггованим) аімом, не за сирим курсором (без «стрільби спиною»). Ergo = `WeaponStatDisplay.ErgonomicsGoodness` (0..1, той самий що на панелі).
+- **Камера**: під скоуп сильніше тягнеться до курсора + зумить (`ScopeCursorInfluenceMul`/`ScopeZoomMul`).
+- **Спот**: бот у scoped-колі стає видимим (`PlayerFOVSystem`, occlusion-checked, gated `ScopeReveal≥0.5`).
+- **Контент/лут**: `SniperScope` мод (Optic; +15→16.5m SightRange, −20 Spread, −25 Ergo) + `ItemDefinition` + loot-drop (`AttachmentModDrops`, вага 0.5) + "Give All Mods". Потребує `Create Stub Assets`.
+- **Тюнинг**: усе в **DevCheats → 🎯 Scope** (окрема секція `DevCheatsScopeSection` + friendly `[CustomEditor]` зі слайдерами/групами/підказками): Near/Far, spring stiffness/damping(ζ)/ErgoImpact, camera influence/zoom, reticle radius/dark/ring.
+- **Тести**: `PlayerVisionSystemTests` (reveal-бленд/радіус/центр), `AimingSystemTests` (+scoped lag/overshoot/no-vel), composer SightRange→meters, loot pool 18.
+
 ## Наступні кроки (на вибір — обрати)
-1. **Playtest/balance** — числа модів = placeholders; протюнити на відчутті (тепер ще й rarity-крива слотів + unique-моди).
-2. **P4 — нові механіки:** Noise→Suppressor (боти чують `WeaponFired` у `NoiseRadius`) + Sight/FOV→Sniper Scope (fog-of-war). Розблоковують відкладені моди + дають unique-модам справжні charge/heat-ефекти.
-3. **Розширити compare-diff** на рядки attachments/ammo-type (зараз лише bar-стати) — `WeaponComparePanel`.
+1. **Playtest/balance** — числа модів + scope-крива = placeholders; протюнити на відчутті (scope-ручки тепер live у DevCheats → 🎯 Scope).
+2. **Полірування наявних фіч** — багато шипнутого ще не відполіровано; довести до ладу перед новими механіками.
+3. **Compare-diff** вже розширено (ammo/mods) ✅.
+
+> **Suppressor (Noise) — прибрано з активного плану (2026-07-10).** Багато невідполірованих фіч; можливо повернемось колись, зараз НЕ робимо. Unique-моди лишаються на proxy-осях (charge/heat true-ефекти чекали саме на цю механіку — теж парковані).
 
 ## Відкладене / спрощення MVP (треба памʼятати)
 - Slot count = **rarity-scaled ✅** (`AttachmentSlots`, Common/Uncommon 1 · Rare/Epic 2 · Legendary 3, cap=category count). Крива тюниться в плейтесті.

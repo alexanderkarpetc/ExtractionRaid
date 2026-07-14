@@ -386,5 +386,70 @@ namespace Tests.EditMode
             Assert.AreEqual(5f, state.PlayerEntity.WeaponAimPoint.x, 0.01f,
                 "Position lerp should follow straight line, no lateral deviation");
         }
+
+        // ── Sniper-scope aim spring (weight: low ergo → lag + overshoot) ──
+
+        // Worst-ergo weapon (bad equip/unequip + slow turn) → ErgonomicsGoodness ≈ 0 → the
+        // scoped aim spring is soft + underdamped. ScopeReveal set directly (normally by
+        // PlayerVisionSystem). AdsBlend 0 so the unscoped exp path isn't ADS-boosted.
+        static RaidState ScopeSpringSetup(float reveal)
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var w = state.PlayerEntity.EquippedWeapon;
+            w.Stats.EquipTime = 1f;
+            w.Stats.UnequipTime = 1f;
+            w.Stats.BodyRotationSpeed = 50f;
+            w.Stats.AimFollowSharpness = 15f; // fixed so the unscoped exp clearly outruns the soft spring
+            state.PlayerEntity.WeaponAimPoint = Vector3.zero;
+            state.PlayerEntity.AdsBlend = 0f;
+            state.PlayerEntity.ScopeReveal = reveal;
+            return state;
+        }
+
+        [Test]
+        public void Tick_Scoped_LowErgo_AimLagsMoreThanUnscoped()
+        {
+            var scoped = ScopeSpringSetup(reveal: 1f);
+            var normal = ScopeSpringSetup(reveal: 0f);
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(scoped, in context);
+            AimingSystem.Tick(normal, in context);
+
+            Assert.Less(scoped.PlayerEntity.WeaponAimPoint.x, normal.PlayerEntity.WeaponAimPoint.x,
+                "Scoped low-ergo aim (soft spring) should lag further behind than the unscoped exponential follow");
+        }
+
+        [Test]
+        public void Tick_Scoped_Underdamped_Overshoots()
+        {
+            var state = ScopeSpringSetup(reveal: 1f);
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
+
+            float maxX = 0f;
+            for (int i = 0; i < 90; i++)
+            {
+                AimingSystem.Tick(state, in context);
+                maxX = Mathf.Max(maxX, state.PlayerEntity.WeaponAimPoint.x);
+            }
+
+            Assert.Greater(maxX, 10f,
+                "Underdamped scoped aim should overshoot the target (inertia + bounce) before settling");
+        }
+
+        [Test]
+        public void Tick_NotScoped_NoSpringVelocity()
+        {
+            var state = ScopeSpringSetup(reveal: 0f);
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(state, in context);
+
+            Assert.AreEqual(0f, state.PlayerEntity.WeaponAimVelocity.magnitude, 1e-4f,
+                "Spring velocity stays zero when not scoped (crisp exponential aim, no carried inertia)");
+        }
     }
 }

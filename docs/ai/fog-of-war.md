@@ -283,6 +283,29 @@ Shadows hug walls precisely. Rotating the camera feels smooth, no flickering.
 
 ---
 
+## Sniper Scope reveal (P4)
+
+A sniper-scope optic adds a **screen-space reveal circle** on top of the normal FoW, driven by
+`PlayerEntityState.ScopeReveal` (0..1, resolved by `PlayerVisionSystem` = `AdsBlend × aim-distance
+blend`). It is drawn **in the composite shader** (`FogOfWarComposite`), NOT baked into the blurred
+visibility mask — a world-space blurred disc read as a soft "floodlight" blob; a crisp procedural
+SDF circle reads as a scope.
+
+Globals set each frame by `FogOfWarController.UpdateScopeUniforms`:
+| Global | Meaning |
+|--------|---------|
+| `_FoWScopeBlackout` | 0..1 scoped amount; lerps fog intensity → 1 outside the circle |
+| `_ScopeCenter` | screen UV of the circle = `WorldToScreenPoint(WeaponAimPoint)` (glued to the crosshair dot, so it inherits aim-follow + recoil) |
+| `_ScopeRadius` / `_ScopeRing` / `_ScopeDark` / `_ScopeRingBright` | circle radius (screen-height fraction), rim thickness, outside darkening, ring+crosshair highlight |
+| `_ScreenAspect` | keeps the circle round |
+
+Inside the circle the scene shows normally (distant area near the cursor is visible → "look far
+through the scope"); outside darkens toward `_FogColor`. A thin rim ring + a crosshair (drawn in the
+shader) mark the scope; the single constant centre **dot** is owned by `CrosshairPresenter`
+(collapses to dot-only when a scope is equipped). Bots inside the world-space circle are spotted by
+`PlayerFOVSystem` (occlusion-checked). All tuning lives in **DevCheats → 🎯 Scope**. The scoped-aim
+"weight" (ergo-driven damped spring) lives in `AimingSystem`, not here — see the weapons/aim docs.
+
 ## File Map
 
 ```

@@ -129,6 +129,12 @@ namespace Systems
                     // so the percent value is read as meters, not a multiplier.
                     s.SightRangeBonus += percent;
                     break;
+                case WeaponStatAxis.ProjectileSpeed:
+                    s.ProjectileSpeed *= f;
+                    break;
+                case WeaponStatAxis.Headshot:
+                    s.HeadshotDamageMultiplier *= f;
+                    break;
             }
             return s;
         }

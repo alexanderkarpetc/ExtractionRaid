@@ -85,6 +85,7 @@ namespace Constants
             new LootDrop("HeavyStock",    1, 1, 1f * scale),
             new LootDrop("SkeletonStock", 1, 1, 1f * scale),
             new LootDrop("RedDot",        1, 1, 1f * scale),
+            new LootDrop("SniperScope",   1, 1, 0.5f * scale),
             new LootDrop("ExtendedMag",   1, 1, 1f * scale),
             new LootDrop("QuickMag",      1, 1, 1f * scale),
             new LootDrop("LaserFocusing", 1, 1, 0.4f * scale),

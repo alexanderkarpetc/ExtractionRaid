@@ -332,8 +332,8 @@ namespace Tests.EditMode
             Assert.AreEqual(1, config.MinDrops);
             Assert.AreEqual(3, config.MaxDrops);
 
-            // Build-parts cache = 5 cores + 12 attachment mods; all are WeaponMod-category items.
-            Assert.AreEqual(17, config.PossibleDrops.Length, "ModuleCache pool = 5 cores + 12 mods.");
+            // Build-parts cache = 5 cores + 13 attachment mods; all are WeaponMod-category items.
+            Assert.AreEqual(18, config.PossibleDrops.Length, "ModuleCache pool = 5 cores + 13 mods.");
             foreach (var drop in config.PossibleDrops)
             {
                 var def = ItemDefinition.Get(drop.DefinitionId);

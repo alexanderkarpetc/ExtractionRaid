@@ -458,13 +458,15 @@ namespace View.UI.Attachments
             { WeaponStatAxis.Recoil, "Recoil" },
             { WeaponStatAxis.Spread, "Spread" },
             { WeaponStatAxis.Ergonomics, "Ergo" },
+            { WeaponStatAxis.SightRange, "Sight" },
+            { WeaponStatAxis.ProjectileSpeed, "Velocity" },
+            { WeaponStatAxis.Headshot, "Headshot" },
         };
 
         static string TagText(StatDelta d)
         {
             var name = AxisShort.TryGetValue(d.Axis, out var s) ? s : d.Axis.ToString();
-            var sign = d.Percent > 0f ? "+" : "";
-            return $"{name} {sign}{d.Percent.ToString("0.#", CultureInfo.InvariantCulture)}";
+            return $"{name} {AttachmentStatDisplay.FormatDelta(d.Axis, d.Percent)}";
         }
 
         // Higher-is-better axes improve when the percent is positive; lower-is-better worsen.
