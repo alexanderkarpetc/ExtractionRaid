@@ -27,6 +27,10 @@ namespace State
 
         // Visibility
         public bool IsVisibleToPlayer = true;
+        // Smooth 0..1 version for the view fade at the FoV boundary (1 = fully visible, 0 = gone).
+        // PlayerFOVSystem ramps it in a band near the cone/range edge; BotView drives the char
+        // shader's screen-door dissolve. IsVisibleToPlayer stays the hard bool for gameplay.
+        public float VisibilityFactor = 1f;
 
         // Stagger (hit reaction). EndTime у scaled Time.time. Bot can't fire while staggered.
         // Applied by DamageSystem on damage tick; consumed by BotShootingSystem (fire lockout)

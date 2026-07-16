@@ -250,6 +250,7 @@ namespace Editor
                 Field("Position", bot.Position);
                 Field("Velocity", bot.Velocity);
                 Field("Aim Dir", bot.AimDirection);
+                Field("Visible", $"{bot.IsVisibleToPlayer} ({bot.VisibilityFactor:F2})");
                 Field("Is Rolling", bot.IsRolling);
                 if (bot.IsRolling)
                 {

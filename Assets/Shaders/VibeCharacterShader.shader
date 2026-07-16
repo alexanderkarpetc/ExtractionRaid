@@ -103,6 +103,27 @@ Shader "ExtractShaders/VibeCharacterShader"
 
         TEXTURE2D(_Texture);
         SAMPLER(sampler_Texture);
+
+        // FoW dissolve — shared by ALL passes (forward + xray + shadow) so a fading bot's mesh,
+        // through-wall silhouette AND shadow dissolve together. _FoWDissolveAmount 0 = off
+        // (default → player and every non-bot draw untouched); bots set 1 + _FoWReveal (0..1
+        // per-bot visibility from PlayerFOVSystem) via MPB. Bayer 4×4 screen-door clip = smooth
+        // fade, no texture sampling. Gate is inside so callers just call it unconditionally.
+        float _FoWDissolveAmount;
+        float _FoWReveal;
+        void FoWDissolveClip(float2 pixelPos)
+        {
+            if (_FoWDissolveAmount <= 0.5) return;
+            int2 p = int2(fmod(pixelPos, 4.0));
+            const half bayer[16] = {
+                0.0h,  8.0h,  2.0h, 10.0h,
+                12.0h, 4.0h, 14.0h,  6.0h,
+                3.0h, 11.0h,  1.0h,  9.0h,
+                15.0h, 7.0h, 13.0h,  5.0h
+            };
+            half threshold = (bayer[p.y * 4 + p.x] + 0.5h) / 16.0h;
+            clip(_FoWReveal - threshold);
+        }
         ENDHLSL
 
         Pass
@@ -254,6 +275,8 @@ Shader "ExtractShaders/VibeCharacterShader"
 
             half4 Frag(Varyings IN) : SV_Target
             {
+                FoWDissolveClip(IN.positionHCS.xy); // FoW fade at cone edge (no-op for non-bots)
+
                 half4 tex = SAMPLE_TEXTURE2D(_Texture, sampler_Texture, IN.uv);
                 half3 stylized = ComputeStylizedBase(tex);
 
@@ -338,6 +361,7 @@ Shader "ExtractShaders/VibeCharacterShader"
 
             half4 XRayFrag(Varyings IN) : SV_Target
             {
+                FoWDissolveClip(IN.positionHCS.xy); // hidden bots don't show their through-wall silhouette
                 half3 N = normalize(IN.normalWS);
                 half3 V = normalize(GetWorldSpaceViewDir(IN.positionWS));
                 half rim = pow(saturate(1.0h - dot(N, V)), _XRayRimPower);
@@ -399,7 +423,7 @@ Shader "ExtractShaders/VibeCharacterShader"
                 return OUT;
             }
 
-            half4 ShadowFrag(V IN) : SV_Target { return 0; }
+            half4 ShadowFrag(V IN) : SV_Target { FoWDissolveClip(IN.positionHCS.xy); return 0; }
             ENDHLSL
         }
 

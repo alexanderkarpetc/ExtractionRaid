@@ -15,11 +15,14 @@ namespace Systems
 
             var fov = ctx.FOVConfig;
 
-            // FOV disabled or force-show — all bots visible
+            // FOV disabled or force-show — all bots fully visible
             if (!fov.Enabled || fov.ForceShowAllBots)
             {
                 for (int i = 0; i < state.Bots.Count; i++)
+                {
                     state.Bots[i].IsVisibleToPlayer = true;
+                    state.Bots[i].VisibilityFactor = 1f;
+                }
                 return;
             }
 
@@ -39,11 +42,12 @@ namespace Systems
                 toBot.y = 0f;
                 float dist = toBot.magnitude;
 
-                // Inner sphere — 360° close awareness
+                // Inner sphere — 360° close awareness (full visibility, no edge fade)
                 if (dist <= nearR)
                 {
-                    bot.IsVisibleToPlayer = !checkOcclusion
-                        || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                    bool occ = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                    bot.IsVisibleToPlayer = !occ;
+                    bot.VisibilityFactor = occ ? 0f : 1f;
                     continue;
                 }
 
@@ -51,23 +55,35 @@ namespace Systems
                 if (dist > farR)
                 {
                     bot.IsVisibleToPlayer = false;
+                    bot.VisibilityFactor = 0f;
                     continue;
                 }
 
                 // Outer sector — directional cone
-                if (hasFacing)
+                float angle = hasFacing ? Vector3.Angle(facing, toBot) : 0f;
+                if (hasFacing && angle > halfAngle)
                 {
-                    float angle = Vector3.Angle(facing, toBot);
-                    if (angle > halfAngle)
-                    {
-                        bot.IsVisibleToPlayer = false;
-                        continue;
-                    }
+                    bot.IsVisibleToPlayer = false;
+                    bot.VisibilityFactor = 0f;
+                    continue;
                 }
 
-                // Passed distance+angle — check occlusion
-                bot.IsVisibleToPlayer = !checkOcclusion
-                    || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                // Inside cone+range — hard bool for gameplay, smooth factor for the view fade.
+                bool occluded = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                bot.IsVisibleToPlayer = !occluded;
+                if (occluded)
+                {
+                    bot.VisibilityFactor = 0f;
+                }
+                else
+                {
+                    // Ramp to 0 across a band at the far-range and angular edges (smooth fade-in/out).
+                    float distFactor = Mathf.InverseLerp(farR, farR - EdgeFalloffMeters, dist);
+                    float angleFactor = hasFacing
+                        ? Mathf.InverseLerp(halfAngle, halfAngle - EdgeFalloffDegrees, angle)
+                        : 1f;
+                    bot.VisibilityFactor = Mathf.Clamp01(distFactor * angleFactor);
+                }
             }
 
             // Sniper-scope spotting — reveal bots inside the scoped circle around the aim
@@ -85,8 +101,10 @@ namespace Systems
                     toCenter.y = 0f;
                     if (toCenter.sqrMagnitude > scopeR2) continue;
 
-                    bot.IsVisibleToPlayer = !checkOcclusion
+                    bool spotted = !checkOcclusion
                         || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                    bot.IsVisibleToPlayer = spotted;
+                    if (spotted) bot.VisibilityFactor = 1f;
                 }
             }
         }
@@ -94,6 +112,10 @@ namespace Systems
         // Min ScopeReveal (ADS blend) before the scope circle starts spotting — avoids
         // pop-in the instant the player taps aim.
         const float ScopeSpotThreshold = 0.5f;
+
+        // Soft-fade bands at the FoV boundary (view-only VisibilityFactor ramp).
+        const float EdgeFalloffMeters = 4f;
+        const float EdgeFalloffDegrees = 12f;
 
         // Character-collider ignore radius for FOV sight checks: CapsuleColliders on Default
         // layer would otherwise spuriously block vision near player/bot positions.

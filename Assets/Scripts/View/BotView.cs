@@ -22,6 +22,12 @@ namespace View
         public string TypeId { get; private set; }
         public CharacterBody Body => _body;
 
+        // FoW dissolve — drives the char shader's screen-space fade at the FOV boundary (soft
+        // fade instead of a hard renderer pop). Get→Set preserves CharacterHitFx's decal MPB.
+        static readonly int FoWDissolveId = Shader.PropertyToID("_FoWDissolveAmount");
+        static readonly int FoWRevealId = Shader.PropertyToID("_FoWReveal");
+        MaterialPropertyBlock _fowMpb;
+
         /// <summary>Bind a CharacterBody at runtime (shell+body composition).</summary>
         public void BindBody(CharacterBody body)
         {
@@ -75,11 +81,26 @@ namespace View
             // тягнемо її окремим SetVisible на CanvasGroup. BotDebugLabel — TextMesh +
             // MeshRenderer, ловиться loop'ом, але має власний FOV-gate з більш точними
             // умовами (показ DevCheats flags); тут шум не нашкодить.
-            bool shouldShow = state.IsVisibleToPlayer || !DevCheats.FOVEnabled || DevCheats.ForceShowAllBots;
+            // FoW visibility: the character mesh now fades along the fog boundary in-shader
+            // (soft screen-door dissolve), no hard renderer pop. Keep renderers enabled and drive
+            // the dissolve amount; when FoW is off or force-show-all, dissolve 0 = fully opaque.
+            // Health bar (Canvas — not caught by the mesh shader) stays bool-gated on raycast vis.
+            bool fovActive = DevCheats.FOVEnabled && !DevCheats.ForceShowAllBots;
+            float dissolve = fovActive ? 1f : 0f;
+            float reveal = fovActive ? state.VisibilityFactor : 1f;
+            // Shadow + through-wall silhouette dissolve in-shader too (all passes read _FoWReveal),
+            // so they fade in sync with the mesh — no need to hard-toggle shadowCastingMode.
+            _fowMpb ??= new MaterialPropertyBlock();
             foreach (var r in GetComponentsInChildren<Renderer>(true))
-                r.enabled = shouldShow;
+            {
+                r.enabled = true;
+                r.GetPropertyBlock(_fowMpb);
+                _fowMpb.SetFloat(FoWDissolveId, dissolve);
+                _fowMpb.SetFloat(FoWRevealId, reveal);
+                r.SetPropertyBlock(_fowMpb);
+            }
             if (_healthBar != null)
-                _healthBar.SetVisible(shouldShow);
+                _healthBar.SetVisible(state.IsVisibleToPlayer || !fovActive);
 
             transform.position = state.Position;
 
