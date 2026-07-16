@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2562016441662859548}
   - component: {fileID: 4736729483790868799}
   - component: {fileID: 6180918382197523880}
+  - component: {fileID: 8078130650010803663}
   m_Layer: 0
   m_Name: Tree07_03Foliage
   m_TagString: Untagged
@@ -90,6 +91,33 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!205 &8078130650010803663
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2524561165937171859}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0.53623056, y: 4.748048, z: -0.07984638}
+  m_Size: 6.3483377
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.6
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 6180918382197523880}
+  - screenRelativeHeight: 0.3
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 6180918382197523880}
+  - screenRelativeHeight: 0.11
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 6180918382197523880}
+  m_Enabled: 0
 --- !u!1 &3652327275347539964
 GameObject:
   m_ObjectHideFlags: 0
@@ -101,6 +129,7 @@ GameObject:
   - component: {fileID: 4589451733573835865}
   - component: {fileID: 7672455243693273920}
   - component: {fileID: 8970397976061149292}
+  - component: {fileID: 2435657950893266618}
   m_Layer: 0
   m_Name: TreeMaple04
   m_TagString: Untagged
@@ -116,7 +145,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3652327275347539964}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 222.44, y: -0.000009636512, z: 80.56}
   m_LocalScale: {x: 1.4, y: 1.2, z: 1.4}
   m_ConstrainProportionsScale: 0
@@ -181,3 +210,30 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!205 &2435657950893266618
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3652327275347539964}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0.14731002, y: 3.00257, z: 0.058269024}
+  m_Size: 6.114947
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.601
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8970397976061149292}
+  - screenRelativeHeight: 0.3
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8970397976061149292}
+  - screenRelativeHeight: 0.11
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8970397976061149292}
+  m_Enabled: 0
