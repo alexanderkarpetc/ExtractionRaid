@@ -38,6 +38,7 @@ namespace Tests.EditMode
         public void EmergencyHeal_CriticalHp_NoDamageRecently_Heals()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.2f, elapsedTime: 10f, lastDamageTime: 5f);
+            bot.Blackboard.IsAlert = true; // past the reaction-delay window (Humanize bots overrides DebugStatus="Reacting..." while HasTarget && !IsAlert)
             var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
@@ -64,6 +65,7 @@ namespace Tests.EditMode
         public void NormalHeal_ModerateHp_SafeWindow_Heals()
         {
             var (state, bot) = CreatePMCSafe(hpRatio: 0.4f, elapsedTime: 10f, lastDamageTime: 5f);
+            bot.Blackboard.IsAlert = true; // past the reaction-delay window (see EmergencyHeal test)
             var ctx = TestContextFactory.Create();
 
             BotBrainSystem.Tick(state, in ctx);
