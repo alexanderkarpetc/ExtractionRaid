@@ -1,7 +1,14 @@
 # Battle Design — Current Status
 
 > Living document. Updated as decisions are made.
-> Last updated: 2026-05-06
+> Last updated: 2026-07-16 (armor/pen/bleed design below unchanged since 2026-05-06 — still current).
+>
+> **Scope note:** this doc = armor / penetration / durability / bleeding / damage-feedback design.
+> Weapon **attachments + Sniper Scope** shipped since (May–Jul 2026) but belong to the Weapon
+> Builder domain — see [`weapon-builder/attachments/README.md`](./weapon-builder/attachments/README.md)
+> + [`fog-of-war.md`](./fog-of-war.md), not here. The new `HeadshotDamageMultiplier` /
+> `ProjectileSpeed` mod axes feed the §5/§10 damage & headshot formulas unchanged.
+> Still-open here: **Bleed L2 DPS values** (§ Open Questions).
 
 ## Reference Documents
 - `docs/ai/armor-research.md` — competitor analysis (15+ games), bleeding systems

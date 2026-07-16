@@ -1,10 +1,25 @@
 # Handoff — current state
 
-> Snapshot for next-session agent. Combined state + recent landings (last ~2 weeks). Updated 2026-05-12.
+> Snapshot for next-session agent. Combined state + recent landings. Updated 2026-07-16.
 
 ## Context
 
 Top-down extraction shooter (Unity 6000.3.10f1, URP 17.3). 5-layer architecture (App → Session → Systems → Adapters → View/Presenter) per [`CLAUDE.md`](./CLAUDE.md). Ukrainian-language collaboration, tight iterations.
+
+---
+
+## Most recent — Weapon Attachments epic + Sniper Scope (2026-05 → 07-16)
+
+Big landing since this doc was last current. **Weapon Attachments epic — ✅ complete** (P1–P4). Sidegrade "mod" layer on Builder weapons; full record in [`weapon-builder/attachments/README.md`](./weapon-builder/attachments/README.md).
+
+- **Editor + inventory:** right-click weapon → **Modify** (modal, focus-slot → mod list, live green/red delta); OR drag mod↔weapon in inventory with compatible-slot cross-highlight. Mods are **loot-gated items** (backpack-consume, recoverable) that **drop from loot** (`ContainerConstants.AttachmentModDrops`).
+- **Depth:** slot count = **f(core rarity)**; **unique mods** (`CompatibleArchetype`); **parabolic rarity balance**; **weapon-compare tooltip** (two-column diff incl. ammo + installed mods).
+- **New stat axes:** `SightRange` (metres, additive), `ProjectileSpeed` + `Headshot` (mult) — composer + `WeaponStatDisplay` (Velocity always, Sight Range when scoped) + editor/compare.
+- **Sniper Scope (P4):** vision = screen-space SDF reveal circle in `FogOfWarComposite.shader` glued to `WeaponAimPoint`; aim = **ergo-driven damped spring** in `AimingSystem` (dot/circle/bullet lag as one; low ergo overshoots+bounces; `WeaponAimVelocity` state); `PlayerVisionSystem` resolves `ScopeReveal = AdsBlend × aim-distance blend`. Ballistic identity: give Velocity/Headshot/pinpoint, take RoF/Recoil/Ergo. All tuning in **`Raid → Dev Cheats → 🎯 Scope`** (`DevCheatsScopeSection` + friendly custom editor). See `fog-of-war.md`.
+- **Dropped:** Suppressor (Noise) removed from plan (2026-07-10) — too many unpolished features; unique mods stay on proxy axes.
+- **Tests:** ~640 EditMode green (was 469 at this doc's prior footer).
+
+**Next candidates** (from a 2026-07-16 doc review): attachments polish + playtest/balance · **Tier 8.x procedural reload/equip motion** (weapons static during reload — big feel win) · SFX (no shot audio yet — biggest missing channel) · Tier 4a bot-weapon legacy cleanup · test debt (`tests-review.md`).
 
 ---
 

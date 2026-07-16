@@ -2,7 +2,11 @@
 
 Шар **модулів (attachments)** на зброю, зібрану у Weapon Builder. Покращення, що **тюнять характеристики й feel**, але **не міняють логіку** зброї (логіка = Payload + Delivery). Це активація шару **«Typed Attachments»** з [`../design.md`](../design.md) §6.4 (раніше deferred).
 
-> **Статус (2026-06-12):** 🎨 дизайн завершено → ✅ **P1 shipped** (tooltip стат-бари + dual-rarity + inventory frame) → 🚧 **P2 core shipped**: P2.1 data+compose, P2.2 inventory-invoked attachment editor (anywhere, Variant A, focus-slot→list, live green/red delta, config-version re-assembly), P2.3 base mods. ✅ **P2 done** (P2.4 inventory mod-pips shipped). Sidegrade-loop живий end-to-end. **Лишилось:** balance/playtest (числа модів = catalog placeholders). 587 EditMode green. **Next phases:** P4 (Noise→Suppressor, Sight/FOV→Scope), P3 (unique mods + rarity-scaled slots), loot-gating attachments-as-items.
+> **Статус (2026-07-16): ✅ ЕПІК ЗАВЕРШЕНО.** P1–P4 shipped: візуалізація наявного, перші моди, **loot-gating** (моди-як-предмети, recoverable), inventory **drag/highlight**, **rarity-scaled слоти**, **unique-моди**, **parabolic rarity-баланс**, **weapon-compare tooltip** (+ammo/mods рядки), **mod loot-drops**, **Sniper Scope** (P4). ~640 EditMode green.
+>
+> **Sniper Scope (P4)** — модель ZS/Duckov: вісь `SightRange` (метри) → `ScopeReveal = AdsBlend × dist-blend` → **екранний SDF-круг** у `FogOfWarComposite.shader` (глючений до `WeaponAimPoint`) + **ergo-driven damped-spring аім** у `AimingSystem` (куля/дот/круг лагають як одне; low ergo → овершут+bounce) + балістика (give: Velocity/Headshot/Spread; take: RoF/Recoil/Ergo). Тюнінг: `Raid → Dev Cheats → 🎯 Scope` (`DevCheatsScopeSection` + friendly `[CustomEditor]`). Механіка огляду — `docs/ai/fog-of-war.md`.
+>
+> **Suppressor (Noise) прибрано з плану** (2026-07-10 — забагато невідполірованого; unique-моди лишаються на proxy-осях). Тимчасовий resume-скаффолд `impl-status.md` розпущено — постійний запис тут. **Далі:** playtest/balance + polish наявних фіч.
 >
 > **Термінологія:** цей шар = **Attachments / mods**. «Cores / modules» = Payload/Delivery (щоб не плутати — слово «module» зайняте під cores). Q9 — soft, лишаємо «attachments».
 
@@ -55,6 +59,8 @@ DELIVERY → [Muzzle]    [Grip]               к-ть = f(Delivery rarity)
 ---
 
 ## Roadmap — 5 фаз
+
+> ⚠️ **Історичний план (для контексту).** Фактично shipped: **P1–P4 ✅** (з поправкою — Sniper Scope = screen-space circle, НЕ конус↓; Suppressor/Noise **прибрано**). **P5 частково**: loot-drops модів ✅, RT-render іконки ✗ (backpack composite icons deferred sine die). Фінальний стан — у блоці «Статус» вгорі.
 
 > Принцип: **visualize-first** — встановити візуальну мову на наявних даних, потім нарощувати механіку (де-ризикує проблему читабельності tradeoff-ів, що завалила Division 1).
 >
