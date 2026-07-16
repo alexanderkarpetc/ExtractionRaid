@@ -716,7 +716,10 @@ namespace View.UI.Inventory
 
             var model = ItemTooltipBuilder.For(slot.CurrentItem,
                 App.Instance?.CoreDefinitions, App.Instance?.QuestDatabase,
-                shopCtx, itemIsInShop);
+                shopCtx, itemIsInShop,
+                // "Right-click to modify" only for player-owned weapons — Modify is offered in
+                // BuildPlayerOptions (SlotSource.Player), not for Loot/Floor/Stash.
+                canModify: slot.Source == InventorySlotElement.SlotSource.Player);
             tooltip.ShowFromPanel(model, evt.position);
 
             // Cross-highlight: hovering a mod lights up weapons it fits (and vice-versa).

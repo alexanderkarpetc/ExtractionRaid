@@ -24,7 +24,7 @@ namespace View.UI
             WeaponStatAxis.Spread       => "Spread",
             WeaponStatAxis.Ergonomics   => "Ergonomics",
             WeaponStatAxis.SightRange   => "Sight Range",
-            WeaponStatAxis.ProjectileSpeed => "Projectile Speed",
+            WeaponStatAxis.ProjectileSpeed => "Velocity",
             WeaponStatAxis.Headshot     => "Headshot",
             _                           => axis.ToString(),
         };

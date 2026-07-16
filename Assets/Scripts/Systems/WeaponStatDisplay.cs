@@ -64,7 +64,7 @@ namespace Systems
         {
             float rof = stats.FireInterval > 0f ? 1f / stats.FireInterval : 0f;
 
-            var rows = new List<StatDisplayRow>(7)
+            var rows = new List<StatDisplayRow>(9)
             {
                 // ── Bar rows (value + goodness fill, higher = better) ──
                 BarValue("Damage",       stats.Damage.ToString("0.##"),
@@ -78,7 +78,15 @@ namespace Systems
                 // ── Value-only rows (no bar — sink to bottom) ──
                 ValueOnly("Headshot", $"{stats.HeadshotDamageMultiplier:0.##}×"),
                 ValueOnly("Magazine", stats.MagazineSize.ToString()),
+                ValueOnly("Velocity", stats.ProjectileSpeed.ToString("0.#")),
             };
+
+            // Sight Range only surfaced when a scope grants it (keeps plain-weapon tooltips clean —
+            // WeaponStatDisplayTests asserts it's absent on a baseline weapon). Appended LAST so the
+            // compare panel's index-based row pairing stays aligned across scoped/unscoped weapons.
+            if (stats.SightRangeBonus > 0f)
+                rows.Add(ValueOnly("Sight Range", $"{stats.SightRangeBonus.ToString("0.#")}m"));
+
             return rows;
         }
 

@@ -20,12 +20,13 @@ namespace View.UI.Tooltip.Builders
             ICoreDefinitionRegistry registry = null,
             QuestDatabase questDatabase = null,
             LootableContainerState shopContext = null,
-            bool itemIsInShop = false)
+            bool itemIsInShop = false,
+            bool canModify = false)
         {
             if (item == null) return new TooltipModel(string.Empty);
             if (item.HasWeaponConfiguration)
             {
-                var weaponModel = WeaponTooltipBuilder.For(item, registry);
+                var weaponModel = WeaponTooltipBuilder.For(item, registry, canModify);
                 return AppendPrice(weaponModel, item, shopContext, itemIsInShop);
             }
 

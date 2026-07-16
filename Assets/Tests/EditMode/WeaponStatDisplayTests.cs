@@ -38,8 +38,19 @@ namespace Tests.EditMode
             var rows = WeaponStatDisplay.Build(Baseline());
             var labels = rows.Select(r => r.Label).ToArray();
             Assert.AreEqual(
-                new[] { "Damage", "Rate of Fire", "Stability", "Accuracy", "Ergonomics", "Headshot", "Magazine" },
+                new[] { "Damage", "Rate of Fire", "Stability", "Accuracy", "Ergonomics", "Headshot", "Magazine", "Velocity" },
                 labels);
+        }
+
+        [Test]
+        public void Build_WithSightRange_AppendsMetreRowLast()
+        {
+            var s = Baseline();
+            s.SightRangeBonus = 16.5f;
+            var rows = WeaponStatDisplay.Build(s);
+            Assert.AreEqual("Sight Range", rows[^1].Label, "Sight Range must be the last row (compare pairing relies on it)");
+            Assert.AreEqual("16.5m", rows[^1].Value);
+            Assert.IsFalse(rows[^1].HasBar);
         }
 
         [Test]

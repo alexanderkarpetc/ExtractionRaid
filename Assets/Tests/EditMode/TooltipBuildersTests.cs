@@ -143,7 +143,7 @@ namespace Tests.EditMode
         public void WeaponBuilder_BallisticPistol_HasArchetypeAndCombatStats()
         {
             var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 8);
-            var model = WeaponTooltipBuilder.For(weapon, _registry);
+            var model = WeaponTooltipBuilder.For(weapon, _registry, canModify: true);
 
             Assert.AreEqual("Ballistic Pistol", model.Title);
             // Subtitle = two rarity-colored cores (rich text). Assert content, not exact markup.
@@ -256,7 +256,7 @@ namespace Tests.EditMode
             // Fresh weapon — every attachment slot empty → modify hint is the
             // yellow-orange "can upgrade" call-to-action.
             var weapon = MakeWeaponItem("BallisticRound", "SingleAction", ammo: 8);
-            var model = WeaponTooltipBuilder.For(weapon, _registry);
+            var model = WeaponTooltipBuilder.For(weapon, _registry, canModify: true);
 
             StringAssert.Contains("modify", model.Footer);
             Assert.IsTrue(model.FooterAccent,
@@ -290,7 +290,7 @@ namespace Tests.EditMode
 
             try
             {
-                var model = WeaponTooltipBuilder.For(weapon, reg);
+                var model = WeaponTooltipBuilder.For(weapon, reg, canModify: true);
                 Assert.IsFalse(model.FooterAccent,
                     "A weapon with every slot filled should not accent the hint.");
             }

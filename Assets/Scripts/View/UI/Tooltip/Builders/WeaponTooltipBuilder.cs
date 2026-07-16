@@ -20,7 +20,7 @@ namespace View.UI.Tooltip.Builders
     /// </summary>
     public static class WeaponTooltipBuilder
     {
-        public static TooltipModel For(ItemState item, ICoreDefinitionRegistry registry)
+        public static TooltipModel For(ItemState item, ICoreDefinitionRegistry registry, bool canModify = false)
         {
             if (item == null || !item.HasWeaponConfiguration)
                 return new TooltipModel(string.Empty);
@@ -90,8 +90,11 @@ namespace View.UI.Tooltip.Builders
             // (attachRows.Count == installed mods; total = rarity-scaled unlocked slot count).
             bool hasFreeSlot = attachRows.Count < AttachmentSlots.TotalUnlocked(item);
 
+            // Footer hint only where Modify is actually available (player-owned weapon) — not on
+            // loot/stash/floor weapons, where right-click offers no Modify.
             return new TooltipModel(title, subtitle, sections,
-                footer: "Right-click to modify", footerAccent: hasFreeSlot);
+                footer: canModify ? "Right-click to modify" : string.Empty,
+                footerAccent: canModify && hasFreeSlot);
         }
     }
 }
