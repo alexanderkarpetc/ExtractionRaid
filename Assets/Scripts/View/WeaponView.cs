@@ -36,6 +36,17 @@ namespace View
         [SerializeField] Transform _recoilKickTarget;
         [SerializeField] float     _recoilKickDistance = 0.04f;
 
+        // Tier 8.x — procedural reload/equip/unequip motion on the same KickGroup (replaces the
+        // stale Mecanim clips). Serialized for fast in-Play tuning; migrates to ViewCheats once
+        // the feel is locked. Signs are in KickGroup local space (Z = muzzle fwd, Y = up).
+        [Header("Reload / Equip motion (Tier 8.x)")]
+        [SerializeField] float _reloadDip = 0.05f;        // lower + pull back during the mag swap
+        [SerializeField] float _reloadPitchAngle = 22f;   // muzzle tips as the gun cants for the swap
+        [SerializeField] float _reloadRollAngle  = 14f;   // slight sideways cant
+        [SerializeField] int   _reloadBobs = 2;           // mag-out / mag-in wobbles
+        [SerializeField] float _equipLower = 0.07f;       // equip/unequip start lowered by this
+        [SerializeField] float _equipPitchAngle = 45f;    // ...and muzzle-down by this, rising to rest
+
         ParticleSystem _muzzleFlashInstance;
 
         // Attached delivery state — resolved at AttachDelivery() and cached.
@@ -50,11 +61,18 @@ namespace View
         static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
         float _appliedHeat = -1f; // track to avoid redundant MPB writes
 
-        // Procedural recoil state — local (not RaidState): purely visual feedback.
+        // Procedural pose state — local (not RaidState): purely visual feedback. Recoil kick +
+        // reload/equip/unequip motion compose onto _recoilKickTarget (KickGroup) each frame.
         Vector3 _kickRestLocalPos;
+        Quaternion _kickRestLocalRot;
         bool    _kickRestCached;
         float   _kickElapsed;
         float   _kickDuration;
+
+        enum PhaseMotion { None, Reload, Equip, Unequip }
+        PhaseMotion _phaseMotion;
+        float _phaseElapsed;
+        float _phaseDuration;
 
         static readonly int SpeedParam = Animator.StringToHash("Speed");
 
@@ -191,47 +209,105 @@ namespace View
             PlayClip("Fire", duration);
             TriggerRecoilKick(duration);
         }
-        public void PlayEquip(float duration)   => PlayClip("Equip", duration);
-        public void PlayUnequip(float duration) => PlayClip("Unequip", duration);
-        public void PlayReload(float duration)  => PlayClip("Reload", duration);
+        public void PlayEquip(float duration)   => StartPhaseMotion(PhaseMotion.Equip, duration);
+        public void PlayUnequip(float duration) => StartPhaseMotion(PhaseMotion.Unequip, duration);
+        public void PlayReload(float duration)  => StartPhaseMotion(PhaseMotion.Reload, duration);
         public void PlayDryFire()               => _animator?.SetTrigger("DryFire");
 
-        // ── Procedural recoil ──────────────────────────────────
+        // ── Procedural pose (recoil kick + reload/equip motion, composed each frame) ──────────
+
+        void CacheRest()
+        {
+            if (_kickRestCached || _recoilKickTarget == null) return;
+            _kickRestLocalPos = _recoilKickTarget.localPosition;
+            _kickRestLocalRot = _recoilKickTarget.localRotation;
+            _kickRestCached = true;
+        }
 
         void TriggerRecoilKick(float fireDuration)
         {
             if (_recoilKickTarget == null || _recoilKickDistance <= 0f) return;
-            if (!_kickRestCached)
-            {
-                _kickRestLocalPos = _recoilKickTarget.localPosition;
-                _kickRestCached = true;
-            }
+            CacheRest();
             _kickDuration = Mathf.Max(0.06f, fireDuration * 0.4f);
             _kickElapsed  = 0f;
-            _recoilKickTarget.localPosition = _kickRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance);
+        }
+
+        void StartPhaseMotion(PhaseMotion motion, float duration)
+        {
+            if (_recoilKickTarget == null) return;
+            CacheRest();
+            _phaseMotion   = motion;
+            _phaseDuration = Mathf.Max(0.05f, duration);
+            _phaseElapsed  = 0f;
         }
 
         void Update()
         {
-            UpdateRecoilKick();
+            UpdatePose();
             UpdateMuzzleLightPulse();
         }
 
-        void UpdateRecoilKick()
+        // Recoil kick + phase motion both write the KickGroup, so compose them into one
+        // pos/rot offset per frame (they'd fight if each wrote the transform directly).
+        void UpdatePose()
         {
-            if (!_kickRestCached || _kickDuration <= 0f) return;
+            if (!_kickRestCached || _recoilKickTarget == null) return;
+            float dt = Time.deltaTime;
+            Vector3 pos = Vector3.zero;
+            Vector3 euler = Vector3.zero;
 
-            _kickElapsed += Time.deltaTime;
-            if (_kickElapsed >= _kickDuration)
+            // Recoil kick — short Z pull-back, ease-out snap back.
+            if (_kickDuration > 0f)
             {
-                _recoilKickTarget.localPosition = _kickRestLocalPos;
-                _kickDuration = 0f;
-                return;
+                _kickElapsed += dt;
+                float t = Mathf.Clamp01(_kickElapsed / _kickDuration);
+                float e = (1f - t) * (1f - t);
+                pos.z -= _recoilKickDistance * e;
+                if (t >= 1f) _kickDuration = 0f;
             }
 
-            float t = _kickElapsed / _kickDuration;
-            float eased = (1f - t) * (1f - t); // ease-out quad → snap back
-            _recoilKickTarget.localPosition = _kickRestLocalPos + new Vector3(0f, 0f, -_recoilKickDistance * eased);
+            // Reload / equip / unequip pose motion.
+            if (_phaseMotion != PhaseMotion.None && _phaseDuration > 0f)
+            {
+                _phaseElapsed += dt;
+                float t = Mathf.Clamp01(_phaseElapsed / _phaseDuration);
+                AddPhaseMotion(t, ref pos, ref euler);
+                if (t >= 1f) _phaseMotion = PhaseMotion.None;
+            }
+
+            _recoilKickTarget.localPosition = _kickRestLocalPos + pos;
+            _recoilKickTarget.localRotation = _kickRestLocalRot * Quaternion.Euler(euler);
+        }
+
+        void AddPhaseMotion(float t, ref Vector3 pos, ref Vector3 euler)
+        {
+            switch (_phaseMotion)
+            {
+                case PhaseMotion.Reload:
+                {
+                    float hump = Mathf.Sin(t * Mathf.PI);             // 0 at ends, 1 mid — dip + return
+                    float bob  = Mathf.Sin(t * Mathf.PI * 2f * Mathf.Max(1, _reloadBobs)) * hump;
+                    pos.y -= _reloadDip * hump;
+                    pos.z -= _reloadDip * 0.5f * hump;
+                    euler.x += _reloadPitchAngle * hump + bob * 4f;   // tip + mag in/out wobble
+                    euler.z += _reloadRollAngle * hump;               // sideways cant
+                    break;
+                }
+                case PhaseMotion.Equip:
+                {
+                    float k = 1f - t; k *= k;                         // 1 → 0, ease-out (bring up + settle)
+                    pos.y -= _equipLower * k;
+                    euler.x += _equipPitchAngle * k;
+                    break;
+                }
+                case PhaseMotion.Unequip:
+                {
+                    float k = t * t;                                  // 0 → 1, ease-in (lower away)
+                    pos.y -= _equipLower * k;
+                    euler.x += _equipPitchAngle * k;
+                    break;
+                }
+            }
         }
 
         void UpdateMuzzleLightPulse()
