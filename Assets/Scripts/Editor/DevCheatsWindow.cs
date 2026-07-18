@@ -38,6 +38,15 @@ namespace Editor
         // testable both in hideout and in raid.
         string _giveItemId;
         int _giveItemCount = 1;
+
+        // "Give Weapon Preset" devcheat — designers author full builds (payload +
+        // delivery + optional exotic/attachments) as WeaponPresetDefinition assets;
+        // this picks one and spawns the assembled weapon into the backpack. Presets
+        // are discovered via AssetDatabase (editor-only) so no Resources database is
+        // needed.
+        State.WeaponPresetDefinition[] _weaponPresets;
+        int _weaponPresetIndex;
+
         int _giveCreditsAmount = 1000;
         State.BuildingKind _buildingKind = State.BuildingKind.WeaponBuilder;
         int _buildingLevel = 1;
@@ -396,6 +405,13 @@ namespace Editor
             }
 
             EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Give Weapon Preset", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!appReady))
+            {
+                DrawGiveWeaponPresetRow();
+            }
+
+            EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Give Credits", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(!appReady))
             {
@@ -447,6 +463,94 @@ namespace Editor
                         GiveItem(_giveItemId, _giveItemCount);
                 }
             }
+        }
+
+        void DrawGiveWeaponPresetRow()
+        {
+            // Lazy-load (and cache) the preset assets. Refresh button rescans after
+            // new presets are authored without reopening the window.
+            _weaponPresets ??= LoadWeaponPresets();
+
+            if (_weaponPresets.Length == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No WeaponPresetDefinition assets found.\n" +
+                    "Create one via Assets → Create → Weapon Builder → Weapon Preset, " +
+                    "then set its Payload + Delivery cores.",
+                    MessageType.Info);
+                if (GUILayout.Button("Refresh", GUILayout.Width(70)))
+                    _weaponPresets = LoadWeaponPresets();
+                return;
+            }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var labels = new string[_weaponPresets.Length];
+                for (int i = 0; i < _weaponPresets.Length; i++)
+                    labels[i] = _weaponPresets[i].PresetName;
+
+                _weaponPresetIndex = Mathf.Clamp(_weaponPresetIndex, 0, _weaponPresets.Length - 1);
+                _weaponPresetIndex = EditorGUILayout.Popup(_weaponPresetIndex, labels,
+                    GUILayout.MinWidth(220), GUILayout.ExpandWidth(true));
+
+                var preset = _weaponPresets[_weaponPresetIndex];
+                using (new EditorGUI.DisabledScope(preset == null || !preset.IsValid))
+                {
+                    if (GUILayout.Button("Give", GUILayout.Width(70)))
+                        GiveWeaponPreset(preset);
+                }
+
+                if (GUILayout.Button("↻", GUILayout.Width(24)))
+                    _weaponPresets = LoadWeaponPresets();
+            }
+
+            var selected = _weaponPresets[_weaponPresetIndex];
+            if (selected != null && !selected.IsValid)
+                EditorGUILayout.HelpBox(
+                    $"'{selected.PresetName}' is missing a Payload or Delivery core.",
+                    MessageType.Warning);
+        }
+
+        static State.WeaponPresetDefinition[] LoadWeaponPresets()
+        {
+            var guids = AssetDatabase.FindAssets("t:WeaponPresetDefinition");
+            var list = new List<State.WeaponPresetDefinition>(guids.Length);
+            foreach (var guid in guids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<State.WeaponPresetDefinition>(path);
+                if (asset != null) list.Add(asset);
+            }
+            list.Sort((a, b) => string.CompareOrdinal(a.PresetName, b.PresetName));
+            return list.ToArray();
+        }
+
+        static void GiveWeaponPreset(State.WeaponPresetDefinition preset)
+        {
+            var inventory = App.Instance?.Player?.Inventory;
+            var session   = App.Instance?.RaidSession;
+            if (inventory == null || session == null)
+            {
+                Debug.LogWarning("[DevCheats] Cannot give weapon preset — Player.Inventory / RaidSession not ready.");
+                return;
+            }
+            if (preset == null || !preset.IsValid)
+            {
+                Debug.LogWarning("[DevCheats] Weapon preset is missing a Payload or Delivery core.");
+                return;
+            }
+
+            int slot = inventory.FindFreeBackpackSlot();
+            if (slot < 0)
+            {
+                Debug.LogWarning($"[DevCheats] Cannot give '{preset.PresetName}' — backpack is full.");
+                return;
+            }
+
+            var config = preset.BuildConfiguration();
+            var eid = session.RaidState.AllocateEId();
+            inventory.Backpack[slot] = State.ItemState.CreateWeapon(eid, preset.WeaponDefinitionId, config);
+            Debug.Log($"[DevCheats] Gave weapon preset '{preset.PresetName}' → backpack slot {slot}.");
         }
 
         void DrawGiveCreditsRow()
