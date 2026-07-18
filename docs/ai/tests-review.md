@@ -1,8 +1,10 @@
 # EditMode Tests — Review
 
-> **Status:** Analysis complete (2026-04-24). No fixes applied yet — this doc is the plan.
-> **Scope:** 387 EditMode tests across 26 files in `Assets/Tests/EditMode/`.
+> **Status:** Analysis from 2026-04-24 (the plan below is that snapshot — treat as historical).
+> **Scope (then):** 387 EditMode tests across 26 files in `Assets/Tests/EditMode/`.
 > **Goal:** identify duplicates, weak/tautological tests, wrong assumptions, obsolete tests, coverage gaps — and produce a prioritized fix plan.
+>
+> **Currency note (2026-07-16):** suite is now **~660 EditMode green** (attachments epic, sniper scope, bot/heal, etc. added tests since). Some flagged debt already resolved — notably the **DevCheats-leak refactor** for `ArmorSystem` / `PlayerFOVSystem` / `MovementSystem` (P0-1, done 2026-05-05, tunables now via `RaidContext.*Config`). Re-audit before acting on the older items below; the P1-K exotic gap stays valid (Tier 5 unimplemented).
 
 **Legend:**
 - 🔁 **DUP** — duplication / redundancy

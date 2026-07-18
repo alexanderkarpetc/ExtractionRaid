@@ -2,6 +2,8 @@
 
 Системна фіча кастомізації зброї для extraction shooter. Поточна версія дизайну: **v0.7**.
 
+> **⚠️ v1.0 UNPAUSE (2026-07-18): Weapon Builder = release headline.** Player-facing builder + content розвиваються: **Tier 3 subset** (+Rocket, +Rotary → 3×4) + **Tier 5** (3–4 exotics) + balance + Builder UX re-engaged for v1.0. Full 4×5 = stretch. Canonical: [`../v1.0-roadmap.md`](../v1.0-roadmap.md) (M2) + [`../release-scope.md`](../release-scope.md). Historical "paused / polish-first" notes below kept for context.
+
 > ⏸ **PAUSED 2026-05-01.** Foundation + Tier 6 + Tier 8 shipped. Active dev focus shifted до **Better Feel Gunplay** epic ([`docs/ai/gunplay/`](../gunplay/README.md)) — make existing 6 archetypes feel visceral. Weapon Builder polish track (Tier 8.x → 4a → 9 → 10) re-engages коли gunplay polish loop converges. Tier 3/5 (content expansion) лишаються deferred sine die.
 
 > 🎨 **Active sub-epic (2026-06-10): Weapon Attachments** — шар модулів (Typed Attachments §6.4), що тюнять стати/feel без зміни логіки. Дизайн завершено, 5-фазний roadmap затверджено → [`attachments/README.md`](./attachments/README.md).
@@ -43,13 +45,13 @@
 | **4a** Bot weapon migration | Bot weapons through assembly pipeline; retire Cluster B compat | ⏳ planned (polish track) |
 | **9** VFX / SFX Language | Per-payload/delivery visual + audio language; scope-limited to current 2×3 | ⏳ planned (polish track) |
 | **10** Weapon Feel Polish | Iterative tuning loop on existing 6 archetypes | ⏳ planned (polish track) |
-| **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | ⏸ deferred sine die |
+| **3** Content expansion | +Foam, +Rocket, +Rotary, +Swarm | 🔄 **partial for v1.0** — Rocket+Rotary re-engaged (2026-07-18); Foam/Swarm deferred |
 | **4b** Rarity + Slots | Per-tier stat values, banned combos | ⏸ deferred sine die |
-| **5** Exotic Mods | 5 Exotic mods via hook system | ⏸ deferred sine die |
+| **5** Exotic Mods | hook system + exotic mods | 🔄 **re-engaged for v1.0** (2026-07-18) — hook + 3–4 exotics |
 | **8 Wave F** | Backpack composite icons | ⏸ deferred (UI prereq) |
 | ~~**7**~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
 
-**Tier numbers = stable IDs.** Execution order ≠ tier number order — see [plan/roadmap.md](./plan/roadmap.md#execution-sequence-revised-2026-05-01--polish-first) for rationale. Currently (revised 2026-05-01): **8.x → 4a → 9 → 10**, with 3/4b/5 deferred sine die.
+**Tier numbers = stable IDs.** Execution order ≠ tier number order. **v1.0 (2026-07-18):** Weapon Builder = release headline — execution folds into [`../v1.0-roadmap.md`](../v1.0-roadmap.md) M2 (Tier 8.x/4a/9/10 + Tier 3 Rocket/Rotary + Tier 5 exotics). **4b + Foam/Swarm + Wave F still deferred.**
 
 **Test coverage:** **434 зелених тестів** (foundation + UX Pass 1 + Tier 6 G2 loot + Tier 8 Wave B propagation).
 

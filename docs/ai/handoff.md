@@ -1,6 +1,8 @@
 # Handoff — current state
 
 > Snapshot for next-session agent. Combined state + recent landings. Updated 2026-07-16.
+>
+> **📍 Canonical plan (2026-07-18):** [`release-scope.md`](./release-scope.md) (feature-map + gaps + 🔒 locked decisions) + [`v1.0-roadmap.md`](./v1.0-roadmap.md) (milestones **M1–M4**, mirrored in the Task list). These supersede the ad-hoc "Next candidates" below.
 
 ## Context
 
@@ -19,7 +21,7 @@ Big landing since this doc was last current. **Weapon Attachments epic — ✅ c
 - **Dropped:** Suppressor (Noise) removed from plan (2026-07-10) — too many unpolished features; unique mods stay on proxy axes.
 - **Tests:** ~640 EditMode green (was 469 at this doc's prior footer).
 
-**Next candidates** (from a 2026-07-16 doc review): attachments polish + playtest/balance · **Tier 8.x procedural reload/equip motion** (weapons static during reload — big feel win) · SFX (no shot audio yet — biggest missing channel) · Tier 4a bot-weapon legacy cleanup · test debt (`tests-review.md`).
+**Next candidates** — superseded by the **[v1.0 roadmap](./v1.0-roadmap.md)** (milestones M1–M4, mirrored in the Task list #39–#60). Start point: **M1 — honest core loop** (gear-loss on death · raid timer · extraction UX · Tier 4a bot migration · audio scaffold). *(Tier 8.x reload/equip motion listed here previously — already shipped 2026-07-16.)*
 
 ---
 
@@ -228,13 +230,8 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify `mcp__unityMCP__run_tests` EditMode → 524/524 (baseline as of 2026-05-21).
-4. Sync with user on direction. Most gunplay polish epic items are shipped — likely candidates remaining:
-   - Bleed L2 DPS tuning (playtest-driven)
-   - Test debt closure (P0-3/4/5 — see `tests-review.md`)
-   - Audio epic (no SFX hooks yet — biggest missing channel)
-   - Level design / first map content
-   - Quest/economy systems
+3. Verify `mcp__unityMCP__run_tests` EditMode → **660/660** (baseline as of 2026-07-16). ⚠️ bridge is CoplayDev `mcp__unityMCP__*` on port 6401 for this project (see global CLAUDE.md), not `unity-mcp`.
+4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4) + Task list #39–#60.** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); progression OUT; 2 maps + bunker; item icons must-have (generated); EN-only. **Start with M1 (honest core loop).** Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
 
 ---
 
@@ -251,4 +248,4 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ---
 
-**Status as of session end:** All committed. 469/469 green. Heat-haze experiment reverted. Docs updated (weapons.md, bot-ai.md). Ready for fresh session.
+**Status (2026-07-16):** All committed. **660/660 EditMode green.** Latest: Weapon Attachments epic + Sniper Scope (P4), bot FoV-boundary dissolve (mesh/shadow/xray fade), procedural weapon reload/equip motion. (Older footer note — 469/469, heat-haze reverted — was 2026-05-x.)

@@ -112,14 +112,19 @@ When delegating Unity work to a subagent (Task / custom agent), pass the bridge-
 
 Project docs live в `docs/ai/`. Update the relevant doc when changing the system it describes — section 9 lists which doc maps to which area.
 
+**📍 Current direction / release plan (read early):**
+- [`release-scope.md`](./release-scope.md) — full feature-map + gap analysis + 🔒 locked release decisions (what's shipped vs what's left).
+- [`v1.0-roadmap.md`](./v1.0-roadmap.md) — the execution plan to v1.0 (milestones **M1–M4**, mirrored in the Task list). **This is the canonical "what do we build next" doc.**
+
 ## 9) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
+- **Release scope / current priorities / what's left to v1.0** -> `docs/ai/release-scope.md` + `docs/ai/v1.0-roadmap.md`
 - Architecture changes / new systems -> `docs/ai/architecture.md`
 - Spawn/despawn, entity binding, callbacks, presenter wiring -> `docs/ai/entity-lifecycle.md`
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`
 - Weapons, ammo, reload, aiming, weapon stats -> `docs/ai/weapons.md`
-- Weapon Builder (composition, modules, builder UI) — paused -> `docs/ai/weapon-builder/`
+- Weapon Builder (composition, modules, builder UI) — **v1.0 headline; 3×4 archetypes + exotics in scope** -> `docs/ai/weapon-builder/`
 - **Combat polish (shipped state — hit feedback, camera shake, blood, ragdoll, decals)** -> `docs/ai/gunplay/`
 - Crosshair / cursor overlay, weapon state visualization -> `docs/ai/crosshair.md`
 - Fog of War, visibility, ray sweep, post-processing -> `docs/ai/fog-of-war.md`

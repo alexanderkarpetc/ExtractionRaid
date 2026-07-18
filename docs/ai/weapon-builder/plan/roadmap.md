@@ -1,5 +1,7 @@
 # Weapon Builder — Implementation Roadmap
 
+> **⚠️ v1.0 update (2026-07-18): Weapon Builder = release headline.** The 2026-05-01 "polish-first, Tier 3/5 deferred sine die" pivot is PARTLY REVERSED for v1.0. Re-engaged (scoped): **Tier 3 subset** (+Rocket payload, +Rotary delivery → 3×4 matrix) + **Tier 5** (3–4 exotics) + balance + Builder UX. Full 4×5 still a stretch. Canonical plan: [`../../v1.0-roadmap.md`](../../v1.0-roadmap.md) (M2.2/M2.3/M2.6) + [`../../release-scope.md`](../../release-scope.md).
+>
 > **Ultimate план реалізації фічі.** Структурований по tiers. Для кожного tier — архітектурні питання, рішення, work items, exit criteria, залежності.
 >
 > **Принцип:** Tier 0-2 опрацьовуємо детально (це vertical slice + найближче розширення). Tier 3-7 — high-level bullets, деталізуємо в міру наближення. Не намагаємось відповісти на всі архітектурні питання одразу.
@@ -19,13 +21,13 @@
 | UX Pass 1 | UX polish (Builder D&D rewrite, tooltips, ammo, archetype labels, resolution scaling) | ✅ complete (2026-04-27) |
 | 6 | Loot / Inventory integration (modules-as-items, loot drops, dev grant) | ✅ done (Waves A/B/D/E/F); G7 deferred sine die |
 | 8 | 3D Modular Visualization | ✅ done (2026-04-30) — Waves A-E; Wave F deferred (UI prereq) |
-| 8.x | Tier 8 follow-ups (muzzle alignment, reload/equip motion, Mecanim cleanup, socket tuning) | ⏳ NEXT (polish track) |
+| 8.x | Tier 8 follow-ups: **reload/equip/unequip procedural motion ✅ (2026-07-16, player)**; remaining — muzzle alignment, Mecanim cleanup, socket tuning | 🔄 in progress (polish track) |
 | 4a | **Bot weapon migration ONLY** (split from Tier 4) — closes Cluster B legacy debt | ⏳ planned (polish track) |
 | 9 | VFX / SFX Language (scope-limited to current 2×3 archetypes) | ⏳ planned (polish track) |
 | 10 | Weapon Feel Polish (iterative playtest tuning) | ⏳ planned (polish track) |
-| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | ⏸ deferred sine die — engage коли polish converges |
+| 3 | Content expansion (Foam, Rocket, Rotary, Swarm) | 🔄 **partial for v1.0** (2026-07-18) — Rocket + Rotary re-engaged (→3×4); Foam/Swarm still deferred |
 | 4b | Rarity values + Slot Compatibility + banned combos (split from Tier 4) | ⏸ deferred sine die |
-| 5 | Exotic Mods | ⏸ deferred sine die |
+| 5 | Exotic Mods | 🔄 **re-engaged for v1.0** (2026-07-18) — hook system + 3–4 exotics |
 | 8 Wave F | Backpack composite icons | ⏸ deferred sine die — UI prereq |
 | ~~7~~ | ~~Polish (Art/VFX, UX, balance)~~ — **deprecated, split into 8/9/10** | — |
 
@@ -47,8 +49,10 @@
 
    1. Tier 8.x follow-ups
       • Muzzle alignment for symmetric meshes
-      • Reload/Equip/Unequip procedural motion
-      • Mecanim controller stale clip cleanup or replacement
+      • Reload/Equip/Unequip procedural motion ✅ (2026-07-16 — code-driven pose on KickGroup
+        in WeaponView, composed with recoil; replaces stale Mecanim clips; PLAYER only, bots
+        need WeaponView plumbing; tuning serialized → migrate to ViewCheats when feel locked)
+      • Mecanim controller stale clip cleanup or replacement (Fire clip still Mecanim)
       • Per-prefab PayloadMount/MuzzlePoint tuning
 
    2. Tier 4a — bot weapon migration (split from Tier 4)

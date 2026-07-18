@@ -1,10 +1,14 @@
 # Weapon Builder — Status
 
+> **⚠️ v1.0 UNPAUSE (2026-07-18): Weapon Builder = release headline.** Tier 3 subset (+Rocket, +Rotary → 3×4) + Tier 5 (3–4 exotics) re-engaged for v1.0 + balance + Builder UX. Canonical plan: [`../../v1.0-roadmap.md`](../../v1.0-roadmap.md) (M2). The pause history below is superseded for scope decisions.
+>
 > ⏸ **PAUSED 2026-05-01, partial unpause 2026-05-04 → 2026-05-05.** Foundation + Tier 6 + Tier 8 done; Cluster A (player-facing legacy) retired 2026-05-01; **Cluster B (bot weapon migration / Tier 4a) retired 2026-05-04**; **Tier 8.x* (asset architecture rebuild) shipped 2026-05-05** — full inversion of payload/delivery prefab roles, all 5 module prefabs regenerated, weapon-on-death drop physics added, MuzzlePoint dynamic resolution. Remaining backlog: **Tier 9 (VFX/SFX, awaiting FX artist)** → Tier 10 (feel polish, mostly overlap з gunplay). 6 archetypes feel coherent + composable.
 
 > **Status (2026-05-01):** Foundation done (Tiers 0-2) + UX Pass 1 done + **Tier 6 done** (Waves A/B/D/E/F; G7 deferred) + **Tier 8 done** (Waves A-E; F deferred — UI prereq) + **Cluster A retired** (legacy `Rifle`/`Pistol`/`Ammo_Pistol*` player-facing references replaced з Builder content).
 >
 > **Strategic pivot 2026-05-01:** content expansion (Tier 3, 5) deferred sine die. Polish-first execution: make current 6 archetypes feel great. 📋 Next track: **Tier 8.x follow-ups → Tier 4a (bot weapon migration) → Tier 9 (VFX/SFX, scoped 2×3) → Tier 10 (feel)**. See [Pause summary](#pause-summary--session-resumption-guide) для повного rationale.
+>
+> **Update 2026-07-16:** Tier 8.x **reload/equip/unequip procedural motion landed** (player; `WeaponView` code-driven pose, replaces stale Mecanim clips) — see roadmap Tier 8.x. Remaining 8.x: muzzle alignment, Mecanim cleanup, socket tuning, + bot WeaponView plumbing. Biggest un-started gap overall = **SFX/audio** (Tier 9 territory, no shot/reload sound hooks yet).
 
 ---
 
