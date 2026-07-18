@@ -17,7 +17,7 @@ namespace State
         public int Resource = -1;
 
         // Weapon-builder composition (only populated for weapon items).
-        // Set via CreateWeapon() / WeaponItemFactory.
+        // Set via CreateWeapon().
         // Assembled into a runtime WeaponEntityState by WeaponSyncSystem / PlayerSpawnSystem.
         public bool HasWeaponConfiguration;
         public WeaponConfiguration WeaponConfiguration;

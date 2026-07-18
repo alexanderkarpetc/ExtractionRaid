@@ -9,9 +9,9 @@ namespace Systems
     /// Keeps player's hotbar slots in sync with the inventory's weapon slots.
     ///
     /// Each weapon inventory item carries its own <see cref="WeaponConfiguration"/>
-    /// (attached at spawn time by <see cref="WeaponItemFactory"/>; later — by the
-    /// Builder UI). <see cref="WeaponAssemblySystem.TryAssemble"/> resolves it into a
-    /// runtime <see cref="WeaponEntityState"/>.
+    /// (attached at spawn time via <see cref="ItemState.CreateWeapon"/> — by loot / bot /
+    /// quest spawns or the Builder UI). <see cref="WeaponAssemblySystem.TryAssemble"/>
+    /// resolves it into a runtime <see cref="WeaponEntityState"/>.
     ///
     /// Per D7 (ghost-weapon): assembly failure leaves the inventory item untouched,
     /// empties the hotbar slot, and emits <see cref="IRaidEvents.WeaponAssemblyFailed"/>.

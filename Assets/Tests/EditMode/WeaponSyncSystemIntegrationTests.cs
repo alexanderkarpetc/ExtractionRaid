@@ -11,8 +11,8 @@ namespace Tests.EditMode
     /// ItemState (with WeaponConfiguration) → WeaponAssemblySystem → WeaponEntityState.
     ///
     /// Covers:
-    ///   - Rifle / Pistol starter-grade items produce runtime WeaponEntityState with
-    ///     the expected composition, Stats pulled from SO assets, and AmmoType from Payload.
+    ///   - Ballistic+Auto / Ballistic+SingleAction builds produce runtime WeaponEntityState
+    ///     with the expected composition, Stats pulled from SO assets, and AmmoType from Payload.
     ///   - Ghost-weapon path per D7: invalid / missing config → null + WeaponAssemblyFailed event.
     ///   - Ground ↔ inventory round-trip preserves composition.
     /// </summary>
@@ -74,12 +74,17 @@ namespace Tests.EditMode
         public void TearDown() =>
             WeaponBuilderTestFactory.DestroyAll(_ballistic, _singleAction, _auto, _db);
 
-        // ── Rifle parity ──────────────────────────────────────
+        // ── Ballistic + Auto build ────────────────────────────
 
         [Test]
-        public void BuildWeaponForItem_RifleStarterItem_AssemblesExpectedState()
+        public void BuildWeaponForItem_BallisticAutoBuild_AssemblesExpectedState()
         {
-            var item = WeaponItemFactory.SpawnItem(new EId(1), "Rifle");
+            var config = new WeaponConfiguration(
+                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                new DeliveryCoreInstance("Auto",          RarityTier.Common),
+                exotic: null,
+                ammoInMagazine: 30);
+            var item = ItemState.CreateWeapon(new EId(1), "Weapon", config);
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
 
@@ -106,12 +111,17 @@ namespace Tests.EditMode
             Assert.IsEmpty(_events.WeaponAssemblyFailures);
         }
 
-        // ── Pistol parity ─────────────────────────────────────
+        // ── Ballistic + SingleAction build ────────────────────
 
         [Test]
-        public void BuildWeaponForItem_PistolStarterItem_AssemblesExpectedState()
+        public void BuildWeaponForItem_BallisticSingleActionBuild_AssemblesExpectedState()
         {
-            var item = WeaponItemFactory.SpawnItem(new EId(2), "Pistol");
+            var config = new WeaponConfiguration(
+                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
+                exotic: null,
+                ammoInMagazine: 12);
+            var item = ItemState.CreateWeapon(new EId(2), "Weapon", config);
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
 
@@ -122,7 +132,7 @@ namespace Tests.EditMode
             Assert.AreEqual(12,   weapon.Stats.MagazineSize);
             Assert.AreEqual(35f,  weapon.Stats.ConeHalfAngle);
             Assert.AreEqual("Ammo_Rifle", weapon.AmmoType,
-                "Ballistic payload → Ammo_Rifle (shared between Rifle and Pistol)");
+                "Ballistic payload → Ammo_Rifle regardless of delivery");
             Assert.AreEqual(12, weapon.AmmoInMagazine);
             Assert.IsEmpty(_events.WeaponAssemblyFailures);
         }
@@ -133,22 +143,27 @@ namespace Tests.EditMode
         public void BuildWeaponForItem_ItemWithoutConfiguration_ReturnsNullAndEmitsEvent()
         {
             // An item that's a weapon by DefinitionId but was created without config
-            // (e.g. by legacy ItemState.Create). This shouldn't normally happen in
+            // (e.g. by a plain ItemState.Create). This shouldn't normally happen in
             // production, but we verify the safety net.
-            var item = ItemState.Create(new EId(3), "Rifle");
+            var item = ItemState.Create(new EId(3), "Weapon");
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
 
             Assert.IsNull(weapon);
             Assert.AreEqual(1, _events.WeaponAssemblyFailures.Count);
-            Assert.AreEqual("Rifle", _events.WeaponAssemblyFailures[0].weaponId);
+            Assert.AreEqual("Weapon", _events.WeaponAssemblyFailures[0].weaponId);
             StringAssert.Contains("no WeaponConfiguration", _events.WeaponAssemblyFailures[0].reason);
         }
 
         [Test]
         public void BuildWeaponForItem_NullRegistry_ReturnsNullAndEmitsEvent()
         {
-            var item = WeaponItemFactory.SpawnItem(new EId(4), "Rifle");
+            var config = new WeaponConfiguration(
+                new PayloadCoreInstance("BallisticRound", RarityTier.Common),
+                new DeliveryCoreInstance("Auto",          RarityTier.Common),
+                exotic: null,
+                ammoInMagazine: 30);
+            var item = ItemState.CreateWeapon(new EId(4), "Weapon", config);
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, registry: null, _events);
 
@@ -167,7 +182,7 @@ namespace Tests.EditMode
                 new DeliveryCoreInstance("Auto",              RarityTier.Common),
                 exotic: null,
                 ammoInMagazine: 30);
-            var item = ItemState.CreateWeapon(new EId(5), "Rifle", config);
+            var item = ItemState.CreateWeapon(new EId(5), "Weapon", config);
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
 
@@ -184,7 +199,7 @@ namespace Tests.EditMode
                 new DeliveryCoreInstance("Rotary",        RarityTier.Common), // not in DB
                 exotic: null,
                 ammoInMagazine: 30);
-            var item = ItemState.CreateWeapon(new EId(6), "Rifle", config);
+            var item = ItemState.CreateWeapon(new EId(6), "Weapon", config);
 
             var weapon = WeaponSyncSystem.BuildWeaponForItem(item, _registry, _events);
 
