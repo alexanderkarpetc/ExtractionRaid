@@ -55,9 +55,7 @@ namespace Systems
                 if (def != null)
                     count = Mathf.Min(count, def.MaxStackSize);
 
-                inventory.Backpack[slot++] = WeaponItemFactory.IsKnownWeaponDefinition(drop.DefinitionId)
-                    ? WeaponItemFactory.SpawnItem(itemId, drop.DefinitionId)
-                    : ItemState.Create(itemId, drop.DefinitionId, count);
+                inventory.Backpack[slot++] = ItemState.Create(itemId, drop.DefinitionId, count);
             }
 
             var lootable = LootableContainerState.Create(id, position, config.TypeId, inventory, isContainer: true);
@@ -287,7 +285,6 @@ namespace Systems
         }
 
         // Drops `count` of an item into the backpack, splitting across stacks by MaxStackSize.
-        // Weapon-family ids go through WeaponItemFactory so they carry a valid configuration.
         static void DropStacks(RaidState state, InventoryState inventory, ref int backpackSlot,
             string itemId, int count)
         {
@@ -295,14 +292,11 @@ namespace Systems
             var def = ItemDefinition.Get(itemId);
             if (def == null) return;
 
-            bool isWeapon = WeaponItemFactory.IsKnownWeaponDefinition(itemId);
             int stackMax = Mathf.Max(1, def.MaxStackSize);
             while (count > 0 && backpackSlot < InventoryState.BackpackSize)
             {
                 int add = Mathf.Min(count, stackMax);
-                inventory.Backpack[backpackSlot++] = isWeapon
-                    ? WeaponItemFactory.SpawnItem(state.AllocateEId(), itemId)
-                    : ItemState.Create(state.AllocateEId(), itemId, add);
+                inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), itemId, add);
                 count -= add;
             }
         }

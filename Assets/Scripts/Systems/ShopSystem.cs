@@ -60,9 +60,7 @@ namespace Systems
                     {
                         int count = Mathf.Min(remaining, maxStack);
                         var itemId = state.AllocateEId();
-                        inv.Backpack[slot++] = WeaponItemFactory.IsKnownWeaponDefinition(entry.ItemDefId)
-                            ? WeaponItemFactory.SpawnItem(itemId, entry.ItemDefId)
-                            : ItemState.Create(itemId, entry.ItemDefId, count);
+                        inv.Backpack[slot++] = ItemState.Create(itemId, entry.ItemDefId, count);
                         remaining -= count;
                     }
                 }

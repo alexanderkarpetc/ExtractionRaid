@@ -446,11 +446,15 @@ namespace Editor
                     GUILayout.MinWidth(220), GUILayout.ExpandWidth(true));
                 if (EditorGUI.DropdownButton(btnRect, new GUIContent(label), FocusType.Keyboard))
                 {
+                    // Weapon-category items (Weapon/Rifle/Pistol) can't be given raw — they
+                    // need a WeaponConfiguration (payload + delivery). Use "Give Weapon
+                    // Preset" for those; hide them here so the picker only lists items that
+                    // actually work through the plain add-to-backpack path.
                     var dropdown = new ItemPickerDropdown(new AdvancedDropdownState(), id =>
                     {
                         _giveItemId = id;
                         Repaint();
-                    });
+                    }, filter: d => d.Category != State.ItemCategory.Weapon);
                     dropdown.Show(btnRect);
                 }
 

@@ -83,31 +83,19 @@ namespace State
 
         static Dictionary<string, ItemDefinition> BuildRegistry()
         {
-#pragma warning disable CS0618 // Rifle/Pistol legacy entries still set WeaponPrefabId until Tier 4 bot migration
             var reg = new Dictionary<string, ItemDefinition>
             {
-                // Generic weapon entry for Builder-created weapons. PrefabId is left
-                // empty here; WeaponSyncSystem derives it from the Delivery FormFactor
-                // at assembly time. Display name shown in inventory UI is expected to be
-                // replaced by the archetype label (e.g. "Ballistic Pistol").
+                // Generic weapon entry for Builder-created weapons. All guns spawn as
+                // this generic shell — identity (payload + delivery + rarity) lives in
+                // the item's WeaponConfiguration. PrefabId is left empty here;
+                // WeaponSyncSystem derives it from the Delivery FormFactor at assembly
+                // time. Display name is replaced by the archetype label (e.g. "Ballistic
+                // Pistol"). The old self-configuring "Rifle"/"Pistol" ids were retired —
+                // use a WeaponPresetDefinition (Dev Cheats → Give Weapon Preset) instead.
                 ["Weapon"] = new()
                 {
                     Id = "Weapon",
                     DisplayName = "Weapon",
-                    Category = ItemCategory.Weapon,
-                    AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
-                },
-                ["Rifle"] = new()
-                {
-                    Id = "Rifle",
-                    DisplayName = "Rifle",
-                    Category = ItemCategory.Weapon,
-                    AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
-                },
-                ["Pistol"] = new()
-                {
-                    Id = "Pistol",
-                    DisplayName = "Pistol",
                     Category = ItemCategory.Weapon,
                     AllowedSlots = ItemSlotType.Weapon | ItemSlotType.Backpack,
                 },
@@ -974,7 +962,6 @@ namespace State
                     MaxStackSize = 1,
                 },
             };
-#pragma warning restore CS0618
 
             ApplyLootValues(reg);
             return reg;

@@ -18,8 +18,8 @@ namespace Tests.EditMode
         /// Injects a minimal App instance via reflection so edit-mode tests can access
         /// App.Instance.Player / CoreDefinitions without running AppBootstrap or any
         /// Unity adapters. The injected <see cref="ICoreDefinitionRegistry"/> knows
-        /// about BallisticRound / Auto / SingleAction — enough for
-        /// <see cref="Systems.WeaponItemFactory"/> default configurations to assemble.
+        /// about BallisticRound / Auto / SingleAction — enough for weapon
+        /// configurations built from those cores to assemble.
         /// Call ResetApp() in [TearDown] to clean up static state between test runs.
         /// </summary>
         public static void EnsureAppForTests()
