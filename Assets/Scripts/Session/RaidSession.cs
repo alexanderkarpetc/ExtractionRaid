@@ -50,12 +50,17 @@ namespace Session
         public void Start()
         {
             var spawnPoints = Object.FindObjectsByType<PlayerSpawnPoint>(FindObjectsSortMode.None);
-            if (spawnPoints.Length != 1)
+            var selectedSpawnPoint = PlayerSpawnPointSelector.Pick(spawnPoints, UnityEngine.Random.value);
+            if (selectedSpawnPoint == null)
             {
-                Debug.LogWarning($"{nameof(spawnPoints)} must contain exactly 1 SpawnPoint in the scene. Found: {spawnPoints.Length}. " +
-                                 $"Player will spawn at world origin. Please add exactly one PlayerSpawnPoint to the scene.");
+                Debug.LogWarning("No PlayerSpawnPoint found in the scene. Player will spawn at world origin.");
             }
-            var spawnPos = spawnPoints.Length > 0 ? spawnPoints[0].transform.position : Vector3.zero;
+            else if (System.Array.TrueForAll(spawnPoints, point => point == null || point.weight <= 0f))
+            {
+                Debug.LogWarning("All PlayerSpawnPoint weights are 0. Falling back to an equal random choice among available points.");
+            }
+
+            var spawnPos = selectedSpawnPoint != null ? selectedSpawnPoint.transform.position : Vector3.zero;
             PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer, LevelState.LevelId);
             SpawnFromScenePoints();
             SpawnActiveQuestItems();
