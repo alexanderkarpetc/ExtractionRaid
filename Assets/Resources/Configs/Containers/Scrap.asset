@@ -10,51 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 995b410d30489c4479bdc50c690cae96, type: 3}
-  m_Name: RandomLootBox
+  m_Name: Scrap
   m_EditorClassIdentifier: Game::Constants.ContainerTypeConfigAsset
-  _typeId: RandomLootBox
-  _displayName: Loot Box
-  _slotCount: 12
-  _minDrops: 2
-  _maxDrops: 4
+  _typeId: ModuleCache
+  _displayName: Module Cache
+  _slotCount: 6
+  _minDrops: 1
+  _maxDrops: 2
   _drops:
-  - definitionId: Medkit
-    minCount: 1
-    maxCount: 1
-    weight: 2
-  - definitionId: Bandage
-    minCount: 1
-    maxCount: 1
-    weight: 2
-  - definitionId: Grenade
+  - definitionId: Rubber
     minCount: 1
     maxCount: 1
     weight: 1
-  - definitionId: Ammo_Rifle
-    minCount: 10
-    maxCount: 30
-    weight: 3
-  - definitionId: BallisticRound
+  - definitionId: Adaptive_Circuit
     minCount: 1
     maxCount: 1
     weight: 1
-  - definitionId: LaserCharge
+  - definitionId: Aluminum
     minCount: 1
     maxCount: 1
     weight: 1
-  - definitionId: SingleAction
+  - definitionId: Bio_Compound
     minCount: 1
     maxCount: 1
     weight: 1
-  - definitionId: Auto
+  - definitionId: Cloth
     minCount: 1
     maxCount: 1
-    weight: 0.5
-  - definitionId: Scatter
-    minCount: 1
-    maxCount: 1
-    weight: 0.5
-  - definitionId: 
+    weight: 1
+  - definitionId: Energy_Core
     minCount: 1
     maxCount: 1
     weight: 1
