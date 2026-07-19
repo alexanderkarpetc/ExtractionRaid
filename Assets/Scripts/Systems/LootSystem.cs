@@ -232,14 +232,18 @@ namespace Systems
             int picks = Mathf.Min(Random.Range(rule.MinPicks, rule.MaxPicks + 1), candidates.Count);
             for (int p = 0; p < picks && backpackSlot < InventoryState.BackpackSize; p++)
             {
+                // Drop chance is driven by the global ItemBalanceAsset's per-item DropWeight
+                // (higher = more common). Falls back to the value-derived default for items
+                // the balance table hasn't been synced with yet.
                 float total = 0f;
-                for (int i = 0; i < candidates.Count; i++) total += LootConstants.ValueWeight(candidates[i].Value);
+                for (int i = 0; i < candidates.Count; i++)
+                    total += ItemBalanceAsset.DropWeightOf(candidates[i].Id);
 
                 float r = Random.value * total;
                 int chosen = candidates.Count - 1;
                 for (int i = 0; i < candidates.Count; i++)
                 {
-                    r -= LootConstants.ValueWeight(candidates[i].Value);
+                    r -= ItemBalanceAsset.DropWeightOf(candidates[i].Id);
                     if (r <= 0f) { chosen = i; break; }
                 }
 

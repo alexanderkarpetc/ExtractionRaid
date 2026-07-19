@@ -35,10 +35,12 @@ namespace State
         public int MaxStackSize = 1;
         public string AmmoType;
 
-        // Intrinsic worth of one unit. Drives loot weighting (pricier = rarer drop, see
-        // LootConstants.ValueWeight) and is a sensible base for economy. Separate from
-        // per-vendor shop prices (ShopDefinitionAsset), which can mark up/down freely.
-        // Baseline here; per-item values are assigned in ApplyLootValues.
+        // Intrinsic worth of one unit — the SEED the balance table starts from. When you
+        // "Sync from ItemDefinition", ItemBalanceAsset copies this into Price and derives an
+        // initial DropWeight from it. At runtime the balance asset (Resources/Configs/
+        // ItemBalance) is authoritative for both price and drop chance; this stays the
+        // fallback when an item isn't in the table yet. Baseline here; per-item values are
+        // assigned in ApplyLootValues.
         public int Value = 10;
 
         // Consumable resource pool (e.g. medkit healing charge). 0 = not a resource

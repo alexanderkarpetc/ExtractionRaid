@@ -22,8 +22,9 @@ namespace Constants
             [Tooltip("How many units the shop offers per raid. Stacks honor MaxStackSize.")]
             public int Quantity = 1;
 
-            [Tooltip("Credits the player pays to buy ONE unit (or one stack — depending on how items group).")]
-            public int BuyPrice = 100;
+            // Buy price is no longer authored per shop — it comes from the global
+            // ItemBalanceAsset (Resources/Configs/ItemBalance). This asset only decides
+            // WHAT and HOW MANY a vendor stocks; the balance table decides the price.
         }
 
         [Header("Identity")]

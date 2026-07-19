@@ -49,7 +49,7 @@ namespace Systems
                         continue;
                     }
 
-                    catalog[entry.ItemDefId] = entry.BuyPrice;
+                    catalog[entry.ItemDefId] = ItemBalanceAsset.PriceOf(entry.ItemDefId);
 
                     // Stacks honor MaxStackSize: a stock entry of 50 ammo with cap=30
                     // spreads into two backpack slots (30 + 20). Weapons never stack,
@@ -118,8 +118,8 @@ namespace Systems
 
         // Catalog-wide fallback: aggregates every ShopDefinitionAsset under
         // Resources/Configs/Shops so tooltips can show a sell value even when no
-        // shop instance is live. First buy price encountered for each item id
-        // wins; sell value derived via the asset's SellRatio.
+        // shop instance is live. Buy price comes from the global ItemBalanceAsset;
+        // the first shop that stocks an item supplies the SellRatio for it.
         static bool s_globalLoaded;
         static readonly Dictionary<string, int> s_globalSellPrices = new();
 
@@ -145,7 +145,8 @@ namespace Systems
                 {
                     if (string.IsNullOrEmpty(entry.ItemDefId)) continue;
                     if (s_globalSellPrices.ContainsKey(entry.ItemDefId)) continue;
-                    s_globalSellPrices[entry.ItemDefId] = Mathf.Max(1, Mathf.RoundToInt(entry.BuyPrice * ratio));
+                    int price = ItemBalanceAsset.PriceOf(entry.ItemDefId);
+                    s_globalSellPrices[entry.ItemDefId] = Mathf.Max(1, Mathf.RoundToInt(price * ratio));
                 }
             }
         }

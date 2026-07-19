@@ -1,0 +1,309 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1a5c0d34e7f4a1b9c2d3e4f5a6b7c80, type: 3}
+  m_Name: ItemBalance
+  m_EditorClassIdentifier: Game::Constants.ItemBalanceAsset
+  _entries:
+  - DefinitionId: Helmet_Basic
+    Price: 350
+    DropWeight: 17
+  - DefinitionId: Armor_Basic
+    Price: 600
+    DropWeight: 12
+  - DefinitionId: Medkit
+    Price: 120
+    DropWeight: 22
+  - DefinitionId: Ammo_Rifle
+    Price: 5
+    DropWeight: 83
+  - DefinitionId: Ammo_EnergyCell
+    Price: 16
+    DropWeight: 62
+  - DefinitionId: Ammo_Pistol
+    Price: 3
+    DropWeight: 100
+  - DefinitionId: Grenade
+    Price: 75
+    DropWeight: 29
+  - DefinitionId: Bandage
+    Price: 25
+    DropWeight: 125
+  - DefinitionId: Advanced_Medkit
+    Price: 400
+    DropWeight: 9
+  - DefinitionId: Adhesive
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Metal_Parts
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Mechanical_Parts
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Electronics
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Chemicals
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Cloth
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Gunpowder
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Plastic
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Glass
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Rubber
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Springs
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Military_Components
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Energy_Core
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Pipes
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Insulated_Wiring
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Duct_Tape
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Aluminum
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Structural_Foam
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Synthetic_Fiber
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Hydraulic_Seals
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Gear_Cluster
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Rotary_Motor
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Pneumatic_Valve
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Cooling_Fan
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Sensor_Module
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Motion_Sensor
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Camera_Optics
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Flux_Coil
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Pulse_Converter
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Ion_Battery
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Conductive_Gel
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Energy_Relay
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Chemical_Catalyst
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Bio_Compound
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Filtration_Membrane
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Sterile_Wrap
+    Price: 40
+    DropWeight: 25
+  - DefinitionId: Gyro_Stabilizer
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Smart_Targeting_Unit
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Pulse_Emitter
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Adaptive_Circuit
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Nano_Filament
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Magnetic_Alloy
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Resonance_Plate
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Synthetic_Quartz
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Crystal_Matrix
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Phase_Shard
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Phase_Battery
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Quantum_Relay
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Plasma_Residue
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Irradiated_Dust
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Neural_Gel
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Bio_Foam
+    Price: 120
+    DropWeight: 8
+  - DefinitionId: Military_Intel
+    Price: 220
+    DropWeight: 5
+  - DefinitionId: Bio_Sample_Case
+    Price: 190
+    DropWeight: 5
+  - DefinitionId: Ammo_Pistol_AP
+    Price: 28
+    DropWeight: 36
+  - DefinitionId: Ammo_Rifle_AP
+    Price: 32
+    DropWeight: 31
+  - DefinitionId: Ammo_Rifle_HP
+    Price: 26
+    DropWeight: 38
+  - DefinitionId: Ammo_Pistol_HP
+    Price: 22
+    DropWeight: 45
+  - DefinitionId: Basic_Scope
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Advanced_Scope
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Long_Barrel
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Short_Barrel
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Suppressor
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Compensator
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Extended_Mag
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Fast_Reload_Mag
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Recoil_Grip
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Stabilized_Stock
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: AP_Barrel
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Overclock_Receiver
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: PowerComp
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: MuzzleBrake
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: VerticalGrip
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: AngledGrip
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: HeavyStock
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: SkeletonStock
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: RedDot
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: SniperScope
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: ExtendedMag
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: QuickMag
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: LaserFocusing
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: ScatterChoke
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: AutoHeatSink
+    Price: 10
+    DropWeight: 100
+  - DefinitionId: Worn_Warehouse_Key
+    Price: 10
+    DropWeight: 0
+  - DefinitionId: BallisticRound
+    Price: 55
+    DropWeight: 18
+  - DefinitionId: LaserCharge
+    Price: 70
+    DropWeight: 14
+  - DefinitionId: SingleAction
+    Price: 45
+    DropWeight: 22
+  - DefinitionId: Auto
+    Price: 60
+    DropWeight: 17
+  - DefinitionId: Scatter
+    Price: 55
+    DropWeight: 18
