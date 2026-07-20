@@ -61,5 +61,24 @@ namespace State
             }
             return -1;
         }
+
+        /// <summary>
+        /// Nulls every slot (weapons, helmet, body armor, backpack) and unbinds all
+        /// quick slots. Used by the KIA gear-loss path (App.EndRaid) and the
+        /// fresh-player loadout reset (PlayerSpawnSystem). Stash is a separate
+        /// collection on the Player and is never touched here.
+        /// </summary>
+        public void ClearAll()
+        {
+            for (int i = 0; i < WeaponSlotCount; i++)
+                WeaponSlots[i] = null;
+            HelmetSlot = null;
+            BodyArmorSlot = null;
+            for (int i = 0; i < BackpackSize; i++)
+                Backpack[i] = null;
+            for (int i = 0; i < QuickSlotCount; i++)
+                QuickSlotBindings[i] = -1;
+            Version++;
+        }
     }
 }

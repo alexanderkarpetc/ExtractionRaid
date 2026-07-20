@@ -230,7 +230,7 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify `mcp__unityMCP__run_tests` EditMode → **660/660** (baseline as of 2026-07-16). ⚠️ bridge is CoplayDev `mcp__unityMCP__*` on port 6401 for this project (see global CLAUDE.md), not `unity-mcp`.
+3. Verify `mcp__unityMCP__run_tests` EditMode → **669/669** (baseline as of 2026-07-18). ⚠️ bridge is CoplayDev `mcp__unityMCP__*` for this project (see global CLAUDE.md), not `unity-mcp`. **Port varies — verify with `lsof -nP -iTCP:6400-6410 -sTCP:LISTEN` (was 6400 on 2026-07-18, 6401 earlier); repo contract `docs/ai/CLAUDE.md §7` says 6400 default.**
 4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4) + Task list #39–#60.** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); progression OUT; 2 maps + bunker; item icons must-have (generated); EN-only. **Start with M1 (honest core loop).** Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
 
 ---

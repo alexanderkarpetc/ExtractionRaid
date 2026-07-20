@@ -17,13 +17,17 @@ namespace Systems
             state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
 
             var inventory = App.Instance.Player.Inventory;
-            if (levelId == "shooting_range" || levelId == "kill_feel_range"
-                || levelId == "horde_range" || levelId == "ranged_range"
-                || levelId == "feedback_range"
-                || IsInventoryEmpty(App.Instance.Player.Inventory))
+            var profile = App.Instance.Player.ProfileState;
+            bool isTestRange = IsTestRange(levelId);
+            // Test scenes always regrant a fresh cheat loadout each spawn. Real raids
+            // grant the starting kit ONLY once per profile — after a KIA gear-wipe the
+            // player re-gears from stash, not from a free handout. (M1.1 gear-loss)
+            if (ShouldGrantStartingKit(levelId, profile.HasReceivedStartingKit))
             {
-                ClearInventory(inventory);
+                inventory.ClearAll();
                 GiveStartingLoadout(state, inventory);
+                if (!isTestRange)
+                    profile.HasReceivedStartingKit = true;
             }
 
             for (int i = 0; i < PlayerEntityState.HotbarSize; i++)
@@ -51,25 +55,16 @@ namespace Systems
             events.PlayerSpawned(playerId);
         }
 
-        static void ClearInventory(InventoryState inv)
-        {
-            for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
-                inv.WeaponSlots[i] = null;
-            inv.HelmetSlot = null;
-            inv.BodyArmorSlot = null;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-                inv.Backpack[i] = null;
-        }
+        // Test/dev scenes always get a fresh cheat loadout each spawn. Real raids grant
+        // the starting kit only once per profile (see M1.1 gear-loss). Pure + public so
+        // EditMode tests can exercise the gate without an App/Player singleton.
+        public static bool IsTestRange(string levelId) =>
+            levelId == "shooting_range" || levelId == "kill_feel_range"
+            || levelId == "horde_range" || levelId == "ranged_range"
+            || levelId == "feedback_range";
 
-        static bool IsInventoryEmpty(InventoryState inv)
-        {
-            for (int i = 0; i < InventoryState.WeaponSlotCount; i++)
-                if (inv.WeaponSlots[i] != null) return false;
-            if (inv.HelmetSlot != null || inv.BodyArmorSlot != null) return false;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-                if (inv.Backpack[i] != null) return false;
-            return true;
-        }
+        public static bool ShouldGrantStartingKit(string levelId, bool hasReceivedStartingKit) =>
+            IsTestRange(levelId) || !hasReceivedStartingKit;
 
         static void GiveStartingLoadout(RaidState state, InventoryState inventory)
         {

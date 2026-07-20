@@ -59,7 +59,7 @@ Slot-based інвентар (2 weapon + helmet + body + 20 backpack + 7 quick-sl
 |---|---|---|
 | Extraction (per-zone hold-таймер, progress, RequestExtraction) | ✅ | `ExtractionSystem` + HUD |
 | Raid start/end flow, outcome (Extracted/KIA), end-screen | ✅ | `App.StartRaid/EndRaid`, `EndOfRaidPresenter` |
-| **Втрата спорядження при смерті** | 🟥 | **субтитр «Your gear was lost» — косметика; KIA зберігає інвентар цілим. Ризик-лупу немає.** |
+| **Втрата спорядження при смерті** | ✅ | **M1.1 (2026-07-18): KIA → `Player.Inventory.ClearAll()` в `App.EndRaid` (повний wipe, stash цілий); стартовий кіт видається раз (`HasReceivedStartingKit`), після смерті — re-gear зі stash. Deferred: secure-container/insurance, save-on-death, стартовий пістоль.** |
 | Загальний raid-таймер / ліміт часу | 🟥 | лише per-zone hold |
 | Hideout hub (як не-ворожий «рейд») | ✅ | `HideoutScene` |
 | Stash (deposit/withdraw + swap) | ✅ | персист |

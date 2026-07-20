@@ -250,6 +250,14 @@ namespace ApplicationCore
             if (LastRaidOutcome == RaidOutcome.Extracted)
                 Systems.QuestSystem.OnPlayerExtracted(Player.QuestProgress, QuestDatabase, endedLevelId);
             Systems.QuestSystem.OnRaidEnded(Player.QuestProgress, QuestDatabase);
+
+            // Risk loop (M1.1): dying forfeits everything carried into the raid —
+            // equipped weapons + armor + backpack. Stash on base is a separate
+            // collection and stays safe. Only KIA wipes; extraction (and the
+            // outcome-None hideout-exit path) preserves the inventory.
+            if (LastRaidOutcome == RaidOutcome.KIA)
+                Player.Inventory.ClearAll();
+
             SavePlayer();
             Debug.Log("[App] Raid ended.");
             RaidSession = null;

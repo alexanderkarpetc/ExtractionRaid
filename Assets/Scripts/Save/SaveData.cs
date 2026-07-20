@@ -220,6 +220,10 @@ namespace Save
     {
         public string PlayerName;
         public int Credits;
+        // Fresh-player starting kit granted once. Defaults false on legacy saves
+        // (missing field) — harmless: a legacy save always has a populated inventory,
+        // so the empty-check no longer gates the kit and they keep their gear.
+        public bool HasReceivedStartingKit;
         public InventorySaveData Inventory;
         public List<ItemSaveData> Stash;
         public List<QuestProgressSaveData> Quests;
