@@ -21,8 +21,12 @@ MonoBehaviour:
   - definitionId: Medkit
     minCount: 1
     maxCount: 1
-    weight: 1
+    weight: 0.3
   - definitionId: Bandage
     minCount: 3
     maxCount: 3
-    weight: 1
+    weight: 0.7
+  - definitionId: Advanced_Medkit
+    minCount: 1
+    maxCount: 1
+    weight: 0.1
