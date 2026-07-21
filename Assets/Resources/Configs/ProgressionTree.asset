@@ -1,0 +1,1143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50beab277ecec694e835c717376d2eb7, type: 3}
+  m_Name: ProgressionTree
+  m_EditorClassIdentifier: Game::Progression.ProgressionTreeConfig
+  HubRadius: 120
+  RingBase: 150
+  RingStep: 82
+  BranchSpread:
+  - -33
+  - -11
+  - 11
+  - 33
+  ForkScale: 0.4
+  Disciplines:
+  - Id: warden
+    DisplayName: Warden
+    Color: {r: 1, g: 0.42, b: 0.365, a: 1}
+    Tagline: Take the hit, take their stuff
+    AngleDeg: 135
+    Branches:
+    - Name: Flesh
+      Nodes:
+      - Id: warden.0.0
+        DisplayName: ASSS
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: warden.0.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: warden.0.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Max HP
+        Magnitude: 12
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: warden.0.3
+        DisplayName: Thick Skin
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Damage Taken
+        Magnitude: -8
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.DamageReductionK
+      - Id: warden.0.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Heal Received
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MedConstants.HealPerSecond
+      - Id: warden.0.5
+        DisplayName: Last Stand
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: 'Below 25% HP: +35% damage resistance and steady health regen.'
+        PointCost: 1
+        DevHook: HealthState.CurrentHp guard
+    - Name: Plating
+      Nodes:
+      - Id: warden.1.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Armor Points
+        Magnitude: 15
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ItemDefinition.ArmorPoints
+      - Id: warden.1.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Armor Durability
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorState.MaxDurability
+      - Id: warden.1.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Ricochet Chance
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.RicochetChance
+      - Id: warden.1.3
+        DisplayName: Hardened Kit
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Armor Durability Loss
+        Magnitude: -40
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.ArmorDamageCap
+      - Id: warden.1.4
+        DisplayName: Deadweight
+        Size: 1
+        Ring: 4
+        Offset: 15
+        StatLabel: Armor Speed Penalty
+        Magnitude: -50
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.WeightSpeedFactor
+      - Id: warden.1.5
+        DisplayName: 
+        Size: 0
+        Ring: 5
+        Offset: 0
+        StatLabel: Damage Taken
+        Magnitude: -6
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.DamageReductionK
+    - Name: Spoils
+      Nodes:
+      - Id: warden.2.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Bot Mod Drops
+        Magnitude: 25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: LootSystem.BotModDropChance
+      - Id: warden.2.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Ammo/Med Box Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerTypeConfig.MaxDrops
+      - Id: warden.2.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Backpack Slots
+        Magnitude: 2
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: InventoryState.BackpackSize
+      - Id: warden.2.3
+        DisplayName: Trophy Taker
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Guaranteed Kill Drop
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: LootSystem.CreateLootable
+      - Id: warden.2.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Bot Mod Drops
+        Magnitude: 25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: LootSystem.BotModDropChance
+      - Id: warden.2.5
+        DisplayName: War Spoils
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Killing a Boss or PMC drops a bonus Rare-or-better item.
+        PointCost: 1
+        DevHook: LootSystem + RarityTier
+    - Name: Presence
+      Nodes:
+      - Id: warden.3.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Max Stamina
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.MaxStamina
+      - Id: warden.3.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Heavy Stamina Drain
+        Magnitude: -15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.SprintDrainRate
+      - Id: warden.3.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Melee Damage
+        Magnitude: 8
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.Damage
+      - Id: warden.3.3
+        DisplayName: Bloodied but Unbowed
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Damage Below 50% HP
+        Magnitude: 12
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ShootingConfig.DamageMultiplier
+      - Id: warden.3.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: -15
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: warden.3.5
+        DisplayName: Juggernaut
+        Size: 1
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: While standing still, +18% damage resistance.
+        PointCost: 1
+        DevHook: ArmorConstants.DamageReductionK
+  - Id: phantom
+    DisplayName: Phantom
+    Color: {r: 0.529, g: 0.902, b: 1, a: 1}
+    Tagline: See everything, leave no trace
+    AngleDeg: 225
+    Branches:
+    - Name: Sight
+      Nodes:
+      - Id: phantom.0.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Vision Radius
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: FOVConfig.FarRadius
+      - Id: phantom.0.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Vision Angle
+        Magnitude: 12
+        Unit: "\xB0"
+        Description: 
+        PointCost: 1
+        DevHook: FOVConfig.Angle
+      - Id: phantom.0.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: "360\xB0 Awareness"
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: FOVConfig.NearRadius
+      - Id: phantom.0.3
+        DisplayName: Eagle Eye
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Scope Reveal
+        Magnitude: 45
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerEntityState.ScopeRadius
+      - Id: phantom.0.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Spotting Duration
+        Magnitude: 25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerFOVSystem
+      - Id: phantom.0.5
+        DisplayName: Cartographer
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Rare containers and Boss positions are pinged on your map when
+          the raid begins.
+        PointCost: 1
+        DevHook: BotSpawnSystem + LootContainerSpawnPoint
+    - Name: Sound
+      Nodes:
+      - Id: phantom.1.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Hearing Range
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: FOVConfig hearing radius
+      - Id: phantom.1.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Footstep Noise
+        Magnitude: -20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MovementSystem noise
+      - Id: phantom.1.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Gunfire Noise Range
+        Magnitude: -5
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: shooting noise radius
+      - Id: phantom.1.3
+        DisplayName: Blindspot
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Enemy Track Loss
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: BotTypeConfig.ReactionTime
+      - Id: phantom.1.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: -15
+        StatLabel: Hearing Range
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: FOVConfig hearing radius
+      - Id: phantom.1.5
+        DisplayName: Muffled
+        Size: 1
+        Ring: 5
+        Offset: 0
+        StatLabel: Sprint Noise
+        Magnitude: -40
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MovementSystem
+    - Name: Fortune
+      Nodes:
+      - Id: phantom.2.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Rare+ Roll Chance
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: RarityTier / LootConstants.ValueWeight
+      - Id: phantom.2.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Loot Pickup Speed
+        Magnitude: 50
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: interaction time
+      - Id: phantom.2.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Credits Found
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerProfileState.Credits
+      - Id: phantom.2.3
+        DisplayName: Cat Burglar
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Module Cache Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerConstants.ModuleCache
+      - Id: phantom.2.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Rare+ Roll Chance
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: RarityTier
+      - Id: phantom.2.5
+        DisplayName: Golden Eye
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: The best item in each container is highlighted and upgraded
+          one rarity tier.
+        PointCost: 1
+        DevHook: RarityTier
+    - Name: Fleet
+      Nodes:
+      - Id: phantom.3.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Max Stamina
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.MaxStamina
+      - Id: phantom.3.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Move Speed
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MovementConfig.MoveSpeedMultiplier
+      - Id: phantom.3.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Max HP
+        Magnitude: 8
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: phantom.3.3
+        DisplayName: Silent Runner
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Sprint Drain
+        Magnitude: -25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.SprintDrainRate
+      - Id: phantom.3.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Dodge Cooldown
+        Magnitude: -20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: DodgeConstants.Cooldown
+      - Id: phantom.3.5
+        DisplayName: Silent Assassin
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Hits on unaware enemies deal +40% damage.
+        PointCost: 1
+        DevHook: DamageSystem
+  - Id: predator
+    DisplayName: Predator
+    Color: {r: 1, g: 0.714, b: 0.282, a: 1}
+    Tagline: Hunt the biggest game
+    AngleDeg: 315
+    Branches:
+    - Name: Lethality
+      Nodes:
+      - Id: predator.0.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Weapon Damage
+        Magnitude: 6
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ShootingConfig.DamageMultiplier
+      - Id: predator.0.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Penetration
+        Magnitude: 8
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.BasePenetration
+      - Id: predator.0.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Armor Damage
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.BaseArmorDamage
+      - Id: predator.0.3
+        DisplayName: Executioner
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Headshot Damage
+        Magnitude: 45
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.HeadshotDamageMultiplier
+      - Id: predator.0.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Weapon Damage
+        Magnitude: 6
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ShootingConfig.DamageMultiplier
+      - Id: predator.0.5
+        DisplayName: Apex Predator
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: +30% damage to Bosses and PMCs, and they drop an extra Rare+
+          item.
+        PointCost: 1
+        DevHook: DamageSystem + LootSystem
+    - Name: Handling
+      Nodes:
+      - Id: predator.1.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Recoil
+        Magnitude: -15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ShootingConfig.RecoilMultiplier
+      - Id: predator.1.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Recoil Recovery
+        Magnitude: 25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: AimConfig.RecoilRecoveryMultiplier
+      - Id: predator.1.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Reload Time
+        Magnitude: -15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.ReloadTime
+      - Id: predator.1.3
+        DisplayName: Steady Hands
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Aim Sway
+        Magnitude: -30
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: AimConfig.AimFollowMultiplier
+      - Id: predator.1.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: -15
+        StatLabel: Equip Time
+        Magnitude: -20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.EquipTime
+      - Id: predator.1.5
+        DisplayName: Cold Barrel
+        Size: 1
+        Ring: 5
+        Offset: 0
+        StatLabel: Heat Buildup
+        Magnitude: -35
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: BarrelHeatConfig
+    - Name: Bloodlust
+      Nodes:
+      - Id: predator.2.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Max HP
+        Magnitude: 8
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: predator.2.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Heal per Kill
+        Magnitude: 5
+        Unit: ' HP'
+        Description: 
+        PointCost: 1
+        DevHook: DamageSystem on-kill
+      - Id: predator.2.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Bleed Applied
+        Magnitude: 25
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: WeaponStats.BaseBleedChance
+      - Id: predator.2.3
+        DisplayName: Adrenaline
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Stamina per Kill
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaSystem
+      - Id: predator.2.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: predator.2.5
+        DisplayName: Berserk
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: 'Below 50% HP: +20% fire rate and hits heal you for a fraction
+          of the damage dealt.'
+        PointCost: 1
+        DevHook: ShootingConfig + DamageSystem
+    - Name: The Hunt
+      Nodes:
+      - Id: predator.3.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Boss Spawn Chance
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: BotSpawnPoint.spawnChance
+      - Id: predator.3.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Boss Kill Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: LootSystem
+      - Id: predator.3.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Credits from Loot
+        Magnitude: 10
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerProfileState.Credits
+      - Id: predator.3.3
+        DisplayName: Tracker
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Boss and elite positions are revealed after your first kill
+          of the raid.
+        PointCost: 1
+        DevHook: BotSpawnSystem
+      - Id: predator.3.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Boss Spawn Chance
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: BotSpawnPoint.spawnChance
+      - Id: predator.3.5
+        DisplayName: Big Game
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: +35% chance a Boss or a rare high-value spawn appears on the
+          map this raid.
+        PointCost: 1
+        DevHook: BotSpawnPoint.spawnChance
+  - Id: prospector
+    DisplayName: Prospector
+    Color: {r: 0.753, g: 0.549, b: 1, a: 1}
+    Tagline: Grab it all, live to spend it
+    AngleDeg: 45
+    Branches:
+    - Name: Haul
+      Nodes:
+      - Id: prospector.0.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Container Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerTypeConfig.MaxDrops
+      - Id: prospector.0.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Container Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerTypeConfig.MaxDrops
+      - Id: prospector.0.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Container Slots
+        Magnitude: 2
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerTypeConfig.SlotCount
+      - Id: prospector.0.3
+        DisplayName: Deep Pockets
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Backpack Slots
+        Magnitude: 4
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: InventoryState.BackpackSize
+      - Id: prospector.0.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Weapon Slots
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: InventoryState.WeaponSlotCount
+      - Id: prospector.0.5
+        DisplayName: Pack Rat
+        Size: 1
+        Ring: 5
+        Offset: 0
+        StatLabel: Container Drops
+        Magnitude: 2
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerTypeConfig.MaxDrops
+    - Name: Fortune
+      Nodes:
+      - Id: prospector.1.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Rare+ Roll Chance
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: RarityTier / LootConstants.ValueWeight
+      - Id: prospector.1.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Credits Found
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerProfileState.Credits
+      - Id: prospector.1.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Loot Box Drops
+        Magnitude: 1
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: ContainerConstants.RandomLootBox
+      - Id: prospector.1.3
+        DisplayName: Lucky Find
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Rare+ Roll Chance
+        Magnitude: 30
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: RarityTier
+      - Id: prospector.1.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Credits Found
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: PlayerProfileState.Credits
+      - Id: prospector.1.5
+        DisplayName: Golden Touch
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: "The best drop in each container gains +1 rarity tier \u2014
+          but enemies hear you 30% farther."
+        PointCost: 1
+        DevHook: RarityTier + noise
+    - Name: Endurance
+      Nodes:
+      - Id: prospector.2.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Max Stamina
+        Magnitude: 12
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.MaxStamina
+      - Id: prospector.2.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Move Speed
+        Magnitude: 8
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MovementConfig.MoveSpeedMultiplier
+      - Id: prospector.2.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: prospector.2.3
+        DisplayName: Pack Mule
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: Carry Speed Penalty
+        Magnitude: -100
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: ArmorConstants.WeightSpeedFactor
+      - Id: prospector.2.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: -15
+        StatLabel: Max HP
+        Magnitude: 10
+        Unit: 
+        Description: 
+        PointCost: 1
+        DevHook: BotConstants.PlayerMaxHp
+      - Id: prospector.2.5
+        DisplayName: Second Wind
+        Size: 1
+        Ring: 5
+        Offset: 0
+        StatLabel: Stamina Regen
+        Magnitude: 30
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StaminaConstants.RegenRate
+    - Name: Getaway
+      Nodes:
+      - Id: prospector.3.0
+        DisplayName: 
+        Size: 0
+        Ring: 1
+        Offset: 0
+        StatLabel: Heal Speed
+        Magnitude: 20
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MedConstants.HealPerSecond
+      - Id: prospector.3.1
+        DisplayName: 
+        Size: 0
+        Ring: 2
+        Offset: 0
+        StatLabel: Med Use Delay
+        Magnitude: -1
+        Unit: s
+        Description: 
+        PointCost: 1
+        DevHook: MedConstants.UseDelay
+      - Id: prospector.3.2
+        DisplayName: 
+        Size: 0
+        Ring: 3
+        Offset: -15
+        StatLabel: Bleed Taken
+        Magnitude: -40
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: StatusEffectConstants
+      - Id: prospector.3.3
+        DisplayName: Field Dressing
+        Size: 1
+        Ring: 3
+        Offset: 15
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Bandages instantly stop all bleeding.
+        PointCost: 1
+        DevHook: StatusEffectConstants
+      - Id: prospector.3.4
+        DisplayName: 
+        Size: 0
+        Ring: 4
+        Offset: 15
+        StatLabel: Heal Speed
+        Magnitude: 15
+        Unit: '%'
+        Description: 
+        PointCost: 1
+        DevHook: MedConstants.HealPerSecond
+      - Id: prospector.3.5
+        DisplayName: Secure Pocket
+        Size: 2
+        Ring: 5
+        Offset: 0
+        StatLabel: 
+        Magnitude: 0
+        Unit: 
+        Description: Keep one random slot of loot even if you die in the raid.
+        PointCost: 1
+        DevHook: InventoryState

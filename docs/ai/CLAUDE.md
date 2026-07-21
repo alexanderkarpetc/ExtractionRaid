@@ -137,6 +137,7 @@ Read extra docs depending on the task:
 - Impact/armor VFX guide for artists -> `docs/ai/fx-artist-guide.md`
 - UI Toolkit panel sizing / theme / sort order -> `docs/ai/ui-styling.md`
 - Adding a new UI Toolkit window/overlay (files, C# skeleton, registration, Esc/pause gating) -> `docs/ai/ui-window-recipe.md`
+- Character progression / skill tree (config asset, node data, allocation rules, permanent no-refund, effects seam) -> `docs/ai/progression.md`
 - DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
 - Unity Editor automation (read console / find GOs / run tests / edit scripts via bridge) -> `docs/ai/unity-mcp.md`
 
