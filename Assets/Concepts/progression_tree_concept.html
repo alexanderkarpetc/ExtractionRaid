@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Character Progression — Unified Tree (v2)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --bg-deep:  #080a12;
+    --bg-mid:   #10182f;
+    --panel:    rgba(18, 24, 42, 0.9);
+    --panel-2:  rgba(11, 15, 28, 0.94);
+    --border:   rgba(255,255,255,0.12);
+    --border-soft: rgba(255,255,255,0.06);
+    --text:     #eef4ff;
+    --muted:    #9fb0d0;
+    --dim:      #5f6c85;
+
+    --core:     #ffd76a;
+    --warden:    #ff6b5d;
+    --phantom:   #87e6ff;
+    --predator:  #ffb648;
+    --prospector:#c08cff;
+
+    --shadow: 0 18px 50px rgba(0,0,0,0.5);
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(80,120,255,0.15), transparent 34%),
+      radial-gradient(circle at 82% 26%, rgba(0,220,180,0.09), transparent 30%),
+      radial-gradient(circle at 60% 92%, rgba(255,150,90,0.08), transparent 36%),
+      linear-gradient(180deg, var(--bg-mid) 0%, var(--bg-deep) 100%);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .app { display: flex; height: 100vh; width: 100vw; }
+  .stage { position: relative; flex: 1 1 auto; min-width: 0; display:flex; flex-direction:column; }
+
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 18px 26px 10px; z-index: 6; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--core); opacity: 0.85; font-weight: 700; }
+  .title { font-size: 21px; font-weight: 700; margin-top: 3px; }
+  .subtitle { font-size: 12.5px; color: var(--muted); margin-top: 3px; max-width: 560px; }
+
+  .points { display: flex; align-items: center; gap: 14px; padding: 11px 18px; border-radius: 16px; flex: 0 0 auto;
+    background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+  .points .num { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1; }
+  .points .num b { color: var(--core); }
+  .points .num span { color: var(--dim); font-size: 19px; }
+  .points .lbl { font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+  .btn { cursor: pointer; padding: 9px 13px; border-radius: 11px; font-size: 12px; font-weight: 600; color: var(--text);
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border); transition: 0.15s ease; margin-left:9px; }
+  .btn:hover { border-color: rgba(135,230,255,0.5); color: #dff6ff; background: rgba(135,230,255,0.08); }
+  .btn.warn:hover { border-color: rgba(255,93,108,0.5); color: #ffd2d7; background: rgba(255,93,108,0.08); }
+
+  .canvas-wrap { position: relative; flex: 1 1 auto; min-height: 0; }
+  svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  svg.grabbing { cursor: grabbing; }
+
+  .edge { stroke: rgba(255,255,255,0.07); stroke-width: 3; fill: none; transition: stroke 0.2s ease, stroke-width 0.2s; }
+  .edge.live { stroke-width: 4.5; }
+
+  .node { cursor: pointer; }
+  .node .ring { fill: rgba(12,16,30,0.9); stroke-width: 2.5; transition: 0.16s ease; }
+  .node .halo { fill: none; opacity: 0; transition: opacity 0.2s ease; }
+  .node .glyph { font-family: var(--mono); font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .node .name { font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--text); pointer-events: none; paint-order: stroke; stroke: rgba(6,8,14,0.92); stroke-width: 3px; }
+
+  .node.locked .ring { stroke: rgba(255,255,255,0.14); }
+  .node.locked .glyph { fill: var(--dim); }
+  .node.locked .name { fill: var(--dim); }
+  .node.open .ring { stroke: var(--c); filter: drop-shadow(0 0 5px var(--c)); }
+  .node.open .glyph { fill: var(--c); }
+  .node.open { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:0.82; } 50% { opacity:1; } }
+  .node.on .ring { fill: var(--c); stroke: #fff; filter: drop-shadow(0 0 10px var(--c)); }
+  .node.on .glyph { fill: #08101c; }
+  .node.on .halo { opacity: 0.5; stroke: var(--c); }
+  .node:hover .ring { stroke: #fff; }
+
+  /* hubs (discipline gateways) */
+  .hub .ring { fill: color-mix(in srgb, var(--c) 22%, #0b0f1c); stroke: var(--c); stroke-width: 3; filter: drop-shadow(0 0 12px var(--c)); }
+  .hub .hname { font-size: 15px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; text-anchor: middle; fill: var(--c);
+    paint-order: stroke; stroke: rgba(6,8,14,0.92); stroke-width: 4px; pointer-events: none; }
+  .hub .htag { font-size: 10.5px; text-anchor: middle; fill: var(--muted); paint-order: stroke; stroke: rgba(6,8,14,0.9); stroke-width: 3px; pointer-events: none; }
+
+  .zoom { position:absolute; bottom:16px; right:18px; display:flex; gap:8px; z-index:6; }
+  .zoom button { width:38px; height:38px; border-radius:10px; font-size:18px; font-weight:600; cursor:pointer;
+    background: var(--panel); border:1px solid var(--border); color: var(--text); box-shadow: var(--shadow); }
+  .zoom button:hover { border-color: rgba(135,230,255,0.5); }
+  .viewhint { position:absolute; bottom:20px; left:26px; z-index:5; font-size:11px; color:var(--dim); pointer-events:none; }
+  .viewhint b { color: var(--muted); font-weight:500; }
+
+  /* side panel */
+  .side { flex: 0 0 330px; height: 100vh; overflow-y: auto; background: var(--panel-2); border-left: 1px solid var(--border); backdrop-filter: blur(14px); padding: 20px 18px 30px; }
+  .side h2 { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 11px; }
+  .side h2 .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--core); margin-right: 8px; box-shadow: 0 0 8px var(--core); }
+
+  .disc { padding:9px 11px; border-radius:11px; border:1px solid var(--border-soft); margin-bottom:8px; position:relative; overflow:hidden; }
+  .disc::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--dc); }
+  .disc .dh { display:flex; align-items:baseline; justify-content:space-between; }
+  .disc .dn { font-size:13px; font-weight:700; color:var(--dc); }
+  .disc .dspent { font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .disc .dsub { font-size:11px; color:var(--dim); margin-top:3px; }
+
+  .divider { height:1px; background: var(--border-soft); margin: 14px 0 16px; }
+  .stat-row { display: flex; align-items: baseline; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border-soft); }
+  .stat-row .k { font-size: 12.5px; color: var(--text); }
+  .stat-row .v { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: #6affc1; }
+  .stat-row .v.neg { color: #ffb648; }
+  .empty { font-size: 12px; color: var(--dim); font-style: italic; padding: 8px 0 4px; }
+
+  .keystones { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .ks { padding: 9px 11px; border-radius: 10px; border:1px solid var(--border-soft); background: rgba(255,255,255,0.03); position: relative; overflow: hidden; }
+  .ks::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--kc); }
+  .ks .kn { font-size: 12px; font-weight: 700; color: var(--kc); }
+  .ks .kt { font-size: 9px; letter-spacing:0.16em; text-transform:uppercase; color: var(--dim); margin-top:1px; }
+  .ks .kd { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+  #tip { position: fixed; z-index: 30; max-width: 262px; pointer-events: none; padding: 12px 14px; border-radius: 13px; opacity: 0; transform: translateY(4px);
+    background: rgba(10,14,26,0.97); border: 1px solid var(--border); box-shadow: var(--shadow); backdrop-filter: blur(10px); transition: opacity 0.12s ease, transform 0.12s ease; }
+  #tip.show { opacity: 1; transform: translateY(0); }
+  #tip .type { font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; }
+  #tip .tn { font-size: 14px; font-weight: 700; margin: 6px 0 5px; }
+  #tip .td { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  #tip .hook { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--border-soft); font-family: var(--mono); font-size: 10px; color: var(--dim); word-break: break-word; }
+  #tip .hook b { color: var(--muted); font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Extraction Raid · Character Progression</div>
+        <div class="title">Operative Progression — One Tree, Four Sectors</div>
+        <div class="subtitle">Unlock nodes by spending skill points and materials looted from raids. Allocate outward from the core; refund a node any time by clicking it.</div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <div class="points">
+          <div>
+            <div class="num"><b id="used">0</b><span> / </span><span id="total">32</span></div>
+            <div class="lbl">Points spent</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <svg id="tree" viewBox="0 0 1400 1400" preserveAspectRatio="xMidYMid meet">
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </svg>
+      <div class="zoom">
+        <button id="zoomOut" title="Zoom out">−</button>
+        <button id="zoomFit" title="Reset view" style="font-size:13px;">⤢</button>
+        <button id="zoomIn" title="Zoom in">+</button>
+      </div>
+      <div class="viewhint"><b>Scroll</b> to zoom · <b>drag</b> empty space to pan · click a glowing node to allocate</div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h2><span class="dot"></span>Disciplines</h2>
+    <div id="discList"></div>
+    <div class="divider"></div>
+    <h2>Total Build Summary</h2>
+    <div id="summary"></div>
+    <div class="keystones" id="ks"></div>
+  </aside>
+</div>
+<div id="tip"></div>
+
+<script>
+// ═══ Data (identical nodes & colours to v1) ═════════════
+const TREES = {
+  warden: {
+    name:'Warden', color:'var(--warden)', tag:'Take the hit, take their stuff',
+    sub:['Flesh','Plating','Spoils','Presence'],
+    branches: [
+      [
+        {r:1,o:0,  z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:2,o:0,  z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:3,o:-15,z:'m', g:['Max HP',12,''], h:'BotConstants.PlayerMaxHp'},
+        {r:3,o:15, z:'t', n:'Thick Skin', g:['Damage Taken',-8,'%'], h:'ArmorConstants.DamageReductionK'},
+        {r:4,o:15, z:'m', g:['Heal Received',10,'%'], h:'MedConstants.HealPerSecond'},
+        {r:5,o:0,  z:'k', n:'Last Stand', sp:'Below 25% HP: +35% damage resistance and steady health regen.', h:'HealthState.CurrentHp guard'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Armor Points',15,''], h:'ItemDefinition.ArmorPoints'},
+        {r:2,o:0,  z:'m', g:['Armor Durability',20,'%'], h:'ArmorState.MaxDurability'},
+        {r:3,o:-15,z:'m', g:['Ricochet Chance',10,'%'], h:'ArmorConstants.RicochetChance'},
+        {r:3,o:15, z:'t', n:'Hardened Kit', g:['Armor Durability Loss',-40,'%'], h:'ArmorConstants.ArmorDamageCap'},
+        {r:4,o:15, z:'t', n:'Deadweight', g:['Armor Speed Penalty',-50,'%'], h:'ArmorConstants.WeightSpeedFactor'},
+        {r:5,o:0,  z:'m', g:['Damage Taken',-6,'%'], h:'ArmorConstants.DamageReductionK'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Bot Mod Drops',25,'%'], h:'LootSystem.BotModDropChance'},
+        {r:2,o:0,  z:'m', g:['Ammo/Med Box Drops',1,''], h:'ContainerTypeConfig.MaxDrops'},
+        {r:3,o:-15,z:'m', g:['Backpack Slots',2,''], h:'InventoryState.BackpackSize'},
+        {r:3,o:15, z:'t', n:'Trophy Taker', g:['Guaranteed Kill Drop',1,''], h:'LootSystem.CreateLootable'},
+        {r:4,o:15, z:'m', g:['Bot Mod Drops',25,'%'], h:'LootSystem.BotModDropChance'},
+        {r:5,o:0,  z:'k', n:'War Spoils', sp:'Killing a Boss or PMC drops a bonus Rare-or-better item.', h:'LootSystem + RarityTier'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Max Stamina',10,'%'], h:'StaminaConstants.MaxStamina'},
+        {r:2,o:0,  z:'m', g:['Heavy Stamina Drain',-15,'%'], h:'StaminaConstants.SprintDrainRate'},
+        {r:3,o:-15,z:'m', g:['Melee Damage',8,'%'], h:'WeaponStats.Damage'},
+        {r:3,o:15, z:'t', n:'Bloodied but Unbowed', g:['Damage Below 50% HP',12,'%'], h:'ShootingConfig.DamageMultiplier'},
+        {r:4,o:-15,z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:5,o:0,  z:'t', n:'Juggernaut', sp:'While standing still, +18% damage resistance.', h:'ArmorConstants.DamageReductionK'},
+      ],
+    ],
+  },
+  phantom: {
+    name:'Phantom', color:'var(--phantom)', tag:'See everything, leave no trace',
+    sub:['Sight','Sound','Fortune','Fleet'],
+    branches: [
+      [
+        {r:1,o:0,  z:'m', g:['Vision Radius',15,'%'], h:'FOVConfig.FarRadius'},
+        {r:2,o:0,  z:'m', g:['Vision Angle',12,'°'], h:'FOVConfig.Angle'},
+        {r:3,o:-15,z:'m', g:['360° Awareness',20,'%'], h:'FOVConfig.NearRadius'},
+        {r:3,o:15, z:'t', n:'Eagle Eye', g:['Scope Reveal',45,'%'], h:'PlayerEntityState.ScopeRadius'},
+        {r:4,o:15, z:'m', g:['Spotting Duration',25,'%'], h:'PlayerFOVSystem'},
+        {r:5,o:0,  z:'k', n:'Cartographer', sp:'Rare containers and Boss positions are pinged on your map when the raid begins.', h:'BotSpawnSystem + LootContainerSpawnPoint'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Hearing Range',20,'%'], h:'FOVConfig hearing radius'},
+        {r:2,o:0,  z:'m', g:['Footstep Noise',-20,'%'], h:'MovementSystem noise'},
+        {r:3,o:-15,z:'m', g:['Gunfire Noise Range',-5,'%'], h:'shooting noise radius'},
+        {r:3,o:15, z:'t', n:'Blindspot', g:['Enemy Track Loss',10,'%'], h:'BotTypeConfig.ReactionTime'},
+        {r:4,o:-15,z:'m', g:['Hearing Range',15,'%'], h:'FOVConfig hearing radius'},
+        {r:5,o:0,  z:'t', n:'Muffled', g:['Sprint Noise',-40,'%'], h:'MovementSystem'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Rare+ Roll Chance',15,'%'], h:'RarityTier / LootConstants.ValueWeight'},
+        {r:2,o:0,  z:'m', g:['Loot Pickup Speed',50,'%'], h:'interaction time'},
+        {r:3,o:-15,z:'m', g:['Credits Found',15,'%'], h:'PlayerProfileState.Credits'},
+        {r:3,o:15, z:'t', n:'Cat Burglar', g:['Module Cache Drops',1,''], h:'ContainerConstants.ModuleCache'},
+        {r:4,o:15, z:'m', g:['Rare+ Roll Chance',10,'%'], h:'RarityTier'},
+        {r:5,o:0,  z:'k', n:'Golden Eye', sp:'The best item in each container is highlighted and upgraded one rarity tier.', h:'RarityTier'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Max Stamina',10,'%'], h:'StaminaConstants.MaxStamina'},
+        {r:2,o:0,  z:'m', g:['Move Speed',10,'%'], h:'MovementConfig.MoveSpeedMultiplier'},
+        {r:3,o:-15,z:'m', g:['Max HP',8,''], h:'BotConstants.PlayerMaxHp'},
+        {r:3,o:15, z:'t', n:'Silent Runner', g:['Sprint Drain',-25,'%'], h:'StaminaConstants.SprintDrainRate'},
+        {r:4,o:15, z:'m', g:['Dodge Cooldown',-20,'%'], h:'DodgeConstants.Cooldown'},
+        {r:5,o:0,  z:'k', n:'Silent Assassin', sp:'Hits on unaware enemies deal +40% damage.', h:'DamageSystem'},
+      ],
+    ],
+  },
+  predator: {
+    name:'Predator', color:'var(--predator)', tag:'Hunt the biggest game',
+    sub:['Lethality','Handling','Bloodlust','The Hunt'],
+    branches: [
+      [
+        {r:1,o:0,  z:'m', g:['Weapon Damage',6,'%'], h:'ShootingConfig.DamageMultiplier'},
+        {r:2,o:0,  z:'m', g:['Penetration',8,'%'], h:'WeaponStats.BasePenetration'},
+        {r:3,o:-15,z:'m', g:['Armor Damage',15,'%'], h:'WeaponStats.BaseArmorDamage'},
+        {r:3,o:15, z:'t', n:'Executioner', g:['Headshot Damage',45,'%'], h:'WeaponStats.HeadshotDamageMultiplier'},
+        {r:4,o:15, z:'m', g:['Weapon Damage',6,'%'], h:'ShootingConfig.DamageMultiplier'},
+        {r:5,o:0,  z:'k', n:'Apex Predator', sp:'+30% damage to Bosses and PMCs, and they drop an extra Rare+ item.', h:'DamageSystem + LootSystem'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Recoil',-15,'%'], h:'ShootingConfig.RecoilMultiplier'},
+        {r:2,o:0,  z:'m', g:['Recoil Recovery',25,'%'], h:'AimConfig.RecoilRecoveryMultiplier'},
+        {r:3,o:-15,z:'m', g:['Reload Time',-15,'%'], h:'WeaponStats.ReloadTime'},
+        {r:3,o:15, z:'t', n:'Steady Hands', g:['Aim Sway',-30,'%'], h:'AimConfig.AimFollowMultiplier'},
+        {r:4,o:-15,z:'m', g:['Equip Time',-20,'%'], h:'WeaponStats.EquipTime'},
+        {r:5,o:0,  z:'t', n:'Cold Barrel', g:['Heat Buildup',-35,'%'], h:'BarrelHeatConfig'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Max HP',8,''], h:'BotConstants.PlayerMaxHp'},
+        {r:2,o:0,  z:'m', g:['Heal per Kill',5,' HP'], h:'DamageSystem on-kill'},
+        {r:3,o:-15,z:'m', g:['Bleed Applied',25,'%'], h:'WeaponStats.BaseBleedChance'},
+        {r:3,o:15, z:'t', n:'Adrenaline', g:['Stamina per Kill',20,'%'], h:'StaminaSystem'},
+        {r:4,o:15, z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:5,o:0,  z:'k', n:'Berserk', sp:'Below 50% HP: +20% fire rate and hits heal you for a fraction of the damage dealt.', h:'ShootingConfig + DamageSystem'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Boss Spawn Chance',20,'%'], h:'BotSpawnPoint.spawnChance'},
+        {r:2,o:0,  z:'m', g:['Boss Kill Drops',1,''], h:'LootSystem'},
+        {r:3,o:-15,z:'m', g:['Credits from Loot',10,'%'], h:'PlayerProfileState.Credits'},
+        {r:3,o:15, z:'t', n:'Tracker', sp:'Boss and elite positions are revealed after your first kill of the raid.', h:'BotSpawnSystem'},
+        {r:4,o:15, z:'m', g:['Boss Spawn Chance',15,'%'], h:'BotSpawnPoint.spawnChance'},
+        {r:5,o:0,  z:'k', n:'Big Game', sp:'+35% chance a Boss or a rare high-value spawn appears on the map this raid.', h:'BotSpawnPoint.spawnChance'},
+      ],
+    ],
+  },
+  prospector: {
+    name:'Prospector', color:'var(--prospector)', tag:'Grab it all, live to spend it',
+    sub:['Haul','Fortune','Endurance','Getaway'],
+    branches: [
+      [
+        {r:1,o:0,  z:'m', g:['Container Drops',1,''], h:'ContainerTypeConfig.MaxDrops'},
+        {r:2,o:0,  z:'m', g:['Container Drops',1,''], h:'ContainerTypeConfig.MaxDrops'},
+        {r:3,o:-15,z:'m', g:['Container Slots',2,''], h:'ContainerTypeConfig.SlotCount'},
+        {r:3,o:15, z:'t', n:'Deep Pockets', g:['Backpack Slots',4,''], h:'InventoryState.BackpackSize'},
+        {r:4,o:15, z:'m', g:['Weapon Slots',1,''], h:'InventoryState.WeaponSlotCount'},
+        {r:5,o:0,  z:'t', n:'Pack Rat', g:['Container Drops',2,''], h:'ContainerTypeConfig.MaxDrops'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Rare+ Roll Chance',15,'%'], h:'RarityTier / LootConstants.ValueWeight'},
+        {r:2,o:0,  z:'m', g:['Credits Found',20,'%'], h:'PlayerProfileState.Credits'},
+        {r:3,o:-15,z:'m', g:['Loot Box Drops',1,''], h:'ContainerConstants.RandomLootBox'},
+        {r:3,o:15, z:'t', n:'Lucky Find', g:['Rare+ Roll Chance',30,'%'], h:'RarityTier'},
+        {r:4,o:15, z:'m', g:['Credits Found',15,'%'], h:'PlayerProfileState.Credits'},
+        {r:5,o:0,  z:'k', n:'Golden Touch', sp:'The best drop in each container gains +1 rarity tier — but enemies hear you 30% farther.', h:'RarityTier + noise'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Max Stamina',12,'%'], h:'StaminaConstants.MaxStamina'},
+        {r:2,o:0,  z:'m', g:['Move Speed',8,'%'], h:'MovementConfig.MoveSpeedMultiplier'},
+        {r:3,o:-15,z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:3,o:15, z:'t', n:'Pack Mule', g:['Carry Speed Penalty',-100,'%'], h:'ArmorConstants.WeightSpeedFactor'},
+        {r:4,o:-15,z:'m', g:['Max HP',10,''], h:'BotConstants.PlayerMaxHp'},
+        {r:5,o:0,  z:'t', n:'Second Wind', g:['Stamina Regen',30,'%'], h:'StaminaConstants.RegenRate'},
+      ],
+      [
+        {r:1,o:0,  z:'m', g:['Heal Speed',20,'%'], h:'MedConstants.HealPerSecond'},
+        {r:2,o:0,  z:'m', g:['Med Use Delay',-1,'s'], h:'MedConstants.UseDelay'},
+        {r:3,o:-15,z:'m', g:['Bleed Taken',-40,'%'], h:'StatusEffectConstants'},
+        {r:3,o:15, z:'t', n:'Field Dressing', sp:'Bandages instantly stop all bleeding.', h:'StatusEffectConstants'},
+        {r:4,o:15, z:'m', g:['Heal Speed',15,'%'], h:'MedConstants.HealPerSecond'},
+        {r:5,o:0,  z:'k', n:'Secure Pocket', sp:'Keep one random slot of loot even if you die in the raid.', h:'InventoryState'},
+      ],
+    ],
+  },
+};
+
+let TOTAL = 32;   // reassigned to the node count once the graph is built (full clear = all points)
+const CX = 700, CY = 700;
+const HUBR = 120;
+const R = ring => 150 + 82 * ring;         // ring1..5 → 232..560
+const RAD = { m:14, t:22, k:24 };
+const SIZE_NAME = { m:'Minor', t:'Notable', k:'Keystone' };
+
+// discipline direction (deg) + per-branch angular lane within the sector
+const DISC_ANGLE = { warden:135, phantom:225, predator:315, prospector:45 };
+const SPREAD = [-33, -11, 11, 33];   // wider lanes so branches don't interleave
+const FORK = 0.4;                    // gentler forks (data ±15° → ±6° on canvas)
+
+// ═══ Build one unified graph ════════════════════════════
+const SVGNS = 'http://www.w3.org/2000/svg';
+const byUid = {};
+const allNodes = [];    // stat nodes
+const hubs = [];
+const edges = [];
+const adj = {};
+const core = { uid:'core', kind:'core', x:CX, y:CY, color:'var(--core)' };
+byUid.core = core; adj.core = new Set();
+
+function linkE(a,b){ if(a===b)return; adj[a].add(b); adj[b].add(a);
+  if(!edges.some(e => (e.a===a&&e.b===b)||(e.a===b&&e.b===a))) edges.push({a,b}); }
+
+Object.entries(TREES).forEach(([key,T]) => {
+  const base = DISC_ANGLE[key];
+  const ha = base * Math.PI/180;
+  const hub = { uid:key+'#h', kind:'hub', disc:key, color:T.color, name:T.name, tag:T.tag,
+    x: CX + HUBR*Math.cos(ha), y: CY + HUBR*Math.sin(ha) };
+  hubs.push(hub); byUid[hub.uid] = hub; adj[hub.uid] = new Set();
+  linkE('core', hub.uid);
+
+  T.branches.forEach((branch, bi) => {
+    branch.forEach((raw, ni) => {
+      const a = (base + SPREAD[bi] + raw.o * FORK) * Math.PI/180;
+      const node = {
+        uid:`${key}#${bi}.${ni}`, kind:'node', disc:key, branch:bi,
+        x: CX + R(raw.r)*Math.cos(a), y: CY + R(raw.r)*Math.sin(a),
+        r:raw.r, o:raw.o, z:raw.z, n:raw.n||'', g:raw.g||null, sp:raw.sp||null, h:raw.h, color:T.color,
+      };
+      allNodes.push(node); byUid[node.uid] = node; adj[node.uid] = new Set();
+    });
+  });
+});
+
+// adjacency: node → same-branch nearest lower ring (keystone → all deepest); ring1 → hub
+allNodes.forEach(n => {
+  const lower = allNodes.filter(m => m.disc===n.disc && m.branch===n.branch && m.r < n.r);
+  if (!lower.length){ linkE(n.uid, n.disc+'#h'); return; }
+  const maxR = Math.max(...lower.map(m => m.r));
+  const deepest = lower.filter(m => m.r===maxR);
+  if (n.z==='k'){ deepest.forEach(m => linkE(n.uid, m.uid)); }
+  else { deepest.sort((p,q)=>Math.abs(p.o-n.o)-Math.abs(q.o-n.o)); linkE(n.uid, deepest[0].uid); }
+});
+
+TOTAL = allNodes.length;   // one point per node — a full career unlocks the whole tree
+
+// ═══ State ══════════════════════════════════════════════
+const allocated = new Set(['core', ...hubs.map(h=>h.uid)]);   // core + hubs are free
+const spent = () => allNodes.filter(n => allocated.has(n.uid)).length;
+const canAlloc = uid => { for (const nb of adj[uid]) if (allocated.has(nb)) return true; return false; };
+
+function onClick(uid){
+  const node = byUid[uid];
+  if (node.kind!=='node') return;
+  if (allocated.has(uid)){
+    allocated.delete(uid);
+    const reach = new Set(); const q = ['core'];
+    while(q.length){ const c=q.pop(); if(reach.has(c))continue; reach.add(c);
+      adj[c].forEach(nb => { if(allocated.has(nb)&&!reach.has(nb)) q.push(nb); }); }
+    allNodes.forEach(m => { if(allocated.has(m.uid)&&!reach.has(m.uid)) allocated.delete(m.uid); });
+  } else {
+    if (spent() >= TOTAL) return;
+    if (!canAlloc(uid)) return;
+    allocated.add(uid);
+  }
+  refresh();
+}
+
+// ═══ Render (built once, states refreshed) ══════════════
+const edgesG = document.getElementById('edges');
+const nodesG = document.getElementById('nodes');
+const nodeEls = {};
+
+edges.forEach(({a,b}) => {
+  const A = byUid[a], B = byUid[b];
+  const el = document.createElementNS(SVGNS,'line');
+  el.setAttribute('x1',A.x); el.setAttribute('y1',A.y); el.setAttribute('x2',B.x); el.setAttribute('y2',B.y);
+  el.setAttribute('class','edge');
+  el._a=a; el._b=b; el._color = A.kind==='core'?B.color:(B.kind==='core'?A.color:B.color);
+  edgesG.appendChild(el);
+});
+
+function build(){
+  drawGlyphNode(core);
+  hubs.forEach(drawHub);
+  allNodes.forEach(drawGlyphNode);
+}
+
+function drawHub(h){
+  const g = document.createElementNS(SVGNS,'g');
+  g.setAttribute('class','node hub'); g.setAttribute('transform',`translate(${h.x},${h.y})`);
+  g.style.setProperty('--c', h.color);
+  const ring = document.createElementNS(SVGNS,'circle');
+  ring.setAttribute('class','ring'); ring.setAttribute('r',26); g.appendChild(ring);
+  const nm = document.createElementNS(SVGNS,'text');
+  nm.setAttribute('class','hname'); nm.setAttribute('y',-40); nm.textContent=h.name.toUpperCase(); g.appendChild(nm);
+  const tg = document.createElementNS(SVGNS,'text');
+  tg.setAttribute('class','htag'); tg.setAttribute('y',48); tg.textContent=h.tag; g.appendChild(tg);
+  nodesG.appendChild(g);
+}
+
+function drawGlyphNode(n){
+  const isCore = n.kind==='core';
+  const g = document.createElementNS(SVGNS,'g');
+  g.setAttribute('class','node'); g.setAttribute('transform',`translate(${n.x},${n.y})`);
+  g.style.setProperty('--c', n.color);
+  const rad = isCore ? 34 : RAD[n.z];
+
+  const halo = document.createElementNS(SVGNS,'circle');
+  halo.setAttribute('class','halo'); halo.setAttribute('r', rad+7); halo.setAttribute('stroke-width','2'); g.appendChild(halo);
+
+  const ring = document.createElementNS(SVGNS, n.z==='k' ? 'rect':'circle');
+  ring.setAttribute('class','ring');
+  if (n.z==='k'){ const s=rad*1.7; ring.setAttribute('x',-s/2); ring.setAttribute('y',-s/2); ring.setAttribute('width',s); ring.setAttribute('height',s); ring.setAttribute('rx',5); ring.setAttribute('transform','rotate(45)'); }
+  else ring.setAttribute('r', rad);
+  g.appendChild(ring);
+
+  const glyph = document.createElementNS(SVGNS,'text');
+  glyph.setAttribute('class','glyph'); glyph.setAttribute('font-size', isCore?20:(n.z==='m'?13:15));
+  glyph.textContent = isCore ? '★' : n.z==='k' ? '◆' : n.z==='t' ? '●' : (n.g && n.g[1]<0?'−':'+');
+  g.appendChild(glyph);
+
+  const label = isCore ? 'OPERATIVE' : n.n;
+  if (label){
+    const t = document.createElementNS(SVGNS,'text'); t.setAttribute('class','name'); t.setAttribute('y', rad+16); t.textContent=label; g.appendChild(t);
+  }
+  if (!isCore){
+    g.addEventListener('click', ev => { if(!dragMoved) onClick(n.uid); });
+    g.addEventListener('mousemove', e => showTip(e, n));
+    g.addEventListener('mouseleave', hideTip);
+  }
+  nodeEls[n.uid] = g; nodesG.appendChild(g);
+}
+
+function refresh(){
+  allNodes.forEach(n => {
+    const g = nodeEls[n.uid]; g.classList.remove('on','open','locked');
+    if (allocated.has(n.uid)) g.classList.add('on');
+    else if (canAlloc(n.uid) && spent()<TOTAL) g.classList.add('open');
+    else g.classList.add('locked');
+  });
+  nodeEls.core.classList.add('on');
+  edgesG.querySelectorAll('.edge').forEach(el => {
+    if (allocated.has(el._a) && allocated.has(el._b)){ el.classList.add('live'); el.style.stroke=el._color; }
+    else { el.classList.remove('live'); el.style.stroke=''; }
+  });
+  document.getElementById('used').textContent = spent();
+  buildSidebar();
+}
+
+// ═══ Tooltip ════════════════════════════════════════════
+const tip = document.getElementById('tip');
+function showTip(e, n){
+  const T = TREES[n.disc];
+  const body = n.sp ? n.sp : `<b style="color:${T.color}">${n.g[1]>0?'+':''}${n.g[1]}${n.g[2]}</b> ${n.g[0]}`;
+  tip.innerHTML = `<div class="type" style="color:${T.color}">${T.name} · ${SIZE_NAME[n.z].toUpperCase()}</div>
+    <div class="tn">${n.n || n.g[0]}</div><div class="td">${body}</div>
+    <div class="hook"><b>hook →</b> ${n.h}</div>`;
+  tip.classList.add('show');
+  const pad=14; let x=e.clientX+16, y=e.clientY+16; const r=tip.getBoundingClientRect();
+  if (x+r.width+pad>innerWidth) x=e.clientX-r.width-16;
+  if (y+r.height+pad>innerHeight) y=e.clientY-r.height-16;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip(){ tip.classList.remove('show'); }
+
+// ═══ Sidebar ════════════════════════════════════════════
+function buildSidebar(){
+  // per-discipline spent
+  document.getElementById('discList').innerHTML = Object.entries(TREES).map(([k,T]) => {
+    const c = allNodes.filter(n => n.disc===k && allocated.has(n.uid)).length;
+    return `<div class="disc" style="--dc:${T.color}"><div class="dh"><span class="dn">${T.name}</span><span class="dspent">${c} pts</span></div><div class="dsub">${T.sub.join(' · ')}</div></div>`;
+  }).join('');
+
+  const agg = {}; const keys = [];
+  allNodes.forEach(n => {
+    if (!allocated.has(n.uid)) return;
+    if (n.g){ const a = agg[n.g[0]]||(agg[n.g[0]]={sum:0,unit:n.g[2]}); a.sum+=n.g[1]; }
+    if (n.sp) keys.push(n);
+  });
+  const labels = Object.keys(agg).sort();
+  document.getElementById('summary').innerHTML = labels.length ? labels.map(l=>{
+    const {sum,unit}=agg[l]; const neg=sum<0;
+    return `<div class="stat-row"><span class="k">${l}</span><span class="v ${neg?'neg':''}">${sum>0?'+':''}${sum}${unit}</span></div>`;
+  }).join('') : `<div class="empty">No points spent yet — click a glowing node.</div>`;
+
+  document.getElementById('ks').innerHTML = keys.map(n=>{
+    const T=TREES[n.disc];
+    return `<div class="ks" style="--kc:${T.color}"><div class="kn">◆ ${n.n}</div><div class="kt">${T.name}</div><div class="kd">${n.sp}</div></div>`;
+  }).join('');
+}
+
+// ═══ Pan / zoom (viewBox based) ═════════════════════════
+const svg = document.getElementById('tree');
+let vb = { x:0, y:0, w:1400, h:1400 };
+const applyVB = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+function clientToSvg(e){ const r=svg.getBoundingClientRect(); return { x: vb.x + (e.clientX-r.left)/r.width*vb.w, y: vb.y + (e.clientY-r.top)/r.height*vb.h }; }
+function zoomAt(px, py, factor){
+  let nw = Math.min(2600, Math.max(560, vb.w*factor)); const ratio = nw/vb.w;
+  vb.x = px - (px-vb.x)*ratio; vb.y = py - (py-vb.y)*ratio; vb.w = nw; vb.h = vb.h*ratio; applyVB();
+}
+svg.addEventListener('wheel', e => { e.preventDefault(); const p=clientToSvg(e); zoomAt(p.x,p.y, e.deltaY<0?0.86:1.16); }, {passive:false});
+
+let dragging=false, dragMoved=false, lastX=0, lastY=0;
+svg.addEventListener('pointerdown', e => {
+  if (e.target.closest('.node') && !e.target.closest('.hub')) return; // let node clicks through
+  dragging=true; dragMoved=false; lastX=e.clientX; lastY=e.clientY; svg.classList.add('grabbing'); svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', e => {
+  if(!dragging) return; const r=svg.getBoundingClientRect();
+  const dx=(e.clientX-lastX)*(vb.w/r.width), dy=(e.clientY-lastY)*(vb.h/r.height);
+  if (Math.abs(e.clientX-lastX)+Math.abs(e.clientY-lastY) > 3) dragMoved=true;
+  vb.x-=dx; vb.y-=dy; lastX=e.clientX; lastY=e.clientY; applyVB();
+});
+const endDrag = () => { dragging=false; svg.classList.remove('grabbing'); setTimeout(()=>dragMoved=false, 0); };
+svg.addEventListener('pointerup', endDrag); svg.addEventListener('pointercancel', endDrag);
+
+document.getElementById('zoomIn').onclick  = () => zoomAt(vb.x+vb.w/2, vb.y+vb.h/2, 0.82);
+document.getElementById('zoomOut').onclick = () => zoomAt(vb.x+vb.w/2, vb.y+vb.h/2, 1.22);
+document.getElementById('zoomFit').onclick = () => { vb={x:0,y:0,w:1400,h:1400}; applyVB(); };
+
+// ═══ Boot ═══════════════════════════════════════════════
+document.getElementById('total').textContent = TOTAL;
+build(); applyVB(); refresh();
+</script>
+</body>
+</html>
