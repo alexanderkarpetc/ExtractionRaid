@@ -95,16 +95,20 @@
 }
 
 /* ── Nodes ───────────────────────────────── */
-.pr-node {
+/* Wrapper: transparent, holds the aura rings + the opaque core circle. */
+.pr-node { position: absolute; }
+
+.pr-node-core {
     position: absolute;
     align-items: center;
     justify-content: center;
-    background-color: rgba(12, 16, 30, 0.9);
+    background-color: rgb(13, 16, 30);
     border-width: 2px;
     border-color: var(--color-border);
     border-radius: 50%;
 }
-.pr-node--keystone { rotate: 45deg; border-radius: 5px; }
+.pr-node--keystone .pr-node-core { rotate: 45deg; border-radius: 5px; }
+
 .pr-glyph {
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;
@@ -115,6 +119,11 @@
     color: var(--color-text-muted);
 }
 .pr-node--keystone .pr-glyph { rotate: -45deg; }
+
+/* Soft radial glow (tinted texture) + crisp "taken" ring. Colors/visibility set in C#. */
+.pr-glow { position: absolute; -unity-background-scale-mode: stretch-to-fill; }
+.pr-halo { position: absolute; border-radius: 50%; border-width: 2px; background-color: rgba(0, 0, 0, 0); }
+.pr-node--keystone .pr-halo { rotate: 45deg; border-radius: 6px; }
 
 /* Node state colors (bg / border / glyph) are set inline per-discipline in ProgressionWindow.cs. */
 

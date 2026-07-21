@@ -38,9 +38,10 @@ namespace View.UI.Progression
         readonly Dictionary<string, Vector2> _pos = new();
         readonly List<Edge> _edgeList = new();
 
-        static readonly Color NodeBaseBg = new(0.05f, 0.06f, 0.12f, 0.9f);
+        static readonly Color NodeBaseBg = new(0.05f, 0.06f, 0.12f, 1f);
         static readonly Color NodeLockedBorder = new(0.4f, 0.44f, 0.5f);
         static readonly Color NodeOnGlyph = new(0.03f, 0.06f, 0.11f);
+        static Texture2D _glowTex;   // radial-falloff glow, tinted per discipline
 
         bool _isVisible;
         bool _fitted;
@@ -176,7 +177,7 @@ namespace View.UI.Progression
             el.style.width = radius * 2; el.style.height = radius * 2;
             el.style.borderTopColor = el.style.borderBottomColor =
                 el.style.borderLeftColor = el.style.borderRightColor = color;
-            el.style.backgroundColor = new Color(color.r, color.g, color.b, 0.20f);
+            el.style.backgroundColor = Color.Lerp(NodeBaseBg, color, 0.22f);
 
             var label = new Label(name.ToUpperInvariant());
             label.AddToClassList("pr-hub-name");
@@ -189,17 +190,43 @@ namespace View.UI.Progression
         void AddNode(Prog.ProgressionDisciplineDef disc, Prog.ProgressionNodeDef node, Vector2 pos)
         {
             float r = NodeRadius(node.Size);
+            float wrap = r * 2f + 22f;   // extra room for the soft glow
             var el = new VisualElement { name = node.Id };
             el.AddToClassList("pr-node");
             if (node.Size == Prog.NodeSize.Keystone) el.AddToClassList("pr-node--keystone");
-            el.style.left = pos.x - r; el.style.top = pos.y - r;
-            el.style.width = r * 2; el.style.height = r * 2;
+            el.style.left = pos.x - wrap / 2f; el.style.top = pos.y - wrap / 2f;
+            el.style.width = wrap; el.style.height = wrap;
             _nodeColor[node.Id] = disc.Color;
 
-            var glyph = new Label(GlyphFor(node));
+            // Soft radial glow filling the wrapper (behind everything).
+            var glow = new VisualElement { pickingMode = PickingMode.Ignore };
+            glow.AddToClassList("pr-glow");
+            glow.style.backgroundImage = new StyleBackground(GlowTexture());
+            glow.style.width = wrap; glow.style.height = wrap;
+            glow.style.display = DisplayStyle.None;
+            el.Add(glow);
+
+            // Crisp accent ring shown only on allocated nodes.
+            var halo = new VisualElement { pickingMode = PickingMode.Ignore };
+            halo.AddToClassList("pr-halo");
+            float haloSize = r * 2f + 12f;
+            float ho = (wrap - haloSize) / 2f;
+            halo.style.left = ho; halo.style.top = ho; halo.style.width = haloSize; halo.style.height = haloSize;
+            halo.style.display = DisplayStyle.None;
+            el.Add(halo);
+
+            var core = new VisualElement { pickingMode = PickingMode.Ignore };
+            core.AddToClassList("pr-node-core");
+            float coreOff = (wrap - r * 2f) / 2f;
+            core.style.left = coreOff; core.style.top = coreOff;
+            core.style.width = r * 2f; core.style.height = r * 2f;
+            el.Add(core);
+
+            var glyph = new Label(GlyphFor(node)) { pickingMode = PickingMode.Ignore };
             glyph.AddToClassList("pr-glyph");
             glyph.style.fontSize = node.Size == Prog.NodeSize.Minor ? 18 : 16;
-            el.Add(glyph);
+            if (node.Size == Prog.NodeSize.Minor) glyph.style.translate = new Translate(0, -1, 0);
+            core.Add(glyph);
 
             var id = node.Id;
             el.RegisterCallback<ClickEvent>(_ => OnNodeClicked(id));
@@ -213,9 +240,29 @@ namespace View.UI.Progression
             {
                 var name = new Label(node.DisplayName);
                 name.AddToClassList("pr-name");
-                name.style.left = pos.x - 70; name.style.top = pos.y + r + 3; name.style.width = 140;
+                name.style.left = pos.x - 70; name.style.top = pos.y + r + 6; name.style.width = 140;
                 _nodesLayer.Add(name);
             }
+        }
+
+        // Radial white-to-transparent texture; tinted per discipline for a soft glow.
+        static Texture2D GlowTexture()
+        {
+            if (_glowTex != null) return _glowTex;
+            const int s = 64;
+            var t = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, name = "pr-glow" };
+            var px = new Color32[s * s];
+            float c = (s - 1) / 2f;
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c)) / c; // 0 at center
+                    float a = Mathf.Clamp01(1f - d);
+                    a *= a;   // soft falloff
+                    px[y * s + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+                }
+            t.SetPixels32(px); t.Apply();
+            return _glowTex = t;
         }
 
         static string GlyphFor(Prog.ProgressionNodeDef node) => node.Size switch
@@ -257,15 +304,40 @@ namespace View.UI.Progression
                     foreach (var node in branch.Nodes)
                     {
                         if (!_nodeEls.TryGetValue(node.Id, out var el)) continue;
+                        var core = el.Q<VisualElement>(className: "pr-node-core");
+                        if (core == null) continue;
+                        var glow = el.Q<VisualElement>(className: "pr-glow");
+                        var halo = el.Q<VisualElement>(className: "pr-halo");
                         Color accent = _nodeColor.TryGetValue(node.Id, out var c) ? c : Color.white;
                         bool on = state != null && Prog.ProgressionSystem.IsAllocated(state, node.Id);
                         bool open = !on && state != null && Prog.ProgressionSystem.CanAllocate(_cfg, state, node.Id);
 
-                        if (on) { el.style.backgroundColor = accent; SetBorder(el, Color.white); el.style.opacity = 1f; }
-                        else if (open) { el.style.backgroundColor = NodeBaseBg; SetBorder(el, accent); el.style.opacity = 1f; }
-                        else { el.style.backgroundColor = NodeBaseBg; SetBorder(el, NodeLockedBorder); el.style.opacity = 0.55f; }
-
-                        SetGlyphColor(el, on ? NodeOnGlyph : (open ? accent : NodeLockedBorder));
+                        if (on)
+                        {
+                            core.style.backgroundColor = accent;
+                            SetBorder(core, Color.white);
+                            core.style.opacity = 1f;
+                            ShowGlow(glow, accent, 0.9f);
+                            ShowHalo(halo, accent, 0.9f);
+                            SetGlyphColor(el, NodeOnGlyph);
+                        }
+                        else if (open)
+                        {
+                            core.style.backgroundColor = NodeBaseBg;
+                            SetBorder(core, accent);
+                            core.style.opacity = 1f;
+                            ShowGlow(glow, accent, 0.5f);
+                            HideEl(halo);
+                            SetGlyphColor(el, accent);
+                        }
+                        else
+                        {
+                            core.style.backgroundColor = NodeBaseBg;
+                            SetBorder(core, NodeLockedBorder);
+                            core.style.opacity = 1f;
+                            HideEl(glow); HideEl(halo);
+                            SetGlyphColor(el, NodeLockedBorder);
+                        }
                     }
                 }
 
@@ -315,6 +387,22 @@ namespace View.UI.Progression
             var g = el.Q<Label>(className: "pr-glyph");
             if (g != null) g.style.color = c;
         }
+
+        static void ShowGlow(VisualElement g, Color c, float alpha)
+        {
+            if (g == null) return;
+            g.style.display = DisplayStyle.Flex;
+            g.style.unityBackgroundImageTintColor = new Color(c.r, c.g, c.b, alpha);
+        }
+
+        static void ShowHalo(VisualElement h, Color c, float alpha)
+        {
+            if (h == null) return;
+            h.style.display = DisplayStyle.Flex;
+            SetBorder(h, new Color(c.r, c.g, c.b, alpha));
+        }
+
+        static void HideEl(VisualElement e) { if (e != null) e.style.display = DisplayStyle.None; }
 
         // ── tooltip ─────────────────────────────────────────────────
         void ShowTip(Prog.ProgressionDisciplineDef disc, Prog.ProgressionNodeDef node, Vector2 panelPos)
