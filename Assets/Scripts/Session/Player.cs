@@ -7,6 +7,7 @@ namespace Session
     public class Player
     {
         public PlayerProfileState ProfileState { get; private set; }
+        public PlayerProgressionState Progression { get; private set; }
         public InventoryState Inventory { get; private set; }
         public List<ItemState> Stash { get; private set; }
         public QuestProgressState QuestProgress { get; private set; }
@@ -19,6 +20,7 @@ namespace Session
         public Player()
         {
             ProfileState = new PlayerProfileState();
+            Progression = new PlayerProgressionState();
             Inventory = new InventoryState();
             Stash = new List<ItemState>();
             QuestProgress = new QuestProgressState();
@@ -75,6 +77,8 @@ namespace Session
                 Stash = stashData,
                 Quests = questList,
                 BuildingLevels = buildingList,
+                AllocatedNodes = new List<string>(Progression.AllocatedNodeIds),
+                ProgressionPoints = Progression.AvailablePoints,
             };
         }
 
@@ -106,6 +110,11 @@ namespace Session
                 foreach (var b in data.BuildingLevels)
                     if (System.Enum.TryParse<BuildingKind>(b.Kind, out var kind))
                         BuildingLevels[kind] = b.Level;
+
+            Progression.AllocatedNodeIds = data.AllocatedNodes != null
+                ? new List<string>(data.AllocatedNodes)
+                : new List<string>();
+            Progression.AvailablePoints = data.ProgressionPoints;
         }
     }
 }

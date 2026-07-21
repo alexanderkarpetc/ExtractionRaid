@@ -169,6 +169,12 @@ namespace ApplicationCore
             craftingMockupHost.AddComponent<CraftingMockupWindow>();
             craftingMockupHost.AddComponent<CraftingMockupHotkey>();
 
+            // Character progression skill tree — hidden by default, toggled with K.
+            var progressionHost = new GameObject("ProgressionWindow");
+            progressionHost.transform.SetParent(transform, false);
+            progressionHost.AddComponent<View.UI.Progression.ProgressionWindow>();
+            progressionHost.AddComponent<View.UI.Progression.ProgressionHotkey>();
+
             // Attachment editor modal — edit a weapon's attachments anywhere (P2.2). Hidden
             // by default; opened via AttachmentEditorWindow.Instance.Open(weaponItem). Lazily
             // builds its own presenter. See docs/ai/weapon-builder/attachments/.

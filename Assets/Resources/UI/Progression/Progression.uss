@@ -1,0 +1,216 @@
+/* Character progression tree. Node accent colors are set inline in C# from the
+   discipline color; everything else uses shared theme tokens. */
+
+.pr-root {
+    flex-grow: 1;
+    background-color: rgb(10, 13, 24);
+    color: var(--color-text-body);
+}
+
+/* ── Top bar ─────────────────────────────── */
+.pr-topbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 18px 26px 10px 26px;
+}
+.pr-eyebrow {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--color-accent);
+    -unity-font-style: bold;
+}
+.pr-title {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: var(--color-text-title);
+    margin-top: 2px;
+}
+.pr-subtitle {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 3px;
+    max-width: 560px;
+    white-space: normal;
+}
+.pr-topright { flex-direction: row; align-items: center; }
+.pr-points {
+    align-items: center;
+    padding: 8px 16px;
+    margin-left: 10px;
+    background-color: var(--color-header-bg);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-inset);
+}
+.pr-points-num { font-size: 26px; color: var(--color-accent); -unity-font-style: bold; }
+.pr-points-num--dim { color: var(--color-text-secondary); font-size: 20px; }
+.pr-points-lbl { font-size: 9px; letter-spacing: 2px; color: var(--color-text-muted); margin-top: 3px; }
+
+.pr-devbtn {
+    margin-left: 12px;
+    height: 34px;
+    padding: 0 12px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: var(--color-text-muted);
+    background-color: var(--color-card-bg);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-inset);
+}
+.pr-closebtn {
+    margin-left: 8px;
+    width: 34px; height: 34px;
+    font-size: 15px;
+    color: var(--color-text-body);
+    background-color: var(--color-card-bg);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-inset);
+}
+
+/* ── Main split ──────────────────────────── */
+.pr-main { flex-direction: row; flex-grow: 1; }
+
+.pr-canvas-wrap {
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+}
+.pr-content {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1400px; height: 1400px;
+    transform-origin: left top;
+}
+.pr-edges { position: absolute; left: 0; top: 0; width: 1400px; height: 1400px; }
+.pr-nodes { position: absolute; left: 0; top: 0; width: 1400px; height: 1400px; }
+
+.pr-hint {
+    position: absolute;
+    left: 20px; bottom: 16px;
+    font-size: 11px;
+    color: var(--color-text-empty);
+}
+
+/* ── Nodes ───────────────────────────────── */
+.pr-node {
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(12, 16, 30, 0.9);
+    border-width: 2px;
+    border-color: var(--color-border);
+    border-radius: 50%;
+}
+.pr-node--keystone { rotate: 45deg; border-radius: 5px; }
+.pr-glyph {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    margin: 0;
+    padding: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    color: var(--color-text-muted);
+}
+.pr-node--keystone .pr-glyph { rotate: -45deg; }
+
+/* Node state colors (bg / border / glyph) are set inline per-discipline in ProgressionWindow.cs. */
+
+.pr-hub {
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border-width: 3px;
+}
+.pr-hub-name {
+    position: absolute;
+    -unity-font-style: bold;
+    font-size: 15px;
+    letter-spacing: 2px;
+    -unity-text-align: middle-center;
+}
+.pr-name {
+    position: absolute;
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: var(--color-text-body-strong);
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+}
+.pr-name.is-dim { color: var(--color-text-empty); }
+
+/* ── Side panel ──────────────────────────── */
+.pr-side {
+    width: 320px;
+    flex-shrink: 0;
+    background-color: var(--color-inset-bg);
+    border-left-width: 1px;
+    border-left-color: var(--color-border);
+    padding: 18px 16px;
+}
+.pr-side-h {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--color-text-muted);
+    -unity-font-style: bold;
+    margin-bottom: 10px;
+}
+.pr-disc-list { margin-bottom: 8px; }
+.pr-disc {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background-color: var(--color-card-bg);
+    border-left-width: 3px;
+    border-radius: var(--radius-inset);
+}
+.pr-disc-row { flex-direction: row; justify-content: space-between; }
+.pr-disc-name { font-size: 13px; -unity-font-style: bold; }
+.pr-disc-pts { font-size: 12px; color: var(--color-text-muted); }
+.pr-disc-sub { font-size: 11px; color: var(--color-text-empty); margin-top: 2px; white-space: normal; }
+
+.pr-divider { height: 1px; background-color: var(--color-border-inset); margin: 12px 0; }
+
+.pr-summary { }
+.pr-stat-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border-inset);
+}
+.pr-stat-k { font-size: 12px; color: var(--color-text-body); }
+.pr-stat-v { font-size: 12px; -unity-font-style: bold; color: var(--color-drag-valid-border); }
+.pr-stat-v--neg { color: var(--color-mod-hint); }
+.pr-empty { font-size: 12px; color: var(--color-text-empty); -unity-font-style: italic; }
+
+.pr-keystones { margin-top: 14px; }
+.pr-ks {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    background-color: var(--color-card-bg);
+    border-left-width: 3px;
+    border-radius: var(--radius-inset);
+}
+.pr-ks-name { font-size: 12px; -unity-font-style: bold; }
+.pr-ks-disc { font-size: 9px; letter-spacing: 1px; color: var(--color-text-empty); }
+.pr-ks-desc { font-size: 11px; color: var(--color-text-muted); margin-top: 3px; white-space: normal; }
+
+/* ── Tooltip ─────────────────────────────── */
+.pr-tip {
+    position: absolute;
+    width: 380px;
+    max-width: 380px;
+    padding: 16px 18px;
+    background-color: rgba(10, 14, 26, 0.98);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-inset);
+    display: none;
+}
+.pr-tip-type { font-size: 13px; letter-spacing: 2px; -unity-font-style: bold; }
+.pr-tip-name { font-size: 22px; -unity-font-style: bold; color: var(--color-text-title); margin-top: 6px; }
+.pr-tip-desc { font-size: 17px; color: var(--color-text-body); margin-top: 6px; white-space: normal; }
+.pr-tip-hook { font-size: 13px; color: var(--color-text-empty); margin-top: 10px; white-space: normal; }

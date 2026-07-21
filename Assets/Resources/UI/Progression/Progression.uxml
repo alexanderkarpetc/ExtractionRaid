@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="Progression.uss"/>
+    <ui:VisualElement name="root" class="pr-root" picking-mode="Position">
+
+        <ui:VisualElement name="topbar" class="pr-topbar">
+            <ui:VisualElement class="pr-title-wrap">
+                <ui:Label text="CHARACTER PROGRESSION" class="pr-eyebrow"/>
+                <ui:Label text="Operative Progression" class="pr-title"/>
+                <ui:Label name="subtitle" text="Unlock nodes by spending skill points and materials looted from raids." class="pr-subtitle"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="pr-topright">
+                <ui:VisualElement class="pr-points">
+                    <ui:Label name="availLabel" text="0" class="pr-points-num"/>
+                    <ui:Label text="POINTS AVAILABLE" class="pr-points-lbl"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="pr-points">
+                    <ui:Label name="spentLabel" text="0 / 0" class="pr-points-num pr-points-num--dim"/>
+                    <ui:Label text="ALLOCATED" class="pr-points-lbl"/>
+                </ui:VisualElement>
+                <ui:Button name="devGrantBtn" text="DEV +5" class="pr-devbtn"/>
+                <ui:Button name="closeBtn" text="✕" class="pr-closebtn"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="main" class="pr-main">
+            <ui:VisualElement name="canvasWrap" class="pr-canvas-wrap" picking-mode="Position">
+                <ui:VisualElement name="content" class="pr-content" picking-mode="Ignore">
+                    <ui:VisualElement name="edges" class="pr-edges" picking-mode="Ignore"/>
+                    <ui:VisualElement name="nodes" class="pr-nodes" picking-mode="Position"/>
+                </ui:VisualElement>
+                <ui:Label name="hint" text="Scroll to zoom  ·  drag to pan  ·  click a glowing node to unlock (permanent)" class="pr-hint"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="tip" class="pr-tip" picking-mode="Ignore">
+            <ui:Label name="tipType" class="pr-tip-type"/>
+            <ui:Label name="tipName" class="pr-tip-name"/>
+            <ui:Label name="tipDesc" class="pr-tip-desc"/>
+            <ui:Label name="tipHook" class="pr-tip-hook"/>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

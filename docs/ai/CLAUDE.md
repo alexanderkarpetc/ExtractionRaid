@@ -65,8 +65,10 @@ When implementing a change:
 4. Emit domain events for VFX/SFX/UI instead of calling Unity APIs directly.
 5. Update presenter/view only for visualization, bindings, and callback routing.
 6. Add or update tests when logic changes.
-7. If new fields were added to any state class, update the Raid State Debugger
-   (`Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`) to display them.
+7. If new fields were added to a **raid state** class (state owned by `RaidSession`/`RaidState`),
+   update the Raid State Debugger (`Assets/Scripts/Editor/RaidStateDebuggerWindow.cs`) to display
+   them. Persistent profile/meta state on `Player` (e.g. `PlayerProfileState`,
+   `PlayerProgressionState`) is out of scope — the debugger inspects the live raid only.
 8. Show a file-level plan before editing.
 9. Keep the change incremental.
 

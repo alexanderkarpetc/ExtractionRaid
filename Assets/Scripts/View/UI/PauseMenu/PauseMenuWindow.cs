@@ -7,6 +7,7 @@ using View.UI.Attachments;
 using View.UI.Controls;
 using View.UI.EndOfRaid;
 using View.UI.Inventory;
+using View.UI.Progression;
 using View.UI.WeaponBuilder;
 
 namespace View.UI.PauseMenu
@@ -142,6 +143,7 @@ namespace View.UI.PauseMenu
             if (AttachmentEditorWindow.Instance != null && AttachmentEditorWindow.Instance.IsOpen) return false;
             if (ControlsOverlay.Instance != null && ControlsOverlay.Instance.IsOpen) return false;
             if (EndOfRaidWindow.Instance != null && EndOfRaidWindow.Instance.IsVisible) return false;
+            if (ProgressionWindow.Instance != null && ProgressionWindow.Instance.IsOpen) return false;
 
             return true;
         }

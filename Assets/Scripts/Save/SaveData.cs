@@ -228,5 +228,10 @@ namespace Save
         public List<ItemSaveData> Stash;
         public List<QuestProgressSaveData> Quests;
         public List<BuildingLevelSaveData> BuildingLevels;
+
+        // Progression tree — allocated node ids (permanent, no refund) + unspent points.
+        // Missing on legacy saves → null/0, which loads as an empty tree.
+        public List<string> AllocatedNodes;
+        public int ProgressionPoints;
     }
 }
