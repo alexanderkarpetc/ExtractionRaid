@@ -1,6 +1,7 @@
 using ApplicationCore;
 using State;
 using UnityEngine;
+using View.Audio;
 
 namespace View
 {
@@ -123,6 +124,7 @@ namespace View
                     ProjectileId = EId,
                     Position = hitPoint,
                     Normal   = hitNormal,
+                    SurfaceType = SurfaceAudioClassifier.Resolve(other),
                 });
             }
         }

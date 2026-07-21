@@ -762,7 +762,8 @@ namespace Session
                 {
                     if (RaidState.Projectiles[i].Id == col.ProjectileId)
                     {
-                        context.Events.ProjectileHit(col.ProjectileId, col.Position, col.Normal);
+                        context.Events.ProjectileHit(col.ProjectileId, col.Position, col.Normal,
+                            col.SurfaceType ?? "surface");
                         context.Events.ProjectileDespawned(col.ProjectileId);
                         RaidState.Projectiles.RemoveAt(i);
                         break;
