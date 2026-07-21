@@ -189,6 +189,7 @@ namespace Editor
 
             DrawMacroGroup("✨ FX & Feel", FxTone, defaultExpanded: false, () =>
             {
+                if (view != null) DrawSection("🔊 Audio", view.Audio);
                 DrawSection("✨ Muzzle VFX", _config.MuzzleVfx);
                 if (view != null)
                 {
@@ -923,6 +924,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsCrosshairV2Section>(so, "_crosshairV2", folder, "CrosshairV2");
             CreateSectionIfMissing<ViewCheatsHudDamageSection>(so, "_hudDamage", folder, "HudDamage");
             CreateSectionIfMissing<ViewCheatsBattleHudSection>(so, "_battleHud", folder, "BattleHud");
+            CreateSectionIfMissing<ViewCheatsAudioSection>(so, "_audio", folder, "Audio");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
 
             so.ApplyModifiedPropertiesWithoutUndo();

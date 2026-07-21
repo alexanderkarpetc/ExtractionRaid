@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0662ee35eff49a5b83539e2b0127f9c, type: 3}
+  m_Name: Audio
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsAudioSection
+  MasterSfx: 0.49
+  Music: 0.35
+  CloseShot: 1
+  DistantShot: 1
+  DryFire: 1
+  Reload: 1
+  Holster: 1
+  Unholster: 1
+  HardSurfaceImpact: 1
+  MetalImpact: 1
+  FleshImpact: 1
+  ArmorImpact: 1
+  Ricochet: 1
+  Headshot: 1
+  Bleeding: 1
+  BodyFall: 1
+  WalkFootsteps: 1
+  SprintFootsteps: 1

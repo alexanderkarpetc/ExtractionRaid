@@ -20,6 +20,7 @@ namespace View.Audio
         public readonly AudioClip[] Bleeding = Load("Audio/Status/Bleeding");
         public readonly AudioClip[] BodyFalls = Load("Audio/Characters/BodyFall");
         public readonly AudioClip[] Footsteps = Load("Audio/Movement/Footsteps");
+        public readonly AudioClip[] HideoutMusic = Load("Audio/Music/Hideout");
 
         static AudioClip[] Load(string path) => Resources.LoadAll<AudioClip>(path);
     }
