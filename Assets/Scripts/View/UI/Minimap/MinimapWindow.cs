@@ -36,7 +36,7 @@ namespace View.UI.Minimap
         const int ExtractionIconSize = 44;
 
         static Texture2D s_questIconTex;
-        const int QuestIconSize = 44;
+        const int QuestIconSize = 26;
 
         Vector2 _boundsCenterXZ;
         Vector2 _boundsSize = new Vector2(80f, 80f);
@@ -236,10 +236,53 @@ namespace View.UI.Minimap
             return s_extractionIconTex;
         }
 
+        // Procedurally painted quest "!" badge — a yellow disc з dark rim + dark
+        // exclamation, matching the in-world NpcQuestIndicator. Generated in code (same
+        // approach as the player arrow) so it needs no sprite asset and reads as a clean
+        // "!" instead of the old generic pin texture. Cached statically.
         static Texture2D GetQuestIconTexture()
         {
             if (s_questIconTex != null) return s_questIconTex;
-            s_questIconTex = Resources.Load<Texture2D>("UI/Minimap/quest_icon_32x32");
+
+            const int S = 64;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, mipChain: false)
+            {
+                name = "Minimap_QuestIcon",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+
+            var fill      = new Color32(255, 205, 45, 255);   // quest yellow (matches world badge)
+            var dark      = new Color32(28, 22, 6, 255);      // rim + "!" glyph
+            var clear     = new Color32(0, 0, 0, 0);
+            var center    = new Vector2(0.5f, 0.5f);
+            var dotCenter = new Vector2(0.5f, 0.74f);
+
+            var pixels = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+            {
+                for (int x = 0; x < S; x++)
+                {
+                    // Texture2D y=0 is bottom; element y=0 is top. Flip so the "!" bar
+                    // (semantic top) lands at the top of the element, dot below it.
+                    var p = new Vector2((x + 0.5f) / S, 1f - (y + 0.5f) / S);
+                    float d = Vector2.Distance(p, center);
+                    Color32 c;
+                    if (d > 0.5f) c = clear;
+                    else if (d > 0.46f) c = dark;             // rim outline
+                    else
+                    {
+                        bool inBar = p.x >= 0.43f && p.x <= 0.57f && p.y >= 0.22f && p.y <= 0.585f;
+                        bool inDot = Vector2.Distance(p, dotCenter) <= 0.078f;
+                        c = (inBar || inDot) ? dark : fill;
+                    }
+                    pixels[y * S + x] = c;
+                }
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
+            s_questIconTex = tex;
             return s_questIconTex;
         }
 
@@ -258,7 +301,14 @@ namespace View.UI.Minimap
             dot.style.left = mx - half;
             dot.style.top  = my - half;
             dot.style.backgroundImage = new StyleBackground(tex);
+            // Icon markers use a transparent texture — clear the inherited .marker square
+            // (1px border + type background-color) so only the glyph shows. Mirrors the
+            // per-frame clearing that .marker--player does in USS.
             dot.style.backgroundColor = new StyleColor(new Color(0, 0, 0, 0));
+            dot.style.borderTopWidth = 0;
+            dot.style.borderBottomWidth = 0;
+            dot.style.borderLeftWidth = 0;
+            dot.style.borderRightWidth = 0;
         }
 
         // Procedurally painted player arrow: kite/chevron pointing up at yaw=0, with

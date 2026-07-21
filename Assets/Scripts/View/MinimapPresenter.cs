@@ -1,6 +1,7 @@
 using ApplicationCore;
 using Quests;
 using State;
+using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using View.SpawnPoints;
@@ -240,12 +241,21 @@ namespace View
 
             var state = session.RaidState;
 
+            // Quest lookups — also used to flag NPCs that currently have an offer so they
+            // render as a "!" quest marker instead of a plain NPC dot. Snapshot at capture
+            // time (raid/hideout start), same as the rest of this registration.
+            var app = App.Instance;
+            var db = app?.QuestDatabase;
+            var progress = app?.Player?.QuestProgress;
+            int level = app?.Player?.ProfileState?.Level ?? 1;
+
             for (int i = 0; i < state.Npcs.Count; i++)
             {
                 var npc = state.Npcs[i];
+                bool hasOffer = NpcHasQuestOffer(npc.NpcId, db, progress, level);
                 MinimapMarkerRegistry.Register(
                     $"npc:{npc.Id.Value}",
-                    MinimapMarkerType.Npc,
+                    hasOffer ? MinimapMarkerType.Quest : MinimapMarkerType.Npc,
                     npc.Position,
                     tooltip: string.IsNullOrEmpty(npc.NpcId) ? "NPC" : npc.NpcId);
             }
@@ -262,9 +272,6 @@ namespace View
 
             // Active find-item quests on the current map — the same source RaidSession
             // uses to spawn ground items for these tasks.
-            var app = App.Instance;
-            var db = app?.QuestDatabase;
-            var progress = app?.Player?.QuestProgress;
             if (db == null || progress == null) return;
             var currentMap = Constants.MapIds.FromLevelId(session.LevelState.LevelId);
             if (currentMap == Constants.MapId.None) return;
@@ -286,6 +293,21 @@ namespace View
                         tooltip: $"{q.DisplayName}: {f.ItemId}");
                 }
             }
+        }
+
+        // Mirrors NpcQuestIndicator.Refresh: an NPC "has an offer" when it has a quest
+        // available to the player, or an active quest with all tasks done (ready to turn in).
+        static bool NpcHasQuestOffer(string npcId, QuestDatabase db, QuestProgressState progress, int level)
+        {
+            if (string.IsNullOrEmpty(npcId) || db == null || progress == null) return false;
+            if (QuestSystem.GetAvailableQuests(progress, db, level, npcId).Count > 0) return true;
+            var active = QuestSystem.GetActiveQuestsForNpc(progress, db, npcId);
+            for (int i = 0; i < active.Count; i++)
+            {
+                var qp = progress.GetProgress(active[i].Id);
+                if (qp != null && QuestSystem.AreAllTasksDone(active[i], qp)) return true;
+            }
+            return false;
         }
 
         void ResetForNextRaid()

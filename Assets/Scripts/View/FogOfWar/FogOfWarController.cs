@@ -188,7 +188,12 @@ namespace View.FogOfWar
         void LateUpdate()
         {
             if (!_initialized) return;
-            if (!DevCheats.FOVEnabled || !DevCheats.FogOfWarEnabled)
+            // Fog of war is a combat-map mechanic. In the safe hub it only darkens the
+            // scene, so disable it there — reuse the same "off" path (FOV camera off +
+            // white mask = composite no-op) as the DevCheats gate, letting bunker lighting
+            // read at full brightness.
+            bool inHideout = App.IsInitialized && App.Instance.IsInHideout;
+            if (inHideout || !DevCheats.FOVEnabled || !DevCheats.FogOfWarEnabled)
             {
                 ToggleFOVCamera(false);
                 Shader.SetGlobalFloat(ScopeBlackoutId, 0f);

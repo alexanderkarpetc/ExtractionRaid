@@ -11,6 +11,13 @@ namespace View.SpawnPoints
             // Floating "!" badge above head when this NPC has a quest offer.
             // Built code-side so existing NPC prefabs need no edits.
             NpcQuestIndicator.Create(transform, npcId);
+
+            // Interact highlight — the SAME screen-space outline stack containers/loot use
+            // (InteractableOutlineTarget → InteractableOutlineFeature), so the quest-giver
+            // reads as interactable when the player is in range. Added AFTER the quest
+            // indicator so the target's one-shot renderer cache (OnEnable) sees only the
+            // character mesh — the beam/ground-glow start inactive and are excluded.
+            gameObject.AddComponent<InteractableOutlineTarget>();
         }
 
 #if UNITY_EDITOR

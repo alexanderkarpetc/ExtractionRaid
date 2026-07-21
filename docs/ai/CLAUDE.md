@@ -91,28 +91,24 @@ DevCheats provides runtime-tunable parameters via ScriptableObject assets.
 6. All gameplay-tunable parameters should go through DevCheats, not hardcoded constants.
 7. **Systems must not read `DevCheats.X` directly.** Tunable values go through `RaidContext.*Config` structs (`AimConfig`, `ShootingConfig`, …). `RaidSession.Tick` populates those from DevCheats when building the context. See `testing-and-workflow.md §1` for the testing rationale. Dev/test cheats (e.g. `GodMode`) flow through `CheatsConfig` — add new cheat toggles there as they appear (single point of plumbing, no per-cheat refactor). Known latent violations (2026-04-24, flagged for refactor): `ArmorSystem`, `PlayerFOVSystem`, `MovementSystem`. **Resolved 2026-05-15**: `DamageSystem` (now reads `context.CheatsConfig.GodMode`).
 
-## 7) Unity Editor via MCP
+## 7) Unity Editor access
 
-When the Unity Editor for this project is open and the MCP for Unity bridge is listening on `127.0.0.1:6400`, prefer `mcp__unityMCP__*` tools over reading `.unity` / `.prefab` / `.asset` files as text.
+Do **not** read `.unity` / `.prefab` / `.asset` files as text to reconstruct scene/prefab state — they're large and brittle to parse. Inspect them in the Unity Editor.
 
-Quick reference (full doc: `docs/ai/unity-mcp.md`):
-- `read_console` — Unity console; **always call this first** for diagnostics.
-- `find_gameobjects` — search by component / name / path. ⚠️ no wildcards; `by_path "/"` returns 0. Use `by_component "Transform"` with `include_inactive: true` to enumerate the scene.
-- `manage_scene` / `manage_gameobject` / `manage_components` — scene + GO + component CRUD.
-- `manage_scriptable_object` — read/write DevCheats SOs without opening the Editor manually.
-- `apply_text_edits` / `script_apply_edits` — surgical C# edits with recompile signal.
-- `run_tests` (async, returns `job_id`) + `get_test_job` polling — EditMode/PlayMode runs.
-- `execute_menu_item` / `execute_code` — escape hatches for things not covered by typed tools.
+If you have an **editor/MCP bridge available**, prefer it over file-scraping for: reading the Unity console, enumerating/CRUD-ing GameObjects & components, reading/writing ScriptableObjects (e.g. DevCheats), surgical C# edits with a recompile signal, and running EditMode/PlayMode tests. Otherwise edit the `.cs` directly and run tests via the Unity Test Runner (or `-batchmode -runTests`), or hand the change to the maintainer to run.
 
-Preconditions:
-- Verify the bridge with `lsof -nP -iTCP:6400 -sTCP:LISTEN`. If down, **stop and ask the user** — do not fall back to scraping `.unity` files.
-- Modifying actions (play/stop, edits, code execution, deploy_package, run_tests in PlayMode) require **explicit user confirmation** before each call.
+Bridge etiquette:
+- Verify the bridge is actually up before relying on it (e.g. `lsof -nP -iTCP:<port> -sTCP:LISTEN`). If it's down, **stop and ask** — do not fall back to scraping `.unity` files as text.
+- Modifying actions (play/stop, edits, code execution, deploys, PlayMode test runs) require **explicit user confirmation** before each call.
+- When delegating to a subagent, spell out the bridge assumption + which tools it may call (subagents inherit tools, not this conversation's context).
 
-When delegating Unity work to a subagent (Task / custom agent), pass the bridge-up assumption + a pointer to `docs/ai/unity-mcp.md` in the prompt — subagents inherit the tools but not this conversation's context.
+> The maintainer's specific bridge (server, exact tool names, port) is personal and lives in their `~/.claude/` config, not in this repo.
 
 ## 8) Documentation
 
 Project docs live в `docs/ai/`. Update the relevant doc when changing the system it describes — section 9 lists which doc maps to which area.
+
+**This file is canonical.** The repo-root [`AGENTS.md`](../../AGENTS.md) is a thin pointer that directs `AGENTS.md`-reading agents (e.g. Codex) to read this file and follow §9. It carries only a few always-on rules as a safety net + does not duplicate §9, so it needs no upkeep when §9 changes.
 
 **📍 Current direction / release plan (read early):**
 - [`release-scope.md`](./release-scope.md) — full feature-map + gap analysis + 🔒 locked release decisions (what's shipped vs what's left).
@@ -139,7 +135,7 @@ Read extra docs depending on the task:
 - Adding a new UI Toolkit window/overlay (files, C# skeleton, registration, Esc/pause gating) -> `docs/ai/ui-window-recipe.md`
 - Character progression / skill tree (config asset, node data, allocation rules, permanent no-refund, effects seam) -> `docs/ai/progression.md`
 - DevCheats sections, runtime tuning parameters -> section 6 above + `Assets/Scripts/Dev/`
-- Unity Editor automation (read console / find GOs / run tests / edit scripts via bridge) -> `docs/ai/unity-mcp.md`
+- Unity Editor access (scenes/prefabs, tests, editor/MCP bridge etiquette) -> section 7 above
 
 Do not load all docs unless the task spans multiple areas.
 Prefer the smallest relevant context.
