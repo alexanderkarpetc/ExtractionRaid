@@ -23,6 +23,16 @@ namespace View.Audio
         const float WalkStepInterval = 0.5f;
         const float SprintStepInterval = 0.32f;
         const float MusicFadeDuration = 1.5f;
+        const float BotVoiceMaxDistance = 36f;
+        const float LostVisualDelay = 1.25f;
+        const float NearbyDeathCalloutRange = 22f;
+
+        enum BotVoiceFaction : byte
+        {
+            None,
+            Pmc,
+            Scav,
+        }
 
         sealed class Voice
         {
@@ -40,16 +50,48 @@ namespace View.Audio
             public float Volume;
         }
 
+        sealed class BotVoiceMemory
+        {
+            public BotVoiceFaction Faction;
+            public Vector3 Position;
+            public bool HasTarget;
+            public bool CanSeeTarget;
+            public float LastFireTime;
+            public WeaponPhase WeaponPhase;
+            public float LostSightAt = -1f;
+            public bool LostVisualOffered;
+            public float NextAmbientTime;
+            public float NextVoiceTime;
+        }
+
+        struct BotVoiceCandidate
+        {
+            public EId SpeakerId;
+            public BotVoiceFaction Faction;
+            public AudioClip[] Clips;
+            public Vector3 Position;
+            public Vector3 ListenerPosition;
+            public int Priority;
+            public float DistanceSq;
+        }
+
         readonly GameAudioClipLibrary _clips = new();
         readonly List<Voice> _voices = new(PoolSize);
         readonly List<DelayedSound> _delayed = new();
         readonly Dictionary<AudioClip[], int> _lastClipIndices = new();
+        readonly Dictionary<EId, BotVoiceMemory> _botVoiceMemories = new();
+        readonly List<EId> _staleBotVoiceIds = new();
 
         Transform _root;
         AudioSource _musicSource;
         float _nextStepTime;
         bool _rollSoundPlayed;
         bool _inventoryWasOpen;
+        bool _canOfferBotVoice;
+        bool _hasBotVoiceCandidate;
+        BotVoiceCandidate _botVoiceCandidate;
+        float _botVoicePlayingUntil;
+        float _nextBotVoiceTime;
 
         public void LateTick(RaidSession session)
         {
@@ -59,6 +101,7 @@ namespace View.Audio
             if (session == null || session.RaidState == null)
             {
                 _inventoryWasOpen = false;
+                _botVoiceMemories.Clear();
                 return;
             }
 
@@ -66,9 +109,11 @@ namespace View.Audio
             var player = state.PlayerEntity;
             var listenerPosition = player != null ? player.Position : Vector3.zero;
 
-            foreach (var e in session.ConsumeEvents().All)
+            var events = session.ConsumeEvents().All;
+            foreach (var e in events)
                 HandleEvent(e, state, player, listenerPosition);
 
+            TickBotVoices(state, player, events, listenerPosition);
             TickBackpack(player);
             TickFootsteps(player);
         }
@@ -196,6 +241,278 @@ namespace View.Audio
                 PlaySpatial(_clips.ArmorImpacts, e.Position, Volume(absorption, Audio.ArmorImpact), 36f);
             if (headshot)
                 PlaySpatial(_clips.Headshots, e.Position, Volume(0.7f, Audio.Headshot), 36f);
+        }
+
+        void TickBotVoices(RaidState state, PlayerEntityState player,
+            IReadOnlyList<RaidEvent> events, Vector3 listenerPosition)
+        {
+            float now = Time.unscaledTime;
+            _canOfferBotVoice = now >= _botVoicePlayingUntil && now >= _nextBotVoiceTime;
+            _hasBotVoiceCandidate = false;
+
+            ProcessBotVoiceEvents(state, player, events, listenerPosition);
+
+            for (int i = 0; i < state.Bots.Count; i++)
+            {
+                var bot = state.Bots[i];
+                var faction = GetBotVoiceFaction(bot.TypeId);
+                if (faction == BotVoiceFaction.None) continue;
+
+                if (!_botVoiceMemories.TryGetValue(bot.Id, out var memory))
+                {
+                    memory = new BotVoiceMemory
+                    {
+                        Faction = faction,
+                        Position = bot.Position,
+                        LastFireTime = bot.Weapon?.LastFireTime ?? -999f,
+                        WeaponPhase = bot.Weapon?.Phase ?? WeaponPhase.Ready,
+                        NextAmbientTime = now + Random.Range(12f, 22f),
+                    };
+                    _botVoiceMemories.Add(bot.Id, memory);
+                }
+
+                var bb = bot.Blackboard;
+                if (bb.CanSeeTarget && !memory.CanSeeTarget)
+                {
+                    OfferBotVoice(bot.Id, faction,
+                        faction == BotVoiceFaction.Pmc ? _clips.PmcContact : _clips.ScavContact,
+                        bot.Position, priority: 70, listenerPosition);
+                    memory.LostSightAt = -1f;
+                    memory.LostVisualOffered = false;
+                }
+                else if (bb.HasTarget && !bb.CanSeeTarget && !memory.HasTarget)
+                {
+                    OfferBotVoice(bot.Id, faction,
+                        faction == BotVoiceFaction.Pmc ? _clips.PmcHeardSomething : _clips.ScavHeardSomething,
+                        bot.Position, priority: 65, listenerPosition);
+                }
+
+                if (memory.CanSeeTarget && !bb.CanSeeTarget)
+                {
+                    memory.LostSightAt = now;
+                    memory.LostVisualOffered = false;
+                }
+                else if (bb.CanSeeTarget)
+                {
+                    memory.LostSightAt = -1f;
+                    memory.LostVisualOffered = false;
+                }
+
+                if (faction == BotVoiceFaction.Pmc && memory.LostSightAt >= 0f
+                    && !memory.LostVisualOffered && now - memory.LostSightAt >= LostVisualDelay)
+                {
+                    if (OfferBotVoice(bot.Id, faction, _clips.PmcLostVisual,
+                        bot.Position, priority: 55, listenerPosition))
+                        memory.LostVisualOffered = true;
+                }
+
+                float lastFireTime = bot.Weapon?.LastFireTime ?? -999f;
+                if (lastFireTime > memory.LastFireTime && Random.value < 0.5f)
+                {
+                    OfferBotVoice(bot.Id, faction,
+                        faction == BotVoiceFaction.Pmc ? _clips.PmcCoverMe : _clips.ScavHelp,
+                        bot.Position, priority: 45, listenerPosition);
+                }
+
+                var weaponPhase = bot.Weapon?.Phase ?? WeaponPhase.Ready;
+                if (weaponPhase == WeaponPhase.Reloading && memory.WeaponPhase != WeaponPhase.Reloading
+                    && Random.value < 0.9f)
+                {
+                    OfferBotVoice(bot.Id, faction,
+                        faction == BotVoiceFaction.Pmc ? _clips.PmcReloading : _clips.ScavReloading,
+                        bot.Position, priority: 60, listenerPosition);
+                }
+
+                if (faction == BotVoiceFaction.Pmc && now >= memory.NextAmbientTime)
+                {
+                    memory.NextAmbientTime = now + Random.Range(18f, 35f);
+                    if (!bb.HasTarget)
+                    {
+                        bool patrolling = bb.DebugStatus != null
+                                          && bb.DebugStatus.StartsWith("Patrol")
+                                          && bb.PatrolWaitTimer <= 0f;
+                        OfferBotVoice(bot.Id, faction,
+                            patrolling ? _clips.PmcMoving : _clips.PmcStaySharp,
+                            bot.Position, priority: 20, listenerPosition);
+                    }
+                }
+
+                memory.Faction = faction;
+                memory.Position = bot.Position;
+                memory.HasTarget = bb.HasTarget;
+                memory.CanSeeTarget = bb.CanSeeTarget;
+                memory.LastFireTime = lastFireTime;
+                memory.WeaponPhase = weaponPhase;
+            }
+
+            RemoveStaleBotVoiceMemories(state);
+            if (_hasBotVoiceCandidate)
+                PlayBotVoice(in _botVoiceCandidate, now);
+        }
+
+        void ProcessBotVoiceEvents(RaidState state, PlayerEntityState player,
+            IReadOnlyList<RaidEvent> events, Vector3 listenerPosition)
+        {
+            for (int i = 0; i < events.Count; i++)
+            {
+                var e = events[i];
+                if (e.Type == RaidEventType.EntityHit && e.MaxHp < 0.5f
+                    && TryGetBotVoiceIdentity(state, e.Id, out var hitFaction, out var hitPosition))
+                {
+                    var clips = hitFaction == BotVoiceFaction.Pmc
+                        ? _clips.PmcHit
+                        : e.CurrentHp > 0.5f ? _clips.ScavHeadshot : _clips.ScavHit;
+                    if (Random.value < (e.CurrentHp > 0.5f ? 0.8f : 0.5f))
+                        OfferBotVoice(e.Id, hitFaction, clips, hitPosition,
+                            priority: e.CurrentHp > 0.5f ? 85 : 75, listenerPosition);
+                    continue;
+                }
+
+                if (e.Type == RaidEventType.GrenadeSpawned)
+                {
+                    OfferNearestBotVoice(state, BotVoiceFaction.Pmc, e.Position, 28f,
+                        _clips.PmcGrenade, priority: 95, listenerPosition);
+                    continue;
+                }
+
+                if (e.Type != RaidEventType.EntityDied) continue;
+                if (player != null && e.Id == player.Id)
+                {
+                    OfferNearestBotVoice(state, BotVoiceFaction.Pmc, player.Position, float.MaxValue,
+                        _clips.PmcAreaSecure, priority: 100, listenerPosition);
+                    OfferNearestBotVoice(state, BotVoiceFaction.Scav, player.Position, float.MaxValue,
+                        _clips.ScavCheckPockets, priority: 100, listenerPosition);
+                    continue;
+                }
+
+                if (!TryGetBotVoiceIdentity(state, e.Id, out var deadFaction, out var deadPosition))
+                    continue;
+                OfferNearestBotVoice(state, deadFaction, deadPosition, NearbyDeathCalloutRange,
+                    deadFaction == BotVoiceFaction.Pmc ? _clips.PmcManDown : _clips.ScavBastard,
+                    priority: 90, listenerPosition, excludedId: e.Id);
+            }
+        }
+
+        void OfferNearestBotVoice(RaidState state, BotVoiceFaction faction, Vector3 origin,
+            float maxDistance, AudioClip[] clips, int priority, Vector3 listenerPosition,
+            EId excludedId = default)
+        {
+            BotEntityState nearest = null;
+            float nearestDistanceSq = maxDistance * maxDistance;
+            for (int i = 0; i < state.Bots.Count; i++)
+            {
+                var bot = state.Bots[i];
+                if (bot.Id == excludedId || GetBotVoiceFaction(bot.TypeId) != faction) continue;
+                float distanceSq = HorizontalDistanceSq(bot.Position, origin);
+                if (distanceSq > nearestDistanceSq) continue;
+                nearest = bot;
+                nearestDistanceSq = distanceSq;
+            }
+            if (nearest != null)
+                OfferBotVoice(nearest.Id, faction, clips, nearest.Position, priority, listenerPosition);
+        }
+
+        bool OfferBotVoice(EId speakerId, BotVoiceFaction faction, AudioClip[] clips,
+            Vector3 position, int priority, Vector3 listenerPosition)
+        {
+            if (!_canOfferBotVoice || clips == null || clips.Length == 0) return false;
+            if (_botVoiceMemories.TryGetValue(speakerId, out var memory)
+                && Time.unscaledTime < memory.NextVoiceTime) return false;
+
+            float distanceSq = HorizontalDistanceSq(position, listenerPosition);
+            if (distanceSq > BotVoiceMaxDistance * BotVoiceMaxDistance) return false;
+            if (_hasBotVoiceCandidate && (priority < _botVoiceCandidate.Priority
+                || priority == _botVoiceCandidate.Priority && distanceSq >= _botVoiceCandidate.DistanceSq))
+                return false;
+
+            _botVoiceCandidate = new BotVoiceCandidate
+            {
+                SpeakerId = speakerId,
+                Faction = faction,
+                Clips = clips,
+                Position = position,
+                ListenerPosition = listenerPosition,
+                Priority = priority,
+                DistanceSq = distanceSq,
+            };
+            _hasBotVoiceCandidate = true;
+            return true;
+        }
+
+        void PlayBotVoice(in BotVoiceCandidate candidate, float now)
+        {
+            var clip = PickClip(candidate.Clips);
+            if (clip == null) return;
+
+            float distance = Mathf.Sqrt(candidate.DistanceSq);
+            ResolveShotOcclusion(candidate.Position, candidate.ListenerPosition, distance,
+                out float occlusionVolume, out float cutoff);
+            float categoryVolume = candidate.Faction == BotVoiceFaction.Pmc
+                ? Audio.PmcVoice : Audio.ScavVoice;
+
+            var voice = AcquireVoice();
+            voice.GameObject.transform.position = ListenerPlanePosition(candidate.Position);
+            voice.Source.clip = clip;
+            voice.Source.volume = Mathf.Clamp01(Volume(occlusionVolume, categoryVolume));
+            voice.Source.pitch = Random.Range(0.98f, 1.02f);
+            voice.Source.maxDistance = BotVoiceMaxDistance;
+            voice.Source.minDistance = 2f;
+            voice.LowPass.cutoffFrequency = cutoff;
+            voice.Source.Play();
+            voice.StartedAt = now;
+
+            _botVoicePlayingUntil = now + clip.length / voice.Source.pitch;
+            _nextBotVoiceTime = _botVoicePlayingUntil + Random.Range(2f, 3f);
+            if (_botVoiceMemories.TryGetValue(candidate.SpeakerId, out var memory))
+                memory.NextVoiceTime = _botVoicePlayingUntil + (candidate.Faction == BotVoiceFaction.Pmc
+                    ? Random.Range(4f, 8f)
+                    : Random.Range(3f, 6f));
+        }
+
+        bool TryGetBotVoiceIdentity(RaidState state, EId id,
+            out BotVoiceFaction faction, out Vector3 position)
+        {
+            for (int i = 0; i < state.Bots.Count; i++)
+            {
+                if (state.Bots[i].Id != id) continue;
+                faction = GetBotVoiceFaction(state.Bots[i].TypeId);
+                position = state.Bots[i].Position;
+                return faction != BotVoiceFaction.None;
+            }
+            if (_botVoiceMemories.TryGetValue(id, out var memory))
+            {
+                faction = memory.Faction;
+                position = memory.Position;
+                return faction != BotVoiceFaction.None;
+            }
+            faction = BotVoiceFaction.None;
+            position = default;
+            return false;
+        }
+
+        void RemoveStaleBotVoiceMemories(RaidState state)
+        {
+            _staleBotVoiceIds.Clear();
+            foreach (var pair in _botVoiceMemories)
+            {
+                bool found = false;
+                for (int i = 0; i < state.Bots.Count; i++)
+                {
+                    if (state.Bots[i].Id != pair.Key) continue;
+                    found = true;
+                    break;
+                }
+                if (!found) _staleBotVoiceIds.Add(pair.Key);
+            }
+            for (int i = 0; i < _staleBotVoiceIds.Count; i++)
+                _botVoiceMemories.Remove(_staleBotVoiceIds[i]);
+        }
+
+        static BotVoiceFaction GetBotVoiceFaction(string typeId)
+        {
+            if (typeId == BotConstants.PMC.TypeId) return BotVoiceFaction.Pmc;
+            if (typeId == BotConstants.Scav.TypeId) return BotVoiceFaction.Scav;
+            return BotVoiceFaction.None;
         }
 
         void TickFootsteps(PlayerEntityState player)
@@ -381,9 +698,14 @@ namespace View.Audio
 
         static float HorizontalDistance(Vector3 a, Vector3 b)
         {
+            return Mathf.Sqrt(HorizontalDistanceSq(a, b));
+        }
+
+        static float HorizontalDistanceSq(Vector3 a, Vector3 b)
+        {
             float dx = a.x - b.x;
             float dz = a.z - b.z;
-            return Mathf.Sqrt(dx * dx + dz * dz);
+            return dx * dx + dz * dz;
         }
 
         static Vector3 ListenerPlanePosition(Vector3 worldPosition)
@@ -402,10 +724,14 @@ namespace View.Audio
         {
             _delayed.Clear();
             _voices.Clear();
+            _botVoiceMemories.Clear();
+            _staleBotVoiceIds.Clear();
             if (_root != null) Object.Destroy(_root.gameObject);
             _root = null;
             _musicSource = null;
             _inventoryWasOpen = false;
+            _botVoicePlayingUntil = 0f;
+            _nextBotVoiceTime = 0f;
         }
     }
 }

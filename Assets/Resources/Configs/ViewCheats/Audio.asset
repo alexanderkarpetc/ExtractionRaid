@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game::Dev.ViewCheatsAudioSection
   MasterSfx: 0.49
   Music: 0.5
-  CloseShot: 0.4
-  DistantShot: 0.4
+  CloseShot: 0.3
+  DistantShot: 0.3
   DryFire: 0.51
   Reload: 0.49
   Holster: 0.54
   Unholster: 0.55
-  RifleShot: 0.4
+  RifleShot: 0.3
   RifleDryFire: 1
   RifleReload: 1
-  ShotgunShot: 0.4
+  ShotgunShot: 0.3
   HardSurfaceImpact: 1
   MetalImpact: 1
   FleshImpact: 1
@@ -34,4 +34,6 @@ MonoBehaviour:
   BodyFall: 1
   WalkFootsteps: 0.4
   SprintFootsteps: 0.4
+  PmcVoice: 1
+  ScavVoice: 1
   BackpackOpen: 1
