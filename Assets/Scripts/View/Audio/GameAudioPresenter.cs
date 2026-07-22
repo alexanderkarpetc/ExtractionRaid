@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Adapters;
 using Constants;
+using Dev;
 using Session;
 using State;
 using UnityEngine;
@@ -11,10 +12,17 @@ namespace View.Audio
     {
         const int PoolSize = 32;
         const float PistolMaxDistance = 55f;
+        const float RifleMaxDistance = 70f;
+        const float ShotgunMaxDistance = 65f;
         const float DistantBlendStart = 12f;
         const float DistantBlendEnd = 42f;
+        const float OccludedNearVolume = 0.88f;
+        const float OccludedFarVolume = 0.65f;
+        const float OccludedNearCutoff = 9000f;
+        const float OccludedFarCutoff = 2600f;
         const float WalkStepInterval = 0.5f;
         const float SprintStepInterval = 0.32f;
+        const float MusicFadeDuration = 1.5f;
 
         sealed class Voice
         {
@@ -38,14 +46,21 @@ namespace View.Audio
         readonly Dictionary<AudioClip[], int> _lastClipIndices = new();
 
         Transform _root;
+        AudioSource _musicSource;
         float _nextStepTime;
         bool _rollSoundPlayed;
+        bool _inventoryWasOpen;
 
         public void LateTick(RaidSession session)
         {
             EnsurePool();
+            TickMusic(session);
             TickDelayed();
-            if (session == null || session.RaidState == null) return;
+            if (session == null || session.RaidState == null)
+            {
+                _inventoryWasOpen = false;
+                return;
+            }
 
             var state = session.RaidState;
             var player = state.PlayerEntity;
@@ -54,6 +69,7 @@ namespace View.Audio
             foreach (var e in session.ConsumeEvents().All)
                 HandleEvent(e, state, player, listenerPosition);
 
+            TickBackpack(player);
             TickFootsteps(player);
         }
 
@@ -62,31 +78,53 @@ namespace View.Audio
             switch (e.Type)
             {
                 case RaidEventType.WeaponFired:
-                    if (e.StringPayload == "Ballistic" && e.DeliveryPattern == FiringPattern.Single)
-                        PlayPistolShot(e.Position, listenerPosition);
+                    if (e.StringPayload == "Ballistic")
+                    {
+                        if (e.DeliveryPattern == FiringPattern.Single)
+                            PlayPistolShot(e.Position, listenerPosition);
+                        else if (e.DeliveryPattern == FiringPattern.Auto)
+                            PlayWeaponShot(_clips.RifleFire, e.Position, listenerPosition,
+                                RifleMaxDistance, Audio.RifleShot);
+                        else if (e.DeliveryPattern == FiringPattern.Scatter)
+                            PlayWeaponShot(_clips.ShotgunFire, e.Position, listenerPosition,
+                                ShotgunMaxDistance, Audio.ShotgunShot);
+                    }
                     break;
                 case RaidEventType.WeaponDryFired:
-                    if (IsPlayerPistol(player)) PlaySpatial(_clips.PistolDryFire, player.Position, 0.72f, 18f);
+                    if (IsPlayerPistol(player))
+                        PlaySpatial(_clips.PistolDryFire, player.Position,
+                            Volume(0.72f, Audio.DryFire), 18f);
+                    else if (IsPlayerRifle(player))
+                        PlaySpatial(_clips.RifleDryFire, player.Position,
+                            Volume(0.75f, Audio.RifleDryFire), 18f);
                     break;
                 case RaidEventType.WeaponReloadStarted:
-                    if (IsPlayerPistol(player)) PlaySpatial(_clips.PistolReload, player.Position, 0.85f, 22f);
+                    if (IsPlayerPistol(player))
+                        PlaySpatial(_clips.PistolReload, player.Position,
+                            Volume(0.85f, Audio.Reload), 22f);
+                    else if (IsPlayerRifle(player))
+                        PlaySpatial(_clips.RifleReload, player.Position,
+                            Volume(0.85f, Audio.RifleReload), 22f, 1f, 1f);
                     break;
                 case RaidEventType.WeaponEquipStarted:
-                    if (IsPendingOrEquippedPistol(player)) PlaySpatial(_clips.PistolUnholster, player.Position, 0.65f, 18f);
+                    if (IsPendingOrEquippedPistol(player)) PlaySpatial(_clips.PistolUnholster, player.Position,
+                        Volume(0.65f, Audio.Unholster), 18f);
                     break;
                 case RaidEventType.WeaponUnequipStarted:
-                    if (IsPlayerPistol(player)) PlaySpatial(_clips.PistolHolster, player.Position, 0.65f, 18f);
+                    if (IsPlayerPistol(player)) PlaySpatial(_clips.PistolHolster, player.Position,
+                        Volume(0.65f, Audio.Holster), 18f);
                     break;
                 case RaidEventType.ProjectileHit:
                     PlaySpatial(e.StringPayload == "metal" ? _clips.MetalImpacts : _clips.HardSurfaceImpacts,
-                        e.Position, 0.82f, 38f);
+                        e.Position, Volume(0.82f, e.StringPayload == "metal"
+                            ? Audio.MetalImpact : Audio.HardSurfaceImpact), 38f);
                     break;
                 case RaidEventType.EntityHit:
                     PlayEntityHit(e);
                     break;
                 case RaidEventType.StatusEffectApplied:
                     if (e.StringPayload == "Bleeding" && TryGetEntityPosition(state, e.Id, out var bleedPosition))
-                        PlaySpatial(_clips.Bleeding, bleedPosition, 0.72f, 24f);
+                        PlaySpatial(_clips.Bleeding, bleedPosition, Volume(0.72f, Audio.Bleeding), 24f);
                     break;
                 case RaidEventType.EntityDied:
                     _delayed.Add(new DelayedSound
@@ -94,7 +132,7 @@ namespace View.Audio
                         PlayAt = Time.unscaledTime + 0.42f,
                         Position = e.Position,
                         Clips = _clips.BodyFalls,
-                        Volume = 0.78f,
+                        Volume = Volume(0.78f, Audio.BodyFall),
                     });
                     break;
             }
@@ -106,15 +144,39 @@ namespace View.Audio
             if (distance > PistolMaxDistance) return;
 
             float blend = Mathf.InverseLerp(DistantBlendStart, DistantBlendEnd, distance);
+            ResolveShotOcclusion(position, listenerPosition, distance, out float volume, out float cutoff);
+
+            PlaySpatial(_clips.PistolClose, position,
+                Volume((1f - blend) * volume, Audio.CloseShot),
+                PistolMaxDistance, 0.98f, 1.02f, cutoff);
+            PlaySpatial(_clips.PistolDistant, position,
+                Volume(blend * 0.9f * volume, Audio.DistantShot),
+                PistolMaxDistance, 0.97f, 1.01f, cutoff);
+        }
+
+        void PlayWeaponShot(AudioClip[] clips, Vector3 position, Vector3 listenerPosition,
+            float maxDistance, float volumeMultiplier)
+        {
+            float distance = HorizontalDistance(position, listenerPosition);
+            if (distance > maxDistance) return;
+
+            ResolveShotOcclusion(position, listenerPosition, distance, out float volume, out float cutoff);
+            PlaySpatial(clips, position, Volume(volume, volumeMultiplier), maxDistance,
+                0.98f, 1.02f, cutoff);
+        }
+
+        static void ResolveShotOcclusion(Vector3 position, Vector3 listenerPosition, float distance,
+            out float volume, out float cutoff)
+        {
             bool occluded = Physics.Linecast(position, listenerPosition + Vector3.up,
                 BotConstants.VisionBlockingMask, QueryTriggerInteraction.Ignore);
-            float volume = occluded ? 0.65f : 1f;
-            float cutoff = occluded ? 2600f : 22000f;
+            volume = 1f;
+            cutoff = 22000f;
+            if (!occluded) return;
 
-            PlaySpatial(_clips.PistolClose, position, (1f - blend) * volume,
-                PistolMaxDistance, 0.98f, 1.02f, cutoff);
-            PlaySpatial(_clips.PistolDistant, position, blend * 0.9f * volume,
-                PistolMaxDistance, 0.97f, 1.01f, cutoff);
+            float occlusionDistance = Mathf.InverseLerp(DistantBlendStart, DistantBlendEnd, distance);
+            volume = Mathf.Lerp(OccludedNearVolume, OccludedFarVolume, occlusionDistance);
+            cutoff = Mathf.Lerp(OccludedNearCutoff, OccludedFarCutoff, occlusionDistance);
         }
 
         void PlayEntityHit(RaidEvent e)
@@ -124,13 +186,16 @@ namespace View.Audio
             float absorption = Mathf.Clamp01(e.Damage);
             if (ricochet)
             {
-                PlaySpatial(_clips.Ricochets, e.Position, 1f, 42f);
+                PlaySpatial(_clips.Ricochets, e.Position, Volume(1f, Audio.Ricochet), 42f);
                 return;
             }
 
-            PlaySpatial(_clips.FleshImpacts, e.Position, Mathf.Clamp01(1f - absorption * 0.75f), 32f);
-            if (absorption > 0.08f) PlaySpatial(_clips.ArmorImpacts, e.Position, absorption, 36f);
-            if (headshot) PlaySpatial(_clips.Headshots, e.Position, 0.7f, 36f);
+            PlaySpatial(_clips.FleshImpacts, e.Position,
+                Volume(Mathf.Clamp01(1f - absorption * 0.75f), Audio.FleshImpact), 32f);
+            if (absorption > 0.08f)
+                PlaySpatial(_clips.ArmorImpacts, e.Position, Volume(absorption, Audio.ArmorImpact), 36f);
+            if (headshot)
+                PlaySpatial(_clips.Headshots, e.Position, Volume(0.7f, Audio.Headshot), 36f);
         }
 
         void TickFootsteps(PlayerEntityState player)
@@ -144,7 +209,8 @@ namespace View.Audio
             {
                 if (!_rollSoundPlayed)
                 {
-                    PlaySpatial(_clips.Footsteps, player.Position, 1f, 22f, 0.88f, 0.94f);
+                    PlaySpatial(_clips.Footsteps, player.Position,
+                        Volume(1f, Audio.SprintFootsteps), 22f, 0.88f, 0.94f);
                     _rollSoundPlayed = true;
                 }
                 return;
@@ -155,9 +221,25 @@ namespace View.Audio
             if (Time.time < _nextStepTime) return;
 
             bool sprinting = player.IsSprinting;
-            PlaySpatial(_clips.Footsteps, player.Position, sprinting ? 0.9f : 0.68f, 20f,
+            PlaySpatial(_clips.Footsteps, player.Position,
+                Volume(sprinting ? 0.9f : 0.68f,
+                    sprinting ? Audio.SprintFootsteps : Audio.WalkFootsteps), 20f,
                 sprinting ? 0.94f : 0.98f, sprinting ? 1.01f : 1.03f);
             _nextStepTime = Time.time + (sprinting ? SprintStepInterval : WalkStepInterval);
+        }
+
+        void TickBackpack(PlayerEntityState player)
+        {
+            if (player == null)
+            {
+                _inventoryWasOpen = false;
+                return;
+            }
+
+            if (player.IsInventoryOpen && !_inventoryWasOpen)
+                PlaySpatial(_clips.BackpackOpen, player.Position,
+                    Volume(0.75f, Audio.BackpackOpen), 18f, 0.98f, 1.02f);
+            _inventoryWasOpen = player.IsInventoryOpen;
         }
 
         void TickDelayed()
@@ -169,6 +251,27 @@ namespace View.Audio
                 if (now < delayed.PlayAt) continue;
                 PlaySpatial(delayed.Clips, delayed.Position, delayed.Volume, 30f);
                 _delayed.RemoveAt(i);
+            }
+        }
+
+        void TickMusic(RaidSession session)
+        {
+            bool inHideout = session?.LevelState?.LevelId == MapIds.HideoutLevelId;
+            if (inHideout && !_musicSource.isPlaying && _clips.HideoutMusic.Length > 0)
+            {
+                _musicSource.clip = _clips.HideoutMusic[0];
+                _musicSource.volume = 0f;
+                _musicSource.Play();
+            }
+
+            float targetVolume = inHideout ? Audio.Music : 0f;
+            _musicSource.volume = Mathf.MoveTowards(_musicSource.volume, targetVolume,
+                Time.unscaledDeltaTime / MusicFadeDuration);
+
+            if (!inHideout && _musicSource.isPlaying && _musicSource.volume <= 0.001f)
+            {
+                _musicSource.Stop();
+                _musicSource.clip = null;
             }
         }
 
@@ -219,6 +322,11 @@ namespace View.Audio
             var root = new GameObject("[GameAudio]");
             Object.DontDestroyOnLoad(root);
             _root = root.transform;
+
+            _musicSource = root.AddComponent<AudioSource>();
+            _musicSource.playOnAwake = false;
+            _musicSource.loop = true;
+            _musicSource.spatialBlend = 0f;
             for (int i = 0; i < PoolSize; i++)
             {
                 var go = new GameObject($"Voice_{i:00}");
@@ -236,6 +344,8 @@ namespace View.Audio
 
         static bool IsPlayerPistol(PlayerEntityState player) => IsPistol(player?.EquippedWeapon);
 
+        static bool IsPlayerRifle(PlayerEntityState player) => IsRifle(player?.EquippedWeapon);
+
         static bool IsPendingOrEquippedPistol(PlayerEntityState player)
         {
             if (player == null) return false;
@@ -247,6 +357,10 @@ namespace View.Audio
         static bool IsPistol(WeaponEntityState weapon) =>
             weapon != null && weapon.PayloadDefinition?.Archetype == "Ballistic"
             && weapon.DeliveryDefinition?.Pattern == FiringPattern.Single;
+
+        static bool IsRifle(WeaponEntityState weapon) =>
+            weapon != null && weapon.PayloadDefinition?.Archetype == "Ballistic"
+            && weapon.DeliveryDefinition?.Pattern == FiringPattern.Auto;
 
         static bool TryGetEntityPosition(RaidState state, EId id, out Vector3 position)
         {
@@ -279,12 +393,19 @@ namespace View.Audio
             return worldPosition;
         }
 
+        static ViewCheatsAudioSection Audio => ViewCheats.Config.Audio;
+
+        static float Volume(float baseVolume, float effectMultiplier) =>
+            baseVolume * Audio.MasterSfx * effectMultiplier;
+
         public void Dispose()
         {
             _delayed.Clear();
             _voices.Clear();
             if (_root != null) Object.Destroy(_root.gameObject);
             _root = null;
+            _musicSource = null;
+            _inventoryWasOpen = false;
         }
     }
 }

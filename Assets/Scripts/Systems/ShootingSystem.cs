@@ -54,7 +54,11 @@ namespace Systems
             bool usesAmmo = !string.IsNullOrEmpty(weapon.AmmoType);
             if (weapon.Phase == WeaponPhase.Ready && usesAmmo && weapon.AmmoInMagazine <= 0)
             {
-                context.Events.WeaponDryFired(weapon.PrefabId);
+                // AttackPressed remains true for every frame the trigger is held. Dry fire is
+                // a trigger-pull response, so emit once on the rising edge instead of stacking
+                // multiple audio voices during a single click.
+                if (input.AttackJustPressed)
+                    context.Events.WeaponDryFired(weapon.PrefabId);
                 if (AmmoSystem.CanReload(weapon, App.Instance.Player.Inventory))
                 {
                     weapon.Phase = WeaponPhase.Reloading;

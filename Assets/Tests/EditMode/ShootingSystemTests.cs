@@ -314,13 +314,48 @@ namespace Tests.EditMode
             state.PlayerEntity.FacingDirection = Vector3.forward;
             state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
             var eventBuffer = new RaidEventBuffer();
-            var input = new FakeInputAdapter { AttackPressed = true };
+            var input = new FakeInputAdapter { AttackPressed = true, AttackJustPressed = true };
             var context = TestContextFactory.Create(input, events: eventBuffer);
 
             ShootingSystem.Tick(state, in context);
 
             var dryFires = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponDryFired).ToList();
             Assert.AreEqual(1, dryFires.Count);
+        }
+
+        [Test]
+        public void Tick_EmptyMagazine_HeldTrigger_EmitsOneDryFireEventPerClick()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            state.PlayerEntity.EquippedWeapon.AmmoInMagazine = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                App.Instance.Player.Inventory.Backpack[i] = null;
+
+            var eventBuffer = new RaidEventBuffer();
+            var input = new FakeInputAdapter
+            {
+                AttackPressed = true,
+                AttackJustPressed = true,
+            };
+            var context = TestContextFactory.Create(input, events: eventBuffer);
+
+            ShootingSystem.Tick(state, in context);
+            input.AttackJustPressed = false;
+            ShootingSystem.Tick(state, in context);
+            ShootingSystem.Tick(state, in context);
+
+            int dryFireCount = eventBuffer.All.Count(e => e.Type == RaidEventType.WeaponDryFired);
+            Assert.AreEqual(1, dryFireCount);
+
+            input.AttackPressed = false;
+            ShootingSystem.Tick(state, in context);
+            input.AttackPressed = true;
+            input.AttackJustPressed = true;
+            ShootingSystem.Tick(state, in context);
+
+            dryFireCount = eventBuffer.All.Count(e => e.Type == RaidEventType.WeaponDryFired);
+            Assert.AreEqual(2, dryFireCount);
         }
 
         [Test]
