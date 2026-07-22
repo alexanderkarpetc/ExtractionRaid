@@ -10,6 +10,10 @@ namespace View.Audio
         public readonly AudioClip[] PistolReload = Load("Audio/Weapons/Pistol/Reload");
         public readonly AudioClip[] PistolHolster = Load("Audio/Weapons/Pistol/Holster");
         public readonly AudioClip[] PistolUnholster = Load("Audio/Weapons/Pistol/Unholster");
+        public readonly AudioClip[] RifleFire = Load("Audio/Weapons/Rifle/Fire");
+        public readonly AudioClip[] RifleDryFire = Load("Audio/Weapons/Rifle/DryFire");
+        public readonly AudioClip[] RifleReload = Load("Audio/Weapons/Rifle/Reload");
+        public readonly AudioClip[] ShotgunFire = Load("Audio/Weapons/Shotgun/Fire");
 
         public readonly AudioClip[] HardSurfaceImpacts = Load("Audio/Impacts/HardSurface");
         public readonly AudioClip[] MetalImpacts = Load("Audio/Impacts/Metal");
@@ -20,6 +24,7 @@ namespace View.Audio
         public readonly AudioClip[] Bleeding = Load("Audio/Status/Bleeding");
         public readonly AudioClip[] BodyFalls = Load("Audio/Characters/BodyFall");
         public readonly AudioClip[] Footsteps = Load("Audio/Movement/Footsteps");
+        public readonly AudioClip[] BackpackOpen = Load("Audio/UI/Backpack");
         public readonly AudioClip[] HideoutMusic = Load("Audio/Music/Hideout");
 
         static AudioClip[] Load(string path) => Resources.LoadAll<AudioClip>(path);
