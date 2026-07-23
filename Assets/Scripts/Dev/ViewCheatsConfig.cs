@@ -32,6 +32,7 @@ namespace Dev
         [SerializeField] ViewCheatsHudDamageSection _hudDamage;
         [SerializeField] ViewCheatsBattleHudSection _battleHud;
         [SerializeField] ViewCheatsAudioSection _audio;
+        [SerializeField] ViewCheatsQuestMarkerSection _questMarker;
 
         // Lazy-create fallbacks for null sections (in-memory defaults)
         public ViewCheatsCameraShakeSection CameraShake =>
@@ -78,5 +79,8 @@ namespace Dev
 
         public ViewCheatsAudioSection Audio =>
             _audio ? _audio : (_audio = CreateInstance<ViewCheatsAudioSection>());
+
+        public ViewCheatsQuestMarkerSection QuestMarker =>
+            _questMarker ? _questMarker : (_questMarker = CreateInstance<ViewCheatsQuestMarkerSection>());
     }
 }

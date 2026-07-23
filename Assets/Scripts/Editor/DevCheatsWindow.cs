@@ -216,6 +216,7 @@ namespace Editor
                     DrawSection("🥃 Casings", view.Casings);
                     DrawSection("📦 Magazine Drop", view.Magazine);
                     DrawSection("🔻 Weapon Drop", view.WeaponDrop);
+                    DrawSection("❗ Quest Marker", view.QuestMarker);
                     DrawSection("💀 Ragdoll", view.Ragdoll);
                 }
             });
@@ -1086,6 +1087,7 @@ namespace Editor
             CreateSectionIfMissing<ViewCheatsBattleHudSection>(so, "_battleHud", folder, "BattleHud");
             CreateSectionIfMissing<ViewCheatsAudioSection>(so, "_audio", folder, "Audio");
             CreateSectionIfMissing<ViewCheatsBotDebugSection>(so, "_botDebug", folder, "BotDebug");
+            CreateSectionIfMissing<ViewCheatsQuestMarkerSection>(so, "_questMarker", folder, "QuestMarker");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

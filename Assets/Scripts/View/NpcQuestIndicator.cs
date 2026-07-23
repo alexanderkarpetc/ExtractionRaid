@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Dev;
 using Systems;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,18 +27,21 @@ namespace View
         const float Width   = 0.9f;
         const float Height  = 0.9f;
 
-        // ── Vertical glow column (billboarded quad, additive, soft-particle occluded).
-        const float BeamHeight    = 4.5f;
-        const float BeamHalfWidth = 0.40f;
+        // Fallback defaults — used only when the ViewCheats QuestMarker section asset is
+        // absent (e.g. a build without it). Normally ViewCheats.Config.QuestMarker drives
+        // these live (tune in Raid → Dev Cheats → ❗ Quest Marker).
+        const float BeamHeight    = 13.5f;
+        const float BeamHalfWidth = 1.2f;
         const float BeamBaseY     = 0.10f;
-        const float BeamAlphaMin  = 0.50f;   // powerful — soft particles keep it clean near geo
+        const float BeamAlphaMin  = 0.50f;
         const float BeamAlphaMax  = 0.95f;
 
         // ── Ground light pool (horizontal additive disc, soft-particle occluded).
-        const float GroundRadius   = 1.6f;
+        const float GroundRadius   = 4.8f;
         const float GroundY        = 0.06f;
         const float GroundAlphaMin = 0.50f;
         const float GroundAlphaMax = 0.90f;
+        const float GroundSoftFade = 0.5f;
 
         // ── Behavior
         const float PollInterval = 0.4f;
@@ -90,6 +94,7 @@ namespace View
         // ── Beam / ground-glow shader property IDs (both use _Color + _Alpha)
         static readonly int PropVfxColor = Shader.PropertyToID("_Color");
         static readonly int PropVfxAlpha = Shader.PropertyToID("_Alpha");
+        static readonly int PropSoftFade = Shader.PropertyToID("_SoftFade");
 
         static Mesh s_beamMesh;
         static Mesh s_groundMesh;
@@ -133,6 +138,7 @@ namespace View
             BuildGround();
             BuildBeam();
             ApplyPalette(Avail);
+            ApplyLayout(ViewCheats.Config?.QuestMarker);
 
             SetVisible(false);
         }
@@ -219,16 +225,16 @@ namespace View
             mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
         }
 
-        // Single vertical quad in local XY at Z=0 (billboarded toward camera each frame).
+        // Unit vertical quad: x∈[-0.5,0.5] (width 1), y∈[0,1] (height 1), Z=0. World size
+        // comes from _beam.transform.localScale (ApplyLayout); billboarded on yaw each frame.
         static Mesh BuildBeamMesh()
         {
-            float top = BeamBaseY + BeamHeight;
             var verts = new[]
             {
-                new Vector3(-BeamHalfWidth, BeamBaseY, 0f),
-                new Vector3( BeamHalfWidth, BeamBaseY, 0f),
-                new Vector3( BeamHalfWidth, top,       0f),
-                new Vector3(-BeamHalfWidth, top,       0f),
+                new Vector3(-0.5f, 0f, 0f),
+                new Vector3( 0.5f, 0f, 0f),
+                new Vector3( 0.5f, 1f, 0f),
+                new Vector3(-0.5f, 1f, 0f),
             };
             var uvs  = new[] { new Vector2(0,0), new Vector2(1,0), new Vector2(1,1), new Vector2(0,1) };
             var tris = new[] { 0, 2, 1, 0, 3, 2 };
@@ -238,16 +244,16 @@ namespace View
             return mesh;
         }
 
-        // Horizontal quad on the XZ plane (normal +Y), UV 0..1 for the radial shader.
+        // Unit horizontal quad on XZ (normal +Y), x,z∈[-0.5,0.5], UV 0..1 for the radial
+        // shader. World radius comes from _ground.transform.localScale (ApplyLayout).
         static Mesh BuildGroundMesh()
         {
-            float r = GroundRadius;
             var verts = new[]
             {
-                new Vector3(-r, 0f, -r),
-                new Vector3( r, 0f, -r),
-                new Vector3( r, 0f,  r),
-                new Vector3(-r, 0f,  r),
+                new Vector3(-0.5f, 0f, -0.5f),
+                new Vector3( 0.5f, 0f, -0.5f),
+                new Vector3( 0.5f, 0f,  0.5f),
+                new Vector3(-0.5f, 0f,  0.5f),
             };
             var uvs  = new[] { new Vector2(0,0), new Vector2(1,0), new Vector2(1,1), new Vector2(0,1) };
             var tris = new[] { 0, 1, 2, 0, 2, 3 };
@@ -284,6 +290,9 @@ namespace View
 
             if (!_isVisible) return;
 
+            var c = ViewCheats.Config?.QuestMarker;
+            ApplyLayout(c);
+
             var cam = Camera.main;
             if (cam != null)
             {
@@ -296,16 +305,46 @@ namespace View
                 }
             }
 
-            float breath = 0.5f + 0.5f * Mathf.Sin(Time.time * PulseHz * Mathf.PI * 2f);
+            float pulseHz = c != null ? c.PulseHz : PulseHz;
+            float breath = 0.5f + 0.5f * Mathf.Sin(Time.time * pulseHz * Mathf.PI * 2f);
             if (_material != null)
             {
                 _material.SetFloat(PropPulse, Mathf.Lerp(0.5f, 1f, breath));
                 _material.SetFloat(PropAlpha, 1f);
             }
             if (_beamMaterial != null)
-                _beamMaterial.SetFloat(PropVfxAlpha, Mathf.Lerp(BeamAlphaMin, BeamAlphaMax, breath));
+                _beamMaterial.SetFloat(PropVfxAlpha, Mathf.Lerp(
+                    c != null ? c.BeamAlphaMin : BeamAlphaMin,
+                    c != null ? c.BeamAlphaMax : BeamAlphaMax, breath));
             if (_groundMaterial != null)
-                _groundMaterial.SetFloat(PropVfxAlpha, Mathf.Lerp(GroundAlphaMin, GroundAlphaMax, breath));
+                _groundMaterial.SetFloat(PropVfxAlpha, Mathf.Lerp(
+                    c != null ? c.GroundAlphaMin : GroundAlphaMin,
+                    c != null ? c.GroundAlphaMax : GroundAlphaMax, breath));
+        }
+
+        // Live size / position / soft-fade from the ViewCheats section (consts as fallback
+        // when the asset is absent). Applied every frame while visible so Dev Cheats sliders
+        // update the beacon in play mode. Meshes are unit-sized; size = transform.localScale.
+        void ApplyLayout(ViewCheatsQuestMarkerSection c)
+        {
+            float gRadius = c != null ? c.GroundRadius : GroundRadius;
+            float gY      = c != null ? c.GroundY : GroundY;
+            float gSoft   = c != null ? c.GroundSoftFade : GroundSoftFade;
+            float bH      = c != null ? c.BeamHeight : BeamHeight;
+            float bHalf   = c != null ? c.BeamHalfWidth : BeamHalfWidth;
+            float bBaseY  = c != null ? c.BeamBaseY : BeamBaseY;
+
+            if (_ground != null)
+            {
+                _ground.transform.localPosition = new Vector3(0f, gY, 0f);
+                _ground.transform.localScale    = new Vector3(gRadius * 2f, 1f, gRadius * 2f);
+            }
+            if (_groundMaterial != null) _groundMaterial.SetFloat(PropSoftFade, gSoft);
+            if (_beam != null)
+            {
+                _beam.transform.localPosition = new Vector3(0f, bBaseY, 0f);
+                _beam.transform.localScale    = new Vector3(bHalf * 2f, bH, 1f);
+            }
         }
 
         void Refresh()

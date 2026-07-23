@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92c617818906a4911a88fea051891292, type: 3}
+  m_Name: QuestMarker
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsQuestMarkerSection
+  GroundRadius: 5.06
+  GroundAlphaMin: 0.51
+  GroundAlphaMax: 0.746
+  GroundSoftFade: 0.63
+  GroundY: 0.072
+  BeamHeight: 13.3
+  BeamHalfWidth: 1.18
+  BeamBaseY: 0.023
+  BeamAlphaMin: 0.328
+  BeamAlphaMax: 0.77
+  PulseHz: 0.73
