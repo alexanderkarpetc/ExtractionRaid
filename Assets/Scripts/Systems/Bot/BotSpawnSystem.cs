@@ -71,6 +71,8 @@ namespace Systems.Bot
                     if (def != null)
                     {
                         armorSlots.Helmet = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                        armorSlots.Helmet.CurrentDurability =
+                            RollWear(config.HelmetDurabilityMin, config.HelmetDurabilityMax) * def.MaxDurability;
                         armorSlots.HelmetDefinitionId = helmetId;
                     }
                 }
@@ -80,6 +82,8 @@ namespace Systems.Bot
                     if (def != null)
                     {
                         armorSlots.BodyArmor = ArmorState.Create(def.ArmorPoints, def.MaxDurability);
+                        armorSlots.BodyArmor.CurrentDurability =
+                            RollWear(config.BodyArmorDurabilityMin, config.BodyArmorDurabilityMax) * def.MaxDurability;
                         armorSlots.BodyArmorDefinitionId = bodyArmorId;
                     }
                 }
@@ -88,6 +92,15 @@ namespace Systems.Bot
             }
 
             events.BotSpawned(id, position, typeId);
+        }
+
+        // Rolls a durability fraction in [min, max] (clamped to 0..1). A pristine (1,1)
+        // range returns 1 — no behaviour change for armor that hasn't been tuned.
+        static float RollWear(float min, float max)
+        {
+            float lo = Mathf.Clamp01(Mathf.Min(min, max));
+            float hi = Mathf.Clamp01(Mathf.Max(min, max));
+            return Random.Range(lo, hi);
         }
 
         // Weighted random pick over a pool. Returns false (picked = default) when the pool

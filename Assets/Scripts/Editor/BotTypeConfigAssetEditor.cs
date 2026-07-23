@@ -20,6 +20,7 @@ namespace Editor
             "_equipmentSource", "_equipment",
             "_payload", "_delivery", "_exotic", "_weaponRarity", "_magazineAmmo",
             "_helmetDefinitionId", "_bodyArmorDefinitionId",
+            "_helmetDurability", "_bodyArmorDurability",
         };
 
         // The Loadout block is injected where this (first) property would appear.
@@ -80,6 +81,8 @@ namespace Editor
                 EditorGUILayout.LabelField("Armor", EditorStyles.miniBoldLabel);
                 DrawProp("_helmetDefinitionId");
                 DrawProp("_bodyArmorDefinitionId");
+                DrawProp("_helmetDurability");
+                DrawProp("_bodyArmorDurability");
             }
             else
             {

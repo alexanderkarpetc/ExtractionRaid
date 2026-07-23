@@ -15,11 +15,18 @@ MonoBehaviour:
   _typeId: Scav
   _shellPrefabId: BotShell
   _bodyPrefab: {fileID: 1612062852821883575, guid: d5b06130063e44a518996bc34d8c8e2e, type: 3}
+  _equipmentSource: 0
+  _equipment: {fileID: 11400000, guid: ccdba8ee2cfafcd4ab60eb38557c3f93, type: 2}
   _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
   _delivery: {fileID: 11400000, guid: 0b858c1acb1a84316b516707412f2a6b, type: 2}
   _exotic: {fileID: 0}
   _weaponRarity: 0
   _magazineAmmo: 30
+  _helmetDefinitionId: Helmet_Basic
+  _bodyArmorDefinitionId: 
+  _helmetDurability: {x: 0.3, y: 0.8}
+  _bodyArmorDurability: {x: 0.3, y: 0.8}
+  _loot: {fileID: 0}
   _maxHp: 80
   _healAmount: 0
   _healThreshold: 0
@@ -41,12 +48,9 @@ MonoBehaviour:
   _accuracy: 0.5
   _engageRange: 20
   _dodgeCooldown: 0
-  _grenadeCount: 0
   _grenadeCooldown: 0
   _grenadeMinThrowDist: 5
   _meleeAttackRadius: 1.5
   _meleeAttackDamage: 10
   _meleeAttackCooldown: 1
-  _helmetDefinitionId: Helmet_Basic
-  _bodyArmorDefinitionId: 
   _behaviors: 7

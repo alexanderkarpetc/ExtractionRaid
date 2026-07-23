@@ -55,6 +55,13 @@ namespace Constants
         [ItemIdPicker(ItemSlotType.BodyArmor)]
         [SerializeField] string _bodyArmorDefinitionId;
 
+        [Tooltip("Helmet durability at spawn/drop as a fraction of its max (x = min, y = max). " +
+                 "(1,1) = pristine; lower it to model a bot that's already been shot.")]
+        [SerializeField] Vector2 _helmetDurability = Vector2.one;
+        [Tooltip("Body armor durability at spawn/drop as a fraction of its max (x = min, y = max). " +
+                 "(1,1) = pristine.")]
+        [SerializeField] Vector2 _bodyArmorDurability = Vector2.one;
+
         [Header("Loot")]
         [Tooltip("Optional loot table — what this bot drops beyond its weapon and armor " +
                  "(ammo mix, specific items, category loot). Leave null for the default drop.")]
@@ -125,6 +132,11 @@ namespace Constants
             int grenadeMin = _loot != null ? _loot.grenadeMinCount : 0;
             int grenadeMax = _loot != null ? _loot.grenadeMaxCount : 0;
 
+            // Armor wear: pooled armor takes the range from the equipment asset, inline armor
+            // from this asset. Fraction of the item's max durability at spawn/drop.
+            Vector2 helmetDur = useEquipment ? _equipment.HelmetDurabilityRange : _helmetDurability;
+            Vector2 bodyDur   = useEquipment ? _equipment.BodyArmorDurabilityRange : _bodyArmorDurability;
+
             return new BotTypeConfig(
                 typeId: _typeId,
                 prefabId: _shellPrefabId,
@@ -166,7 +178,11 @@ namespace Constants
                 guaranteedItems: guaranteedItems,
                 categoryLoot: categoryLoot,
                 grenadeMinCount: grenadeMin,
-                grenadeMaxCount: grenadeMax);
+                grenadeMaxCount: grenadeMax,
+                helmetDurabilityMin: helmetDur.x,
+                helmetDurabilityMax: helmetDur.y,
+                bodyArmorDurabilityMin: bodyDur.x,
+                bodyArmorDurabilityMax: bodyDur.y);
         }
 
         WeaponConfiguration BuildWeaponConfig() =>

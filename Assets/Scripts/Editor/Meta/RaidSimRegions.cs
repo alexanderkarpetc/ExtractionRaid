@@ -222,8 +222,9 @@ namespace Editor.Meta
 
             var sb = new StringBuilder();
             sb.AppendLine($"Looted region '{snap.name}': {containersHit} container(s), {looseHit} loose, {botsHit} enemy body(ies).");
-            sb.AppendLine($"Banked {result.UnitsBanked} unit(s) across {result.DistinctBanked} type(s), worth {result.ValueBanked}¢.");
-            sb.Append($"Backpack {result.SlotsUsed}/{result.SlotsCapacity} slots.");
+            sb.AppendLine($"Kept {result.UnitsBanked} unit(s) across {result.DistinctBanked} slot(s) " +
+                          $"({result.WeaponsBanked} gun(s)), worth {result.ValueBanked}¢.");
+            sb.Append($"Backpack {result.SlotsUsed}/{result.SlotsCapacity} slots (most valuable kept).");
             if (result.Skipped != null && result.Skipped.Count > 0)
             {
                 int skippedUnits = 0;

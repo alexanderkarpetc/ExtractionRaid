@@ -62,6 +62,7 @@ namespace Editor
         bool _metaCacheLoaded;
         string _metaScanInfo = "";
         string _metaLootInfo = "";
+        string _metaSellInfo = "";
 
         // Cached inline editors per section SO (recreated when config changes)
         readonly Dictionary<string, UnityEditor.Editor> _sectionEditors = new();
@@ -815,6 +816,24 @@ namespace Editor
             if (!string.IsNullOrEmpty(_metaScanInfo))
                 EditorGUILayout.HelpBox(_metaScanInfo, MessageType.Info);
 
+            // Player-action sim: dump the backpack for credits (loot → sell → spend loop).
+            {
+                bool canSell = Application.isPlaying && App.IsInitialized && App.Instance.Player != null;
+                EditorGUILayout.Space(6);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    int credits = canSell ? App.Instance.Player.Credits : 0;
+                    EditorGUILayout.LabelField($"Balance: {credits}¢", GUILayout.MinWidth(120));
+                    using (new EditorGUI.DisabledScope(!canSell))
+                    {
+                        if (GUILayout.Button("Sell Backpack → Credits", GUILayout.Width(190)))
+                            SellBackpack();
+                    }
+                }
+                if (!string.IsNullOrEmpty(_metaSellInfo))
+                    EditorGUILayout.LabelField(_metaSellInfo, EditorStyles.miniLabel);
+            }
+
             if (_metaCache?.regions == null || _metaCache.regions.Count == 0)
             {
                 EditorGUILayout.HelpBox(
@@ -857,6 +876,52 @@ namespace Editor
 
             if (!string.IsNullOrEmpty(_metaLootInfo))
                 EditorGUILayout.HelpBox(_metaLootInfo, MessageType.Info);
+        }
+
+        // Simulates the player vendoring everything in the backpack: each slot pays out
+        // its sell value (real global sell price where the item is stocked; otherwise a
+        // half-worth fallback so guns / uncatalogued loot still convert), credits the
+        // player, ticks sell-quests, and empties the pack.
+        void SellBackpack()
+        {
+            var player = App.Instance?.Player;
+            if (player?.Inventory == null) return;
+
+            var inv = player.Inventory;
+            var db = App.Instance.QuestDatabase;
+            long total = 0;
+            int slotsSold = 0;
+
+            for (int i = 0; i < inv.Backpack.Length; i++)
+            {
+                var it = inv.Backpack[i];
+                if (it == null) continue;
+
+                int price = SellValueOf(it);
+                inv.Backpack[i] = null;
+                slotsSold++;
+                if (price > 0)
+                {
+                    player.Credit(price);
+                    total += price;
+                    if (db != null) QuestSystem.OnItemSold(player.QuestProgress, db, price);
+                }
+            }
+            inv.Version++;
+
+            _metaSellInfo = slotsSold == 0
+                ? "Backpack already empty."
+                : $"Sold {slotsSold} slot(s) for {total}¢ — balance {player.Credits}¢.";
+            Debug.Log($"[DevCheats] {_metaSellInfo}");
+        }
+
+        static int SellValueOf(State.ItemState item)
+        {
+            int p = ShopSystem.GetGlobalSellPrice(item);
+            if (p > 0) return p;
+            // No shop stocks it (weapons, some loot) → fall back to half its loot worth.
+            long worth = Systems.Meta.RegionLootSimulator.ValueOfItem(item);
+            return Mathf.Max(1, Mathf.RoundToInt(worth * 0.5f));
         }
 
         void DrawQuestsSection()

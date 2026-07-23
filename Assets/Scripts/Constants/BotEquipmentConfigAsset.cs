@@ -72,6 +72,15 @@ namespace Constants
         [Header("Body Armor (weighted random pick; None = no vest)")]
         [SerializeField] BodyArmorEntry[] _bodyArmors;
 
+        [Header("Armor wear (durability at spawn/drop, fraction of max — models prior combat)")]
+        [Tooltip("Helmet durability range as a fraction of its max (x = min, y = max). (1,1) = pristine.")]
+        [SerializeField] Vector2 _helmetDurability = Vector2.one;
+        [Tooltip("Body armor durability range as a fraction of its max (x = min, y = max). (1,1) = pristine.")]
+        [SerializeField] Vector2 _bodyArmorDurability = Vector2.one;
+
+        public Vector2 HelmetDurabilityRange => _helmetDurability;
+        public Vector2 BodyArmorDurabilityRange => _bodyArmorDurability;
+
         /// <summary>Weighted weapon pool, or null when no weapon entries are authored.</summary>
         public WeightedWeapon[] BuildWeaponPool()
         {

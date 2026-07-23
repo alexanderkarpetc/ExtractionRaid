@@ -9,32 +9,46 @@ namespace Systems.Meta
     /// <summary>
     /// Pure loot-roll helpers behind the DevCheats <c>🌍 Meta → Region raid simulator</c>.
     /// Re-rolls the same dice <see cref="LootSystem"/> uses at container / loose-loot /
-    /// bot-body spawn, but emits a flat (definitionId, count) list instead of mutating a
-    /// <c>RaidState</c> — so an editor tool can answer "what would I carry out if I looted
-    /// this whole region?" without a live raid.
+    /// bot-body spawn, but emits a flat list instead of mutating a <c>RaidState</c> — so an
+    /// editor tool can answer "what would I carry out if I looted this whole region?"
+    /// without a live raid.
     ///
-    /// Stateless, Unity value-types only (CLAUDE.md §3), no <c>App</c> / no editor deps →
-    /// unit-testable. The one deliberate simplification vs the real death drop: a bot's
-    /// assembled weapon is NOT rolled (it needs a live <c>BotEntityState</c> weapon); this
-    /// is a meta-loot simulator, not a combat replay.
+    /// Stateless, Unity value-types only (CLAUDE.md §3), no <c>App</c> / no editor deps.
     /// </summary>
     public static class RegionLootSimulator
     {
-        // All current payloads fire the ballistic round → rifle ammo (mirrors
-        // LootSystem's default drop). Simulated bodies drop this caliber.
         const string SimAmmoBase = "Ammo_Rifle";
+
+        // A looted gun's worth for the "grab the most valuable" sort. Weapons carry no
+        // shop price (they're assembled from cores, not stocked), so we synthesize one:
+        // a solid base + a bump per rarity tier across both cores, keeping guns near the
+        // top of the pack and better guns above worse ones.
+        const long WeaponBaseValue = 220;
+        const long WeaponRarityStep = 120;
 
         public struct Rolled
         {
             public string DefinitionId;
             public int Count;
-            public Rolled(string id, int count) { DefinitionId = id; Count = count; }
+            public bool IsWeapon;
+            public WeaponConfiguration Weapon;
+            // Durability as a fraction of max for armor drops; <0 = leave default (full).
+            public float DurabilityFrac;
+
+            public Rolled(string id, int count)
+            {
+                DefinitionId = id; Count = count; IsWeapon = false; Weapon = default; DurabilityFrac = -1f;
+            }
+
+            public static Rolled MakeWeapon(WeaponConfiguration cfg)
+                => new() { DefinitionId = "Weapon", Count = 1, IsWeapon = true, Weapon = cfg, DurabilityFrac = -1f };
+
+            public static Rolled MakeArmor(string id, float durabilityFrac)
+                => new() { DefinitionId = id, Count = 1, DurabilityFrac = durabilityFrac };
         }
 
         // ─────────────────────────────────────────── Containers ──
 
-        /// <summary>Mirrors <see cref="LootSystem.CreateContainer"/>: N weighted drops,
-        /// each count-ranged and stack-capped.</summary>
         public static void RollContainer(in ContainerTypeConfig cfg, List<Rolled> outItems)
         {
             var pool = cfg.PossibleDrops;
@@ -59,7 +73,6 @@ namespace Systems.Meta
 
         // ────────────────────────────────────────── Loose loot ──
 
-        /// <summary>Uniform pick over the group (matches <c>LooseLootSpawnPoint.RollItem</c>).</summary>
         public static void RollLooseGroup(ItemGroup group, List<Rolled> outItems)
             => RollUniform(ItemGroups.GetDrops(group), outItems);
 
@@ -71,7 +84,6 @@ namespace Systems.Meta
             if (!string.IsNullOrEmpty(d.DefinitionId)) outItems.Add(new Rolled(d.DefinitionId, count));
         }
 
-        /// <summary>Uniform pick over a custom (definitionId, min, max) pool.</summary>
         public static void RollLooseCustom(IReadOnlyList<(string id, int min, int max)> custom, List<Rolled> outItems)
         {
             if (custom == null || custom.Count == 0) return;
@@ -85,12 +97,17 @@ namespace Systems.Meta
 
         /// <summary>
         /// Approximates <see cref="LootSystem.CreateLootable"/>'s body drop from the static
-        /// <see cref="BotTypeConfig"/>: caliber ammo, meds, grenades, helmet + body armor,
-        /// plus the loot table (ammo variants / guaranteed items / category loot) when set.
-        /// The assembled weapon is intentionally omitted (see class summary).
+        /// <see cref="BotTypeConfig"/>: the bot's assembled WEAPON, caliber ammo, meds,
+        /// grenades, helmet + body armor, plus the loot table (ammo variants / guaranteed
+        /// items / category loot) when set.
         /// </summary>
         public static void RollBot(in BotTypeConfig cfg, List<Rolled> outItems)
         {
+            // The gun the bot carries — the headline drop. Pool-equipped bots have no fixed
+            // config; those fall back to no gun (weapon pools resolve only at live spawn).
+            if (IsValidWeapon(cfg.WeaponConfig))
+                outItems.Add(Rolled.MakeWeapon(cfg.WeaponConfig));
+
             if (cfg.HasLootTable)
             {
                 if (cfg.AmmoLoot.HasValue) RollAmmoVariants(cfg.AmmoLoot.Value, outItems);
@@ -108,7 +125,6 @@ namespace Systems.Meta
             }
             else
             {
-                // Legacy default drop: caliber ammo + carried meds.
                 outItems.Add(new Rolled(SimAmmoBase, 30));
                 if (cfg.MedkitCount > 0) outItems.Add(new Rolled("Medkit", cfg.MedkitCount));
             }
@@ -118,9 +134,24 @@ namespace Systems.Meta
                 : cfg.GrenadeCount;
             if (grenades > 0) outItems.Add(new Rolled("Grenade", grenades));
 
-            if (!string.IsNullOrEmpty(cfg.HelmetDefinitionId)) outItems.Add(new Rolled(cfg.HelmetDefinitionId, 1));
-            if (!string.IsNullOrEmpty(cfg.BodyArmorDefinitionId)) outItems.Add(new Rolled(cfg.BodyArmorDefinitionId, 1));
+            if (!string.IsNullOrEmpty(cfg.HelmetDefinitionId))
+                outItems.Add(Rolled.MakeArmor(cfg.HelmetDefinitionId,
+                    RollWear(cfg.HelmetDurabilityMin, cfg.HelmetDurabilityMax)));
+            if (!string.IsNullOrEmpty(cfg.BodyArmorDefinitionId))
+                outItems.Add(Rolled.MakeArmor(cfg.BodyArmorDefinitionId,
+                    RollWear(cfg.BodyArmorDurabilityMin, cfg.BodyArmorDurabilityMax)));
         }
+
+        // Durability fraction in [min, max], clamped 0..1. Pristine (1,1) → 1.
+        static float RollWear(float min, float max)
+        {
+            float lo = Mathf.Clamp01(Mathf.Min(min, max));
+            float hi = Mathf.Clamp01(Mathf.Max(min, max));
+            return UnityEngine.Random.Range(lo, hi);
+        }
+
+        static bool IsValidWeapon(in WeaponConfiguration c)
+            => !string.IsNullOrEmpty(c.Payload.DefinitionId) && !string.IsNullOrEmpty(c.Delivery.DefinitionId);
 
         static void RollAmmoVariants(in AmmoLootRule rule, List<Rolled> outItems)
         {
@@ -168,7 +199,7 @@ namespace Systems.Meta
                     if (r <= 0f) { chosen = i; break; }
                 }
                 outItems.Add(new Rolled(candidates[chosen].Id, 1));
-                candidates.RemoveAt(chosen); // distinct picks
+                candidates.RemoveAt(chosen);
             }
         }
 
@@ -187,60 +218,145 @@ namespace Systems.Meta
 
         public struct FillResult
         {
-            public int SlotsUsed;      // occupied backpack slots after the fill
-            public int SlotsCapacity;  // total backpack slots
-            public int UnitsBanked;    // item units that fit
-            public long ValueBanked;   // Σ (unit value × units) that fit
-            public int DistinctBanked; // distinct definitions banked
-            public List<Rolled> Skipped; // units that didn't fit (pack full)
+            public int SlotsUsed;
+            public int SlotsCapacity;
+            public int UnitsBanked;
+            public long ValueBanked;
+            public int DistinctBanked;
+            public int WeaponsBanked;
+            public List<Rolled> Skipped; // items that didn't make the cut (backpack full)
         }
 
         /// <summary>
-        /// Consolidates rolled loot by definition, sorts by unit <see cref="ItemDefinition.Value"/>
-        /// (desc), and pours it into free backpack slots via
-        /// <see cref="Systems.InventorySystem.AddToBackpack"/> until the pack is full —
-        /// "grab the most valuable you can carry, more slots ⇒ more loot". Anything that
-        /// didn't fit lands in <see cref="FillResult.Skipped"/>.
+        /// Merges the rolled loot with whatever is ALREADY in the backpack, then keeps the
+        /// most valuable items that fit — "grab the better stuff, drop the garbage". Existing
+        /// weapons / armor keep their config + durability; stackables are re-consolidated.
+        /// Anything that didn't make the cut lands in <see cref="FillResult.Skipped"/>.
         /// </summary>
         public static FillResult FillBackpackByValue(InventoryState inv, List<Rolled> rolled, Func<EId> alloc)
         {
             var result = new FillResult { Skipped = new List<Rolled>() };
-            if (inv == null || rolled == null) return result;
+            if (inv == null) return result;
+            rolled ??= new List<Rolled>();
 
-            var byId = new Dictionary<string, int>();
+            // Non-stackables keep their concrete ItemState (durability / weapon config /
+            // medkit charge). Stackables merge into per-def counts, then split into stacks.
+            var singles = new List<ItemState>();
+            var stackCounts = new Dictionary<string, int>();
+
+            void AddStackable(string id, int count)
+            {
+                if (count <= 0) return;
+                stackCounts.TryGetValue(id, out var c);
+                stackCounts[id] = c + count;
+            }
+
+            // Existing backpack contents.
+            for (int i = 0; i < inv.Backpack.Length; i++)
+            {
+                var it = inv.Backpack[i];
+                if (it == null) continue;
+                var def = it.Definition;
+                if (def != null && def.IsStackable) AddStackable(it.DefinitionId, Mathf.Max(1, it.StackCount));
+                else singles.Add(it);
+            }
+
+            // Newly rolled loot.
             foreach (var r in rolled)
             {
-                if (string.IsNullOrEmpty(r.DefinitionId) || r.Count <= 0) continue;
-                byId.TryGetValue(r.DefinitionId, out var c);
-                byId[r.DefinitionId] = c + r.Count;
-            }
-
-            var ordered = new List<KeyValuePair<string, int>>(byId);
-            ordered.Sort((a, b) => UnitValue(b.Key).CompareTo(UnitValue(a.Key)));
-
-            foreach (var kv in ordered)
-            {
-                int added = Systems.InventorySystem.AddToBackpack(inv, kv.Key, kv.Value, alloc);
-                if (added > 0)
+                if (r.IsWeapon)
                 {
-                    result.UnitsBanked += added;
-                    result.ValueBanked += (long)UnitValue(kv.Key) * added;
-                    result.DistinctBanked++;
+                    singles.Add(ItemState.CreateWeapon(alloc(), "Weapon", r.Weapon));
+                    continue;
                 }
-                if (added < kv.Value) result.Skipped.Add(new Rolled(kv.Key, kv.Value - added));
+                if (string.IsNullOrEmpty(r.DefinitionId) || r.Count <= 0) continue;
+                var def = ItemDefinition.Get(r.DefinitionId);
+                if (def == null) continue;
+                if (def.IsStackable)
+                {
+                    AddStackable(r.DefinitionId, r.Count);
+                }
+                else
+                {
+                    for (int k = 0; k < r.Count; k++)
+                    {
+                        var item = ItemState.Create(alloc(), r.DefinitionId);
+                        ApplyWear(item, def, r.DurabilityFrac);
+                        singles.Add(item);
+                    }
+                }
             }
 
-            result.SlotsCapacity = InventoryState.BackpackSize;
-            int used = 0;
-            for (int i = 0; i < inv.Backpack.Length; i++) if (inv.Backpack[i] != null) used++;
-            result.SlotsUsed = used;
+            // Materialize stacks into slot-sized ItemStates.
+            var candidates = new List<ItemState>(singles);
+            foreach (var kv in stackCounts)
+            {
+                var def = ItemDefinition.Get(kv.Key);
+                int maxStack = def != null ? Mathf.Max(1, def.MaxStackSize) : 1;
+                int remaining = kv.Value;
+                while (remaining > 0)
+                {
+                    int n = Mathf.Min(remaining, maxStack);
+                    candidates.Add(ItemState.Create(alloc(), kv.Key, n));
+                    remaining -= n;
+                }
+            }
+
+            // Most valuable first, then pour into the pack until full.
+            candidates.Sort((a, b) => ValueOfItem(b).CompareTo(ValueOfItem(a)));
+
+            int cap = inv.Backpack.Length;
+            for (int i = 0; i < cap; i++) inv.Backpack[i] = null;
+
+            int placed = 0;
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                var it = candidates[i];
+                if (placed < cap)
+                {
+                    inv.Backpack[placed++] = it;
+                    result.UnitsBanked += Mathf.Max(1, it.StackCount);
+                    result.ValueBanked += ValueOfItem(it);
+                    result.DistinctBanked++;
+                    if (it.HasWeaponConfiguration) result.WeaponsBanked++;
+                }
+                else
+                {
+                    result.Skipped.Add(it.HasWeaponConfiguration
+                        ? Rolled.MakeWeapon(it.WeaponConfiguration)
+                        : new Rolled(it.DefinitionId, Mathf.Max(1, it.StackCount)));
+                }
+            }
+
+            inv.Version++;
+            result.SlotsCapacity = cap;
+            result.SlotsUsed = placed;
             return result;
         }
 
-        static int UnitValue(string id)
+        /// <summary>Worth of one backpack item for the "keep the most valuable" sort.</summary>
+        public static long ValueOfItem(ItemState it)
         {
-            var d = ItemDefinition.Get(id);
-            return d != null ? d.Value : 0;
+            if (it == null) return 0;
+            if (it.HasWeaponConfiguration) return WeaponValue(it.WeaponConfiguration);
+            int unit = ItemBalanceAsset.PriceOf(it.DefinitionId);
+            if (unit <= 0) unit = it.Definition?.Value ?? 0;
+            return (long)unit * Mathf.Max(1, it.StackCount);
+        }
+
+        static long WeaponValue(in WeaponConfiguration c)
+        {
+            int rarity = (int)c.Payload.Rarity + (int)c.Delivery.Rarity;
+            return WeaponBaseValue + rarity * WeaponRarityStep;
+        }
+
+        // Stamps rolled combat wear onto a looted armor item (matches LootSystem.DropArmor,
+        // which carries the bot's ArmorState durability). No-op for non-armor / full drops.
+        static void ApplyWear(ItemState item, ItemDefinition def, float frac)
+        {
+            if (item == null || def == null || frac < 0f || def.MaxDurability <= 0f) return;
+            item.MaxDurability = def.MaxDurability;
+            item.CurrentDurability = Mathf.Clamp01(frac) * def.MaxDurability;
         }
     }
 }

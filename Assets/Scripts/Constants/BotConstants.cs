@@ -128,6 +128,15 @@ namespace Constants
         public readonly string HelmetDefinitionId;
         public readonly string BodyArmorDefinitionId;
 
+        // Durability the armor SPAWNS with — and therefore DROPS with — as a fraction of the
+        // item's max (models a bot that's already seen combat). 1 = pristine. Rolled per spawn
+        // in BotSpawnSystem; the Meta region-loot sim rolls the same range so looted armor
+        // isn't always full.
+        public readonly float HelmetDurabilityMin;
+        public readonly float HelmetDurabilityMax;
+        public readonly float BodyArmorDurabilityMin;
+        public readonly float BodyArmorDurabilityMax;
+
         // Behavior
         public readonly BotBehaviorFlags Behaviors;
 
@@ -152,7 +161,9 @@ namespace Constants
             BotBehaviorFlags behaviors = BotBehaviorFlags.Patrol | BotBehaviorFlags.Chase | BotBehaviorFlags.Shoot,
             WeightedWeapon[] weaponPool = null, WeightedId[] helmetPool = null, WeightedId[] bodyArmorPool = null,
             AmmoLootRule? ammoLoot = null, ItemCountRule[] guaranteedItems = null, CategoryLootRule[] categoryLoot = null,
-            int grenadeMinCount = 0, int grenadeMaxCount = 0)
+            int grenadeMinCount = 0, int grenadeMaxCount = 0,
+            float helmetDurabilityMin = 1f, float helmetDurabilityMax = 1f,
+            float bodyArmorDurabilityMin = 1f, float bodyArmorDurabilityMax = 1f)
         {
             TypeId = typeId;
             PrefabId = prefabId;
@@ -188,6 +199,10 @@ namespace Constants
             GrenadeCount = grenadeCount;
             GrenadeMinCount = grenadeMinCount;
             GrenadeMaxCount = grenadeMaxCount;
+            HelmetDurabilityMin = helmetDurabilityMin;
+            HelmetDurabilityMax = helmetDurabilityMax;
+            BodyArmorDurabilityMin = bodyArmorDurabilityMin;
+            BodyArmorDurabilityMax = bodyArmorDurabilityMax;
             GrenadeCooldown = grenadeCooldown;
             GrenadeMinThrowDist = grenadeMinThrowDist;
             MeleeAttackRadius = meleeAttackRadius;
