@@ -5,12 +5,11 @@ using Systems;
 namespace Tests.EditMode
 {
     /// <summary>
-    /// M1.1 gear-loss (KIA risk loop). Covers the two pure pieces:
+    /// M1.1 gear-loss (KIA risk loop) + baseline-floor gate. Covers the pure pieces:
     ///  - <see cref="InventoryState.ClearAll"/> — the wipe primitive App.EndRaid runs on KIA.
-    ///  - <see cref="PlayerSpawnSystem.ShouldGrantStartingKit"/> — the fresh-player kit gate
-    ///    that must NOT re-grant a free kit after a death-wipe.
-    /// The full death→save→redeploy loop is integration-tested manually (touches SaveManager
-    /// file IO + scene loads).
+    ///  - <see cref="PlayerSpawnSystem.IsInventoryEmpty"/> — gates the baseline-floor grant
+    ///    (fresh save or post-death-wipe → floor; re-geared from stash → keep gear).
+    /// The full death→save→redeploy loop + loadout content are integration-tested manually.
     /// </summary>
     [TestFixture]
     public class GearLossTests
@@ -65,27 +64,47 @@ namespace Tests.EditMode
             Assert.Greater(inv.Version, before);
         }
 
-        // ── Starting-kit gate (grant once; re-gear from stash after death) ──
+        // ── Baseline-floor gate (grant when empty; keep gear otherwise) ──
 
         [Test]
-        public void ShouldGrantStartingKit_TestRange_AlwaysTrue_EvenAfterKit()
+        public void IsInventoryEmpty_FreshInventory_True()
         {
-            Assert.IsTrue(PlayerSpawnSystem.ShouldGrantStartingKit("shooting_range", hasReceivedStartingKit: true));
-            Assert.IsTrue(PlayerSpawnSystem.ShouldGrantStartingKit("horde_range", hasReceivedStartingKit: true));
+            Assert.IsTrue(PlayerSpawnSystem.IsInventoryEmpty(new InventoryState()));
         }
 
         [Test]
-        public void ShouldGrantStartingKit_FreshRealPlayer_True()
+        public void IsInventoryEmpty_AfterWipe_True()
         {
-            Assert.IsTrue(PlayerSpawnSystem.ShouldGrantStartingKit("main_map", hasReceivedStartingKit: false));
+            var inv = new InventoryState();
+            inv.WeaponSlots[0] = MakeItem("Weapon");
+            inv.Backpack[3] = MakeItem("Medkit");
+            inv.ClearAll();
+            Assert.IsTrue(PlayerSpawnSystem.IsInventoryEmpty(inv));
         }
 
         [Test]
-        public void ShouldGrantStartingKit_AfterDeath_RealRaid_False()
+        public void IsInventoryEmpty_WithAnyItem_False()
         {
-            // KIA wiped the inventory but the flag persists → no free re-kit; the player
-            // must re-gear from stash at the hideout.
-            Assert.IsFalse(PlayerSpawnSystem.ShouldGrantStartingKit("main_map", hasReceivedStartingKit: true));
+            var backpackOnly = new InventoryState();
+            backpackOnly.Backpack[5] = MakeItem("Bandage");
+            Assert.IsFalse(PlayerSpawnSystem.IsInventoryEmpty(backpackOnly));
+
+            var weaponOnly = new InventoryState();
+            weaponOnly.WeaponSlots[0] = MakeItem("Weapon");
+            Assert.IsFalse(PlayerSpawnSystem.IsInventoryEmpty(weaponOnly));
+
+            var armorOnly = new InventoryState();
+            armorOnly.HelmetSlot = MakeItem("Helmet_Basic");
+            Assert.IsFalse(PlayerSpawnSystem.IsInventoryEmpty(armorOnly));
+        }
+
+        [Test]
+        public void IsTestRange_ClassifiesRangesVsRealLevels()
+        {
+            Assert.IsTrue(PlayerSpawnSystem.IsTestRange("shooting_range"));
+            Assert.IsTrue(PlayerSpawnSystem.IsTestRange("horde_range"));
+            Assert.IsFalse(PlayerSpawnSystem.IsTestRange("main_map"));
+            Assert.IsFalse(PlayerSpawnSystem.IsTestRange("hideout"));
         }
     }
 }

@@ -67,16 +67,17 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void SpawnPlayer_BothHotbarSlotsFilled()
+        public void SpawnPlayer_BaselineFloor_OnlyFirstHotbarSlotFilled()
         {
-            // Cheat loadout (2026-05-05): all 6 weapon variants — first 2 у hotbar.
+            // Baseline floor = a single pistol → hotbar slot 0 filled, slot 1 empty.
+            // (Test ranges get the full 6-weapon cheat kit; not exercised here.)
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
             Assert.IsNotNull(state.PlayerEntity.Hotbar[0]);
-            Assert.IsNotNull(state.PlayerEntity.Hotbar[1]);
+            Assert.IsNull(state.PlayerEntity.Hotbar[1]);
         }
 
         [Test]
@@ -98,35 +99,30 @@ namespace Tests.EditMode
         // ── Armor ─────────────────────────────────────────────
 
         [Test]
-        public void SpawnPlayer_EmptyInventory_GetsStartingArmorEquipped()
+        public void SpawnPlayer_BaselineFloor_HasNoArmor()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            // Cheat loadout 2026-05-05: armor goes directly into equip slots, not backpack.
+            // Baseline floor is deliberately armor-free (PlayerSpawnSystem.GiveBaselineFloor).
             var inv = App.Instance.Player.Inventory;
-            Assert.AreEqual("Helmet_Basic", inv.HelmetSlot?.DefinitionId,
-                "HelmetSlot should be pre-equipped with Helmet_Basic");
-            Assert.AreEqual("Armor_Basic", inv.BodyArmorSlot?.DefinitionId,
-                "BodyArmorSlot should be pre-equipped with Armor_Basic");
+            Assert.IsNull(inv.HelmetSlot, "Baseline floor grants no helmet");
+            Assert.IsNull(inv.BodyArmorSlot, "Baseline floor grants no body armor");
         }
 
         [Test]
-        public void SpawnPlayer_StartingArmorInArmorMap()
+        public void SpawnPlayer_BaselineFloor_NotInArmorMap()
         {
             var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
             var events = new FakeRaidEvents();
 
             PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events);
 
-            // Cheat loadout equips armor → ArmorMap contains player entry з both slots.
-            var playerId = state.PlayerEntity.Id;
-            Assert.IsTrue(state.ArmorMap.TryGetValue(playerId, out var slots),
-                "ArmorMap should contain player when armor is pre-equipped");
-            Assert.IsNotNull(slots.Helmet, "Helmet should be in ArmorMap");
-            Assert.IsNotNull(slots.BodyArmor, "BodyArmor should be in ArmorMap");
+            // No armor equipped → player has no ArmorMap entry.
+            Assert.IsFalse(state.ArmorMap.ContainsKey(state.PlayerEntity.Id),
+                "Baseline floor has no armor, so no ArmorMap entry");
         }
     }
 }

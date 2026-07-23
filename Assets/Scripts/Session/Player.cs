@@ -72,7 +72,6 @@ namespace Session
             {
                 PlayerName = ProfileState.PlayerName,
                 Credits = ProfileState.Credits,
-                HasReceivedStartingKit = ProfileState.HasReceivedStartingKit,
                 Inventory = InventorySaveData.FromState(Inventory),
                 Stash = stashData,
                 Quests = questList,
@@ -88,7 +87,6 @@ namespace Session
 
             ProfileState.PlayerName = data.PlayerName;
             ProfileState.Credits = data.Credits;
-            ProfileState.HasReceivedStartingKit = data.HasReceivedStartingKit;
             data.Inventory?.ApplyTo(Inventory);
 
             Stash.Clear();

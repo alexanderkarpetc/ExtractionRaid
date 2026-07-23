@@ -59,7 +59,7 @@ Slot-based інвентар (2 weapon + helmet + body + 20 backpack + 7 quick-sl
 |---|---|---|
 | Extraction (per-zone hold-таймер, progress, RequestExtraction) | ✅ | `ExtractionSystem` + HUD |
 | Raid start/end flow, outcome (Extracted/KIA), end-screen | ✅ | `App.StartRaid/EndRaid`, `EndOfRaidPresenter` |
-| **Втрата спорядження при смерті** | ✅ | **M1.1 (2026-07-18): KIA → `Player.Inventory.ClearAll()` в `App.EndRaid` (повний wipe, stash цілий); стартовий кіт видається раз (`HasReceivedStartingKit`), після смерті — re-gear зі stash. Deferred: secure-container/insurance, save-on-death, стартовий пістоль.** |
+| **Втрата спорядження при смерті** | ✅ | **M1.1 + baseline floor. KIA → `Player.Inventory.ClearAll()` в `App.EndRaid` (повний wipe; stash цілий). Baseline floor = **пістоль (Common Ballistic, рівно повний маг) + запас (усього 36 набоїв) + бинт + медик, БЕЗ броні** (`PlayerSpawnSystem.GiveBaselineFloor`; маг = реальна `MagazineSize` з композиції, ніколи не переповнюється), видається коли інвентар порожній (новий гравець / після KIA-wipe) → ніколи не софт-лок, але смерть забирає ДОБРЕ спорядження. Тест-полігони — окремий 6-ствольний cheat-кіт (`GiveTestRangeLoadout`). Deferred: secure-container/insurance, save-on-death.** |
 | Загальний raid-таймер / ліміт часу | 🟥 | лише per-zone hold |
 | Hideout hub (як не-ворожий «рейд») | ✅ | `HideoutScene` |
 | Stash (deposit/withdraw + swap) | ✅ | персист |
