@@ -1,4 +1,5 @@
 using System;
+using State;
 using UnityEngine;
 
 namespace Constants
@@ -9,7 +10,8 @@ namespace Constants
         [Serializable]
         public class WeightedDropEntry
         {
-            [Tooltip("ItemDefinition.Id (e.g. \"Medkit\", \"Ammo_Rifle\", \"BallisticRound\").")]
+            [Tooltip("ItemDefinition.Id (e.g. \"Medkit\", \"Ammo_Rifle\", \"BallisticRound\"). " +
+                     "Ignored when a Weapon Preset is assigned below.")]
             public string definitionId;
 
             [Min(1)] public int minCount = 1;
@@ -17,6 +19,10 @@ namespace Constants
 
             [Tooltip("Relative weight for the weighted roll. Higher = more likely. Must be > 0.")]
             [Min(0.0001f)] public float weight = 1f;
+
+            [Tooltip("Optional. When set, this drop spawns the assembled weapon from the preset " +
+                     "instead of a plain item. The Item id / count above are ignored.")]
+            public WeaponPresetDefinition weaponPreset;
         }
 
         [Header("Identity")]
@@ -49,7 +55,7 @@ namespace Constants
                 var e = _drops[i];
                 int min = Mathf.Max(1, e.minCount);
                 int max = Mathf.Max(min, e.maxCount);
-                drops[i] = new LootDrop(e.definitionId, min, max, e.weight);
+                drops[i] = new LootDrop(e.definitionId, min, max, e.weight, e.weaponPreset);
             }
 
             int maxDrops = Mathf.Max(_minDrops, _maxDrops);

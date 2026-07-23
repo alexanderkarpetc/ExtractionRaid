@@ -57,6 +57,14 @@ namespace Systems.Meta
             for (int i = 0; i < dropCount; i++)
             {
                 var drop = PickWeighted(pool, totalWeight);
+
+                // Weapon-preset drop mirrors the live LootSystem path: a single assembled weapon.
+                if (drop.IsWeaponPreset)
+                {
+                    outItems.Add(Rolled.MakeWeapon(drop.WeaponPreset.BuildConfiguration()));
+                    continue;
+                }
+
                 int count = UnityEngine.Random.Range(drop.MinCount, drop.MaxCount + 1);
                 var def = ItemDefinition.Get(drop.DefinitionId);
                 if (def != null) count = Mathf.Min(count, Mathf.Max(1, def.MaxStackSize));

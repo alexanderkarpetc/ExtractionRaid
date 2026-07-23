@@ -22,7 +22,14 @@ MonoBehaviour:
     minCount: 30
     maxCount: 40
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Ammo_Pistol
     minCount: 10
     maxCount: 30
     weight: 1
+    weaponPreset: {fileID: 0}
+  - definitionId: 
+    minCount: 1
+    maxCount: 1
+    weight: 1
+    weaponPreset: {fileID: 11400000, guid: f4d440f61269b8b44a1d7015060d2279, type: 2}
