@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2539256660946419126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3797258419482690275}
+  - component: {fileID: 2618616400087176268}
+  m_Layer: 0
+  m_Name: ArmyBaseRegion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3797258419482690275
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2539256660946419126}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -221.4, y: 0.20092659, z: -7.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5128840504738551978}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2618616400087176268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2539256660946419126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6d746523099d794a9710c096b85f5ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.SpawnPoints.MapRegion
+  regionName: "Army Base (\U0001F4E69 \u272613 \U0001F48015)"
+  points:
+  - {x: 65.4545, y: 0.000007584691, z: 15.04657}
+  - {x: 3.866333, y: 0.0000040084124, z: -92.723854}
+  - {x: -88.900085, y: 0.0000026971102, z: 3.3563318}
+  - {x: 9.093094, y: -0.0000022798777, z: 118.42607}
+  color: {r: 1, g: 0.3, b: 0.3, a: 1}
+--- !u!1 &6191157593234063841
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5128840504738551978}
+  m_Layer: 0
+  m_Name: MapRegions (auto)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5128840504738551978
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6191157593234063841}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4827172658927704520}
+  - {fileID: 7571579433350521608}
+  - {fileID: 3797258419482690275}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6818919709596908060
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7571579433350521608}
+  - component: {fileID: 2497920004060726609}
+  m_Layer: 0
+  m_Name: WoodsRegion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7571579433350521608
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6818919709596908060}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -82.9, y: 0.20092659, z: 42.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5128840504738551978}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2497920004060726609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6818919709596908060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6d746523099d794a9710c096b85f5ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.SpawnPoints.MapRegion
+  regionName: "Woods (\U0001F4E68 \u272622 \U0001F48016)"
+  points:
+  - {x: 93.8483, y: 0.000002875924, z: -14.445417}
+  - {x: 28.761562, y: 0.0000009536743, z: -108.6391}
+  - {x: -59.935265, y: -0.00000014901161, z: -39.9263}
+  - {x: -70.1625, y: 0.0000028014183, z: 89.929794}
+  - {x: -34.54902, y: 0.000004902482, z: 145.48102}
+  - {x: 57.481827, y: 0.0000019222498, z: 46.494892}
+  color: {r: 1, g: 0.3, b: 0.3, a: 1}
+--- !u!1 &7259371240448036881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4827172658927704520}
+  - component: {fileID: 2542594227071418522}
+  m_Layer: 0
+  m_Name: StartRegion
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4827172658927704520
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7259371240448036881}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 10.025558, y: 0.20092659, z: 27.086893}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5128840504738551978}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2542594227071418522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7259371240448036881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6d746523099d794a9710c096b85f5ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.SpawnPoints.MapRegion
+  regionName: "Starting area (\U0001F4E64 \u272611 \U0001F4809)"
+  points:
+  - {x: 49.188324, y: -0.0000018179417, z: 71.5595}
+  - {x: 33.05554, y: -0.0000036656857, z: 251.48149}
+  - {x: -63.994896, y: 0.0000005364418, z: 227.00151}
+  - {x: -104.31072, y: 0.0000013411045, z: 149.70815}
+  - {x: -61.53592, y: 0.000004455447, z: 83.54576}
+  color: {r: 1, g: 0.3, b: 0.3, a: 1}

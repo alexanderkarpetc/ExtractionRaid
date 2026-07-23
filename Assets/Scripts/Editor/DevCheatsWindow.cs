@@ -3,6 +3,7 @@ using System.Linq;
 using ApplicationCore;
 using Cysharp.Threading.Tasks;
 using Dev;
+using Editor.Meta;
 using State;
 using Systems;
 using UnityEditor;
@@ -53,6 +54,14 @@ namespace Editor
 
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
+
+        // Meta → Region raid simulator: cached scan of Test_Map's MapRegion polygons,
+        // last scan / last loot status lines. Cache is loaded lazily (persists via
+        // EditorPrefs across the Play↔Edit boundary — see RaidSimRegions).
+        RegionCache _metaCache;
+        bool _metaCacheLoaded;
+        string _metaScanInfo = "";
+        string _metaLootInfo = "";
 
         // Cached inline editors per section SO (recreated when config changes)
         readonly Dictionary<string, UnityEditor.Editor> _sectionEditors = new();
@@ -150,6 +159,11 @@ namespace Editor
                 DrawQuestsSection();
             });
 
+            DrawMacroGroup("🌍 Meta", MetaTone, defaultExpanded: false, () =>
+            {
+                DrawMetaSection();
+            });
+
             DrawMacroGroup("🎮 Combat", CombatTone, defaultExpanded: false, () =>
             {
                 DrawSection("🔫 Weapon", _config.Weapon);
@@ -219,6 +233,7 @@ namespace Editor
         static readonly (Color bg, Color accent) PlayerTone = (new(0.16f, 0.34f, 0.22f, 1f), new(0.36f, 0.80f, 0.50f, 1f));
         static readonly (Color bg, Color accent) AiTone     = (new(0.28f, 0.20f, 0.44f, 1f), new(0.62f, 0.50f, 0.92f, 1f));
         static readonly (Color bg, Color accent) FxTone     = (new(0.18f, 0.32f, 0.48f, 1f), new(0.36f, 0.62f, 0.92f, 1f));
+        static readonly (Color bg, Color accent) MetaTone    = (new(0.14f, 0.36f, 0.36f, 1f), new(0.30f, 0.82f, 0.78f, 1f));
 
         void DrawMacroGroup(string title, (Color bg, Color accent) tone, bool defaultExpanded,
             System.Action body)
@@ -762,6 +777,86 @@ namespace Editor
             var id = session.RaidState.AllocateEId();
             inventory.Backpack[freeSlot] = State.ItemState.Create(id, moduleDefinitionId);
             Debug.Log($"[DevCheats] Spawned {moduleDefinitionId} у backpack slot {freeSlot}.");
+        }
+
+        // ── Meta → Region raid simulator ───────────────────────
+        // Two-phase (see RaidSimRegions): SCAN Test_Map's MapRegion polygons in edit
+        // mode → cache; then in Play Mode LOOT a region straight into the backpack,
+        // grabbing the most valuable loot that fits. Lets you dry-run raids to feed
+        // hideout / quest / craft / sell progression without playing them out.
+        void DrawMetaSection()
+        {
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField(
+                "Author MapRegion polygons in Test_Map, scan them (edit mode), then in " +
+                "Play Mode loot a region into your backpack to test meta progression.",
+                EditorStyles.wordWrappedMiniLabel);
+
+            EditorGUILayout.Space(4);
+            using (new EditorGUI.DisabledScope(Application.isPlaying))
+            {
+                if (GUILayout.Button("Scan Test_Map regions"))
+                {
+                    _metaCache = RaidSimRegions.Scan(out _metaScanInfo);
+                    _metaCacheLoaded = true;
+                    _metaLootInfo = "";
+                }
+            }
+            if (Application.isPlaying)
+                EditorGUILayout.LabelField("Re-scanning needs edit mode — exit Play Mode to scan.",
+                    EditorStyles.miniLabel);
+
+            if (!_metaCacheLoaded)
+            {
+                _metaCache = RaidSimRegions.LoadCache();
+                _metaCacheLoaded = true;
+            }
+
+            if (!string.IsNullOrEmpty(_metaScanInfo))
+                EditorGUILayout.HelpBox(_metaScanInfo, MessageType.Info);
+
+            if (_metaCache?.regions == null || _metaCache.regions.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No scanned regions yet. Add MapRegion components to Test_Map (≥3 points " +
+                    "each), then press Scan.", MessageType.None);
+                return;
+            }
+
+            EditorGUILayout.LabelField(
+                $"Cached: {_metaCache.regions.Count} region(s)  ·  scanned {_metaCache.scannedAtUtc} UTC",
+                EditorStyles.miniLabel);
+
+            bool appReady = Application.isPlaying && App.IsInitialized && App.Instance.Player != null;
+
+            EditorGUILayout.Space(2);
+            foreach (var region in _metaCache.regions)
+            {
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    EditorGUILayout.LabelField(region.name, GUILayout.MinWidth(110));
+                    EditorGUILayout.LabelField(
+                        $"📦 {region.containers.Count}  ✦ {region.loose.Count}  💀 {region.bots.Count}",
+                        EditorStyles.miniLabel, GUILayout.Width(140));
+                    using (new EditorGUI.DisabledScope(!appReady))
+                    {
+                        if (GUILayout.Button("Loot → Backpack", GUILayout.Width(130)))
+                        {
+                            RaidSimRegions.LootRegion(
+                                region, App.Instance.Player.Inventory, App.Instance.AllocateEId,
+                                out _metaLootInfo);
+                            Debug.Log($"[DevCheats] {_metaLootInfo}");
+                        }
+                    }
+                }
+            }
+
+            if (!appReady)
+                EditorGUILayout.HelpBox("Enter Play Mode (hideout is fine) to loot a region into the backpack.",
+                    MessageType.Info);
+
+            if (!string.IsNullOrEmpty(_metaLootInfo))
+                EditorGUILayout.HelpBox(_metaLootInfo, MessageType.Info);
         }
 
         void DrawQuestsSection()
