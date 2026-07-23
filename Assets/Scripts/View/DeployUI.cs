@@ -6,6 +6,13 @@ using UnityEngine;
 
 namespace View
 {
+    /// <summary>
+    /// Deploy point (exit-to-raid) in the hideout. Shows a "Press F to deploy" prompt when
+    /// the player is near an unlocked deploy point; on interact it deploys straight to the
+    /// Main Map — no map-select popup (single destination for now). The prompt + interaction
+    /// are gated behind accepting the first quest (see RaidSession + DeployBeaconPresenter;
+    /// QuestSystem.HasAcceptedAnyQuest).
+    /// </summary>
     public class DeployUI : MonoBehaviour
     {
         static readonly MapEntry[] Maps =
@@ -14,17 +21,23 @@ namespace View
             new("Test_Map", "main_map", "Main Map"),
         };
 
-        bool _isOpen;
+        // Single deploy destination for now. When map selection returns, this becomes a
+        // choice again (see task M3.1 — second map).
+        static MapEntry MainMap
+        {
+            get
+            {
+                foreach (var m in Maps)
+                    if (m.LevelId == "main_map") return m;
+                return Maps[Maps.Length - 1];
+            }
+        }
 
-        Texture2D _panelBg;
         Texture2D _promptBg;
-        GUIStyle _headerStyle;
-        GUIStyle _buttonStyle;
         GUIStyle _promptStyle;
 
         void Awake()
         {
-            _panelBg = MakeTex(new Color(0.12f, 0.12f, 0.14f, 0.95f));
             _promptBg = MakeTex(new Color(0.1f, 0.1f, 0.1f, 0.8f));
         }
 
@@ -34,65 +47,23 @@ namespace View
             var player = session?.RaidState?.PlayerEntity;
             if (player == null) return;
 
-            bool shouldBeOpen = player.DeployTargetId != EId.None;
-
-            if (shouldBeOpen && !_isOpen)
-                _isOpen = true;
-            else if (!shouldBeOpen && _isOpen)
-                _isOpen = false;
+            // Interacting with the deploy point deploys straight to the Main Map (no
+            // map-select popup). Clear the target first so the async scene load can't
+            // re-trigger on a later frame.
+            if (player.DeployTargetId != EId.None)
+            {
+                player.DeployTargetId = EId.None;
+                var map = MainMap;
+                App.Instance.DeployToRaid(map.SceneName, map.LevelId).Forget();
+            }
         }
 
         void OnGUI()
         {
             var session = App.Instance?.RaidSession;
-            if (session == null) return;
-            var state = session.RaidState;
+            var state = session?.RaidState;
             if (state?.PlayerEntity == null) return;
-
-            if (!_isOpen)
-            {
-                DrawInteractPrompt(state, state.PlayerEntity);
-                return;
-            }
-
-            EnsureStyles();
-
-            float panelW = 280f;
-            float headerH = 36f;
-            float gap = 8f;
-            float padding = 14f;
-            float mapBtnH = 40f;
-            float panelH = padding + headerH + gap + Maps.Length * (mapBtnH + gap) + mapBtnH + padding;
-
-            float panelX = (Screen.width - panelW) * 0.5f;
-            float panelY = (Screen.height - panelH) * 0.5f;
-
-            var panelRect = new Rect(panelX, panelY, panelW, panelH);
-            GUI.DrawTexture(panelRect, _panelBg);
-
-            float curY = panelY + padding;
-            GUI.Label(new Rect(panelX + padding, curY, panelW - padding * 2f, headerH),
-                "SELECT MAP", _headerStyle);
-            curY += headerH + gap;
-
-            for (int i = 0; i < Maps.Length; i++)
-            {
-                var map = Maps[i];
-                var btnRect = new Rect(panelX + padding, curY, panelW - padding * 2f, mapBtnH);
-                if (GUI.Button(btnRect, map.DisplayName, _buttonStyle))
-                {
-                    App.Instance.DeployToRaid(map.SceneName, map.LevelId).Forget();
-                }
-                curY += mapBtnH + gap;
-            }
-
-            if (GUI.Button(new Rect(panelX + padding, curY, panelW - padding * 2f, mapBtnH),
-                "Cancel", _buttonStyle))
-            {
-                var player = state.PlayerEntity;
-                if (player != null)
-                    player.DeployTargetId = EId.None;
-            }
+            DrawInteractPrompt(state, state.PlayerEntity);
         }
 
         void DrawInteractPrompt(RaidState state, PlayerEntityState player)
@@ -106,6 +77,12 @@ namespace View
             var nearest = LootSystem.FindNearestInteractable(state, player.Position, player.FacingDirection);
             if (!nearest.IsValid) return;
 
+            // Exit-to-raid is gated behind accepting the first quest (onboarding) — no
+            // "Press F to deploy" prompt until then.
+            if (nearest.Type == InteractableType.DeployPoint
+                && !QuestSystem.HasAcceptedAnyQuest(App.Instance?.Player?.QuestProgress))
+                return;
+
             string label = nearest.Type switch
             {
                 InteractableType.Lootable    => "Press F to loot",
@@ -116,8 +93,6 @@ namespace View
                 _ => null,
             };
             if (label == null) return;
-
-            EnsureStyles();
 
             float w = 220f;
             float h = 32f;
@@ -141,25 +116,6 @@ namespace View
             GUI.Label(rect, label, _promptStyle);
         }
 
-        void EnsureStyles()
-        {
-            if (_headerStyle != null) return;
-
-            _headerStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 22,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-            };
-            _headerStyle.normal.textColor = Color.white;
-
-            _buttonStyle = new GUIStyle(GUI.skin.button)
-            {
-                fontSize = 18,
-                fontStyle = FontStyle.Bold,
-            };
-        }
-
         static Texture2D MakeTex(Color color)
         {
             var tex = new Texture2D(1, 1);
@@ -170,7 +126,6 @@ namespace View
 
         void OnDestroy()
         {
-            if (_panelBg != null) Destroy(_panelBg);
             if (_promptBg != null) Destroy(_promptBg);
         }
 

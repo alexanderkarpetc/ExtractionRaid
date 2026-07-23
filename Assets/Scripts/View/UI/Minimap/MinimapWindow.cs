@@ -171,8 +171,10 @@ namespace View.UI.Minimap
                     dot.style.rotate = new StyleRotate(
                         new Rotate(new Angle(m.ResolveRotation(), AngleUnit.Degree)));
                 }
-                else if (m.Type == MinimapMarkerType.Extraction)
+                else if (m.Type == MinimapMarkerType.Extraction || m.Type == MinimapMarkerType.Deploy)
                 {
+                    // Deploy (hideout exit-to-raid) reuses the exit icon — never shares a
+                    // scene with real extraction points, so no ambiguity.
                     ApplyIcon(dot, GetExtractionIconTexture(), ExtractionIconSize, mx, my, m.Type);
                 }
                 else if (m.Type == MinimapMarkerType.Quest)
@@ -223,6 +225,7 @@ namespace View.UI.Minimap
             MinimapMarkerType.Npc        => "marker--npc",
             MinimapMarkerType.Extraction => "marker--extract",
             MinimapMarkerType.Quest      => "marker--quest",
+            MinimapMarkerType.Deploy     => "marker--extract",
             _                            => "marker--custom",
         };
 

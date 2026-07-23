@@ -94,6 +94,11 @@ namespace ApplicationCore
             extractionHudHost.transform.SetParent(transform, false);
             extractionHudHost.AddComponent<ExtractionHudWindow>();
 
+            // Deploy wayfinding (hideout) — world beacon on the exit-to-raid deploy point
+            // + a screen-edge direction arrow to it (new-player "where do I leave?" cue).
+            gameObject.AddComponent<DeployBeaconPresenter>();
+            gameObject.AddComponent<DeployArrowPresenter>();
+
             // Notification banners — bottom-right toast stack. The presenter listens to
             // QuestSystem.TaskCompleted (only event wired in v1) and pushes banners to
             // the overlay window, which owns the UI Toolkit panel + animations.

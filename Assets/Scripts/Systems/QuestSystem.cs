@@ -46,6 +46,15 @@ namespace Systems
         }
 
         /// <summary>
+        /// True once the player has accepted at least one quest. Gates the deploy /
+        /// exit-to-raid onboarding (interaction, wayfinding beacon/arrow, minimap marker):
+        /// the very first quest a player takes unlocks leaving the bunker. QuestProgress
+        /// only ever holds accepted quests, so a non-empty set means "has taken a quest".
+        /// </summary>
+        public static bool HasAcceptedAnyQuest(QuestProgressState progress) =>
+            progress != null && progress.All.Count > 0;
+
+        /// <summary>
         /// Returns quests that the given NPC can offer (requirements met, not yet started).
         /// </summary>
         public static List<QuestDefinition> GetAvailableQuests(

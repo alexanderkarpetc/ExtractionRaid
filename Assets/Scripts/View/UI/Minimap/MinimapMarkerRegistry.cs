@@ -10,6 +10,7 @@ namespace View.UI.Minimap
         Npc,
         Extraction,
         Quest,
+        Deploy,
         Custom,
     }
 

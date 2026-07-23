@@ -29,6 +29,7 @@ namespace View
         RenderTexture _envTexture;
         bool _hasCapturedThisRaid;
         string _capturedLevelId;
+        bool _deployMarkersShown;
 
         const string PlayerMarkerId = "player";
 
@@ -52,7 +53,11 @@ namespace View
                 _capturedLevelId = session.LevelState.LevelId;
             }
 
-            // (2) Refresh marker overlay every frame (cheap; supports live positions).
+            // (2) Deploy markers gate on live quest state (can unlock mid-session in the
+            // hideout), so reconcile them before refreshing the overlay.
+            ReconcileDeployMarkers(session);
+
+            // Refresh marker overlay every frame (cheap; supports live positions).
             _window.RefreshMarkers();
 
             // (3) Hold-to-expand on M. Read directly from Keyboard.current — gameplay
@@ -310,10 +315,32 @@ namespace View
             return false;
         }
 
+        // Deploy-point minimap markers are gated behind accepting the first quest and can
+        // unlock mid-session (in the hideout), so they can't be registered once at capture.
+        // Register them the frame the gate opens; ResetForNextRaid re-arms via Clear().
+        void ReconcileDeployMarkers(Session.RaidSession session)
+        {
+            if (_deployMarkersShown) return;
+            var app = App.Instance;
+            if (!app.IsInHideout) return;
+            var state = session.RaidState;
+            if (state == null || state.DeployPoints.Count == 0) return;
+            if (!Systems.QuestSystem.HasAcceptedAnyQuest(app.Player?.QuestProgress)) return;
+
+            for (int i = 0; i < state.DeployPoints.Count; i++)
+            {
+                var dp = state.DeployPoints[i];
+                MinimapMarkerRegistry.Register(
+                    $"deploy:{dp.Id.Value}", MinimapMarkerType.Deploy, dp.Position, "Deploy");
+            }
+            _deployMarkersShown = true;
+        }
+
         void ResetForNextRaid()
         {
             _hasCapturedThisRaid = false;
             _capturedLevelId = null;
+            _deployMarkersShown = false;
             MinimapMarkerRegistry.Clear();
             if (_envTexture != null)
             {

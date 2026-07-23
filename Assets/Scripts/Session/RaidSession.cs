@@ -742,7 +742,8 @@ namespace Session
                             player.LootTargetId = nearest.Id;
                         else if (nearest.Type == InteractableType.Workbench)
                             player.CraftTargetId = nearest.Id;
-                        else if (nearest.Type == InteractableType.DeployPoint)
+                        else if (nearest.Type == InteractableType.DeployPoint
+                                 && QuestSystem.HasAcceptedAnyQuest(App.Instance.Player?.QuestProgress))
                             player.DeployTargetId = nearest.Id;
                         else if (nearest.Type == InteractableType.Npc)
                             player.NpcTargetId = nearest.Id;

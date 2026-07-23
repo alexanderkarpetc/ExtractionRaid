@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d6f9b9fa93fa41cc88924004789cb13, type: 3}
+  m_Name: DeployMarker
+  m_EditorClassIdentifier: Game::Dev.ViewCheatsDeployMarkerSection
+  Color: {r: 0.35, g: 0.92, b: 0.55, a: 1}
+  GroundRadius: 4.8
+  GroundAlphaMin: 0.45
+  GroundAlphaMax: 0.8
+  GroundSoftFade: 0.5
+  GroundY: 0.06
+  BeamHeight: 13.5
+  BeamHalfWidth: 1.2
+  BeamBaseY: 0.1
+  BeamAlphaMin: 0.45
+  BeamAlphaMax: 0.85
+  PulseHz: 0.7
+  ArrowEnabled: 1
+  ArrowSizePx: 64
+  ArrowEdgeInsetPx: 64
