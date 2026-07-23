@@ -108,12 +108,77 @@ namespace Systems
         public static int GetSellPrice(LootableContainerState shop, ItemState item)
         {
             if (shop == null || item == null) return 0;
-            int unit;
-            if (shop.ShopCatalog != null && shop.ShopCatalog.TryGetValue(item.DefinitionId, out var p))
-                unit = Mathf.Max(1, Mathf.RoundToInt(p * shop.SellRatio));
+            int total;
+            if (item.HasWeaponConfiguration)
+                // Guns aren't stocked, so there's no catalog price — value them by their parts.
+                total = Mathf.RoundToInt(WeaponComponentValue(item.WeaponConfiguration) * shop.SellRatio);
             else
-                unit = Mathf.Max(0, shop.DefaultSellPrice);
-            return unit * Mathf.Max(1, item.StackCount);
+            {
+                int unit;
+                if (shop.ShopCatalog != null && shop.ShopCatalog.TryGetValue(item.DefinitionId, out var p))
+                    unit = Mathf.Max(1, Mathf.RoundToInt(p * shop.SellRatio));
+                else
+                    unit = Mathf.Max(0, shop.DefaultSellPrice);
+                total = unit * Mathf.Max(1, item.StackCount);
+            }
+            return ApplyDurability(total, item);
+        }
+
+        // Fallback sell ratio for the catalog-less global price (Duckov's 50% base).
+        const float DefaultGlobalSellRatio = 0.5f;
+
+        // Rarity value multiplier — a Legendary core is worth far more than a Common one
+        // even before per-tier stats are authored. Common 1× → Legendary 4×.
+        static float RarityMult(RarityTier r) => 1f + (int)r * 0.75f;
+
+        /// <summary>
+        /// Sum-of-parts base value of an assembled weapon: payload + delivery (each scaled by
+        /// its rarity) + exotic + every attachment, priced from the item balance table. A gun
+        /// is worth what went into it, not a flat vendor minimum.
+        /// </summary>
+        public static int WeaponComponentValue(in WeaponConfiguration c)
+        {
+            float sum = 0f;
+            sum += ItemBalanceAsset.PriceOf(c.Payload.DefinitionId)  * RarityMult(c.Payload.Rarity);
+            sum += ItemBalanceAsset.PriceOf(c.Delivery.DefinitionId) * RarityMult(c.Delivery.Rarity);
+            if (c.Exotic.HasValue) sum += ItemBalanceAsset.PriceOf(c.Exotic.Value.DefinitionId);
+            if (c.Attachments != null)
+                foreach (var a in c.Attachments)
+                    if (!string.IsNullOrEmpty(a.DefinitionId)) sum += ItemBalanceAsset.PriceOf(a.DefinitionId);
+            return Mathf.RoundToInt(sum);
+        }
+
+        /// <summary>Base (pre-sell-ratio, pre-durability) worth of any item — weapons sum their
+        /// parts, everything else uses the balance-table price × stack. Shared by the Meta
+        /// loot-value sort so guns rank by real worth.</summary>
+        public static int BaseValueOf(ItemState item)
+        {
+            if (item == null) return 0;
+            if (item.HasWeaponConfiguration) return WeaponComponentValue(item.WeaponConfiguration);
+            return ItemBalanceAsset.PriceOf(item.DefinitionId) * Mathf.Max(1, item.StackCount);
+        }
+
+        // Damaged gear is worth less. Duckov (reference game) scales price roughly linearly
+        // with the current/max durability ratio; we keep a floor so a near-broken piece still
+        // sells as scrap. Single source of truth — every sell path and the Meta loot-value
+        // sort route through this. (For Tarkov's gentler curve, use Mathf.Sqrt(ratio).)
+        public const float MinDurabilityValueMult = 0.1f;
+
+        public static float DurabilityValueMultiplier(ItemState item)
+        {
+            var def = item?.Definition;
+            if (def == null || def.MaxDurability <= 0f) return 1f; // non-durability item
+            float max = item.MaxDurability > 0f ? item.MaxDurability : def.MaxDurability;
+            float cur = item.CurrentDurability >= 0f ? item.CurrentDurability : max; // -1 = full
+            if (max <= 0f) return 1f;
+            return Mathf.Clamp(cur / max, MinDurabilityValueMult, 1f);
+        }
+
+        static int ApplyDurability(int total, ItemState item)
+        {
+            if (total <= 0) return 0;
+            float mult = DurabilityValueMultiplier(item);
+            return mult >= 1f ? total : Mathf.Max(1, Mathf.RoundToInt(total * mult));
         }
 
         // Catalog-wide fallback: aggregates every ShopDefinitionAsset under
@@ -127,9 +192,12 @@ namespace Systems
         {
             if (item == null) return 0;
             EnsureGlobalCatalog();
+            if (item.HasWeaponConfiguration)
+                return ApplyDurability(
+                    Mathf.RoundToInt(WeaponComponentValue(item.WeaponConfiguration) * DefaultGlobalSellRatio), item);
             if (!s_globalSellPrices.TryGetValue(item.DefinitionId, out var unit))
                 return 0;
-            return unit * Mathf.Max(1, item.StackCount);
+            return ApplyDurability(unit * Mathf.Max(1, item.StackCount), item);
         }
 
         static void EnsureGlobalCatalog()

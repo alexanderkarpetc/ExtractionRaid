@@ -76,16 +76,20 @@ namespace Constants
         // ItemDefinition entries. Universal mods drop at full weight; the 3 unique
         // (archetype-restricted) mods are rarer (×0.4). `scale` tunes the whole pool's share
         // when concatenated into a mixed container. See docs/ai/weapon-builder/attachments.
+        // Weights mirror the value tiers in ItemBalance: cheap handling mods (grips, mags,
+        // brake, red dot) drop freely at 1.0; premium gear drops rarer — the sniper scope and
+        // the PowerComp (suppressor-tier muzzle) are the pricey, uncommon finds, and the three
+        // archetype-locked uniques stay rarest. Tarkov-style: optics/suppressors = valuable + scarce.
         public static LootDrop[] AttachmentModDrops(float scale = 1f) => new[]
         {
-            new LootDrop("PowerComp",     1, 1, 1f * scale),
+            new LootDrop("PowerComp",     1, 1, 0.55f * scale),
             new LootDrop("MuzzleBrake",   1, 1, 1f * scale),
             new LootDrop("VerticalGrip",  1, 1, 1f * scale),
             new LootDrop("AngledGrip",    1, 1, 1f * scale),
             new LootDrop("HeavyStock",    1, 1, 1f * scale),
-            new LootDrop("SkeletonStock", 1, 1, 1f * scale),
+            new LootDrop("SkeletonStock", 1, 1, 0.85f * scale),
             new LootDrop("RedDot",        1, 1, 1f * scale),
-            new LootDrop("SniperScope",   1, 1, 0.5f * scale),
+            new LootDrop("SniperScope",   1, 1, 0.3f * scale),
             new LootDrop("ExtendedMag",   1, 1, 1f * scale),
             new LootDrop("QuickMag",      1, 1, 1f * scale),
             new LootDrop("LaserFocusing", 1, 1, 0.4f * scale),

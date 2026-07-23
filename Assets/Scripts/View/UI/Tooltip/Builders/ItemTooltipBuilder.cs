@@ -128,7 +128,10 @@ namespace View.UI.Tooltip.Builders
             {
                 new TooltipRow(label, price + "¢"),
             }));
-            return new TooltipModel(model.Title, model.Subtitle, combined, model.Description);
+            // Preserve the footer/accent (e.g. a weapon's "Right-click to modify") — the price
+            // section is additive, it must not wipe the rest of the model.
+            return new TooltipModel(model.Title, model.Subtitle, combined, model.Description,
+                model.Footer, model.FooterAccent);
         }
 
         static void AppendQuestInfo(string itemId, QuestDatabase database,

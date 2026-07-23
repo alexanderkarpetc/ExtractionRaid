@@ -220,6 +220,18 @@ namespace View.UI.Compare
             }
             modsRow.Add(chips);
             col.Add(modsRow);
+
+            // Value row — the gun's worth (sum of its parts, via ShopSystem). Matches the
+            // "Value" line other item tooltips show.
+            var valueRow = new VisualElement();
+            valueRow.AddToClassList("wc-row");
+            var valueLabel = new Label("Value");
+            valueLabel.AddToClassList("wc-label");
+            valueRow.Add(valueLabel);
+            var valueVal = new Label(ShopSystem.GetGlobalSellPrice(item) + "¢");
+            valueVal.AddToClassList("wc-value");
+            valueRow.Add(valueVal);
+            col.Add(valueRow);
         }
 
         // Live rounds in the weapon's magazine: for an equipped weapon read the runtime Hotbar
