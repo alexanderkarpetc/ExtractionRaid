@@ -917,9 +917,12 @@ namespace Editor
 
         static int SellValueOf(State.ItemState item)
         {
+            // GetGlobalSellPrice already applies the durability discount (ShopSystem is the
+            // single source of truth now).
             int p = ShopSystem.GetGlobalSellPrice(item);
             if (p > 0) return p;
-            // No shop stocks it (weapons, some loot) → fall back to half its loot worth.
+            // No shop stocks it (weapons, some loot) → fall back to half its loot worth
+            // (ValueOfItem also routes through the same durability multiplier).
             long worth = Systems.Meta.RegionLootSimulator.ValueOfItem(item);
             return Mathf.Max(1, Mathf.RoundToInt(worth * 0.5f));
         }

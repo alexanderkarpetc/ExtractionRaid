@@ -64,6 +64,12 @@ namespace Save
         // default keeps legacy saves (missing field) at "full" rather than empty.
         public int Resource = -1;
 
+        // Armor durability, persisted so a looted/worn vest keeps its condition across
+        // save/load. -1 = uninitialized → ItemDefinition defaults (full) on first equip;
+        // the -1 default also keeps legacy saves (missing field) at "full".
+        public float CurrentDurability = -1f;
+        public float MaxDurability = -1f;
+
         // Weapon-builder composition — only set for weapon items. Without this the
         // weapon loads back as a plain ItemState (HasWeaponConfiguration = false),
         // which the equip path treats as a broken/unconfigured weapon.
@@ -78,7 +84,9 @@ namespace Save
                 SlotIndex = slotIndex,
                 DefinitionId = item.DefinitionId,
                 StackCount = item.StackCount,
-                Resource = item.Resource
+                Resource = item.Resource,
+                CurrentDurability = item.CurrentDurability,
+                MaxDurability = item.MaxDurability,
             };
             if (item.HasWeaponConfiguration)
             {
@@ -98,9 +106,22 @@ namespace Save
             if (string.IsNullOrEmpty(DefinitionId)) return null;
 
             if (HasWeaponConfiguration && Weapon != null)
-                return ItemState.CreateWeapon(App.Instance.AllocateEId(), DefinitionId, Weapon.ToConfig());
+            {
+                var weapon = ItemState.CreateWeapon(App.Instance.AllocateEId(), DefinitionId, Weapon.ToConfig());
+                weapon.CurrentDurability = CurrentDurability;
+                weapon.MaxDurability = MaxDurability;
+                return weapon;
+            }
 
-            return new ItemState { Id = App.Instance.AllocateEId(), DefinitionId = DefinitionId, StackCount = StackCount, Resource = Resource };
+            return new ItemState
+            {
+                Id = App.Instance.AllocateEId(),
+                DefinitionId = DefinitionId,
+                StackCount = StackCount,
+                Resource = Resource,
+                CurrentDurability = CurrentDurability,
+                MaxDurability = MaxDurability,
+            };
         }
     }
 

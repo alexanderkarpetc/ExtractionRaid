@@ -19,13 +19,6 @@ namespace Systems.Meta
     {
         const string SimAmmoBase = "Ammo_Rifle";
 
-        // A looted gun's worth for the "grab the most valuable" sort. Weapons carry no
-        // shop price (they're assembled from cores, not stocked), so we synthesize one:
-        // a solid base + a bump per rarity tier across both cores, keeping guns near the
-        // top of the pack and better guns above worse ones.
-        const long WeaponBaseValue = 220;
-        const long WeaponRarityStep = 120;
-
         public struct Rolled
         {
             public string DefinitionId;
@@ -334,20 +327,15 @@ namespace Systems.Meta
             return result;
         }
 
-        /// <summary>Worth of one backpack item for the "keep the most valuable" sort.</summary>
+        /// <summary>Worth of one backpack item for the "keep the most valuable" sort. Routes
+        /// through <see cref="ShopSystem.BaseValueOf"/> (guns = sum of their parts, everything
+        /// else = balance-table price) and discounts by remaining durability, so the sim ranks
+        /// loot exactly as the vendor would value it.</summary>
         public static long ValueOfItem(ItemState it)
         {
             if (it == null) return 0;
-            if (it.HasWeaponConfiguration) return WeaponValue(it.WeaponConfiguration);
-            int unit = ItemBalanceAsset.PriceOf(it.DefinitionId);
-            if (unit <= 0) unit = it.Definition?.Value ?? 0;
-            return (long)unit * Mathf.Max(1, it.StackCount);
-        }
-
-        static long WeaponValue(in WeaponConfiguration c)
-        {
-            int rarity = (int)c.Payload.Rarity + (int)c.Delivery.Rarity;
-            return WeaponBaseValue + rarity * WeaponRarityStep;
+            long baseVal = ShopSystem.BaseValueOf(it);
+            return (long)Mathf.Round(baseVal * ShopSystem.DurabilityValueMultiplier(it));
         }
 
         // Stamps rolled combat wear onto a looted armor item (matches LootSystem.DropArmor,
