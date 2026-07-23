@@ -980,9 +980,10 @@ namespace State
                 if (reg.TryGetValue(id, out var d)) d.Value = value;
             }
 
-            // Ammo — AP/HP variants are worth more than standard.
-            Set("Ammo_Rifle", 12);  Set("Ammo_Rifle_AP", 32);  Set("Ammo_Rifle_HP", 26);
-            Set("Ammo_Pistol", 10); Set("Ammo_Pistol_AP", 28); Set("Ammo_Pistol_HP", 22);
+            // Ammo — AP/HP variants worth more than standard, but kept modest so a full
+            // premium stack doesn't out-value a body armor.
+            Set("Ammo_Rifle", 8);   Set("Ammo_Rifle_AP", 15);  Set("Ammo_Rifle_HP", 12);
+            Set("Ammo_Pistol", 5);  Set("Ammo_Pistol_AP", 12); Set("Ammo_Pistol_HP", 9);
             Set("Ammo_EnergyCell", 16);
 
             // Meds / throwables / armor.
@@ -994,12 +995,36 @@ namespace State
             Set("BallisticRound", 55); Set("LaserCharge", 70);
             Set("SingleAction", 45);   Set("Auto", 60); Set("Scatter", 55);
 
+            // Weapon attachment mods. Tiered like Tarkov relative to this economy: cheap
+            // handling mods (grips/mags/brake ≈ a core), mid stocks/red-dot, premium
+            // optics/suppressors/uniques (rival a good core, below armor). Mirrors the
+            // ItemBalance asset so a re-sync keeps prices sane instead of reverting to 10.
+            Set("RedDot", 90);          Set("SniperScope", 260);
+            Set("PowerComp", 130);      Set("MuzzleBrake", 70);
+            Set("VerticalGrip", 55);    Set("AngledGrip", 55);
+            Set("HeavyStock", 65);      Set("SkeletonStock", 80);
+            Set("ExtendedMag", 60);     Set("QuickMag", 55);
+            Set("LaserFocusing", 200);  Set("ScatterChoke", 170); Set("AutoHeatSink", 180);
+            // Legacy-named attachment ids (no-op if not registered).
+            Set("Basic_Scope", 90);     Set("Advanced_Scope", 240);
+            Set("Suppressor", 160);     Set("Compensator", 70);
+            Set("Long_Barrel", 110);    Set("Short_Barrel", 70); Set("AP_Barrel", 140);
+            Set("Extended_Mag", 60);    Set("Fast_Reload_Mag", 55);
+            Set("Recoil_Grip", 55);     Set("Stabilized_Stock", 75);
+            Set("Overclock_Receiver", 160);
+
             // Uncommon crafting materials.
             foreach (var id in UncommonMaterials) Set(id, 40);
             // Rare crafting materials.
             foreach (var id in RareMaterials) Set(id, 120);
+            // Prize finds — the "graphics card / bitcoin" jackpot loot: far pricier and far
+            // scarcer than the rest of the rare band (drop weights set low in ItemBalance).
+            // Worth diverting a raid to grab.
+            Set("Smart_Targeting_Unit", 550); Set("Phase_Battery", 500);
+            Set("Neural_Gel", 700); Set("Crystal_Matrix", 800); Set("Quantum_Relay", 1200);
             // Specialty / intel.
             Set("Military_Intel", 220); Set("Bio_Sample_Case", 190);
+            Set("Worn_Warehouse_Key", 220);
         }
 
         static readonly string[] UncommonMaterials =
