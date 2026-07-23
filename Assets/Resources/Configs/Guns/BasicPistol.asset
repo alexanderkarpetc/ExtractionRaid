@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 457b3b6b2659fcf49968abdae32dadc3, type: 3}
+  m_Name: BasicPistol
+  m_EditorClassIdentifier: Game::State.WeaponPresetDefinition
+  _presetName: BasicAssaultRiffle
+  _weaponDefinitionId: Weapon
+  _payload: {fileID: 11400000, guid: 17d8a75ec1a564ccd9233a4dc3a91e9c, type: 2}
+  _payloadRarity: 0
+  _delivery: {fileID: 11400000, guid: 0b858c1acb1a84316b516707412f2a6b, type: 2}
+  _deliveryRarity: 0
+  _exotic: {fileID: 0}
+  _attachments: []

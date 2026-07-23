@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using State;
 
 namespace Constants
 {
@@ -9,15 +10,29 @@ namespace Constants
         public readonly int MaxCount;
         public readonly float Weight;
 
+        /// <summary>
+        /// Optional. When set (and valid), this drop spawns the fully-assembled weapon
+        /// built from the preset instead of a plain item — <see cref="DefinitionId"/> and
+        /// the count range are ignored for it. Mirrors the "Give Weapon Preset" devcheat.
+        /// </summary>
+        public readonly WeaponPresetDefinition WeaponPreset;
+
+        public bool IsWeaponPreset => WeaponPreset != null && WeaponPreset.IsValid;
+
         public LootDrop(string definitionId, int minCount, int maxCount)
             : this(definitionId, minCount, maxCount, 1f) { }
 
         public LootDrop(string definitionId, int minCount, int maxCount, float weight)
+            : this(definitionId, minCount, maxCount, weight, null) { }
+
+        public LootDrop(string definitionId, int minCount, int maxCount, float weight,
+            WeaponPresetDefinition weaponPreset)
         {
             DefinitionId = definitionId;
             MinCount = minCount;
             MaxCount = maxCount;
             Weight = weight > 0f ? weight : 1f;
+            WeaponPreset = weaponPreset;
         }
     }
 

@@ -62,12 +62,18 @@ namespace Editor
                 var minCount = entry.FindPropertyRelative("minCount");
                 var maxCount = entry.FindPropertyRelative("maxCount");
                 var weight = entry.FindPropertyRelative("weight");
+                var weaponPreset = entry.FindPropertyRelative("weaponPreset");
+
+                bool isPreset = weaponPreset.objectReferenceValue != null;
 
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        DrawItemPicker(defId);
+                        // When a weapon preset is assigned it drives the drop — the item id
+                        // and count are ignored, so disable the item picker to make that clear.
+                        using (new EditorGUI.DisabledScope(isPreset))
+                            DrawItemPicker(defId);
 
                         if (GUILayout.Button("✕", GUILayout.Width(24)))
                         {
@@ -76,12 +82,19 @@ namespace Editor
                         }
                     }
 
+                    EditorGUILayout.PropertyField(weaponPreset,
+                        new GUIContent("Weapon Preset", "Optional. When set, this drop spawns the " +
+                            "assembled weapon from the preset instead of the item above."));
+
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        EditorGUILayout.LabelField("Count", GUILayout.Width(40));
-                        EditorGUILayout.PropertyField(minCount, GUIContent.none, GUILayout.Width(50));
-                        EditorGUILayout.LabelField("–", GUILayout.Width(10));
-                        EditorGUILayout.PropertyField(maxCount, GUIContent.none, GUILayout.Width(50));
+                        using (new EditorGUI.DisabledScope(isPreset))
+                        {
+                            EditorGUILayout.LabelField("Count", GUILayout.Width(40));
+                            EditorGUILayout.PropertyField(minCount, GUIContent.none, GUILayout.Width(50));
+                            EditorGUILayout.LabelField("–", GUILayout.Width(10));
+                            EditorGUILayout.PropertyField(maxCount, GUIContent.none, GUILayout.Width(50));
+                        }
 
                         GUILayout.Space(12);
                         EditorGUILayout.LabelField("Weight", GUILayout.Width(48));
@@ -102,6 +115,7 @@ namespace Editor
                 entry.FindPropertyRelative("minCount").intValue = 1;
                 entry.FindPropertyRelative("maxCount").intValue = 1;
                 entry.FindPropertyRelative("weight").floatValue = 1f;
+                entry.FindPropertyRelative("weaponPreset").objectReferenceValue = null;
             }
         }
 

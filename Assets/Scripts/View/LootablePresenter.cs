@@ -31,11 +31,14 @@ namespace View
                 {
                     case RaidEventType.LootableSpawned:
                     {
+                        // Only scene containers get a spawned view. Bot corpses are now
+                        // represented visually by the ragdoll body (Gunplay A.9), so we no
+                        // longer spawn the old brown capsule loot marker for them. Looting
+                        // still works — interaction is state-based (LootSystem.FindNearest-
+                        // Interactable reads LootableState positions, not this GameObject).
                         var lootable = LootSystem.GetLootable(session.RaidState, e.Id);
                         if (lootable != null && lootable.IsContainer)
                             SpawnContainerView(e.Id, e.Position, e.StringPayload);
-                        else
-                            SpawnCorpseView(e.Id, e.Position, e.StringPayload);
                         break;
                     }
                     case RaidEventType.LootableDespawned:
@@ -44,29 +47,6 @@ namespace View
                 }
             }
 
-        }
-
-        void SpawnCorpseView(EId id, Vector3 position, string typeId)
-        {
-            if (_views.ContainsKey(id)) return;
-
-            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            go.name = $"Corpse_{typeId}_{id}";
-            go.transform.position = position + new Vector3(0f, 0.15f, 0f);
-            go.transform.localScale = new Vector3(0.8f, 0.15f, 0.8f);
-
-            // Strip collider — corpse is a visual loot marker, not a physical obstacle.
-            // Ragdoll bodies (Gunplay A.9) would land on top + bounce otherwise.
-            var col = go.GetComponent<Collider>();
-            if (col != null) Object.Destroy(col);
-
-            var renderer = go.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material.color = new Color(0.4f, 0.2f, 0.15f);
-
-            AttachLabel(go, typeId, new Color(0.9f, 0.7f, 0.5f));
-            go.AddComponent<InteractableOutlineTarget>();
-            _views[id] = go;
         }
 
         void SpawnContainerView(EId id, Vector3 position, string typeId)

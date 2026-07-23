@@ -49,6 +49,17 @@ namespace Systems
 
                 var drop = PickWeighted(pool, totalWeight);
                 var itemId = state.AllocateEId();
+
+                // Weapon-preset drop: spawn the fully-assembled weapon (payload + delivery +
+                // optional exotic/attachments) rather than a plain stackable item. Same build
+                // path as the "Give Weapon Preset" devcheat.
+                if (drop.IsWeaponPreset)
+                {
+                    inventory.Backpack[slot++] = ItemState.CreateWeapon(
+                        itemId, drop.WeaponPreset.WeaponDefinitionId, drop.WeaponPreset.BuildConfiguration());
+                    continue;
+                }
+
                 int count = Random.Range(drop.MinCount, drop.MaxCount + 1);
 
                 var def = ItemDefinition.Get(drop.DefinitionId);
