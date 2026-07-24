@@ -235,6 +235,7 @@ namespace View.UI.Inventory
             if (_root == null) return;
             CancelActiveDrag();
             _contextMenu?.Hide();
+            ClearHoverFeedback();
 
             // Start fade-out, then collapse display after the transition.
             int gen = ++_fadeGen;
@@ -688,6 +689,10 @@ namespace View.UI.Inventory
 
         void OnSlotPointerEnter(InventorySlotElement slot, PointerEnterEvent evt)
         {
+            // Close() keeps the hierarchy mounted during the fade-out. Do not
+            // let pointer movement in that interval resurrect a dismissed tooltip.
+            if (!_isVisible) return;
+
             _hoveredSlot = slot;
             if (_isDragging) return;
             if (slot.CurrentItem == null) return;
@@ -731,6 +736,14 @@ namespace View.UI.Inventory
             if (_hoveredSlot == slot) _hoveredSlot = null;
             TooltipController.Instance?.Hide();
             if (!_isDragging) ClearCompatHighlight();
+            HideWeaponCompare();
+        }
+
+        void ClearHoverFeedback()
+        {
+            _hoveredSlot = null;
+            TooltipController.Instance?.Hide();
+            ClearCompatHighlight();
             HideWeaponCompare();
         }
 
