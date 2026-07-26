@@ -239,8 +239,15 @@ Shader "ExtractShaders/BushWindCutout"
             inputData.shadowMask = half4(1, 1, 1, 1);
 
             half4 color = UniversalFragmentPBR(inputData, surfaceData);
+
+            // Back-face fill ("light through the leaf"), faded out as the lit result
+            // approaches white. The raw add used to stack on top of an already sunlit
+            // back-face and push it past the bloom threshold, so wind-animated leaf
+            // quads popped as drifting glowing blobs. Shaded leaves still get the lift.
             half backFaceMask = (1.0h - saturate(facingSign)) * _TwoSidedLighting;
-            color.rgb += tex.rgb * _BackFaceLight * backFaceMask;
+            half fillRoom = saturate(1.0h - Luminance(color.rgb));
+            color.rgb += tex.rgb * _BackFaceLight * backFaceMask * fillRoom;
+
             color.rgb = MixFog(color.rgb, inputData.fogCoord);
             return color;
         }
