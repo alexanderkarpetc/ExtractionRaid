@@ -1,12 +1,50 @@
 # Handoff — current state
 
-> Snapshot for next-session agent. Combined state + recent landings. Updated 2026-07-16.
+> Snapshot for next-session agent. Combined state + recent landings. Updated 2026-07-23.
 >
 > **📍 Canonical plan (2026-07-18):** [`release-scope.md`](./release-scope.md) (feature-map + gaps + 🔒 locked decisions) + [`v1.0-roadmap.md`](./v1.0-roadmap.md) (milestones **M1–M4**, mirrored in the Task list). These supersede the ad-hoc "Next candidates" below.
 
 ## Context
 
 Top-down extraction shooter (Unity 6000.3.10f1, URP 17.3). 5-layer architecture (App → Session → Systems → Adapters → View/Presenter) per [`CLAUDE.md`](./CLAUDE.md). Ukrainian-language collaboration, tight iterations.
+
+---
+
+## Most recent — New-player onboarding + risk loop (2026-07-18 → 07-23)
+
+M1 core-loop + onboarding batch. All committed.
+
+- **M1.1 gear-loss + baseline floor (task #39).** KIA → `Player.Inventory.ClearAll()` in `App.EndRaid`
+  before save (full wipe; stash safe; KIA only, not extraction / hideout-exit). **Baseline floor** =
+  Common Ballistic pistol (exactly one full mag via `WeaponStatComposer` — never overfilled) + spare
+  ammo (36 rounds total) + bandage + medkit, **NO armor** (`PlayerSpawnSystem.GiveBaselineFloor`),
+  granted when inventory is empty (fresh save / post-KIA-wipe) → never soft-locked, but death costs
+  your GOOD gear. Test ranges keep the 6-weapon cheat kit (`GiveTestRangeLoadout`). The M1.1 grant-once
+  flag was reverted/removed. Pure bits tested (`GearLossTests`, `PlayerSpawnSystemTests`).
+- **Quest marker — world + minimap (task #61).** NPCs with an offer show a floating SDF "!" badge +
+  additive ground light pool + camera-billboarded beam (`NpcQuestIndicator`; shaders `VFX/QuestBeam` +
+  `VFX/QuestGroundGlow`, both soft-particle depth-faded) + a procedural "!" on the minimap. Tunable in
+  `Dev Cheats → ❗ Quest Marker`.
+- **Deploy wayfinding + first-quest gate (task #62).** The hideout's exit-to-raid **deploy point** gets a
+  `WorldBeacon` (new shared VFX = pool + billboarded beam) + a **pulsing screen-edge direction arrow** +
+  a minimap `Deploy` marker (`DeployBeaconPresenter` / `DeployArrowPresenter`). **All gated behind
+  accepting the first quest** (`QuestSystem.HasAcceptedAnyQuest` — also gates the deploy interaction +
+  prompt). Interacting deploys **straight to Main Map** (the IMGUI SELECT MAP popup was removed). Beacon
+  knobs → `Dev Cheats → 🧭 Deploy Marker`; arrow knobs (incl. pulse) → `❗ Quest Marker`.
+- **FoW off in the hideout** (`FogOfWarController` skips when `App.IsInHideout` — combat mechanic,
+  pointless/dark in the safe hub). Quest NPCs also gain the container-style interact outline
+  (`InteractableOutlineTarget`).
+- **New shared/support:** `View/WorldBeacon.cs`; ViewCheats sections `ViewCheatsQuestMarkerSection` +
+  `ViewCheatsDeployMarkerSection`; `MinimapMarkerType.Deploy`.
+- **Tests:** ~**671** EditMode green (last run this session).
+
+> ⚠️ **Parallel work not from this batch:** a **progression / skill-tree meta system** has appeared in
+> the code (`Player.Progression` / `PlayerProgressionState`, `SaveData.AllocatedNodes`, `Systems.Meta`,
+> DevCheats `using Progression`). It was added by another agent/session — **check its current state before
+> touching save/meta.** Note "progression OUT of v1.0" is a locked decision in `release-scope.md`;
+> reconcile with the maintainer. Item durability now also persists in `SaveData` (CurrentDurability/MaxDurability).
+
+**Still-open new-player gap:** task #63 — initial difficulty ramp (weak bots first; playtest: "3 riflemen killed me in 20s").
 
 ---
 
@@ -230,7 +268,7 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify EditMode tests are green (**669/669** baseline as of 2026-07-18) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
+3. Verify EditMode tests are green (~**671** baseline as of 2026-07-23; may shift with the parallel progression work) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
 4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4) + Task list #39–#60.** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); progression OUT; 2 maps + bunker; item icons must-have (generated); EN-only. **Start with M1 (honest core loop).** Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
 
 ---
@@ -248,4 +286,4 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ---
 
-**Status (2026-07-16):** All committed. **660/660 EditMode green.** Latest: Weapon Attachments epic + Sniper Scope (P4), bot FoV-boundary dissolve (mesh/shadow/xray fade), procedural weapon reload/equip motion. (Older footer note — 469/469, heat-haze reverted — was 2026-05-x.)
+**Status (2026-07-23):** All committed. ~**671** EditMode green. Latest: new-player onboarding batch — gear-loss + baseline floor, quest marker (world + minimap), deploy wayfinding + first-quest gate (details at top). ⚠️ Parallel: a progression / skill-tree meta system is in-flight (not this batch — reconcile with "progression OUT of v1.0"). (Older: Weapon Attachments epic + Sniper Scope, 2026-07-16.)
