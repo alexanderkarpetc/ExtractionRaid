@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using ApplicationCore;
 using State;
@@ -246,9 +246,9 @@ namespace Save
         public List<QuestProgressSaveData> Quests;
         public List<BuildingLevelSaveData> BuildingLevels;
 
-        // Progression tree — allocated node ids (permanent, no refund) + unspent points.
-        // Missing on legacy saves → null/0, which loads as an empty tree.
+        // Progression tree — allocated node ids (permanent, no refund). Nodes cost materials,
+        // not points, so there is no pool to persist. Missing on legacy saves → null, which
+        // loads as an empty tree (a legacy ProgressionPoints value is simply ignored).
         public List<string> AllocatedNodes;
-        public int ProgressionPoints;
     }
 }

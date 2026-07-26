@@ -1,16 +1,82 @@
 using System.Collections.Generic;
+using Constants;
+using State;
 using UnityEngine;
 
 namespace Progression
 {
     public enum NodeSize { Minor, Notable, Keystone }
 
+    /// <summary>What a single line of a node's material cost asks for.</summary>
+    public enum ProgressionCostKind
+    {
+        /// <summary>A plain stackable item id (materials, ammo, mods) — <see cref="ProgressionCostEntry.ItemId"/>.</summary>
+        Item = 0,
+        /// <summary>An assembled weapon: this Delivery core + this Payload core, both at MinRarity or better.</summary>
+        Weapon = 1,
+    }
+
+    /// <summary>
+    /// One line of a node's unlock cost. Paid out of the player's stash first, then the
+    /// backpack (see <see cref="ProgressionCostSystem"/>). A node lists up to three of these.
+    ///
+    /// Rarity only gates <see cref="ProgressionCostKind.Weapon"/> entries: plain items carry no
+    /// runtime rarity in this project (only weapon cores do — see <see cref="PayloadCoreInstance"/>),
+    /// so an item line is just "id × quantity".
+    /// </summary>
+    [System.Serializable]
+    public class ProgressionCostEntry
+    {
+        public ProgressionCostKind Kind = ProgressionCostKind.Item;
+        [Min(1)] public int Quantity = 1;
+
+        [Header("Kind = Item")]
+        [ItemIdPicker] public string ItemId;
+
+        [Header("Kind = Weapon (Delivery + Payload + rarity)")]
+        public string DeliveryId;       // DeliveryCoreDefinition.Id — "SingleAction", "Auto", "Scatter"
+        public string PayloadId;        // PayloadCoreDefinition.Id  — "BallisticRound", "LaserCharge"
+        public RarityTier MinRarity = RarityTier.Common;
+
+        public bool IsWeapon => Kind == ProgressionCostKind.Weapon;
+
+        /// <summary>Player-facing name of what this line asks for.</summary>
+        public string Label => IsWeapon
+            ? $"{MinRarity} Weapon"
+            : ItemDefinition.Get(ItemId)?.DisplayName ?? ItemId;
+
+        /// <summary>Sub-line for weapon entries: the core combination. Empty for items.</summary>
+        public string SubLabel => IsWeapon
+            ? $"{CoreName(DeliveryId)} + {CoreName(PayloadId)}"
+            : string.Empty;
+
+        // Core ids are code identifiers ("SingleAction"); the item registry carries the pretty
+        // name ("Single-Action Delivery"), so prefer it and fall back to the raw id.
+        static string CoreName(string coreId)
+        {
+            var def = ItemDefinition.Get(coreId);
+            return def != null ? def.DisplayName.Replace(" Delivery", "") : coreId;
+        }
+
+        public static ProgressionCostEntry Item_(string itemId, int qty) =>
+            new() { Kind = ProgressionCostKind.Item, ItemId = itemId, Quantity = qty };
+
+        public static ProgressionCostEntry Weapon_(string deliveryId, string payloadId, RarityTier minRarity, int qty = 1) =>
+            new()
+            {
+                Kind = ProgressionCostKind.Weapon, DeliveryId = deliveryId, PayloadId = payloadId,
+                MinRarity = minRarity, Quantity = qty,
+            };
+    }
+
     /// <summary>
     /// One allocatable node. Numeric perks fill <see cref="StatLabel"/>/<see cref="Magnitude"/>/
     /// <see cref="Unit"/> (they aggregate into the build summary); keystones/specials leave those
-    /// empty and describe their effect in <see cref="Description"/>. <see cref="DevHook"/> is a
-    /// designer note pointing at the config field this node is meant to drive — it is NOT wired
-    /// automatically (see <see cref="ProgressionSystem.ApplyAllocatedEffects"/>).
+    /// empty and describe their effect in <see cref="Description"/>.
+    ///
+    /// Unlocking costs exactly what's in <see cref="Cost"/> — the materials ARE the gate, there
+    /// is no skill-point pool. See <see cref="ProgressionCostDefaults"/> for the ring/size curve
+    /// the seeder applies.
     /// </summary>
     [System.Serializable]
     public class ProgressionNodeDef
@@ -29,8 +95,11 @@ namespace Progression
         public string Unit;             // "", "%", "°", " HP", "s"
 
         [TextArea] public string Description;   // keystone / special wording
-        public int PointCost = 1;
-        public string DevHook;          // designer note: which config field this should modify
+
+        [Header("Cost")]
+        [Tooltip("Items consumed on unlock — up to 3 lines. Empty = free. There is no point cost: " +
+                 "materials are the only gate.")]
+        public List<ProgressionCostEntry> Cost = new();
     }
 
     [System.Serializable]
@@ -99,6 +168,20 @@ namespace Progression
         public void SeedDefaultTree()
         {
             Disciplines = ProgressionTreeDefaults.BuildDisciplines();
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        }
+
+        /// <summary>
+        /// Re-rolls only <see cref="ProgressionNodeDef.Cost"/> from the default curve, leaving
+        /// stats, layout and wording as they are — the safe way to retune the material economy
+        /// after hand-editing node effects.
+        /// </summary>
+        [ContextMenu("Reseed Node Costs")]
+        public void ReseedNodeCosts()
+        {
+            ProgressionCostDefaults.Apply(Disciplines);
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif

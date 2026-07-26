@@ -40,7 +40,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 2
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.0.1
         DisplayName: 
         Size: 0
@@ -51,7 +57,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.0.2
         DisplayName: 
         Size: 0
@@ -62,7 +74,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.0.3
         DisplayName: Thick Skin
         Size: 1
@@ -73,7 +97,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.DamageReductionK
+        Cost:
+        - Kind: 0
+          Quantity: 9
+          ItemId: Structural_Foam
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Magnetic_Alloy
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.0.4
         DisplayName: 
         Size: 0
@@ -84,7 +120,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MedConstants.HealPerSecond
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Hydraulic_Seals
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.0.5
         DisplayName: Last Stand
         Size: 2
@@ -95,7 +149,25 @@ MonoBehaviour:
         Unit: 
         Description: 'Below 25% HP: +35% damage resistance and steady health regen.'
         PointCost: 1
-        DevHook: HealthState.CurrentHp guard
+        Cost:
+        - Kind: 0
+          Quantity: 13
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Plating
       Nodes:
       - Id: warden.1.0
@@ -108,7 +180,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ItemDefinition.ArmorPoints
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.1.1
         DisplayName: 
         Size: 0
@@ -119,7 +197,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorState.MaxDurability
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.1.2
         DisplayName: 
         Size: 0
@@ -130,7 +214,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.RicochetChance
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Synthetic_Fiber
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.1.3
         DisplayName: Hardened Kit
         Size: 1
@@ -141,7 +237,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.ArmorDamageCap
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Synthetic_Fiber
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Magnetic_Alloy
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.1.4
         DisplayName: Deadweight
         Size: 1
@@ -152,7 +260,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.WeightSpeedFactor
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: LaserCharge
+          MinRarity: 2
       - Id: warden.1.5
         DisplayName: 
         Size: 0
@@ -163,7 +289,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.DamageReductionK
+        Cost:
+        - Kind: 0
+          Quantity: 20
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
     - Name: Spoils
       Nodes:
       - Id: warden.2.0
@@ -176,7 +320,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: LootSystem.BotModDropChance
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.2.1
         DisplayName: 
         Size: 0
@@ -187,7 +337,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerTypeConfig.MaxDrops
+        Cost:
+        - Kind: 0
+          Quantity: 7
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.2.2
         DisplayName: 
         Size: 0
@@ -198,7 +354,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: InventoryState.BackpackSize
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Synthetic_Fiber
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.2.3
         DisplayName: Trophy Taker
         Size: 1
@@ -209,7 +377,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: LootSystem.CreateLootable
+        Cost:
+        - Kind: 0
+          Quantity: 9
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Resonance_Plate
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.2.4
         DisplayName: 
         Size: 0
@@ -220,7 +400,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: LootSystem.BotModDropChance
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Resonance_Plate
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.2.5
         DisplayName: War Spoils
         Size: 2
@@ -231,7 +429,25 @@ MonoBehaviour:
         Unit: 
         Description: Killing a Boss or PMC drops a bonus Rare-or-better item.
         PointCost: 1
-        DevHook: LootSystem + RarityTier
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Structural_Foam
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: LaserCharge
+          MinRarity: 3
     - Name: Presence
       Nodes:
       - Id: warden.3.0
@@ -244,7 +460,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.MaxStamina
+        Cost:
+        - Kind: 0
+          Quantity: 3
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.3.1
         DisplayName: 
         Size: 0
@@ -255,7 +477,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.SprintDrainRate
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.3.2
         DisplayName: 
         Size: 0
@@ -266,7 +494,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.Damage
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Hydraulic_Seals
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.3.3
         DisplayName: Bloodied but Unbowed
         Size: 1
@@ -277,7 +517,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ShootingConfig.DamageMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Hydraulic_Seals
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Resonance_Plate
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.3.4
         DisplayName: 
         Size: 0
@@ -288,7 +540,25 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Aluminum
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Magnetic_Alloy
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: warden.3.5
         DisplayName: Juggernaut
         Size: 1
@@ -299,7 +569,25 @@ MonoBehaviour:
         Unit: 
         Description: While standing still, +18% damage resistance.
         PointCost: 1
-        DevHook: ArmorConstants.DamageReductionK
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Synthetic_Fiber
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Military_Components
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: BallisticRound
+          MinRarity: 3
   - Id: phantom
     DisplayName: Phantom
     Color: {r: 0.529, g: 0.902, b: 1, a: 1}
@@ -318,7 +606,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: FOVConfig.FarRadius
+        Cost:
+        - Kind: 0
+          Quantity: 2
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.0.1
         DisplayName: 
         Size: 0
@@ -329,7 +623,13 @@ MonoBehaviour:
         Unit: "\xB0"
         Description: 
         PointCost: 1
-        DevHook: FOVConfig.Angle
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.0.2
         DisplayName: 
         Size: 0
@@ -340,7 +640,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: FOVConfig.NearRadius
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Motion_Sensor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.0.3
         DisplayName: Eagle Eye
         Size: 1
@@ -351,7 +663,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerEntityState.ScopeRadius
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Insulated_Wiring
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.0.4
         DisplayName: 
         Size: 0
@@ -362,7 +686,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerFOVSystem
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Sensor_Module
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.0.5
         DisplayName: Cartographer
         Size: 2
@@ -374,7 +716,25 @@ MonoBehaviour:
         Description: Rare containers and Boss positions are pinged on your map when
           the raid begins.
         PointCost: 1
-        DevHook: BotSpawnSystem + LootContainerSpawnPoint
+        Cost:
+        - Kind: 0
+          Quantity: 13
+          ItemId: Camera_Optics
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Pulse_Emitter
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Sound
       Nodes:
       - Id: phantom.1.0
@@ -387,7 +747,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: FOVConfig hearing radius
+        Cost:
+        - Kind: 0
+          Quantity: 3
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.1.1
         DisplayName: 
         Size: 0
@@ -398,7 +764,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MovementSystem noise
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.1.2
         DisplayName: 
         Size: 0
@@ -409,7 +781,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: shooting noise radius
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Camera_Optics
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.1.3
         DisplayName: Blindspot
         Size: 1
@@ -420,7 +804,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: BotTypeConfig.ReactionTime
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Sensor_Module
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Synthetic_Quartz
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.1.4
         DisplayName: 
         Size: 0
@@ -431,7 +827,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: FOVConfig hearing radius
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Sensor_Module
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.1.5
         DisplayName: Muffled
         Size: 1
@@ -442,7 +856,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MovementSystem
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Motion_Sensor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Synthetic_Quartz
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Fortune
       Nodes:
       - Id: phantom.2.0
@@ -455,7 +887,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: RarityTier / LootConstants.ValueWeight
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.2.1
         DisplayName: 
         Size: 0
@@ -466,7 +904,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: interaction time
+        Cost:
+        - Kind: 0
+          Quantity: 7
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.2.2
         DisplayName: 
         Size: 0
@@ -477,7 +921,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerProfileState.Credits
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Motion_Sensor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.2.3
         DisplayName: Cat Burglar
         Size: 1
@@ -488,7 +944,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerConstants.ModuleCache
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Camera_Optics
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Pulse_Emitter
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.2.4
         DisplayName: 
         Size: 0
@@ -499,7 +967,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: RarityTier
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Insulated_Wiring
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.2.5
         DisplayName: Golden Eye
         Size: 2
@@ -511,7 +997,25 @@ MonoBehaviour:
         Description: The best item in each container is highlighted and upgraded
           one rarity tier.
         PointCost: 1
-        DevHook: RarityTier
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Insulated_Wiring
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 6
+          ItemId: Pulse_Emitter
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Fleet
       Nodes:
       - Id: phantom.3.0
@@ -524,7 +1028,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.MaxStamina
+        Cost:
+        - Kind: 0
+          Quantity: 3
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.3.1
         DisplayName: 
         Size: 0
@@ -535,7 +1045,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MovementConfig.MoveSpeedMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.3.2
         DisplayName: 
         Size: 0
@@ -546,7 +1062,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Sensor_Module
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.3.3
         DisplayName: Silent Runner
         Size: 1
@@ -557,7 +1085,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.SprintDrainRate
+        Cost:
+        - Kind: 0
+          Quantity: 9
+          ItemId: Motion_Sensor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Pulse_Emitter
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.3.4
         DisplayName: 
         Size: 0
@@ -568,7 +1108,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: DodgeConstants.Cooldown
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Motion_Sensor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: phantom.3.5
         DisplayName: Silent Assassin
         Size: 2
@@ -579,7 +1137,25 @@ MonoBehaviour:
         Unit: 
         Description: Hits on unaware enemies deal +40% damage.
         PointCost: 1
-        DevHook: DamageSystem
+        Cost:
+        - Kind: 0
+          Quantity: 14
+          ItemId: Sensor_Module
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Smart_Targeting_Unit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: BallisticRound
+          MinRarity: 4
   - Id: predator
     DisplayName: Predator
     Color: {r: 1, g: 0.714, b: 0.282, a: 1}
@@ -598,7 +1174,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ShootingConfig.DamageMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 3
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.0.1
         DisplayName: 
         Size: 0
@@ -609,7 +1191,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.BasePenetration
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.0.2
         DisplayName: 
         Size: 0
@@ -620,7 +1208,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.BaseArmorDamage
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Pneumatic_Valve
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.0.3
         DisplayName: Executioner
         Size: 1
@@ -631,7 +1231,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.HeadshotDamageMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Gunpowder
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Nano_Filament
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.0.4
         DisplayName: 
         Size: 0
@@ -642,7 +1254,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ShootingConfig.DamageMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 16
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Gear_Cluster
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.0.5
         DisplayName: Apex Predator
         Size: 2
@@ -654,7 +1284,25 @@ MonoBehaviour:
         Description: +30% damage to Bosses and PMCs, and they drop an extra Rare+
           item.
         PointCost: 1
-        DevHook: DamageSystem + LootSystem
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Rotary_Motor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: LaserCharge
+          MinRarity: 3
     - Name: Handling
       Nodes:
       - Id: predator.1.0
@@ -667,7 +1315,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ShootingConfig.RecoilMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.1.1
         DisplayName: 
         Size: 0
@@ -678,7 +1332,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: AimConfig.RecoilRecoveryMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.1.2
         DisplayName: 
         Size: 0
@@ -689,7 +1349,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.ReloadTime
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Rotary_Motor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.1.3
         DisplayName: Steady Hands
         Size: 1
@@ -700,7 +1372,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: AimConfig.AimFollowMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Gear_Cluster
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Adaptive_Circuit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.1.4
         DisplayName: 
         Size: 0
@@ -711,7 +1395,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.EquipTime
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Gear_Cluster
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.1.5
         DisplayName: Cold Barrel
         Size: 1
@@ -722,7 +1424,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: BarrelHeatConfig
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Pneumatic_Valve
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Adaptive_Circuit
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: LaserCharge
+          MinRarity: 3
     - Name: Bloodlust
       Nodes:
       - Id: predator.2.0
@@ -735,7 +1455,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 2
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.2.1
         DisplayName: 
         Size: 0
@@ -746,7 +1472,13 @@ MonoBehaviour:
         Unit: ' HP'
         Description: 
         PointCost: 1
-        DevHook: DamageSystem on-kill
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.2.2
         DisplayName: 
         Size: 0
@@ -757,7 +1489,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: WeaponStats.BaseBleedChance
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Pneumatic_Valve
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.2.3
         DisplayName: Adrenaline
         Size: 1
@@ -768,7 +1512,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaSystem
+        Cost:
+        - Kind: 0
+          Quantity: 9
+          ItemId: Rotary_Motor
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.2.4
         DisplayName: 
         Size: 0
@@ -779,7 +1535,25 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Gunpowder
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.2.5
         DisplayName: Berserk
         Size: 2
@@ -791,7 +1565,25 @@ MonoBehaviour:
         Description: 'Below 50% HP: +20% fire rate and hits heal you for a fraction
           of the damage dealt.'
         PointCost: 1
-        DevHook: ShootingConfig + DamageSystem
+        Cost:
+        - Kind: 0
+          Quantity: 13
+          ItemId: Gunpowder
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Scatter
+          PayloadId: LaserCharge
+          MinRarity: 3
     - Name: The Hunt
       Nodes:
       - Id: predator.3.0
@@ -804,7 +1596,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: BotSpawnPoint.spawnChance
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.3.1
         DisplayName: 
         Size: 0
@@ -815,7 +1613,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: LootSystem
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.3.2
         DisplayName: 
         Size: 0
@@ -826,7 +1630,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerProfileState.Credits
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Gear_Cluster
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.3.3
         DisplayName: Tracker
         Size: 1
@@ -838,7 +1654,19 @@ MonoBehaviour:
         Description: Boss and elite positions are revealed after your first kill
           of the raid.
         PointCost: 1
-        DevHook: BotSpawnSystem
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Pneumatic_Valve
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Gyro_Stabilizer
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.3.4
         DisplayName: 
         Size: 0
@@ -849,7 +1677,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: BotSpawnPoint.spawnChance
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Pneumatic_Valve
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Nano_Filament
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: predator.3.5
         DisplayName: Big Game
         Size: 2
@@ -861,7 +1707,25 @@ MonoBehaviour:
         Description: +35% chance a Boss or a rare high-value spawn appears on the
           map this raid.
         PointCost: 1
-        DevHook: BotSpawnPoint.spawnChance
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Gear_Cluster
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Nano_Filament
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: LaserCharge
+          MinRarity: 4
   - Id: prospector
     DisplayName: Prospector
     Color: {r: 0.753, g: 0.549, b: 1, a: 1}
@@ -880,7 +1744,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerTypeConfig.MaxDrops
+        Cost:
+        - Kind: 0
+          Quantity: 2
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.0.1
         DisplayName: 
         Size: 0
@@ -891,7 +1761,13 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerTypeConfig.MaxDrops
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.0.2
         DisplayName: 
         Size: 0
@@ -902,7 +1778,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerTypeConfig.SlotCount
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Pipes
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.0.3
         DisplayName: Deep Pockets
         Size: 1
@@ -913,7 +1801,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: InventoryState.BackpackSize
+        Cost:
+        - Kind: 0
+          Quantity: 9
+          ItemId: Pipes
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Crystal_Matrix
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.0.4
         DisplayName: 
         Size: 0
@@ -924,7 +1824,25 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: InventoryState.WeaponSlotCount
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Mechanical_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 1
+          ItemId: Energy_Core
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.0.5
         DisplayName: Pack Rat
         Size: 1
@@ -935,7 +1853,25 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerTypeConfig.MaxDrops
+        Cost:
+        - Kind: 0
+          Quantity: 13
+          ItemId: Electronics
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Energy_Core
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Fortune
       Nodes:
       - Id: prospector.1.0
@@ -948,7 +1884,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: RarityTier / LootConstants.ValueWeight
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.1.1
         DisplayName: 
         Size: 0
@@ -959,7 +1901,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerProfileState.Credits
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.1.2
         DisplayName: 
         Size: 0
@@ -970,7 +1918,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: ContainerConstants.RandomLootBox
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Plastic
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Cooling_Fan
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.1.3
         DisplayName: Lucky Find
         Size: 1
@@ -981,7 +1941,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: RarityTier
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Mechanical_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Crystal_Matrix
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.1.4
         DisplayName: 
         Size: 0
@@ -992,7 +1964,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: PlayerProfileState.Credits
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Mechanical_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Quantum_Relay
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.1.5
         DisplayName: Golden Touch
         Size: 2
@@ -1004,7 +1994,25 @@ MonoBehaviour:
         Description: "The best drop in each container gains +1 rarity tier \u2014
           but enemies hear you 30% farther."
         PointCost: 1
-        DevHook: RarityTier + noise
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Cooling_Fan
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Energy_Core
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: LaserCharge
+          MinRarity: 4
     - Name: Endurance
       Nodes:
       - Id: prospector.2.0
@@ -1017,7 +2025,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.MaxStamina
+        Cost:
+        - Kind: 0
+          Quantity: 2
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.2.1
         DisplayName: 
         Size: 0
@@ -1028,7 +2042,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MovementConfig.MoveSpeedMultiplier
+        Cost:
+        - Kind: 0
+          Quantity: 8
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.2.2
         DisplayName: 
         Size: 0
@@ -1039,7 +2059,19 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Duct_Tape
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Cooling_Fan
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.2.3
         DisplayName: Pack Mule
         Size: 1
@@ -1050,7 +2082,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: ArmorConstants.WeightSpeedFactor
+        Cost:
+        - Kind: 0
+          Quantity: 10
+          ItemId: Electronics
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Crystal_Matrix
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.2.4
         DisplayName: 
         Size: 0
@@ -1061,7 +2105,25 @@ MonoBehaviour:
         Unit: 
         Description: 
         PointCost: 1
-        DevHook: BotConstants.PlayerMaxHp
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Springs
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 4
+          ItemId: Pipes
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Energy_Core
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.2.5
         DisplayName: Second Wind
         Size: 1
@@ -1072,7 +2134,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StaminaConstants.RegenRate
+        Cost:
+        - Kind: 0
+          Quantity: 13
+          ItemId: Pipes
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Quantum_Relay
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: SingleAction
+          PayloadId: BallisticRound
+          MinRarity: 3
     - Name: Getaway
       Nodes:
       - Id: prospector.3.0
@@ -1085,7 +2165,13 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MedConstants.HealPerSecond
+        Cost:
+        - Kind: 0
+          Quantity: 4
+          ItemId: Cloth
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.3.1
         DisplayName: 
         Size: 0
@@ -1096,7 +2182,13 @@ MonoBehaviour:
         Unit: s
         Description: 
         PointCost: 1
-        DevHook: MedConstants.UseDelay
+        Cost:
+        - Kind: 0
+          Quantity: 6
+          ItemId: Metal_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.3.2
         DisplayName: 
         Size: 0
@@ -1107,7 +2199,19 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: StatusEffectConstants
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Mechanical_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.3.3
         DisplayName: Field Dressing
         Size: 1
@@ -1118,7 +2222,19 @@ MonoBehaviour:
         Unit: 
         Description: Bandages instantly stop all bleeding.
         PointCost: 1
-        DevHook: StatusEffectConstants
+        Cost:
+        - Kind: 0
+          Quantity: 11
+          ItemId: Cooling_Fan
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Crystal_Matrix
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.3.4
         DisplayName: 
         Size: 0
@@ -1129,7 +2245,25 @@ MonoBehaviour:
         Unit: '%'
         Description: 
         PointCost: 1
-        DevHook: MedConstants.HealPerSecond
+        Cost:
+        - Kind: 0
+          Quantity: 15
+          ItemId: Adhesive
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 3
+          ItemId: Pipes
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 2
+          ItemId: Energy_Core
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
       - Id: prospector.3.5
         DisplayName: Secure Pocket
         Size: 2
@@ -1140,4 +2274,22 @@ MonoBehaviour:
         Unit: 
         Description: Keep one random slot of loot even if you die in the raid.
         PointCost: 1
-        DevHook: InventoryState
+        Cost:
+        - Kind: 0
+          Quantity: 12
+          ItemId: Mechanical_Parts
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 0
+          Quantity: 5
+          ItemId: Quantum_Relay
+          DeliveryId: 
+          PayloadId: 
+          MinRarity: 0
+        - Kind: 1
+          Quantity: 1
+          ItemId: 
+          DeliveryId: Auto
+          PayloadId: LaserCharge
+          MinRarity: 3

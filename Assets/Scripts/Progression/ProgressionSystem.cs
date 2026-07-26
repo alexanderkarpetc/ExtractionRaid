@@ -7,9 +7,14 @@ namespace Progression
     public struct StatSum { public float Value; public string Unit; }
 
     /// <summary>
-    /// Stateless rules for the progression tree: what's connected, what can be bought,
+    /// Stateless rules for the progression tree: what's connected, what's already taken,
     /// and (stubbed) how allocated nodes translate into gameplay. The view calls these —
     /// it never decides allocation itself. There is intentionally NO refund path.
+    ///
+    /// This half only knows about <b>connectivity</b>. There is no skill-point pool: a node's
+    /// price is the items in its <see cref="ProgressionNodeDef.Cost"/>, charged by
+    /// <c>Systems.ProgressionCostSystem</c> (it needs the player's stash). Call its
+    /// <c>TryUnlock</c> rather than <see cref="Allocate"/> from gameplay/UI, or nothing is paid.
     /// </summary>
     public static class ProgressionSystem
     {
@@ -49,31 +54,33 @@ namespace Progression
             return false;
         }
 
+        /// <summary>
+        /// Structural gate only: the node exists, isn't taken yet, and hangs off something
+        /// allocated. Materials are the actual price — see <c>Systems.ProgressionCostSystem</c>.
+        /// </summary>
         public static bool CanAllocate(ProgressionTreeConfig cfg, PlayerProgressionState state, string id)
         {
             if (cfg == null || state == null) return false;
             if (IsAllocated(state, id)) return false;
             if (!cfg.TryFind(id, out _, out var branch, out var node)) return false;
-            if (state.AvailablePoints < node.PointCost) return false;
             return IsConnected(state, branch, node);
         }
 
-        /// <summary>Spend points to allocate. Permanent — returns false if not affordable/connected.</summary>
+        /// <summary>Mark a node allocated. Permanent — returns false if it isn't connected.</summary>
         public static bool Allocate(ProgressionTreeConfig cfg, PlayerProgressionState state, string id)
         {
             if (!CanAllocate(cfg, state, id)) return false;
-            cfg.TryFind(id, out _, out _, out var node);
             state.AllocatedNodeIds.Add(id);
-            state.AvailablePoints -= node.PointCost;
             return true;
         }
 
-        public static int SpentPoints(ProgressionTreeConfig cfg, PlayerProgressionState state)
+        /// <summary>How many nodes are unlocked — drives the "n / total" header.</summary>
+        public static int AllocatedCount(ProgressionTreeConfig cfg, PlayerProgressionState state)
         {
-            int spent = 0;
+            int n = 0;
             foreach (var id in state.AllocatedNodeIds)
-                if (cfg.TryFind(id, out _, out _, out var node)) spent += node.PointCost;
-            return spent;
+                if (cfg.TryFind(id, out _, out _, out _)) n++;
+            return n;
         }
 
         /// <summary>Numeric perks summed by StatLabel — drives the build-summary panel.</summary>
@@ -94,8 +101,8 @@ namespace Progression
 
         /// <summary>
         /// TODO — translate allocated nodes into gameplay modifiers. Deliberately unimplemented:
-        /// wire each node id to the config field named in its <c>DevHook</c> as those systems are
-        /// touched (e.g. push Max-HP sums into BotConstants.PlayerMaxHp, MoveSpeed into
+        /// wire each node id to a gameplay config field as those systems are touched (e.g. push
+        /// Max-HP sums into BotConstants.PlayerMaxHp, MoveSpeed into
         /// MovementConfig.MoveSpeedMultiplier). Called once when a raid context is built.
         /// </summary>
         public static void ApplyAllocatedEffects(ProgressionTreeConfig cfg, PlayerProgressionState state)

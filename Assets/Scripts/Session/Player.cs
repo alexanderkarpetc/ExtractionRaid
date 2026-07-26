@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Save;
 using State;
 
@@ -77,7 +77,6 @@ namespace Session
                 Quests = questList,
                 BuildingLevels = buildingList,
                 AllocatedNodes = new List<string>(Progression.AllocatedNodeIds),
-                ProgressionPoints = Progression.AvailablePoints,
             };
         }
 
@@ -112,7 +111,6 @@ namespace Session
             Progression.AllocatedNodeIds = data.AllocatedNodes != null
                 ? new List<string>(data.AllocatedNodes)
                 : new List<string>();
-            Progression.AvailablePoints = data.ProgressionPoints;
         }
     }
 }

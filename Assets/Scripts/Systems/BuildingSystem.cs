@@ -58,12 +58,7 @@ namespace Systems
             var recipe = GetNextUpgradeRecipe(player, kind);
 
             for (int i = 0; i < recipe.Length; i++)
-            {
-                int remaining = recipe[i].Count;
-                remaining = ConsumeFromStash(player.Stash, recipe[i].ItemId, remaining);
-                if (remaining > 0)
-                    ConsumeFromBackpack(player.Inventory, recipe[i].ItemId, remaining);
-            }
+                ConsumeMaterial(player, recipe[i].ItemId, recipe[i].Count);
 
             int newLevel = GetLevel(player, kind) + 1;
             player.SetBuildingLevel(kind, newLevel);
@@ -84,6 +79,20 @@ namespace Systems
         {
             if (player == null) return 0;
             return CountInStash(player.Stash, itemId) + CountInBackpack(player.Inventory, itemId);
+        }
+
+        /// <summary>
+        /// Takes <paramref name="amount"/> of an item from the Stash first, then the Backpack.
+        /// Assumes the caller already checked supply (see <see cref="GetAvailable"/>) — it
+        /// consumes whatever it can find and silently stops when both containers run dry.
+        /// Shared with <see cref="ProgressionCostSystem"/> so both spend materials the same way.
+        /// </summary>
+        public static void ConsumeMaterial(Player player, string itemId, int amount)
+        {
+            if (player == null || amount <= 0) return;
+            int remaining = ConsumeFromStash(player.Stash, itemId, amount);
+            if (remaining > 0 && player.Inventory != null)
+                ConsumeFromBackpack(player.Inventory, itemId, remaining);
         }
 
         static int CountAvailable(Player player, string itemId) =>

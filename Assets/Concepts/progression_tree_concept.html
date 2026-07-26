@@ -152,13 +152,13 @@
       <div>
         <div class="eyebrow">Extraction Raid · Character Progression</div>
         <div class="title">Operative Progression — One Tree, Four Sectors</div>
-        <div class="subtitle">Unlock nodes by spending skill points and materials looted from raids. Allocate outward from the core; refund a node any time by clicking it.</div>
+        <div class="subtitle">Unlock nodes with materials looted from raids — there are no skill points, the resources are the gate. Allocate outward from the core; refund a node any time by clicking it.</div>
       </div>
       <div style="display:flex; align-items:center;">
         <div class="points">
           <div>
             <div class="num"><b id="used">0</b><span> / </span><span id="total">32</span></div>
-            <div class="lbl">Points spent</div>
+            <div class="lbl">Nodes unlocked</div>
           </div>
         </div>
       </div>
@@ -359,7 +359,7 @@ const SPREAD = [-33, -11, 11, 33];   // wider lanes so branches don't interleave
 const FORK = 0.4;                    // gentler forks (data ±15° → ±6° on canvas)
 
 // ═══ Cost model ═════════════════════════════════════════
-// A node costs skill points AND up to 3 looted items. An entry is either a plain
+// A node's whole price is up to 3 looted items — no skill points. An entry is either a plain
 // item ("Metal Parts ×4", optionally at a required rarity) or an assembled weapon,
 // which is a combination of Delivery core + Payload core at a minimum rarity.
 // Costs below are rolled deterministically from the node id so the concept stays

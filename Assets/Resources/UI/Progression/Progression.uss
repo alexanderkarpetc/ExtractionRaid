@@ -44,21 +44,8 @@
     border-radius: var(--radius-inset);
 }
 .pr-points-num { font-size: 26px; color: var(--color-accent); -unity-font-style: bold; }
-.pr-points-num--dim { color: var(--color-text-secondary); font-size: 20px; }
 .pr-points-lbl { font-size: 9px; letter-spacing: 2px; color: var(--color-text-muted); margin-top: 3px; }
 
-.pr-devbtn {
-    margin-left: 12px;
-    height: 34px;
-    padding: 0 12px;
-    font-size: 11px;
-    -unity-font-style: bold;
-    color: var(--color-text-muted);
-    background-color: var(--color-card-bg);
-    border-width: 1px;
-    border-color: var(--color-border);
-    border-radius: var(--radius-inset);
-}
 .pr-closebtn {
     margin-left: 8px;
     width: 34px; height: 34px;
@@ -222,4 +209,28 @@
 .pr-tip-type { font-size: 13px; letter-spacing: 2px; -unity-font-style: bold; }
 .pr-tip-name { font-size: 22px; -unity-font-style: bold; color: var(--color-text-title); margin-top: 6px; }
 .pr-tip-desc { font-size: 17px; color: var(--color-text-body); margin-top: 6px; white-space: normal; }
-.pr-tip-hook { font-size: 13px; color: var(--color-text-empty); margin-top: 10px; white-space: normal; }
+
+/* Cost block — one row per required item; have/need colors are set in C#
+   (CostOk / CostShort) alongside the discipline accents. */
+.pr-tip-cost {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top-width: 1px;
+    border-top-color: var(--color-border-inset);
+}
+.pr-cost-head { flex-direction: row; justify-content: space-between; align-items: center; }
+.pr-cost-lbl { font-size: 12px; letter-spacing: 2px; -unity-font-style: bold; color: var(--color-text-empty); }
+.pr-cost-status { font-size: 12px; letter-spacing: 1px; -unity-font-style: bold; }
+.pr-cost-rows { margin-top: 5px; }
+.pr-cost-row { flex-direction: row; align-items: center; margin-top: 3px; }
+.pr-cost-dot {
+    width: 7px;
+    height: 7px;
+    margin-right: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.pr-cost-body { flex-grow: 1; flex-shrink: 1; }
+.pr-cost-name { font-size: 15px; -unity-font-style: bold; }
+.pr-cost-sub { font-size: 12px; color: var(--color-text-empty); margin-top: -1px; }
+.pr-cost-qty { font-size: 15px; -unity-font-style: bold; flex-shrink: 0; }

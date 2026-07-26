@@ -1,6 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using ApplicationCore;
 using State;
+using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -11,8 +12,10 @@ namespace View.UI.Progression
     /// <summary>
     /// Runtime skill-tree screen. Reads the tree layout/content from
     /// <see cref="Prog.ProgressionTreeConfig"/> and the allocation state from
-    /// <c>App.Instance.Player.Progression</c>. Allocation is permanent (no refund) and
-    /// routed through <see cref="Prog.ProgressionSystem"/> — this view holds no rules.
+    /// <c>App.Instance.Player.Progression</c>. Allocation is permanent (no refund) and routed
+    /// through <see cref="Systems.ProgressionCostSystem"/> (which charges the node's items and
+    /// defers to <see cref="Prog.ProgressionSystem"/> for points/connectivity) — this view holds
+    /// no rules.
     /// Connecting lines are drawn with <see cref="Painter2D"/>; the web pans/zooms.
     /// </summary>
     [DefaultExecutionOrder(-100)]
@@ -29,8 +32,8 @@ namespace View.UI.Progression
 
         UIDocument _doc;
         VisualElement _root, _content, _edges, _nodesLayer, _canvasWrap;
-        VisualElement _tip;
-        Label _availLabel, _spentLabel, _tipType, _tipName, _tipDesc, _tipHook;
+        VisualElement _tip, _tipCost, _tipCostRows;
+        Label _unlockedLabel, _tipType, _tipName, _tipDesc, _tipCostStatus;
 
         Prog.ProgressionTreeConfig _cfg;
         readonly Dictionary<string, VisualElement> _nodeEls = new();
@@ -41,6 +44,10 @@ namespace View.UI.Progression
         static readonly Color NodeBaseBg = new(0.05f, 0.06f, 0.12f, 1f);
         static readonly Color NodeLockedBorder = new(0.4f, 0.44f, 0.5f);
         static readonly Color NodeOnGlyph = new(0.03f, 0.06f, 0.11f);
+        // have/need readout — matches the crafting panel's enough/not-enough pair.
+        static readonly Color CostOk = new(0.31f, 0.78f, 0.47f);
+        static readonly Color CostShort = new(0.86f, 0.39f, 0.39f);
+        static readonly Color TipCostText = new(0.82f, 0.84f, 0.88f);
         static Texture2D _glowTex;   // radial-falloff glow, tinted per discipline
 
         bool _isVisible;
@@ -90,17 +97,16 @@ namespace View.UI.Progression
             _nodesLayer = _root.Q<VisualElement>("nodes");
             _canvasWrap = _root.Q<VisualElement>("canvasWrap");
             _tip = _root.Q<VisualElement>("tip");
-            _availLabel = _root.Q<Label>("availLabel");
-            _spentLabel = _root.Q<Label>("spentLabel");
+            _unlockedLabel = _root.Q<Label>("unlockedLabel");
             _tipType = _root.Q<Label>("tipType");
             _tipName = _root.Q<Label>("tipName");
             _tipDesc = _root.Q<Label>("tipDesc");
-            _tipHook = _root.Q<Label>("tipHook");
+            _tipCost = _root.Q<VisualElement>("tipCost");
+            _tipCostRows = _root.Q<VisualElement>("tipCostRows");
+            _tipCostStatus = _root.Q<Label>("tipCostStatus");
 
             var closeBtn = _root.Q<Button>("closeBtn");
             if (closeBtn != null) closeBtn.clicked += Close;
-            var dev = _root.Q<Button>("devGrantBtn");
-            if (dev != null) dev.clicked += () => { GrantPoints(5); };
 
             _edges.generateVisualContent += OnGenerateEdges;
             _canvasWrap.RegisterCallback<WheelEvent>(OnWheel);
@@ -273,29 +279,25 @@ namespace View.UI.Progression
         };
 
         // ── allocation ─────────────────────────────────────────────
+        // Unlocking spends the point AND the node's items — routed through ProgressionCostSystem
+        // so the material half is never bypassed by the view.
         void OnNodeClicked(string id)
         {
-            var state = ProgressionState;
-            if (state == null || _cfg == null) return;
-            if (Prog.ProgressionSystem.Allocate(_cfg, state, id))
+            if (_cfg == null) return;
+            var player = App.Instance?.Player;
+            if (player == null) return;
+            if (ProgressionCostSystem.TryUnlock(_cfg, player, id))
                 Refresh();
         }
 
         PlayerProgressionState ProgressionState => App.Instance?.Player?.Progression;
-
-        void GrantPoints(int n)
-        {
-            var state = ProgressionState;
-            if (state == null) return;
-            state.AvailablePoints += n;
-            Refresh();
-        }
 
         // ── refresh visual state ───────────────────────────────────
         void Refresh()
         {
             if (_cfg == null) return;
             var state = ProgressionState;
+            var player = App.Instance?.Player;
 
             foreach (var disc in _cfg.Disciplines)
                 for (int bi = 0; bi < disc.Branches.Count; bi++)
@@ -310,7 +312,12 @@ namespace View.UI.Progression
                         var halo = el.Q<VisualElement>(className: "pr-halo");
                         Color accent = _nodeColor.TryGetValue(node.Id, out var c) ? c : Color.white;
                         bool on = state != null && Prog.ProgressionSystem.IsAllocated(state, node.Id);
-                        bool open = !on && state != null && Prog.ProgressionSystem.CanAllocate(_cfg, state, node.Id);
+                        // Reachable and payable → "open" (glows). Reachable but short on materials
+                        // → "unaffordable": dimmed accent ring, no glow, so the player sees where
+                        // the tree continues without reading it as parent-gated.
+                        bool reachable = !on && state != null && Prog.ProgressionSystem.IsConnected(state, branch, node);
+                        bool open = reachable && ProgressionCostSystem.CanUnlock(_cfg, player, node.Id);
+                        bool unaffordable = reachable && !open;
 
                         if (on)
                         {
@@ -330,6 +337,14 @@ namespace View.UI.Progression
                             HideEl(halo);
                             SetGlyphColor(el, accent);
                         }
+                        else if (unaffordable)
+                        {
+                            core.style.backgroundColor = NodeBaseBg;
+                            SetBorder(core, Color.Lerp(NodeLockedBorder, accent, 0.55f));
+                            core.style.opacity = 0.75f;
+                            HideEl(glow); HideEl(halo);
+                            SetGlyphColor(el, Color.Lerp(NodeLockedBorder, accent, 0.55f));
+                        }
                         else
                         {
                             core.style.backgroundColor = NodeBaseBg;
@@ -343,10 +358,8 @@ namespace View.UI.Progression
 
             _edges?.MarkDirtyRepaint();
 
-            int avail = state?.AvailablePoints ?? 0;
-            int spent = state != null ? Prog.ProgressionSystem.SpentPoints(_cfg, state) : 0;
-            if (_availLabel != null) _availLabel.text = avail.ToString();
-            if (_spentLabel != null) _spentLabel.text = $"{spent} / {_cfg.NodeCount}";
+            int unlocked = state != null ? Prog.ProgressionSystem.AllocatedCount(_cfg, state) : 0;
+            if (_unlockedLabel != null) _unlockedLabel.text = $"{unlocked} / {_cfg.NodeCount}";
         }
 
         // ── edges (Painter2D) ───────────────────────────────────────
@@ -418,9 +431,73 @@ namespace View.UI.Progression
                 string sign = node.Magnitude > 0 ? "+" : "";
                 _tipDesc.text = $"{sign}{node.Magnitude:0.##}{node.Unit}  {node.StatLabel}";
             }
-            _tipHook.text = string.IsNullOrEmpty(node.DevHook) ? "" : "hook → " + node.DevHook;
+            BuildCostBlock(node);
             _tip.style.display = DisplayStyle.Flex;
             MoveTip(panelPos);
+        }
+
+        /// <summary>
+        /// Cost lines with a <c>have / need</c> readout each, green when covered and red when
+        /// short — the same format the crafting panel uses. Rebuilt per hover; a node with no
+        /// cost hides the block entirely.
+        /// </summary>
+        void BuildCostBlock(Prog.ProgressionNodeDef node)
+        {
+            if (_tipCost == null || _tipCostRows == null) return;
+            _tipCostRows.Clear();
+
+            var cost = node.Cost;
+            if (cost == null || cost.Count == 0)
+            {
+                _tipCost.style.display = DisplayStyle.None;
+                return;
+            }
+            _tipCost.style.display = DisplayStyle.Flex;
+
+            var player = App.Instance?.Player;
+            int missing = ProgressionCostSystem.MissingLineCount(player, node);
+            if (_tipCostStatus != null)
+            {
+                _tipCostStatus.text = missing == 0 ? "READY" : $"MISSING {missing} OF {cost.Count}";
+                _tipCostStatus.style.color = missing == 0 ? CostOk : CostShort;
+            }
+
+            foreach (var entry in cost)
+            {
+                int have = ProgressionCostSystem.Owned(player, entry);
+                bool ok = have >= entry.Quantity;
+                Color nameColor = entry.IsWeapon ? RarityVisuals.Color(entry.MinRarity) : TipCostText;
+
+                var row = new VisualElement();
+                row.AddToClassList("pr-cost-row");
+
+                var dot = new VisualElement();
+                dot.AddToClassList("pr-cost-dot");
+                dot.style.backgroundColor = nameColor;
+                row.Add(dot);
+
+                var body = new VisualElement();
+                body.AddToClassList("pr-cost-body");
+                var name = new Label(entry.Label);
+                name.AddToClassList("pr-cost-name");
+                name.style.color = nameColor;
+                body.Add(name);
+                if (!string.IsNullOrEmpty(entry.SubLabel))
+                {
+                    var sub = new Label(entry.SubLabel);
+                    sub.AddToClassList("pr-cost-sub");
+                    body.Add(sub);
+                }
+                row.Add(body);
+
+                // Cap the "have" side at what's needed so a covered line reads as covered.
+                var qty = new Label($"{Mathf.Min(have, entry.Quantity)} / {entry.Quantity}");
+                qty.AddToClassList("pr-cost-qty");
+                qty.style.color = ok ? CostOk : CostShort;
+                row.Add(qty);
+
+                _tipCostRows.Add(row);
+            }
         }
 
         void MoveTip(Vector2 panelPos)
@@ -428,7 +505,7 @@ namespace View.UI.Progression
             if (_tip == null || _tip.style.display == DisplayStyle.None) return;
             var local = _root.WorldToLocal(panelPos);
             var r = _root.contentRect;
-            const float w = 380f, h = 170f;
+            const float w = 380f, h = 300f;   // desc + up to 3 cost rows
             float x = local.x + 16, y = local.y + 16;
             if (x + w > r.width) x = local.x - w - 16;
             if (y + h > r.height) y = Mathf.Max(8f, r.height - h - 8f);

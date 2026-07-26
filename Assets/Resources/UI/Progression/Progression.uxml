@@ -6,18 +6,13 @@
             <ui:VisualElement class="pr-title-wrap">
                 <ui:Label text="CHARACTER PROGRESSION" class="pr-eyebrow"/>
                 <ui:Label text="Operative Progression" class="pr-title"/>
-                <ui:Label name="subtitle" text="Unlock nodes by spending skill points and materials looted from raids." class="pr-subtitle"/>
+                <ui:Label name="subtitle" text="Unlock nodes by spending materials looted from raids — no skill points, the resources are the gate." class="pr-subtitle"/>
             </ui:VisualElement>
             <ui:VisualElement class="pr-topright">
                 <ui:VisualElement class="pr-points">
-                    <ui:Label name="availLabel" text="0" class="pr-points-num"/>
-                    <ui:Label text="POINTS AVAILABLE" class="pr-points-lbl"/>
+                    <ui:Label name="unlockedLabel" text="0 / 0" class="pr-points-num"/>
+                    <ui:Label text="UNLOCKED" class="pr-points-lbl"/>
                 </ui:VisualElement>
-                <ui:VisualElement class="pr-points">
-                    <ui:Label name="spentLabel" text="0 / 0" class="pr-points-num pr-points-num--dim"/>
-                    <ui:Label text="ALLOCATED" class="pr-points-lbl"/>
-                </ui:VisualElement>
-                <ui:Button name="devGrantBtn" text="DEV +5" class="pr-devbtn"/>
                 <ui:Button name="closeBtn" text="✕" class="pr-closebtn"/>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -36,7 +31,13 @@
             <ui:Label name="tipType" class="pr-tip-type"/>
             <ui:Label name="tipName" class="pr-tip-name"/>
             <ui:Label name="tipDesc" class="pr-tip-desc"/>
-            <ui:Label name="tipHook" class="pr-tip-hook"/>
+            <ui:VisualElement name="tipCost" class="pr-tip-cost">
+                <ui:VisualElement class="pr-cost-head">
+                    <ui:Label text="COST" class="pr-cost-lbl"/>
+                    <ui:Label name="tipCostStatus" class="pr-cost-status"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="tipCostRows" class="pr-cost-rows"/>
+            </ui:VisualElement>
         </ui:VisualElement>
 
     </ui:VisualElement>

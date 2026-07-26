@@ -42,5 +42,26 @@ namespace GameEditor
             EditorGUIUtility.PingObject(cfg);
             Debug.Log($"[Progression] {(created ? "Created and seeded" : "Re-seeded")} {Path} — {cfg.NodeCount} nodes.");
         }
+
+        /// <summary>
+        /// Re-rolls every node's material cost from <see cref="ProgressionCostDefaults"/> without
+        /// touching stats/layout/wording — use this after tuning the curve, so hand-edited node
+        /// effects survive.
+        /// </summary>
+        [MenuItem("Raid/Progression/Reseed Node Costs")]
+        public static void ReseedCosts()
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<ProgressionTreeConfig>(Path);
+            if (cfg == null)
+            {
+                Debug.LogWarning($"[Progression] No asset at {Path} — run 'Create & Seed Config Asset' first.");
+                return;
+            }
+
+            cfg.ReseedNodeCosts();
+            EditorUtility.SetDirty(cfg);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Progression] Reseeded material costs on {cfg.NodeCount} nodes in {Path}.");
+        }
     }
 }
