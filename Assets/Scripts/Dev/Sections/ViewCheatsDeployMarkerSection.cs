@@ -3,11 +3,10 @@ using UnityEngine;
 namespace Dev
 {
     /// <summary>
-    /// Deploy-point wayfinding VFX in the HIDEOUT (<see cref="View.DeployBeaconPresenter"/> +
-    /// <see cref="View.DeployArrowPresenter"/>): the always-on beacon on the exit-to-raid
-    /// deploy point (ground pool + beam) + a screen-edge arrow to the nearest deploy point.
-    /// Helps a new player find where to leave the bunker and start a raid. Runtime-tunable;
-    /// read live by the views.
+    /// Deploy-point BEACON VFX in the HIDEOUT (<see cref="View.DeployBeaconPresenter"/>): the
+    /// always-on ground pool + beam on the exit-to-raid deploy point. Helps a new player find
+    /// where to leave the bunker. Runtime-tunable; read live by the view.
+    /// (The off-screen direction arrow's knobs live in the Quest Marker section.)
     /// </summary>
     public class ViewCheatsDeployMarkerSection : ScriptableObject
     {
@@ -31,12 +30,5 @@ namespace Dev
 
         [Header("Shared")]
         [Range(0.1f, 3f)] public float PulseHz = 0.7f;
-
-        [Header("Screen-edge direction arrow")]
-        [Tooltip("Show the screen-edge arrow to the nearest deploy point when it's off-screen.")]
-        public bool ArrowEnabled = true;
-        [Range(24f, 160f)] public float ArrowSizePx = 64f;
-        [Tooltip("Distance from the screen edge (px) the arrow sits at.")]
-        [Range(20f, 200f)] public float ArrowEdgeInsetPx = 64f;
     }
 }

@@ -34,5 +34,21 @@ namespace Dev
         [Header("Shared")]
         [Tooltip("Breathing pulse frequency (Hz) — drives both the badge glow and the light intensity.")]
         [Range(0.1f, 3f)] public float PulseHz = 0.9f;
+
+        // Off-screen direction arrow to the nearest deploy point (exit-to-raid), drawn by
+        // DeployArrowPresenter. Grouped here so all on-screen marker guidance is tuned in
+        // one Dev Cheats section.
+        [Header("Exit direction arrow (screen-edge)")]
+        [Tooltip("Show the screen-edge arrow to the nearest deploy point when it's off-screen.")]
+        public bool ArrowEnabled = true;
+        [Range(24f, 160f)] public float ArrowSizePx = 64f;
+        [Tooltip("Distance from the screen edge (px) the arrow sits at.")]
+        [Range(20f, 200f)] public float ArrowEdgeInsetPx = 64f;
+        [Tooltip("Pulse depth — arrow scales ±this fraction while shown. 0 = no pulse.")]
+        [Range(0f, 0.5f)] public float ArrowPulseAmount = 0.12f;
+        [Tooltip("Arrow pulse frequency (Hz).")]
+        [Range(0.1f, 4f)] public float ArrowPulseHz = 1.6f;
+        [Tooltip("Arrow tint (defaults to the deploy 'go' green).")]
+        public Color ArrowColor = new(0.35f, 0.92f, 0.55f, 1f);
     }
 }

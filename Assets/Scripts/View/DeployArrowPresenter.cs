@@ -35,7 +35,9 @@ namespace View
             var player = state?.PlayerEntity;
             if (player == null || state.DeployPoints.Count == 0) { Hide(); return; }
 
-            var cfg = ViewCheats.Config?.DeployMarker;
+            // Arrow knobs live in the Quest Marker section (all on-screen marker guidance
+            // grouped there).
+            var cfg = ViewCheats.Config?.QuestMarker;
             if (cfg != null && !cfg.ArrowEnabled) { Hide(); return; }
 
             var cam = Camera.main;
@@ -70,11 +72,14 @@ namespace View
             float x = Mathf.Clamp(sp.x, inset, Screen.width - inset);
             float y = Mathf.Clamp(sp.y, inset, Screen.height - inset);
             float size = cfg != null ? cfg.ArrowSizePx : 64f;
+            // Subtle attention pulse while shown (±ArrowPulseAmount of size).
+            if (cfg != null && cfg.ArrowPulseAmount > 0f)
+                size *= 1f + cfg.ArrowPulseAmount * Mathf.Sin(Time.time * cfg.ArrowPulseHz * Mathf.PI * 2f);
 
             _arrowRt.sizeDelta = new Vector2(size, size);
             _arrowRt.position = new Vector3(x, y, 0f);
             _arrowRt.rotation = Quaternion.Euler(0f, 0f, angle - 90f); // sprite points up at 0°
-            _arrow.color = cfg != null ? cfg.Color : new Color(0.35f, 0.92f, 0.55f, 1f);
+            _arrow.color = cfg != null ? cfg.ArrowColor : new Color(0.35f, 0.92f, 0.55f, 1f);
             if (!_arrow.enabled) _arrow.enabled = true;
         }
 
