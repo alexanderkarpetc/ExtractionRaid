@@ -109,6 +109,11 @@ namespace View
         Material _groundMaterial;
         float _pollClock;
         bool _isVisible;
+        // SetVisible early-outs when the state already matches, so the initial hide in
+        // Build() would never reach the just-created (active by default) child objects —
+        // an indicator rebuilt with no offer pending (hideout reload after a raid) stayed
+        // lit forever. Track the first application so it always lands.
+        bool _visibilityApplied;
 
         public static NpcQuestIndicator Create(Transform parent, string npcId)
         {
@@ -384,7 +389,8 @@ namespace View
 
         void SetVisible(bool visible)
         {
-            if (_isVisible == visible) return;
+            if (_visibilityApplied && _isVisible == visible) return;
+            _visibilityApplied = true;
             _isVisible = visible;
             if (_root != null)   _root.SetActive(visible);
             if (_beam != null)   _beam.SetActive(visible);
