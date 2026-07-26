@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Adapters;
 using Constants;
+using Progression;
 using State;
 using Systems.Meta;
 using UnityEditor;
@@ -29,6 +31,8 @@ namespace Editor.Meta
     public class RegionSnapshot
     {
         public string name;
+        // Danger knob authored on the MapRegion — drives the survival roll (see RaidCombatSimulator).
+        public float difficulty = 1f;
         public List<ContainerSpawn> containers = new();
         public List<LooseSpawn> loose = new();
         public List<BotSpawn> bots = new();
@@ -114,7 +118,11 @@ namespace Editor.Meta
                 foreach (var region in regions)
                 {
                     if (!region.IsValid) continue;
-                    var snap = new RegionSnapshot { name = string.IsNullOrEmpty(region.regionName) ? region.name : region.regionName };
+                    var snap = new RegionSnapshot
+                    {
+                        name = string.IsNullOrEmpty(region.regionName) ? region.name : region.regionName,
+                        difficulty = Mathf.Max(0.1f, region.difficultyMultiplier),
+                    };
 
                     foreach (var c in containers)
                     {
@@ -175,7 +183,93 @@ namespace Editor.Meta
             return string.IsNullOrEmpty(p) ? "" : AssetDatabase.AssetPathToGUID(p);
         }
 
+        // ───────────────────────────────── Threat (play mode) ──
+
+        /// <summary>Total HP the region's garrison fields — the ammo bill is priced off this.</summary>
+        public static void MeasureThreat(RegionSnapshot snap, out int enemyCount, out float totalHp)
+        {
+            enemyCount = 0; totalHp = 0f;
+            if (snap?.bots == null) return;
+            foreach (var b in snap.bots)
+            {
+                if (!TryLoadBotConfig(b, out var cfg)) continue;
+                enemyCount++;
+                totalHp += Mathf.Max(1f, cfg.MaxHp);
+            }
+        }
+
+        /// <summary>Prices the fight (ammo + survival odds) without committing to it.</summary>
+        public static RaidCombatSimulator.Plan PlanRegion(
+            RegionSnapshot snap, InventoryState inv, ICoreDefinitionRegistry registry,
+            ProgressionTreeConfig tree, PlayerProgressionState progress)
+        {
+            MeasureThreat(snap, out var enemyCount, out var totalHp);
+            return RaidCombatSimulator.BuildPlan(
+                enemyCount, totalHp, snap?.difficulty ?? 1f, inv, registry, tree, progress);
+        }
+
         // ────────────────────────────────────── Loot (play mode) ──
+
+        /// <summary>Result of a full sim run: the fight, then (if you lived) the haul.</summary>
+        public struct RaidResult
+        {
+            public RaidCombatSimulator.Plan Plan;
+            public RaidCombatSimulator.Outcome Outcome;
+            public RegionLootSimulator.FillResult Fill;
+            public bool LootTaken;      // false = died
+        }
+
+        /// <summary>
+        /// Full risk/reward run at a region: clear the garrison (burns reserve ammo, rolls
+        /// survival), and only on a survived roll pour the most valuable loot into the backpack.
+        /// Dying mirrors the live KIA path — the whole inventory is forfeit (App.EndRaid).
+        /// </summary>
+        public static RaidResult RaidRegion(
+            RegionSnapshot snap, InventoryState inv, Func<EId> alloc,
+            ICoreDefinitionRegistry registry, ProgressionTreeConfig tree,
+            PlayerProgressionState progress, out string log)
+        {
+            var res = new RaidResult
+            {
+                Plan = PlanRegion(snap, inv, registry, tree, progress),
+            };
+
+            res.Outcome = RaidCombatSimulator.Resolve(res.Plan, inv);
+
+            var sb = new StringBuilder();
+            if (res.Plan.EnemyCount == 0)
+            {
+                sb.AppendLine($"'{snap.name}' is undefended — walked in for free.");
+            }
+            else
+            {
+                string bill = res.Plan.HasWeapon
+                    ? $"spent {res.Outcome.RoundsSpent}/{res.Plan.RoundsNeeded} {res.Plan.AmmoType}"
+                    : "no gun — fought it out bare-handed";
+                sb.AppendLine($"Fought '{snap.name}' (×{res.Plan.Difficulty:0.##} difficulty): " +
+                              $"{res.Plan.EnemyCount} enemy(ies), {res.Plan.TotalEnemyHp:0} HP → {bill}.");
+                sb.AppendLine($"Survival {res.Plan.SurviveChance:P0} " +
+                              $"(gear {res.Plan.GearScore:P0}, skills +{res.Plan.SkillBonus:P0}" +
+                              (res.Plan.Shortfall > 0 ? $", ammo short ×{res.Plan.AmmoPenalty:0.00}" : "") +
+                              (res.Plan.WeaponPenalty < 1f ? $", no gun ×{res.Plan.WeaponPenalty:0.00}" : "") +
+                              $") · rolled {res.Outcome.Roll:0.00}.");
+            }
+
+            if (!res.Outcome.Survived)
+            {
+                inv.ClearAll();
+                sb.Append("☠ KIA — no loot, and everything you carried is gone (weapons, armor, backpack).");
+                log = sb.ToString();
+                return res;
+            }
+
+            res.LootTaken = true;
+            res.Fill = LootRegion(snap, inv, alloc, out var lootLog);
+            sb.AppendLine("✔ Extracted.");
+            sb.Append(lootLog);
+            log = sb.ToString();
+            return res;
+        }
 
         /// <summary>Rolls every spawn in <paramref name="snap"/> (respecting spawn
         /// chance) and pours the most valuable loot into the backpack.</summary>

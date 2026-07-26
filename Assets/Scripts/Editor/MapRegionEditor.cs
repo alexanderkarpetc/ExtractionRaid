@@ -1,3 +1,4 @@
+using Systems.Meta;
 using UnityEditor;
 using UnityEngine;
 using View.SpawnPoints;
@@ -24,8 +25,18 @@ namespace Editor
 
             serializedObject.Update();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("regionName"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("difficultyMultiplier"),
+                new GUIContent("Difficulty ×"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("color"));
             serializedObject.ApplyModifiedProperties();
+
+            // What this multiplier actually buys, at the two ends of the gear curve.
+            float diff = Mathf.Max(0.1f, region.difficultyMultiplier);
+            EditorGUILayout.LabelField(
+                $"Survive: worst kit {RaidCombatSimulator.SurviveChance(0f, diff, 0f, 1f):P0} · " +
+                $"best kit {RaidCombatSimulator.SurviveChance(1f, diff, 0f, 1f):P0} · " +
+                $"full skill tree adds +{RaidCombatSimulator.MaxSkillBonus:P0} flat.",
+                EditorStyles.wordWrappedMiniLabel);
 
             EditorGUILayout.Space(6);
             _editing = GUILayout.Toggle(_editing, _editing ? "● Editing — click the map to add points" : "Edit Region",

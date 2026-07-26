@@ -4,7 +4,9 @@ using ApplicationCore;
 using Cysharp.Threading.Tasks;
 using Dev;
 using Editor.Meta;
+using Progression;
 using State;
+using Systems.Meta;
 using Systems;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -853,31 +855,72 @@ namespace Editor
             EditorGUILayout.Space(2);
             foreach (var region in _metaCache.regions)
             {
-                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.LabelField(region.name, GUILayout.MinWidth(110));
-                    EditorGUILayout.LabelField(
-                        $"📦 {region.containers.Count}  ✦ {region.loose.Count}  💀 {region.bots.Count}",
-                        EditorStyles.miniLabel, GUILayout.Width(140));
-                    using (new EditorGUI.DisabledScope(!appReady))
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        if (GUILayout.Button("Loot → Backpack", GUILayout.Width(130)))
+                        EditorGUILayout.LabelField($"{region.name}  ×{region.difficulty:0.##}",
+                            GUILayout.MinWidth(110));
+                        EditorGUILayout.LabelField(
+                            $"📦 {region.containers.Count}  ✦ {region.loose.Count}  💀 {region.bots.Count}",
+                            EditorStyles.miniLabel, GUILayout.Width(140));
+                        using (new EditorGUI.DisabledScope(!appReady))
                         {
-                            RaidSimRegions.LootRegion(
-                                region, App.Instance.Player.Inventory, App.Instance.AllocateEId,
-                                out _metaLootInfo);
-                            Debug.Log($"[DevCheats] {_metaLootInfo}");
+                            if (GUILayout.Button("Raid → Backpack", GUILayout.Width(130)))
+                            {
+                                RaidSimRegions.RaidRegion(
+                                    region, App.Instance.Player.Inventory, App.Instance.AllocateEId,
+                                    App.Instance.CoreDefinitions, ProgressionTreeConfig.Instance,
+                                    App.Instance.Player.Progression, out _metaLootInfo);
+                                Debug.Log($"[DevCheats] {_metaLootInfo}");
+                            }
                         }
                     }
+
+                    // Live bill + odds against the CURRENT kit, so you can see what a better
+                    // gun / more armor / more skill nodes buys you before committing.
+                    if (appReady)
+                        EditorGUILayout.LabelField(DescribePlan(region), EditorStyles.wordWrappedMiniLabel);
                 }
             }
 
             if (!appReady)
-                EditorGUILayout.HelpBox("Enter Play Mode (hideout is fine) to loot a region into the backpack.",
+                EditorGUILayout.HelpBox("Enter Play Mode (hideout is fine) to raid a region into the backpack.",
                     MessageType.Info);
+            else
+                EditorGUILayout.LabelField(
+                    "Raiding burns real reserve ammo and rolls survival — dying forfeits the whole " +
+                    "inventory, same as a live KIA.", EditorStyles.wordWrappedMiniLabel);
 
             if (!string.IsNullOrEmpty(_metaLootInfo))
                 EditorGUILayout.HelpBox(_metaLootInfo, MessageType.Info);
+        }
+
+        // One-line "what will this cost me and what are my odds" readout for a region row.
+        static string DescribePlan(RegionSnapshot region)
+        {
+            var plan = RaidSimRegions.PlanRegion(
+                region, App.Instance.Player.Inventory, App.Instance.CoreDefinitions,
+                ProgressionTreeConfig.Instance, App.Instance.Player.Progression);
+
+            if (plan.EnemyCount == 0) return "No enemies here — free loot, no ammo, no roll.";
+
+            string gun, ammo;
+            if (plan.HasWeapon)
+            {
+                ammo = $"{plan.RoundsNeeded} × {plan.AmmoType} (have {plan.RoundsAvailable})";
+                if (plan.Shortfall > 0) ammo += $" ⚠ short {plan.Shortfall}";
+                gun = $"{plan.WeaponName} — {plan.Dps:0} dps";
+            }
+            else
+            {
+                ammo = "none";
+                gun = $"⚠ no gun (odds ×{RaidCombatSimulator.ImprovisedPenalty:0.00})";
+            }
+
+            return $"{plan.EnemyCount} enemy · {plan.TotalEnemyHp:0} HP · ammo {ammo}\n" +
+                   $"{gun}, gear {plan.GearScore:P0}, " +
+                   $"skills +{plan.SkillBonus:P0}  →  survive {plan.SurviveChance:P0}";
         }
 
         // Simulates the player vendoring everything in the backpack: each slot pays out

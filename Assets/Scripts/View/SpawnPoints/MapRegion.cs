@@ -22,6 +22,11 @@ namespace View.SpawnPoints
                  "areas. Order defines the outline; the last point links back to the first.")]
         public List<Vector3> points = new();
 
+        [Tooltip("How dangerous this area is. Feeds the region raid sim's survival roll: the " +
+                 "gear-based base chance is raised to this power, so 1 = the plain 70%..99% " +
+                 "band, 2 = squared (a bad kit drops to ~49%), 0.5 = a safe milk run.")]
+        [Range(0.25f, 4f)] public float difficultyMultiplier = 1f;
+
         [Tooltip("Gizmo colour (outline + fill).")]
         public Color color = new(0.25f, 0.7f, 1f, 1f);
 
@@ -73,7 +78,7 @@ namespace View.SpawnPoints
             c /= PointCount;
             UnityEditor.Handles.color = line;
             UnityEditor.Handles.Label(c + Vector3.up * 0.5f,
-                $"{regionName}{(IsValid ? "" : "  (needs ≥3 points)")}");
+                $"{regionName}  ×{difficultyMultiplier:0.##}{(IsValid ? "" : "  (needs ≥3 points)")}");
         }
 #endif
     }
