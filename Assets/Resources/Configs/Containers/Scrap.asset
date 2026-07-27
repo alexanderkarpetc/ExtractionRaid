@@ -16,29 +16,45 @@ MonoBehaviour:
   _displayName: Module Cache
   _slotCount: 6
   _minDrops: 1
-  _maxDrops: 2
+  _maxDrops: 4
   _drops:
   - definitionId: Rubber
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Adaptive_Circuit
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Aluminum
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Bio_Compound
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Cloth
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Energy_Core
     minCount: 1
     maxCount: 1
     weight: 1
+    weaponPreset: {fileID: 0}
+  - definitionId: Crystal_Matrix
+    minCount: 1
+    maxCount: 1
+    weight: 1
+    weaponPreset: {fileID: 0}
+  - definitionId: Electronics
+    minCount: 1
+    maxCount: 1
+    weight: 1
+    weaponPreset: {fileID: 0}
