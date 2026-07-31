@@ -836,6 +836,12 @@ namespace Editor
                 }
                 if (!string.IsNullOrEmpty(_metaSellInfo))
                     EditorGUILayout.LabelField(_metaSellInfo, EditorStyles.miniLabel);
+
+                // What a raid will prioritise over raw value — recomputed each repaint so
+                // it tracks quest hand-ins / upgrades you do while the window is open.
+                if (canSell)
+                    EditorGUILayout.LabelField(MetaNeeds.Describe(CurrentNeeds()),
+                        EditorStyles.wordWrappedMiniLabel);
             }
 
             if (_metaCache?.regions == null || _metaCache.regions.Count == 0)
@@ -871,7 +877,8 @@ namespace Editor
                                 RaidSimRegions.RaidRegion(
                                     region, App.Instance.Player.Inventory, App.Instance.AllocateEId,
                                     App.Instance.CoreDefinitions, ProgressionTreeConfig.Instance,
-                                    App.Instance.Player.Progression, out _metaLootInfo);
+                                    App.Instance.Player.Progression, out _metaLootInfo,
+                                    MetaNeeds.ToQuotas(CurrentNeeds()));
                                 Debug.Log($"[DevCheats] {_metaLootInfo}");
                             }
                         }
@@ -894,6 +901,17 @@ namespace Editor
 
             if (!string.IsNullOrEmpty(_metaLootInfo))
                 EditorGUILayout.HelpBox(_metaLootInfo, MessageType.Info);
+        }
+
+        // The player's CURRENT shopping list: active-quest hand-ins, the next level of
+        // each hideout building, and skill nodes that are unlockable right now. Deeper
+        // levels / unreachable nodes are deliberately out — a sim raid should bring back
+        // what unblocks the very next step, not everything the tree will ever want.
+        static List<MetaNeeds.Need> CurrentNeeds()
+        {
+            var player = App.Instance?.Player;
+            if (player == null) return new List<MetaNeeds.Need>();
+            return MetaNeeds.Collect(player, App.Instance.QuestDatabase, ProgressionTreeConfig.Instance);
         }
 
         // One-line "what will this cost me and what are my odds" readout for a region row.

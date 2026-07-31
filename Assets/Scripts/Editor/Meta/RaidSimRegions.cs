@@ -227,7 +227,8 @@ namespace Editor.Meta
         public static RaidResult RaidRegion(
             RegionSnapshot snap, InventoryState inv, Func<EId> alloc,
             ICoreDefinitionRegistry registry, ProgressionTreeConfig tree,
-            PlayerProgressionState progress, out string log)
+            PlayerProgressionState progress, out string log,
+            IReadOnlyDictionary<string, RegionLootSimulator.NeedQuota> needs = null)
         {
             var res = new RaidResult
             {
@@ -264,7 +265,7 @@ namespace Editor.Meta
             }
 
             res.LootTaken = true;
-            res.Fill = LootRegion(snap, inv, alloc, out var lootLog);
+            res.Fill = LootRegion(snap, inv, alloc, out var lootLog, needs);
             sb.AppendLine("✔ Extracted.");
             sb.Append(lootLog);
             log = sb.ToString();
@@ -272,9 +273,12 @@ namespace Editor.Meta
         }
 
         /// <summary>Rolls every spawn in <paramref name="snap"/> (respecting spawn
-        /// chance) and pours the most valuable loot into the backpack.</summary>
+        /// chance) and pours the loot into the backpack: whatever the player currently
+        /// needs (<paramref name="needs"/> — quests, next hideout level, reachable skill
+        /// nodes) first, then the most valuable of the rest.</summary>
         public static RegionLootSimulator.FillResult LootRegion(
-            RegionSnapshot snap, InventoryState inv, Func<EId> alloc, out string log)
+            RegionSnapshot snap, InventoryState inv, Func<EId> alloc, out string log,
+            IReadOnlyDictionary<string, RegionLootSimulator.NeedQuota> needs = null)
         {
             // Loot EVERYTHING in the region — spawn chance is ignored on purpose: the
             // fantasy is "you just cleared this whole area". What actually drops inside
@@ -312,13 +316,16 @@ namespace Editor.Meta
                 botsHit++;
             }
 
-            var result = RegionLootSimulator.FillBackpackByValue(inv, rolled, alloc);
+            var result = RegionLootSimulator.FillBackpackByValue(inv, rolled, alloc, needs);
 
             var sb = new StringBuilder();
             sb.AppendLine($"Looted region '{snap.name}': {containersHit} container(s), {looseHit} loose, {botsHit} enemy body(ies).");
             sb.AppendLine($"Kept {result.UnitsBanked} unit(s) across {result.DistinctBanked} slot(s) " +
                           $"({result.WeaponsBanked} gun(s)), worth {result.ValueBanked}¢.");
-            sb.Append($"Backpack {result.SlotsUsed}/{result.SlotsCapacity} slots (most valuable kept).");
+            if (result.NeedSlotsBanked > 0)
+                sb.AppendLine($"★ {result.NeedUnitsBanked} unit(s) in {result.NeedSlotsBanked} slot(s) went to " +
+                              "current quest / hideout / skill needs (taken before value).");
+            sb.Append($"Backpack {result.SlotsUsed}/{result.SlotsCapacity} slots (needs first, then most valuable).");
             if (result.Skipped != null && result.Skipped.Count > 0)
             {
                 int skippedUnits = 0;

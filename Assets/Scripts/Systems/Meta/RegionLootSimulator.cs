@@ -225,7 +225,20 @@ namespace Systems.Meta
             public long ValueBanked;
             public int DistinctBanked;
             public int WeaponsBanked;
+            public int NeedSlotsBanked;  // slots spent on progression needs, not on price
+            public int NeedUnitsBanked;
             public List<Rolled> Skipped; // items that didn't make the cut (backpack full)
+        }
+
+        /// <summary>
+        /// How much of an item the player still needs, and how urgently. Built by
+        /// <see cref="MetaNeeds.ToQuotas"/>; <see cref="Priority"/> mirrors
+        /// <see cref="MetaNeeds.NeedSource"/> (0 = quest, 1 = hideout, 2 = skill).
+        /// </summary>
+        public struct NeedQuota
+        {
+            public int Remaining;
+            public int Priority;
         }
 
         /// <summary>
@@ -233,8 +246,13 @@ namespace Systems.Meta
         /// most valuable items that fit — "grab the better stuff, drop the garbage". Existing
         /// weapons / armor keep their config + durability; stackables are re-consolidated.
         /// Anything that didn't make the cut lands in <see cref="FillResult.Skipped"/>.
+        ///
+        /// <paramref name="needs"/> (optional) front-loads progression: anything on the
+        /// current quest / hideout / skill shopping list is packed FIRST, urgent track first,
+        /// up to the quota — only the slots left over go to the most valuable loot.
         /// </summary>
-        public static FillResult FillBackpackByValue(InventoryState inv, List<Rolled> rolled, Func<EId> alloc)
+        public static FillResult FillBackpackByValue(InventoryState inv, List<Rolled> rolled, Func<EId> alloc,
+            IReadOnlyDictionary<string, NeedQuota> needs = null)
         {
             var result = new FillResult { Skipped = new List<Rolled>() };
             if (inv == null) return result;
@@ -303,8 +321,38 @@ namespace Systems.Meta
                 }
             }
 
-            // Most valuable first, then pour into the pack until full.
-            candidates.Sort((a, b) => ValueOfItem(b).CompareTo(ValueOfItem(a)));
+            // Claim what progression actually asks for before anything is priced: biggest
+            // stacks first so a quota is met in the fewest slots, urgent track first.
+            var needClaim = new HashSet<ItemState>();
+            var needRank = new Dictionary<ItemState, int>();
+            if (needs != null && needs.Count > 0)
+            {
+                var quota = new Dictionary<string, NeedQuota>();
+                foreach (var kv in needs) quota[kv.Key] = kv.Value;
+
+                var byStack = new List<ItemState>(candidates);
+                byStack.Sort((a, b) => Mathf.Max(1, b.StackCount).CompareTo(Mathf.Max(1, a.StackCount)));
+
+                foreach (var it in byStack)
+                {
+                    if (it.HasWeaponConfiguration || string.IsNullOrEmpty(it.DefinitionId)) continue;
+                    if (!quota.TryGetValue(it.DefinitionId, out var q) || q.Remaining <= 0) continue;
+
+                    needClaim.Add(it);
+                    needRank[it] = q.Priority;
+                    q.Remaining -= Mathf.Max(1, it.StackCount);
+                    quota[it.DefinitionId] = q;
+                }
+            }
+
+            // Needed items first (quest → hideout → skill), then most valuable.
+            candidates.Sort((a, b) =>
+            {
+                bool na = needClaim.Contains(a), nb = needClaim.Contains(b);
+                if (na != nb) return na ? -1 : 1;
+                if (na && needRank[a] != needRank[b]) return needRank[a].CompareTo(needRank[b]);
+                return ValueOfItem(b).CompareTo(ValueOfItem(a));
+            });
 
             int cap = inv.Backpack.Length;
             for (int i = 0; i < cap; i++) inv.Backpack[i] = null;
@@ -320,6 +368,11 @@ namespace Systems.Meta
                     result.ValueBanked += ValueOfItem(it);
                     result.DistinctBanked++;
                     if (it.HasWeaponConfiguration) result.WeaponsBanked++;
+                    if (needClaim.Contains(it))
+                    {
+                        result.NeedSlotsBanked++;
+                        result.NeedUnitsBanked += Mathf.Max(1, it.StackCount);
+                    }
                 }
                 else
                 {
