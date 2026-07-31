@@ -43,17 +43,50 @@ namespace Systems.Bot.Nodes
                 perp = Vector3.right;
             }
 
-            // Strafe: flip direction every Min..Max seconds so the bot doesn't drift away.
-            if (bb.StrafeDirection == 0)
-                bb.StrafeDirection = 1;
-            if (state.ElapsedTime >= bb.StrafeChangeTime)
+            // Footwork. Bots fighting from cover keep the legacy pure-strafe: their
+            // peek spot is only valid where they stand, so TakeCoverNode owns the feet
+            // and this node must not push them off it.
+            bool fromCover = bb.CoverPhase != CoverPhase.None;
+            if (fromCover)
             {
-                bb.StrafeDirection = -bb.StrafeDirection;
-                bb.StrafeChangeTime = state.ElapsedTime
-                    + Random.Range(BotConstants.ShootStrafeMinDuration, BotConstants.ShootStrafeMaxDuration);
+                bot.DesiredVelocity = StrafeVelocity(bb, state, perp, in config);
             }
-            bot.DesiredVelocity = perp * (bb.StrafeDirection * config.ChaseSpeed
-                                          * BotConstants.ShootStrafeSpeedFraction * bb.Aggression);
+            else
+            {
+                // Open field: roll a stance every few seconds — plant, push, or strafe.
+                // Endless strafing was the tell that read as "weird" to the player.
+                if (state.ElapsedTime >= bb.CombatStanceEndTime)
+                    RollStance(bb, state);
+
+                switch (bb.CombatStance)
+                {
+                    case CombatStance.Strafe:
+                        bot.DesiredVelocity = StrafeVelocity(bb, state, perp, in config);
+                        break;
+
+                    case CombatStance.Advance:
+                        float stopDist = Mathf.Max(BotConstants.ShootAdvanceStopMin,
+                            config.EngageRange * BotConstants.ShootAdvanceStopFraction);
+                        // Own-position distance, not the perception-tick snapshot in
+                        // bb.DistanceToTarget — that one lags and would overshoot.
+                        if (toTarget.magnitude > stopDist)
+                        {
+                            bot.DesiredVelocity = toTarget.normalized * (config.ChaseSpeed
+                                * BotConstants.ShootAdvanceSpeedFraction * bb.Aggression);
+                            break;
+                        }
+                        // Already inside the push distance — go lateral instead of
+                        // oscillating at the stop line or walking into melee. Standing
+                        // still is Hold's job, not a side effect of a blocked advance.
+                        bb.CombatStance = CombatStance.Strafe;
+                        bot.DesiredVelocity = StrafeVelocity(bb, state, perp, in config);
+                        break;
+
+                    default: // Hold
+                        bot.DesiredVelocity = Vector3.zero;
+                        break;
+                }
+            }
 
             // Aim sway: slow Perlin-noise lateral wobble around LastKnownTargetPos. Combined
             // with existing per-pellet accuracy spread it gives a "tracking, not snapping"
@@ -96,9 +129,73 @@ namespace Systems.Bot.Nodes
                 bb.BurstShotsLeft = Mathf.Max(1, Mathf.RoundToInt(burst));
             }
 
-            bb.DebugStatus = "Shoot";
+            bb.DebugStatus = fromCover ? "Shoot" : StanceLabel(bb.CombatStance);
             bot.WantsToFire = true;
             return this.Traced(bot, BTStatus.Success);
         }
+
+        /// <summary>
+        /// Lateral movement along the perp-to-target axis, flipping direction every
+        /// Min..Max seconds so the bot doesn't drift off across the map.
+        /// </summary>
+        static Vector3 StrafeVelocity(BotBlackboard bb, RaidState state, Vector3 perp,
+            in BotTypeConfig config)
+        {
+            if (bb.StrafeDirection == 0)
+                bb.StrafeDirection = 1;
+            if (state.ElapsedTime >= bb.StrafeChangeTime)
+            {
+                bb.StrafeDirection = -bb.StrafeDirection;
+                bb.StrafeChangeTime = state.ElapsedTime
+                    + Random.Range(BotConstants.ShootStrafeMinDuration, BotConstants.ShootStrafeMaxDuration);
+            }
+            return perp * (bb.StrafeDirection * config.ChaseSpeed
+                           * BotConstants.ShootStrafeSpeedFraction * bb.Aggression);
+        }
+
+        /// <summary>
+        /// Weighted stance roll. Aggression pushes toward Advance and away from Hold, so
+        /// a jumpy bot presses in while a cautious one plants and shoots. Repeating the
+        /// current stance is possible but down-weighted.
+        /// </summary>
+        static void RollStance(BotBlackboard bb, RaidState state)
+        {
+            float aggr = Mathf.Max(0.1f, bb.Aggression);
+            float hold    = BotConstants.ShootStanceHoldWeight / aggr;
+            float advance = BotConstants.ShootStanceAdvanceWeight * aggr;
+            float strafe  = BotConstants.ShootStanceStrafeWeight;
+
+            switch (bb.CombatStance)
+            {
+                case CombatStance.Hold:    hold    *= BotConstants.ShootStanceRepeatWeightMult; break;
+                case CombatStance.Advance: advance *= BotConstants.ShootStanceRepeatWeightMult; break;
+                default:                   strafe  *= BotConstants.ShootStanceRepeatWeightMult; break;
+            }
+
+            float roll = Random.value * (hold + advance + strafe);
+            var next = roll < hold                ? CombatStance.Hold
+                     : roll < hold + advance      ? CombatStance.Advance
+                                                  : CombatStance.Strafe;
+
+            // Entering a fresh strafe leg: pick a side outright instead of inheriting
+            // whichever way the previous leg happened to end.
+            if (next == CombatStance.Strafe && bb.CombatStance != CombatStance.Strafe)
+            {
+                bb.StrafeDirection  = Random.value < 0.5f ? -1 : 1;
+                bb.StrafeChangeTime = state.ElapsedTime
+                    + Random.Range(BotConstants.ShootStrafeMinDuration, BotConstants.ShootStrafeMaxDuration);
+            }
+
+            bb.CombatStance = next;
+            bb.CombatStanceEndTime = state.ElapsedTime
+                + Random.Range(BotConstants.ShootStanceMinDuration, BotConstants.ShootStanceMaxDuration);
+        }
+
+        static string StanceLabel(CombatStance stance) => stance switch
+        {
+            CombatStance.Hold    => "Shoot (hold)",
+            CombatStance.Advance => "Shoot (push)",
+            _                    => "Shoot (strafe)",
+        };
     }
 }

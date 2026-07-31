@@ -432,6 +432,25 @@ namespace Constants
         public const float ShootStrafeMinDuration   = 1.2f;
         public const float ShootStrafeMaxDuration   = 2.6f;
 
+        // Combat stance: open-field footwork is re-rolled every few seconds between
+        // hold / advance / strafe. Strafing nonstop was the tell — bots slid sideways
+        // for entire fights. Weights are relative; Aggression biases the roll toward
+        // pushing in (and away from planting). Cover fights keep pure strafe.
+        public const float ShootStanceMinDuration   = 1.4f;
+        public const float ShootStanceMaxDuration   = 3.2f;
+        public const float ShootStanceHoldWeight    = 1.0f;   // divided by Aggression
+        public const float ShootStanceAdvanceWeight = 0.8f;   // multiplied by Aggression
+        public const float ShootStanceStrafeWeight  = 1.2f;
+        // Rolling the same stance twice in a row reads as "nothing changed" — allowed,
+        // but down-weighted so consecutive repeats are the exception.
+        public const float ShootStanceRepeatWeightMult = 0.4f;
+
+        // Advance: walk in while firing, but never crawl into melee range. Stop at
+        // whichever is larger — a fraction of EngageRange or the absolute floor.
+        public const float ShootAdvanceSpeedFraction = 0.5f;   // of config.ChaseSpeed
+        public const float ShootAdvanceStopFraction  = 0.45f;  // of config.EngageRange
+        public const float ShootAdvanceStopMin       = 3.5f;   // meters
+
         // Aim sway: Perlin-noise-driven lateral offset on the aim point. Sized so
         // per-shot hit rate at engage range stays roughly equal to baseline accuracy.
         public const float AimSwayAmplitude = 0.45f;           // meters at the aim point

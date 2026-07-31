@@ -16,6 +16,18 @@ namespace State
         Return,      // ducking back behind cover after the exposure window
     }
 
+    /// <summary>
+    /// Open-field fighting footwork (ShootNode). Rolled every few seconds so a bot
+    /// doesn't slide sideways for the whole engagement. Not used while fighting from
+    /// cover — TakeCoverNode owns the feet there.
+    /// </summary>
+    public enum CombatStance : byte
+    {
+        Strafe = 0, // lateral movement perpendicular to the target (the legacy behaviour)
+        Hold,       // planted, shooting from where it stands
+        Advance,    // walking in on the target, stopping short of melee range
+    }
+
     public class BotBlackboard
     {
         // Target tracking
@@ -67,6 +79,10 @@ namespace State
         public int   StrafeDirection;       // -1 or +1 along perp-to-target axis
         public float StrafeChangeTime;      // ElapsedTime at which to flip strafe direction
         public float AimSwaySeed;           // per-bot phase offset for aim-sway noise
+
+        // Combat footwork — re-rolled every ShootStance*Duration seconds in ShootNode
+        public CombatStance CombatStance;
+        public float CombatStanceEndTime;   // ElapsedTime at which to roll the next stance
 
         // Personality — rolled once per spawn so each bot is an individual, not a clone
         public float ReactionTimeMult = 1f; // scales config.ReactionTime
@@ -160,6 +176,8 @@ namespace State
             ReactionTimer = 0f;
             VisionAwareness01 = 0f;
             IsAlert = false;
+            CombatStance = CombatStance.Strafe;
+            CombatStanceEndTime = 0f;
             AimSettle01 = 0f;
             EffectiveAccuracy = 0f;
             BurstShotsLeft = 0;
@@ -219,6 +237,8 @@ namespace State
             StrafeDirection = 0;
             StrafeChangeTime = 0f;
             AimSwaySeed = 0f;
+            CombatStance = CombatStance.Strafe;
+            CombatStanceEndTime = 0f;
             ReactionTimeMult = 1f;
             AccuracyMult = 1f;
             Aggression = 1f;
