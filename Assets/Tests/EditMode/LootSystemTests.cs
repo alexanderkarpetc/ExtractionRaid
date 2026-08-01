@@ -332,16 +332,19 @@ namespace Tests.EditMode
             Assert.AreEqual(1, config.MinDrops);
             Assert.AreEqual(3, config.MaxDrops);
 
-            // Build-parts cache = 5 cores + 13 attachment mods; all are WeaponMod-category items.
-            Assert.AreEqual(18, config.PossibleDrops.Length, "ModuleCache pool = 5 cores + 13 mods.");
-            foreach (var drop in config.PossibleDrops)
+            // Build-parts cache = the cores bucket + the attachments bucket. WHICH part comes
+            // out of each is ItemBalance's call, so the config only names the two buckets.
+            Assert.AreEqual(2, config.RandomPool.Length);
+            foreach (var entry in config.RandomPool)
             {
-                var def = ItemDefinition.Get(drop.DefinitionId);
-                Assert.IsNotNull(def, drop.DefinitionId);
-                Assert.AreEqual(ItemCategory.WeaponMod, def.Category,
-                    $"ModuleCache pool entry '{drop.DefinitionId}' is not a WeaponMod item.");
-                Assert.AreEqual(1, drop.MinCount, "Cores + mods drop as single units — min/max=1.");
-                Assert.AreEqual(1, drop.MaxCount);
+                Assert.IsTrue(entry.IsCategory, "ModuleCache rolls whole buckets, not fixed items.");
+                Assert.IsTrue(entry.Category == LootCategory.WeaponCores
+                              || entry.Category == LootCategory.Attachments,
+                    $"Unexpected bucket '{entry.Category}' in ModuleCache.");
+
+                foreach (var def in LootConstants.CandidatesFor(entry.Category))
+                    Assert.AreEqual(ItemCategory.WeaponMod, def.Category,
+                        $"'{def.Id}' resolved from {entry.Category} is not a WeaponMod item.");
             }
         }
 
@@ -350,18 +353,24 @@ namespace Tests.EditMode
         {
             Assert.IsTrue(ContainerConstants.TryGetConfig(ContainerType.RandomLootBox, out var config));
 
-            var poolIds = new System.Collections.Generic.HashSet<string>();
-            foreach (var drop in config.PossibleDrops) poolIds.Add(drop.DefinitionId);
+            bool hasCores = false;
+            foreach (var entry in config.RandomPool)
+                if (entry.IsCategory && entry.Category == LootCategory.WeaponCores) hasCores = true;
+            Assert.IsTrue(hasCores, "RandomLootBox should be able to roll weapon cores.");
+
+            var coreIds = new System.Collections.Generic.HashSet<string>();
+            foreach (var def in LootConstants.CandidatesFor(LootCategory.WeaponCores))
+                coreIds.Add(def.Id);
 
             foreach (var moduleId in ExpectedModuleIds)
-                Assert.IsTrue(poolIds.Contains(moduleId),
-                    $"RandomLootBox pool missing weapon module '{moduleId}'.");
+                Assert.IsTrue(coreIds.Contains(moduleId),
+                    $"WeaponCores bucket missing weapon module '{moduleId}'.");
         }
 
         [Test]
         public void CreateContainer_ModuleCache_DropsOnlyBuildParts()
         {
-            // Deterministic RNG so the 10 runs cover the pool (cores + mods).
+            // Deterministic RNG so the 10 runs cover both buckets (cores + attachments).
             UnityEngine.Random.InitState(0xC0FFEE);
 
             ContainerConstants.TryGetConfig(ContainerType.ModuleCache, out var config);
@@ -390,6 +399,125 @@ namespace Tests.EditMode
                 totalSpawned += spawnedThisRun;
             }
             Assert.Greater(totalSpawned, 0, "ModuleCache should spawn at least one module across 10 runs.");
+        }
+
+        // ── Containers: hardcoded drops + balance-driven rolls ──────────
+
+        [Test]
+        public void CreateContainer_GuaranteedDrops_AlwaysSpawn()
+        {
+            // The "starting chest always holds a pistol" shape: hardcoded contents, no rolls.
+            var config = new ContainerTypeConfig(
+                typeId: "TestChest", displayName: "Test Chest",
+                minDrops: 0, maxDrops: 0,
+                randomPool: System.Array.Empty<LootPoolEntry>(),
+                guaranteedDrops: new[]
+                {
+                    new LootDrop("Medkit", 1, 1),
+                    new LootDrop("Bandage", 3, 3),
+                });
+
+            for (int run = 0; run < 5; run++)
+            {
+                LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+                var inv = _state.Lootables[_state.Lootables.Count - 1].Inventory;
+
+                Assert.AreEqual(1, CountInBackpack(inv, "Medkit"), "Guaranteed medkit missing.");
+                var bandages = FindInBackpack(inv, "Bandage");
+                Assert.IsNotNull(bandages, "Guaranteed bandages missing.");
+                Assert.AreEqual(3, bandages.StackCount, "Guaranteed count must be exact, not rolled.");
+            }
+        }
+
+        [Test]
+        public void CreateContainer_GuaranteedDrop_CountFromBalance_UsesBalanceRange()
+        {
+            var config = new ContainerTypeConfig(
+                typeId: "TestChest", displayName: "Test Chest",
+                minDrops: 0, maxDrops: 0,
+                randomPool: System.Array.Empty<LootPoolEntry>(),
+                guaranteedDrops: new[] { LootDrop.FromBalance("Bandage") });
+
+            ItemBalanceAsset.DropCountRangeOf("Bandage", out int min, out int max);
+
+            for (int run = 0; run < 20; run++)
+            {
+                LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+                var bandages = FindInBackpack(_state.Lootables[_state.Lootables.Count - 1].Inventory, "Bandage");
+                Assert.IsNotNull(bandages);
+                Assert.GreaterOrEqual(bandages.StackCount, min);
+                Assert.LessOrEqual(bandages.StackCount, max);
+            }
+        }
+
+        [Test]
+        public void CreateContainer_CategoryPool_RollsOnlyThatCategory()
+        {
+            UnityEngine.Random.InitState(1234);
+
+            var config = new ContainerTypeConfig(
+                typeId: "TestMeds", displayName: "Test Meds",
+                minDrops: 3, maxDrops: 3,
+                randomPool: new[] { LootPoolEntry.FromCategory(LootCategory.Meds) });
+
+            int seen = 0;
+            for (int run = 0; run < 10; run++)
+            {
+                LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+                var inv = _state.Lootables[_state.Lootables.Count - 1].Inventory;
+                for (int slot = 0; slot < InventoryState.BackpackSize; slot++)
+                {
+                    var item = inv.Backpack[slot];
+                    if (item == null) continue;
+                    Assert.AreEqual(ItemCategory.Meds, item.Definition.Category,
+                        $"Meds-only pool produced '{item.DefinitionId}'.");
+                    seen++;
+                }
+            }
+            Assert.Greater(seen, 0, "A Meds pool should produce items.");
+        }
+
+        [Test]
+        public void CreateContainer_RolledStackSize_ComesFromBalance()
+        {
+            UnityEngine.Random.InitState(99);
+
+            // A named-item pool entry still defers its stack size to the balance table.
+            var config = new ContainerTypeConfig(
+                typeId: "TestAmmo", displayName: "Test Ammo",
+                minDrops: 1, maxDrops: 1,
+                randomPool: new[] { LootPoolEntry.FromItem("Ammo_Rifle") });
+
+            ItemBalanceAsset.DropCountRangeOf("Ammo_Rifle", out int min, out int max);
+            Assert.Greater(max, 1, "Ammo_Rifle is expected to drop in stacks, not singles.");
+
+            for (int run = 0; run < 20; run++)
+            {
+                LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+                var ammo = FindInBackpack(_state.Lootables[_state.Lootables.Count - 1].Inventory, "Ammo_Rifle");
+                Assert.IsNotNull(ammo);
+                Assert.GreaterOrEqual(ammo.StackCount, min);
+                Assert.LessOrEqual(ammo.StackCount, max);
+            }
+        }
+
+        [Test]
+        public void CreateContainer_SlotCount_ClampsLoot()
+        {
+            var config = new ContainerTypeConfig(
+                typeId: "TestTiny", displayName: "Tiny",
+                minDrops: 10, maxDrops: 10,
+                randomPool: new[] { LootPoolEntry.FromCategory(LootCategory.Meds) },
+                guaranteedDrops: null,
+                slotCount: 2);
+
+            LootSystem.CreateContainer(_state, in config, Vector3.zero, _events);
+
+            var inv = _state.Lootables[0].Inventory;
+            int used = 0;
+            for (int slot = 0; slot < InventoryState.BackpackSize; slot++)
+                if (inv.Backpack[slot] != null) used++;
+            Assert.AreEqual(2, used, "A 2-slot container must never hold more than 2 stacks.");
         }
     }
 }

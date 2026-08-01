@@ -3,12 +3,22 @@ using State;
 
 namespace Constants
 {
+    /// <summary>
+    /// A named drop: one specific item (or one assembled weapon preset) in a count range.
+    /// Used for HARDCODED loot — a container's guaranteed contents, a bot's guaranteed items —
+    /// where the designer wants that exact thing, not a roll. Set
+    /// <see cref="CountFromBalance"/> to keep the item fixed but let
+    /// <see cref="ItemBalanceAsset"/> decide the stack size.
+    /// </summary>
     public readonly struct LootDrop
     {
         public readonly string DefinitionId;
         public readonly int MinCount;
         public readonly int MaxCount;
-        public readonly float Weight;
+
+        /// <summary>When true the count range above is ignored and the stack size comes from
+        /// the balance table's per-item drop-count range.</summary>
+        public readonly bool CountFromBalance;
 
         /// <summary>
         /// Optional. When set (and valid), this drop spawns the fully-assembled weapon
@@ -20,22 +30,66 @@ namespace Constants
         public bool IsWeaponPreset => WeaponPreset != null && WeaponPreset.IsValid;
 
         public LootDrop(string definitionId, int minCount, int maxCount)
-            : this(definitionId, minCount, maxCount, 1f) { }
+            : this(definitionId, minCount, maxCount, null) { }
 
-        public LootDrop(string definitionId, int minCount, int maxCount, float weight)
-            : this(definitionId, minCount, maxCount, weight, null) { }
-
-        public LootDrop(string definitionId, int minCount, int maxCount, float weight,
-            WeaponPresetDefinition weaponPreset)
+        public LootDrop(string definitionId, int minCount, int maxCount,
+            WeaponPresetDefinition weaponPreset, bool countFromBalance = false)
         {
             DefinitionId = definitionId;
             MinCount = minCount;
             MaxCount = maxCount;
-            Weight = weight > 0f ? weight : 1f;
             WeaponPreset = weaponPreset;
+            CountFromBalance = countFromBalance;
         }
+
+        /// <summary>Named item, stack size straight from the balance table.</summary>
+        public static LootDrop FromBalance(string definitionId) =>
+            new(definitionId, 1, 1, null, countFromBalance: true);
+
+        /// <summary>An assembled weapon (the "starting chest always holds a pistol" case).</summary>
+        public static LootDrop Preset(WeaponPresetDefinition preset) =>
+            new(null, 1, 1, preset);
     }
 
+    /// <summary>
+    /// One weighted entry in a container's random pool. Either a whole
+    /// <see cref="LootCategory"/> bucket — the item inside it is picked by the balance table's
+    /// DropWeight — or one specific item. Either way the stack size comes from the balance
+    /// table. The entry weight only shapes the container's MIX ("mostly ammo, some meds"),
+    /// never an individual item's rarity.
+    /// </summary>
+    public readonly struct LootPoolEntry
+    {
+        public readonly bool IsCategory;
+        public readonly LootCategory Category;
+        public readonly string DefinitionId;
+        public readonly float Weight;
+
+        LootPoolEntry(bool isCategory, LootCategory category, string definitionId, float weight)
+        {
+            IsCategory = isCategory;
+            Category = category;
+            DefinitionId = definitionId;
+            Weight = weight;
+        }
+
+        public static LootPoolEntry FromCategory(LootCategory category, float weight = 1f) =>
+            new(true, category, null, weight > 0f ? weight : 0f);
+
+        public static LootPoolEntry FromItem(string definitionId, float weight = 1f) =>
+            new(false, default, definitionId, weight > 0f ? weight : 0f);
+    }
+
+    /// <summary>
+    /// What a container spawns. Three independent knobs:
+    ///
+    ///   • <see cref="GuaranteedDrops"/> — hardcoded contents, always present, in order.
+    ///   • <see cref="MinDrops"/>/<see cref="MaxDrops"/> — how many extra entries to roll.
+    ///   • <see cref="RandomPool"/> — WHAT those rolls can be (category buckets / named items).
+    ///
+    /// Item rarity inside a bucket and every rolled stack size come from
+    /// <see cref="ItemBalanceAsset"/>, so retuning the economy is a one-asset edit.
+    /// </summary>
     public readonly struct ContainerTypeConfig
     {
         public const int DefaultSlotCount = 20;
@@ -45,21 +99,20 @@ namespace Constants
         public readonly int SlotCount;
         public readonly int MinDrops;
         public readonly int MaxDrops;
-        public readonly LootDrop[] PossibleDrops;
+        public readonly LootPoolEntry[] RandomPool;
+        public readonly LootDrop[] GuaranteedDrops;
 
         public ContainerTypeConfig(string typeId, string displayName, int minDrops, int maxDrops,
-            LootDrop[] possibleDrops)
-            : this(typeId, displayName, DefaultSlotCount, minDrops, maxDrops, possibleDrops) { }
-
-        public ContainerTypeConfig(string typeId, string displayName, int slotCount,
-            int minDrops, int maxDrops, LootDrop[] possibleDrops)
+            LootPoolEntry[] randomPool, LootDrop[] guaranteedDrops = null,
+            int slotCount = DefaultSlotCount)
         {
             TypeId = typeId;
             DisplayName = displayName;
             SlotCount = slotCount > 0 ? slotCount : DefaultSlotCount;
             MinDrops = minDrops;
             MaxDrops = maxDrops;
-            PossibleDrops = possibleDrops;
+            RandomPool = randomPool;
+            GuaranteedDrops = guaranteedDrops;
         }
     }
 
@@ -75,102 +128,49 @@ namespace Constants
     {
         public const int LootSlots = 8;
 
-        // Tier 6 G2 — weapon module ids that can drop. Mirrors entries у
-        // ItemDefinition.BuildRegistry (Tier 6 G1) so loot rolls produce real
-        // build-able items. All Common rarity initially; Tier 4 layers rarity.
-        public static readonly LootDrop[] WeaponModuleDrops =
-        {
-            new LootDrop("BallisticRound", 1, 1),
-            new LootDrop("LaserCharge",    1, 1),
-            new LootDrop("SingleAction",   1, 1),
-            new LootDrop("Auto",           1, 1),
-            new LootDrop("Scatter",        1, 1),
-        };
-
-        // Attachment mods (loot-gated economy). Ids match the AttachmentDefinition SOs +
-        // ItemDefinition entries. Universal mods drop at full weight; the 3 unique
-        // (archetype-restricted) mods are rarer (×0.4). `scale` tunes the whole pool's share
-        // when concatenated into a mixed container. See docs/ai/weapon-builder/attachments.
-        // Weights mirror the value tiers in ItemBalance: cheap handling mods (grips, mags,
-        // brake, red dot) drop freely at 1.0; premium gear drops rarer — the sniper scope and
-        // the PowerComp (suppressor-tier muzzle) are the pricey, uncommon finds, and the three
-        // archetype-locked uniques stay rarest. Tarkov-style: optics/suppressors = valuable + scarce.
-        public static LootDrop[] AttachmentModDrops(float scale = 1f) => new[]
-        {
-            new LootDrop("PowerComp",     1, 1, 0.55f * scale),
-            new LootDrop("MuzzleBrake",   1, 1, 1f * scale),
-            new LootDrop("VerticalGrip",  1, 1, 1f * scale),
-            new LootDrop("AngledGrip",    1, 1, 1f * scale),
-            new LootDrop("HeavyStock",    1, 1, 1f * scale),
-            new LootDrop("SkeletonStock", 1, 1, 0.85f * scale),
-            new LootDrop("RedDot",        1, 1, 1f * scale),
-            new LootDrop("SniperScope",   1, 1, 0.3f * scale),
-            new LootDrop("ExtendedMag",   1, 1, 1f * scale),
-            new LootDrop("QuickMag",      1, 1, 1f * scale),
-            new LootDrop("LaserFocusing", 1, 1, 0.4f * scale),
-            new LootDrop("ScatterChoke",  1, 1, 0.4f * scale),
-            new LootDrop("AutoHeatSink",  1, 1, 0.4f * scale),
-        };
-
-        static LootDrop[] Concat(LootDrop[] a, LootDrop[] b)
-        {
-            var r = new LootDrop[a.Length + b.Length];
-            a.CopyTo(r, 0);
-            b.CopyTo(r, a.Length);
-            return r;
-        }
-
         public static readonly ContainerTypeConfig MedContainer = new(
             typeId: "MedContainer",
             displayName: "Medical Supplies",
             minDrops: 2, maxDrops: 4,
-            possibleDrops: new[]
-            {
-                new LootDrop("Medkit", 1, 1),
-                new LootDrop("Bandage", 1, 1),
-            }
+            randomPool: new[] { LootPoolEntry.FromCategory(LootCategory.Meds) }
         );
 
-        // Cluster A (2026-05-01): Ammo_Pistol family retired from drop tables —
-        // no current payload uses Pistol-caliber ammo. Pool tightened to Rifle-only.
         public static readonly ContainerTypeConfig AmmoBox = new(
             typeId: "AmmoBox",
             displayName: "Ammo Box",
             minDrops: 2, maxDrops: 4,
-            possibleDrops: new[]
-            {
-                new LootDrop("Ammo_Rifle", 10, 40),
-            }
+            randomPool: new[] { LootPoolEntry.FromCategory(LootCategory.Ammo) }
         );
 
+        // General-purpose box: consumables + ammo lead, build parts are a modest slice (the
+        // ModuleCache is the parts-dense source). Which medkit / which caliber / which mod
+        // comes out — and how many — is ItemBalance's call.
         public static readonly ContainerTypeConfig RandomLootBox = new(
             typeId: "RandomLootBox",
             displayName: "Loot Box",
             minDrops: 2, maxDrops: 4,
-            // Meds/ammo/grenades + weapon modules + attachment mods (half-weight so mods stay a
-            // modest slice of the general box; the ModuleCache is the mod-dense source).
-            possibleDrops: Concat(new[]
+            randomPool: new[]
             {
-                new LootDrop("Medkit",         1, 1),
-                new LootDrop("Bandage",        1, 1),
-                new LootDrop("Grenade",        1, 1),
-                new LootDrop("Ammo_Rifle",    10, 30),
-                new LootDrop("BallisticRound", 1, 1),
-                new LootDrop("LaserCharge",    1, 1),
-                new LootDrop("SingleAction",   1, 1),
-                new LootDrop("Auto",           1, 1),
-                new LootDrop("Scatter",        1, 1),
-            }, AttachmentModDrops(0.5f))
+                LootPoolEntry.FromCategory(LootCategory.Meds,        2f),
+                LootPoolEntry.FromCategory(LootCategory.Ammo,        3f),
+                LootPoolEntry.FromCategory(LootCategory.Throwables,  1f),
+                LootPoolEntry.FromCategory(LootCategory.Materials,   2f),
+                LootPoolEntry.FromCategory(LootCategory.WeaponCores, 1f),
+                LootPoolEntry.FromCategory(LootCategory.Attachments, 1f),
+            }
         );
 
-        // Dedicated build-parts cache: cores + attachment mods (full mod weight). Pool is
-        // build-only, so opening one always nets a build-relevant part — the mod-dense source
-        // vs the general RandomLootBox.
+        // Dedicated build-parts cache: cores + attachments only, so opening one always nets a
+        // build-relevant part.
         public static readonly ContainerTypeConfig ModuleCache = new(
             typeId: "ModuleCache",
             displayName: "Module Cache",
             minDrops: 1, maxDrops: 3,
-            possibleDrops: Concat(WeaponModuleDrops, AttachmentModDrops(1f))
+            randomPool: new[]
+            {
+                LootPoolEntry.FromCategory(LootCategory.WeaponCores, 1f),
+                LootPoolEntry.FromCategory(LootCategory.Attachments, 1f),
+            }
         );
 
         static readonly Dictionary<string, ContainerTypeConfig> Registry = new()

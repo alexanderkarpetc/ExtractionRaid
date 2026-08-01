@@ -15,14 +15,17 @@ MonoBehaviour:
   _typeId: MedContainer
   _displayName: Medical Supplies
   _slotCount: 8
-  _minDrops: 2
-  _maxDrops: 2
-  _drops:
+  _guaranteedDrops:
   - definitionId: Medkit
+    countFromBalance: 0
     minCount: 1
     maxCount: 1
-    weight: 1
+    weaponPreset: {fileID: 0}
   - definitionId: Bandage
+    countFromBalance: 0
     minCount: 3
     maxCount: 3
-    weight: 1
+    weaponPreset: {fileID: 0}
+  _minDrops: 0
+  _maxDrops: 0
+  _pool: []

@@ -23,6 +23,12 @@ namespace Systems
         // Placeholder — promote to DevCheats if runtime tuning is wanted.
         const float BotModDropChance = 0.25f;
 
+        /// <summary>
+        /// Spawns a container: its hardcoded contents first (a starting chest's pistol always
+        /// makes it in), then <c>MinDrops..MaxDrops</c> rolls from its category pool. The
+        /// container config decides the MIX; <see cref="ItemBalanceAsset"/> decides which item
+        /// inside a bucket and how big each stack is.
+        /// </summary>
         public static void CreateContainer(RaidState state, in ContainerTypeConfig config, Vector3 position,
             IRaidEvents events)
         {
@@ -33,40 +39,18 @@ namespace Systems
                 config.SlotCount > 0 ? config.SlotCount : InventoryState.BackpackSize,
                 inventory.Backpack.Length);
 
-            int rolledCount = Random.Range(config.MinDrops, config.MaxDrops + 1);
-            int dropCount = Mathf.Min(rolledCount, capacity);
-
-            var pool = config.PossibleDrops;
-            float totalWeight = 0f;
-            if (pool != null)
-                for (int i = 0; i < pool.Length; i++)
-                    totalWeight += pool[i].Weight;
-
             int slot = 0;
-            for (int i = 0; i < dropCount && slot < capacity; i++)
+
+            var guaranteed = config.GuaranteedDrops;
+            if (guaranteed != null)
+                for (int i = 0; i < guaranteed.Length && slot < capacity; i++)
+                    SpawnDrop(state, inventory, ref slot, capacity, in guaranteed[i]);
+
+            int rolls = Random.Range(config.MinDrops, config.MaxDrops + 1);
+            for (int i = 0; i < rolls && slot < capacity; i++)
             {
-                if (pool == null || pool.Length == 0 || totalWeight <= 0f) break;
-
-                var drop = PickWeighted(pool, totalWeight);
-                var itemId = state.AllocateEId();
-
-                // Weapon-preset drop: spawn the fully-assembled weapon (payload + delivery +
-                // optional exotic/attachments) rather than a plain stackable item. Same build
-                // path as the "Give Weapon Preset" devcheat.
-                if (drop.IsWeaponPreset)
-                {
-                    inventory.Backpack[slot++] = ItemState.CreateWeapon(
-                        itemId, drop.WeaponPreset.WeaponDefinitionId, drop.WeaponPreset.BuildConfiguration());
-                    continue;
-                }
-
-                int count = Random.Range(drop.MinCount, drop.MaxCount + 1);
-
-                var def = ItemDefinition.Get(drop.DefinitionId);
-                if (def != null)
-                    count = Mathf.Min(count, def.MaxStackSize);
-
-                inventory.Backpack[slot++] = ItemState.Create(itemId, drop.DefinitionId, count);
+                if (!LootRoller.TryRollPool(config.RandomPool, out var itemId)) break;
+                DropStacks(state, inventory, ref slot, itemId, LootRoller.RollCount(itemId), capacity);
             }
 
             var lootable = LootableContainerState.Create(id, position, config.TypeId, inventory, isContainer: true);
@@ -74,16 +58,22 @@ namespace Systems
             events.LootableSpawned(id, position, config.TypeId);
         }
 
-        static LootDrop PickWeighted(LootDrop[] pool, float totalWeight)
+        // One hardcoded drop. Weapon presets spawn the fully-assembled weapon (payload +
+        // delivery + optional exotic/attachments) rather than a plain stackable item — same
+        // build path as the "Give Weapon Preset" devcheat.
+        static void SpawnDrop(RaidState state, InventoryState inventory, ref int slot, int capacity,
+            in LootDrop drop)
         {
-            float r = Random.value * totalWeight;
-            float acc = 0f;
-            for (int i = 0; i < pool.Length; i++)
+            if (slot >= capacity) return;
+
+            if (drop.IsWeaponPreset)
             {
-                acc += pool[i].Weight;
-                if (r <= acc) return pool[i];
+                inventory.Backpack[slot++] = ItemState.CreateWeapon(state.AllocateEId(),
+                    drop.WeaponPreset.WeaponDefinitionId, drop.WeaponPreset.BuildConfiguration());
+                return;
             }
-            return pool[pool.Length - 1];
+
+            DropStacks(state, inventory, ref slot, drop.DefinitionId, LootRoller.RollCount(in drop), capacity);
         }
 
         public static void CreateLootable(RaidState state, BotEntityState bot, in BotTypeConfig config,
@@ -148,18 +138,13 @@ namespace Systems
 
             DropStacks(state, inventory, ref backpackSlot, "Bandage", bot.Blackboard.BandagesRemaining);
 
-            // Chance to also drop a weapon attachment mod (universal common, unique rare — see
-            // ContainerConstants.AttachmentModDrops). Weighted pick from the shared mod pool.
+            // Chance to also drop one weapon attachment. Which one is a balance-weighted pick
+            // across the curated attachment set, so the pricey optics stay the rare find.
             if (backpackSlot < InventoryState.BackpackSize && Random.value < BotModDropChance)
             {
-                var modPool = ContainerConstants.AttachmentModDrops();
-                float total = 0f;
-                for (int i = 0; i < modPool.Length; i++) total += modPool[i].Weight;
-                if (total > 0f)
-                {
-                    var drop = PickWeighted(modPool, total);
-                    inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), drop.DefinitionId, 1);
-                }
+                var modId = LootRoller.PickWeighted(LootConstants.AttachmentIds);
+                if (!string.IsNullOrEmpty(modId))
+                    inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), modId, 1);
             }
         }
 
@@ -228,39 +213,23 @@ namespace Systems
             DropStacks(state, inventory, ref backpackSlot, ids[chosen], rounds);
         }
 
-        // Value-weighted pick of distinct items from a broad category (pricier = rarer).
+        // Balance-weighted pick of distinct items from a category bucket. Both the item choice
+        // (DropWeight — pricier = rarer) and the stack size come from ItemBalanceAsset; the
+        // rule only says how MANY distinct things this bot carries.
         static void DropCategoryLoot(RaidState state, InventoryState inventory, ref int backpackSlot,
             in CategoryLootRule rule)
         {
-            var cat = LootConstants.ToItemCategory(rule.Category);
-            if (cat == ItemCategory.None) return;
-
-            var candidates = new List<ItemDefinition>();
-            foreach (var d in ItemDefinition.Registry.Values)
-                if (d.Category == cat) candidates.Add(d);
+            var candidates = LootConstants.CandidatesFor(rule.Category);
             if (candidates.Count == 0) return;
 
+            var taken = new List<string>();
             int picks = Mathf.Min(Random.Range(rule.MinPicks, rule.MaxPicks + 1), candidates.Count);
             for (int p = 0; p < picks && backpackSlot < InventoryState.BackpackSize; p++)
             {
-                // Drop chance is driven by the global ItemBalanceAsset's per-item DropWeight
-                // (higher = more common). Falls back to the value-derived default for items
-                // the balance table hasn't been synced with yet.
-                float total = 0f;
-                for (int i = 0; i < candidates.Count; i++)
-                    total += ItemBalanceAsset.DropWeightOf(candidates[i].Id);
-
-                float r = Random.value * total;
-                int chosen = candidates.Count - 1;
-                for (int i = 0; i < candidates.Count; i++)
-                {
-                    r -= ItemBalanceAsset.DropWeightOf(candidates[i].Id);
-                    if (r <= 0f) { chosen = i; break; }
-                }
-
-                var def = candidates[chosen];
-                candidates.RemoveAt(chosen); // distinct picks — no duplicates in one roll
-                DropStacks(state, inventory, ref backpackSlot, def.Id, 1);
+                var id = LootRoller.PickFromCategory(rule.Category, taken);
+                if (string.IsNullOrEmpty(id)) break;
+                taken.Add(id); // distinct picks — no duplicates in one roll
+                DropStacks(state, inventory, ref backpackSlot, id, LootRoller.RollCount(id));
             }
         }
 
@@ -300,15 +269,17 @@ namespace Systems
         }
 
         // Drops `count` of an item into the backpack, splitting across stacks by MaxStackSize.
+        // `capacity` bounds how many slots may be used (a container's SlotCount can be smaller
+        // than the backpack array).
         static void DropStacks(RaidState state, InventoryState inventory, ref int backpackSlot,
-            string itemId, int count)
+            string itemId, int count, int capacity = InventoryState.BackpackSize)
         {
             if (string.IsNullOrEmpty(itemId) || count <= 0) return;
             var def = ItemDefinition.Get(itemId);
             if (def == null) return;
 
             int stackMax = Mathf.Max(1, def.MaxStackSize);
-            while (count > 0 && backpackSlot < InventoryState.BackpackSize)
+            while (count > 0 && backpackSlot < capacity)
             {
                 int add = Mathf.Min(count, stackMax);
                 inventory.Backpack[backpackSlot++] = ItemState.Create(state.AllocateEId(), itemId, add);

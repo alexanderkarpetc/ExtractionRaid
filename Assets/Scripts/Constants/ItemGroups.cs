@@ -10,65 +10,63 @@ namespace Constants
         Mixed,
     }
 
+    /// <summary>
+    /// Loose-loot presets: the "what kind of thing lies here" shorthand a
+    /// <c>LooseLootSpawnPoint</c> picks from a dropdown. Each group is just a weighted set of
+    /// <see cref="LootCategory"/> buckets — the actual item and its stack size come from
+    /// <see cref="ItemBalanceAsset"/>, same as containers.
+    /// </summary>
     public static class ItemGroups
     {
-        static readonly LootDrop[] MedsDrops =
+        static readonly LootPoolEntry[] MedsPool =
         {
-            new("Medkit", 1, 1),
-            new("Bandage", 1, 1),
+            LootPoolEntry.FromCategory(LootCategory.Meds),
         };
 
-        // Cluster A (2026-05-01): Ammo_Pistol family retired from drop tables —
-        // no current payload uses it. May come back if Tier 3 splits Ballistic
-        // into per-caliber payloads.
-        static readonly LootDrop[] AmmoDrops =
+        static readonly LootPoolEntry[] AmmoPool =
         {
-            new("Ammo_Rifle", 10, 40),
+            LootPoolEntry.FromCategory(LootCategory.Ammo),
         };
 
-        // Cluster A (2026-05-01): "Rifle" / "Pistol" legacy items retired —
-        // ItemGroup.Weapons now drops Builder modules so a "weapons cache"
-        // LooseLootSpawnPoint produces buildable parts.
-        static readonly LootDrop[] WeaponsDrops = ContainerConstants.WeaponModuleDrops;
-
-        static readonly LootDrop[] GearDrops =
+        // Cluster A (2026-05-01): "Rifle" / "Pistol" legacy items retired — a "weapons cache"
+        // spawn point produces buildable Builder cores instead.
+        static readonly LootPoolEntry[] WeaponsPool =
         {
-            new("Helmet_Basic", 1, 1),
-            new("Armor_Basic", 1, 1),
+            LootPoolEntry.FromCategory(LootCategory.WeaponCores),
         };
 
-        static readonly LootDrop[] ThrowablesDrops =
+        static readonly LootPoolEntry[] GearPool =
         {
-            new("Grenade", 1, 1),
+            LootPoolEntry.FromCategory(LootCategory.Gear),
         };
 
-        static readonly LootDrop[] MixedDrops =
+        static readonly LootPoolEntry[] ThrowablesPool =
         {
-            new("Medkit", 1, 1),
-            new("Bandage", 1, 1),
-            new("Grenade", 1, 1),
-            new("Ammo_Rifle", 10, 30),
-            // Modules — 1× each (5 entries) — Tier 6 G2 module loot economy.
-            new("BallisticRound", 1, 1),
-            new("LaserCharge",    1, 1),
-            new("SingleAction",   1, 1),
-            new("Auto",           1, 1),
-            new("Scatter",        1, 1),
-            new("Helmet_Basic", 1, 1),
-            new("Armor_Basic", 1, 1),
+            LootPoolEntry.FromCategory(LootCategory.Throwables),
         };
 
-        public static LootDrop[] GetDrops(ItemGroup group)
+        static readonly LootPoolEntry[] MixedPool =
+        {
+            LootPoolEntry.FromCategory(LootCategory.Meds,        2f),
+            LootPoolEntry.FromCategory(LootCategory.Ammo,        3f),
+            LootPoolEntry.FromCategory(LootCategory.Materials,   2f),
+            LootPoolEntry.FromCategory(LootCategory.Throwables,  1f),
+            LootPoolEntry.FromCategory(LootCategory.WeaponCores, 1f),
+            LootPoolEntry.FromCategory(LootCategory.Attachments, 1f),
+            LootPoolEntry.FromCategory(LootCategory.Gear,        0.5f),
+        };
+
+        public static LootPoolEntry[] GetPool(ItemGroup group)
         {
             return group switch
             {
-                ItemGroup.Meds => MedsDrops,
-                ItemGroup.Ammo => AmmoDrops,
-                ItemGroup.Weapons => WeaponsDrops,
-                ItemGroup.Gear => GearDrops,
-                ItemGroup.Throwables => ThrowablesDrops,
-                ItemGroup.Mixed => MixedDrops,
-                _ => MixedDrops,
+                ItemGroup.Meds => MedsPool,
+                ItemGroup.Ammo => AmmoPool,
+                ItemGroup.Weapons => WeaponsPool,
+                ItemGroup.Gear => GearPool,
+                ItemGroup.Throwables => ThrowablesPool,
+                ItemGroup.Mixed => MixedPool,
+                _ => MixedPool,
             };
         }
     }

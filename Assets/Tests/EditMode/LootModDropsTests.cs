@@ -1,55 +1,80 @@
-using System.Linq;
 using Constants;
 using NUnit.Framework;
 using State;
+using Systems;
 
 namespace Tests.EditMode
 {
     /// <summary>
-    /// Attachment mods drop from loot: the shared mod pool resolves to real WeaponMod items,
-    /// unique (archetype-restricted) mods are rarer, and the mixed containers include mods.
+    /// The attachment / core buckets resolve to real WeaponMod items, ItemBalance (not a
+    /// hardcoded weight table) decides their rarity, and the mixed containers can roll both.
     /// </summary>
     [TestFixture]
     public class LootModDropsTests
     {
         [Test]
-        public void AttachmentModDrops_AllResolveToWeaponModItems()
+        public void AttachmentBucket_AllResolveToWeaponModItems()
         {
-            foreach (var d in ContainerConstants.AttachmentModDrops())
+            var candidates = LootConstants.CandidatesFor(LootCategory.Attachments);
+            Assert.AreEqual(LootConstants.AttachmentIds.Length, candidates.Count,
+                "Every curated attachment id must resolve to a registry item.");
+            foreach (var def in candidates)
+                Assert.AreEqual(ItemCategory.WeaponMod, def.Category, def.Id);
+        }
+
+        [Test]
+        public void WeaponCoreBucket_AllResolveToWeaponModItems()
+        {
+            var candidates = LootConstants.CandidatesFor(LootCategory.WeaponCores);
+            Assert.AreEqual(LootConstants.WeaponCoreIds.Length, candidates.Count,
+                "Every curated core id must resolve to a registry item.");
+            foreach (var def in candidates)
+                Assert.AreEqual(ItemCategory.WeaponMod, def.Category, def.Id);
+        }
+
+        [Test]
+        public void AttachmentRarity_ComesFromItemBalance()
+        {
+            // Cheap handling mods are common; the archetype-locked / premium optics are scarce.
+            // Both numbers live in ItemBalance — nothing here restates them.
+            float universal = ItemBalanceAsset.DropWeightOf("RedDot");
+            float unique    = ItemBalanceAsset.DropWeightOf("LaserFocusing");
+            Assert.Greater(universal, unique,
+                "ItemBalance should keep the archetype-locked mod rarer than the red dot.");
+        }
+
+        [Test]
+        public void MixedContainers_CanRollModsAndCores()
+        {
+            Assert.IsTrue(ContainerConstants.TryGetConfig("RandomLootBox", out var rb));
+            Assert.IsTrue(HasBucket(rb, LootCategory.Attachments), "RandomLootBox rolls attachments");
+            Assert.IsTrue(HasBucket(rb, LootCategory.WeaponCores), "RandomLootBox rolls cores");
+
+            Assert.IsTrue(ContainerConstants.TryGetConfig("ModuleCache", out var mc));
+            Assert.IsTrue(HasBucket(mc, LootCategory.Attachments), "ModuleCache rolls attachments");
+            Assert.IsTrue(HasBucket(mc, LootCategory.WeaponCores), "ModuleCache keeps cores");
+        }
+
+        [Test]
+        public void PickWeighted_OverAttachmentSet_ReturnsRealDroppableItems()
+        {
+            UnityEngine.Random.InitState(4242);
+            for (int i = 0; i < 50; i++)
             {
-                var def = ItemDefinition.Get(d.DefinitionId);
-                Assert.IsNotNull(def, d.DefinitionId);
-                Assert.AreEqual(ItemCategory.WeaponMod, def.Category, d.DefinitionId);
+                var id = LootRoller.PickWeighted(LootConstants.AttachmentIds);
+                Assert.IsNotNull(id);
+                Assert.IsNotNull(ItemDefinition.Get(id), id);
+                Assert.Greater(ItemBalanceAsset.DropWeightOf(id), 0f,
+                    $"'{id}' has drop weight 0 and must never be picked.");
             }
         }
 
-        [Test]
-        public void AttachmentModDrops_UniqueAreRarerThanUniversal()
+        static bool HasBucket(in ContainerTypeConfig cfg, LootCategory category)
         {
-            var pool = ContainerConstants.AttachmentModDrops();
-            float universal = pool.First(d => d.DefinitionId == "RedDot").Weight;
-            float unique    = pool.First(d => d.DefinitionId == "LaserFocusing").Weight;
-            Assert.Greater(universal, unique);
-        }
-
-        [Test]
-        public void AttachmentModDrops_ScaleScalesWeights()
-        {
-            var full = ContainerConstants.AttachmentModDrops(1f);
-            var half = ContainerConstants.AttachmentModDrops(0.5f);
-            for (int i = 0; i < full.Length; i++)
-                Assert.AreEqual(full[i].Weight * 0.5f, half[i].Weight, 1e-4);
-        }
-
-        [Test]
-        public void MixedContainers_IncludeModsAndKeepCores()
-        {
-            Assert.IsTrue(ContainerConstants.TryGetConfig("RandomLootBox", out var rb));
-            Assert.IsTrue(rb.PossibleDrops.Any(d => d.DefinitionId == "RedDot"), "RandomLootBox has mods");
-
-            Assert.IsTrue(ContainerConstants.TryGetConfig("ModuleCache", out var mc));
-            Assert.IsTrue(mc.PossibleDrops.Any(d => d.DefinitionId == "ExtendedMag"), "ModuleCache has mods");
-            Assert.IsTrue(mc.PossibleDrops.Any(d => d.DefinitionId == "BallisticRound"), "ModuleCache keeps cores");
+            if (cfg.RandomPool == null) return false;
+            foreach (var entry in cfg.RandomPool)
+                if (entry.IsCategory && entry.Category == category) return true;
+            return false;
         }
     }
 }

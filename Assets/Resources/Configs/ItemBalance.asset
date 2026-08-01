@@ -16,294 +16,490 @@ MonoBehaviour:
   - DefinitionId: Helmet_Basic
     Price: 350
     DropWeight: 17
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Armor_Basic
     Price: 600
     DropWeight: 12
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Medkit
     Price: 120
     DropWeight: 22
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Ammo_Rifle
     Price: 8
     DropWeight: 80
+    MinDropCount: 10
+    MaxDropCount: 30
   - DefinitionId: Ammo_EnergyCell
     Price: 16
     DropWeight: 62
+    MinDropCount: 10
+    MaxDropCount: 30
   - DefinitionId: Ammo_Pistol
     Price: 5
     DropWeight: 100
+    MinDropCount: 20
+    MaxDropCount: 40
   - DefinitionId: Grenade
     Price: 75
     DropWeight: 29
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Bandage
     Price: 25
     DropWeight: 125
+    MinDropCount: 2
+    MaxDropCount: 3
   - DefinitionId: Advanced_Medkit
     Price: 400
     DropWeight: 9
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Adhesive
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Metal_Parts
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Mechanical_Parts
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Electronics
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Chemicals
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Cloth
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Gunpowder
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Plastic
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Glass
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Rubber
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Springs
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Military_Components
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Energy_Core
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Pipes
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Insulated_Wiring
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Duct_Tape
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Aluminum
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Structural_Foam
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Synthetic_Fiber
     Price: 10
     DropWeight: 100
+    MinDropCount: 2
+    MaxDropCount: 6
   - DefinitionId: Hydraulic_Seals
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Gear_Cluster
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Rotary_Motor
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Pneumatic_Valve
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Cooling_Fan
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Sensor_Module
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Motion_Sensor
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Camera_Optics
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Flux_Coil
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Pulse_Converter
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Ion_Battery
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Conductive_Gel
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Energy_Relay
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Chemical_Catalyst
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Bio_Compound
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Filtration_Membrane
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Sterile_Wrap
     Price: 40
     DropWeight: 25
+    MinDropCount: 1
+    MaxDropCount: 3
   - DefinitionId: Gyro_Stabilizer
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Smart_Targeting_Unit
     Price: 550
     DropWeight: 4
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Pulse_Emitter
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Adaptive_Circuit
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Nano_Filament
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Magnetic_Alloy
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Resonance_Plate
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Synthetic_Quartz
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Crystal_Matrix
     Price: 800
     DropWeight: 3
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Phase_Shard
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Phase_Battery
     Price: 500
     DropWeight: 4
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Quantum_Relay
     Price: 1200
     DropWeight: 2
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Plasma_Residue
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Irradiated_Dust
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Neural_Gel
     Price: 700
     DropWeight: 3
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Bio_Foam
     Price: 120
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Military_Intel
     Price: 220
     DropWeight: 5
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Bio_Sample_Case
     Price: 190
     DropWeight: 5
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Ammo_Pistol_AP
     Price: 12
     DropWeight: 60
+    MinDropCount: 10
+    MaxDropCount: 24
   - DefinitionId: Ammo_Rifle_AP
     Price: 15
     DropWeight: 50
+    MinDropCount: 10
+    MaxDropCount: 20
   - DefinitionId: Ammo_Rifle_HP
     Price: 12
     DropWeight: 60
+    MinDropCount: 10
+    MaxDropCount: 20
   - DefinitionId: Ammo_Pistol_HP
     Price: 9
     DropWeight: 70
+    MinDropCount: 10
+    MaxDropCount: 24
   - DefinitionId: Basic_Scope
     Price: 90
     DropWeight: 20
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Advanced_Scope
     Price: 240
     DropWeight: 6
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Long_Barrel
     Price: 110
     DropWeight: 12
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Short_Barrel
     Price: 70
     DropWeight: 18
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Suppressor
     Price: 160
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Compensator
     Price: 70
     DropWeight: 20
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Extended_Mag
     Price: 60
     DropWeight: 24
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Fast_Reload_Mag
     Price: 55
     DropWeight: 24
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Recoil_Grip
     Price: 55
     DropWeight: 26
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Stabilized_Stock
     Price: 75
     DropWeight: 20
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: AP_Barrel
     Price: 140
     DropWeight: 10
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Overclock_Receiver
     Price: 160
     DropWeight: 8
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: PowerComp
     Price: 130
     DropWeight: 12
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: MuzzleBrake
     Price: 70
     DropWeight: 20
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: VerticalGrip
     Price: 55
     DropWeight: 26
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: AngledGrip
     Price: 55
     DropWeight: 26
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: HeavyStock
     Price: 65
     DropWeight: 22
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: SkeletonStock
     Price: 80
     DropWeight: 18
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: RedDot
     Price: 90
     DropWeight: 22
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: SniperScope
     Price: 260
     DropWeight: 6
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: ExtendedMag
     Price: 60
     DropWeight: 24
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: QuickMag
     Price: 55
     DropWeight: 24
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: LaserFocusing
     Price: 200
     DropWeight: 6
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: ScatterChoke
     Price: 170
     DropWeight: 6
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: AutoHeatSink
     Price: 180
     DropWeight: 6
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Worn_Warehouse_Key
     Price: 220
     DropWeight: 0
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: BallisticRound
     Price: 55
     DropWeight: 18
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: LaserCharge
     Price: 70
     DropWeight: 14
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: SingleAction
     Price: 45
     DropWeight: 22
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Auto
     Price: 60
     DropWeight: 17
+    MinDropCount: 1
+    MaxDropCount: 1
   - DefinitionId: Scatter
     Price: 55
     DropWeight: 18
+    MinDropCount: 1
+    MaxDropCount: 1

@@ -212,13 +212,52 @@ Each binding is an index into `Backpack[]`. The system:
 
 **Range**: `LootRange = 3f`
 
+### Where loot numbers live (single source of truth)
+
+`Resources/Configs/ItemBalance.asset` (`ItemBalanceAsset`) owns, per item: `Price`,
+`DropWeight` (rarity inside a bucket) and `MinDropCount`/`MaxDropCount` (how many units one
+drop is worth). Loot configs never restate those.
+
+| Question | Answered by |
+|---|---|
+| What kinds of thing can this container hold? | container config's category pool |
+| How many entries does it roll? | container config's `MinDrops`/`MaxDrops` |
+| Which item comes out of a bucket? | `ItemBalance.DropWeight` |
+| How many units of it? | `ItemBalance.MinDropCount`/`MaxDropCount` |
+| What must ALWAYS be in there? | container config's **Guaranteed Drops** |
+
+Rules of thumb:
+- `DropWeight = 0` on an existing row = **never** rolls (still buyable/craftable/guaranteed).
+  Only items with *no row at all* fall back to the value-derived default weight.
+- `MaxDropCount = 0` = derive the range from `MaxStackSize` (`ItemBalanceAsset.DefaultDropCountRange`).
+  The inspector's **Seed Drop Counts** button materializes those defaults.
+- Stack sizes above `MaxStackSize` are split across slots automatically.
+
+`LootRoller` (in `Systems`) is the only place these dice are rolled — containers, bot loot
+tables and loose-loot spawn points all go through it.
+
+### Loot buckets (`LootCategory`)
+
+`Materials`, `Meds`, `Ammo`, `Mods`, `Throwables`, `Gear` map to the matching `ItemCategory`.
+`WeaponCores` and `Attachments` are curated id sets (`LootConstants.WeaponCoreIds` /
+`AttachmentIds`) carved out of `WeaponMod`, because build cores and attachments are separate
+economies sharing one item category. No bucket can produce a generic weapon shell or a quest
+item. `LootConstants.CandidatesFor(bucket)` resolves a bucket (cached).
+
 ### Container Creation
 
 `CreateContainer(state, config, position, events)`:
-- Rolls `Random.Range(config.MinDrops, config.MaxDrops + 1)` items.
-- Each drop: random entry from `config.PossibleDrops`, random count clamped to `MaxStackSize`.
-- Items placed sequentially into a new `InventoryState.Backpack`.
+- Spawns `config.GuaranteedDrops` first, in order — hardcoded contents (e.g. the starting
+  chest's pistol preset). Each has an explicit count range, or defers to the balance table.
+- Then rolls `Random.Range(config.MinDrops, config.MaxDrops + 1)` entries from
+  `config.RandomPool`. Each roll: pick a pool entry by its weight (the container's *mix*) →
+  resolve it to an item (category → `DropWeight`, or a named item) → stack size from the
+  balance table.
+- Everything is clamped to `config.SlotCount`; stacks split across slots by `MaxStackSize`.
 - Creates `LootableContainerState` with `isContainer = true`.
+
+Authored per container in `ContainerTypeConfigAsset` (`Resources/Configs/Containers/*.asset`),
+whose inspector previews exactly what `ItemBalance` would let out of each bucket.
 
 ### Corpse Loot
 
@@ -244,11 +283,15 @@ Each binding is an index into `Backpack[]`. The system:
 
 ### Container Types
 
-| TypeId | DisplayName | Drops | Possible Loot |
+Built-in fallbacks in `ContainerConstants` (scene spawn points use their own
+`ContainerTypeConfigAsset`, which overrides the registry entry at spawn):
+
+| TypeId | DisplayName | Rolls | Category pool (weights) |
 |---|---|---|---|
-| `MedContainer` | Medical Supplies | 2-4 | Medkit(1), Bandage(1) |
-| `AmmoBox` | Ammo Box | 2-4 | Ammo_Rifle(10-40), Ammo_Shotgun(4-14), Ammo_Pistol(8-24) |
-| `RandomLootBox` | Loot Box | 2-4 | Medkit(1), Bandage(1), Grenade(1), Ammo_Rifle(10-30), Ammo_Shotgun(4-10), Ammo_Pistol(8-18) |
+| `MedContainer` | Medical Supplies | 2-4 | Meds |
+| `AmmoBox` | Ammo Box | 2-4 | Ammo |
+| `RandomLootBox` | Loot Box | 2-4 | Meds 2, Ammo 3, Throwables 1, Materials 2, WeaponCores 1, Attachments 1 |
+| `ModuleCache` | Module Cache | 1-3 | WeaponCores 1, Attachments 1 |
 
 ### State Types
 
@@ -469,6 +512,7 @@ All tasks share: `Description`, `RequiredCount`.
 | `Assets/Scripts/Systems/EquipmentSystem.cs` | Armor equip/unequip, durability sync |
 | `Assets/Scripts/Systems/QuickSlotSystem.cs` | Quick slot binding and activation |
 | `Assets/Scripts/Systems/LootSystem.cs` | Container creation, corpse loot, interactables |
+| `Assets/Scripts/Systems/LootRoller.cs` | The dice: bucket → item (DropWeight), stack size (drop counts) |
 | `Assets/Scripts/Systems/CraftingSystem.cs` | Recipe validation and crafting |
 | `Assets/Scripts/Systems/StatusEffectSystem.cs` | Bleed apply/tick/downgrade/remove |
 | `Assets/Scripts/Systems/BandageSystem.cs` | Bandage use (bleed cure) |
@@ -476,7 +520,9 @@ All tasks share: `Description`, `RequiredCount`.
 | `Assets/Scripts/Systems/StaminaSystem.cs` | Sprint drain and regen |
 | `Assets/Scripts/Systems/QuestSystem.cs` | Quest accept/complete/rewards |
 | `Assets/Scripts/Constants/CraftConstants.cs` | All craft recipes |
-| `Assets/Scripts/Constants/ContainerConstants.cs` | Container type configs |
+| `Assets/Scripts/Constants/ContainerConstants.cs` | Container type configs (guaranteed drops + category pool) |
+| `Assets/Scripts/Constants/ItemBalanceAsset.cs` | Price / drop weight / drop count — the economy source of truth |
+| `Assets/Scripts/Constants/LootConstants.cs` | `LootCategory` buckets + curated core/attachment sets |
 | `Assets/Scripts/Constants/StatusEffectConstants.cs` | Bleed/bandage constants |
 | `Assets/Scripts/Constants/MedConstants.cs` | Medkit heal constants |
 | `Assets/Scripts/Constants/StaminaConstants.cs` | Sprint/stamina constants |

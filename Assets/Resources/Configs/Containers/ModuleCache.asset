@@ -15,36 +15,15 @@ MonoBehaviour:
   _typeId: ModuleCache
   _displayName: Module Cache
   _slotCount: 6
+  _guaranteedDrops: []
   _minDrops: 1
   _maxDrops: 2
-  _drops:
-  - definitionId: BallisticRound
-    minCount: 1
-    maxCount: 1
+  _pool:
+  - kind: 0
+    category: 6
+    definitionId:
+    weight: 2
+  - kind: 0
+    category: 7
+    definitionId:
     weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: LaserCharge
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: SingleAction
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Auto
-    minCount: 1
-    maxCount: 1
-    weight: 0.5
-    weaponPreset: {fileID: 0}
-  - definitionId: Scatter
-    minCount: 1
-    maxCount: 1
-    weight: 0.5
-    weaponPreset: {fileID: 0}
-  - definitionId: 
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}

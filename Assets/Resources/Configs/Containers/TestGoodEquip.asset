@@ -15,41 +15,42 @@ MonoBehaviour:
   _typeId: RandomLootBox
   _displayName: Good gear
   _slotCount: 30
-  _minDrops: 30
-  _maxDrops: 30
-  _drops:
-  - definitionId: 
+  _guaranteedDrops:
+  - definitionId:
+    countFromBalance: 0
     minCount: 1
     maxCount: 1
-    weight: 1
     weaponPreset: {fileID: 11400000, guid: 9fa22624b92af744c881d5d37dcbe0fc, type: 2}
   - definitionId: Ammo_Rifle_AP
+    countFromBalance: 0
     minCount: 60
     maxCount: 60
-    weight: 1
     weaponPreset: {fileID: 0}
   - definitionId: Ammo_Rifle_AP
+    countFromBalance: 0
     minCount: 60
     maxCount: 69
-    weight: 1
     weaponPreset: {fileID: 0}
   - definitionId: Armor_Basic
+    countFromBalance: 0
     minCount: 1
     maxCount: 1
-    weight: 1
     weaponPreset: {fileID: 0}
   - definitionId: Helmet_Basic
+    countFromBalance: 0
     minCount: 1
     maxCount: 1
-    weight: 1
     weaponPreset: {fileID: 0}
   - definitionId: Advanced_Medkit
+    countFromBalance: 0
     minCount: 1
     maxCount: 1
-    weight: 1
     weaponPreset: {fileID: 0}
   - definitionId: Bandage
+    countFromBalance: 0
     minCount: 3
     maxCount: 3
-    weight: 1
     weaponPreset: {fileID: 0}
+  _minDrops: 0
+  _maxDrops: 0
+  _pool: []

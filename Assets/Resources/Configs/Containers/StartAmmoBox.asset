@@ -15,18 +15,16 @@ MonoBehaviour:
   _typeId: AmmoBox
   _displayName: Ammo Box
   _slotCount: 8
-  _minDrops: 2
-  _maxDrops: 4
-  _drops:
+  _guaranteedDrops:
   - definitionId: Ammo_Pistol
+    countFromBalance: 0
     minCount: 30
     maxCount: 40
-    weight: 1
-  - definitionId: Ammo_Pistol
-    minCount: 10
-    maxCount: 30
-    weight: 1
-  - definitionId: 
-    minCount: 1
-    maxCount: 1
+    weaponPreset: {fileID: 0}
+  _minDrops: 1
+  _maxDrops: 2
+  _pool:
+  - kind: 1
+    category: 2
+    definitionId: Ammo_Pistol
     weight: 1

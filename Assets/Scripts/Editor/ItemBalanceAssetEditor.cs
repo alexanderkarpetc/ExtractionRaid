@@ -44,6 +44,14 @@ namespace Editor
                 if (GUILayout.Button("Sort by Category"))
                     SortByCategory();
             }
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button(new GUIContent("Seed Drop Counts",
+                        "Fills unauthored (0) drop-count ranges with the stack-size derived " +
+                        "default, so every row shows the number loot will actually use.")))
+                    SeedDropCounts();
+            }
         }
 
         // Generic weapon shells (ItemCategory.Weapon) are intentionally NOT balanced here —
@@ -73,6 +81,9 @@ namespace Editor
                 e.FindPropertyRelative("Price").intValue = kv.Value.Value;
                 e.FindPropertyRelative("DropWeight").floatValue =
                     ItemBalanceAsset.DefaultDropWeight(kv.Value.Value);
+                ItemBalanceAsset.DefaultDropCountRange(kv.Key, out int cmin, out int cmax);
+                e.FindPropertyRelative("MinDropCount").intValue = cmin;
+                e.FindPropertyRelative("MaxDropCount").intValue = cmax;
                 added++;
             }
 
@@ -103,16 +114,42 @@ namespace Editor
                 : "[ItemBalance] No stale entries.");
         }
 
+        // Materializes the derived default into every row that hasn't authored a range yet, so
+        // the table shows the real numbers loot uses instead of an implicit 0.
+        void SeedDropCounts()
+        {
+            int seeded = 0;
+            for (int i = 0; i < _entries.arraySize; i++)
+            {
+                var e = _entries.GetArrayElementAtIndex(i);
+                var maxProp = e.FindPropertyRelative("MaxDropCount");
+                if (maxProp.intValue > 0) continue;
+
+                var id = e.FindPropertyRelative("DefinitionId").stringValue;
+                ItemBalanceAsset.DefaultDropCountRange(id, out int min, out int max);
+                e.FindPropertyRelative("MinDropCount").intValue = min;
+                maxProp.intValue = max;
+                seeded++;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            Debug.Log(seeded > 0
+                ? $"[ItemBalance] Seeded drop counts for {seeded} rows."
+                : "[ItemBalance] Every row already has a drop-count range.");
+        }
+
         void SortByCategory()
         {
-            var snapshot = new List<(string id, int price, float weight)>();
+            var snapshot = new List<(string id, int price, float weight, int minCount, int maxCount)>();
             for (int i = 0; i < _entries.arraySize; i++)
             {
                 var e = _entries.GetArrayElementAtIndex(i);
                 snapshot.Add((
                     e.FindPropertyRelative("DefinitionId").stringValue,
                     e.FindPropertyRelative("Price").intValue,
-                    e.FindPropertyRelative("DropWeight").floatValue
+                    e.FindPropertyRelative("DropWeight").floatValue,
+                    e.FindPropertyRelative("MinDropCount").intValue,
+                    e.FindPropertyRelative("MaxDropCount").intValue
                 ));
             }
 
@@ -135,6 +172,8 @@ namespace Editor
                 e.FindPropertyRelative("DefinitionId").stringValue = snapshot[i].id;
                 e.FindPropertyRelative("Price").intValue = snapshot[i].price;
                 e.FindPropertyRelative("DropWeight").floatValue = snapshot[i].weight;
+                e.FindPropertyRelative("MinDropCount").intValue = snapshot[i].minCount;
+                e.FindPropertyRelative("MaxDropCount").intValue = snapshot[i].maxCount;
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -192,6 +231,8 @@ namespace Editor
                 e.FindPropertyRelative("DefinitionId").stringValue = "";
                 e.FindPropertyRelative("Price").intValue = 10;
                 e.FindPropertyRelative("DropWeight").floatValue = ItemBalanceAsset.DefaultDropWeight(10);
+                e.FindPropertyRelative("MinDropCount").intValue = 1;
+                e.FindPropertyRelative("MaxDropCount").intValue = 1;
             }
         }
 
@@ -211,8 +252,9 @@ namespace Editor
             {
                 GUILayout.Space(4);
                 EditorGUILayout.LabelField("Item", EditorStyles.miniLabel);
-                EditorGUILayout.LabelField("Price", EditorStyles.miniLabel, GUILayout.Width(70));
-                EditorGUILayout.LabelField("Drop Wt", EditorStyles.miniLabel, GUILayout.Width(70));
+                EditorGUILayout.LabelField("Price", EditorStyles.miniLabel, GUILayout.Width(64));
+                EditorGUILayout.LabelField("Drop Wt", EditorStyles.miniLabel, GUILayout.Width(64));
+                EditorGUILayout.LabelField("Count", EditorStyles.miniLabel, GUILayout.Width(104));
                 GUILayout.Space(28);
             }
 
@@ -224,18 +266,34 @@ namespace Editor
                 var defIdProp = entry.FindPropertyRelative("DefinitionId");
                 var priceProp = entry.FindPropertyRelative("Price");
                 var weightProp = entry.FindPropertyRelative("DropWeight");
+                var minCountProp = entry.FindPropertyRelative("MinDropCount");
+                var maxCountProp = entry.FindPropertyRelative("MaxDropCount");
 
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
                 {
                     DrawItemPicker(defIdProp);
-                    EditorGUILayout.PropertyField(priceProp, GUIContent.none, GUILayout.Width(70));
-                    EditorGUILayout.PropertyField(weightProp, GUIContent.none, GUILayout.Width(70));
+                    EditorGUILayout.PropertyField(priceProp, GUIContent.none, GUILayout.Width(64));
+                    EditorGUILayout.PropertyField(weightProp, GUIContent.none, GUILayout.Width(64));
+
+                    // Drop count: how many units one roll of this item is worth. 0/0 = derived
+                    // from MaxStackSize (shown as a hint so the row never reads as "nothing").
+                    EditorGUILayout.PropertyField(minCountProp, GUIContent.none, GUILayout.Width(44));
+                    EditorGUILayout.LabelField("–", GUILayout.Width(10));
+                    EditorGUILayout.PropertyField(maxCountProp, GUIContent.none, GUILayout.Width(44));
 
                     if (GUILayout.Button("✕", GUILayout.Width(24)))
                     {
                         _entries.DeleteArrayElementAtIndex(i);
                         deleted = true;
                     }
+                }
+
+                if (deleted) break;
+
+                if (maxCountProp.intValue <= 0 && !string.IsNullOrEmpty(defIdProp.stringValue))
+                {
+                    ItemBalanceAsset.DefaultDropCountRange(defIdProp.stringValue, out int dmin, out int dmax);
+                    EditorGUILayout.LabelField(" ", $"count auto: {dmin}–{dmax}", EditorStyles.miniLabel);
                 }
             }
         }

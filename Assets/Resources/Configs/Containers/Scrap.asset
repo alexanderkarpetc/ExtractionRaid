@@ -12,49 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 995b410d30489c4479bdc50c690cae96, type: 3}
   m_Name: Scrap
   m_EditorClassIdentifier: Game::Constants.ContainerTypeConfigAsset
-  _typeId: ModuleCache
-  _displayName: Module Cache
+  _typeId: Scrap
+  _displayName: Scrap
   _slotCount: 6
+  _guaranteedDrops: []
   _minDrops: 1
   _maxDrops: 4
-  _drops:
-  - definitionId: Rubber
-    minCount: 1
-    maxCount: 1
+  _pool:
+  - kind: 0
+    category: 0
+    definitionId:
     weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Adaptive_Circuit
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Aluminum
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Bio_Compound
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Cloth
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Energy_Core
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Crystal_Matrix
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Electronics
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}

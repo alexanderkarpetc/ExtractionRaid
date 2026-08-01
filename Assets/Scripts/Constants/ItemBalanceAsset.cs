@@ -7,9 +7,15 @@ namespace Constants
 {
     /// <summary>
     /// The single, designer-authored balance table for every item in the game: its base
-    /// credit <see cref="Entry.Price"/> (what shops charge) and its <see cref="Entry.DropWeight"/>
-    /// (relative chance in value-weighted loot rolls). One asset for the whole economy —
-    /// lives at <c>Resources/Configs/ItemBalance.asset</c>.
+    /// credit <see cref="Entry.Price"/> (what shops charge), its <see cref="Entry.DropWeight"/>
+    /// (relative chance in loot rolls) and its <see cref="Entry.MinDropCount"/> /
+    /// <see cref="Entry.MaxDropCount"/> (how many units one drop is worth). One asset for the
+    /// whole economy — lives at <c>Resources/Configs/ItemBalance.asset</c>.
+    ///
+    /// Loot configs (containers, bot loot tables, loose loot) only say WHAT KIND of thing can
+    /// appear and HOW MANY entries to roll; this table decides WHICH item comes out of a
+    /// bucket and HOW BIG the stack is. Hardcoded/guaranteed drops on a container are the one
+    /// deliberate exception — those name an item outright.
     ///
     /// Rows are kept in sync with <see cref="ItemDefinition"/> via the "Sync from
     /// ItemDefinition" button on the asset's inspector, so a newly-added item can't silently
@@ -29,8 +35,18 @@ namespace Constants
             public int Price;
 
             [Tooltip("Relative loot drop weight — higher = more common in category loot rolls. " +
-                     "Only the ratio between items matters, not the absolute number.")]
+                     "Only the ratio between items matters, not the absolute number. " +
+                     "0 = never drops from a random roll (still buyable / craftable / " +
+                     "reachable via a container's guaranteed drops).")]
             public float DropWeight;
+
+            [Tooltip("Smallest stack this item drops as when a loot roll picks it. " +
+                     "0 = derive from the item's MaxStackSize.")]
+            public int MinDropCount;
+
+            [Tooltip("Largest stack this item drops as when a loot roll picks it (split across " +
+                     "slots when it exceeds MaxStackSize). 0 = derive from MaxStackSize.")]
+            public int MaxDropCount;
         }
 
         [SerializeField] Entry[] _entries = Array.Empty<Entry>();
@@ -63,12 +79,27 @@ namespace Constants
             return ItemDefinition.Get(definitionId)?.Value ?? 0;
         }
 
-        /// <summary>Loot drop weight for one item. Falls back to the value-derived default so an
-        /// un-synced item still rolls at a sensible (scale-consistent) rate.</summary>
+        /// <summary>Loot drop weight for one item. A row's weight is authoritative — including
+        /// an explicit 0, which takes the item out of every random roll. Only items with NO row
+        /// fall back to the value-derived default, so an un-synced item still rolls at a
+        /// sensible (scale-consistent) rate instead of silently vanishing.</summary>
         public float GetDropWeight(string definitionId)
         {
-            if (TryGet(definitionId, out var e) && e.DropWeight > 0f) return e.DropWeight;
+            if (TryGet(definitionId, out var e)) return Mathf.Max(0f, e.DropWeight);
             return DefaultDropWeight(ItemDefinition.Get(definitionId)?.Value ?? 10);
+        }
+
+        /// <summary>How many units one drop of this item is worth. Falls back to a stack-size
+        /// derived range for rows that haven't been authored yet.</summary>
+        public void GetDropCountRange(string definitionId, out int min, out int max)
+        {
+            if (TryGet(definitionId, out var e) && e.MaxDropCount > 0)
+            {
+                min = Mathf.Max(1, e.MinDropCount);
+                max = Mathf.Max(min, e.MaxDropCount);
+                return;
+            }
+            DefaultDropCountRange(definitionId, out min, out max);
         }
 
         // Seed / fallback weight on a readable scale (~8..125) that stays proportional to the
@@ -76,6 +107,16 @@ namespace Constants
         // sync (initial values) and the runtime fallback, keeping every weight on one scale.
         public static float DefaultDropWeight(int value) =>
             Mathf.Max(1f, Mathf.Round(1000f / Mathf.Max(1, value)));
+
+        /// <summary>Seed / fallback drop-count range: singles for non-stackables, a modest
+        /// slice of a full stack for stackables. Deliberately conservative — the balance table
+        /// is where a generous item (ammo, bandages) gets its real range.</summary>
+        public static void DefaultDropCountRange(string definitionId, out int min, out int max)
+        {
+            int stack = Mathf.Max(1, ItemDefinition.Get(definitionId)?.MaxStackSize ?? 1);
+            min = 1;
+            max = stack <= 1 ? 1 : Mathf.Clamp(Mathf.RoundToInt(stack * 0.25f), 1, stack);
+        }
 
         // ── Runtime singleton ────────────────────────────────────────────────
         public const string ResourcePath = "Configs/ItemBalance";
@@ -101,6 +142,14 @@ namespace Constants
             var inst = Instance;
             if (inst != null) return inst.GetDropWeight(definitionId);
             return DefaultDropWeight(ItemDefinition.Get(definitionId)?.Value ?? 10);
+        }
+
+        /// <summary>Convenience drop-count range that tolerates a missing asset.</summary>
+        public static void DropCountRangeOf(string definitionId, out int min, out int max)
+        {
+            var inst = Instance;
+            if (inst != null) { inst.GetDropCountRange(definitionId, out min, out max); return; }
+            DefaultDropCountRange(definitionId, out min, out max);
         }
     }
 }

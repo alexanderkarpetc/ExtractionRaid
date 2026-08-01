@@ -15,51 +15,31 @@ MonoBehaviour:
   _typeId: RandomLootBox
   _displayName: Loot Box
   _slotCount: 12
+  _guaranteedDrops: []
   _minDrops: 1
   _maxDrops: 6
-  _drops:
-  - definitionId: Medkit
-    minCount: 1
-    maxCount: 1
+  _pool:
+  - kind: 0
+    category: 1
+    definitionId:
     weight: 2
-    weaponPreset: {fileID: 0}
-  - definitionId: Bandage
-    minCount: 1
-    maxCount: 1
-    weight: 2
-    weaponPreset: {fileID: 0}
-  - definitionId: Grenade
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Ammo_Rifle
-    minCount: 10
-    maxCount: 30
+  - kind: 0
+    category: 2
+    definitionId:
     weight: 3
-    weaponPreset: {fileID: 0}
-  - definitionId: BallisticRound
-    minCount: 1
-    maxCount: 1
+  - kind: 0
+    category: 4
+    definitionId:
     weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: LaserCharge
-    minCount: 1
-    maxCount: 1
+  - kind: 0
+    category: 0
+    definitionId:
+    weight: 2
+  - kind: 0
+    category: 6
+    definitionId:
     weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: 
-    minCount: 1
-    maxCount: 1
+  - kind: 0
+    category: 7
+    definitionId:
     weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Ammo_Pistol_AP
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}
-  - definitionId: Ammo_Pistol_HP
-    minCount: 1
-    maxCount: 1
-    weight: 1
-    weaponPreset: {fileID: 0}

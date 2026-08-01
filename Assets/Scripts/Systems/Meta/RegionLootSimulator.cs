@@ -44,53 +44,51 @@ namespace Systems.Meta
 
         public static void RollContainer(in ContainerTypeConfig cfg, List<Rolled> outItems)
         {
-            var pool = cfg.PossibleDrops;
-            if (pool == null || pool.Length == 0) return;
-
-            int capacity = cfg.SlotCount > 0 ? cfg.SlotCount : ContainerTypeConfig.DefaultSlotCount;
-            int dropCount = Mathf.Min(UnityEngine.Random.Range(cfg.MinDrops, cfg.MaxDrops + 1), capacity);
-
-            float totalWeight = 0f;
-            for (int i = 0; i < pool.Length; i++) totalWeight += pool[i].Weight;
-            if (totalWeight <= 0f) return;
-
-            for (int i = 0; i < dropCount; i++)
-            {
-                var drop = PickWeighted(pool, totalWeight);
-
-                // Weapon-preset drop mirrors the live LootSystem path: a single assembled weapon.
-                if (drop.IsWeaponPreset)
+            // Hardcoded contents first, exactly like LootSystem.CreateContainer.
+            if (cfg.GuaranteedDrops != null)
+                foreach (var drop in cfg.GuaranteedDrops)
                 {
-                    outItems.Add(Rolled.MakeWeapon(drop.WeaponPreset.BuildConfiguration()));
-                    continue;
+                    // Weapon-preset drop mirrors the live path: a single assembled weapon.
+                    if (drop.IsWeaponPreset)
+                    {
+                        outItems.Add(Rolled.MakeWeapon(drop.WeaponPreset.BuildConfiguration()));
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(drop.DefinitionId)) continue;
+                    int c = LootRoller.RollCount(in drop);
+                    if (c > 0) outItems.Add(new Rolled(drop.DefinitionId, c));
                 }
 
-                int count = UnityEngine.Random.Range(drop.MinCount, drop.MaxCount + 1);
-                var def = ItemDefinition.Get(drop.DefinitionId);
-                if (def != null) count = Mathf.Min(count, Mathf.Max(1, def.MaxStackSize));
-                if (count > 0) outItems.Add(new Rolled(drop.DefinitionId, count));
+            int capacity = cfg.SlotCount > 0 ? cfg.SlotCount : ContainerTypeConfig.DefaultSlotCount;
+            int rolls = Mathf.Min(UnityEngine.Random.Range(cfg.MinDrops, cfg.MaxDrops + 1), capacity);
+
+            for (int i = 0; i < rolls; i++)
+            {
+                if (!LootRoller.TryRollPool(cfg.RandomPool, out var id)) break;
+                int count = LootRoller.RollCount(id);
+                if (count > 0) outItems.Add(new Rolled(id, count));
             }
         }
 
         // ────────────────────────────────────────── Loose loot ──
 
         public static void RollLooseGroup(ItemGroup group, List<Rolled> outItems)
-            => RollUniform(ItemGroups.GetDrops(group), outItems);
-
-        static void RollUniform(LootDrop[] drops, List<Rolled> outItems)
         {
-            if (drops == null || drops.Length == 0) return;
-            var d = drops[UnityEngine.Random.Range(0, drops.Length)];
-            int count = Mathf.Max(1, UnityEngine.Random.Range(d.MinCount, d.MaxCount + 1));
-            if (!string.IsNullOrEmpty(d.DefinitionId)) outItems.Add(new Rolled(d.DefinitionId, count));
+            if (!LootRoller.TryRollPool(ItemGroups.GetPool(group), out var id)) return;
+            int count = Mathf.Max(1, LootRoller.RollCount(id));
+            outItems.Add(new Rolled(id, count));
         }
 
+        // Custom loose-loot lists name their items outright; a max of 0 defers the stack size
+        // to the balance table (matches LooseLootSpawnPoint.RollItem).
         public static void RollLooseCustom(IReadOnlyList<(string id, int min, int max)> custom, List<Rolled> outItems)
         {
             if (custom == null || custom.Count == 0) return;
             var pick = custom[UnityEngine.Random.Range(0, custom.Count)];
             if (string.IsNullOrEmpty(pick.id)) return;
-            int count = Mathf.Max(1, UnityEngine.Random.Range(pick.min, pick.max + 1));
+            int count = pick.max > 0
+                ? Mathf.Max(1, UnityEngine.Random.Range(pick.min, pick.max + 1))
+                : Mathf.Max(1, LootRoller.RollCount(pick.id));
             outItems.Add(new Rolled(pick.id, count));
         }
 
@@ -179,40 +177,19 @@ namespace Systems.Meta
 
         static void RollCategory(in CategoryLootRule rule, List<Rolled> outItems)
         {
-            var cat = LootConstants.ToItemCategory(rule.Category);
-            if (cat == ItemCategory.None) return;
-
-            var candidates = new List<ItemDefinition>();
-            foreach (var d in ItemDefinition.Registry.Values)
-                if (d.Category == cat) candidates.Add(d);
+            var candidates = LootConstants.CandidatesFor(rule.Category);
             if (candidates.Count == 0) return;
 
+            var taken = new List<string>();
             int picks = Mathf.Min(UnityEngine.Random.Range(rule.MinPicks, rule.MaxPicks + 1), candidates.Count);
             for (int p = 0; p < picks; p++)
             {
-                float total = 0f;
-                for (int i = 0; i < candidates.Count; i++) total += ItemBalanceAsset.DropWeightOf(candidates[i].Id);
-                float r = UnityEngine.Random.value * total;
-                int chosen = candidates.Count - 1;
-                for (int i = 0; i < candidates.Count; i++)
-                {
-                    r -= ItemBalanceAsset.DropWeightOf(candidates[i].Id);
-                    if (r <= 0f) { chosen = i; break; }
-                }
-                outItems.Add(new Rolled(candidates[chosen].Id, 1));
-                candidates.RemoveAt(chosen);
+                var id = LootRoller.PickFromCategory(rule.Category, taken);
+                if (string.IsNullOrEmpty(id)) break;
+                taken.Add(id);
+                int count = Mathf.Max(1, LootRoller.RollCount(id));
+                outItems.Add(new Rolled(id, count));
             }
-        }
-
-        static LootDrop PickWeighted(LootDrop[] pool, float totalWeight)
-        {
-            float r = UnityEngine.Random.value * totalWeight, acc = 0f;
-            for (int i = 0; i < pool.Length; i++)
-            {
-                acc += pool[i].Weight;
-                if (r <= acc) return pool[i];
-            }
-            return pool[pool.Length - 1];
         }
 
         // ───────────────────────────────── Carry (most valuable) ──
