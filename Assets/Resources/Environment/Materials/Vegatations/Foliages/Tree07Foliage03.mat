@@ -14,6 +14,7 @@ Material:
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
+  - _DITHERENABLED_ON
   - _RECEIVE_SHADOWS_OFF
   - _USEFOLIAGEDITHERPATTERNTEX_ON
   m_LightmapFlags: 4
@@ -107,7 +108,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DisableReceiveShadows: 1
     - _Dither: 0
-    - _DitherEnabled: 0
+    - _DitherEnabled: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
