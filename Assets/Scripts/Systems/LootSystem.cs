@@ -153,7 +153,7 @@ namespace Systems
             BotEntityState bot, in BotTypeConfig config)
         {
             if (config.AmmoLoot.HasValue)
-                DropAmmoVariants(state, inventory, ref backpackSlot, bot, config.AmmoLoot.Value);
+                DropCaliberAmmo(state, inventory, ref backpackSlot, bot, config.AmmoLoot.Value);
 
             if (config.GuaranteedItems != null)
             {
@@ -175,42 +175,18 @@ namespace Systems
             }
         }
 
-        // Ammo drop for the gun's OWN caliber, weighted across Standard / AP / HP variants.
-        // Variants absent from the registry (e.g. energy cells have no AP/HP) are skipped,
-        // so a weight pointing at a missing variant simply doesn't contribute.
-        static void DropAmmoVariants(RaidState state, InventoryState inventory, ref int backpackSlot,
+        // Ammo drop for the gun's OWN caliber — resolved from the payload, never authored,
+        // so a bot can only ever drop rounds its weapon could actually fire.
+        static void DropCaliberAmmo(RaidState state, InventoryState inventory, ref int backpackSlot,
             BotEntityState bot, in AmmoLootRule rule)
         {
-            var baseAmmo = bot.Weapon?.PayloadDefinition?.AmmoType;
-            if (string.IsNullOrEmpty(baseAmmo)) return;
-
-            var ids = new List<string>(3);
-            var weights = new List<float>(3);
-            void TryAdd(string id, float w)
-            {
-                if (w > 0f && ItemDefinition.Get(id) != null)
-                {
-                    ids.Add(id);
-                    weights.Add(w);
-                }
-            }
-            TryAdd(baseAmmo, rule.StandardWeight);
-            TryAdd(baseAmmo + "_AP", rule.ApWeight);
-            TryAdd(baseAmmo + "_HP", rule.HpWeight);
-            if (ids.Count == 0) return;
-
-            float total = 0f;
-            for (int i = 0; i < weights.Count; i++) total += weights[i];
-            float r = Random.value * total;
-            int chosen = ids.Count - 1;
-            for (int i = 0; i < ids.Count; i++)
-            {
-                r -= weights[i];
-                if (r <= 0f) { chosen = i; break; }
-            }
+            var ammoId = bot.Weapon?.PayloadDefinition?.AmmoType;
+            if (string.IsNullOrEmpty(ammoId) || ItemDefinition.Get(ammoId) == null) return;
 
             int rounds = Random.Range(rule.MinRounds, rule.MaxRounds + 1);
-            DropStacks(state, inventory, ref backpackSlot, ids[chosen], rounds);
+            if (rounds <= 0) return;
+
+            DropStacks(state, inventory, ref backpackSlot, ammoId, rounds);
         }
 
         // Balance-weighted pick of distinct items from a category bucket. Both the item choice

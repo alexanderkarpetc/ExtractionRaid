@@ -160,18 +160,11 @@ namespace State
                     ArmorDamage = 0f,
                     BleedChance = 0.05f,
                 },
-                ["Ammo_Pistol"] = new()
-                {
-                    Id = "Ammo_Pistol",
-                    DisplayName = "Pistol Ammo",
-                    Category = ItemCategory.Ammo,
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 36,
-                    AmmoType = "Ammo_Pistol",
-                    Penetration = 12f,
-                    ArmorDamage = 6f,
-                    BleedChance = 0.05f,
-                },
+                // Ammo audit (2026-07-27): only calibers a payload core declares live here.
+                // Pistol / AP / HP definitions were deleted — AmmoSystem chambers by exact id,
+                // so an id no payload reads is unloadable loot. Re-add them together with the
+                // payload (or the ammo-selection feature) that can actually fire them;
+                // AmmoAvailabilityTests fails the moment an orphan caliber reappears.
                 ["Grenade"] = new()
                 {
                     Id = "Grenade",
@@ -649,62 +642,6 @@ namespace State
                     MaxStackSize = 3,
                 },
 
-                // --- AP Ammo ---
-                ["Ammo_Pistol_AP"] = new()
-                {
-                    Id = "Ammo_Pistol_AP",
-                    DisplayName = "Pistol AP Ammo",
-                    Category = ItemCategory.Ammo,
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 36,
-                    AmmoType = "Ammo_Pistol_AP",
-                    Penetration = 30f,
-                    DamageModifier = -5f,
-                    ArmorDamage = 7f,
-                    BleedChance = 0.05f,
-                },
-                ["Ammo_Rifle_AP"] = new()
-                {
-                    Id = "Ammo_Rifle_AP",
-                    DisplayName = "Rifle AP Ammo",
-                    Category = ItemCategory.Ammo,
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 60,
-                    AmmoType = "Ammo_Rifle_AP",
-                    Penetration = 35f,
-                    DamageModifier = -5f,
-                    ArmorDamage = 8f,
-                    BleedChance = 0.05f,
-                },
-
-                // --- HP Ammo (Hollow Point — flesh shredder, no pen, no armor damage) ---
-                ["Ammo_Rifle_HP"] = new()
-                {
-                    Id = "Ammo_Rifle_HP",
-                    DisplayName = "Rifle HP Ammo",
-                    Category = ItemCategory.Ammo,
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 60,
-                    AmmoType = "Ammo_Rifle_HP",
-                    Penetration = 0f,
-                    DamageModifier = 10f,
-                    ArmorDamage = 0f,
-                    BleedChance = 0.30f,
-                },
-                ["Ammo_Pistol_HP"] = new()
-                {
-                    Id = "Ammo_Pistol_HP",
-                    DisplayName = "Pistol HP Ammo",
-                    Category = ItemCategory.Ammo,
-                    AllowedSlots = ItemSlotType.Backpack,
-                    MaxStackSize = 36,
-                    AmmoType = "Ammo_Pistol_HP",
-                    Penetration = 0f,
-                    DamageModifier = 10f,
-                    ArmorDamage = 0f,
-                    BleedChance = 0.25f,
-                },
-
                 // --- Weapon Mods ---
                 ["Basic_Scope"] = new()
                 {
@@ -980,11 +917,9 @@ namespace State
                 if (reg.TryGetValue(id, out var d)) d.Value = value;
             }
 
-            // Ammo — AP/HP variants worth more than standard, but kept modest so a full
-            // premium stack doesn't out-value a body armor.
-            Set("Ammo_Rifle", 8);   Set("Ammo_Rifle_AP", 15);  Set("Ammo_Rifle_HP", 12);
-            Set("Ammo_Pistol", 5);  Set("Ammo_Pistol_AP", 12); Set("Ammo_Pistol_HP", 9);
-            Set("Ammo_EnergyCell", 16);
+            // Ammo — energy cells cost more per round than rifle brass, but kept modest so a
+            // full stack doesn't out-value a body armor.
+            Set("Ammo_Rifle", 8);   Set("Ammo_EnergyCell", 16);
 
             // Meds / throwables / armor.
             Set("Bandage", 8); Set("Medkit", 45); Set("Advanced_Medkit", 110);

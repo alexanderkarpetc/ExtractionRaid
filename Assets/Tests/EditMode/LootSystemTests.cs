@@ -261,22 +261,23 @@ namespace Tests.EditMode
         // ── Loot table (BotLootConfigAsset → BotTypeConfig loot rules) ──────────
 
         [Test]
-        public void CreateLootable_AmmoLootTable_DropsWeightedCaliberVariant()
+        public void CreateLootable_AmmoLootTable_DropsTheGunsOwnCaliber()
         {
             BotConstants.TryGetConfig("Scav", out var scav);   // Scav = BallisticRound → Ammo_Rifle
             var bot = CreateBot("Scav", Vector3.zero);
 
-            // AP-only weights → must resolve to the caliber's AP variant, never pistol ammo.
+            // The caliber is never authored in the rule — it comes from the equipped payload,
+            // so a bot can only drop rounds its own weapon could fire.
             var config = new BotTypeConfig(
                 typeId: "Scav", prefabId: "BotShell", weaponConfig: scav.WeaponConfig,
-                ammoLoot: new AmmoLootRule(standardWeight: 0f, apWeight: 1f, hpWeight: 0f,
-                    minRounds: 10, maxRounds: 10));
+                ammoLoot: new AmmoLootRule(minRounds: 10, maxRounds: 10));
 
             LootSystem.CreateLootable(_state, bot, in config, _events);
 
             var inv = _state.Lootables[0].Inventory;
-            Assert.IsNotNull(FindInBackpack(inv, "Ammo_Rifle_AP"), "AP-weighted ammo should drop the rifle AP variant");
-            Assert.IsNull(FindInBackpack(inv, "Ammo_Rifle"), "Standard weight was 0 — no standard rounds");
+            var dropped = FindInBackpack(inv, "Ammo_Rifle");
+            Assert.IsNotNull(dropped, "Scav fires BallisticRound — the drop must be rifle ammo");
+            Assert.AreEqual(10, dropped.StackCount);
         }
 
         [Test]

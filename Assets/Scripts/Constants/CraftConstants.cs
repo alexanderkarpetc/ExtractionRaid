@@ -140,9 +140,11 @@ namespace Constants
             });
 
         // ── Ammo ─────────────────────────────────────────────────
-        // Cluster A (2026-05-01): Ammo_Pistol / Ammo_Pistol_AP recipes retired —
-        // no current payload uses Pistol-caliber ammo (BallisticPayload reads Ammo_Rifle).
-        // May return if Tier 3 splits Ballistic into per-caliber payloads.
+        // One recipe per caliber a payload core declares, and nothing else: AmmoSystem
+        // chambers by exact id, so a recipe for a caliber no payload reads just costs the
+        // player materials for unloadable rounds. Pistol and AP/HP recipes were retired for
+        // exactly that (Cluster A 2026-05-01, ammo audit 2026-07-27). Guarded by
+        // AmmoAvailabilityTests — add the payload first, then the recipe.
 
         public static readonly CraftRecipe RifleAmmo = new(
             "RifleAmmo", "Rifle Ammo", "Standard rifle cartridges.",
@@ -153,14 +155,14 @@ namespace Constants
                 new CraftIngredient("Metal_Parts", 2),
             });
 
-        public static readonly CraftRecipe RifleAPAmmo = new(
-            "RifleAPAmmo", "Rifle AP Ammo", "Armor-piercing rifle cartridges with hardened core.",
-            CraftCategory.Ammo, "Ammo_Rifle_AP", 5,
+        public static readonly CraftRecipe EnergyCellAmmo = new(
+            "EnergyCellAmmo", "Energy Cell", "Charged cells for laser payloads.",
+            CraftCategory.Ammo, "Ammo_EnergyCell", 5,
             new[]
             {
-                new CraftIngredient("Gunpowder", 2),
-                new CraftIngredient("Metal_Parts", 2),
-                new CraftIngredient("Military_Components", 1),
+                new CraftIngredient("Electronics", 2),
+                new CraftIngredient("Metal_Parts", 1),
+                new CraftIngredient("Chemicals", 1),
             });
 
         // ── Weapon Mods: Scopes ──────────────────────────────────
@@ -293,7 +295,7 @@ namespace Constants
             // Weapon Builder modules (Cluster A 2026-05-01)
             BallisticRoundModule, LaserChargeModule,
             SingleActionModule, AutoModule, ScatterModule,
-            RifleAmmo, RifleAPAmmo,
+            RifleAmmo, EnergyCellAmmo,
             BasicScope, AdvancedScope,
             LongBarrel, ShortBarrel,
             Suppressor, Compensator,

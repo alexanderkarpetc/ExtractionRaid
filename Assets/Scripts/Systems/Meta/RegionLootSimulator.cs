@@ -109,7 +109,7 @@ namespace Systems.Meta
 
             if (cfg.HasLootTable)
             {
-                if (cfg.AmmoLoot.HasValue) RollAmmoVariants(cfg.AmmoLoot.Value, outItems);
+                if (cfg.AmmoLoot.HasValue) RollCaliberAmmo(cfg.AmmoLoot.Value, outItems);
 
                 if (cfg.GuaranteedItems != null)
                     foreach (var rule in cfg.GuaranteedItems)
@@ -152,27 +152,14 @@ namespace Systems.Meta
         static bool IsValidWeapon(in WeaponConfiguration c)
             => !string.IsNullOrEmpty(c.Payload.DefinitionId) && !string.IsNullOrEmpty(c.Delivery.DefinitionId);
 
-        static void RollAmmoVariants(in AmmoLootRule rule, List<Rolled> outItems)
+        // Mirrors LootSystem.DropCaliberAmmo: one caliber, count only. The AP/HP variant roll
+        // that used to live here went away with those calibers (ammo audit, 2026-07-27).
+        static void RollCaliberAmmo(in AmmoLootRule rule, List<Rolled> outItems)
         {
-            var ids = new List<string>(3);
-            var weights = new List<float>(3);
-            void TryAdd(string id, float w)
-            {
-                if (w > 0f && ItemDefinition.Get(id) != null) { ids.Add(id); weights.Add(w); }
-            }
-            TryAdd(SimAmmoBase, rule.StandardWeight);
-            TryAdd(SimAmmoBase + "_AP", rule.ApWeight);
-            TryAdd(SimAmmoBase + "_HP", rule.HpWeight);
-            if (ids.Count == 0) return;
-
-            float total = 0f;
-            for (int i = 0; i < weights.Count; i++) total += weights[i];
-            float r = UnityEngine.Random.value * total;
-            int chosen = ids.Count - 1;
-            for (int i = 0; i < ids.Count; i++) { r -= weights[i]; if (r <= 0f) { chosen = i; break; } }
+            if (ItemDefinition.Get(SimAmmoBase) == null) return;
 
             int rounds = UnityEngine.Random.Range(rule.MinRounds, rule.MaxRounds + 1);
-            if (rounds > 0) outItems.Add(new Rolled(ids[chosen], rounds));
+            if (rounds > 0) outItems.Add(new Rolled(SimAmmoBase, rounds));
         }
 
         static void RollCategory(in CategoryLootRule rule, List<Rolled> outItems)

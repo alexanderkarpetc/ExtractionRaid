@@ -21,7 +21,7 @@ MonoBehaviour:
     minCount: 1
     maxCount: 1
     weaponPreset: {fileID: 11400000, guid: f4d440f61269b8b44a1d7015060d2279, type: 2}
-  - definitionId: Ammo_Pistol
+  - definitionId: Ammo_Rifle
     countFromBalance: 0
     minCount: 30
     maxCount: 40
@@ -31,5 +31,5 @@ MonoBehaviour:
   _pool:
   - kind: 1
     category: 2
-    definitionId: Ammo_Pistol
+    definitionId: Ammo_Rifle
     weight: 1

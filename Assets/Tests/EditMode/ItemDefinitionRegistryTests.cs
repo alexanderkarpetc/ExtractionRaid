@@ -4,9 +4,11 @@ using State;
 namespace Tests.EditMode
 {
     /// <summary>
-    /// Smoke tests for the static <see cref="ItemDefinition.Registry"/>: verifies that
-    /// core items (armor pieces, standard/HP ammo) load with the shape production code
-    /// depends on, plus one design-contract check (AP ammo pens better than standard).
+    /// Smoke tests for the static <see cref="ItemDefinition.Registry"/>: verifies that core
+    /// items (armor pieces, ammo) load with the shape production code depends on.
+    /// The AP/HP design-contract cases (AP pens harder, HP bleeds more) went away with those
+    /// calibers in the ammo audit (2026-07-27) — bring them back with the ammo-selection
+    /// feature that makes variants loadable again.
     /// </summary>
     [TestFixture]
     public class ItemDefinitionRegistryTests
@@ -22,8 +24,8 @@ namespace Tests.EditMode
             Assert.IsNotNull(def.ArmorPrefabId, $"{id} should carry a visual prefab id");
         }
 
-        [TestCase("Ammo_Rifle",    ExpectedResult = true)]  // standard: has pen, no bleed
-        [TestCase("Ammo_Rifle_HP", ExpectedResult = false)] // HP:       zero pen, has bleed
+        [TestCase("Ammo_Rifle",      ExpectedResult = true)]  // brass: punches through armor
+        [TestCase("Ammo_EnergyCell", ExpectedResult = false)] // laser: damage comes from the weapon
         public bool Ammo_HasPenetration(string id)
         {
             var def = ItemDefinition.Get(id);
@@ -32,34 +34,14 @@ namespace Tests.EditMode
         }
 
         // 2026-05-26: all ammo carries a baseline bleed chance (5%) so the bleed/HUD loop
-        // always has a chance to fire; HP variants escalate further (see escalation test).
-        [TestCase("Ammo_Rifle",    ExpectedResult = true)] // standard: baseline bleed
-        [TestCase("Ammo_Rifle_HP", ExpectedResult = true)] // HP:       elevated bleed
-        public bool Ammo_HasBleedChance(string id)
+        // always has a chance to fire.
+        [TestCase("Ammo_Rifle")]
+        [TestCase("Ammo_EnergyCell")]
+        public void Ammo_HasBaselineBleedChance(string id)
         {
             var def = ItemDefinition.Get(id);
             Assert.IsNotNull(def, $"{id} must be in registry");
-            return def.BleedChance > 0f;
-        }
-
-        [Test]
-        public void AmmoRifleHP_HasHigherBleedThanStandard()
-        {
-            // Design contract: HP ammo is the bleed upgrade — must exceed the baseline.
-            var standard = ItemDefinition.Get("Ammo_Rifle");
-            var hp       = ItemDefinition.Get("Ammo_Rifle_HP");
-            Assert.Greater(hp.BleedChance, standard.BleedChance,
-                "HP ammo should have higher bleed chance than standard");
-        }
-
-        [Test]
-        public void AmmoRifleAP_HasHigherPenetrationThanStandard()
-        {
-            // Design contract: AP ammo pen > standard ammo pen.
-            var standard = ItemDefinition.Get("Ammo_Rifle");
-            var ap       = ItemDefinition.Get("Ammo_Rifle_AP");
-            Assert.Greater(ap.Penetration, standard.Penetration,
-                "AP ammo should have higher penetration than standard");
+            Assert.Greater(def.BleedChance, 0f, $"{id} should carry the baseline bleed chance");
         }
     }
 }

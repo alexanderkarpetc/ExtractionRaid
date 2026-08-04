@@ -115,11 +115,11 @@ namespace Tests.EditMode
             var weapon2Id = state.AllocateEId();
             state.PlayerEntity.Hotbar[1] = NewPistolLikeWeapon(weapon2Id);
 
-            // Starting reserve ammo for tests
+            // Starting reserve ammo for tests — one stack per live caliber.
             var rifleAmmoId = state.AllocateEId();
             App.Instance.Player.Inventory.Backpack[0] = ItemState.Create(rifleAmmoId, "Ammo_Rifle", 60);
-            var pistolAmmoId = state.AllocateEId();
-            App.Instance.Player.Inventory.Backpack[1] = ItemState.Create(pistolAmmoId, "Ammo_Pistol", 36);
+            var cellAmmoId = state.AllocateEId();
+            App.Instance.Player.Inventory.Backpack[1] = ItemState.Create(cellAmmoId, "Ammo_EnergyCell", 30);
 
             return state;
         }
@@ -174,7 +174,7 @@ namespace Tests.EditMode
                 PrefabId       = "Weapon_Pistol",
                 PayloadCore    = new PayloadCoreInstance("BallisticRound", RarityTier.Common),
                 DeliveryCore   = new DeliveryCoreInstance("SingleAction",  RarityTier.Common),
-                AmmoType       = "Ammo_Pistol",
+                AmmoType       = "Ammo_Rifle",
                 AmmoInMagazine = 12,
                 LastFireTime   = -999f,
                 Phase          = WeaponPhase.Ready,

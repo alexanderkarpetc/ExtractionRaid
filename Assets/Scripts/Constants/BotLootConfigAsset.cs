@@ -10,26 +10,21 @@ namespace Constants
     // roll these on death.
 
     /// <summary>
-    /// Ammo drop rule. Variant weights are relative to the equipped gun's own caliber —
-    /// resolved at drop time from the payload's AmmoType, so a rifle bot can only ever
-    /// drop rifle ammo. A weight of 0 disables that variant; an unavailable variant
-    /// (e.g. a caliber with no AP round) is skipped automatically.
+    /// Ammo drop rule. The caliber is never authored here — it's resolved at drop time from
+    /// the equipped gun's payload AmmoType, so a rifle bot can only ever drop rifle ammo and
+    /// a laser bot energy cells. Only the round count is a design choice.
+    /// AP/HP variant weights lived here until the ammo audit (2026-07-27) retired those
+    /// calibers; they come back with the ammo-selection feature, not before.
     /// </summary>
     public readonly struct AmmoLootRule
     {
-        public readonly float StandardWeight;
-        public readonly float ApWeight;
-        public readonly float HpWeight;
-        public readonly int   MinRounds;
-        public readonly int   MaxRounds;
+        public readonly int MinRounds;
+        public readonly int MaxRounds;
 
-        public AmmoLootRule(float standardWeight, float apWeight, float hpWeight, int minRounds, int maxRounds)
+        public AmmoLootRule(int minRounds, int maxRounds)
         {
-            StandardWeight = standardWeight > 0f ? standardWeight : 0f;
-            ApWeight       = apWeight > 0f ? apWeight : 0f;
-            HpWeight       = hpWeight > 0f ? hpWeight : 0f;
-            MinRounds      = Mathf.Max(0, minRounds);
-            MaxRounds      = Mathf.Max(MinRounds, maxRounds);
+            MinRounds = Mathf.Max(0, minRounds);
+            MaxRounds = Mathf.Max(MinRounds, maxRounds);
         }
     }
 
@@ -105,13 +100,8 @@ namespace Constants
         [Min(0)] public int grenadeMinCount = 0;
         [Min(0)] public int grenadeMaxCount = 0;
 
-        [Header("Ammo (variant mix for the gun's own caliber)")]
-        [Tooltip("Relative weight of standard rounds. Set all three to 0 to drop no ammo.")]
-        [Min(0f)] public float ammoStandardWeight = 1f;
-        [Tooltip("Relative weight of Armor-Piercing rounds (ignored if the caliber has no AP variant).")]
-        [Min(0f)] public float ammoApWeight = 0f;
-        [Tooltip("Relative weight of Hollow-Point rounds (ignored if the caliber has no HP variant).")]
-        [Min(0f)] public float ammoHpWeight = 0f;
+        [Header("Ammo (rounds of the gun's own caliber)")]
+        [Tooltip("Rounds dropped on death. Set both to 0 to drop no ammo.")]
         [Min(0)] public int ammoMinRounds = 30;
         [Min(0)] public int ammoMaxRounds = 30;
 
@@ -121,8 +111,7 @@ namespace Constants
         [Header("Category loot (value-weighted random picks per category)")]
         [SerializeField] CategoryEntry[] _categories;
 
-        public AmmoLootRule BuildAmmoRule() =>
-            new(ammoStandardWeight, ammoApWeight, ammoHpWeight, ammoMinRounds, ammoMaxRounds);
+        public AmmoLootRule BuildAmmoRule() => new(ammoMinRounds, ammoMaxRounds);
 
         public ItemCountRule[] BuildItemRules()
         {

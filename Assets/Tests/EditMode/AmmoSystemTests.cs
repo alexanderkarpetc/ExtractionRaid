@@ -38,9 +38,9 @@ namespace Tests.EditMode
         {
             var inventory = new InventoryState();
             inventory.Backpack[0] = ItemState.Create(new EId(1), "Ammo_Rifle", 30);
-            inventory.Backpack[1] = ItemState.Create(new EId(2), "Ammo_Pistol", 10);
+            inventory.Backpack[1] = ItemState.Create(new EId(2), "Ammo_EnergyCell", 10);
             Assert.AreEqual(30, AmmoSystem.CountReserve(inventory, "Ammo_Rifle"));
-            Assert.AreEqual(10, AmmoSystem.CountReserve(inventory, "Ammo_Pistol"));
+            Assert.AreEqual(10, AmmoSystem.CountReserve(inventory, "Ammo_EnergyCell"));
         }
 
         [Test]
