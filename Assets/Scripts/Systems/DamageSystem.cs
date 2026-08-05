@@ -277,6 +277,32 @@ namespace Systems
         }
 
         /// <summary>
+        /// Kills an entity outright with no attacker — environment deaths (raid clock running out,
+        /// later: gas, out-of-bounds). Emits the same <c>EntityDied</c> the combat path does, so the
+        /// whole downstream pipeline works unchanged: ragdoll, loot drop, and for the player
+        /// <c>RaidSession.ProcessDeathEvents</c> → <c>RaidOutcome.KIA</c> → gear wipe on
+        /// <c>App.EndRaid</c>. No <c>EntityHit</c> is fired — there is no impact to render, and blood
+        /// from a nonexistent bullet would read as a bug.
+        ///
+        /// Deliberately ignores GodMode: that cheat exists to survive combat, not to stop the clock.
+        /// To play without a deadline, set the duration to 0 (Dev Cheats → ⏱ Raid).
+        /// Returns false when the entity has no health entry or is already dead.
+        /// </summary>
+        public static bool KillEntity(RaidState state, EId targetId, in RaidContext context)
+        {
+            if (!state.HealthMap.TryGetValue(targetId, out var health)) return false;
+            if (!health.IsAlive) return false;
+
+            float lethal = health.CurrentHp;
+            ApplyDamage(health, lethal);
+
+            context.Events.EntityDied(
+                targetId, EId.None, Vector3.zero, Vector3.down, lethal,
+                isHeadshot: false, victimVelocity: Vector3.zero);
+            return true;
+        }
+
+        /// <summary>
         /// Direct contact damage entrypoint for melee attacks (Horde-mode zombies).
         /// Skips the projectile / armor / bleed pipeline — raw HP delta + matching
         /// view-feedback events. Bypasses GodMode на attackers тому що GodMode у

@@ -158,6 +158,7 @@ namespace Editor
             DrawMacroGroup("💀 Tools & Cheats", ToolsTone, defaultExpanded: true, () =>
             {
                 DrawSection("💀 Cheats", _config.Cheats);
+                DrawSection("⏱ Raid clock", _config.Raid);
                 DrawRaidSection();
                 DrawQuestsSection();
             });
@@ -1194,6 +1195,7 @@ namespace Editor
             CreateSectionIfMissing<DevCheatsLaserSection>(so, "_laser", folder, "Laser");
             CreateSectionIfMissing<DevCheatsBarrelHeatSection>(so, "_barrelHeat", folder, "BarrelHeat");
             CreateSectionIfMissing<DevCheatsStaminaSection>(so, "_stamina", folder, "Stamina");
+            CreateSectionIfMissing<DevCheatsRaidSection>(so, "_raid", folder, "Raid");
 
             so.ApplyModifiedPropertiesWithoutUndo();
         }

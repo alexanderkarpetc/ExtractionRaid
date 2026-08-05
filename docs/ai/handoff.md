@@ -4,11 +4,37 @@
 >
 > **📍 Canonical plan:** [`release-scope.md`](./release-scope.md) (feature-map + gaps + 🔒 locked decisions) + [`v1.0-roadmap.md`](./v1.0-roadmap.md) (milestones **M1–M4**; statuses reconciled with the repo 2026-08-05, incl. a list of parallel work outside M1–M4). These supersede the ad-hoc "Next candidates" below.
 >
-> **Baseline: 693 EditMode tests green** (2026-08-05).
+> **Baseline: 700 EditMode tests green** (2026-08-05).
 
 ## Context
 
 Top-down extraction shooter (Unity 6000.3.10f1, URP 17.3). 5-layer architecture (App → Session → Systems → Adapters → View/Presenter) per [`CLAUDE.md`](./CLAUDE.md). Ukrainian-language collaboration, tight iterations.
+
+---
+
+## Most recent — Raid timer (M1.2, 2026-08-05)
+
+The raid clock, the missing half of the risk loop: gear-loss (M1.1) made death cost something, this
+makes *staying* cost something. **Time out → KIA**, deliberately through the ordinary death path —
+`RaidTimerSystem` → `DamageSystem.KillEntity` → `EntityDied` → `ProcessDeathEvents` → `RaidOutcome.KIA`
+→ gear wipe in `App.EndRaid`. No second exit-from-raid route to keep in sync.
+
+- **No timer state.** The countdown is derived (`RaidState.RaidDurationSeconds − ElapsedTime`), so
+  there is nothing to reset or desync. `RaidTimerSystem.TimeRemaining/HasClock` are the read helpers
+  the HUD, the debugger and the end-of-raid screen share.
+- **0 = no clock**, which is how the hideout, `test_level` (TestScene) and the shooting ranges opt out
+  — see `RaidSession.ResolveRaidDuration`. `test_level` is checked there rather than folded into
+  `PlayerSpawnSystem.IsTestRange`, because that predicate also hands out the 6-weapon cheat loadout.
+- **`DamageSystem.KillEntity`** is new and reusable for future environment kills (gas, out-of-bounds):
+  attacker-less lethal damage that emits `EntityDied` but no `EntityHit` — there is no impact to
+  render, and blood from a nonexistent bullet reads as a bug.
+- **Ignores GodMode on purpose** (it is a combat cheat, not a clock cheat). The escape hatch for long
+  playtests is duration `0` in `Dev Cheats → ⏱ Raid clock` (also holds warn/critical thresholds).
+- **UX:** `MM:SS` pill top-centre in `BattleHudOverlay` with warn (120s) / critical (30s) looks, hidden
+  on clock-less levels; the death screen says **"TIME'S UP"** instead of "YOU DIED" when the clock ran
+  out — no extra state, the KIA path leaves the session live so the presenter can just read it.
+- Extraction completed in the same frame wins the tie (`ExtractionSystem` ticks first).
+- **7 tests** (`RaidTimerSystemTests`) → **700 EditMode green**.
 
 ---
 
@@ -257,8 +283,8 @@ Files: `View/BotDebugLabel.cs`, `View/WorldHealthBar.cs`, `View/BotView.cs`, `De
 
 ## Current state
 
-- **693/693 EditMode tests green** (2026-08-05; was 671 at the 07-23 batch, +5 `AmmoAvailabilityTests`
-  and the rest from the loot rework).
+- **700/700 EditMode tests green** (2026-08-05; was 671 at the 07-23 batch — +7 `RaidTimerSystemTests`,
+  +5 `AmmoAvailabilityTests`, the rest from the loot rework).
 - Compile clean (only pre-existing warnings — `FindObjectOfType` obsolete API, QuestDefinition missing type).
 - 6 weapon archetypes feel coherent (Ballistic/Laser × Pistol/Rifle/Shotgun); semi-auto pistol/shotgun, full-auto rifle, laser charge-release.
 - 4 test scenes: `ShootingScene` (armored), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover).
@@ -327,8 +353,8 @@ terrain details onto scattered prefabs.
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify EditMode tests are green (**693** baseline as of 2026-08-05) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
-4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4).** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); **progression IN** (material-cost nodes, since 2026-07-21); 2 maps + bunker; item icons must-have (generated); EN-only. **M1 is the active milestone:** M1.1 ✅ and M1.4 ✅; open are **M1.2 raid timer** (no timer exists in code at all), **M1.3 extraction UX**, **M1.5 audio scaffold**, plus **#63** initial difficulty ramp. Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
+3. Verify EditMode tests are green (**700** baseline as of 2026-08-05) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
+4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4).** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); **progression IN** (material-cost nodes, since 2026-07-21); 2 maps + bunker; item icons must-have (generated); EN-only. **M1 is the active milestone:** M1.1 ✅, M1.2 ✅, M1.4 ✅; open are **M1.3 extraction UX**, **M1.5 audio scaffold**, plus **#63** initial difficulty ramp. Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
 5. Check the roadmap's **"Паралельні роботи поза M1–M4"** before picking anything — maps, loot, bots,
    progression and the meta simulator are actively owned by other contributors.
 
@@ -347,9 +373,9 @@ terrain details onto scattered prefabs.
 
 ---
 
-**Status (2026-08-05):** All committed. **693** EditMode green. Latest: ammo audit (5 orphan calibers
+**Status (2026-08-05):** All committed. **700** EditMode green. Latest: raid timer (M1.2), ammo audit (5 orphan calibers
 deleted end-to-end + `AmmoAvailabilityTests` guard), quest-indicator stuck-on fix, foliage bloom fix.
-M1: M1.1 ✅ M1.4 ✅ — open M1.2 / M1.3 / M1.5 / #63. Parallel owners: progression + loot + meta simulator
+M1: M1.1 ✅ M1.2 ✅ M1.4 ✅ — open M1.3 / M1.5 / #63. Parallel owners: progression + loot + meta simulator
 (Олександр), map content (Vudmaster), vegetation shaders (Denis) — see the roadmap list before picking
 work. Known Mac-only issue: terrain grass black on Metal (above). (Older: onboarding batch 2026-07-23,
 Weapon Attachments epic + Sniper Scope 2026-07-16.)

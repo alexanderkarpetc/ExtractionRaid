@@ -124,6 +124,26 @@ namespace Session
         };
     }
 
+    /// <summary>
+    /// Raid clock. The countdown itself is derived — <c>RaidState.RaidDurationSeconds</c> minus
+    /// <c>RaidState.ElapsedTime</c> — so nothing here is per-frame state. Warn/critical are HUD
+    /// thresholds carried alongside the duration so the presenter reads one source.
+    /// </summary>
+    public struct RaidTimerConfig
+    {
+        /// <summary>Seconds before the raid ends in a KIA. 0 (or less) = no limit.</summary>
+        public float DurationSeconds;
+        public float WarnAtSeconds;
+        public float CriticalAtSeconds;
+
+        public static RaidTimerConfig Default => new RaidTimerConfig
+        {
+            DurationSeconds   = Constants.RaidTimerConstants.DefaultDurationSeconds,
+            WarnAtSeconds     = Constants.RaidTimerConstants.DefaultWarnAtSeconds,
+            CriticalAtSeconds = Constants.RaidTimerConstants.DefaultCriticalAtSeconds,
+        };
+    }
+
     public struct ArmorConfig
     {
         public bool  ForceNoArmor;
@@ -333,6 +353,7 @@ namespace Session
         public readonly LaserConfig LaserConfig;
         public readonly BarrelHeatConfig BarrelHeatConfig;
         public readonly CheatsConfig CheatsConfig;
+        public readonly RaidTimerConfig RaidTimerConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -348,7 +369,8 @@ namespace Session
             BotEngagementConfig? botEngagementConfig = null,
             LaserConfig? laserConfig = null,
             BarrelHeatConfig? barrelHeatConfig = null,
-            CheatsConfig? cheatsConfig = null)
+            CheatsConfig? cheatsConfig = null,
+            RaidTimerConfig? raidTimerConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -369,6 +391,7 @@ namespace Session
             LaserConfig = laserConfig ?? LaserConfig.Default;
             BarrelHeatConfig = barrelHeatConfig ?? BarrelHeatConfig.Default;
             CheatsConfig = cheatsConfig ?? CheatsConfig.Default;
+            RaidTimerConfig = raidTimerConfig ?? RaidTimerConfig.Default;
         }
     }
 }

@@ -29,6 +29,26 @@ namespace Dev
             }
         }
 
+        // ── Raid clock (M1.2) ───────────────────────────────
+        // Read once per raid at RaidSession.Start (duration) and per frame for the HUD thresholds.
+        public static float RaidDurationSeconds
+        {
+            get => Config.Raid.RaidDurationSeconds;
+            set => Config.Raid.RaidDurationSeconds = value;
+        }
+
+        public static float RaidWarnAtSeconds
+        {
+            get => Config.Raid.RaidWarnAtSeconds;
+            set => Config.Raid.RaidWarnAtSeconds = value;
+        }
+
+        public static float RaidCriticalAtSeconds
+        {
+            get => Config.Raid.RaidCriticalAtSeconds;
+            set => Config.Raid.RaidCriticalAtSeconds = value;
+        }
+
         // ── Cheats ──────────────────────────────────────────
         public static bool GodMode
         {

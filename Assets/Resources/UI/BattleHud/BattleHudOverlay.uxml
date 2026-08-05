@@ -5,6 +5,12 @@
              Anchor + offset set via inline style from DevCheats. -->
         <ui:VisualElement name="status-row" picking-mode="Position" class="bh-status-row" />
 
+        <!-- Raid clock (M1.2). Top-centre MM:SS. Hidden on levels with no clock
+             (hideout, shooting ranges). Warn/critical looks are USS state classes. -->
+        <ui:VisualElement name="raid-timer" picking-mode="Ignore" class="bh-timer">
+            <ui:Label name="raid-timer-value" class="bh-timer__value" />
+        </ui:VisualElement>
+
         <!-- Ammo counter (Stage 7). Anchor + offset set inline from DevCheats.
              Big mag count / reserve / ammo-type name. Hidden when holstered. -->
         <ui:VisualElement name="ammo-block" picking-mode="Ignore" class="bh-ammo">

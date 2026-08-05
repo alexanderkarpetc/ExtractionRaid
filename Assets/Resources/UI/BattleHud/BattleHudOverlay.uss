@@ -119,3 +119,36 @@
 .bh-ammo.is-empty .bh-ammo__mag {
     color: var(--color-error);
 }
+
+/* ── Raid clock (M1.2) ──────────────────────────────────────────────────
+ * Top-centre MM:SS. Neutral while there is plenty of time; gold at the warn
+ * threshold; red at critical. Tabular-ish fixed width keeps the digits from
+ * shifting the block every second. The element is display:none on levels with
+ * no clock — the hideout and the shooting ranges never show it. */
+.bh-timer {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    right: 0;
+    align-items: center;
+}
+
+.bh-timer__value {
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--color-text-title);
+    width: 132px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 6px;
+}
+
+.bh-timer.is-warn .bh-timer__value {
+    color: var(--color-accent);
+}
+
+.bh-timer.is-critical .bh-timer__value {
+    color: var(--color-error);
+}

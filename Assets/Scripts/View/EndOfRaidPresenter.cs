@@ -71,8 +71,14 @@ namespace View
                     success = true;
                     break;
                 case RaidOutcome.KIA:
-                    title = "YOU DIED";
-                    subtitle = "Your gear was lost.";
+                    // A timeout death is still a KIA (same gear wipe), but reading "YOU DIED" after
+                    // the clock ran out hides WHY. The KIA path leaves the session live while this
+                    // screen is up, so the expired clock is still readable — no extra state needed.
+                    bool timedOut = IsRaidClockExpired();
+                    title = timedOut ? "TIME'S UP" : "YOU DIED";
+                    subtitle = timedOut
+                        ? "The raid closed with you still inside. Your gear was lost."
+                        : "Your gear was lost.";
                     success = false;
                     break;
                 default:
@@ -80,6 +86,14 @@ namespace View
             }
 
             _window.Show(title, subtitle, success, OnNextClicked);
+        }
+
+        static bool IsRaidClockExpired()
+        {
+            var state = App.Instance?.RaidSession?.RaidState;
+            return state != null
+                   && Systems.RaidTimerSystem.HasClock(state)
+                   && Systems.RaidTimerSystem.TimeRemaining(state) <= 0f;
         }
 
         void OnNextClicked()

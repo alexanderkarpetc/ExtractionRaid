@@ -101,6 +101,9 @@ namespace Editor
         {
             EditorGUILayout.LabelField("General", EditorStyles.boldLabel);
             Field("Elapsed Time", $"{state.ElapsedTime:F2}s");
+            Field("Raid Clock", Systems.RaidTimerSystem.HasClock(state)
+                ? $"{Systems.RaidTimerSystem.TimeRemaining(state):F1}s left of {state.RaidDurationSeconds:F0}s"
+                : "no limit");
             Field("Is Running", state.IsRunning);
             Field("Projectiles", state.Projectiles.Count);
             Field("Grenades", state.Grenades.Count);

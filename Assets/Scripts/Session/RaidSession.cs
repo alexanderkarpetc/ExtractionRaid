@@ -60,6 +60,8 @@ namespace Session
                 Debug.LogWarning("All PlayerSpawnPoint weights are 0. Falling back to an equal random choice among available points.");
             }
 
+            RaidState.RaidDurationSeconds = ResolveRaidDuration(LevelState.LevelId);
+
             var spawnPos = selectedSpawnPoint != null ? selectedSpawnPoint.transform.position : Vector3.zero;
             PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer, LevelState.LevelId);
             SpawnFromScenePoints();
@@ -77,6 +79,24 @@ namespace Session
             // horde_range: no static spawn — HordeSpawnSystem.Tick drives waves.
 
             _eventBuffer.RaidStarted();
+        }
+
+        /// <summary>
+        /// Raid clock length for a level, or 0 for "no clock". The hideout is a safe hub, the
+        /// shooting ranges are combat labs, and `test_level` (TestScene) is the dev sandbox —
+        /// none of them should ever KIA the player on a timer. Real levels take the DevCheats
+        /// value; per-map authoring lands with map #2 (roadmap M3.1).
+        ///
+        /// `test_level` is checked here rather than folded into <c>IsTestRange</c> on purpose:
+        /// that predicate also decides who gets the 6-weapon cheat loadout, and TestScene is
+        /// meant to play with the normal one.
+        /// </summary>
+        static float ResolveRaidDuration(string levelId)
+        {
+            if (levelId == "hideout" || levelId == "test_level" || PlayerSpawnSystem.IsTestRange(levelId))
+                return Constants.RaidTimerConstants.NoLimit;
+
+            return DevCheats.RaidDurationSeconds;
         }
 
         void SpawnFromScenePoints()
@@ -651,6 +671,14 @@ namespace Session
                     GodMode = DevCheats.GodMode,
                     IgnoreBleedOnPlayer = DevCheats.IgnoreBleed,
                 },
+                raidTimerConfig: new RaidTimerConfig
+                {
+                    // Duration lives on RaidState (resolved per level at Start); the config carries
+                    // it too so the HUD reads thresholds and length from one place.
+                    DurationSeconds   = RaidState.RaidDurationSeconds,
+                    WarnAtSeconds     = DevCheats.RaidWarnAtSeconds,
+                    CriticalAtSeconds = DevCheats.RaidCriticalAtSeconds,
+                },
                 staminaConfig: new StaminaConfig
                 {
                     MaxStamina              = DevCheats.Config.Stamina.MaxStamina,
@@ -708,6 +736,9 @@ namespace Session
             ProjectileSystem.Tick(RaidState, in context);
             GrenadeSystem.TickExplosions(RaidState, in context);
             ExtractionSystem.Tick(RaidState, in context);
+            // After extraction (a run that just completed wins the tie), before DamageSystem so the
+            // timeout death lands in the same frame's death processing as any other kill.
+            RaidTimerSystem.Tick(RaidState, in context);
             DamageSystem.Tick(RaidState, _hitInbox, in context);
             _hitInbox.Clear();
             ProcessCollisions(in context);

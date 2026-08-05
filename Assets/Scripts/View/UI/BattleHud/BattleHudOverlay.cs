@@ -33,6 +33,8 @@ namespace View.UI.BattleHud
         Label _ammoMag;
         Label _ammoReserve;
         Label _ammoType;
+        VisualElement _raidTimer;
+        Label _raidTimerValue;
         // Track tiles by composite key (Type + Level) so we can in-place update
         // when bleed escalates L1 → L2 without losing tooltip hover state.
         readonly Dictionary<string, VisualElement> _tiles = new();
@@ -79,6 +81,8 @@ namespace View.UI.BattleHud
             _ammoMag = _root.Q<Label>("ammo-mag");
             _ammoReserve = _root.Q<Label>("ammo-reserve");
             _ammoType = _root.Q<Label>("ammo-type");
+            _raidTimer = _root.Q<VisualElement>("raid-timer");
+            _raidTimerValue = _root.Q<Label>("raid-timer-value");
         }
 
         void OnDestroy()
@@ -107,6 +111,42 @@ namespace View.UI.BattleHud
             ApplyCornerAnchor(_statusRow, cfg.StatusRowCorner, cfg.StatusRowOffset);
             SyncStatusTiles(cfg);
             RefreshAmmo(cfg);
+            RefreshRaidTimer();
+        }
+
+        // ── Raid clock (M1.2) ──────────────────────────────────────────────
+        // Read-only view of RaidState: the countdown is derived, and the kill itself is
+        // RaidTimerSystem's job. Hidden whenever the level has no clock, so the hideout and
+        // the shooting ranges need no special-casing here.
+        void RefreshRaidTimer()
+        {
+            if (_raidTimer == null) return;
+
+            var state = App.Instance?.RaidSession?.RaidState;
+            if (state == null || !RaidTimerSystem.HasClock(state))
+            {
+                if (_raidTimer.style.display != DisplayStyle.None) _raidTimer.style.display = DisplayStyle.None;
+                return;
+            }
+
+            if (_raidTimer.style.display != DisplayStyle.Flex) _raidTimer.style.display = DisplayStyle.Flex;
+
+            float remaining = RaidTimerSystem.TimeRemaining(state);
+            if (_raidTimerValue != null)
+            {
+                // Ceil so the clock only shows 0:00 when the time is actually gone.
+                int total   = Mathf.CeilToInt(remaining);
+                int minutes = total / 60;
+                int seconds = total % 60;
+                _raidTimerValue.text = $"{minutes}:{seconds:00}";
+            }
+
+            float warnAt     = DevCheats.RaidWarnAtSeconds;
+            float criticalAt = DevCheats.RaidCriticalAtSeconds;
+            bool critical = remaining <= criticalAt;
+            bool warn     = !critical && remaining <= warnAt;
+            _raidTimer.EnableInClassList("is-warn", warn);
+            _raidTimer.EnableInClassList("is-critical", critical);
         }
 
         // ── Ammo counter (Stage 7) ─────────────────────────────────────────

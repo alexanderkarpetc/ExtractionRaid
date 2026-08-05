@@ -5,6 +5,13 @@ namespace State
     public class RaidState
     {
         public float ElapsedTime;
+
+        // Raid clock (M1.2). Seconds the player has before RaidTimerSystem KIAs them.
+        // 0 = no limit — that's how the hideout and the shooting ranges opt out. The
+        // remaining time is derived (RaidDurationSeconds - ElapsedTime), never stored,
+        // so there is no second clock to keep in sync.
+        public float RaidDurationSeconds;
+
         public bool IsRunning;
         public PlayerEntityState PlayerEntity;
         public List<ProjectileEntityState> Projectiles;
