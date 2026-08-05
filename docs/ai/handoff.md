@@ -1,12 +1,52 @@
 # Handoff — current state
 
-> Snapshot for next-session agent. Combined state + recent landings. Updated 2026-07-23.
+> Snapshot for next-session agent. Combined state + recent landings. Updated 2026-08-05.
 >
-> **📍 Canonical plan (2026-07-18):** [`release-scope.md`](./release-scope.md) (feature-map + gaps + 🔒 locked decisions) + [`v1.0-roadmap.md`](./v1.0-roadmap.md) (milestones **M1–M4**, mirrored in the Task list). These supersede the ad-hoc "Next candidates" below.
+> **📍 Canonical plan:** [`release-scope.md`](./release-scope.md) (feature-map + gaps + 🔒 locked decisions) + [`v1.0-roadmap.md`](./v1.0-roadmap.md) (milestones **M1–M4**; statuses reconciled with the repo 2026-08-05, incl. a list of parallel work outside M1–M4). These supersede the ad-hoc "Next candidates" below.
+>
+> **Baseline: 693 EditMode tests green** (2026-08-05).
 
 ## Context
 
 Top-down extraction shooter (Unity 6000.3.10f1, URP 17.3). 5-layer architecture (App → Session → Systems → Adapters → View/Presenter) per [`CLAUDE.md`](./CLAUDE.md). Ukrainian-language collaboration, tight iterations.
+
+---
+
+## Most recent — Ammo audit + render fixes (2026-07-27 → 08-05)
+
+**Ammo audit (committed `remove legacy ammos`).** After the Weapon Builder landed, the item registry
+still carried calibers no payload core declares. `AmmoSystem` chambers by **exact id** — so those were
+unloadable loot the game actively handed out: the starting Ammo Box gave 30-40 `Ammo_Pistol`, PMCAuto
+bots dropped 25% `Ammo_Rifle_AP` (`ammoApWeight: 0.25`), and Rifle AP was craftable for
+Military_Components. All five orphan calibers (`Ammo_Pistol`, `Ammo_Pistol_AP`, `Ammo_Pistol_HP`,
+`Ammo_Rifle_AP`, `Ammo_Rifle_HP`) are **deleted end-to-end**, together with the machinery that could
+turn them back on:
+
+- `AmmoLootRule` lost `StandardWeight/ApWeight/HpWeight` → now just `MinRounds/MaxRounds`;
+  `LootSystem.DropAmmoVariants` → **`DropCaliberAmmo`** (caliber resolved from the payload, never
+  authored); same simplification mirrored in `Systems/Meta/RegionLootSimulator` (**owner's file —
+  mechanical edit, flagged**).
+- Shop `Ammo_Pistol` → **`Ammo_EnergyCell`**, starting boxes → `Ammo_Rifle`, `RifleAPAmmo` recipe
+  dropped, **new `EnergyCellAmmo` recipe** (laser ammo previously had *no* buy/craft source at all).
+- Guard: **`AmmoAvailabilityTests`** (5 cases, reads shipped assets) — shop/containers/craft may only
+  offer chamberable ammo, every ammo definition must be chamberable, and every chamberable caliber
+  needs a restock source. The usable set is derived from `CoreDefinitionDatabase` payloads, so it
+  widens by itself when a payload (or ammo selection) is added.
+
+**Quest indicator stuck-on fix** (`quest giver update`). `NpcQuestIndicator.SetVisible` early-outs when
+the state matches, so the initial hide in `Build()` never reached the just-created (active) children —
+an indicator rebuilt with no offer pending (hideout reload after a raid) stayed lit forever: badge +
+glow with no quest behind it. Fixed with a first-application flag.
+
+**Foliage bloom blowout fix** (`back face fill fix`). `BushWindCutout` added `tex.rgb * _BackFaceLight`
+on top of the finished PBR result — unbounded, so sunlit back-faces crossed the bloom threshold and
+wind-animated leaf quads popped as drifting coloured blobs. The term now fades as the lit result
+approaches white; Bloom `threshold` 1.0 → 1.4 in `SampleSceneProfile`.
+
+**From other contributors (per commits, not deep-reviewed):** loot rework + `LootBalanceTests`
+(Олександр), weapon presets `Configs/Guns/*_T1..T3`, bot behavior variety (`ShootNode`), progression
+**material-cost** system, meta auto-raid simulator (`RaidCombatSimulator`, `MetaNeeds`), map #1 content
+build-out (Vudmaster), vegetation/fog shader work (Denis). See the roadmap's "Паралельні роботи" list.
 
 ---
 
@@ -38,11 +78,12 @@ M1 core-loop + onboarding batch. All committed.
   `ViewCheatsDeployMarkerSection`; `MinimapMarkerType.Deploy`.
 - **Tests:** ~**671** EditMode green (last run this session).
 
-> ⚠️ **Parallel work not from this batch:** a **progression / skill-tree meta system** has appeared in
-> the code (`Player.Progression` / `PlayerProgressionState`, `SaveData.AllocatedNodes`, `Systems.Meta`,
-> DevCheats `using Progression`). It was added by another agent/session — **check its current state before
-> touching save/meta.** Note "progression OUT of v1.0" is a locked decision in `release-scope.md`;
-> reconcile with the maintainer. Item durability now also persists in `SaveData` (CurrentDurability/MaxDurability).
+> ✅ **Resolved (was: "progression OUT — reconcile with maintainer").** Progression is **IN** since
+> 2026-07-21 and owned by Олександр. Model: **no skill points** — a node's price is looted materials
+> (`ProgressionCostSystem`, 2026-07-26). Effects are still **not wired**:
+> `ProgressionSystem.ApplyAllocatedEffects` is an empty seam with a TODO (roadmap M2.7). Details in
+> [`progression.md`](./progression.md). Item durability persists in `SaveData`
+> (CurrentDurability/MaxDurability).
 
 **Still-open new-player gap:** task #63 — initial difficulty ramp (weak bots first; playtest: "3 riflemen killed me in 20s").
 
@@ -216,7 +257,8 @@ Files: `View/BotDebugLabel.cs`, `View/WorldHealthBar.cs`, `View/BotView.cs`, `De
 
 ## Current state
 
-- **469/469 EditMode tests green.** (+13 since 2026-05-06: 6 MeleeAttackTests + 7 HordeSpawnSystemTests.)
+- **693/693 EditMode tests green** (2026-08-05; was 671 at the 07-23 batch, +5 `AmmoAvailabilityTests`
+  and the rest from the loot rework).
 - Compile clean (only pre-existing warnings — `FindObjectOfType` obsolete API, QuestDefinition missing type).
 - 6 weapon archetypes feel coherent (Ballistic/Laser × Pistol/Rifle/Shotgun); semi-auto pistol/shotgun, full-auto rifle, laser charge-release.
 - 4 test scenes: `ShootingScene` (armored), `ShootingScene_KillFeel` (low-HP), `ShootingScene_Horde` (zombie waves), `ShootingScene_RangedRange` (ranged combat with cover).
@@ -231,6 +273,23 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ### Battle design open
 - Bleed L2 DPS values (playtest-driven)
+
+### Known platform issue — terrain grass renders black on macOS/Metal (2026-08-05)
+Terrain **detail meshes** (`VertexLit` + GPU instancing) whose material uses **any Shader Graph** render
+solid black on Metal; the same project is correct on Windows/D3D11. Isolated on the maintainer's M3 Max:
+
+- SG Lit (`S_Vegetation_Interactive`) → black · SG Simple → black · SG **Unlit** (`S_Particle`) → black
+- The generated HLSL exported to a plain `.shader` → **also black** (so it is not the SG importer)
+- `URP/Lit` and `URP/Unlit` on the same prototype → **correct**; the same SG material on a normal
+  MeshRenderer → **correct**
+- Ruled out: graph precision (Single), shader cache/reimport, material GPU-instancing flag,
+  stray Built-In/HDRP targets in the graph, light probes. `useInstancing = false` → white (legacy
+  built-in detail path); `renderMode = Grass` → details vanish.
+
+No matching Unity issue in the tracker (closest: UUM-76696, fixed well before 6000.3). Options, none of
+them free: hide details in the macOS editor as a local workaround, port the grass shader to a
+hand-written URP one (`Assets/Shaders/BushWindCutout.shader` is a working template), or move grass off
+terrain details onto scattered prefabs.
 
 ### Test debt
 - P0-3 BT primitives 0 tests (BTSelector / BTSequence / BTCondition / BTCooldown)
@@ -268,8 +327,10 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 1. Read this + `gunplay/README.md` + `battle-design-status.md`.
 2. `git log -15` for recent commits.
-3. Verify EditMode tests are green (~**671** baseline as of 2026-07-23; may shift with the parallel progression work) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
-4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4) + Task list #39–#60.** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); progression OUT; 2 maps + bunker; item icons must-have (generated); EN-only. **Start with M1 (honest core loop).** Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
+3. Verify EditMode tests are green (**693** baseline as of 2026-08-05) — through your editor/MCP bridge if you have one, else the Unity Test Runner / `-batchmode`. Don't scrape `.unity` files as text. (The maintainer's specific bridge setup is personal — see their `~/.claude/`.)
+4. **Direction is locked — see [`v1.0-roadmap.md`](./v1.0-roadmap.md) (M1–M4).** Target = full v1.0; Weapon Builder = headline (3×4 + exotics); **progression IN** (material-cost nodes, since 2026-07-21); 2 maps + bunker; item icons must-have (generated); EN-only. **M1 is the active milestone:** M1.1 ✅ and M1.4 ✅; open are **M1.2 raid timer** (no timer exists in code at all), **M1.3 extraction UX**, **M1.5 audio scaffold**, plus **#63** initial difficulty ramp. Rationale + full gap analysis in [`release-scope.md`](./release-scope.md).
+5. Check the roadmap's **"Паралельні роботи поза M1–M4"** before picking anything — maps, loot, bots,
+   progression and the meta simulator are actively owned by other contributors.
 
 ---
 
@@ -286,4 +347,9 @@ See [`gunplay/README.md`](./gunplay/README.md) — combat-polish foundation ship
 
 ---
 
-**Status (2026-07-23):** All committed. ~**671** EditMode green. Latest: new-player onboarding batch — gear-loss + baseline floor, quest marker (world + minimap), deploy wayfinding + first-quest gate (details at top). ⚠️ Parallel: a progression / skill-tree meta system is in-flight (not this batch — reconcile with "progression OUT of v1.0"). (Older: Weapon Attachments epic + Sniper Scope, 2026-07-16.)
+**Status (2026-08-05):** All committed. **693** EditMode green. Latest: ammo audit (5 orphan calibers
+deleted end-to-end + `AmmoAvailabilityTests` guard), quest-indicator stuck-on fix, foliage bloom fix.
+M1: M1.1 ✅ M1.4 ✅ — open M1.2 / M1.3 / M1.5 / #63. Parallel owners: progression + loot + meta simulator
+(Олександр), map content (Vudmaster), vegetation shaders (Denis) — see the roadmap list before picking
+work. Known Mac-only issue: terrain grass black on Metal (above). (Older: onboarding batch 2026-07-23,
+Weapon Attachments epic + Sniper Scope 2026-07-16.)
