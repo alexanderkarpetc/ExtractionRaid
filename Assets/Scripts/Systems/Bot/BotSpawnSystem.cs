@@ -26,9 +26,12 @@ namespace Systems.Bot
             // by passing explicit registry.
             // Weapon: roll from the weighted equipment pool if this type provides one,
             // otherwise use the fixed WeaponConfig.
+            // A pool entry carries an authored rarity — respect it. The fixed WeaponConfig is
+            // Common/Common by construction, so roll each module there instead of shipping every
+            // bot with the same grey gun.
             var weaponConfig = TryPickWeighted(config.WeaponPool, w => w.Weight, out var rolledWeapon)
                 ? rolledWeapon.Config
-                : config.WeaponConfig;
+                : RollModuleRarities(config.WeaponConfig);
             var weaponId   = state.AllocateEId();
             var weaponItem = ItemState.CreateWeapon(weaponId, "Weapon", weaponConfig);
             var registry   = coreDefinitions ?? (App.IsInitialized ? App.Instance.CoreDefinitions : null);
@@ -101,6 +104,39 @@ namespace Systems.Bot
             float lo = Mathf.Clamp01(Mathf.Min(min, max));
             float hi = Mathf.Clamp01(Mathf.Max(min, max));
             return Random.Range(lo, hi);
+        }
+
+        /// <summary>
+        /// Re-rolls payload and delivery rarity independently (see the weights in
+        /// <see cref="BotConstants"/>). The exotic slot is left exactly as authored — bots carry
+        /// none today, and an exotic is a designed drop, not a dice roll.
+        /// </summary>
+        static WeaponConfiguration RollModuleRarities(in WeaponConfiguration config)
+        {
+            var payload  = new PayloadCoreInstance(config.Payload.DefinitionId, PickRarity(Random.value));
+            var delivery = new DeliveryCoreInstance(config.Delivery.DefinitionId, PickRarity(Random.value));
+
+            // AmmoInMagazine is carried over untouched. Rarity only ever goes up from the authored
+            // Common, so a bigger composed magazine just means the bot starts it partially loaded.
+            return new WeaponConfiguration(payload, delivery, config.Exotic, config.AmmoInMagazine);
+        }
+
+        /// <summary>
+        /// Maps a 0..1 roll onto the bot weapon rarity distribution. Pure on purpose — the
+        /// distribution is the thing worth testing, and it can be checked without touching RNG.
+        /// </summary>
+        public static RarityTier PickRarity(float roll01)
+        {
+            float total = BotConstants.BotWeaponCommonWeight
+                          + BotConstants.BotWeaponUncommonWeight
+                          + BotConstants.BotWeaponRareWeight;
+            if (total <= 0f) return RarityTier.Common;
+
+            float r = Mathf.Clamp01(roll01) * total;
+            if (r < BotConstants.BotWeaponCommonWeight) return RarityTier.Common;
+            if (r < BotConstants.BotWeaponCommonWeight + BotConstants.BotWeaponUncommonWeight)
+                return RarityTier.Uncommon;
+            return RarityTier.Rare;
         }
 
         // Weighted random pick over a pool. Returns false (picked = default) when the pool

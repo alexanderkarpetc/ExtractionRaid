@@ -379,6 +379,18 @@ namespace Constants
         public const float AggressionMin       = 0.7f;
         public const float AggressionMax       = 1.3f;
 
+        // --- Weapon module rarity (rolled once per spawn, per module) ---
+        // Bot loadouts in this file are authored as Common/Common, which made every corpse drop
+        // the same grey gun. Payload and delivery are rolled independently, so a bot can carry a
+        // Common receiver with a Rare barrel — rarity feeds composed stats and attachment slot
+        // count, and the weapon drops with whatever it rolled.
+        //
+        // Only the fixed WeaponConfig is rolled. A weapon that came from a designer-authored pool
+        // (BotEquipmentConfigAsset) keeps its authored rarity — someone typed that number on purpose.
+        public const float BotWeaponCommonWeight   = 50f;
+        public const float BotWeaponUncommonWeight = 40f;
+        public const float BotWeaponRareWeight     = 10f;
+
         // Layer mask for vision raycasts — only these layers block line of sight.
         // Default: layer 0 ("Default"). Set via BotConstants or a ScriptableObject
         // if your obstacles live on a different layer.
