@@ -89,6 +89,11 @@ namespace View.UI.Inventory
         bool _isDragging;
         VisualElement _dragGhost;
 
+        // ── Double-click quick transfer ───────────────────────
+        const double DoubleClickSeconds = 0.35;
+        InventorySlotElement _lastClickSlot;
+        double _lastClickTime;
+
         ItemIconRegistryAsset _iconRegistry;
 
         // ── Hover state (for tooltip + hover-key quick-slot bind) ─
@@ -1053,18 +1058,19 @@ namespace View.UI.Inventory
             PushToStash(inv, slot.SlotRef);
         }
 
-        void CtxPickUpFromLoot(InventorySlotElement slot)
+        // The Ctx* take-actions report success so the double-click path can tell a completed
+        // transfer from a no-op (full backpack, out of range) and skip the refresh.
+        bool CtxPickUpFromLoot(InventorySlotElement slot)
         {
             var playerInv = App.Instance?.Player?.Inventory;
             var lootable  = ResolveLootable(slot.SourceLootableId);
-            if (playerInv == null || lootable == null) return;
+            if (playerInv == null || lootable == null) return false;
             int free = playerInv.FindFreeBackpackSlot();
-            if (free < 0) return;
+            if (free < 0) return false;
             var dst = InventorySlotRef.BackpackSlot(free);
-            if (lootable.IsShop)
-                ShopSystem.TryBuy(App.Instance?.Player, lootable, slot.SlotRef, dst);
-            else
-                LootSystem.TryTransfer(lootable.Inventory, slot.SlotRef, playerInv, dst);
+            return lootable.IsShop
+                ? ShopSystem.TryBuy(App.Instance?.Player, lootable, slot.SlotRef, dst)
+                : LootSystem.TryTransfer(lootable.Inventory, slot.SlotRef, playerInv, dst);
         }
 
         void CtxDropFromLoot(InventorySlotElement slot)
@@ -1080,22 +1086,22 @@ namespace View.UI.Inventory
                 session.ConsumeEvents());
         }
 
-        void CtxPickUpFromFloor(InventorySlotElement slot)
+        bool CtxPickUpFromFloor(InventorySlotElement slot)
         {
             var playerInv = App.Instance?.Player?.Inventory;
-            if (playerInv == null) return;
+            if (playerInv == null) return false;
             int free = playerInv.FindFreeBackpackSlot();
-            if (free < 0) return;
-            PickUpFloorTo(slot.RightIndex, InventorySlotRef.BackpackSlot(free));
+            if (free < 0) return false;
+            return PickUpFloorTo(slot.RightIndex, InventorySlotRef.BackpackSlot(free));
         }
 
-        void CtxTakeFromStash(InventorySlotElement slot)
+        bool CtxTakeFromStash(InventorySlotElement slot)
         {
             var playerInv = App.Instance?.Player?.Inventory;
-            if (playerInv == null) return;
+            if (playerInv == null) return false;
             int free = playerInv.FindFreeBackpackSlot();
-            if (free < 0) return;
-            PullFromStash(slot.RightIndex, playerInv, InventorySlotRef.BackpackSlot(free));
+            if (free < 0) return false;
+            return PullFromStash(slot.RightIndex, playerInv, InventorySlotRef.BackpackSlot(free));
         }
 
         void OnSlotPointerMove(InventorySlotElement slot, PointerMoveEvent evt)
@@ -1133,10 +1139,108 @@ namespace View.UI.Inventory
                 DestroyGhost();
                 ClearAllSlotHover();
             }
+            else
+            {
+                // Released without crossing the drag threshold — this was a click, and the second
+                // one inside the window is the quick-transfer gesture. Resolved here rather than on
+                // pointer-down because at press time a click is indistinguishable from a drag start.
+                RegisterClick(slot);
+            }
 
             _draggedSlot   = null;
             _dragPointerId = -1;
             _isDragging    = false;
+        }
+
+        // ── Double-click quick transfer ───────────────────────
+
+        void RegisterClick(InventorySlotElement slot)
+        {
+            // Unscaled: the inventory is usable while the game is paused, where Time.time stands
+            // still and every click would look simultaneous.
+            double now = Time.unscaledTimeAsDouble;
+            bool isDoubleClick = slot == _lastClickSlot && now - _lastClickTime <= DoubleClickSeconds;
+
+            if (isDoubleClick)
+            {
+                _lastClickSlot = null;   // a third click starts a fresh pair, not another transfer
+                _lastClickTime = 0d;
+                QuickTransfer(slot);
+                return;
+            }
+
+            _lastClickSlot = slot;
+            _lastClickTime = now;
+        }
+
+        /// <summary>
+        /// Double-click = "send this item to the other side", with the destination slot chosen
+        /// automatically. Every branch delegates to the same System-layer call the context menu
+        /// uses — no transfer rules live here.
+        ///
+        /// Shops are deliberately excluded in both directions: buying and selling stay explicit
+        /// menu actions, because a mis-click that spends credits is not an undoable mistake.
+        /// </summary>
+        void QuickTransfer(InventorySlotElement slot)
+        {
+            if (slot.CurrentItem == null) return;
+
+            bool moved;
+            switch (slot.Source)
+            {
+                case InventorySlotElement.SlotSource.Loot:
+                {
+                    var lootable = ResolveLootable(slot.SourceLootableId);
+                    if (lootable == null || lootable.IsShop) return;
+                    moved = CtxPickUpFromLoot(slot);
+                    break;
+                }
+                case InventorySlotElement.SlotSource.Floor:
+                    moved = CtxPickUpFromFloor(slot);
+                    break;
+                case InventorySlotElement.SlotSource.Stash:
+                    moved = CtxTakeFromStash(slot);
+                    break;
+                case InventorySlotElement.SlotSource.Player:
+                    moved = QuickSendFromPlayer(slot);
+                    break;
+                default:
+                    return;
+            }
+
+            // Slot contents are re-bound by the per-frame RefreshAll in Update; only the tooltip
+            // needs a nudge, since it is pinned to an item that just moved out from under the cursor.
+            if (moved) TooltipController.Instance?.Hide();
+        }
+
+        /// <summary>
+        /// The mirror direction: player slot → whatever container is open on the right. An open
+        /// loot container wins over the stash (if you opened a crate, that's where you're packing);
+        /// shops are skipped entirely so double-click can never sell.
+        /// </summary>
+        bool QuickSendFromPlayer(InventorySlotElement slot)
+        {
+            var playerInv = App.Instance?.Player?.Inventory;
+            if (playerInv == null) return false;
+
+            LootSubPanelElement stashPanel = null;
+            foreach (var panel in _subPanels.Values)
+            {
+                if (panel.SlotSource == InventorySlotElement.SlotSource.Stash)
+                {
+                    stashPanel = panel;
+                    continue;
+                }
+                if (panel.SlotSource != InventorySlotElement.SlotSource.Loot) continue;
+
+                var lootable = ResolveLootable(panel.LootableId);
+                if (lootable == null || lootable.IsShop) continue;
+                if (TrySendToSubPanel(panel, playerInv, slot.SlotRef, allowShopSell: false))
+                    return true;
+            }
+
+            return stashPanel != null
+                   && TrySendToSubPanel(stashPanel, playerInv, slot.SlotRef, allowShopSell: false);
         }
 
         void OnSlotPointerCaptureOut(InventorySlotElement slot, PointerCaptureOutEvent _)
@@ -1359,6 +1463,17 @@ namespace View.UI.Inventory
             if (playerInv == null || _draggedSlot == null) return false;
             if (_draggedSlot.Source != InventorySlotElement.SlotSource.Player) return false;
 
+            return TrySendToSubPanel(subPanel, playerInv, _draggedSlot.SlotRef, allowShopSell: true);
+        }
+
+        /// <summary>
+        /// Player slot → a right-hand sub-panel, picking the destination slot itself. Shared by the
+        /// drag-onto-panel drop and by double-click quick transfer; the latter passes
+        /// <paramref name="allowShopSell"/> = false so a stray double-click can't sell gear.
+        /// </summary>
+        bool TrySendToSubPanel(LootSubPanelElement subPanel, InventoryState playerInv,
+            InventorySlotRef src, bool allowShopSell)
+        {
             switch (subPanel.SlotSource)
             {
                 case InventorySlotElement.SlotSource.Loot:
@@ -1367,14 +1482,15 @@ namespace View.UI.Inventory
                     if (lootable == null) return false;
                     if (!IsLootableInRange(subPanel.LootableId)) return false;
                     if (lootable.IsShop)
-                        return ShopSystem.TrySell(App.Instance.Player, lootable, _draggedSlot.SlotRef);
+                        return allowShopSell
+                               && ShopSystem.TrySell(App.Instance.Player, lootable, src);
                     int free = lootable.Inventory.FindFreeBackpackSlot();
                     if (free < 0) return false;
-                    return LootSystem.TryTransfer(playerInv, _draggedSlot.SlotRef,
+                    return LootSystem.TryTransfer(playerInv, src,
                         lootable.Inventory, InventorySlotRef.BackpackSlot(free));
                 }
                 case InventorySlotElement.SlotSource.Stash:
-                    return PushToStash(playerInv, _draggedSlot.SlotRef);
+                    return PushToStash(playerInv, src);
                 default:
                     return false;
             }
