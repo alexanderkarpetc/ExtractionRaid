@@ -106,6 +106,9 @@ namespace View.UI.Inventory
         IReadOnlyList<ItemState> _compareCandidates;
         string _compareHoveredTag;
         int _compareSelectedSlot;
+        LootableContainerState _compareShopCtx;
+        bool _compareItemIsInShop;
+        bool _compareCanModify;
 
         // Quick-slot keys 3..9 → bindings index 0..6.
         static readonly Key[] QuickSlotKeys =
@@ -163,7 +166,8 @@ namespace View.UI.Inventory
             var baseline = WeaponCompareTarget.Pick(_compareCandidates, held ? 1 : 0);
             panel.Show(_compareItem, _compareHoveredTag, baseline,
                        BaselineTag(baseline, App.Instance?.Player?.Inventory, _compareSelectedSlot),
-                       hasMore: true, _comparePos);
+                       hasMore: true, _comparePos,
+                       _compareShopCtx, _compareItemIsInShop, _compareCanModify);
         }
 
         void HandleFKey()
@@ -702,15 +706,11 @@ namespace View.UI.Inventory
             if (_isDragging) return;
             if (slot.CurrentItem == null) return;
 
-            // Weapon → side-by-side compare vs the equipped baseline (auto). Falls back to the
-            // normal single tooltip when nothing is equipped to compare against.
-            if (TryShowWeaponCompare(slot, evt.position)) return;
-
-            var tooltip = TooltipController.Instance;
-            if (tooltip == null) return;
             // Resolve shop context: if hovering a shop slot use that shop directly
             // (Buy price). Otherwise use any nearby shop (Sell price) — gives stash /
             // loot / player slots a value indicator while trading.
+            // Resolved before the compare branch: the panel takes over from the tooltip whenever
+            // a weapon is equipped, so it needs the same pricing context to work in a shop.
             LootableContainerState shopCtx = null;
             bool itemIsInShop = false;
             if (slot.Source == InventorySlotElement.SlotSource.Loot)
@@ -723,6 +723,13 @@ namespace View.UI.Inventory
                 }
             }
             if (shopCtx == null) shopCtx = FindNearbyShop();
+
+            // Weapon → side-by-side compare vs the equipped baseline (auto). Falls back to the
+            // normal single tooltip when nothing is equipped to compare against.
+            if (TryShowWeaponCompare(slot, evt.position, shopCtx, itemIsInShop)) return;
+
+            var tooltip = TooltipController.Instance;
+            if (tooltip == null) return;
 
             var model = ItemTooltipBuilder.For(slot.CurrentItem,
                 App.Instance?.CoreDefinitions, App.Instance?.QuestDatabase,
@@ -755,7 +762,8 @@ namespace View.UI.Inventory
         // Shows the two-column weapon compare (hovered vs equipped baseline) and returns true
         // when it took over from the normal tooltip. False → caller shows the normal tooltip
         // (item isn't a weapon, or nothing is equipped to compare against).
-        bool TryShowWeaponCompare(InventorySlotElement slot, Vector2 panelPos)
+        bool TryShowWeaponCompare(InventorySlotElement slot, Vector2 panelPos,
+            LootableContainerState shopCtx = null, bool itemIsInShop = false)
         {
             var panel = WeaponComparePanel.Instance;
             var item = slot.CurrentItem;
@@ -773,13 +781,18 @@ namespace View.UI.Inventory
             _compareCandidates = candidates;
             _compareSelectedSlot = selected;
             _compareHoveredTag = HoveredTag(slot);
+            _compareShopCtx = shopCtx;
+            _compareItemIsInShop = itemIsInShop;
+            // Same rule as the tooltip: Modify is only offered on player-owned weapons.
+            _compareCanModify = slot.Source == InventorySlotElement.SlotSource.Player;
             // If Alt is already held when the hover starts, open straight on the alternative.
             _compareAltHeld = Keyboard.current != null && Keyboard.current[Key.LeftAlt].isPressed;
 
             var baseline = WeaponCompareTarget.Pick(candidates, _compareAltHeld ? 1 : 0);
             TooltipController.Instance?.Hide(); // make sure the single tooltip isn't also up
             panel.Show(item, _compareHoveredTag, baseline, BaselineTag(baseline, inv, selected),
-                       candidates.Count > 1, panelPos);
+                       candidates.Count > 1, panelPos,
+                       shopCtx, itemIsInShop, _compareCanModify);
             return true;
         }
 

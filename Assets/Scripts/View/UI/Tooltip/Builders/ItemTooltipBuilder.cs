@@ -27,6 +27,7 @@ namespace View.UI.Tooltip.Builders
             if (item.HasWeaponConfiguration)
             {
                 var weaponModel = WeaponTooltipBuilder.For(item, registry, canModify);
+                weaponModel = AppendQuestUsage(weaponModel, item.DefinitionId, questDatabase);
                 return AppendPrice(weaponModel, item, shopContext, itemIsInShop);
             }
 
@@ -43,6 +44,7 @@ namespace View.UI.Tooltip.Builders
                 if (registry.TryGetAttachment(item.DefinitionId, out var attachmentDef) && attachmentDef != null)
                 {
                     var attModel = AttachmentTooltipBuilder.For(attachmentDef, item);
+                    attModel = AppendQuestUsage(attModel, item.DefinitionId, questDatabase);
                     return AppendPrice(attModel, item, shopContext, itemIsInShop);
                 }
             }
@@ -98,6 +100,29 @@ namespace View.UI.Tooltip.Builders
 
             var model = new TooltipModel(title, subtitle, sections, description);
             return AppendPrice(model, item, shopContext, itemIsInShop);
+        }
+
+        /// <summary>
+        /// "Used For" for the branches that return a purpose-built model (weapon, attachment) —
+        /// the generic path builds it inline. A quest that asks for a specific gun or mod used to
+        /// leave no trace on the item itself, so the player had no way to tell it was wanted.
+        /// </summary>
+        static TooltipModel AppendQuestUsage(TooltipModel model, string itemId, QuestDatabase database)
+        {
+            if (database == null) return model;
+
+            var sections = new List<TooltipSection>();
+            AppendQuestInfo(itemId, database, sections, out var description);
+            if (sections.Count == 0) return model;
+
+            var combined = new List<TooltipSection>(
+                (model.Sections?.Count ?? 0) + sections.Count);
+            if (model.Sections != null) combined.AddRange(model.Sections);
+            combined.AddRange(sections);
+
+            return new TooltipModel(model.Title, model.Subtitle, combined,
+                string.IsNullOrEmpty(model.Description) ? description : model.Description,
+                model.Footer, model.FooterAccent);
         }
 
         static TooltipModel AppendPrice(TooltipModel model, ItemState item,

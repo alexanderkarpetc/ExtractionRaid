@@ -35,6 +35,12 @@ namespace View.UI.Compare
         bool _visible;
         Vector2 _pendingPos;
 
+        // Price / affordance context for the current hover — set by Show, read while building the
+        // hovered column so it can match what the single tooltip would have said.
+        LootableContainerState _shopContext;
+        bool _hoveredIsInShop;
+        bool _canModify;
+
         void Awake()
         {
             Instance = this;
@@ -53,8 +59,18 @@ namespace View.UI.Compare
         /// <paramref name="panelPos"/> (PointerEnter coords). <paramref name="hasMore"/> shows
         /// the "Alt — vs other slot" hint when more than one equipped weapon exists.
         /// </summary>
+        /// <summary>
+        /// <paramref name="shopContext"/> / <paramref name="hoveredIsInShop"/> mirror the single
+        /// tooltip's price handling: without them a weapon hovered at a vendor showed its generic
+        /// Value, so the buy price was unreachable — the compare panel takes over from the tooltip
+        /// whenever anything is equipped, which is nearly always.
+        /// <paramref name="canModify"/> shows the same "right-click to modify" affordance the
+        /// tooltip gives player-owned weapons.
+        /// </summary>
         public void Show(ItemState hovered, string hoveredTag, ItemState baseline, string baselineTag,
-                         bool hasMore, Vector2 panelPos)
+                         bool hasMore, Vector2 panelPos,
+                         LootableContainerState shopContext = null, bool hoveredIsInShop = false,
+                         bool canModify = false)
         {
             if (_root == null || hovered == null || !hovered.HasWeaponConfiguration
                 || baseline == null || !baseline.HasWeaponConfiguration)
@@ -62,6 +78,10 @@ namespace View.UI.Compare
                 Hide();
                 return;
             }
+
+            _shopContext     = shopContext;
+            _hoveredIsInShop = hoveredIsInShop;
+            _canModify       = canModify;
 
             Populate(hovered, hoveredTag, baseline, baselineTag, hasMore);
             _root.style.display = DisplayStyle.Flex;
@@ -138,8 +158,14 @@ namespace View.UI.Compare
             _cols.Add(BuildHoveredColumn(hovered, hoveredTag, reg, diff));
             _cols.Add(BuildBaselineColumn(baseline, baselineTag, reg, bRows));
 
-            _footer.text = hasMore ? "Hold Alt — compare vs other weapon" : string.Empty;
-            _footer.style.display = hasMore ? DisplayStyle.Flex : DisplayStyle.None;
+            // Both affordances can apply at once (your own spare gun with a second one equipped),
+            // so they share the footer instead of one hiding the other.
+            string hint = hasMore ? "Hold Alt — compare vs other weapon" : string.Empty;
+            if (_canModify)
+                hint = string.IsNullOrEmpty(hint) ? "Right-click to modify"
+                                                  : hint + "   ·   Right-click to modify";
+            _footer.text = hint;
+            _footer.style.display = string.IsNullOrEmpty(hint) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         VisualElement BuildHoveredColumn(ItemState item, string tag, ICoreDefinitionRegistry reg,
@@ -149,9 +175,10 @@ namespace View.UI.Compare
             col.AddToClassList("wc-col");
             AppendHeader(col, item, reg, tag);
 
+            AppendChargeRow(col, item, reg);
             for (int i = 0; i < diff.Count; i++)
                 col.Add(BuildCompareRow(diff[i]));
-            AppendLoadout(col, item, reg);
+            AppendLoadout(col, item, reg, isHoveredColumn: true);
             return col;
         }
 
@@ -163,14 +190,42 @@ namespace View.UI.Compare
             col.AddToClassList("wc-col--baseline");
             AppendHeader(col, item, reg, tag);
 
+            AppendChargeRow(col, item, reg);
             for (int i = 0; i < rows.Count; i++)
                 col.Add(BuildPlainRow(rows[i]));
-            AppendLoadout(col, item, reg);
+            AppendLoadout(col, item, reg, isHoveredColumn: false);
             return col;
         }
 
+        /// <summary>
+        /// Charge time for Laser payloads — payload-specific cadence that has no place in the
+        /// shared stat table, so <see cref="WeaponStatDisplay"/> never emits it. The weapon tooltip
+        /// has always shown it; without this row the compare panel silently dropped the one number
+        /// that separates a laser from a ballistic gun.
+        /// </summary>
+        void AppendChargeRow(VisualElement col, ItemState item, ICoreDefinitionRegistry reg)
+        {
+            if (reg == null) return;
+            var cfg = item.WeaponConfiguration;
+            if (!reg.TryGetPayload(cfg.Payload.DefinitionId, out var payload) || payload == null) return;
+            if (!WeaponChargeResolver.RequiresChargeUp(payload)) return;
+
+            float chargeTime = WeaponChargeResolver.GetChargeTime(payload, cfg.Payload.Rarity);
+
+            var row = new VisualElement();
+            row.AddToClassList("wc-row");
+            var label = new Label("Charge");
+            label.AddToClassList("wc-label");
+            row.Add(label);
+            var value = new Label(chargeTime.ToString("0.##", CultureInfo.InvariantCulture) + " s");
+            value.AddToClassList("wc-value");
+            row.Add(value);
+            col.Add(row);
+        }
+
         // Non-stat loadout footer per column: ammo type + player reserve (red when 0) + installed mods.
-        void AppendLoadout(VisualElement col, ItemState item, ICoreDefinitionRegistry reg)
+        void AppendLoadout(VisualElement col, ItemState item, ICoreDefinitionRegistry reg,
+            bool isHoveredColumn)
         {
             var s = WeaponLoadoutSummary.Build(item, reg, App.Instance?.Player?.Inventory, LoadedRounds(item));
 
@@ -187,9 +242,10 @@ namespace View.UI.Compare
             var ammoName = new Label(string.IsNullOrEmpty(s.AmmoName) ? "—" : s.AmmoName);
             ammoName.AddToClassList("wc-value");
             ammoRow.Add(ammoName);
-            // Loaded / reserve (like the HUD ammo counter); red only when the weapon truly
-            // can't fire — nothing chambered AND no reserve.
-            var reserve = new Label(s.AmmoLoaded + " / " + s.AmmoReserve);
+            // Spelled out rather than "loaded / reserve": next to the Magazine stat a bare "20 / 23"
+            // reads as mag/capacity, which is a different pair of numbers entirely.
+            // Red only when the weapon truly can't fire — nothing chambered AND no reserve.
+            var reserve = new Label($"{s.AmmoLoaded} in mag · {s.AmmoReserve} spare");
             reserve.AddToClassList("wc-reserve");
             if (s.AmmoLoaded + s.AmmoReserve <= 0) reserve.AddToClassList("wc-reserve--empty");
             ammoRow.Add(reserve);
@@ -225,13 +281,38 @@ namespace View.UI.Compare
             // "Value" line other item tooltips show.
             var valueRow = new VisualElement();
             valueRow.AddToClassList("wc-row");
-            var valueLabel = new Label("Value");
+            ResolvePrice(item, isHoveredColumn, out string priceLabel, out int price);
+            var valueLabel = new Label(priceLabel);
             valueLabel.AddToClassList("wc-label");
             valueRow.Add(valueLabel);
-            var valueVal = new Label(ShopSystem.GetGlobalSellPrice(item) + "¢");
+            var valueVal = new Label(price + "¢");
             valueVal.AddToClassList("wc-value");
             valueRow.Add(valueVal);
             col.Add(valueRow);
+        }
+
+        /// <summary>
+        /// Same three cases the single tooltip has: Buy for the vendor's own stock, Sell for your
+        /// gear while a vendor is in reach, plain Value otherwise. Only the hovered column can be
+        /// the shop's item — the baseline is always something you already own.
+        /// </summary>
+        void ResolvePrice(ItemState item, bool isHoveredColumn, out string label, out int price)
+        {
+            bool shopOpen = _shopContext != null && _shopContext.IsShop;
+            if (shopOpen && isHoveredColumn && _hoveredIsInShop)
+            {
+                label = "Buy";
+                price = ShopSystem.GetBuyPrice(_shopContext, item);
+                return;
+            }
+            if (shopOpen)
+            {
+                label = "Sell";
+                price = ShopSystem.GetSellPrice(_shopContext, item);
+                return;
+            }
+            label = "Value";
+            price = ShopSystem.GetGlobalSellPrice(item);
         }
 
         // Live rounds in the weapon's magazine: for an equipped weapon read the runtime Hotbar
@@ -262,7 +343,12 @@ namespace View.UI.Compare
             var title = new Label(WeaponDisplayName.For(item, reg));
             title.AddToClassList("wc-title");
             var cfg = item.WeaponConfiguration;
-            title.style.color = RarityVisuals.Color(cfg.Payload.Rarity);
+            // Highest of the two cores: tinting by payload alone read a Common receiver with a
+            // Rare barrel as an ordinary grey gun.
+            var topRarity = cfg.Delivery.Rarity > cfg.Payload.Rarity
+                ? cfg.Delivery.Rarity
+                : cfg.Payload.Rarity;
+            title.style.color = RarityVisuals.Color(topRarity);
             head.Add(title);
 
             var t = new Label(tag);
@@ -270,12 +356,21 @@ namespace View.UI.Compare
             head.Add(t);
             col.Add(head);
 
+            // Per-core rarity, spelled out and tinted exactly like the weapon tooltip does. Without
+            // it the panel dropped the single most important fact about a looted gun — and with
+            // per-module rarity rolls the two cores routinely differ.
             string subtitle = item.DefinitionId;
             if (reg != null
                 && reg.TryGetPayload(cfg.Payload.DefinitionId, out var p) && p != null
                 && reg.TryGetDelivery(cfg.Delivery.DefinitionId, out var d) && d != null)
-                subtitle = $"{p.DisplayName} · {d.FormFactor}";
-            var sub = new Label(subtitle);
+            {
+                var pr = cfg.Payload.Rarity;
+                var dr = cfg.Delivery.Rarity;
+                subtitle = $"<color={RarityVisuals.Hex(pr)}>{p.DisplayName} ({pr})</color>"
+                           + " · "
+                           + $"<color={RarityVisuals.Hex(dr)}>{d.FormFactor} ({dr})</color>";
+            }
+            var sub = new Label(subtitle) { enableRichText = true };
             sub.AddToClassList("wc-subtitle");
             col.Add(sub);
 
