@@ -37,6 +37,13 @@ namespace Systems.Bot
             var registry   = coreDefinitions ?? (App.IsInitialized ? App.Instance.CoreDefinitions : null);
             bot.Weapon     = WeaponSyncSystem.BuildWeaponForItem(weaponItem, registry, events);
 
+            // Start on a full magazine, derived rather than authored. Capacity depends on the
+            // rolled rarity (and later attachments), so a fixed number in BotConstants can only
+            // ever be right for one tier — the pistol's authored 12 sat in a 6-round magazine.
+            // This is also where the bot's own first reload would land it (BotCombatSystem).
+            if (bot.Weapon != null && bot.Weapon.Stats.MagazineSize > 0)
+                bot.Weapon.AmmoInMagazine = bot.Weapon.Stats.MagazineSize;
+
             bot.Blackboard.MedkitsRemaining = config.MedkitCount;
             // Grenade count: loot-config range (rolled per spawn) takes precedence over the
             // built-in/legacy fixed GrenadeCount. Drives both throwing behaviour and leftover drop.

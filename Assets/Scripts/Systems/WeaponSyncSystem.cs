@@ -2,6 +2,7 @@ using Adapters;
 using ApplicationCore;
 using Session;
 using State;
+using UnityEngine;
 
 namespace Systems
 {
@@ -130,7 +131,13 @@ namespace Systems
 
                 AmmoType       = result.PayloadDefinition?.AmmoType,
                 ConfigVersion  = invItem.WeaponConfigVersion,
-                AmmoInMagazine = config.AmmoInMagazine,
+                // Capacity is composed (rarity + attachments), the stored count is authored, so the
+                // two can disagree — a Common bot pistol used to spawn holding 12 rounds in a
+                // 6-round magazine, and the corpse dropped it that way. Clamp down only: a
+                // MagazineSize of 0 means "this weapon doesn't track ammo", not "empty it".
+                AmmoInMagazine = result.Stats.MagazineSize > 0
+                    ? Mathf.Min(config.AmmoInMagazine, result.Stats.MagazineSize)
+                    : config.AmmoInMagazine,
 
                 LastFireTime   = -999f,
                 Phase          = WeaponPhase.Ready,
