@@ -6,6 +6,10 @@ using UnityEngine.UI;
 
 namespace View.UI
 {
+    /// <summary>
+    /// ⚠️ LEGACY — dead code. Base of <see cref="InventorySlotView"/>, which is the only type that
+    /// derives from it; see that class for why the files are still here and how to remove them.
+    /// </summary>
     public abstract class SlotViewBase : MonoBehaviour,
         IBeginDragHandler, IDragHandler, IEndDragHandler,
         IDropHandler, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler

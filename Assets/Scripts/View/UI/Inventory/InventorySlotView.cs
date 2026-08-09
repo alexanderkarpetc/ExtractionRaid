@@ -10,6 +10,21 @@ using View.UI.Tooltip.Builders;
 
 namespace View.UI
 {
+    /// <summary>
+    /// ⚠️ LEGACY — dead code, kept only because deleting it is a prefab job.
+    ///
+    /// The uGUI inventory/loot slot from before the UI Toolkit rewrite. Nothing instantiates or
+    /// opens it any more: <see cref="InventoryWindow"/> + <c>InventorySlotElement</c> replaced the
+    /// whole path, and no script references this type. It survives because it sits on the
+    /// <c>LootPopup</c> / <c>SlotItemView</c> / <c>HotBarItemVIew</c> prefabs, which are children of
+    /// <c>Resources/Prefabs/UI/UI.prefab</c> — and that prefab is instantiated in every scene, so
+    /// deleting the files would leave missing-script and broken-reference warnings project-wide.
+    ///
+    /// Do not extend it, and do not copy from it: its tooltip call passes no shop context and no
+    /// canModify, so prices and the modify hint silently differ from the live path.
+    /// Removal = strip the legacy subtree from UI.prefab in the editor first, then delete the
+    /// prefabs, then these two scripts.
+    /// </summary>
     public class InventorySlotView : SlotViewBase
     {
         [Header("Item visuals")]
