@@ -35,10 +35,21 @@ namespace View.UI.Tooltip.Builders
             // Builder — tooltip має бути однаковий, не generic "module name only".
             if (registry != null)
             {
+                // Modules go through the same price/quest append as everything else — a core sitting
+                // in the backpack is a tradeable item, and it used to be the one item type that
+                // showed neither its worth nor the quest asking for it.
                 if (registry.TryGetPayload(item.DefinitionId, out var payloadDef))
-                    return ModuleTooltipBuilder.ForPayload(payloadDef);
+                {
+                    var payloadModel = ModuleTooltipBuilder.ForPayload(payloadDef);
+                    payloadModel = AppendQuestUsage(payloadModel, item.DefinitionId, questDatabase);
+                    return AppendPrice(payloadModel, item, shopContext, itemIsInShop);
+                }
                 if (registry.TryGetDelivery(item.DefinitionId, out var deliveryDef))
-                    return ModuleTooltipBuilder.ForDelivery(deliveryDef);
+                {
+                    var deliveryModel = ModuleTooltipBuilder.ForDelivery(deliveryDef);
+                    deliveryModel = AppendQuestUsage(deliveryModel, item.DefinitionId, questDatabase);
+                    return AppendPrice(deliveryModel, item, shopContext, itemIsInShop);
+                }
 
                 // Attachment mods: show slot + stat deltas instead of a title-only generic view.
                 if (registry.TryGetAttachment(item.DefinitionId, out var attachmentDef) && attachmentDef != null)

@@ -196,7 +196,16 @@ namespace Systems
                 return ApplyDurability(
                     Mathf.RoundToInt(WeaponComponentValue(item.WeaponConfiguration) * DefaultGlobalSellRatio), item);
             if (!s_globalSellPrices.TryGetValue(item.DefinitionId, out var unit))
-                return 0;
+            {
+                // The catalog only knows what some vendor stocks — 8 ids today against 93 priced
+                // items — so mods, modules, materials and quest items had no Value line at all
+                // even though ItemBalance prices them. Fall back to the authored price at the
+                // same ratio a vendor would pay. Display-only: real transactions go through
+                // GetSellPrice/GetBuyPrice with the shop's own catalog and ratio.
+                int authored = ItemBalanceAsset.PriceOf(item.DefinitionId);
+                if (authored <= 0) return 0;
+                unit = Mathf.Max(1, Mathf.RoundToInt(authored * DefaultGlobalSellRatio));
+            }
             return ApplyDurability(unit * Mathf.Max(1, item.StackCount), item);
         }
 
