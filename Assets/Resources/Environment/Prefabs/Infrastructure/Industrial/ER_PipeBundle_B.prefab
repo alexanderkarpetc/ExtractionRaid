@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 809163576368811535}
   - component: {fileID: 3932018016673324343}
   m_Layer: 0
-  m_Name: PipeBundle_B
+  m_Name: ER_PipeBundle_B
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27,13 +27,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1169323522867752922}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0, y: 0, z: -0.000000014901161}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!33 &3233108124557982405
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -41,7 +41,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1169323522867752922}
-  m_Mesh: {fileID: 1745941138890989701, guid: fb0f9fdb2cc266547977eb5c1802ec78, type: 3}
+  m_Mesh: {fileID: 6351100680175203939, guid: fb0f9fdb2cc266547977eb5c1802ec78, type: 3}
 --- !u!23 &809163576368811535
 MeshRenderer:
   m_ObjectHideFlags: 0
