@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_FuelStationKiosk_A
+  m_Name: M_Townhouse_A
   m_Shader: {fileID: 4800000, guid: 9f574f0a1f1b7be4f9cb60d4d69f3e42, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Texture:
-        m_Texture: {fileID: 2800000, guid: 77118b39d0e970a448daa43ddad68a64, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1e2f1bb120acd52469578ec40e2aab19, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -34,11 +34,11 @@ Material:
     - _Cull: 2
     - _Dither: 0
     - _DitherEnabled: 0
-    - _DitherPatternScale: 0.003
+    - _DitherPatternScale: 0
     - _Emission: 0
     - _Metallic: 0
-    - _Occlusion: 0.84
-    - _Saturate: 0.5
+    - _Occlusion: 1
+    - _Saturate: 0.25
     - _Smoothness: 0
     - _ZoneDitherEnabled: 1
     m_Colors:
