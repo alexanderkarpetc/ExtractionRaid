@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 845672339913544025}
   - component: {fileID: 4329002775055998716}
   - component: {fileID: 2015152336559958582}
+  - component: {fileID: 3326168773213954669}
   m_Layer: 0
-  m_Name: MetalDrum_A
+  m_Name: ER_MetalDrum_A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3326168773213954669
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 69733431044197347}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.86880505, y: 0.8637088, z: 0.99536157}
+  m_Center: {x: 0, y: 0, z: 0.49768078}
