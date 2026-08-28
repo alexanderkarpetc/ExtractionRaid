@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1914874515114989607}
   - component: {fileID: 7599877351040582167}
   - component: {fileID: 6332010840218425651}
+  - component: {fileID: 1868472669277120133}
   m_Layer: 0
   m_Name: ER_MilitaryTent_A
   m_TagString: Untagged
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &1868472669277120133
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6471070442629016739}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0552942, y: 0.06460091, z: 0.040000036}
+  m_Center: {x: -0.000000052452712, y: -0.0001369524, z: 0.020000005}

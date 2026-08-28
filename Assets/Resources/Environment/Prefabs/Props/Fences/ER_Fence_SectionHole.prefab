@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 225851872504585259}
   - component: {fileID: 2248543353785661863}
   - component: {fileID: 5250998698840197386}
+  - component: {fileID: 6185453082453214829}
   m_Layer: 0
-  m_Name: Fence_SectionHole
+  m_Name: ER_Fence_SectionHole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -95,6 +96,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &6185453082453214829
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696303691913784023}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.74023, y: 3.73046, z: 0.15419199}
+  m_Center: {x: 0.004892588, y: 0, z: -0.00078058965}
 --- !u!1 &2500693133579754853
 GameObject:
   m_ObjectHideFlags: 0
