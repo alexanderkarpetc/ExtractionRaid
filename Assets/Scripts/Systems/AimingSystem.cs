@@ -115,7 +115,10 @@ namespace Systems
                 if (weapon != null && weapon.RecoilOffset.sqrMagnitude > 0.0001f)
                 {
                     float adsRecovery = Mathf.Lerp(1f, aimCfg.AdsRecoilRecoveryMultiplier, player.AdsBlend);
-                    float recoilDecay = 1f - Mathf.Exp(-weapon.Stats.RecoilRecoverySpeed * aimCfg.RecoilRecoveryMultiplier * adsRecovery * context.DeltaTime);
+                    float recoilDecay = 1f - Mathf.Exp(-weapon.Stats.RecoilRecoverySpeed
+                        * aimCfg.RecoilRecoveryMultiplier
+                        * context.PlayerProgressionConfig.RecoilRecoveryMultiplier
+                        * adsRecovery * context.DeltaTime);
                     weapon.RecoilOffset = Vector3.Lerp(weapon.RecoilOffset, Vector3.zero, recoilDecay);
                 }
 

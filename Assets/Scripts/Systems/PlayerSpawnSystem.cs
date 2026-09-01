@@ -8,13 +8,14 @@ namespace Systems
 {
     public static class PlayerSpawnSystem
     {
-        public static void SpawnPlayer(RaidState state, Vector3 spawnPosition, IRaidEvents events, string levelId = null)
+        public static void SpawnPlayer(RaidState state, Vector3 spawnPosition, IRaidEvents events,
+            string levelId = null, float maxHp = BotConstants.PlayerMaxHp)
         {
             if (state.PlayerEntity != null) return;
 
             var playerId = state.AllocateEId();
             state.PlayerEntity = PlayerEntityState.Create(playerId, spawnPosition);
-            state.HealthMap[playerId] = HealthState.Create(BotConstants.PlayerMaxHp);
+            state.HealthMap[playerId] = HealthState.Create(Mathf.Max(1f, maxHp));
 
             var inventory = App.Instance.Player.Inventory;
             // Test scenes always get the full cheat loadout (all archetypes) for combat

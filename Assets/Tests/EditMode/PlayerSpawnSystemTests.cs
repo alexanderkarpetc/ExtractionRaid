@@ -96,6 +96,19 @@ namespace Tests.EditMode
             Assert.IsFalse(events.PlayerSpawnedCalled);
         }
 
+        [Test]
+        public void SpawnPlayer_UsesProgressionMaxHp()
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var events = new FakeRaidEvents();
+
+            PlayerSpawnSystem.SpawnPlayer(state, Vector3.zero, events, maxHp: 118f);
+
+            var health = state.HealthMap[state.PlayerEntity.Id];
+            Assert.AreEqual(118f, health.MaxHp, 0.001f);
+            Assert.AreEqual(118f, health.CurrentHp, 0.001f);
+        }
+
         // ── Armor ─────────────────────────────────────────────
 
         [Test]

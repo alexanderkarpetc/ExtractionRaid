@@ -106,9 +106,10 @@ M1 core-loop + onboarding batch. All committed.
 
 > ✅ **Resolved (was: "progression OUT — reconcile with maintainer").** Progression is **IN** since
 > 2026-07-21 and owned by Олександр. Model: **no skill points** — a node's price is looted materials
-> (`ProgressionCostSystem`, 2026-07-26). Effects are still **not wired**:
-> `ProgressionSystem.ApplyAllocatedEffects` is an empty seam with a TODO (roadmap M2.7). Details in
-> [`progression.md`](./progression.md). Item durability persists in `SaveData`
+> (`ProgressionCostSystem`, 2026-07-26). **Predator phase 1 combat effects are wired** through
+> `ProgressionSystem.ApplyAllocatedEffects` → player-only `RaidContext.PlayerProgressionConfig`;
+> conditional/on-kill/boss/loot nodes and the other disciplines remain data-only (roadmap M2.7).
+> Details in [`progression.md`](./progression.md). Item durability persists in `SaveData`
 > (CurrentDurability/MaxDurability).
 
 **Still-open new-player gap:** task #63 — initial difficulty ramp (weak bots first; playtest: "3 riflemen killed me in 20s").

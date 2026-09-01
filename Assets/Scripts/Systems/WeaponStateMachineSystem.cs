@@ -100,7 +100,8 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Equipping:
-                    if (phaseDuration >= weapon.Stats.EquipTime)
+                    if (phaseDuration >= weapon.Stats.EquipTime
+                        * context.PlayerProgressionConfig.EquipTimeMultiplier)
                     {
                         weapon.Phase = WeaponPhase.Ready;
                         weapon.PhaseStartTime = elapsed;
@@ -121,7 +122,8 @@ namespace Systems
                     break;
 
                 case WeaponPhase.Reloading:
-                    if (phaseDuration >= weapon.Stats.ReloadTime)
+                    if (phaseDuration >= weapon.Stats.ReloadTime
+                        * context.PlayerProgressionConfig.ReloadTimeMultiplier)
                     {
                         AmmoSystem.CompleteReload(weapon, App.Instance.Player.Inventory);
                         weapon.Phase = WeaponPhase.Ready;

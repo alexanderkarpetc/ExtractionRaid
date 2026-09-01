@@ -332,6 +332,38 @@ namespace Session
         };
     }
 
+    /// <summary>
+    /// Player-only character progression modifiers. Kept separate from DevCheats-backed configs
+    /// so a player's skill tree never buffs bot shots that share the same raid context.
+    /// </summary>
+    public struct PlayerProgressionConfig
+    {
+        public float WeaponDamageMultiplier;
+        public float PenetrationMultiplier;
+        public float ArmorDamageMultiplier;
+        public float HeadshotDamageMultiplier;
+        public float RecoilMultiplier;
+        public float RecoilRecoveryMultiplier;
+        public float ReloadTimeMultiplier;
+        public float EquipTimeMultiplier;
+        public float HeatBuildupMultiplier;
+        public float BleedAppliedMultiplier;
+
+        public static PlayerProgressionConfig Default => new PlayerProgressionConfig
+        {
+            WeaponDamageMultiplier = 1f,
+            PenetrationMultiplier = 1f,
+            ArmorDamageMultiplier = 1f,
+            HeadshotDamageMultiplier = 1f,
+            RecoilMultiplier = 1f,
+            RecoilRecoveryMultiplier = 1f,
+            ReloadTimeMultiplier = 1f,
+            EquipTimeMultiplier = 1f,
+            HeatBuildupMultiplier = 1f,
+            BleedAppliedMultiplier = 1f,
+        };
+    }
+
     public readonly struct RaidContext
     {
         public readonly float DeltaTime;
@@ -354,6 +386,7 @@ namespace Session
         public readonly BarrelHeatConfig BarrelHeatConfig;
         public readonly CheatsConfig CheatsConfig;
         public readonly RaidTimerConfig RaidTimerConfig;
+        public readonly PlayerProgressionConfig PlayerProgressionConfig;
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
@@ -370,7 +403,8 @@ namespace Session
             LaserConfig? laserConfig = null,
             BarrelHeatConfig? barrelHeatConfig = null,
             CheatsConfig? cheatsConfig = null,
-            RaidTimerConfig? raidTimerConfig = null)
+            RaidTimerConfig? raidTimerConfig = null,
+            PlayerProgressionConfig? playerProgressionConfig = null)
         {
             DeltaTime = deltaTime;
             Events = events;
@@ -392,6 +426,7 @@ namespace Session
             BarrelHeatConfig = barrelHeatConfig ?? BarrelHeatConfig.Default;
             CheatsConfig = cheatsConfig ?? CheatsConfig.Default;
             RaidTimerConfig = raidTimerConfig ?? RaidTimerConfig.Default;
+            PlayerProgressionConfig = playerProgressionConfig ?? PlayerProgressionConfig.Default;
         }
     }
 }

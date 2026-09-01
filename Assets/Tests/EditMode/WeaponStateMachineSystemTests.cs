@@ -2,6 +2,7 @@ using System.Linq;
 using Adapters;
 using ApplicationCore;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems;
 using Tests.EditMode.Fakes;
@@ -475,6 +476,34 @@ namespace Tests.EditMode
                 Assert.IsTrue(events.All.Any(e => e.Type == RaidEventType.WeaponUnequipStarted));
             }
             finally { Object.DestroyImmediate(laserSO); }
+        }
+
+        [Test]
+        public void Tick_PlayerProgression_ReducesEquipTime()
+        {
+            var (state, weapon) = Setup(
+                phase: WeaponPhase.Equipping, equipTime: 1f, elapsedTime: 0.81f);
+            var progression = PlayerProgressionConfig.Default;
+            progression.EquipTimeMultiplier = 0.8f;
+            var context = TestContextFactory.Create(playerProgressionConfig: progression);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
+        }
+
+        [Test]
+        public void Tick_PlayerProgression_ReducesReloadTime()
+        {
+            var (state, weapon) = Setup(
+                phase: WeaponPhase.Reloading, reloadTime: 1f, elapsedTime: 0.86f);
+            var progression = PlayerProgressionConfig.Default;
+            progression.ReloadTimeMultiplier = 0.85f;
+            var context = TestContextFactory.Create(playerProgressionConfig: progression);
+
+            WeaponStateMachineSystem.Tick(state, in context);
+
+            Assert.AreEqual(WeaponPhase.Ready, weapon.Phase);
         }
     }
 }

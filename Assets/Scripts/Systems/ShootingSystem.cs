@@ -269,12 +269,14 @@ namespace Systems
             }
             // Hard caps documented у battle-design-status.md §4 — guards documented
             // invariant even though only WeaponBase + Ammo currently contribute (V0.1).
+            var progression = context.PlayerProgressionConfig;
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
-                weapon.Stats.BasePenetration + ammoPen);
+                (weapon.Stats.BasePenetration + ammoPen) * progression.PenetrationMultiplier);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative
             float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
-                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
-            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
+                (weapon.Stats.BaseArmorDamage + ammoArmorDmg) * progression.ArmorDamageMultiplier);
+            float totalBleedChance = Mathf.Clamp01(
+                (weapon.Stats.BaseBleedChance + ammoBleedChance) * progression.BleedAppliedMultiplier);
 
             // Charge multiplier — parabolic curve через LaserConfig (default min=0.1, power=2).
             // Ballistic chargeRatio is always 1 → multiplier = 1, no behavior change.
@@ -316,8 +318,8 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, lifetime,
-                    totalDamage * cfg.DamageMultiplier,
-                    weapon.Stats.HeadshotDamageMultiplier,
+                    totalDamage * cfg.DamageMultiplier * progression.WeaponDamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier * progression.HeadshotDamageMultiplier,
                     targetedEntityId,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
@@ -335,7 +337,8 @@ namespace Systems
             // Ballistic Rifle signature (B1): increment barrel heat. Decay runs continuously
             // in WeaponHeatSystem, so sustained fire pushes net upward; tap-burst lets decay catch up.
             if (isBallisticAuto && context.BarrelHeatConfig.Enabled)
-                weapon.HeatLevel = Mathf.Min(1f, weapon.HeatLevel + context.BarrelHeatConfig.HeatPerShot);
+                weapon.HeatLevel = Mathf.Min(1f, weapon.HeatLevel
+                    + context.BarrelHeatConfig.HeatPerShot * progression.HeatBuildupMultiplier);
 
             // Burst entry: laser + Auto delivery → Bursting phase queues N-1 follow-up
             // shots, fired automatically by TickBurst at fixed interval. Burst length
@@ -366,7 +369,7 @@ namespace Systems
                 && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
             {
                 float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
-                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
+                float recoilMul = cfg.RecoilMultiplier * progression.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward kick through RecoilOffset
@@ -450,12 +453,14 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
+            var progression = context.PlayerProgressionConfig;
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
-                weapon.Stats.BasePenetration + ammoPen);
+                (weapon.Stats.BasePenetration + ammoPen) * progression.PenetrationMultiplier);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg);
             float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
-                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
-            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
+                (weapon.Stats.BaseArmorDamage + ammoArmorDmg) * progression.ArmorDamageMultiplier);
+            float totalBleedChance = Mathf.Clamp01(
+                (weapon.Stats.BaseBleedChance + ammoBleedChance) * progression.BleedAppliedMultiplier);
 
             // Same parabolic curve as initial fire — burst inherits cached chargeRatio.
             // No spread/lifetime modulation here: burst only triggers for Laser+Auto (single
@@ -476,8 +481,8 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.Stats.ProjectileLifetime,
-                    totalDamage * cfg.DamageMultiplier,
-                    weapon.Stats.HeadshotDamageMultiplier,
+                    totalDamage * cfg.DamageMultiplier * progression.WeaponDamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier * progression.HeadshotDamageMultiplier,
                     targetedEntityId: default,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
@@ -499,7 +504,7 @@ namespace Systems
                 && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
             {
                 float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
-                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
+                float recoilMul = cfg.RecoilMultiplier * progression.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
                 weapon.RecoilOffset += aimDir
                     * (weapon.Stats.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);

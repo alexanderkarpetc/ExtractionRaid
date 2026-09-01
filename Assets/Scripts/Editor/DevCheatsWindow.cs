@@ -160,6 +160,7 @@ namespace Editor
                 DrawSection("💀 Cheats", _config.Cheats);
                 DrawSection("⏱ Raid clock", _config.Raid);
                 DrawRaidSection();
+                DrawProgressionDebugSection();
                 DrawQuestsSection();
             });
 
@@ -354,6 +355,45 @@ namespace Editor
             editor.OnInspectorGUI();
             if (EditorGUI.EndChangeCheck())
                 EditorUtility.SetDirty(section);
+            EditorGUI.indentLevel--;
+        }
+
+        void DrawProgressionDebugSection()
+        {
+            const string key = "Progression test points";
+            EditorGUILayout.Space(4);
+            bool fold = GetFoldout(key);
+            var newFold = EditorGUILayout.Foldout(
+                fold, "🌟 Progression test points", true, EditorStyles.foldoutHeader);
+            if (newFold != fold) SetFoldout(key, newFold);
+            if (!newFold) return;
+
+            EditorGUI.indentLevel++;
+            bool appReady = Application.isPlaying && App.IsInitialized
+                            && App.Instance.Player?.Progression != null;
+            if (!appReady)
+            {
+                EditorGUILayout.HelpBox(
+                    "Enter Play Mode to grant temporary progression points.", MessageType.Info);
+                EditorGUI.indentLevel--;
+                return;
+            }
+
+            var progression = App.Instance.Player.Progression;
+            EditorGUILayout.LabelField("Available", progression.DevUnlockPoints.ToString());
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("+1"))
+                    progression.DevUnlockPoints = Mathf.Min(9999, progression.DevUnlockPoints + 1);
+                if (GUILayout.Button("+10"))
+                    progression.DevUnlockPoints = Mathf.Min(9999, progression.DevUnlockPoints + 10);
+                using (new EditorGUI.DisabledScope(progression.DevUnlockPoints == 0))
+                    if (GUILayout.Button("Reset")) progression.DevUnlockPoints = 0;
+            }
+
+            EditorGUILayout.HelpBox(
+                "One point unlocks one connected node without consuming its materials. " +
+                "Dev points are not saved.", MessageType.None);
             EditorGUI.indentLevel--;
         }
 

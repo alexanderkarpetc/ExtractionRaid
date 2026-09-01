@@ -67,7 +67,7 @@ Slot-based інвентар (2 weapon + helmet + body + 20 backpack + 7 quick-sl
 | Base building / upgrade levels | 🔄 | `BuildingSystem` є; взаємодія частково stub (placeholder-діалоги) |
 | Quests (9 типів задач, prereq-граф, rewards, NPC hand-over) | ✅ | система розлога; **7 квестів контенту** |
 | Economy / currency (Credits) | 🔄 | `ShopSystem` реальний; **1 shop контенту**, без buy-back/loyalty |
-| Progression / level / skills (скіл-древо) | 🔄 | **2026-07-21: додано node-based скіл-древо** — 4 дисципліни × ~96 нод, config-SO (`ProgressionTreeConfig`, seed через `Raid → Progression`), персист (`PlayerProgressionState`), UI Toolkit (клавіша **K**), **allocate-only (no refund)**. Ефекти нод — stub (`ApplyAllocatedEffects`), джерело поінтів TBD. `Level`-поле досі не інкрементує. Док: `progression.md` |
+| Progression / level / skills (скіл-древо) | 🔄 | **2026-07-21: додано node-based скіл-древо** — 4 дисципліни × ~96 нод, config-SO (`ProgressionTreeConfig`, seed через `Raid → Progression`), персист (`PlayerProgressionState`), UI Toolkit (клавіша **K**), **allocate-only (no refund)**. Ціна = лутані матеріали, skill points немає. Predator phase 1 combat-ефекти підключені; решта нод ще data-only. `Level`-поле досі не інкрементує. Док: `progression.md` |
 
 ### G. Shell / game flow — ✅ (з шорсткостями)
 Main menu (Continue/New/Quit) ✅ · AppBootstrap+DI (~20 презентерів) ✅ · MainMenu→Hideout→Deploy→Raid→End→Hideout ✅ · Pause menu (Esc, Resume/Settings/Exit) ✅ · **Deploy UI = legacy IMGUI** 🔄 (функціональний, не продакшн). Settings-глибина не перевірена.
@@ -121,8 +121,9 @@ VFX/juice-шар розлогий ✅ (ragdoll, decals, ejectors, shake, hitstop
 - **Ціль релізу = повний v1.0** (не EA/demo). Отже майже весь контент+полиш заходить у scope.
 - **Progression — node-based скіл-древо — У scope v1.0 (рішення 2026-07-21, змінює попереднє «OUT» від 2026-07-17).**
   Каркас реалізовано: 4 дисципліни × ~96 нод, config-SO, persist, UI (клавіша K), **allocate-only (no refund)**.
-  Лишається: підключити ефекти нод (`ApplyAllocatedEffects` → `RaidContext.*Config`), визначити джерело поінтів,
-  збалансувати значення/вартості. Деталі: `progression.md`. Мета-прогрес також через quests + credits + building + stash.
+  Predator phase 1 combat-ефекти вже підключені через player-only config. Лишається: conditional/on-kill/
+  boss/loot частина Predator, решта трьох дисциплін і баланс значень/вартостей. Skill points немає: ціна ноди =
+  лутані матеріали. Деталі: `progression.md`. Мета-прогрес також через quests + credits + building + stash.
 - **Weapon Builder = headline-фіча, вкладаємось (2026-07-18).** Player-facing core-assembly loop
   лишається й розвивається → обсяг: **3×4 архетипи** (+Rocket payload, +Rotary delivery) + **3–4 exotics**
   + balance + Builder UX. Повна 4×5 = стретч. Attachments + модульне 3D + композиція — база.

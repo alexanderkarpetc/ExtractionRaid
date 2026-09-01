@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using State;
+using UnityEngine;
 
 namespace Progression
 {
@@ -7,8 +8,46 @@ namespace Progression
     public struct StatSum { public float Value; public string Unit; }
 
     /// <summary>
+    /// Aggregated character modifiers produced by allocated Predator nodes. Percent fields are
+    /// additive inside the tree, then exposed as safe multipliers for runtime configs.
+    /// </summary>
+    public struct ProgressionModifiers
+    {
+        public float WeaponDamagePercent;
+        public float PenetrationPercent;
+        public float ArmorDamagePercent;
+        public float HeadshotDamagePercent;
+        public float RecoilPercent;
+        public float RecoilRecoveryPercent;
+        public float ReloadTimePercent;
+        public float AimSwayPercent;
+        public float EquipTimePercent;
+        public float HeatBuildupPercent;
+        public float MaxHpBonus;
+        public float HealPerKill;
+        public float BleedAppliedPercent;
+        public float StaminaPerKillPercent;
+        public float BossSpawnChancePercent;
+        public float BossKillDrops;
+        public float CreditsFromLootPercent;
+
+        public float WeaponDamageMultiplier => Multiplier(WeaponDamagePercent);
+        public float PenetrationMultiplier => Multiplier(PenetrationPercent);
+        public float ArmorDamageMultiplier => Multiplier(ArmorDamagePercent);
+        public float HeadshotDamageMultiplier => Multiplier(HeadshotDamagePercent);
+        public float RecoilMultiplier => Multiplier(RecoilPercent);
+        public float RecoilRecoveryMultiplier => Multiplier(RecoilRecoveryPercent);
+        public float ReloadTimeMultiplier => Multiplier(ReloadTimePercent);
+        public float EquipTimeMultiplier => Multiplier(EquipTimePercent);
+        public float HeatBuildupMultiplier => Multiplier(HeatBuildupPercent);
+        public float BleedAppliedMultiplier => Multiplier(BleedAppliedPercent);
+
+        static float Multiplier(float percent) => Mathf.Max(0f, 1f + percent * 0.01f);
+    }
+
+    /// <summary>
     /// Stateless rules for the progression tree: what's connected, what's already taken,
-    /// and (stubbed) how allocated nodes translate into gameplay. The view calls these —
+    /// and how allocated nodes translate into gameplay modifiers. The view calls these —
     /// it never decides allocation itself. There is intentionally NO refund path.
     ///
     /// This half only knows about <b>connectivity</b>. There is no skill-point pool: a node's
@@ -100,20 +139,97 @@ namespace Progression
         }
 
         /// <summary>
-        /// TODO — translate allocated nodes into gameplay modifiers. Deliberately unimplemented:
-        /// wire each node id to a gameplay config field as those systems are touched (e.g. push
-        /// Max-HP sums into BotConstants.PlayerMaxHp, MoveSpeed into
-        /// MovementConfig.MoveSpeedMultiplier). Called once when a raid context is built.
+        /// Translates allocated Predator nodes into gameplay-ready modifiers. Existing seeded
+        /// assets predate <see cref="ProgressionEffectType"/>, so centralized stable-id/label
+        /// fallbacks keep them functional until they are re-seeded; new/default content uses the enum.
         /// </summary>
-        public static void ApplyAllocatedEffects(ProgressionTreeConfig cfg, PlayerProgressionState state)
+        public static ProgressionModifiers ApplyAllocatedEffects(
+            ProgressionTreeConfig cfg, PlayerProgressionState state)
         {
-            // Intentionally empty for now. Suggested shape once effects are hooked up:
-            //
-            //   foreach (var id in state.AllocatedNodeIds)
-            //       switch (id) { case "warden.0.0": /* +MaxHp */ break; ... }
-            //
-            // or drive it from Summarize(cfg, state) by StatLabel. Left as a single seam so the
-            // UI/allocation can ship before every stat is balanced.
+            var result = new ProgressionModifiers();
+            if (cfg == null || state?.AllocatedNodeIds == null) return result;
+
+            foreach (var id in state.AllocatedNodeIds)
+            {
+                if (!cfg.TryFind(id, out var discipline, out _, out var node)) continue;
+                if (discipline.Id != "predator") continue;
+
+                var effect = node.Effect != ProgressionEffectType.None
+                    ? node.Effect
+                    : LegacyPredatorEffect(id, node.StatLabel);
+
+                switch (effect)
+                {
+                    case ProgressionEffectType.WeaponDamage:   result.WeaponDamagePercent += node.Magnitude; break;
+                    case ProgressionEffectType.Penetration:    result.PenetrationPercent += node.Magnitude; break;
+                    case ProgressionEffectType.ArmorDamage:    result.ArmorDamagePercent += node.Magnitude; break;
+                    case ProgressionEffectType.HeadshotDamage: result.HeadshotDamagePercent += node.Magnitude; break;
+                    case ProgressionEffectType.Recoil:         result.RecoilPercent += node.Magnitude; break;
+                    case ProgressionEffectType.RecoilRecovery: result.RecoilRecoveryPercent += node.Magnitude; break;
+                    case ProgressionEffectType.ReloadTime:     result.ReloadTimePercent += node.Magnitude; break;
+                    case ProgressionEffectType.AimSway:        result.AimSwayPercent += node.Magnitude; break;
+                    case ProgressionEffectType.EquipTime:      result.EquipTimePercent += node.Magnitude; break;
+                    case ProgressionEffectType.HeatBuildup:    result.HeatBuildupPercent += node.Magnitude; break;
+                    case ProgressionEffectType.MaxHp:          result.MaxHpBonus += node.Magnitude; break;
+                    case ProgressionEffectType.HealPerKill:    result.HealPerKill += node.Magnitude; break;
+                    case ProgressionEffectType.BleedApplied:   result.BleedAppliedPercent += node.Magnitude; break;
+                    case ProgressionEffectType.StaminaPerKill: result.StaminaPerKillPercent += node.Magnitude; break;
+                    case ProgressionEffectType.BossSpawnChance: result.BossSpawnChancePercent += node.Magnitude; break;
+                    case ProgressionEffectType.BossKillDrops:  result.BossKillDrops += node.Magnitude; break;
+                    case ProgressionEffectType.CreditsFromLoot: result.CreditsFromLootPercent += node.Magnitude; break;
+                }
+            }
+
+            return result;
+        }
+
+        static ProgressionEffectType LegacyPredatorEffect(string id, string statLabel)
+        {
+            var byId = id switch
+            {
+                "predator.0.0" or "predator.0.4" => ProgressionEffectType.WeaponDamage,
+                "predator.0.1" => ProgressionEffectType.Penetration,
+                "predator.0.2" => ProgressionEffectType.ArmorDamage,
+                "predator.0.3" => ProgressionEffectType.HeadshotDamage,
+                "predator.1.0" => ProgressionEffectType.Recoil,
+                "predator.1.1" => ProgressionEffectType.RecoilRecovery,
+                "predator.1.2" => ProgressionEffectType.ReloadTime,
+                "predator.1.3" => ProgressionEffectType.AimSway,
+                "predator.1.4" => ProgressionEffectType.EquipTime,
+                "predator.1.5" => ProgressionEffectType.HeatBuildup,
+                "predator.2.0" or "predator.2.4" => ProgressionEffectType.MaxHp,
+                "predator.2.1" => ProgressionEffectType.HealPerKill,
+                "predator.2.2" => ProgressionEffectType.BleedApplied,
+                "predator.2.3" => ProgressionEffectType.StaminaPerKill,
+                "predator.3.0" or "predator.3.4" => ProgressionEffectType.BossSpawnChance,
+                "predator.3.1" => ProgressionEffectType.BossKillDrops,
+                "predator.3.2" => ProgressionEffectType.CreditsFromLoot,
+                _ => ProgressionEffectType.None,
+            };
+            if (byId != ProgressionEffectType.None) return byId;
+
+            // Last-resort compatibility for hand-authored legacy Predator assets with custom ids.
+            return statLabel switch
+            {
+                "Weapon Damage"      => ProgressionEffectType.WeaponDamage,
+                "Penetration"        => ProgressionEffectType.Penetration,
+                "Armor Damage"       => ProgressionEffectType.ArmorDamage,
+                "Headshot Damage"    => ProgressionEffectType.HeadshotDamage,
+                "Recoil"             => ProgressionEffectType.Recoil,
+                "Recoil Recovery"    => ProgressionEffectType.RecoilRecovery,
+                "Reload Time"        => ProgressionEffectType.ReloadTime,
+                "Aim Sway"           => ProgressionEffectType.AimSway,
+                "Equip Time"         => ProgressionEffectType.EquipTime,
+                "Heat Buildup"       => ProgressionEffectType.HeatBuildup,
+                "Max HP"             => ProgressionEffectType.MaxHp,
+                "Heal per Kill"      => ProgressionEffectType.HealPerKill,
+                "Bleed Applied"      => ProgressionEffectType.BleedApplied,
+                "Stamina per Kill"   => ProgressionEffectType.StaminaPerKill,
+                "Boss Spawn Chance"  => ProgressionEffectType.BossSpawnChance,
+                "Boss Kill Drops"    => ProgressionEffectType.BossKillDrops,
+                "Credits from Loot"  => ProgressionEffectType.CreditsFromLoot,
+                _                     => ProgressionEffectType.None,
+            };
         }
     }
 }

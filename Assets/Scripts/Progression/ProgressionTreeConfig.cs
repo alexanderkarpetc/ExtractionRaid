@@ -7,6 +7,33 @@ namespace Progression
 {
     public enum NodeSize { Minor, Notable, Keystone }
 
+    /// <summary>
+    /// Stable gameplay binding for numeric progression nodes. <see cref="ProgressionNodeDef.StatLabel"/>
+    /// remains presentation text; runtime rules use this enum so renaming a label cannot silently
+    /// change the effect. None keeps legacy/config-authored special nodes data-only.
+    /// </summary>
+    public enum ProgressionEffectType
+    {
+        None = 0,
+        WeaponDamage,
+        Penetration,
+        ArmorDamage,
+        HeadshotDamage,
+        Recoil,
+        RecoilRecovery,
+        ReloadTime,
+        AimSway,
+        EquipTime,
+        HeatBuildup,
+        MaxHp,
+        HealPerKill,
+        BleedApplied,
+        StaminaPerKill,
+        BossSpawnChance,
+        BossKillDrops,
+        CreditsFromLoot,
+    }
+
     /// <summary>What a single line of a node's material cost asks for.</summary>
     public enum ProgressionCostKind
     {
@@ -90,6 +117,7 @@ namespace Progression
         public float Offset;            // angular fork offset in degrees (±15 typical)
 
         [Header("Numeric effect (leave StatLabel empty for pure keystones)")]
+        public ProgressionEffectType Effect;
         public string StatLabel;        // e.g. "Max HP" — groups in the build summary
         public float Magnitude;         // e.g. 10 or -15
         public string Unit;             // "", "%", "°", " HP", "s"

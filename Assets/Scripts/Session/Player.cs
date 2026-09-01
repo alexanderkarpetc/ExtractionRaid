@@ -111,6 +111,7 @@ namespace Session
             Progression.AllocatedNodeIds = data.AllocatedNodes != null
                 ? new List<string>(data.AllocatedNodes)
                 : new List<string>();
+            Progression.DevUnlockPoints = 0;
         }
     }
 }

@@ -38,7 +38,7 @@ Shape: **Disciplines → Branches → Nodes**.
 - **Discipline**: `Id`, `DisplayName`, `Color`, `Tagline`, `AngleDeg` (sector direction), `Branches`.
 - **Node** (`ProgressionNodeDef`): `Id` (stable, `"<disc>.<branch>.<index>"`), `DisplayName`,
   `Size` (`Minor`/`Notable`/`Keystone`), `Ring` + `Offset` (layout), numeric effect
-  (`StatLabel` + `Magnitude` + `Unit`) **or** `Description` (keystone/special text),
+  (`Effect` + `StatLabel` + `Magnitude` + `Unit`) **or** `Description` (keystone/special text),
   and `Cost` (up to 3 `ProgressionCostEntry` lines — the items charged on unlock, and the node's
   only price).
 - **Cost entry** (`ProgressionCostEntry`): `Kind` + `Quantity`, then either
@@ -77,6 +77,11 @@ not the profile, so progression survives death — matching Level/Credits.
 Legacy saves may still carry a `ProgressionPoints` value; the field is gone and any such value is
 ignored on load.
 
+`PlayerProgressionState.DevUnlockPoints` is a **Play Mode testing aid only**. `Raid → Dev Cheats →
+Progression test points` grants temporary points; one point replaces the material payment for one
+connected node. Connectivity and permanent allocation rules still apply. The field is intentionally
+absent from `SaveData`, so stopping Play Mode/reloading the profile clears it.
+
 ---
 
 ## Rules — `ProgressionSystem` (stateless)
@@ -88,12 +93,16 @@ ignored on load.
 - **Connectivity only.** `Allocate` does *not* charge the node's items — call
   `Systems.ProgressionCostSystem.TryUnlock(cfg, player, id)` instead (the window does).
 - `Summarize` — sums numeric perks by `StatLabel` (helper; the window's build-summary panel was removed).
-- **`ApplyAllocatedEffects` is a STUB.** No per-node gameplay effect is wired yet — this is the single
-  seam to fill in. Drive each node id (or `Summarize` by `StatLabel`) into the config field named in the
-  node's `DevHook` (e.g. Max-HP → `BotConstants.PlayerMaxHp`, MoveSpeed →
-  `MovementConfig.MoveSpeedMultiplier`, loot → `ContainerTypeConfig.MaxDrops`, boss odds →
-  `BotSpawnPoint.spawnChance`). Per the DevCheats rule, effects should flow through `RaidContext.*Config`
-  structs, not be read from state directly inside systems.
+- `ApplyAllocatedEffects` now returns aggregated `ProgressionModifiers`. `Effect` is the stable typed
+  binding; a node-id/label fallback keeps the already-seeded legacy asset functional.
+- **Predator phase 1 is wired:** weapon damage, penetration, armour damage, headshot damage, recoil,
+  recoil recovery, reload time, equip time, barrel-heat buildup, Max HP and bleed application.
+  `RaidSession` copies the player-only multipliers into `PlayerProgressionConfig` on `RaidContext`, so
+  they cannot accidentally buff bots that share `ShootingConfig`.
+- **Still data-only:** Aim Sway, Heal/Stamina per Kill, Predator boss/credit effects and all four
+  Predator special nodes (`Apex Predator`, `Berserk`, `Tracker`, `Big Game`). Other disciplines are not
+  wired yet. Continue routing effects through `RaidContext.*Config`, never read progression state from
+  Systems directly.
 
 The view holds **no rules** — it calls `ProgressionSystem` for allocate/query and renders the result.
 
@@ -110,6 +119,10 @@ weapons/armour are never counted or taken.
 - `CanPay(player, node)` — every line covered (a node with an empty `Cost` list is free).
 - `CanUnlock(cfg, player, id)` — connected + every line covered.
 - `TryUnlock(cfg, player, id)` — all-or-nothing: charges items, then allocates.
+
+When `player.Progression.DevUnlockPoints > 0`, `CanUnlock` treats the material cost as covered and a
+successful `TryUnlock` consumes one point instead of any items. The point never bypasses connectivity
+and is decremented only after allocation succeeds.
 
 A weapon line matches an `ItemState` with `HasWeaponConfiguration` whose `Delivery`/`Payload` core ids
 equal the requested ones and whose **both** core rarities are ≥ `MinRarity`. When several match, the
