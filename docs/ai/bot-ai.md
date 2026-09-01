@@ -103,7 +103,7 @@ Priority order: Heal > Dodge > Combat (Grenade > Melee > TakeCover > Shoot > Cha
 `BotBrainSystem`, personality-scaled) must elapse before the bot chases, fires, or even
 turns toward the target. A `SearchNode` after `ChaseNode` handles arriving at the last
 known position without regaining sight (scan sweep → give up → patrol). See
-`bot-humanization.md` for the full design rationale and tuning values.
+The live tuning values are in `BotConstants`; speculative follow-up ideas belong in `tasks.md`.
 
 ---
 

@@ -20,7 +20,7 @@ Systems must read tuning values from `RaidContext` config structs (`AimConfig`, 
 
 Before writing (or extending) tests for a system, grep the system file for two red flags:
 
-1. **`DevCheats.X` reads** — violates the rule above. Tests will pass via default-value alignment but silently diverge from production when a toggle changes. Refactor the system through a `RaidContext.*Config` struct first, then write tests (dev/test cheats like `GodMode` flow through `CheatsConfig` — add new cheats there). Known-violating systems as of 2026-04-24 and their symptoms are in `docs/ai/tests-review.md §Phase 3/4/5`. **Resolved 2026-05-15**: `DamageSystem` now reads `context.CheatsConfig.GodMode`.
+1. **`DevCheats.X` reads** — violates the rule above. Tests can pass through default-value alignment but diverge from production after a runtime toggle. Refactor through a `RaidContext.*Config` struct first, then write tests. Dev/test cheats such as `GodMode` flow through `CheatsConfig`.
 2. **Direct Unity API calls** in `Tick` — `Physics.*`, `Time.*`, `GameObject.Find/FindObjectOfType`, `Resources.Load`, etc. This violates `CLAUDE.md §3` rule 9. Fake adapters in tests are bypassed → tests become semi-deterministic (pass locally, fail when real Unity state shifts). Route through an existing adapter port (`IPhysicsAdapter`, `ITimeAdapter`, …) or add a new one before writing the test.
 
 If a violation is found, fixing the architecture takes priority over adding coverage — otherwise the new tests lock in false-green behaviour.

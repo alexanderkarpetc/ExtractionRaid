@@ -5,7 +5,7 @@ namespace State
     // Payload-specific stats live on typed *PayloadDefinition subclasses.
     // Each struct represents per-rarity specific values for one payload archetype.
     // Ballistic has no specific stats (empty marker struct not needed).
-    // See docs/ai/weapon-builder/architecture.md §D2.
+    // See docs/ai/weapon-builder/README.md.
 
     /// <summary>Laser Charge payload-specific stats.</summary>
     [Serializable]

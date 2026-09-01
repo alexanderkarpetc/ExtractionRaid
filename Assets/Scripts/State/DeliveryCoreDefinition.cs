@@ -10,7 +10,7 @@ namespace State
     /// Pattern-specific parameters (SpinUp/Down for Rotary, Volley for Swarm) live here
     /// directly; handlers read only what's relevant to their pattern.
     ///
-    /// See docs/ai/weapon-builder/architecture.md §2, §D1.
+    /// See docs/ai/weapon-builder/README.md
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewDeliveryCore",
@@ -30,7 +30,7 @@ namespace State
                  "Rifle, longest for Shotgun). Instantiated як child of payload's DeliverySocket " +
                  "at equip time. Must contain MuzzlePoint child Transform at the barrel tip. " +
                  "Не carries Animator or WeaponView — those live on payload. " +
-                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.")]
+                 "See docs/ai/tasks.md M2.4.")]
         [SerializeField] GameObject _barrelPrefab;
 
         // ── Pattern-specific params (only meaningful for the corresponding Pattern) ──
@@ -50,7 +50,7 @@ namespace State
         /// Delivery barrel prefab (3D model + MuzzlePoint child). Instantiated як child of
         /// payload's DeliverySocket at equip time. Animator + WeaponView live on payload, не
         /// here. May be null у tests; production assets must wire this.
-        /// See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.
+        /// See docs/ai/tasks.md M2.4.
         /// </summary>
         public GameObject    BarrelPrefab => _barrelPrefab;
 

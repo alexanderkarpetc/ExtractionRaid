@@ -3,8 +3,8 @@
 In-game reticle rendered via **uGUI + custom SDF shader** in `View/CrosshairPresenter.cs`.
 Replaced the legacy IMGUI `AimCursorOverlay` overlay in 2026-05-18 (Aim Cursor v2 epic, Stage 7).
 
-For the design rationale, stage-by-stage shipping log, and cut/deferred items, see
-[`docs/ai/gunplay/aim-cursor-v2.md`](gunplay/aim-cursor-v2.md).
+Historical stage logs were removed during the documentation cleanup; this file is the living source
+for the current crosshair implementation.
 
 ## Architecture
 

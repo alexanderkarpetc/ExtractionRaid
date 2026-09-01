@@ -9,7 +9,7 @@ namespace Dev
     ///    Quick-tap laser shots should feel weak; commitment to full charge = full damage.
     /// 2. Laser+Scatter (Laser Shotgun) signature mechanic — charge modulates BOTH spread cone
     ///    width AND projectile range. Low charge = wide buckshot, full charge = focused long-range
-    ///    cluster. See docs/ai/gunplay/archetype-differentiation.md.
+    ///    cluster. See docs/ai/gunplay/README.md.
     /// </summary>
     public class DevCheatsLaserSection : ScriptableObject
     {

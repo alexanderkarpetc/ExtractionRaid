@@ -12,7 +12,7 @@ namespace State
     //   - structural equality
     //   - Unity-friendly serialization via public readonly fields
     //
-    // See docs/ai/weapon-builder/architecture.md §D4.
+    // See docs/ai/weapon-builder/README.md.
 
     /// <summary>Reference to a Payload Core — DefinitionId + Rarity.</summary>
     [Serializable]

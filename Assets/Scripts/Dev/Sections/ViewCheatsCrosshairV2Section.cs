@@ -44,7 +44,7 @@ namespace Dev
     /// colors (normal/bloom/warning), charge flame gradient (cold/mid/hot), overheat tremble,
     /// focus blur (recoil + ADS driven), laser segmented ring + firing animation,
     /// hit pulse per-event-type profiles (normal/kill/headshot/ricochet).
-    /// See <c>docs/ai/gunplay/aim-cursor-v2.md</c> for design rationale + status log.
+    /// See <c>docs/ai/crosshair.md</c> for the current implementation.
     /// </summary>
     public class ViewCheatsCrosshairV2Section : ScriptableObject
     {

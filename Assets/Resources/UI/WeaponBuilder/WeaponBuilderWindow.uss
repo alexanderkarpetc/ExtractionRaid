@@ -1,7 +1,7 @@
 /* Weapon Builder modal — D&D layout (Tier 1-2 + UX pass).
  *
  * Layout (post-Tier 6 Wave A — embedded backpack removed; uGUI inventory canvas
- * opens side-by-side instead, see docs/ai/weapon-builder/plan/roadmap.md):
+ * opens side-by-side instead, see docs/ai/tasks.md):
  *   header
  *   body
  *     topRow:  [palette ───────────] [buildPanel ─────────────]
@@ -26,7 +26,7 @@
     background-color: rgba(0, 0, 0, 0);
     /* Right-anchored: Builder positioned on the right of the viewport so the uGUI
      * inventory canvas (left-anchored at 0..~31% width) can sit alongside without
-     * overlap. See docs/ai/weapon-builder/plan/roadmap.md → Tier 6 Wave A. */
+     * overlap. See docs/ai/weapon-builder/README.md. */
     align-items: flex-end;
     justify-content: flex-start;
     /* All four paddings shared з Inventory через токени. Edge-gap забезпечує

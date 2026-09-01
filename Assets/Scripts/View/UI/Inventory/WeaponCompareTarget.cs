@@ -9,7 +9,7 @@ namespace View.UI.Inventory
     /// Our two hotbar weapon slots are generic (no primary/secondary role), so — unlike
     /// STALKER 2 / Division (same-slot compare) — we can't auto-pick by slot type. Instead the
     /// baseline defaults to the weapon in hand (selected slot) and the player flips to the other
-    /// equipped weapon with a key (Alt). See docs/ai/weapon-comparison-research.md.
+    /// equipped weapon with a key (Alt). See docs/ai/weapon-builder/attachments/README.md.
     ///
     /// Pure C# (no engine refs) — unit-tested.
     /// </summary>

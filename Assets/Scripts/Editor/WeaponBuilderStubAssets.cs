@@ -20,7 +20,7 @@ namespace Game.Editor
     ///   Exotics: none yet (Tier 5)
     ///   CoreDefinitionDatabase — aggregator referencing the above.
     ///
-    /// See docs/ai/weapon-builder/plan/tasks.md T-0a.14/15 and T-2.06..T-2.09.
+    /// See docs/ai/weapon-builder/README.md.
     /// </summary>
     public static class WeaponBuilderStubAssets
     {
@@ -189,7 +189,7 @@ namespace Game.Editor
 
         // ── Payload: Ballistic ────────────────────────────────
 
-        // ── Rarity balance curve (docs/ai/weapon-builder/attachments/balance.md) ──────────
+        // ── Rarity balance curve ──────────────────────────────────────────────
         // The authored values below are the LEGENDARY baseline; lower tiers scale DOWN
         // parabolically — slow growth at the bottom (Common/Uncommon/Rare clustered), steep at
         // Epic/Legendary. Two knobs: RarityBaseFloor (Common floor) + RarityCurvePow (steepness).

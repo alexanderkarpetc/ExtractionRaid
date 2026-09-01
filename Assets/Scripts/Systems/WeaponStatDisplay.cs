@@ -8,7 +8,7 @@ namespace Systems
     /// Maps composed <see cref="WeaponStats"/> → the ordered list of player-facing
     /// rows shown in weapon UIs (tooltip now; Weapon Builder live-preview later).
     /// Single source of truth for the parameter set + display rules agreed for the
-    /// Weapon Attachments epic — see docs/ai/weapon-builder/attachments/stats.md.
+    /// Weapon Attachments epic — see docs/ai/weapon-builder/attachments/README.md.
     ///
     /// Each row carries a <see cref="StatDisplayRow.Value"/> (always) and an optional
     /// 0..1 <see cref="StatDisplayRow.BarRatio01"/> ("goodness" fill, fuller = better):

@@ -216,12 +216,10 @@ Payload prefab carries барель/emitter mesh as wrapper + child mesh (e.g. `
 - Create `<Name>.asset` SO + add у `CoreDefinitionDatabase`
 - Run `Tools → Weapon Builder → Create Module Prefabs` → primitive prefab + wired refs
 - Replace primitive content artist drop-in (no code/SO touch)
-- Detailed workflow: [weapon-builder/README.md](./weapon-builder/README.md#workflow-додавання-нового-модуля-tier-3-content)
+- Core-extension workflow: [weapon-builder/README.md](./weapon-builder/README.md)
 
-**Known follow-ups** (logged у `weapon-builder/plan/status.md`):
-- Muzzle alignment for symmetric meshes (currently MuzzlePoint on delivery, approximate)
-- Reload/Equip/Unequip procedural motion (Tier 9 polish)
-- Mecanim controller stale clip cleanup (Tier 9 housekeeping)
+Release polish for muzzle/socket alignment and stale Mecanim cleanup is tracked in
+[`tasks.md`](./tasks.md). Procedural reload/equip/unequip motion is already shipped.
 
 ---
 
@@ -251,6 +249,6 @@ Key files: `Systems/AimingSystem.cs`, `Systems/ShootingSystem.cs`.
 
 ## Related docs
 
-- [**weapon-builder/README.md**](./weapon-builder/README.md) — Weapon Builder feature: composition, UI, content, plan
+- [**weapon-builder/README.md**](./weapon-builder/README.md) — Weapon Builder composition, UI and core-extension contract
 - [`crosshair.md`](./crosshair.md) — Crosshair rendering, recoil visuals, hit markers
 - [`armor-research.md`](./armor-research.md) / `battle-design-status.md` — Armor penetration pipeline

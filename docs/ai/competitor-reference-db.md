@@ -11,7 +11,7 @@ exists** (so we lean on well-documented games when we need real, citable detail)
 "Knowledge ★" = how much real info we can extract (wiki / GDC talks / our docs / big community). Prefer ★★★ when you need depth.
 
 Related deep-dives we already have: [`armor-research.md`](armor-research.md) (15+ games on armor/pen/bleed),
-[`level-design-research.md`](level-design-research.md) (Tarkov/Hunt/DaD/top-down LD), [`gunplay/`](gunplay/) (combat polish shipped state).
+[`gunplay/`](gunplay/) contains the current combat-feel reference.
 
 ---
 

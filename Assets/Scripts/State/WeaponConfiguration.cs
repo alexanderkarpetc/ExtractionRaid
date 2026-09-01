@@ -16,7 +16,7 @@ namespace State
     /// External code should access it through the <see cref="Exotic"/> property,
     /// which returns a C# nullable value type.
     ///
-    /// See docs/ai/weapon-builder/architecture.md §1, §D4.
+    /// See docs/ai/weapon-builder/README.md
     /// </summary>
     [Serializable]
     public struct WeaponConfiguration

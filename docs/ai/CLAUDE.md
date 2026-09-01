@@ -110,14 +110,16 @@ Project docs live в `docs/ai/`. Update the relevant doc when changing the syste
 
 **This file is canonical.** The repo-root [`AGENTS.md`](../../AGENTS.md) is a thin pointer that directs `AGENTS.md`-reading agents (e.g. Codex) to read this file and follow §9. It carries only a few always-on rules as a safety net + does not duplicate §9, so it needs no upkeep when §9 changes.
 
-**📍 Current direction / release plan (read early):**
-- [`release-scope.md`](./release-scope.md) — full feature-map + gap analysis + 🔒 locked release decisions (what's shipped vs what's left).
-- [`v1.0-roadmap.md`](./v1.0-roadmap.md) — the execution plan to v1.0 (milestones **M1–M4**, mirrored in the Task list). **This is the canonical "what do we build next" doc.**
+**📍 Current direction / work tracking (read early):**
+- [`release-scope.md`](./release-scope.md) — fixed v1.0 product boundary; no task status.
+- [`tasks.md`](./tasks.md) — **the only task tracker**: current focus, backlog, completion and ownership.
+- [`handoff.md`](./handoff.md) — short operational context for the next session; no duplicated task list.
 
 ## 9) Task routing (read only what is relevant)
 
 Read extra docs depending on the task:
-- **Release scope / current priorities / what's left to v1.0** -> `docs/ai/release-scope.md` + `docs/ai/v1.0-roadmap.md`
+- **Release scope** -> `docs/ai/release-scope.md`
+- **Current priorities / task status / what's left** -> `docs/ai/tasks.md`
 - Architecture changes / new systems -> `docs/ai/architecture.md`
 - Spawn/despawn, entity binding, callbacks, presenter wiring -> `docs/ai/entity-lifecycle.md`
 - Tests, feature implementation flow, launch flow -> `docs/ai/testing-and-workflow.md`

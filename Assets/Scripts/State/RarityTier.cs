@@ -4,7 +4,7 @@ namespace State
     /// Rarity tier for Payload and Delivery core modules.
     /// Explicit int values are required — they are used as indices into
     /// serialized stats tables (CommonPayloadStats[], DeliveryStats[]).
-    /// See docs/ai/weapon-builder/architecture.md §6.
+    /// See docs/ai/weapon-builder/README.md.
     /// </summary>
     public enum RarityTier
     {

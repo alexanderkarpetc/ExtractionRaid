@@ -16,7 +16,7 @@ namespace Tests.EditMode
     /// ChargeTime elapses. Verifies Variant B behaviour: every shot from a Laser
     /// payload goes through Charging regardless of Delivery pattern.
     ///
-    /// See docs/ai/weapon-builder/plan/tasks.md T-2.13.
+    /// See docs/ai/tasks.md
     /// </summary>
     [TestFixture]
     public class WeaponChargeFlowEndToEndTests

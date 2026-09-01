@@ -7,8 +7,8 @@ namespace State
     /// a distinctive twist on top of a Payload + Delivery composition.
     /// No rarity (hard rule from design.md §3).
     ///
-    /// This is a minimal shell for Tier 0 — the full stat-modifier and behaviour-hook
-    /// shape is defined in Tier 5. See docs/ai/weapon-builder/plan/roadmap.md.
+    /// This is a minimal shell; the full stat-modifier and behaviour-hook work is tracked
+    /// as M2.2 in docs/ai/tasks.md.
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewExoticMod",

@@ -17,7 +17,7 @@ namespace Systems
     /// Per D7 (ghost-weapon): assembly failure leaves the inventory item untouched,
     /// empties the hotbar slot, and emits <see cref="IRaidEvents.WeaponAssemblyFailed"/>.
     ///
-    /// See docs/ai/weapon-builder/architecture.md §7, §D7.
+    /// See docs/ai/weapon-builder/README.md.
     /// </summary>
     public static class WeaponSyncSystem
     {

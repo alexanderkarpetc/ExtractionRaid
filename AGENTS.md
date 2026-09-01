@@ -4,7 +4,8 @@
 it before any non-trivial work, and follow it.** It is tool-agnostic; ignore any assistant-specific
 framing. Its **§9 "task routing"** table tells you exactly which doc under `docs/ai/` to open for the
 area you're touching — open those **on demand**, don't load everything. `docs/ai/handoff.md` has the
-current state; `docs/ai/release-scope.md` + `docs/ai/v1.0-roadmap.md` have the plan.
+current state; `docs/ai/release-scope.md` defines release scope and `docs/ai/tasks.md` is the only
+task tracker.
 
 > Note for `AGENTS.md`-loading agents (Codex): only this file is auto-loaded into your context —
 > **linked files are not.** So actually open `docs/ai/CLAUDE.md` (and the per-task docs it routes you

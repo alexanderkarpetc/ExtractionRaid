@@ -107,7 +107,7 @@ namespace Systems
             // differ only in Stats (FireInterval, ProjectilesPerShot, SpreadAngle).
             // Rotary / Swarm — dedicated behaviours with their own state machine phases,
             // arriving in Tier 3.
-            // See docs/ai/weapon-builder/architecture.md §2.
+            // See docs/ai/weapon-builder/README.md
             var pattern = weapon.DeliveryDefinition != null
                 ? weapon.DeliveryDefinition.Pattern
                 : FiringPattern.Auto; // legacy/bot-path fallback — Stats drive behaviour

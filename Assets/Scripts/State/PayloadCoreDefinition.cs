@@ -10,7 +10,7 @@ namespace State
     /// Payload-specific stats (e.g. ChargeTime for Laser, ExplosionRadius for Rocket)
     /// live on concrete subclasses alongside their own per-rarity tables.
     ///
-    /// See docs/ai/weapon-builder/architecture.md §D2, §D3.
+    /// See docs/ai/weapon-builder/README.md
     /// </summary>
     public abstract class PayloadCoreDefinition : ScriptableObject
     {
@@ -28,7 +28,7 @@ namespace State
                  "у character's right hand). Instantiated як weapon root у CharacterBody.WeaponPivot. " +
                  "Must contain WeaponView component, DeliverySocket transform, RightHandGrip transform. " +
                  "Delivery (barrel) attaches inside DeliverySocket runtime. " +
-                 "See docs/ai/weapon-builder/plan/roadmap.md Tier 8.x.")]
+                 "See docs/ai/tasks.md M2.4.")]
         [SerializeField] GameObject _basePrefab;
 
         public string Id          => _id;
