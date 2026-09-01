@@ -42,6 +42,10 @@ namespace Progression
             new() { Size = NodeSize.Minor, Ring = r, Offset = o, StatLabel = label, Magnitude = mag, Unit = unit };
         static ProgressionNodeDef Nt(int r, float o, string name, string label, float mag, string unit) =>
             new() { Size = NodeSize.Notable, Ring = r, Offset = o, DisplayName = name, StatLabel = label, Magnitude = mag, Unit = unit };
+        static ProgressionNodeDef MnE(int r, float o, ProgressionEffectType effect, string label, float mag, string unit) =>
+            new() { Size = NodeSize.Minor, Ring = r, Offset = o, Effect = effect, StatLabel = label, Magnitude = mag, Unit = unit };
+        static ProgressionNodeDef NtE(int r, float o, string name, ProgressionEffectType effect, string label, float mag, string unit) =>
+            new() { Size = NodeSize.Notable, Ring = r, Offset = o, DisplayName = name, Effect = effect, StatLabel = label, Magnitude = mag, Unit = unit };
         static ProgressionNodeDef NtSp(int r, float o, string name, string desc) =>
             new() { Size = NodeSize.Notable, Ring = r, Offset = o, DisplayName = name, Description = desc };
         static ProgressionNodeDef Ky(int r, float o, string name, string desc) =>
@@ -145,32 +149,32 @@ namespace Progression
             Branches = new List<ProgressionBranchDef>
             {
                 Branch("Lethality",
-                    Mn(1, 0,   "Weapon Damage", 6, "%"),
-                    Mn(2, 0,   "Penetration", 8, "%"),
-                    Mn(3, -15, "Armor Damage", 15, "%"),
-                    Nt(3, 15,  "Executioner", "Headshot Damage", 45, "%"),
-                    Mn(4, 15,  "Weapon Damage", 6, "%"),
+                    MnE(1, 0,   ProgressionEffectType.WeaponDamage, "Weapon Damage", 6, "%"),
+                    MnE(2, 0,   ProgressionEffectType.Penetration, "Penetration", 8, "%"),
+                    MnE(3, -15, ProgressionEffectType.ArmorDamage, "Armor Damage", 15, "%"),
+                    NtE(3, 15,  "Executioner", ProgressionEffectType.HeadshotDamage, "Headshot Damage", 45, "%"),
+                    MnE(4, 15,  ProgressionEffectType.WeaponDamage, "Weapon Damage", 6, "%"),
                     Ky(5, 0,   "Apex Predator", "+30% damage to Bosses and PMCs, and they drop an extra Rare+ item.")),
                 Branch("Handling",
-                    Mn(1, 0,   "Recoil", -15, "%"),
-                    Mn(2, 0,   "Recoil Recovery", 25, "%"),
-                    Mn(3, -15, "Reload Time", -15, "%"),
-                    Nt(3, 15,  "Steady Hands", "Aim Sway", -30, "%"),
-                    Mn(4, -15, "Equip Time", -20, "%"),
-                    Nt(5, 0,   "Cold Barrel", "Heat Buildup", -35, "%")),
+                    MnE(1, 0,   ProgressionEffectType.Recoil, "Recoil", -15, "%"),
+                    MnE(2, 0,   ProgressionEffectType.RecoilRecovery, "Recoil Recovery", 25, "%"),
+                    MnE(3, -15, ProgressionEffectType.ReloadTime, "Reload Time", -15, "%"),
+                    NtE(3, 15,  "Steady Hands", ProgressionEffectType.AimSway, "Aim Sway", -30, "%"),
+                    MnE(4, -15, ProgressionEffectType.EquipTime, "Equip Time", -20, "%"),
+                    NtE(5, 0,   "Cold Barrel", ProgressionEffectType.HeatBuildup, "Heat Buildup", -35, "%")),
                 Branch("Bloodlust",
-                    Mn(1, 0,   "Max HP", 8, ""),
-                    Mn(2, 0,   "Heal per Kill", 5, " HP"),
-                    Mn(3, -15, "Bleed Applied", 25, "%"),
-                    Nt(3, 15,  "Adrenaline", "Stamina per Kill", 20, "%"),
-                    Mn(4, 15,  "Max HP", 10, ""),
+                    MnE(1, 0,   ProgressionEffectType.MaxHp, "Max HP", 8, ""),
+                    MnE(2, 0,   ProgressionEffectType.HealPerKill, "Heal per Kill", 5, " HP"),
+                    MnE(3, -15, ProgressionEffectType.BleedApplied, "Bleed Applied", 25, "%"),
+                    NtE(3, 15,  "Adrenaline", ProgressionEffectType.StaminaPerKill, "Stamina per Kill", 20, "%"),
+                    MnE(4, 15,  ProgressionEffectType.MaxHp, "Max HP", 10, ""),
                     Ky(5, 0,   "Berserk", "Below 50% HP: +20% fire rate and hits heal you for a fraction of the damage dealt.")),
                 Branch("The Hunt",
-                    Mn(1, 0,   "Boss Spawn Chance", 20, "%"),
-                    Mn(2, 0,   "Boss Kill Drops", 1, ""),
-                    Mn(3, -15, "Credits from Loot", 10, "%"),
+                    MnE(1, 0,   ProgressionEffectType.BossSpawnChance, "Boss Spawn Chance", 20, "%"),
+                    MnE(2, 0,   ProgressionEffectType.BossKillDrops, "Boss Kill Drops", 1, ""),
+                    MnE(3, -15, ProgressionEffectType.CreditsFromLoot, "Credits from Loot", 10, "%"),
                     NtSp(3, 15, "Tracker", "Boss and elite positions are revealed after your first kill of the raid."),
-                    Mn(4, 15,  "Boss Spawn Chance", 15, "%"),
+                    MnE(4, 15,  ProgressionEffectType.BossSpawnChance, "Boss Spawn Chance", 15, "%"),
                     Ky(5, 0,   "Big Game", "+35% chance a Boss or a rare high-value spawn appears on the map this raid.")),
             },
         };

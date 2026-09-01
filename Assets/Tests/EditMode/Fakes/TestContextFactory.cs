@@ -29,6 +29,7 @@ namespace Tests.EditMode.Fakes
             LaserConfig? laserConfig = null,
             BarrelHeatConfig? barrelHeatConfig = null,
             CheatsConfig? cheatsConfig = null,
+            PlayerProgressionConfig? playerProgressionConfig = null,
             float deltaTime = 1f / 60f)
         {
             return new RaidContext(
@@ -47,7 +48,8 @@ namespace Tests.EditMode.Fakes
                 botEngagementConfig: botEngagementConfig,
                 laserConfig: laserConfig,
                 barrelHeatConfig: barrelHeatConfig,
-                cheatsConfig: cheatsConfig);
+                cheatsConfig: cheatsConfig,
+                playerProgressionConfig: playerProgressionConfig);
         }
     }
 }

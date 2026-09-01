@@ -3,6 +3,7 @@ using Adapters;
 using ApplicationCore;
 using Constants;
 using Dev;
+using Progression;
 using Quests;
 using Systems;
 using Systems.Bot;
@@ -63,7 +64,11 @@ namespace Session
             RaidState.RaidDurationSeconds = ResolveRaidDuration(LevelState.LevelId);
 
             var spawnPos = selectedSpawnPoint != null ? selectedSpawnPoint.transform.position : Vector3.zero;
-            PlayerSpawnSystem.SpawnPlayer(RaidState, spawnPos, _eventBuffer, LevelState.LevelId);
+            var progression = ProgressionSystem.ApplyAllocatedEffects(
+                ProgressionTreeConfig.Instance, App.Instance.Player.Progression);
+            float playerMaxHp = BotConstants.PlayerMaxHp + progression.MaxHpBonus;
+            PlayerSpawnSystem.SpawnPlayer(
+                RaidState, spawnPos, _eventBuffer, LevelState.LevelId, playerMaxHp);
             SpawnFromScenePoints();
             SpawnActiveQuestItems();
             // SpawnTestGroundItems();
@@ -566,6 +571,15 @@ namespace Session
         {
             if (!RaidState.IsRunning) return;
 
+            var progression = ProgressionSystem.ApplyAllocatedEffects(
+                ProgressionTreeConfig.Instance, App.Instance.Player.Progression);
+
+            var progressionPlayer = RaidState.PlayerEntity;
+            if (progressionPlayer != null
+                && RaidState.HealthMap.TryGetValue(progressionPlayer.Id, out var playerHealth))
+                ProgressionSystem.SyncMaxHp(
+                    playerHealth, BotConstants.PlayerMaxHp + progression.MaxHpBonus);
+
             var context = new RaidContext(
                 deltaTime: _timeAdapter.DeltaTime,
                 events: _eventBuffer,
@@ -687,6 +701,19 @@ namespace Session
                     RegenDelay              = DevCheats.Config.Stamina.RegenDelay,
                     SprintSpeedMultiplier   = DevCheats.Config.Stamina.SprintSpeedMultiplier,
                     ExhaustionRecoveryRatio = DevCheats.Config.Stamina.ExhaustionRecoveryRatio,
+                },
+                playerProgressionConfig: new PlayerProgressionConfig
+                {
+                    WeaponDamageMultiplier = progression.WeaponDamageMultiplier,
+                    PenetrationMultiplier = progression.PenetrationMultiplier,
+                    ArmorDamageMultiplier = progression.ArmorDamageMultiplier,
+                    HeadshotDamageMultiplier = progression.HeadshotDamageMultiplier,
+                    RecoilMultiplier = progression.RecoilMultiplier,
+                    RecoilRecoveryMultiplier = progression.RecoilRecoveryMultiplier,
+                    ReloadTimeMultiplier = progression.ReloadTimeMultiplier,
+                    EquipTimeMultiplier = progression.EquipTimeMultiplier,
+                    HeatBuildupMultiplier = progression.HeatBuildupMultiplier,
+                    BleedAppliedMultiplier = progression.BleedAppliedMultiplier,
                 }
             );
 

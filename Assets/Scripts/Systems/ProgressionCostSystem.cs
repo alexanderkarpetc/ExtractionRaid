@@ -56,7 +56,8 @@ namespace Systems
         {
             if (cfg == null || player == null) return false;
             if (!ProgressionSystem.CanAllocate(cfg, player.Progression, nodeId)) return false;
-            return cfg.TryFind(nodeId, out _, out _, out var node) && CanPay(player, node);
+            if (!cfg.TryFind(nodeId, out _, out _, out var node)) return false;
+            return player.Progression.DevUnlockPoints > 0 || CanPay(player, node);
         }
 
         /// <summary>
@@ -68,7 +69,9 @@ namespace Systems
             if (!CanUnlock(cfg, player, nodeId)) return false;
             cfg.TryFind(nodeId, out _, out _, out var node);
 
-            if (node.Cost != null)
+            bool useDevPoint = player.Progression.DevUnlockPoints > 0;
+
+            if (!useDevPoint && node.Cost != null)
                 foreach (var entry in node.Cost)
                     Consume(player, entry);
 
@@ -77,6 +80,9 @@ namespace Systems
                 Debug.LogError($"[Progression] Consumed the cost of '{nodeId}' but allocation failed.");
                 return false;
             }
+
+            if (useDevPoint)
+                player.Progression.DevUnlockPoints--;
             return true;
         }
 

@@ -4,6 +4,7 @@ using State;
 using Systems;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using View.SpawnPoints;
 using View.UI.Minimap;
 
@@ -141,8 +142,8 @@ namespace View
             _window.SetCapture(_envTexture, new Vector2(centerWorld.x, centerWorld.z), size);
             RegisterWellKnownMarkers(session);
 
-            // Pipeline-agnostic render: enable a real camera in the scene for exactly
-            // one frame. Works in BIRP and URP without poking pipeline-specific APIs.
+            // Enable a real camera in the scene for exactly one frame. URP render
+            // callbacks temporarily suppress Environment Fog for this camera only.
             StartCoroutine(CaptureOnce(centerWorld, size, camHeight, layers, clear));
         }
 
@@ -163,14 +164,51 @@ namespace View
             cam.nearClipPlane = 0.1f;
             cam.farClipPlane = camHeight * 2f + 100f;
             cam.targetTexture = _envTexture;
-            cam.enabled = true;
 
-            // Wait until the next frame's render has executed. WaitForEndOfFrame
-            // resumes after all cameras (incl. ours) have drawn into their targets.
-            yield return new WaitForEndOfFrame();
+            bool fogOverrideActive = false;
+            bool fogBeforeCapture = false;
 
-            cam.targetTexture = null;
-            Object.Destroy(camGo);
+            void RestoreEnvironmentFog()
+            {
+                if (!fogOverrideActive) return;
+                RenderSettings.fog = fogBeforeCapture;
+                fogOverrideActive = false;
+            }
+
+            void OnBeginCameraRendering(ScriptableRenderContext _, Camera renderingCamera)
+            {
+                if (renderingCamera != cam) return;
+                fogBeforeCapture = RenderSettings.fog;
+                fogOverrideActive = true;
+                RenderSettings.fog = false;
+            }
+
+            void OnEndCameraRendering(ScriptableRenderContext _, Camera renderingCamera)
+            {
+                if (renderingCamera == cam)
+                    RestoreEnvironmentFog();
+            }
+
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+
+            try
+            {
+                cam.enabled = true;
+
+                // Wait until the next frame's render has executed. Environment fog is
+                // disabled only between this camera's begin/end render callbacks.
+                yield return new WaitForEndOfFrame();
+            }
+            finally
+            {
+                RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+                RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+                RestoreEnvironmentFog();
+
+                cam.targetTexture = null;
+                Object.Destroy(camGo);
+            }
         }
 
         // Renderers with any-axis bounds beyond this are treated as skyboxes / infinite

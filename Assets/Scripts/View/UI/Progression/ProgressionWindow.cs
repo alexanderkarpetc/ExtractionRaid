@@ -279,8 +279,8 @@ namespace View.UI.Progression
         };
 
         // ── allocation ─────────────────────────────────────────────
-        // Unlocking spends the point AND the node's items — routed through ProgressionCostSystem
-        // so the material half is never bypassed by the view.
+        // Unlocking is routed through ProgressionCostSystem: normal play spends materials;
+        // temporary Dev Cheats points can bypass that cost without putting rules in the view.
         void OnNodeClicked(string id)
         {
             if (_cfg == null) return;
@@ -359,7 +359,13 @@ namespace View.UI.Progression
             _edges?.MarkDirtyRepaint();
 
             int unlocked = state != null ? Prog.ProgressionSystem.AllocatedCount(_cfg, state) : 0;
-            if (_unlockedLabel != null) _unlockedLabel.text = $"{unlocked} / {_cfg.NodeCount}";
+            if (_unlockedLabel != null)
+            {
+                int devPoints = state?.DevUnlockPoints ?? 0;
+                _unlockedLabel.text = devPoints > 0
+                    ? $"{unlocked} / {_cfg.NodeCount}  ·  DEV POINTS {devPoints}"
+                    : $"{unlocked} / {_cfg.NodeCount}";
+            }
         }
 
         // ── edges (Painter2D) ───────────────────────────────────────
@@ -456,10 +462,13 @@ namespace View.UI.Progression
 
             var player = App.Instance?.Player;
             int missing = ProgressionCostSystem.MissingLineCount(player, node);
+            bool hasDevPoint = player?.Progression?.DevUnlockPoints > 0;
             if (_tipCostStatus != null)
             {
-                _tipCostStatus.text = missing == 0 ? "READY" : $"MISSING {missing} OF {cost.Count}";
-                _tipCostStatus.style.color = missing == 0 ? CostOk : CostShort;
+                _tipCostStatus.text = hasDevPoint
+                    ? "DEV POINT READY"
+                    : missing == 0 ? "READY" : $"MISSING {missing} OF {cost.Count}";
+                _tipCostStatus.style.color = hasDevPoint || missing == 0 ? CostOk : CostShort;
             }
 
             foreach (var entry in cost)

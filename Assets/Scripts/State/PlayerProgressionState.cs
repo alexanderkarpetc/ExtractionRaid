@@ -14,5 +14,11 @@ namespace State
     public class PlayerProgressionState
     {
         public List<string> AllocatedNodeIds = new();
+
+        /// <summary>
+        /// Play-mode testing currency granted from Dev Cheats. One point bypasses the material
+        /// cost of one connected node. Intentionally omitted from SaveData.
+        /// </summary>
+        public int DevUnlockPoints;
     }
 }

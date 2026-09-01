@@ -718,5 +718,38 @@ namespace Tests.EditMode
             }
             finally { Object.DestroyImmediate(scatterSO); }
         }
+
+        [Test]
+        public void Tick_PlayerProgression_MultipliesProjectileCombatStats()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.FacingDirection = Vector3.forward;
+            var weapon = state.PlayerEntity.EquippedWeapon;
+            weapon.AmmoType = null;
+            weapon.Stats.Damage = 10f;
+            weapon.Stats.BasePenetration = 20f;
+            weapon.Stats.BaseArmorDamage = 10f;
+            weapon.Stats.HeadshotDamageMultiplier = 2f;
+            weapon.Stats.BaseBleedChance = 0.2f;
+
+            var progression = PlayerProgressionConfig.Default;
+            progression.WeaponDamageMultiplier = 1.12f;
+            progression.PenetrationMultiplier = 1.08f;
+            progression.ArmorDamageMultiplier = 1.15f;
+            progression.HeadshotDamageMultiplier = 1.45f;
+            progression.BleedAppliedMultiplier = 1.25f;
+            var input = new FakeInputAdapter { AttackPressed = true };
+            var context = TestContextFactory.Create(
+                input, playerProgressionConfig: progression);
+
+            ShootingSystem.Tick(state, in context);
+
+            var projectile = state.Projectiles.Single();
+            Assert.AreEqual(11.2f, projectile.Damage, 0.001f);
+            Assert.AreEqual(21.6f, projectile.Penetration, 0.001f);
+            Assert.AreEqual(11.5f, projectile.ArmorDamage, 0.001f);
+            Assert.AreEqual(2.9f, projectile.HeadshotDamageMultiplier, 0.001f);
+            Assert.AreEqual(0.25f, projectile.BleedChance, 0.001f);
+        }
     }
 }

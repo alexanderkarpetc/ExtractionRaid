@@ -1,4 +1,5 @@
 using Dev;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,11 +48,13 @@ namespace View
         CanvasGroup _canvasGroup;
         RectTransform _canvasRect;
         RectTransform _fillRect;
+        TMP_Text _hpText;
 
         float _fill = 1f;
         float _trailFill = 1f;
         float _flashTimer = 1f; // 1 = flash finished
         float _trailDelayClock;
+        float _currentHp;
         float _maxHp;
 
         // Shake state
@@ -117,6 +120,7 @@ namespace View
             bar._canvasGroup = canvasGroup;
             bar._canvasRect = rt;
             bar._fillRect = fillRect;
+            bar._currentHp = maxHp;
             bar._maxHp = maxHp;
 
             // Initialize shader with full-HP defaults so there's no visual pop on first damage
@@ -127,8 +131,42 @@ namespace View
 
             // Armor bar — thin stripe above health bar (hidden by default)
             bar.CreateArmorBar(go.transform, w, h);
+            bar.CreateHpText(go.transform, maxHp, h);
 
             return bar;
+        }
+
+        void CreateHpText(Transform parent, float maxHp, float barHeight)
+        {
+            var textGo = new GameObject("HpText");
+            textGo.transform.SetParent(parent, false);
+
+            var textRect = textGo.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            var hpText = textGo.AddComponent<TextMeshProUGUI>();
+            hpText.alignment = TextAlignmentOptions.Center;
+            hpText.color = Color.black;
+            hpText.fontStyle = FontStyles.Bold;
+            hpText.fontSize = Mathf.Max(0.05f, barHeight * 0.85f);
+            hpText.overflowMode = TextOverflowModes.Overflow;
+            hpText.raycastTarget = false;
+            hpText.outlineColor = new Color(1f, 1f, 1f, 0.75f);
+            hpText.outlineWidth = 0.12f;
+            hpText.text = FormatHpText(maxHp, maxHp);
+
+            _hpText = hpText;
+            textGo.SetActive(DevCheats.HBarShowNumericHp);
+        }
+
+        public static string FormatHpText(float current, float max)
+        {
+            int maxHp = Mathf.Max(0, Mathf.CeilToInt(max));
+            int currentHp = Mathf.Clamp(Mathf.CeilToInt(current), 0, maxHp);
+            return $"{currentHp} / {maxHp}";
         }
 
         void CreateArmorBar(Transform parent, float barWidth, float barHeight)
@@ -233,7 +271,12 @@ namespace View
         public void UpdateHealth(float current, float max)
         {
             float newFill = max > 0f ? Mathf.Clamp01(current / max) : 0f;
+            bool hpTextChanged = !Mathf.Approximately(current, _currentHp)
+                                 || !Mathf.Approximately(max, _maxHp);
+            _currentHp = current;
             _maxHp = max;
+            if (hpTextChanged && _hpText != null && _hpText.gameObject.activeSelf)
+                _hpText.text = FormatHpText(current, max);
 
             // Detect damage: current fill decreased
             if (newFill < _fill - 0.001f)
@@ -299,6 +342,18 @@ namespace View
 
             transform.localPosition = new Vector3(shakeX, baseY + shakeY, 0f);
             _canvasRect.sizeDelta = new Vector2(w, h);
+
+            if (_hpText != null)
+            {
+                bool showNumericHp = DevCheats.HBarShowNumericHp;
+                if (_hpText.gameObject.activeSelf != showNumericHp)
+                {
+                    _hpText.gameObject.SetActive(showNumericHp);
+                    if (showNumericHp)
+                        _hpText.text = FormatHpText(_currentHp, _maxHp);
+                }
+                _hpText.fontSize = Mathf.Max(0.05f, h * 0.85f);
+            }
 
             float extraX = w * PaddingX / (1f - 2f * PaddingX);
             float extraY = h * PaddingY / (1f - 2f * PaddingY);
