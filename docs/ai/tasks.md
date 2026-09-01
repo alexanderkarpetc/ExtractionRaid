@@ -3,7 +3,7 @@
 > **Єдине джерело задач і статусів у репозиторії.** Інші документи описують лише поточну
 > архітектуру, правила та прийняті рішення. Нову роботу додаємо сюди, а не в feature-доки.
 >
-> Оновлено: **2026-09-01**. Статуси звірено з поточним `master`, історією Git і C#-кодом.
+> Оновлено: **2026-09-02**. Статуси звірено з поточним `master`, історією Git і C#-кодом.
 
 ## Як вести трекер
 
@@ -22,7 +22,7 @@
 | T63 | Стартова складність | ⬜ queued | S–M | Новий гравець не отримує летальний фокус кількох rifle-ботів у перші секунди; результат підтверджено плейтестом без глобального спрощення AI. Узгодити з власником bot configs. |
 | M2.1 | Завершити аудіошар | 🔄 active | L | Закрити відсутні weapon/UI/world sounds, ambience, music transitions і settings sliders; перевірити spatial mix. `GameAudioPresenter` і базова бібліотека вже працюють. |
 | M2.4 | Weapon visual polish | 🔄 active | M | Muzzle/socket alignment, ручний prefab pass, видалення stale Mecanim; реальні меші замість технічних заглушок. Procedural reload/equip/unequip уже є. |
-| M2.7 | Підключити ефекти progression | ⬜ queued | M | `ProgressionSystem.ApplyAllocatedEffects` більше не порожній; ефекти проходять через `RaidContext.*Config`; є EditMode-тести. |
+| M2.7 | Підключити ефекти progression | 🔄 active | M | Predator phase 1 вже працює: damage/penetration/armor/headshot, recoil/recovery, reload/equip, heat, Max HP і bleed проходять через player-only config та покриті EditMode-тестами. Завершення: решта Predator + Warden/Phantom/Prospector підключені без прямих progression-reads у Systems. |
 | M3.1 | Друга бойова мапа | ⬜ queued | L | Окрема сцена проходить повний loop: deploy → combat/loot → extraction; авторені spawns, loot і таймер. Поточне розширення `Test_Map` не рахується другою мапою. |
 | M3.6 | Контент бойових мап | 🔄 active | M | Узгоджені enemy roster, boss placement і loot tiers. Наповнення `Test_Map`/Rednek City триває окремим контентним потоком. |
 

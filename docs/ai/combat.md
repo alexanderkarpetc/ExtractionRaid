@@ -30,6 +30,9 @@ code/config and are intentionally not mirrored here.
 ## Player feedback
 
 - Every hit communicates the result through the crosshair, damage number, VFX/SFX and armor HUD.
+- `WorldHealthBar` reads authoritative current/max health. The dev-only
+  `Tools & Cheats → Show numeric HP on health bars` toggle overlays `current / max` on world bars and
+  is off by default.
 - Blood/spark intensity follows flesh/absorption ratios.
 - Ricochet has a distinct marker, sound and physical deflection.
 - Armor state uses readable healthy/damaged/critical presentation rather than exposing raw formulas.
