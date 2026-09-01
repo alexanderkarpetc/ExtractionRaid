@@ -10,6 +10,10 @@ namespace Dev
         public float HBarOffsetY = 2.4f;
         public float HBarBorderSize = 0.04f;
 
+        [Header("Numeric HP")]
+        [HideInInspector]
+        public bool HBarShowNumericHp;
+
         // Animation
         public float HBarTrailDelay = 0.35f;
         public float HBarTrailSpeed = 1.2f;

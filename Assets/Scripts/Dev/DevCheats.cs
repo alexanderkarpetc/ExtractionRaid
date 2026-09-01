@@ -518,6 +518,7 @@ namespace Dev
         public static float HBarHeight { get => Config.HealthBar.HBarHeight; set => Config.HealthBar.HBarHeight = value; }
         public static float HBarOffsetY { get => Config.HealthBar.HBarOffsetY; set => Config.HealthBar.HBarOffsetY = value; }
         public static float HBarBorderSize { get => Config.HealthBar.HBarBorderSize; set => Config.HealthBar.HBarBorderSize = value; }
+        public static bool HBarShowNumericHp { get => Config.HealthBar.HBarShowNumericHp; set => Config.HealthBar.HBarShowNumericHp = value; }
         public static float HBarTrailDelay { get => Config.HealthBar.HBarTrailDelay; set => Config.HealthBar.HBarTrailDelay = value; }
         public static float HBarTrailSpeed { get => Config.HealthBar.HBarTrailSpeed; set => Config.HealthBar.HBarTrailSpeed = value; }
         public static float HBarFlashDuration { get => Config.HealthBar.HBarFlashDuration; set => Config.HealthBar.HBarFlashDuration = value; }

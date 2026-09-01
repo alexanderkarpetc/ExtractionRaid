@@ -98,7 +98,9 @@ absent from `SaveData`, so stopping Play Mode/reloading the profile clears it.
 - **Predator phase 1 is wired:** weapon damage, penetration, armour damage, headshot damage, recoil,
   recoil recovery, reload time, equip time, barrel-heat buildup, Max HP and bleed application.
   `RaidSession` copies the player-only multipliers into `PlayerProgressionConfig` on `RaidContext`, so
-  they cannot accidentally buff bots that share `ShootingConfig`.
+  they cannot accidentally buff bots that share `ShootingConfig`. Max HP is synchronized into the
+  live player `HealthState` while preserving the current HP ratio; `PlayerPresenter` initializes and
+  updates the world bar from that authoritative state rather than the base constant.
 - **Still data-only:** Aim Sway, Heal/Stamina per Kill, Predator boss/credit effects and all four
   Predator special nodes (`Apex Predator`, `Berserk`, `Tracker`, `Big Game`). Other disciplines are not
   wired yet. Continue routing effects through `RaidContext.*Config`, never read progression state from

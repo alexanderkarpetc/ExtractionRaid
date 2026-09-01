@@ -183,6 +183,25 @@ namespace Progression
             return result;
         }
 
+        /// <summary>
+        /// Applies a progression-driven maximum to existing health while preserving its
+        /// current ratio. A dead entity therefore remains dead.
+        /// </summary>
+        public static bool SyncMaxHp(HealthState health, float targetMaxHp)
+        {
+            if (health == null) return false;
+
+            targetMaxHp = Mathf.Max(1f, targetMaxHp);
+            if (Mathf.Approximately(health.MaxHp, targetMaxHp)) return false;
+
+            float healthRatio = health.MaxHp > 0f
+                ? Mathf.Clamp01(health.CurrentHp / health.MaxHp)
+                : 0f;
+            health.MaxHp = targetMaxHp;
+            health.CurrentHp = healthRatio * targetMaxHp;
+            return true;
+        }
+
         static ProgressionEffectType LegacyPredatorEffect(string id, string statLabel)
         {
             var byId = id switch

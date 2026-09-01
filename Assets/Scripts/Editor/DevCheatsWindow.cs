@@ -161,6 +161,7 @@ namespace Editor
                 DrawSection("⏱ Raid clock", _config.Raid);
                 DrawRaidSection();
                 DrawProgressionDebugSection();
+                DrawNumericHealthBarToggle();
                 DrawQuestsSection();
             });
 
@@ -395,6 +396,24 @@ namespace Editor
                 "One point unlocks one connected node without consuming its materials. " +
                 "Dev points are not saved.", MessageType.None);
             EditorGUI.indentLevel--;
+        }
+
+        void DrawNumericHealthBarToggle()
+        {
+            var healthBar = _config.HealthBar;
+            if (healthBar == null) return;
+
+            EditorGUILayout.Space(4);
+            EditorGUI.BeginChangeCheck();
+            bool showNumericHp = EditorGUILayout.ToggleLeft(
+                "❤ Show numeric HP on health bars",
+                healthBar.HBarShowNumericHp,
+                EditorStyles.boldLabel);
+            if (!EditorGUI.EndChangeCheck()) return;
+
+            Undo.RecordObject(healthBar, "Toggle numeric HP on health bars");
+            healthBar.HBarShowNumericHp = showNumericHp;
+            EditorUtility.SetDirty(healthBar);
         }
 
         void DrawRaidSection()

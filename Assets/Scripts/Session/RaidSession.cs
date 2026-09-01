@@ -574,6 +574,12 @@ namespace Session
             var progression = ProgressionSystem.ApplyAllocatedEffects(
                 ProgressionTreeConfig.Instance, App.Instance.Player.Progression);
 
+            var progressionPlayer = RaidState.PlayerEntity;
+            if (progressionPlayer != null
+                && RaidState.HealthMap.TryGetValue(progressionPlayer.Id, out var playerHealth))
+                ProgressionSystem.SyncMaxHp(
+                    playerHealth, BotConstants.PlayerMaxHp + progression.MaxHpBonus);
+
             var context = new RaidContext(
                 deltaTime: _timeAdapter.DeltaTime,
                 events: _eventBuffer,

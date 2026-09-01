@@ -23,6 +23,7 @@ Replace debug-only armor/helmet overlays (which currently render on top of UI + 
 | # | Decision | Notes |
 |---|---|---|
 | 1 | **No separate HP bar on HUD** | Worldspace `WorldHealthBar` (existing, over player head) carries HP. No duplication in TL corner. |
+| 1a | **Numeric HP is dev-only** | `Dev Cheats → Tools & Cheats → Show numeric HP on health bars` overlays `current / max` on every worldspace HP bar; off by default. |
 | 2 | ~~**Armor: procedural paper-doll**~~ — ✂️ CUT 2026-05-21 after Stage 2a visual test. Did not read well at HUD size in restrained-tactical tone. Armor stays on existing `WorldHealthBar` armor stripe (by-analogy-with-HP), shipped earlier. |
 | 3 | **Status effects HUD row** — horizontal, right of paper-doll | World of Warcraft debuff-row reference. Hover → tooltip. Procedural SDF icons. |
 | 3b | **Status effects worldspace** — universal pattern (player + all bots) | Mini-icons row UNDER the existing `WorldHealthBar`. No tooltips (peripheral signal only). Lives on the same MonoBehaviour as the HP bar so all chars get it. |

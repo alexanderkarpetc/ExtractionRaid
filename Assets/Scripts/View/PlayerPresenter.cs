@@ -115,6 +115,9 @@ namespace View
                 _playerView.SyncFromState(session.RaidState.PlayerEntity, session.RaidState.ElapsedTime);
                 _trajectoryOverlay?.UpdateTrajectory(session.RaidState.PlayerEntity);
 
+                if (session.RaidState.HealthMap.TryGetValue(_trackedId, out var health))
+                    _playerView.OnDamaged(health.CurrentHp, health.MaxHp);
+
                 // Armor sync — bar durability + mesh attach/detach. State-driven (NOT event-
                 // driven) so that ANY mutation of HelmetSlot/BodyArmorSlot from any source
                 // (inventory drag-out → backpack/loot/stash/floor, drag-in, swap, future
@@ -174,7 +177,10 @@ namespace View
             // prefab is shared с bots, тому layer must be set per-instance).
             LayerUtils.SetLayerRecursively(go, LayerUtils.Player);
 
-            _playerView.Initialize(_trackedId, _onMuzzlePointReady, BotConstants.PlayerMaxHp);
+            float maxHp = session.RaidState.HealthMap.TryGetValue(_trackedId, out var health)
+                ? health.MaxHp
+                : BotConstants.PlayerMaxHp;
+            _playerView.Initialize(_trackedId, _onMuzzlePointReady, maxHp);
 
             var cam = Camera.main;
             if (cam != null)
