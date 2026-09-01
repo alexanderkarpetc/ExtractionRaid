@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Adapters;
 using Constants;
 using Session;
 using State;
@@ -16,8 +17,15 @@ namespace Systems
             if (!state.HealthMap.TryGetValue(player.Id, out var health)) return;
 
             var inventory = App.Instance.Player.Inventory;
-            bool wantsBandage = QuickSlotSystem.GetActiveDefinitionId(player, inventory) == "Bandage"
-                && player.QuickSlotHeld;
+            bool wantsBandage = QuickSlotRules.IsBandage(
+                    QuickSlotSystem.GetActiveDefinitionId(player, inventory)) && player.QuickSlotHeld;
+            if (player.ActiveQuickSlot == PlayerEntityState.InventoryUseQuickSlot)
+            {
+                var active = player.ActiveBandageSlot >= 0 && player.ActiveBandageSlot < inventory.Backpack.Length
+                    ? inventory.Backpack[player.ActiveBandageSlot]
+                    : null;
+                wantsBandage = player.IsUsingBandage && QuickSlotRules.IsBandage(active?.DefinitionId);
+            }
 
             if (player.IsUsingBandage)
             {
@@ -50,12 +58,38 @@ namespace Systems
 
             int slot = QuickSlotSystem.GetActiveBoundSlot(player, inventory);
             if (slot < 0) return;
-            if (inventory.Backpack[slot]?.DefinitionId != "Bandage") return;
+            TryStart(state, inventory, slot, fromInventory: false, context.Events);
+        }
+
+        public static bool TryStartFromInventory(RaidState state, InventoryState inventory, int slot,
+            IRaidEvents events)
+        {
+            return TryStart(state, inventory, slot, fromInventory: true, events);
+        }
+
+        static bool TryStart(RaidState state, InventoryState inventory, int slot, bool fromInventory,
+            IRaidEvents events)
+        {
+            var player = state?.PlayerEntity;
+            if (player == null || inventory == null || events == null) return false;
+            if (slot < 0 || slot >= inventory.Backpack.Length) return false;
+            if (!state.HealthMap.TryGetValue(player.Id, out var health) || !health.IsAlive) return false;
+            if (player.IsRolling || player.AreHandsBusy) return false;
+            if (!QuickSlotRules.IsBandage(inventory.Backpack[slot]?.DefinitionId)) return false;
+
+            bool isBleeding = StatusEffectSystem.HasEffect(state, player.Id, StatusEffectType.Bleeding);
+            if (!isBleeding && health.CurrentHp >= health.MaxHp) return false;
 
             player.IsUsingBandage = true;
             player.BandageUseStartTime = state.ElapsedTime;
             player.ActiveBandageSlot = slot;
-            context.Events.StatusEffectApplied(player.Id, "BandageUse");
+            if (fromInventory)
+            {
+                player.ActiveQuickSlot = PlayerEntityState.InventoryUseQuickSlot;
+                player.QuickSlotHeld = true;
+            }
+            events.StatusEffectApplied(player.Id, "BandageUse");
+            return true;
         }
 
         static void ApplyBandage(RaidState state, PlayerEntityState player, HealthState health,
@@ -99,6 +133,11 @@ namespace Systems
         {
             player.IsUsingBandage = false;
             player.ActiveBandageSlot = -1;
+            if (player.ActiveQuickSlot == PlayerEntityState.InventoryUseQuickSlot)
+            {
+                player.ActiveQuickSlot = -1;
+                player.QuickSlotHeld = false;
+            }
             context.Events.StatusEffectRemoved(player.Id, "BandageUse");
         }
     }

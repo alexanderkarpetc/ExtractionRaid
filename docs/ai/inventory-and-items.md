@@ -25,6 +25,10 @@ Equipping projects item data into raid runtime state. Before replacement, raid d
 back to the owned item; the newly equipped item then rebuilds runtime armor/weapon state. KIA and
 extraction apply persistence policy after this synchronization.
 
+Medicine uses one system-owned lifecycle whether started from a bound quick slot or the inventory
+`Use` action. UI only submits the backpack slot; systems validate health/status, delay, interruption
+and consumption. Resource medkits preserve their remaining charge on the item instance.
+
 ## Loot
 
 Loot generation is data-driven by `ItemBalance`/container configuration. Systems create item state;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Adapters;
 using Quests;
 using State;
+using Systems;
 
 namespace View.UI.Tooltip.Builders
 {
@@ -109,7 +110,7 @@ namespace View.UI.Tooltip.Builders
                 AppendQuestInfo(item.DefinitionId, questDatabase, sections, out description);
             }
 
-            string footer = item.DefinitionId == "Medkit" || item.DefinitionId == "Bandage"
+            string footer = QuickSlotRules.IsMedkit(item.DefinitionId) || QuickSlotRules.IsBandage(item.DefinitionId)
                 ? "Hold a bound quick-slot key to use"
                 : null;
 

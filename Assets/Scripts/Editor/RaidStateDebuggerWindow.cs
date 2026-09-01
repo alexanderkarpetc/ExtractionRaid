@@ -188,9 +188,11 @@ namespace Editor
             Field("Sprinting", p.IsSprinting);
             Field("Stamina", $"{p.Stamina:F1} / {p.MaxStamina:F0}");
             Field("Exhausted", p.IsExhausted);
-            Field("Active QuickSlot", p.ActiveQuickSlot >= 0
-                ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {App.Instance.Player.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
-                : "None");
+            Field("Active QuickSlot", p.ActiveQuickSlot == PlayerEntityState.InventoryUseQuickSlot
+                ? "Inventory Use"
+                : p.ActiveQuickSlot >= 0
+                    ? $"{p.ActiveQuickSlot + InventoryState.QuickSlotKeyOffset} (slot {App.Instance.Player.Inventory.QuickSlotBindings[p.ActiveQuickSlot]})"
+                    : "None");
             Field("QuickSlot Held", p.QuickSlotHeld);
 
             DrawHealth(p.Id, state.HealthMap);

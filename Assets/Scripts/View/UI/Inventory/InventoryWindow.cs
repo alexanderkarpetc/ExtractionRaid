@@ -923,6 +923,16 @@ namespace View.UI.Inventory
             var inv = App.Instance?.Player?.Inventory;
             if (inv == null) return;
 
+            if (!App.Instance.IsInHideout && slot.SlotRef.Type == SlotType.Backpack &&
+                (QuickSlotRules.IsMedkit(slot.CurrentItem?.DefinitionId) ||
+                 QuickSlotRules.IsBandage(slot.CurrentItem?.DefinitionId)))
+            {
+                var captured = slot;
+                opts.Add(new ContextMenuElement.Option {
+                    Label = "Use",
+                    OnClick = () => CtxUseMedicine(captured) });
+            }
+
             // Weapon attachment editing — opens the modal editor anywhere (P2.2c).
             if (slot.CurrentItem != null && slot.CurrentItem.HasWeaponConfiguration)
             {
@@ -1031,6 +1041,22 @@ namespace View.UI.Inventory
         }
 
         // ── Context actions ──────────────────────────────────
+
+        void CtxUseMedicine(InventorySlotElement slot)
+        {
+            var session = App.Instance?.RaidSession;
+            var inventory = App.Instance?.Player?.Inventory;
+            if (session?.RaidState == null || inventory == null) return;
+
+            int backpackIndex = slot.SlotRef.Index;
+            string definitionId = inventory.Backpack[backpackIndex]?.DefinitionId;
+            if (QuickSlotRules.IsMedkit(definitionId))
+                MedkitSystem.TryStartFromInventory(
+                    session.RaidState, inventory, backpackIndex, session.ConsumeEvents());
+            else if (QuickSlotRules.IsBandage(definitionId))
+                BandageSystem.TryStartFromInventory(
+                    session.RaidState, inventory, backpackIndex, session.ConsumeEvents());
+        }
 
         void CtxBindToQuickSlot(int backpackIndex, int qi)
         {

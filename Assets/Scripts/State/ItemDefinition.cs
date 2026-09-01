@@ -190,6 +190,9 @@ namespace State
                     Category = ItemCategory.Meds,
                     AllowedSlots = ItemSlotType.Backpack,
                     MaxStackSize = 1,
+                    // Uses the same drainable-resource contract as the baseline medkit.
+                    // Capacity stays equal until the dedicated balance pass decides its advantage.
+                    MaxResource = (int)Constants.MedConstants.TotalHealAmount,
                 },
 
                 // --- Crafting Materials (Common) ---

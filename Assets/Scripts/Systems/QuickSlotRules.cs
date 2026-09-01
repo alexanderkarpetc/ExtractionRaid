@@ -13,11 +13,17 @@ namespace Systems
         static readonly HashSet<string> Assignable = new()
         {
             "Medkit",
+            "Advanced_Medkit",
             "Bandage",
             "Grenade",
         };
 
         public static bool IsAssignable(string definitionId) =>
             !string.IsNullOrEmpty(definitionId) && Assignable.Contains(definitionId);
+
+        public static bool IsMedkit(string definitionId) =>
+            definitionId == "Medkit" || definitionId == "Advanced_Medkit";
+
+        public static bool IsBandage(string definitionId) => definitionId == "Bandage";
     }
 }
