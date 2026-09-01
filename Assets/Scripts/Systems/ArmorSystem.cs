@@ -33,7 +33,7 @@ namespace Systems
             if (armor == null || armor.IsBroken)
                 return 0f;
 
-            // Hard cap (battle-design-status.md §4) — guards against future additive
+            // Hard cap (docs/ai/battle-design-status.md) — guards against future additive
             // armor mod sources stacking past intended ceiling.
             float cappedPoints = Mathf.Min(ArmorConstants.ArmorPointsCap, armor.ArmorPoints);
             return cappedPoints * EffectiveDurabilityMultiplier(armor.DurabilityPercent);
@@ -122,7 +122,7 @@ namespace Systems
             armor.CurrentDurability = Mathf.Max(0f, armor.CurrentDurability - durDamage);
         }
 
-        // battle-design-status.md §11: weight = ArmorPoints + MaxDurability per piece.
+        // Weight = ArmorPoints + MaxDurability per piece.
         // Returns 1.0 (no slowdown) when no armor equipped, down to WeightSpeedFloor for god-gear.
         public static float ComputeArmorSpeedMultiplier(ArmorSlotState slots)
         {

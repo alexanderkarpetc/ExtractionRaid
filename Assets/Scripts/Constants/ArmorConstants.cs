@@ -17,7 +17,7 @@ namespace Constants
         // ArmorDmg cap (flat points per hit)
         public const float ArmorDamageCap = 30f;
 
-        // Weight → movement speed penalty (battle-design-status.md §11).
+        // Weight → movement speed penalty (docs/ai/battle-design-status.md).
         // Weight = (ArmorPoints + MaxDurability) summed across both equipped slots.
         // Speed multiplier = max(WeightSpeedFloor, 1 - totalWeight × WeightSpeedFactor).
         // Tuning at 2026-05-05:

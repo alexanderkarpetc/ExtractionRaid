@@ -86,7 +86,7 @@ namespace State
 
     /// <summary>
     /// Reference to an Exotic Mod — DefinitionId only.
-    /// NO rarity — hard rule from design.md §3: "Rarity застосовується до Payload Core і Delivery Core".
+    /// No rarity; rarity applies to Payload and Delivery cores only.
     /// </summary>
     [Serializable]
     public readonly struct ExoticModInstance : IEquatable<ExoticModInstance>

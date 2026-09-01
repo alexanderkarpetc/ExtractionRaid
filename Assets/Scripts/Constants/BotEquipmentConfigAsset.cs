@@ -17,7 +17,7 @@ namespace Constants
     ///
     /// Pools are baked to plain value arrays (<see cref="WeightedWeapon"/> /
     /// <see cref="WeightedId"/>) on <see cref="BotTypeConfig"/> — no SO refs leak into
-    /// runtime state (CLAUDE.md §3.6). The per-spawn roll happens in BotSpawnSystem.
+    /// runtime state (docs/ai/CLAUDE.md). The per-spawn roll happens in BotSpawnSystem.
     /// </summary>
     [CreateAssetMenu(fileName = "BotEquipmentConfig", menuName = "Bots/Bot Equipment Config")]
     public class BotEquipmentConfigAsset : ScriptableObject

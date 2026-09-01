@@ -1,64 +1,46 @@
-# Weapon Builder
+# Weapon Builder and Attachments
 
-Weapon Builder composes a weapon from two identity-defining cores:
+A weapon is composed from:
 
-- **Payload** — what the weapon launches (`Ballistic`, `Laser`, future `Rocket`).
-- **Delivery** — how it fires (`SingleAction`, `Auto`, `Scatter`, future `Rotary`).
+- **Payload** — what is launched;
+- **Delivery** — how it fires;
+- optional **Exotic** — behavior hook;
+- typed **Attachments** — stat/feel tuning without replacing core identity.
 
-Typed attachments tune stats but do not replace the core identity. Rarity belongs to the two cores;
-runtime weapon stats are composed and cached. Release tasks live only in [`../tasks.md`](../tasks.md).
+Rarity belongs to payload/delivery cores. Persistent configuration stores stable definition IDs,
+rarity and installed attachments; runtime assembly resolves definitions and caches final stats.
 
-## Current system
-
-- Player and bots use `WeaponConfiguration` with payload/delivery core instances.
-- `WeaponStatComposer` resolves core definitions, rarity scaling and installed attachments.
-- `WeaponAssemblySystem` creates runtime weapon state from the configuration.
-- Inventory items persist the configuration; `WeaponSyncSystem` keeps equipped state synchronized.
-- Builder UI, module loot, compare tooltips, rarity-scaled attachment slots and edit-existing flow work.
-- Modular runtime visuals attach the payload mesh to delivery-owned sockets.
-
-## Architecture
+## Pipeline
 
 ```text
 ItemState.WeaponConfiguration
-    ├── PayloadCoreInstance (definition id + rarity)
-    ├── DeliveryCoreInstance (definition id + rarity)
-    └── installed attachments
-             ↓
-WeaponStatComposer + WeaponAssemblySystem
-             ↓
-WeaponEntityState (cached stats + mutable combat state)
-             ↓
-ShootingSystem / WeaponStateMachineSystem / WeaponSyncSystem
+    → definition registry
+    → WeaponStatComposer / WeaponAssemblySystem
+    → WeaponEntityState
+    → firing, aiming and presentation
 ```
 
-Rules:
+Inventory owns the configuration. `WeaponSyncSystem` rebuilds equipped runtime state when the source
+item/version changes. Gameplay systems read cached stats; views resolve meshes and sockets.
 
-- Core definitions are ScriptableObjects in the `CoreDefinitionDatabase`.
-- State stores IDs, rarity and values, never Unity object references.
-- Systems do not load assets and do not call `App.Instance`.
-- Presentation resolves prefabs and sockets from authored core definitions.
-- New behavior belongs in explicit systems/hooks, not string switches in views.
+## Attachments
 
-## Key files
+- Slots and compatibility are data-driven and associated with the appropriate core domain.
+- Core rarity controls available slot count.
+- Install/remove is authoritative in `AttachmentInstallSystem` and preserves the item instance.
+- Mutations bump configuration/inventory versions for equipped sync and UI refresh.
+- Inventory supports edit-existing and compatible drag/drop; UI previews but does not decide
+  compatibility or stat application.
+- Most attachments are readable sidegrades; unique attachments may target one core.
 
-| Concern | Path |
-|---|---|
-| Core definitions | `Assets/Scripts/WeaponBuilder/*CoreDefinition.cs` |
-| Database | `Assets/Scripts/WeaponBuilder/CoreDefinitionDatabase.cs` |
-| Persistent configuration | `Assets/Scripts/State/WeaponConfiguration.cs` |
-| Stat composition | `Assets/Scripts/Systems/WeaponStatComposer.cs` |
-| Runtime assembly | `Assets/Scripts/Systems/WeaponAssemblySystem.cs` |
-| Equipped synchronization | `Assets/Scripts/Systems/WeaponSyncSystem.cs` |
-| Builder UI | `Assets/Scripts/View/UI/WeaponBuilder/` |
-| Attachments | [`attachments/README.md`](./attachments/README.md) |
-| Runtime weapon behavior | [`../weapons.md`](../weapons.md) |
+## Extension workflow
 
-## Adding a core
-
-1. Add or extend the explicit behavior enum/data shape.
-2. Create the core definition ScriptableObject and register it in `CoreDefinitionDatabase`.
-3. Add behavior in the relevant stateless system and configuration plumbing in `RaidContext` when tunable.
-4. Add presentation assets through the Unity Editor; do not reconstruct prefabs from YAML.
+1. Add/extend explicit definition and behavior data.
+2. Register the definition in `CoreDefinitionDatabase`.
+3. Implement behavior in a stateless system and route tunables through `RaidContext`.
+4. Author prefabs/assets in Unity Editor; do not reconstruct them from YAML.
 5. Add composition, behavior, ammo-availability and persistence tests.
-6. Update this reference only if the system contract changed; update task status in `tasks.md`.
+6. Update this contract only if system boundaries changed; update work status in `tasks.md`.
+
+Do not add string-based dispatch, Resources loads in systems, view-owned weapon rules or another
+parallel stat-composition path.

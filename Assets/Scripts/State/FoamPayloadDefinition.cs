@@ -4,7 +4,7 @@ namespace State
 {
     /// <summary>
     /// Adhesive Foam — control/utility payload. Not a burst-damage weapon;
-    /// instead applies slow / sticking / movement denial to targets. See design.md §7.
+    /// instead applies slow / sticking / movement denial to targets. See docs/ai/weapon-builder/README.md.
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewFoamPayload",

@@ -50,11 +50,4 @@ The release is EN-only and targets two authored combat maps plus the hideout.
 - Broad status-effect catalog beyond the existing bleeding baseline.
 - Deep simulated bot life such as factions, autonomous looting and extraction.
 
-## Shipped foundation
-
-The current project already contains the core combat pipeline, armor/penetration/bleeding,
-inventory and loot, crafting, stash, shop, quests, hideout/deploy flow, save/load, extraction,
-raid timeout, combat HUD, minimap, Weapon Builder foundation, attachments, progression UI and
-material-cost allocation. System details live in the routed docs listed in [`CLAUDE.md`](./CLAUDE.md).
-
-For remaining work, completed work and ownership conflicts, use [`tasks.md`](./tasks.md).
+For work status and ownership conflicts, use [`tasks.md`](./tasks.md).

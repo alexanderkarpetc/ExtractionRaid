@@ -1,7 +1,6 @@
-# Battle Design — Current Rules
+# Combat Rules
 
-This document records the live armor/damage/bleeding contract. Implementation detail lives in
-[`armor-system.md`](./armor-system.md); work status lives only in [`tasks.md`](./tasks.md).
+Stable armor, damage and bleeding contract. Work status lives only in [`tasks.md`](./tasks.md).
 
 ## Damage composition
 
@@ -13,8 +12,8 @@ Each shot composes payload weapon stats with ammo modifiers. The important axes 
 - bleed chance;
 - headshot multiplier.
 
-Caps are enforced by `ArmorConstants`. Ammo is the canonical source of the armor-damage trade-off;
-AP favors penetration at lower flesh damage, while HP favors flesh damage and bleeding.
+Caps are enforced by `ArmorConstants`. Ammo modifies projectile damage axes at fire time; the
+currently shipped ammo catalog is defined in code and is not mirrored here.
 
 ## Armor model
 
@@ -23,9 +22,21 @@ AP favors penetration at lower flesh damage, while HP favors flesh damage and bl
 - Body absorption follows a smooth penetration curve; it never creates a separate “blocked” state.
 - A helmet may ricochet a low-penetration hit, producing no HP damage but consuming durability.
 - Durability damage is flat points scaled by absorption; protection that stops more damage wears faster.
-- At zero durability the armor breaks and is removed; helmets receive a physical fly-off effect.
+- At zero durability armor becomes ineffective and its equipped visual is hidden/detached; the item
+  remains in state/inventory at zero durability. Helmets receive a physical fly-off effect.
 - Looted armor preserves current/max durability through inventory and save flows.
 - Armor weight derives from protection plus durability and reduces movement speed with a hard floor.
+
+### Penetration and durability
+
+Body absorption is a smooth function of `armor protection − projectile penetration`; over-penetration
+does not increase damage above the unarmored result. Effective protection falls as durability moves
+below its healthy threshold. Concrete curve constants are tunable and belong in config/code, not
+this document.
+
+Durability damage is based on projectile armor damage and absorption. The resolved hit records
+health damage, absorbed ratio, ricochet and armor break so downstream feedback never recomputes the
+formula.
 
 ## Bleeding
 
@@ -48,3 +59,4 @@ AP favors penetration at lower flesh damage, while HP favors flesh damage and bl
 - Tunables arrive through `RaidContext` configs; systems do not read `DevCheats` directly.
 - Damage events carry values needed by presenters; view code does not recompute gameplay outcomes.
 - Inventory durability is written back when equipment changes or the raid persists.
+- Equipment sync rebuilds raid armor from item durability and writes runtime wear back before swap.

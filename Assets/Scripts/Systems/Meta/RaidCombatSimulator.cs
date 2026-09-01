@@ -23,7 +23,7 @@ namespace Systems.Meta
     /// bottom out at the same <see cref="ImprovisedPenalty"/> floor, so gearing up is always
     /// monotonically better than showing up empty.
     ///
-    /// Stateless, Unity value-types only (CLAUDE.md §3), no <c>App</c> / no editor deps.
+    /// Stateless, Unity value-types only (docs/ai/CLAUDE.md), no <c>App</c> / editor deps.
     /// </summary>
     public static class RaidCombatSimulator
     {

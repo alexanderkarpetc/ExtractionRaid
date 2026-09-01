@@ -20,7 +20,7 @@
 |---|---|---:|---:|---|
 | M1.3 | Extraction UX | 🔄 active | S–M | Виходи однозначно читаються у світі й на мапі; стани available/progress/interrupted/complete зрозумілі; на бойовій мапі авторено кілька виходів. HUD, minimap і підтримка кількох `ExtractionPointState` вже є. |
 | T63 | Стартова складність | ⬜ queued | S–M | Новий гравець не отримує летальний фокус кількох rifle-ботів у перші секунди; результат підтверджено плейтестом без глобального спрощення AI. Узгодити з власником bot configs. |
-| M2.1 | Завершити аудіошар | 🔄 active | L | Закрити відсутні weapon/UI/world sounds, ambience, music transitions і settings sliders; перевірити spatial mix. `GameAudioPresenter` та бібліотека з 68 аудіофайлів уже працюють. |
+| M2.1 | Завершити аудіошар | 🔄 active | L | Закрити відсутні weapon/UI/world sounds, ambience, music transitions і settings sliders; перевірити spatial mix. `GameAudioPresenter` і базова бібліотека вже працюють. |
 | M2.4 | Weapon visual polish | 🔄 active | M | Muzzle/socket alignment, ручний prefab pass, видалення stale Mecanim; реальні меші замість технічних заглушок. Procedural reload/equip/unequip уже є. |
 | M2.7 | Підключити ефекти progression | ⬜ queued | M | `ProgressionSystem.ApplyAllocatedEffects` більше не порожній; ефекти проходять через `RaidContext.*Config`; є EditMode-тести. |
 | M3.1 | Друга бойова мапа | ⬜ queued | L | Окрема сцена проходить повний loop: deploy → combat/loot → extraction; авторені spawns, loot і таймер. Поточне розширення `Test_Map` не рахується другою мапою. |
@@ -43,20 +43,24 @@
 | M4.3 | Save versioning і міграції | ⬜ queued | S | Save має schema version, контрольовані міграції та тести сумісності старих даних. |
 | M4.4 | Balance pass | 🔄 active | L | Плейтестом зведені weapon/armor/loot/economy/difficulty/progression values; немає очевидної домінантної стратегії або soft-lock. |
 | M4.5 | Release validation | ⬜ queued | M | Standalone build проходить smoke/perf pass на цільовій платформі; quality settings і EN-only presentation готові. |
+| A1 | Прибрати Unity refs зі State | ⬜ queued | M | `WeaponEntityState` більше не зберігає `GameObject`/ScriptableObject refs; view/assembly резолвлять їх поза State; тести й debugger оновлені. Поточний код порушує канонічний state contract. |
+| A2 | Прибрати global access із Systems | ⬜ queued | L | Systems отримують inventory/registries/configs через args/`RaidContext`; прямі `App.Instance` і `DevCheats` reads відсутні; focused tests не залежать від global state. |
+| A3 | Винести highlight eligibility з View | ⬜ queued | S | Proximity/eligibility outline визначає gameplay state/system; `InteractableOutlineTarget` лише відображає resolved target і не читає `App.Instance`. |
+| A4 | Reset outline registry без Domain Reload | ⬜ queued | S | `InteractableOutlineRegistry` очищає static dictionaries/buffers через `SubsystemRegistration`; повторний Play не успадковує stale renderers. |
 
 ## Завершено
 
 | ID | Фіча | Статус | Підтвердження |
 |---|---|---:|---|
 | M1.1 | Gear loss + baseline floor | ✅ done | KIA очищає raid inventory, stash зберігається; порожньому інвентарю видається анти-soft-lock комплект. |
-| M1.2 | Raid timer + timeout fail-state | ✅ done | Timeout іде через звичайний KIA pipeline; HUD і 7 EditMode-тестів додані. |
+| M1.2 | Raid timer + timeout fail-state | ✅ done | Timeout іде через звичайний KIA pipeline; HUD і focused EditMode coverage додані. |
 | M1.4 | Bot weapon migration | ✅ done | Боти використовують `WeaponConfiguration`; legacy player/bot weapon IDs і orphan ammo прибрані. |
 | M1.5 | Audio scaffold | ✅ done | `GameAudioPresenter`, pooled spatial voices та перша хвиля weapon/impact/reload/UI sounds працюють. Подальше наповнення — M2.1. |
 | M2.8 | Material cost progression | ✅ done | Ноди оплачуються матеріалами зі stash/backpack через `ProgressionCostSystem`; skill points відсутні. |
-| R1 | Inventory quick transfer | ✅ done | Double-click transfer додано 2026-08-06. |
-| R2 | Bot weapon rarity | ✅ done | Per-spawn 50/40/10 rarity roll і тести додані 2026-08-06. |
-| R3 | Tooltip/value cleanup | ✅ done | Compare fixes і value для всіх priced items додані 2026-08-07…09. |
-| R4 | Magazine capacity guard | ✅ done | Overfill заблоковано, додано `WeaponMagazineTests` 2026-08-09. |
+| R1 | Inventory quick transfer | ✅ done | Double-click transfer працює. |
+| R2 | Bot weapon rarity | ✅ done | Per-spawn rarity roll і тести працюють. |
+| R3 | Tooltip/value cleanup | ✅ done | Compare та value для priced items узгоджені. |
+| R4 | Magazine capacity guard | ✅ done | Overfill заблоковано focused тестами. |
 
 ## Поза v1.0
 

@@ -1511,7 +1511,7 @@ namespace View.UI.Inventory
 
         // Thin View-side adapters that route to the System layer. State
         // mutations + event emission live у StashSystem / InventorySystem —
-        // View contains no gameplay rules (CLAUDE.md §3.10).
+        // View contains no gameplay rules (docs/ai/CLAUDE.md).
 
         static bool PushToStash(InventoryState playerInv, InventorySlotRef src) =>
             StashSystem.TryDeposit(playerInv, App.Instance?.Player?.Stash, src);

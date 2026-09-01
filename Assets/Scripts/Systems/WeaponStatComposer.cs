@@ -70,7 +70,7 @@ namespace Systems
         /// stats (delta option A — player-facing axes mapped to raw fields here). Unknown
         /// or empty attachment instances are skipped (attachments are non-critical, unlike
         /// cores which fail the assembly). Returns a new <see cref="WeaponStats"/>.
-        /// See docs/ai/weapon-builder/attachments/README.md.
+        /// See docs/ai/weapon-builder/README.md.
         /// </summary>
         public static WeaponStats ApplyAttachments(
             WeaponStats stats,

@@ -267,7 +267,7 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            // Hard caps documented у battle-design-status.md §4 — guards documented
+            // Hard caps documented in docs/ai/battle-design-status.md — guards
             // invariant even though only WeaponBase + Ammo currently contribute (V0.1).
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
                 weapon.Stats.BasePenetration + ammoPen);

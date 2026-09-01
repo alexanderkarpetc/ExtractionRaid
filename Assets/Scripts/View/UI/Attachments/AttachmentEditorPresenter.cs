@@ -11,7 +11,7 @@ namespace View.UI.Attachments
     /// attachments, invoked from the inventory, available anywhere). Unit-tested without
     /// the engine; the UI (P2.2b) is a thin view over this.
     ///
-    /// MVP scope (see docs/ai/weapon-builder/attachments/README.md):
+    /// MVP scope (see docs/ai/weapon-builder/README.md):
     ///   • Edits the loaded weapon's <see cref="WeaponConfiguration.Attachments"/> live
     ///     (no separate Apply/Cancel — install/remove are immediate, like Division/Duckov).
     ///   • Fixed slot set (Payload: Optic/Magazine/Buttstock; Delivery: Muzzle/Grip).
