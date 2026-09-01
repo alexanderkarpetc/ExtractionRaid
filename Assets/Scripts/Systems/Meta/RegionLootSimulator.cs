@@ -13,7 +13,7 @@ namespace Systems.Meta
     /// editor tool can answer "what would I carry out if I looted this whole region?"
     /// without a live raid.
     ///
-    /// Stateless, Unity value-types only (CLAUDE.md §3), no <c>App</c> / no editor deps.
+    /// Stateless, Unity value-types only (docs/ai/CLAUDE.md), no <c>App</c> / editor deps.
     /// </summary>
     public static class RegionLootSimulator
     {

@@ -12,7 +12,7 @@ namespace Dev
     /// Battle HUD tunables — status effects (HUD row + worldspace),
     /// radial stamina ring (worldspace), hotbar weapon slots. Multi-stage shipping pass.
     /// Stage 2 (armor paper-doll) was attempted then reverted 2026-05-21 — existing armor
-    /// stripe on WorldHealthBar is sufficient. See <c>docs/ai/gunplay/battle-hud.md</c>.
+    /// stripe on WorldHealthBar is sufficient.
     /// </summary>
     public class ViewCheatsBattleHudSection : ScriptableObject
     {

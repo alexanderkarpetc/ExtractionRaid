@@ -13,7 +13,7 @@ namespace View.UI.Compare
     /// weapon is equipped): left = hovered weapon with comparison bars (gold base + green/red
     /// delta segment + numeric delta, like the attachment editor); right = the baseline weapon
     /// (the one in hand) plain. Baseline pick + flip live in <see cref="WeaponCompareTarget"/>;
-    /// stat-diff in <see cref="WeaponStatComparison"/>. See docs/ai/weapon-comparison-research.md.
+    /// stat-diff in <see cref="WeaponStatComparison"/>. See docs/ai/weapons.md.
     ///
     /// View-singleton on AppBootstrap (same pattern as TooltipController). Reuses the Tooltip
     /// PanelSettings so coords match the inventory's PointerEnter panel position.

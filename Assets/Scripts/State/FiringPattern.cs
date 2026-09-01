@@ -3,7 +3,7 @@ namespace State
     /// <summary>
     /// Pattern that a Delivery Core implements when firing.
     /// Used as a dispatch key inside ShootingSystem — each pattern maps
-    /// to a static handler method. See docs/ai/weapon-builder/architecture.md §2.
+    /// to a static handler method. See docs/ai/weapons.md.
     /// </summary>
     public enum FiringPattern
     {

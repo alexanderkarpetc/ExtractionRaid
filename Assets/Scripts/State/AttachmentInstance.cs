@@ -5,8 +5,8 @@ namespace State
     /// <summary>
     /// A single attachment installed on a weapon, stored in
     /// <see cref="WeaponConfiguration.Attachments"/>. Holds the slot it occupies
-    /// plus the <see cref="AttachmentDefinition"/> id — no rarity (flat, per
-    /// docs/ai/weapon-builder/attachments/catalog.md Q28; like ExoticModInstance).
+    /// plus the <see cref="AttachmentDefinition"/> id. Attachments have no rarity,
+    /// matching <see cref="ExoticModInstance"/>.
     ///
     /// Value semantics + IEquatable, mirroring PayloadCoreInstance / DeliveryCoreInstance.
     /// </summary>

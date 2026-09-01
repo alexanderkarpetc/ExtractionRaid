@@ -14,7 +14,7 @@ namespace State
         /// Charge-up window before a shot can be released. Used by charge-up payloads
         /// (e.g. Laser). Weapon transitions Ready → Charging → Firing once
         /// ChargeTime elapses, or Charging → Ready if attack is released early.
-        /// See docs/ai/weapon-builder/architecture.md §D2.
+        /// See docs/ai/weapons.md
         /// </summary>
         Charging,
 
@@ -40,7 +40,7 @@ namespace State
     /// either by the assembly pipeline (player weapons via WeaponSyncSystem) or
     /// directly in factory code (legacy path, bots).
     ///
-    /// See docs/ai/weapon-builder/architecture.md §1, §D1.
+    /// See docs/ai/weapons.md
     /// </summary>
     public class WeaponEntityState
     {

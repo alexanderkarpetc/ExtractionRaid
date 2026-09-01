@@ -311,7 +311,7 @@ namespace Session
 
     /// <summary>
     /// Dev/test cheats isolated through context — replaces direct <c>DevCheats.X</c> reads in systems.
-    /// Per CLAUDE.md §6 rule 7, systems must NOT read DevCheats directly; tunables flow through
+    /// Per docs/ai/CLAUDE.md, systems must NOT read DevCheats directly; tunables flow through
     /// <c>RaidContext.*Config</c> structs. <c>RaidSession.Tick</c> copies from <c>DevCheats.Config.Cheats</c>
     /// into here when building the runtime context. Tests get <see cref="Default"/> (all cheats off)
     /// unless they explicitly inject a <c>CheatsConfig</c> via <c>TestContextFactory.Create</c>.

@@ -852,10 +852,8 @@ namespace State
 
                 // --- Weapon Builder modules (Tier 6 G1) ---
                 // Module Ids match PayloadCoreDefinition.Id / DeliveryCoreDefinition.Id у
-                // CoreDefinitionDatabase. Non-stackable (MaxStackSize=1) for forward-compat
-                // з Tier 4 rarity (різні tier = різні items). Auto-gen path → Tier 4 коли
-                // rarity змусить SO refactor anyway. See docs/ai/weapon-builder/plan/roadmap.md
-                // → Tier 6.
+                // CoreDefinitionDatabase. Non-stackable (MaxStackSize=1) because core rarity
+                // makes otherwise-identical modules distinct inventory items.
 
                 // Payload modules
                 ["BallisticRound"] = new()

@@ -19,7 +19,7 @@ namespace Game.Editor
     /// without a wired prefab, creates a primitive placeholder prefab and wires the SO.
     /// Idempotent — re-running with everything wired is a no-op.
     ///
-    /// See docs/ai/weapon-builder/README.md (Workflow section).
+    /// See docs/ai/weapons.md (Configuration and extension section).
     /// </summary>
     public static class WeaponBuilderModulePrefabsUtility
     {

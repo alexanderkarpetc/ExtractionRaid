@@ -107,7 +107,7 @@ namespace Systems
             // differ only in Stats (FireInterval, ProjectilesPerShot, SpreadAngle).
             // Rotary / Swarm — dedicated behaviours with their own state machine phases,
             // arriving in Tier 3.
-            // See docs/ai/weapon-builder/architecture.md §2.
+            // See docs/ai/weapons.md
             var pattern = weapon.DeliveryDefinition != null
                 ? weapon.DeliveryDefinition.Pattern
                 : FiringPattern.Auto; // legacy/bot-path fallback — Stats drive behaviour
@@ -267,16 +267,13 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            // Hard caps documented у battle-design-status.md §4 — guards documented
-            // invariant even though only WeaponBase + Ammo currently contribute (V0.1).
-            var progression = context.PlayerProgressionConfig;
+            // Preserve hard-cap invariants even though only WeaponBase + Ammo currently contribute.
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
-                (weapon.Stats.BasePenetration + ammoPen) * progression.PenetrationMultiplier);
+                weapon.Stats.BasePenetration + ammoPen);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative
             float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
-                (weapon.Stats.BaseArmorDamage + ammoArmorDmg) * progression.ArmorDamageMultiplier);
-            float totalBleedChance = Mathf.Clamp01(
-                (weapon.Stats.BaseBleedChance + ammoBleedChance) * progression.BleedAppliedMultiplier);
+                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
+            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
             // Charge multiplier — parabolic curve через LaserConfig (default min=0.1, power=2).
             // Ballistic chargeRatio is always 1 → multiplier = 1, no behavior change.
@@ -318,8 +315,8 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, lifetime,
-                    totalDamage * cfg.DamageMultiplier * progression.WeaponDamageMultiplier,
-                    weapon.Stats.HeadshotDamageMultiplier * progression.HeadshotDamageMultiplier,
+                    totalDamage * cfg.DamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier,
                     targetedEntityId,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
@@ -337,8 +334,7 @@ namespace Systems
             // Ballistic Rifle signature (B1): increment barrel heat. Decay runs continuously
             // in WeaponHeatSystem, so sustained fire pushes net upward; tap-burst lets decay catch up.
             if (isBallisticAuto && context.BarrelHeatConfig.Enabled)
-                weapon.HeatLevel = Mathf.Min(1f, weapon.HeatLevel
-                    + context.BarrelHeatConfig.HeatPerShot * progression.HeatBuildupMultiplier);
+                weapon.HeatLevel = Mathf.Min(1f, weapon.HeatLevel + context.BarrelHeatConfig.HeatPerShot);
 
             // Burst entry: laser + Auto delivery → Bursting phase queues N-1 follow-up
             // shots, fired automatically by TickBurst at fixed interval. Burst length
@@ -369,7 +365,7 @@ namespace Systems
                 && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
             {
                 float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
-                float recoilMul = cfg.RecoilMultiplier * progression.RecoilMultiplier * adsRecoilScale;
+                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
 
                 // Forward kick through RecoilOffset
@@ -453,14 +449,12 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            var progression = context.PlayerProgressionConfig;
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
-                (weapon.Stats.BasePenetration + ammoPen) * progression.PenetrationMultiplier);
+                weapon.Stats.BasePenetration + ammoPen);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg);
             float totalArmorDmg = Mathf.Min(ArmorConstants.ArmorDamageCap,
-                (weapon.Stats.BaseArmorDamage + ammoArmorDmg) * progression.ArmorDamageMultiplier);
-            float totalBleedChance = Mathf.Clamp01(
-                (weapon.Stats.BaseBleedChance + ammoBleedChance) * progression.BleedAppliedMultiplier);
+                weapon.Stats.BaseArmorDamage + ammoArmorDmg);
+            float totalBleedChance = weapon.Stats.BaseBleedChance + ammoBleedChance;
 
             // Same parabolic curve as initial fire — burst inherits cached chargeRatio.
             // No spread/lifetime modulation here: burst only triggers for Laser+Auto (single
@@ -481,8 +475,8 @@ namespace Systems
                     projectileId, player.Id, spawnPos, pelletDir,
                     weapon.Stats.ProjectileSpeed * cfg.ProjectileSpeedMultiplier,
                     state.ElapsedTime, weapon.Stats.ProjectileLifetime,
-                    totalDamage * cfg.DamageMultiplier * progression.WeaponDamageMultiplier,
-                    weapon.Stats.HeadshotDamageMultiplier * progression.HeadshotDamageMultiplier,
+                    totalDamage * cfg.DamageMultiplier,
+                    weapon.Stats.HeadshotDamageMultiplier,
                     targetedEntityId: default,
                     penetration: totalPen,
                     armorDamage: totalArmorDmg,
@@ -504,7 +498,7 @@ namespace Systems
                 && (weapon.Stats.RecoilKickForward > 0f || weapon.Stats.RecoilKickSide > 0f))
             {
                 float adsRecoilScale = Mathf.Lerp(1f, cfg.AdsRecoilMultiplier, player.AdsBlend);
-                float recoilMul = cfg.RecoilMultiplier * progression.RecoilMultiplier * adsRecoilScale;
+                float recoilMul = cfg.RecoilMultiplier * adsRecoilScale;
                 var aimDir = (player.WeaponAimPoint - player.Position).normalized;
                 weapon.RecoilOffset += aimDir
                     * (weapon.Stats.RecoilKickForward * recoilMul * cfg.RecoilForwardMultiplier);

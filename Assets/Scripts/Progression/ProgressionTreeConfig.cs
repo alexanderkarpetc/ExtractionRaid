@@ -188,7 +188,7 @@ namespace Progression
             }
         }
 
-        // Domain reload is OFF in this project — reset the static cache on entering play. (CLAUDE.md §3.15)
+        // Domain reload is OFF — reset the static cache on entering play (docs/ai/CLAUDE.md).
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetCacheOnPlay() => _instance = null;
 
