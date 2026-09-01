@@ -2,9 +2,9 @@
 
 **Your operating contract for this repo is [`docs/ai/CLAUDE.md`](docs/ai/CLAUDE.md) — open and read
 it before any non-trivial work, and follow it.** It is tool-agnostic; ignore any assistant-specific
-framing. Its **§9 "task routing"** table tells you exactly which doc under `docs/ai/` to open for the
-area you're touching — open those **on demand**, don't load everything. `docs/ai/handoff.md` has the
-current state; `docs/ai/release-scope.md` + `docs/ai/v1.0-roadmap.md` have the plan.
+framing. Its **task routing** table tells you exactly which doc under `docs/ai/` to open for the
+area you're touching — open those **on demand**, don't load everything. `docs/ai/release-scope.md`
+defines release scope and `docs/ai/tasks.md` is the only task tracker.
 
 > Note for `AGENTS.md`-loading agents (Codex): only this file is auto-loaded into your context —
 > **linked files are not.** So actually open `docs/ai/CLAUDE.md` (and the per-task docs it routes you
@@ -31,4 +31,4 @@ current state; `docs/ai/release-scope.md` + `docs/ai/v1.0-roadmap.md` have the p
   or hand the change to the maintainer to run. Don't claim tests pass unless you actually ran them.
   See `docs/ai/testing-and-workflow.md`.
 
-_This is a thin pointer; `docs/ai/CLAUDE.md` is the single source of truth (its §9 is the doc index)._
+_This is a thin pointer; `docs/ai/CLAUDE.md` is the single source of truth and doc index._

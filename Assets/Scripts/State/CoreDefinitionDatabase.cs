@@ -12,7 +12,7 @@ namespace State
     /// indexed lookups lazily on first access.
     ///
     /// Same pattern as <see cref="Quests.QuestDatabase"/>.
-    /// See docs/ai/weapon-builder/architecture.md §D3.
+    /// See docs/ai/weapons.md
     /// </summary>
     [CreateAssetMenu(
         fileName = "CoreDefinitionDatabase",

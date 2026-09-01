@@ -12,7 +12,7 @@ namespace State
     //   - structural equality
     //   - Unity-friendly serialization via public readonly fields
     //
-    // See docs/ai/weapon-builder/architecture.md §D4.
+    // See docs/ai/weapons.md.
 
     /// <summary>Reference to a Payload Core — DefinitionId + Rarity.</summary>
     [Serializable]
@@ -86,7 +86,7 @@ namespace State
 
     /// <summary>
     /// Reference to an Exotic Mod — DefinitionId only.
-    /// NO rarity — hard rule from design.md §3: "Rarity застосовується до Payload Core і Delivery Core".
+    /// No rarity; rarity applies to Payload and Delivery cores only.
     /// </summary>
     [Serializable]
     public readonly struct ExoticModInstance : IEquatable<ExoticModInstance>

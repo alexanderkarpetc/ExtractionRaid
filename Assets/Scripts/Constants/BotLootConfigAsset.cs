@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Constants
 {
     // ── Runtime loot rules (plain value types baked onto BotTypeConfig) ──────────
-    // No SO refs leak into runtime state (CLAUDE.md §3.6); BotSpawnSystem/LootSystem
+    // No SO refs leak into runtime state (docs/ai/CLAUDE.md); BotSpawnSystem/LootSystem
     // roll these on death.
 
     /// <summary>

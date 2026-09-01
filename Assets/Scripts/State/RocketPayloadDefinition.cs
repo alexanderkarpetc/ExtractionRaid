@@ -4,7 +4,7 @@ namespace State
 {
     /// <summary>
     /// Micro-Rocket — small explosive payload with AoE impact.
-    /// Typically has HeadshotDamageMultiplier = 0 (explosions don't headshot). See design.md §7.
+    /// Typically has HeadshotDamageMultiplier = 0 (explosions don't headshot). See docs/ai/weapons.md.
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewRocketPayload",

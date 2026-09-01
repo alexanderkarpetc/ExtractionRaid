@@ -107,7 +107,7 @@ namespace Systems
             // differ only in Stats (FireInterval, ProjectilesPerShot, SpreadAngle).
             // Rotary / Swarm — dedicated behaviours with their own state machine phases,
             // arriving in Tier 3.
-            // See docs/ai/weapon-builder/architecture.md §2.
+            // See docs/ai/weapons.md
             var pattern = weapon.DeliveryDefinition != null
                 ? weapon.DeliveryDefinition.Pattern
                 : FiringPattern.Auto; // legacy/bot-path fallback — Stats drive behaviour
@@ -267,8 +267,7 @@ namespace Systems
                     ammoBleedChance = ammoDef.BleedChance;
                 }
             }
-            // Hard caps documented у battle-design-status.md §4 — guards documented
-            // invariant even though only WeaponBase + Ammo currently contribute (V0.1).
+            // Preserve hard-cap invariants even though only WeaponBase + Ammo currently contribute.
             float totalPen = Mathf.Min(ArmorConstants.PenetrationCap,
                 weapon.Stats.BasePenetration + ammoPen);
             float totalDamage = Mathf.Max(0f, weapon.Stats.Damage + ammoDmg); // floor at 0 — AP penalty can't make damage negative

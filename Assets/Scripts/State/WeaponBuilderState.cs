@@ -8,7 +8,7 @@ namespace State
     /// Tier 1 scope: rarity is locked to Common (no per-selection rarity UI).
     /// Exotic slot is exposed on the state but will be hidden in the UI until Tier 5.
     ///
-    /// See docs/ai/weapon-builder/architecture.md §D11, §D14.
+    /// See docs/ai/weapons.md.
     /// </summary>
     public struct WeaponBuilderState
     {

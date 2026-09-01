@@ -154,7 +154,7 @@ namespace ApplicationCore
 
             // Battle HUD overlay — UI Toolkit panel hosting status effect row (Stage 3+).
             // Replaces legacy IMGUI StatusEffectOverlay. Reuses TooltipController.ShowFromPanel
-            // for hover tooltips. See docs/ai/gunplay/battle-hud.md.
+            // for hover tooltips.
             var battleHudHost = new GameObject("BattleHudOverlay");
             battleHudHost.transform.SetParent(transform, false);
             battleHudHost.AddComponent<View.UI.BattleHud.BattleHudOverlay>();
