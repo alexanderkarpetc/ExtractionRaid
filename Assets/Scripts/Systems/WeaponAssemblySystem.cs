@@ -17,7 +17,7 @@ namespace Systems
     /// refactor. For now the assembly produces the composed stats plus the
     /// resolved definitions, which are enough for the caller to finish the job.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public static class WeaponAssemblySystem
     {

@@ -65,8 +65,8 @@ passed unless they actually ran.
 
 - [`tasks.md`](./tasks.md) is the **only** task/status/backlog tracker.
 - [`release-scope.md`](./release-scope.md) defines the v1.0 product boundary.
-- [`handoff.md`](./handoff.md) is a minimal session entry point.
 - System docs contain only stable contracts, non-obvious invariants and operational gotchas.
+- Gameplay values, formulas, curves, thresholds and catalogs belong in code/config, not docs.
 - Do not mirror enums, registries, fields, methods, constants, file trees or test counts from code.
 - Link instead of duplicating.
 
@@ -78,14 +78,12 @@ passed unless they actually ran.
 | Release boundary | `release-scope.md` |
 | Architecture / lifecycle / new systems | `architecture.md` |
 | Tests and acceptance | `testing-and-workflow.md` |
-| Weapons / ammo / aiming | `weapons.md` |
-| Weapon Builder / attachments | `weapon-builder/README.md` |
-| Armor / penetration / bleeding | `battle-design-status.md` |
+| Weapons / builder / attachments / crosshair | `weapons.md` |
+| Armor / penetration / bleeding | `combat.md` |
 | Bot behavior | `bot-ai.md` |
 | Inventory / loot / craft / quests | `inventory-and-items.md` |
 | Progression | `progression.md` |
-| Crosshair | `crosshair.md` |
 | Fog of War | `fog-of-war.md` |
-| Interactable outline | `interactable-highlight.md` |
+| Interactable outline / lifecycle | `architecture.md` |
 | UI Toolkit | `ui-styling.md` |
-| Impact/armor FX authoring | `fx-artist-guide.md` |
+| Impact/armor FX authoring | `combat.md` |

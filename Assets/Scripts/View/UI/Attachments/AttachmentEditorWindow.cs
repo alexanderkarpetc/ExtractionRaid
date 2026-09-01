@@ -10,8 +10,7 @@ using UnityEngine.UIElements;
 namespace View.UI.Attachments
 {
     /// <summary>
-    /// Modal attachment editor (Variant A — two-pane). Edit an existing weapon's
-    /// attachments from anywhere (Option B, docs/ai/weapon-builder/README.md).
+    /// Modal two-pane attachment editor for an existing weapon, available from inventory.
     /// View over <see cref="AttachmentEditorPresenter"/>: slots on the left (grouped under
     /// cores), the focused slot's compatible mods + a live stat readout (green/red delta) on
     /// the right. Content is built in C#; styling from Resources/UI/Attachments/AttachmentEditor.uss.

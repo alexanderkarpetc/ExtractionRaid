@@ -6,7 +6,7 @@ namespace State
     /// Common stats contributed by a Payload Core (shared across all payload types).
     /// Payload-specific stats (ChargeTime, ExplosionRadius, etc.) live on typed
     /// *PayloadDefinition subclasses — see PayloadSpecificStats.
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     [Serializable]
     public struct CommonPayloadStats
@@ -24,7 +24,7 @@ namespace State
     /// <summary>
     /// Stats contributed by a Delivery Core. Applies to all patterns uniformly;
     /// pattern-specific params (SpinUpTime, VolleyCount, etc.) live on DeliveryCoreDefinition.
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     [Serializable]
     public struct DeliveryStats
@@ -57,7 +57,7 @@ namespace State
     /// Final computed weapon stats — result of composing Payload + Delivery
     /// at the chosen rarity tiers. Cached on WeaponEntityState at assembly/equip time.
     /// Ammo modifiers are applied separately in ShootingSystem at fire time.
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     [Serializable]
     public struct WeaponStats

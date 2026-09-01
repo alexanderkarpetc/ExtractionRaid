@@ -33,8 +33,7 @@ namespace Systems
             if (armor == null || armor.IsBroken)
                 return 0f;
 
-            // Hard cap (docs/ai/battle-design-status.md) — guards against future additive
-            // armor mod sources stacking past intended ceiling.
+            // Guards against future additive armor mod sources stacking past the intended ceiling.
             float cappedPoints = Mathf.Min(ArmorConstants.ArmorPointsCap, armor.ArmorPoints);
             return cappedPoints * EffectiveDurabilityMultiplier(armor.DurabilityPercent);
         }

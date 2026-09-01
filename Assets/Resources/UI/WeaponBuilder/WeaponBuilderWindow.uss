@@ -26,7 +26,7 @@
     background-color: rgba(0, 0, 0, 0);
     /* Right-anchored: Builder positioned on the right of the viewport so the uGUI
      * inventory canvas (left-anchored at 0..~31% width) can sit alongside without
-     * overlap. See docs/ai/weapon-builder/README.md. */
+     * overlap. See docs/ai/weapons.md. */
     align-items: flex-end;
     justify-content: flex-start;
     /* All four paddings shared з Inventory через токени. Edge-gap забезпечує

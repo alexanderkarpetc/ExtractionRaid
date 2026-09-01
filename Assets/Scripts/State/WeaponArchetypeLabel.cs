@@ -12,7 +12,7 @@ namespace State
     ///
     /// Overrides for special combos are deferred to Tier 5 polish.
     /// Exotic mods are intentionally NOT part of the label.
-    /// See docs/ai/weapon-builder/README.md.
+    /// See docs/ai/weapons.md.
     /// </summary>
     public static class WeaponArchetypeLabel
     {

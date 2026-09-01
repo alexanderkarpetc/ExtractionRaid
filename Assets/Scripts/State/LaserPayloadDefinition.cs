@@ -4,7 +4,7 @@ namespace State
 {
     /// <summary>
     /// Laser Charge — high-tech energy payload with charge-up before firing
-    /// (direct reference: Half-Life 1 laser). See docs/ai/weapon-builder/README.md.
+    /// (direct reference: Half-Life 1 laser). See docs/ai/weapons.md.
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewLaserPayload",

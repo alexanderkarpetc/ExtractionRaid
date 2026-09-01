@@ -1,7 +1,20 @@
 # Weapons
 
-Weapon identity/configuration is documented in [`weapon-builder/README.md`](./weapon-builder/README.md).
-This file owns runtime firing, ammo, collision and aiming contracts.
+This file owns weapon composition, runtime firing, ammo, collision, aiming and crosshair contracts.
+
+## Composition and attachments
+
+A persistent weapon configuration stores stable payload, delivery, exotic and attachment IDs.
+Inventory owns that configuration; the definition registry and stateless assembly systems resolve it
+into cached runtime stats. `WeaponSyncSystem` rebuilds equipped state when the source item changes.
+
+- Payload defines what is launched; delivery defines how it fires; an exotic adds an optional
+  behavior hook. Rarity belongs to the cores.
+- Attachment slots and compatibility are data-driven. Installation is authoritative in
+  `AttachmentInstallSystem`; UI may preview but cannot decide compatibility or stat application.
+- Mutations preserve the item instance and bump versions used by equipped sync and UI refresh.
+- Add new definitions through the registry and explicit stateless behavior. Do not add string
+  dispatch, view-owned weapon rules or a parallel stat-composition path.
 
 ## Runtime state machine
 
@@ -42,7 +55,18 @@ aim spring; views must not add a second smoothing layer.
 Weapon presentation may retract against nearby geometry/characters to avoid clipping. This is a
 view-only pose adjustment and must not change projectile origin, range or damage rules.
 
-## Tuning and extension
+## Crosshair and pointer
 
-Gameplay tunables enter through `RaidContext` configs. Add a payload/delivery through the explicit
-Weapon Builder extension workflow; do not add string switches or view-owned firing rules.
+`CrosshairPresenter` renders resolved weapon phases, charge, recoil and hit events. Ballistic and
+laser weapons may use different visuals, but the presenter never recalculates accuracy, hit type,
+damage or range. Presentation animation state must reset across play/scene lifecycles.
+
+`PointerOverUiTracker` is the shared authority for pointer-over-UI and OS cursor visibility. When UI
+owns the pointer, gameplay aim/fire is gated and the cursor uses the same screen position. Windows
+must not implement local cursor rules.
+
+## Configuration and extension
+
+Gameplay values enter through `RaidContext` configs and are not duplicated here. When extending the
+weapon model, register definitions, author assets in Unity Editor, and cover composition, behavior,
+ammo availability and persistence. Update this contract only when system boundaries change.

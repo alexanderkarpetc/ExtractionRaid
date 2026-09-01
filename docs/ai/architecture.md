@@ -66,6 +66,18 @@ Main menu, hideout, direct raid and test scenes all converge on the same App/Ses
 Scene-specific bootstrap code may select launch options, but cannot create alternate gameplay
 rules or hidden state.
 
+## Interactable outline
+
+The outline renderer is presentation-only: targets register renderers with the static view registry,
+and the URP feature renders mask/composite passes. Registration must tolerate disabled/destroyed
+objects and reset across play sessions because Reload Domain is off. Eligibility must arrive as
+resolved gameplay state; view code must not query `App.Instance` or decide proximity. Current gaps
+are tracked only in [`tasks.md`](./tasks.md).
+
+Use `MaterialPropertyBlock` for per-object feedback so shared materials remain shared. The
+screen-space mask can merge overlapping objects, and transparent/custom shaders may need explicit
+pass handling; add more mask complexity only for a concrete visual requirement.
+
 ## Review checklist
 
 - Is the rule in a stateless system?

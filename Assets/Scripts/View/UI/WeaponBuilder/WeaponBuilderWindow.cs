@@ -23,7 +23,7 @@ namespace View.UI.WeaponBuilder
     /// backpack context. Drag-and-drop is layered on top in Phase 2 — Phase 1
     /// uses click-to-select.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class WeaponBuilderWindow : MonoBehaviour

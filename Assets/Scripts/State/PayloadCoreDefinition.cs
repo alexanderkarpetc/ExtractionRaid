@@ -10,7 +10,7 @@ namespace State
     /// Payload-specific stats (e.g. ChargeTime for Laser, ExplosionRadius for Rocket)
     /// live on concrete subclasses alongside their own per-rarity tables.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public abstract class PayloadCoreDefinition : ScriptableObject
     {

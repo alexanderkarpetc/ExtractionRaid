@@ -11,7 +11,7 @@ namespace Systems
     /// (to time the Charging phase) and <c>ShootingSystem</c> (to gate the initial
     /// Ready → Charging transition on AttackPressed).
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public static class WeaponChargeResolver
     {

@@ -13,7 +13,7 @@ namespace View.UI.WeaponBuilder
     /// preview via <see cref="WeaponStatComposer"/>, and commits a built weapon to
     /// the player inventory on <see cref="TryBuild"/>.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public class WeaponBuilderPresenter
     {

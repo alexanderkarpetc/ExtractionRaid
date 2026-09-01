@@ -9,7 +9,7 @@ namespace Systems
     /// pair at chosen rarity tiers. Caller is responsible for already having resolved
     /// the definitions (typically via <see cref="Adapters.ICoreDefinitionRegistry"/>).
     ///
-    /// Field mapping (see docs/ai/weapon-builder/README.md):
+    /// Field mapping:
     ///   - 7 numeric stats come from Payload
     ///   - 13 stats come from Delivery
     ///   - no overlap; each field is sourced from exactly one side
@@ -70,7 +70,7 @@ namespace Systems
         /// stats (delta option A — player-facing axes mapped to raw fields here). Unknown
         /// or empty attachment instances are skipped (attachments are non-critical, unlike
         /// cores which fail the assembly). Returns a new <see cref="WeaponStats"/>.
-        /// See docs/ai/weapon-builder/README.md.
+        /// See docs/ai/weapons.md.
         /// </summary>
         public static WeaponStats ApplyAttachments(
             WeaponStats stats,

@@ -14,7 +14,7 @@ namespace Adapters
     ///   - TryGet* returns bool and populates out parameter (default on miss).
     ///   - All* lists are read-only snapshots — enumeration order matches the database.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public interface ICoreDefinitionRegistry
     {

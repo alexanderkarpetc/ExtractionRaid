@@ -14,7 +14,7 @@ namespace View
     /// ("Weapon Workbench  ·  Press E") while in range. Input is read directly via
     /// Unity's <see cref="Keyboard.current"/> — view-layer access is fine here.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     public class WorkbenchView : MonoBehaviour
     {

@@ -5,7 +5,7 @@ namespace State
     /// <summary>
     /// Exotic Mod definition (ScriptableObject) — an optional single modifier that adds
     /// a distinctive twist on top of a Payload + Delivery composition.
-    /// No rarity; see docs/ai/weapon-builder/README.md.
+    /// No rarity; see docs/ai/weapons.md.
     ///
     /// This is a minimal shell; the full stat-modifier and behaviour-hook work is tracked
     /// as M2.2 in docs/ai/tasks.md.

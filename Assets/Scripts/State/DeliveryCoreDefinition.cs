@@ -10,7 +10,7 @@ namespace State
     /// Pattern-specific parameters (SpinUp/Down for Rotary, Volley for Swarm) live here
     /// directly; handlers read only what's relevant to their pattern.
     ///
-    /// See docs/ai/weapon-builder/README.md
+    /// See docs/ai/weapons.md
     /// </summary>
     [CreateAssetMenu(
         fileName = "NewDeliveryCore",

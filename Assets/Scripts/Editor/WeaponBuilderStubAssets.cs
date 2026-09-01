@@ -20,7 +20,7 @@ namespace Game.Editor
     ///   Exotics: none yet (Tier 5)
     ///   CoreDefinitionDatabase — aggregator referencing the above.
     ///
-    /// See docs/ai/weapon-builder/README.md.
+    /// See docs/ai/weapons.md.
     /// </summary>
     public static class WeaponBuilderStubAssets
     {

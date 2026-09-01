@@ -12,7 +12,7 @@ namespace View.UI.Tooltip.Builders
     /// <see cref="WeaponStatDisplay"/> (number rows + bar rows). Reuses
     /// <see cref="WeaponStatComposer"/> so numbers match the Weapon Builder.
     ///
-    /// Display rules per docs/ai/weapon-builder/README.md: no Penetration
+    /// Display rules: no Penetration
     /// (ammo channel), no Reload base value (delta-only later), Rate of Fire instead
     /// of raw Fire Interval. Charge row kept for Laser payloads.
     ///
