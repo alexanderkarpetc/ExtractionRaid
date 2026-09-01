@@ -109,7 +109,11 @@ namespace View.UI.Tooltip.Builders
                 AppendQuestInfo(item.DefinitionId, questDatabase, sections, out description);
             }
 
-            var model = new TooltipModel(title, subtitle, sections, description);
+            string footer = item.DefinitionId == "Medkit" || item.DefinitionId == "Bandage"
+                ? "Hold a bound quick-slot key to use"
+                : null;
+
+            var model = new TooltipModel(title, subtitle, sections, description, footer);
             return AppendPrice(model, item, shopContext, itemIsInShop);
         }
 

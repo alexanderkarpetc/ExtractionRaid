@@ -330,6 +330,23 @@ namespace View
             _currentArmorModel = null;
         }
 
+        /// <summary>
+        /// Hard visibility fallback for equipment materials that do not implement the character
+        /// FoW dissolve properties. The owning view still drives soft reveal where supported.
+        /// </summary>
+        public void SetArmorRenderersVisible(bool visible)
+        {
+            SetRenderersVisible(_currentHelmetModel, visible);
+            SetRenderersVisible(_currentArmorModel, visible);
+        }
+
+        static void SetRenderersVisible(GameObject root, bool visible)
+        {
+            if (root == null) return;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+                renderer.enabled = visible;
+        }
+
         // ── Roll animation ─────────────────────────────────
 
         /// <summary>Drive roll visual. Call every frame from SyncFromState.</summary>

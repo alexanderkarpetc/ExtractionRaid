@@ -95,6 +95,16 @@ namespace Tests.EditMode
             Assert.IsTrue(HasRow(model, "Armor Points", "30"));
         }
 
+        [TestCase("Medkit")]
+        [TestCase("Bandage")]
+        public void ItemBuilder_HoldConsumable_ShowsHoldHint(string definitionId)
+        {
+            var model = ItemTooltipBuilder.For(ItemState.Create(new EId(3), definitionId), _registry);
+
+            StringAssert.Contains("Hold", model.Footer);
+            StringAssert.Contains("quick-slot", model.Footer);
+        }
+
         [Test]
         public void ItemBuilder_DelegatesToWeaponBuilderForBuiltWeapon()
         {

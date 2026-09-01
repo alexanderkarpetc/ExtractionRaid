@@ -37,7 +37,7 @@ namespace View
             // Parent to HealthBar's transform so the row sits relative to the HP bar position
             // (which already has its own Y offset from feet) — keeps "under the bar" semantics.
             _statusIcons = WorldStatusIcons.Create(_healthBar.transform, id);
-            _progressBar = WorldProgressBar.Create(transform);
+            _progressBar = WorldProgressBar.Create(_healthBar.transform);
             // Stamina ring is NOT parented (needs free world position for spring-follow);
             // it tracks this transform's position + a world offset and self-destroys when gone.
             _staminaRing = WorldStaminaRing.Create(transform);
@@ -67,11 +67,17 @@ namespace View
 
             if (_progressBar != null)
             {
-                if (state.IsUsingBandage)
+                if (state.IsUsingMedkit)
+                {
+                    float progress = (elapsedTime - state.MedkitUseStartTime)
+                                     / MedConstants.UseDelay;
+                    _progressBar.SetProgress(progress, isBandage: false);
+                }
+                else if (state.IsUsingBandage)
                 {
                     float progress = (elapsedTime - state.BandageUseStartTime)
                                      / StatusEffectConstants.BandageUseTime;
-                    _progressBar.SetProgress(progress);
+                    _progressBar.SetProgress(progress, isBandage: true);
                 }
                 else
                 {

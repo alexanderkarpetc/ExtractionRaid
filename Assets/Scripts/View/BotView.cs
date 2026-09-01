@@ -99,6 +99,7 @@ namespace View
                 _fowMpb.SetFloat(FoWRevealId, reveal);
                 r.SetPropertyBlock(_fowMpb);
             }
+            _body?.SetArmorRenderersVisible(!fovActive || reveal > 0.001f);
             if (_healthBar != null)
                 _healthBar.SetVisible(state.IsVisibleToPlayer || !fovActive);
 

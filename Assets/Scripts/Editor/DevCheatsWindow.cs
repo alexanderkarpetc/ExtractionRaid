@@ -370,6 +370,13 @@ namespace Editor
 
             using (new EditorGUI.DisabledScope(!appReady || App.Instance.IsInHideout))
             {
+                if (GUILayout.Button("Damage Player (-25 HP, nonlethal)"))
+                    DamagePlayerForMedicineTest();
+            }
+
+            EditorGUILayout.Space(4);
+            using (new EditorGUI.DisabledScope(!appReady || App.Instance.IsInHideout))
+            {
                 if (GUILayout.Button("Extract to Hideout"))
                 {
                     if (appReady)
@@ -453,6 +460,23 @@ namespace Editor
                 EditorGUILayout.HelpBox("Already in hideout.", MessageType.Info);
 
             EditorGUI.indentLevel--;
+        }
+
+        static void DamagePlayerForMedicineTest()
+        {
+            var session = App.Instance.RaidSession;
+            bool damaged = DamageSystem.ApplyPlayerTestDamage(
+                session.RaidState, 25f, session.ConsumeEvents());
+
+            if (!damaged)
+            {
+                Debug.Log("[DevCheats] Player test damage skipped (already at 1 HP or no active player).");
+                return;
+            }
+
+            var playerId = session.RaidState.PlayerEntity.Id;
+            var health = session.RaidState.HealthMap[playerId];
+            Debug.Log($"[DevCheats] Player damaged for medicine test: {health.CurrentHp:0}/{health.MaxHp:0} HP.");
         }
 
         void DrawGiveItemRow()

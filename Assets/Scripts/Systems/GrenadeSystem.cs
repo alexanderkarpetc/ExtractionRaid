@@ -163,7 +163,11 @@ namespace Systems
             float falloff = 1f - (dist / grenade.ExplosionRadius);
             float damage = grenade.Damage * falloff;
 
-            DamageSystem.ApplyDamage(health, damage);
+            bool godModePlayerVictim = context.CheatsConfig.GodMode
+                && state.PlayerEntity != null
+                && targetId == state.PlayerEntity.Id;
+
+            DamageSystem.ApplyDamage(health, godModePlayerVictim ? 0f : damage);
 
             if (health.IsAlive)
                 context.Events.EntityDamaged(targetId, health.CurrentHp, health.MaxHp);

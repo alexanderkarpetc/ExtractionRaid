@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Adapters;
 using Session;
 using State;
 using UnityEngine;
@@ -274,6 +275,25 @@ namespace Systems
 
             if (health.CurrentHp <= 0f)
                 health.IsAlive = false;
+        }
+
+        /// <summary>
+        /// Editor playtest action: damages the current player but never below 1 HP.
+        /// Deliberately bypasses GodMode so healing can be tested without changing cheat settings.
+        /// </summary>
+        public static bool ApplyPlayerTestDamage(RaidState state, float damage, IRaidEvents events)
+        {
+            if (state?.PlayerEntity == null || events == null || damage <= 0f) return false;
+
+            EId playerId = state.PlayerEntity.Id;
+            if (!state.HealthMap.TryGetValue(playerId, out var health) || !health.IsAlive) return false;
+
+            float appliedDamage = Mathf.Min(damage, Mathf.Max(0f, health.CurrentHp - 1f));
+            if (appliedDamage <= 0f) return false;
+
+            ApplyDamage(health, appliedDamage);
+            events.EntityDamaged(playerId, health.CurrentHp, health.MaxHp);
+            return true;
         }
 
         /// <summary>

@@ -156,6 +156,42 @@ namespace Tests.EditMode
             Assert.AreEqual(75f, s.Hp, 0.001f, "Enemy should be damaged by projectile");
         }
 
+        [Test]
+        public void ApplyPlayerTestDamage_DamagesPlayerAndPublishesHealth()
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var playerId = state.AllocateEId();
+            state.PlayerEntity = PlayerEntityState.Create(playerId, Vector3.zero);
+            state.HealthMap[playerId] = HealthState.Create(100f);
+            var events = new FakeRaidEvents();
+
+            bool applied = DamageSystem.ApplyPlayerTestDamage(state, 25f, events);
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual(75f, state.HealthMap[playerId].CurrentHp, 0.001f);
+            Assert.IsTrue(events.EntityDamagedCalled);
+            Assert.AreEqual(playerId, events.EntityDamagedId);
+        }
+
+        [Test]
+        public void ApplyPlayerTestDamage_ClampsAtOneHpAndNeverKillsPlayer()
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var playerId = state.AllocateEId();
+            state.PlayerEntity = PlayerEntityState.Create(playerId, Vector3.zero);
+            state.HealthMap[playerId] = HealthState.Create(10f);
+            var events = new FakeRaidEvents();
+
+            bool firstApplied = DamageSystem.ApplyPlayerTestDamage(state, 25f, events);
+            bool secondApplied = DamageSystem.ApplyPlayerTestDamage(state, 25f, events);
+
+            Assert.IsTrue(firstApplied);
+            Assert.IsFalse(secondApplied);
+            Assert.AreEqual(1f, state.HealthMap[playerId].CurrentHp, 0.001f);
+            Assert.IsTrue(state.HealthMap[playerId].IsAlive);
+            Assert.IsFalse(events.EntityDiedCalled);
+        }
+
         // ── Armor Integration ─────────────────────────────────
 
         [Test]
