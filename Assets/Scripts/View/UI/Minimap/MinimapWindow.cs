@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -42,6 +43,17 @@ namespace View.UI.Minimap
         Vector2 _boundsSize = new Vector2(80f, 80f);
         bool _hasCapture;
         bool _isExpanded;
+
+        // ── Marker element pool ──────────────────────────────
+        // RefreshMarkers runs every frame so live positions track. It used to Clear() the
+        // marker layer and new-up a VisualElement per marker, which allocated ~20KB per
+        // frame and left the panel dirty every frame — MinimapPanelSettings.PrepareRepaint
+        // showed up as a fixed 0.7ms in the profiler even when nothing moved. Elements are
+        // pooled now and only their inline position is rewritten; UI Toolkit's inline style
+        // setters no-op on an unchanged value, so a stationary player repaints nothing.
+        readonly List<VisualElement> _markerPool = new();
+        readonly List<string> _markerPoolClass = new();
+        int _visibleMarkerCount;
 
         void Awake()
         {
@@ -115,15 +127,17 @@ namespace View.UI.Minimap
 
         /// <summary>
         /// Sizes the viewport to Zoom × frame, translates it so the player marker
-        /// sits at the frame's visual center, and rebuilds marker dots in viewport
-        /// coordinates. Cheap enough to run every frame for the marker counts we
-        /// expect (a few dozen).
+        /// sits at the frame's visual center, and repositions pooled marker dots in
+        /// viewport coordinates. Safe to run every frame — see the pool comment above.
         /// </summary>
         public void RefreshMarkers()
         {
             if (_markerLayer == null || _viewport == null || _frame == null) return;
-            _markerLayer.Clear();
-            if (!_hasCapture) return;
+            if (!_hasCapture)
+            {
+                SetVisibleMarkerCount(0);
+                return;
+            }
 
             float frameW = _frame.contentRect.width;
             float frameH = _frame.contentRect.height;
@@ -152,14 +166,14 @@ namespace View.UI.Minimap
 
             // Render markers in viewport coords. Stuff outside the frame is clipped
             // by the parent's overflow:hidden — no need to filter here.
+            int index = 0;
             foreach (var m in MinimapMarkerRegistry.Markers)
             {
                 var world = m.ResolvePosition();
                 WorldToViewport(world, viewW, viewH, out var mx, out var my);
 
-                var dot = new VisualElement();
-                dot.AddToClassList("marker");
-                dot.AddToClassList(ClassFor(m.Type));
+                var dot = AcquireMarker(index, m.Type);
+                index++;
                 if (m.Type == MinimapMarkerType.Player)
                 {
                     float half = PlayerArrowSize * 0.5f;
@@ -186,9 +200,65 @@ namespace View.UI.Minimap
                     dot.style.left = mx - MarkerHalfSizeFor(m.Type);
                     dot.style.top  = my - MarkerHalfSizeFor(m.Type);
                 }
-                if (!string.IsNullOrEmpty(m.Tooltip)) dot.tooltip = m.Tooltip;
-                _markerLayer.Add(dot);
+                string tooltip = m.Tooltip ?? string.Empty;
+                if (dot.tooltip != tooltip) dot.tooltip = tooltip;
             }
+
+            SetVisibleMarkerCount(index);
+        }
+
+        /// <summary>
+        /// Returns the pooled element for slot <paramref name="index"/>, growing the pool
+        /// as needed. When a recycled element changes marker type its inline styles are
+        /// wiped, because the icon branches below write background / size / rotation that
+        /// the plain-dot branch never clears.
+        /// </summary>
+        VisualElement AcquireMarker(int index, MinimapMarkerType type)
+        {
+            while (index >= _markerPool.Count)
+            {
+                // Left pickable on purpose — markers carry tooltips, which need the
+                // element to receive pointer events.
+                var created = new VisualElement();
+                created.AddToClassList("marker");
+                _markerLayer.Add(created);
+                _markerPool.Add(created);
+                _markerPoolClass.Add(null);
+            }
+
+            var dot = _markerPool[index];
+            dot.style.display = DisplayStyle.Flex;
+
+            string cls = ClassFor(type);
+            if (_markerPoolClass[index] != cls)
+            {
+                if (_markerPoolClass[index] != null)
+                    dot.RemoveFromClassList(_markerPoolClass[index]);
+                dot.AddToClassList(cls);
+                _markerPoolClass[index] = cls;
+                ResetMarkerInlineStyles(dot);
+            }
+            return dot;
+        }
+
+        static void ResetMarkerInlineStyles(VisualElement dot)
+        {
+            dot.style.width           = StyleKeyword.Null;
+            dot.style.height          = StyleKeyword.Null;
+            dot.style.backgroundImage = StyleKeyword.Null;
+            dot.style.backgroundColor = StyleKeyword.Null;
+            dot.style.borderTopWidth    = StyleKeyword.Null;
+            dot.style.borderRightWidth  = StyleKeyword.Null;
+            dot.style.borderBottomWidth = StyleKeyword.Null;
+            dot.style.borderLeftWidth   = StyleKeyword.Null;
+            dot.style.rotate          = StyleKeyword.Null;
+        }
+
+        void SetVisibleMarkerCount(int count)
+        {
+            for (int i = count; i < _visibleMarkerCount && i < _markerPool.Count; i++)
+                _markerPool[i].style.display = DisplayStyle.None;
+            _visibleMarkerCount = count;
         }
 
         // ── World → viewport mapping ─────────────────────────────────

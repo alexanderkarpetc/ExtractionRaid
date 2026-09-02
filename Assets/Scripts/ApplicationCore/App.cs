@@ -4,6 +4,7 @@ using Quests;
 using Save;
 using Session;
 using State;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using View;
@@ -284,32 +285,57 @@ namespace ApplicationCore
             RaidSession?.Tick();
         }
 
+        // The whole presenter fan-out shows up in the profiler as a single opaque
+        // AppBootstrap.LateUpdate self-time entry, because none of these calls carry a
+        // marker of their own. One marker per presenter makes that column readable without
+        // needing Deep Profile. ProfilerMarker compiles out of non-development builds.
+        static readonly ProfilerMarker MkDestructible     = new("App.LateTick.Destructible");
+        static readonly ProfilerMarker MkPlayer           = new("App.LateTick.Player");
+        static readonly ProfilerMarker MkRagdoll          = new("App.LateTick.Ragdoll");
+        static readonly ProfilerMarker MkFlinch           = new("App.LateTick.Flinch");
+        static readonly ProfilerMarker MkBot              = new("App.LateTick.Bot");
+        static readonly ProfilerMarker MkProjectile       = new("App.LateTick.Projectile");
+        static readonly ProfilerMarker MkGrenade          = new("App.LateTick.Grenade");
+        static readonly ProfilerMarker MkGroundItem       = new("App.LateTick.GroundItem");
+        static readonly ProfilerMarker MkLootable         = new("App.LateTick.Lootable");
+        static readonly ProfilerMarker MkHitPause         = new("App.LateTick.HitPause");
+        static readonly ProfilerMarker MkCameraShake      = new("App.LateTick.CameraShake");
+        static readonly ProfilerMarker MkBloodDecal       = new("App.LateTick.BloodDecal");
+        static readonly ProfilerMarker MkBulletHoleDecal  = new("App.LateTick.BulletHoleDecal");
+        static readonly ProfilerMarker MkCasingEjector    = new("App.LateTick.CasingEjector");
+        static readonly ProfilerMarker MkMagazineDrop     = new("App.LateTick.MagazineDrop");
+        static readonly ProfilerMarker MkBeamFlash        = new("App.LateTick.BeamFlash");
+        static readonly ProfilerMarker MkDamageNumber     = new("App.LateTick.DamageNumber");
+        static readonly ProfilerMarker MkCrosshair        = new("App.LateTick.Crosshair");
+        static readonly ProfilerMarker MkHudDamage        = new("App.LateTick.HudDamage");
+        static readonly ProfilerMarker MkGameAudio        = new("App.LateTick.GameAudio");
+
         public void LateTick()
         {
-            _destructiblePresenter.LateTick(RaidSession);
-            _playerPresenter.LateTick(RaidSession);
+            using (MkDestructible.Auto()) _destructiblePresenter.LateTick(RaidSession);
+            using (MkPlayer.Auto()) _playerPresenter.LateTick(RaidSession);
             // RagdollPresenter MUST run before BotPresenter — it grabs character body GO
             // from the bot view before BotDespawned destroys the shell + body together.
-            _ragdollPresenter.LateTick(RaidSession);
+            using (MkRagdoll.Auto()) _ragdollPresenter.LateTick(RaidSession);
             // FlinchPresenter consumes EntityHit events to drive spine lean; needs to run
             // while bot views still exist. Order before BotPresenter (which clears views).
-            _flinchPresenter.LateTick(RaidSession);
-            _botPresenter.LateTick(RaidSession);
-            _projectilePresenter.LateTick(RaidSession);
-            _grenadePresenter.LateTick(RaidSession);
-            _groundItemPresenter.LateTick(RaidSession);
-            _lootablePresenter.LateTick(RaidSession);
-            _hitPausePresenter.LateTick(RaidSession);
-            _cameraShakePresenter.LateTick(RaidSession);
-            _bloodDecalPresenter.LateTick(RaidSession);
-            _bulletHoleDecalPresenter.LateTick(RaidSession);
-            _casingEjectorPresenter.LateTick(RaidSession);
-            _magazineDropPresenter.LateTick(RaidSession);
-            _beamFlashPresenter.LateTick(RaidSession);
-            _damageNumberPresenter.LateTick(RaidSession);
-            _crosshairPresenter.LateTick(RaidSession);
-            _hudDamagePresenter.LateTick(RaidSession);
-            _gameAudioPresenter.LateTick(RaidSession);
+            using (MkFlinch.Auto()) _flinchPresenter.LateTick(RaidSession);
+            using (MkBot.Auto()) _botPresenter.LateTick(RaidSession);
+            using (MkProjectile.Auto()) _projectilePresenter.LateTick(RaidSession);
+            using (MkGrenade.Auto()) _grenadePresenter.LateTick(RaidSession);
+            using (MkGroundItem.Auto()) _groundItemPresenter.LateTick(RaidSession);
+            using (MkLootable.Auto()) _lootablePresenter.LateTick(RaidSession);
+            using (MkHitPause.Auto()) _hitPausePresenter.LateTick(RaidSession);
+            using (MkCameraShake.Auto()) _cameraShakePresenter.LateTick(RaidSession);
+            using (MkBloodDecal.Auto()) _bloodDecalPresenter.LateTick(RaidSession);
+            using (MkBulletHoleDecal.Auto()) _bulletHoleDecalPresenter.LateTick(RaidSession);
+            using (MkCasingEjector.Auto()) _casingEjectorPresenter.LateTick(RaidSession);
+            using (MkMagazineDrop.Auto()) _magazineDropPresenter.LateTick(RaidSession);
+            using (MkBeamFlash.Auto()) _beamFlashPresenter.LateTick(RaidSession);
+            using (MkDamageNumber.Auto()) _damageNumberPresenter.LateTick(RaidSession);
+            using (MkCrosshair.Auto()) _crosshairPresenter.LateTick(RaidSession);
+            using (MkHudDamage.Auto()) _hudDamagePresenter.LateTick(RaidSession);
+            using (MkGameAudio.Auto()) _gameAudioPresenter.LateTick(RaidSession);
             RaidSession?.ClearEvents();
         }
 

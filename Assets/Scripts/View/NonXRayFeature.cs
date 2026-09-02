@@ -3,10 +3,17 @@ using UnityEngine.Rendering.Universal;
 
 namespace View
 {
+    /// <summary>
+    /// Owns the authored NonXRay layer mask (serialized into PC_Renderer /
+    /// Mobile_Renderer) and drives <see cref="NonXRayRenderQueue"/>.
+    ///
+    /// The feature enqueues no pass — it only needs a per-scene hook, and the render
+    /// callback is the earliest one guaranteed to run before anything is drawn. The
+    /// actual work is guarded behind a scene-applied flag, so the per-frame, per-camera
+    /// cost here is a bool check. It used to be a full scene renderer scan.
+    /// </summary>
     public class NonXRayFeature : ScriptableRendererFeature
     {
-        const int NonXRayRenderQueue = 2999; // Transparent-1: after x-ray, before normal transparents.
-
         [SerializeField] LayerMask nonXRayLayerMask = 1 << LayerUtils.NonXRay;
 
         public override void Create()
@@ -18,18 +25,7 @@ namespace View
             if (!Application.isPlaying) return;
             if (renderingData.cameraData.cameraType != CameraType.Game) return;
 
-            var renderers = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
-            foreach (var r in renderers)
-            {
-                if (((1 << r.gameObject.layer) & nonXRayLayerMask.value) == 0) continue;
-
-                var materials = r.materials;
-                for (int i = 0; i < materials.Length; i++)
-                {
-                    if (materials[i] != null && materials[i].renderQueue != NonXRayRenderQueue)
-                        materials[i].renderQueue = NonXRayRenderQueue;
-                }
-            }
+            NonXRayRenderQueue.EnsureSceneApplied(nonXRayLayerMask);
         }
     }
 }

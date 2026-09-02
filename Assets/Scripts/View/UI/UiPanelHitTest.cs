@@ -24,18 +24,34 @@ namespace View.UI
     {
         static UIDocument[] _docsCache;
 
+        // Result memo. PointerOverUiTracker calls this every frame, and panel.Pick walks
+        // the visual tree of every open panel. The answer can only change when the query
+        // point moves or the set of displayed panels changes, so both are keyed on.
+        static Vector2 _memoPoint = new(float.NaN, float.NaN);
+        static int _memoDisplayKey;
+        static bool _memoValid;
+        static bool _memoResult;
+
         /// <summary>
         /// Drop the cached UIDocument list. Call when modals are dynamically
         /// added/removed (none in this project today). No-op if cache empty.
         /// </summary>
-        public static void Invalidate() => _docsCache = null;
+        public static void Invalidate()
+        {
+            _docsCache = null;
+            _memoValid = false;
+        }
 
         // Reload Domain is disabled in this project (EditorSettings
         // m_EnterPlayModeOptions=1), so static fields survive Play→Stop→Play.
         // Без цього коллбеку cache тримав би destroyed UIDocument refs після
         // рестарту Play Mode → IsScreenPointOverUi завжди повертав би false.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetCacheOnPlay() => _docsCache = null;
+        static void ResetCacheOnPlay()
+        {
+            _docsCache = null;
+            _memoValid = false;
+        }
 
         /// <summary>
         /// Screen-space (Input.mousePosition / Mouse.current.position) origin
@@ -50,6 +66,23 @@ namespace View.UI
                     FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             }
 
+            // Order-stable fingerprint of which panels are currently displayed. Reading
+            // resolvedStyle per document is cheap; picking through them is not. Including
+            // this means a window opening or closing under a stationary cursor still
+            // re-picks instead of being served a stale answer.
+            int displayKey = 17;
+            foreach (var doc in _docsCache)
+            {
+                var root = doc != null ? doc.rootVisualElement : null;
+                bool live = root != null && root.panel != null
+                            && root.resolvedStyle.display != DisplayStyle.None;
+                displayKey = displayKey * 31 + (live ? 1 : 0);
+            }
+
+            if (_memoValid && displayKey == _memoDisplayKey && screenPos.Equals(_memoPoint))
+                return _memoResult;
+
+            bool hit = false;
             foreach (var doc in _docsCache)
             {
                 var root = doc != null ? doc.rootVisualElement : null;
@@ -61,9 +94,14 @@ namespace View.UI
                 Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(panel,
                     new Vector2(screenPos.x, Screen.height - screenPos.y));
 
-                if (panel.Pick(panelPos) != null) return true;
+                if (panel.Pick(panelPos) != null) { hit = true; break; }
             }
-            return false;
+
+            _memoPoint = screenPos;
+            _memoDisplayKey = displayKey;
+            _memoResult = hit;
+            _memoValid = true;
+            return hit;
         }
     }
 }

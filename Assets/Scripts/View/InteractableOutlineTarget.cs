@@ -33,6 +33,13 @@ namespace View
         bool _hasTweenState;
         bool _lastTweenActive;
 
+        // ApplyOpacity does a GetPropertyBlock/SetPropertyBlock round trip per renderer.
+        // With ~135 of these components in the scene that ran every frame even though most
+        // sit idle at opacity 0, well outside the activation radius. Track what was last
+        // pushed so a steady state costs nothing but the distance check.
+        bool _hasAppliedOpacity;
+        float _lastAppliedOpacity;
+
         static readonly int OutlineMaskOpacityId = Shader.PropertyToID("_OutlineMaskOpacity");
         static MaterialPropertyBlock _propertyBlock;
 
@@ -57,6 +64,7 @@ namespace View
         void OnEnable()
         {
             CacheRenderers();
+            _hasAppliedOpacity = false;
             UpdateFade(0f);
         }
 
@@ -64,6 +72,7 @@ namespace View
         {
             SetTweenersActive(false, true);
             Restore();
+            _hasAppliedOpacity = false;
         }
 
 #if UNITY_EDITOR
@@ -72,6 +81,7 @@ namespace View
             if (!isActiveAndEnabled) return;
             UnregisterAll();
             CacheRenderers();
+            _hasAppliedOpacity = false;
             _activationRadius = Mathf.Max(0f, _activationRadius);
             _fadeSeconds = Mathf.Max(0f, _fadeSeconds);
             _opacityFrom = Mathf.Clamp01(_opacityFrom);
@@ -89,6 +99,7 @@ namespace View
         {
             UnregisterAll();
             CacheRenderers();
+            _hasAppliedOpacity = false;
             UpdateFade(0f);
         }
 
@@ -111,7 +122,14 @@ namespace View
             float curved = _opacityCurve != null ? _opacityCurve.Evaluate(_fade01) : _fade01;
             _currentOpacity = Mathf.Lerp(_opacityFrom, _opacityTo, Mathf.Clamp01(curved));
 
-            ApplyOpacity(active || _fade01 > 0f ? _currentOpacity : 0f);
+            float applied = active || _fade01 > 0f ? _currentOpacity : 0f;
+            // Registry membership is decided by the same opacity, so an unchanged value
+            // means the registry is already correct too — nothing to redo.
+            if (_hasAppliedOpacity && _lastAppliedOpacity.Equals(applied)) return;
+            _hasAppliedOpacity = true;
+            _lastAppliedOpacity = applied;
+
+            ApplyOpacity(applied);
         }
 
         void SetTweenersActive(bool active, bool force = false)

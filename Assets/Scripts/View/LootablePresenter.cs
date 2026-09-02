@@ -65,6 +65,10 @@ namespace View
                 var go = Object.Instantiate(overridePrefab, position, Quaternion.identity);
                 go.name = $"Container_{typeId}_{id}";
                 go.AddComponent<InteractableOutlineTarget>();
+                // Container prefabs (ER_MCrate01) sit on the NonXRay layer. The scene-wide
+                // queue pass only covers objects present at load, so freshly spawned
+                // containers have to opt in explicitly.
+                NonXRayRenderQueue.Apply(go);
                 _views[id] = go;
                 return;
             }

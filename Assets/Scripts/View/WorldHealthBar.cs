@@ -61,6 +61,22 @@ namespace View
         float _shakeTimer;      // counts up from 0; shake active while < duration
         float _shakeMagnitude;  // base magnitude for current shake (proportional to damage)
 
+        // ── Per-frame write gate ─────────────────────────────
+        // LateUpdate runs on ~100 bars at once. Writing RectTransform sizes and the TMP
+        // font size every frame marked 100 world-space canvases dirty (PlayerUpdateCanvases
+        // ~0.9ms), and the ~15 material setters per bar meant ~1500 native calls a frame —
+        // nearly all of them re-pushing DevCheats constants that hadn't moved. Every write
+        // below is now compared against the last value actually written.
+        Vector3 _lastLocalPos  = new(float.NaN, float.NaN, float.NaN);
+        Vector2 _lastCanvasSize = new(float.NaN, float.NaN);
+        Vector2 _lastFillOffset = new(float.NaN, float.NaN);
+        float _lastFontSize = float.NaN;
+
+        bool _uniformsWritten;
+        float _uFill, _uTrailFill, _uFlashT, _uFlashExpandX, _uFlashExpandY;
+        float _uFlashPower, _uBorderSize, _uSegmentCount, _uSegmentLineWidth;
+        Color _uSegmentLineColor, _uTrailColor, _uFlashColor, _uBgColor;
+
         // Armor bar (thin stripe above health bar)
         GameObject _armorBarGo;
         RectTransform _helmetFillRect;
@@ -316,10 +332,18 @@ namespace View
 
         void LateUpdate()
         {
-            // Billboard
+            // Billboard. Compare against our own *world* rotation rather than a cached
+            // camera rotation: the bar is parented to the character, so a bot turning in
+            // place changes this transform's world rotation even when the camera hasn't
+            // moved. Skipping the write only when the two already match avoids dirtying
+            // the transform hierarchy on the (common) frame where neither has moved.
             var cam = Camera.main;
             if (cam != null)
-                transform.rotation = cam.transform.rotation;
+            {
+                var camRot = cam.transform.rotation;
+                if (transform.rotation != camRot)
+                    transform.rotation = camRot;
+            }
 
             // Dynamic layout from DevCheats (real-time tweaking in editor)
             float w = DevCheats.HBarWidth;
@@ -340,8 +364,21 @@ namespace View
                 shakeY = Mathf.Cos(t * 4.1887902f) * amplitude; // different freq for Y
             }
 
-            transform.localPosition = new Vector3(shakeX, baseY + shakeY, 0f);
-            _canvasRect.sizeDelta = new Vector2(w, h);
+            var localPos = new Vector3(shakeX, baseY + shakeY, 0f);
+            if (localPos != _lastLocalPos)
+            {
+                transform.localPosition = localPos;
+                _lastLocalPos = localPos;
+            }
+
+            // sizeDelta / offsets / fontSize all mark the world-space canvas dirty, so they
+            // stay gated — they only move when someone drags a DevCheats slider.
+            var canvasSize = new Vector2(w, h);
+            if (canvasSize != _lastCanvasSize)
+            {
+                _canvasRect.sizeDelta = canvasSize;
+                _lastCanvasSize = canvasSize;
+            }
 
             if (_hpText != null)
             {
@@ -352,13 +389,23 @@ namespace View
                     if (showNumericHp)
                         _hpText.text = FormatHpText(_currentHp, _maxHp);
                 }
-                _hpText.fontSize = Mathf.Max(0.05f, h * 0.85f);
+                float fontSize = Mathf.Max(0.05f, h * 0.85f);
+                if (!fontSize.Equals(_lastFontSize))
+                {
+                    _hpText.fontSize = fontSize;
+                    _lastFontSize = fontSize;
+                }
             }
 
-            float extraX = w * PaddingX / (1f - 2f * PaddingX);
-            float extraY = h * PaddingY / (1f - 2f * PaddingY);
-            _fillRect.offsetMin = new Vector2(-extraX, -extraY);
-            _fillRect.offsetMax = new Vector2(extraX, extraY);
+            var fillOffset = new Vector2(
+                w * PaddingX / (1f - 2f * PaddingX),
+                h * PaddingY / (1f - 2f * PaddingY));
+            if (fillOffset != _lastFillOffset)
+            {
+                _fillRect.offsetMin = -fillOffset;
+                _fillRect.offsetMax = fillOffset;
+                _lastFillOffset = fillOffset;
+            }
 
             float dt = Time.deltaTime;
 
@@ -373,25 +420,43 @@ namespace View
                 _trailFill = Mathf.MoveTowards(_trailFill, _fill, DevCheats.HBarTrailSpeed * dt);
 
             // Push uniforms — animation
-            _material.SetFloat(PropFill, _fill);
-            _material.SetFloat(PropTrailFill, _trailFill);
-            _material.SetFloat(PropFlashT, _flashTimer);
-            _material.SetFloat(PropFlashExpandX, DevCheats.HBarFlashExpandX);
-            _material.SetFloat(PropFlashExpandY, DevCheats.HBarFlashExpandY);
-            _material.SetFloat(PropFlashPower, Mathf.Max(DevCheats.HBarFlashPower, 0.1f));
-            _material.SetFloat(PropBorderSize, DevCheats.HBarBorderSize);
+            SetFloatIfChanged(PropFill, _fill, ref _uFill);
+            SetFloatIfChanged(PropTrailFill, _trailFill, ref _uTrailFill);
+            SetFloatIfChanged(PropFlashT, _flashTimer, ref _uFlashT);
+            SetFloatIfChanged(PropFlashExpandX, DevCheats.HBarFlashExpandX, ref _uFlashExpandX);
+            SetFloatIfChanged(PropFlashExpandY, DevCheats.HBarFlashExpandY, ref _uFlashExpandY);
+            SetFloatIfChanged(PropFlashPower, Mathf.Max(DevCheats.HBarFlashPower, 0.1f), ref _uFlashPower);
+            SetFloatIfChanged(PropBorderSize, DevCheats.HBarBorderSize, ref _uBorderSize);
 
             // Push uniforms — segments (always up-to-date, even before first damage)
             float hpPerSeg = DevCheats.HBarHpPerSegment;
             float segments = hpPerSeg > 0f ? _maxHp / hpPerSeg : 1f;
-            _material.SetFloat(PropSegmentCount, segments);
-            _material.SetFloat(PropSegmentLineWidth, DevCheats.HBarSegmentLineWidth);
-            _material.SetColor(PropSegmentLineColor, DevCheats.HBarSegmentLineColor);
+            SetFloatIfChanged(PropSegmentCount, segments, ref _uSegmentCount);
+            SetFloatIfChanged(PropSegmentLineWidth, DevCheats.HBarSegmentLineWidth, ref _uSegmentLineWidth);
+            SetColorIfChanged(PropSegmentLineColor, DevCheats.HBarSegmentLineColor, ref _uSegmentLineColor);
 
             // Push uniforms — colors
-            _material.SetColor(PropTrailColor, DevCheats.HBarTrailColor);
-            _material.SetColor(PropFlashColor, DevCheats.HBarFlashColor);
-            _material.SetColor(PropBgColor, DevCheats.HBarBgColor);
+            SetColorIfChanged(PropTrailColor, DevCheats.HBarTrailColor, ref _uTrailColor);
+            SetColorIfChanged(PropFlashColor, DevCheats.HBarFlashColor, ref _uFlashColor);
+            SetColorIfChanged(PropBgColor, DevCheats.HBarBgColor, ref _uBgColor);
+
+            _uniformsWritten = true;
+        }
+
+        // Material setters are native calls; at ~15 per bar × ~100 bars they dominated
+        // this component's cost even though almost every value is a DevCheats constant.
+        void SetFloatIfChanged(int propertyId, float value, ref float cached)
+        {
+            if (_uniformsWritten && cached.Equals(value)) return;
+            cached = value;
+            _material.SetFloat(propertyId, value);
+        }
+
+        void SetColorIfChanged(int propertyId, Color value, ref Color cached)
+        {
+            if (_uniformsWritten && cached == value) return;
+            cached = value;
+            _material.SetColor(propertyId, value);
         }
 
         void OnDestroy()

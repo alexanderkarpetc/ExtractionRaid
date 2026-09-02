@@ -52,7 +52,9 @@ namespace View.UI.Minimap
     {
         static readonly Dictionary<string, MinimapMarker> _markers = new();
 
-        public static IReadOnlyCollection<MinimapMarker> Markers => _markers.Values;
+        // Concrete ValueCollection rather than IReadOnlyCollection: MinimapWindow walks
+        // this every frame, and an interface-typed foreach boxes the struct enumerator.
+        public static Dictionary<string, MinimapMarker>.ValueCollection Markers => _markers.Values;
 
         public static void Register(string id, MinimapMarkerType type, Vector3 worldPos,
             string tooltip = null)

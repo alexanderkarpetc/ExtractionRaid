@@ -96,6 +96,30 @@ namespace View.UI.Hotbar
         int   _activeFlashSlot     = -1;
         float _activeFlashStart    = -1f;
 
+        // ── Per-frame refresh gate ───────────────────────────
+        // LateUpdate used to re-Bind every slot every frame. Bind re-formats the item
+        // name and the "xN" / durability strings, so that was ~3.5KB of garbage per
+        // frame plus a permanently dirty panel — HotbarPanelSettings.PrepareRepaint sat
+        // at ~0.9ms even with the hotbar untouched. Rebind only when something the strip
+        // actually shows has changed. InventoryState.Version is the project's established
+        // dirty signal; InventoryWindow.RefreshAll gates on it exactly the same way, so
+        // the hotbar now has the same freshness guarantees as the inventory grid.
+        int   _lastInvVersion        = int.MinValue;
+        int   _lastActiveApplied     = int.MinValue;
+        int   _lastSelectedHotbar    = int.MinValue;
+        bool  _lastFlashAlive;
+        int   _lastFlashSlot         = int.MinValue;
+        Color _lastSlotBgTint;
+        float _lastWeaponSeparatorPx = float.NaN;
+        bool  _refreshQueued         = true;
+
+        /// <summary>
+        /// Forces the next <c>LateUpdate</c> to rebind every slot. Only needed for state
+        /// the gate below can't observe — binding and item changes already bump
+        /// <see cref="InventoryState.Version"/>.
+        /// </summary>
+        public void MarkDirty() => _refreshQueued = true;
+
         void Awake()
         {
             Instance = this;
@@ -297,6 +321,38 @@ namespace View.UI.Hotbar
             bool flashAlive = _activeFlashSlot >= 0
                               && (Time.time - _activeFlashStart) < ActiveFlashDuration;
 
+            // Everything below writes UI Toolkit styles / text. Skip it entirely unless
+            // one of the inputs it renders from changed. `sepPx` is compared with Equals
+            // so a NaN (no ViewCheats config) still matches a previous NaN.
+            int   invVersion = inventory?.Version ?? int.MinValue;
+            int   selected   = player?.SelectedHotbarSlot ?? -1;
+            Color bgTint     = view != null ? view.ConsumableSlotBgTint : default;
+            float sepPx      = view != null ? view.HotbarWeaponSeparatorPx : float.NaN;
+
+            bool dirty = _refreshQueued
+                         || invVersion != _lastInvVersion
+                         || active     != _lastActiveApplied
+                         || selected   != _lastSelectedHotbar
+                         || flashAlive != _lastFlashAlive
+                         || _activeFlashSlot != _lastFlashSlot
+                         || bgTint     != _lastSlotBgTint
+                         || !sepPx.Equals(_lastWeaponSeparatorPx);
+
+            if (!dirty)
+            {
+                AutoClosePickerIfStale();
+                return;
+            }
+
+            _refreshQueued         = false;
+            _lastInvVersion        = invVersion;
+            _lastActiveApplied     = active;
+            _lastSelectedHotbar    = selected;
+            _lastFlashAlive        = flashAlive;
+            _lastFlashSlot         = _activeFlashSlot;
+            _lastSlotBgTint        = bgTint;
+            _lastWeaponSeparatorPx = sepPx;
+
             for (int i = 0; i < _slots.Length; i++)
             {
                 var slot = _slots[i];
@@ -337,8 +393,14 @@ namespace View.UI.Hotbar
 
             RefreshWeaponSlots(inventory, player, registry, view);
 
-            // Picker auto-close: if the slot it was opened for got bound from
-            // elsewhere (hover+key, context menu, etc), the picker becomes stale.
+            AutoClosePickerIfStale();
+        }
+
+        // Picker auto-close: if the slot it was opened for got bound from elsewhere
+        // (hover+key, context menu, etc), the picker becomes stale. Runs every frame,
+        // including on the gated fast path — it's a pair of int checks.
+        void AutoClosePickerIfStale()
+        {
             if (_pickerSlotIndex >= 0 && !IsSlotEmpty(_pickerSlotIndex))
                 HidePicker();
         }
