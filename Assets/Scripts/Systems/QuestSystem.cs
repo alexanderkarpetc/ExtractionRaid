@@ -7,6 +7,13 @@ namespace Systems
 {
     public static class QuestSystem
     {
+        public enum NpcQuestAttention
+        {
+            None,
+            Available,
+            Ready,
+        }
+
         /// <summary>
         /// A quest task that just crossed from incomplete to fully satisfied. Raised by the
         /// On* progress hooks the moment a task hits its <see cref="QuestTask.RequiredCount"/>.
@@ -98,6 +105,38 @@ namespace Systems
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Resolves the quest marker state for an NPC. A handover counts as ready only
+        /// when the player owns the full remaining amount, matching the dialogue action.
+        /// </summary>
+        public static NpcQuestAttention GetNpcQuestAttention(
+            QuestProgressState progress, QuestDatabase db, int playerLevel, string npcId,
+            InventoryState inventory, List<ItemState> stash = null)
+        {
+            if (progress == null || db == null || string.IsNullOrEmpty(npcId))
+                return NpcQuestAttention.None;
+
+            if (GetAvailableQuests(progress, db, playerLevel, npcId).Count > 0)
+                return NpcQuestAttention.Available;
+
+            var active = GetActiveQuestsForNpc(progress, db, npcId);
+            for (int i = 0; i < active.Count; i++)
+            {
+                var questProgress = progress.GetProgress(active[i].Id);
+                if (questProgress != null && AreAllTasksDone(active[i], questProgress))
+                    return NpcQuestAttention.Ready;
+            }
+
+            if (inventory == null) return NpcQuestAttention.None;
+            var handovers = GetHandoverOpportunities(progress, db, inventory, npcId, stash);
+            for (int i = 0; i < handovers.Count; i++)
+                if (handovers[i].RequiredRemaining > 0 &&
+                    handovers[i].Available >= handovers[i].RequiredRemaining)
+                    return NpcQuestAttention.Ready;
+
+            return NpcQuestAttention.None;
         }
 
         public static List<QuestDefinition> GetAllActiveQuests(

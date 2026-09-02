@@ -8,8 +8,8 @@ namespace View
 {
     /// <summary>
     /// Floating quest badge above an NPC's head when they have an offer for the player:
-    /// a new quest available (yellow), or an active quest з all tasks done — ready to
-    /// turn in (green). All procedural (no sprites / prefab):
+    /// a new quest available (yellow), or an active quest ready to claim / hand over
+    /// in full (green). All procedural (no sprites / prefab):
     ///   1. an SDF badge (<c>UI/NpcQuestIcon</c>) — disc + rim + glow + drawn "!";
     ///   2. a soft additive POOL of light on the ground (<c>VFX/QuestGroundGlow</c>) +
     ///      a camera-billboarded vertical glow column (<c>VFX/QuestBeam</c>). Both use
@@ -365,26 +365,12 @@ namespace View
 
             int level = player.ProfileState?.Level ?? 1;
 
-            bool hasAvailable = QuestSystem.GetAvailableQuests(progress, db, level, _npcId).Count > 0;
-
-            bool hasReady = false;
-            if (!hasAvailable)
-            {
-                var active = QuestSystem.GetActiveQuestsForNpc(progress, db, _npcId);
-                for (int i = 0; i < active.Count; i++)
-                {
-                    var qp = progress.GetProgress(active[i].Id);
-                    if (qp != null && QuestSystem.AreAllTasksDone(active[i], qp))
-                    {
-                        hasReady = true;
-                        break;
-                    }
-                }
-            }
-
-            bool visible = hasAvailable || hasReady;
+            var attention = QuestSystem.GetNpcQuestAttention(
+                progress, db, level, _npcId, player.Inventory, player.Stash);
+            bool visible = attention != QuestSystem.NpcQuestAttention.None;
             SetVisible(visible);
-            if (visible) ApplyPalette(hasAvailable ? Avail : Ready);
+            if (visible)
+                ApplyPalette(attention == QuestSystem.NpcQuestAttention.Available ? Avail : Ready);
         }
 
         void SetVisible(bool visible)

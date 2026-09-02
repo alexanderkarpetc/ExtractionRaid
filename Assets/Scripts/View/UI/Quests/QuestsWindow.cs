@@ -399,6 +399,8 @@ namespace View.UI.Quests
                     if (done) doneCount++;
 
                     objList.Add(BuildObjectiveRow(task.Description, current, required, done));
+                    if (!done && task is UpgradeBuildingTask upgrade)
+                        AddUpgradeRequirements(objList, upgrade.Kind);
                 }
                 body.Add(objList);
 
@@ -416,6 +418,40 @@ namespace View.UI.Quests
             if (actions != null) body.Add(actions);
 
             return body;
+        }
+
+        static void AddUpgradeRequirements(VisualElement parent, BuildingKind kind)
+        {
+            var requirements = BuildingSystem.GetNextUpgradeRequirements(
+                App.Instance?.Player, kind);
+            if (requirements.Count == 0) return;
+
+            var group = new VisualElement();
+            group.AddToClassList("qp-material-list");
+            var title = new Label("Required materials");
+            title.AddToClassList("qp-material-title");
+            group.Add(title);
+
+            for (int i = 0; i < requirements.Count; i++)
+            {
+                var requirement = requirements[i];
+                var row = new VisualElement();
+                row.AddToClassList("qp-material-row");
+
+                var def = ItemDefinition.Get(requirement.ItemId);
+                var name = new Label(def?.DisplayName ?? requirement.ItemId);
+                name.AddToClassList("qp-material-name");
+                if (requirement.IsMet) name.AddToClassList("qp-material-name--ready");
+                row.Add(name);
+
+                var count = new Label($"{requirement.Available}/{requirement.Required}");
+                count.AddToClassList("qp-material-count");
+                if (requirement.IsMet) count.AddToClassList("qp-material-count--ready");
+                row.Add(count);
+                group.Add(row);
+            }
+
+            parent.Add(group);
         }
 
         static VisualElement BuildObjectiveRow(string text, int current, int required, bool done)

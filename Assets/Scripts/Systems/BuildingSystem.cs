@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Constants;
 using Session;
 using State;
@@ -14,6 +15,22 @@ namespace Systems
     /// </summary>
     public static class BuildingSystem
     {
+        public readonly struct UpgradeRequirement
+        {
+            public readonly string ItemId;
+            public readonly int Available;
+            public readonly int Required;
+
+            public bool IsMet => Available >= Required;
+
+            public UpgradeRequirement(string itemId, int available, int required)
+            {
+                ItemId = itemId;
+                Available = available;
+                Required = required;
+            }
+        }
+
         public static int GetLevel(Player player, BuildingKind kind) =>
             player?.GetBuildingLevel(kind) ?? 0;
 
@@ -28,6 +45,23 @@ namespace Systems
         {
             if (player == null) return null;
             return BuildingConstants.GetUpgradeRecipe(kind, GetLevel(player, kind));
+        }
+
+        /// <summary>UI-ready material counts for the player's next upgrade step.</summary>
+        public static List<UpgradeRequirement> GetNextUpgradeRequirements(
+            Player player, BuildingKind kind)
+        {
+            var result = new List<UpgradeRequirement>();
+            var recipe = GetNextUpgradeRecipe(player, kind);
+            if (recipe == null) return result;
+
+            for (int i = 0; i < recipe.Length; i++)
+                result.Add(new UpgradeRequirement(
+                    recipe[i].ItemId,
+                    GetAvailable(player, recipe[i].ItemId),
+                    recipe[i].Count));
+
+            return result;
         }
 
         /// <summary>
@@ -110,7 +144,7 @@ namespace Systems
             return count;
         }
 
-        static int CountInStash(System.Collections.Generic.List<ItemState> stash, string itemId)
+        static int CountInStash(List<ItemState> stash, string itemId)
         {
             if (stash == null) return 0;
             int count = 0;
@@ -146,7 +180,7 @@ namespace Systems
 
         // Stash is a List — remove drained entries so the container stays compact.
         // Returns whatever the caller still needs to consume after the stash dries up.
-        static int ConsumeFromStash(System.Collections.Generic.List<ItemState> stash,
+        static int ConsumeFromStash(List<ItemState> stash,
             string itemId, int amount)
         {
             if (stash == null) return amount;
