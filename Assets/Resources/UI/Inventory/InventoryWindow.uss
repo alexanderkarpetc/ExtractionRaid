@@ -177,9 +177,13 @@
 .inv-subpanels {
     flex-direction: column;
     margin-left: 12px;
-    /* Stay at top of stretched .inv-inner — sub-panels are content-sized,
-     * не повинні тягтися вертикально як головне вікно. */
-    align-self: flex-start;
+    /* Full height of the stretched .inv-inner so stacked sub-panels (trade +
+     * floor) can shrink into the available space instead of running off the
+     * bottom of the screen. Panels stay content-sized up to their max-height,
+     * and justify-content defaults to flex-start, so a single panel still hugs
+     * the top exactly as before. */
+    align-self: stretch;
+    justify-content: flex-start;
 }
 
 .inv-subpanel {
@@ -189,11 +193,14 @@
     border-color: var(--color-border);
     border-width: var(--border-window);
     border-radius: var(--radius-window);
-    /* 6 cells × 102 + 5 × 9 gaps + 24 padding + 4 border = 685px. Fixed width
-     * even when stock is smaller — keeps layout stable between trades. Vertical
-     * cap matches the player backpack (4 rows of 102 + 3 × 9 gap ≈ 435 + title). */
-    width: 685px;
-    max-height: 480px;
+    /* Width = grid (666, see .inv-subpanel__grid) + 12 scroller gutter
+     * + 24 padding + 4 border. The old 685px left no room for the vertical
+     * scroller, so the 6-column grid silently wrapped to 5 while the C#-applied
+     * `.inv-slot--row-end` still zeroed every 6th cell's gap — that's what made
+     * the columns look glued together. Fixed width keeps layout stable between
+     * trades even when stock is smaller. */
+    width: 706px;
+    flex-shrink: 1;
 }
 
 .inv-subpanel__title {
@@ -201,15 +208,79 @@
     -unity-font-style: bold;
     color: var(--color-section-heading);
     margin-bottom: 8px;
+    flex-shrink: 0;
 }
 
 .inv-subpanel__scroll {
     flex-grow: 1;
+    flex-shrink: 1;
+    /* Exactly 4 rows of cells (4 × 102 + 4 × 7 bottom margins = 436) so the
+     * viewport never cuts a row in half. min-height: 0 lets the panel compress
+     * below that when several sub-panels stack. */
+    max-height: 436px;
+    min-height: 0;
 }
 
 .inv-subpanel__grid {
     flex-direction: row;
     flex-wrap: wrap;
+    /* 6 × (102 cell + 9 right margin) — wrapping is measured against this
+     * explicit width, not against the scroller-dependent viewport, so the
+     * column count never flips when the scrollbar appears. */
+    width: 666px;
+    flex-shrink: 0;
+}
+
+/* ── Sub-panel scrollbar (thin, themed) ─────────────────
+ * Unity's stock ScrollView scroller is a wide track with up/down arrow buttons
+ * and a chunky grey dragger. Same treatment as ControlsOverlay / NotesWindow. */
+
+.inv-subpanel__scroll .unity-scroller--vertical {
+    width: 10px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+}
+
+/* Drop the up/down arrow buttons entirely. */
+.inv-subpanel__scroll .unity-scroller--vertical .unity-scroller__low-button,
+.inv-subpanel__scroll .unity-scroller--vertical .unity-scroller__high-button {
+    display: none;
+}
+
+/* The slider fills the full height now that the buttons are gone. */
+.inv-subpanel__scroll .unity-scroller--vertical .unity-base-slider--vertical {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Transparent track. */
+.inv-subpanel__scroll .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+}
+
+/* Rounded thumb, tinted with the section-heading accent. */
+.inv-subpanel__scroll .unity-scroller--vertical #unity-dragger {
+    width: 6px;
+    min-height: 36px;
+    border-radius: 3px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 2px;
+    background-color: rgba(140, 175, 210, 0.30);
+}
+
+.inv-subpanel__scroll .unity-scroller--vertical #unity-dragger:hover {
+    background-color: rgba(140, 175, 210, 0.55);
 }
 
 /* Slots inside a sub-panel use the same dimensions as the main backpack

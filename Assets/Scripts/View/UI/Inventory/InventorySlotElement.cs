@@ -84,10 +84,25 @@ namespace View.UI.Inventory
             _name.pickingMode = PickingMode.Ignore;
             Add(_name);
 
+            // Price badge + resource/stack text live in one bottom flex row
+            // (space-between) — as independent absolute children they collided
+            // in shop slots ("120¢" over "200/200"). Footer is added before the
+            // durability bar so the bar keeps its own strip at the very bottom.
+            var footer = new VisualElement();
+            footer.AddToClassList("inv-slot__footer");
+            footer.pickingMode = PickingMode.Ignore;
+            Add(footer);
+
+            _priceBadge = new Label();
+            _priceBadge.AddToClassList("inv-slot__price");
+            _priceBadge.pickingMode = PickingMode.Ignore;
+            _priceBadge.style.display = DisplayStyle.None;
+            footer.Add(_priceBadge);
+
             _resource = new Label();
             _resource.AddToClassList("inv-slot__resource");
             _resource.pickingMode = PickingMode.Ignore;
-            Add(_resource);
+            footer.Add(_resource);
 
             _quickSlotKey = new Label();
             _quickSlotKey.AddToClassList("inv-slot__key");
@@ -107,12 +122,6 @@ namespace View.UI.Inventory
             _durabilityFill.pickingMode = PickingMode.Ignore;
             _durabilityRoot.Add(_durabilityFill);
             Add(_durabilityRoot);
-
-            _priceBadge = new Label();
-            _priceBadge.AddToClassList("inv-slot__price");
-            _priceBadge.pickingMode = PickingMode.Ignore;
-            _priceBadge.style.display = DisplayStyle.None;
-            Add(_priceBadge);
 
             _rarityTl = new VisualElement();
             _rarityTl.AddToClassList("inv-slot__rarity-tl");

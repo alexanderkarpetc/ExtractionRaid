@@ -74,9 +74,15 @@ namespace View.UI.Inventory
         /// <summary>
         /// Ensure the pool has at least <paramref name="needed"/> slots. Extra
         /// slots beyond <paramref name="needed"/> are hidden (display: None).
+        ///
+        /// Column count is enforced purely by the grid's explicit width in
+        /// `.inv-subpanel__grid` (6 × cell pitch, trailing margin included), so
+        /// every cell keeps the same uniform right margin. The old per-6th-cell
+        /// `.inv-slot--row-end` override desynced as soon as the scrollbar took
+        /// width and the grid wrapped to 5 per row — leaving one glued-together
+        /// pair in every row. Hidden slots (display: None) also don't consume a
+        /// column, which that index-based scheme could not account for.
         /// </summary>
-        const int ColumnsPerRow = 6;
-
         public void EnsureSlotCount(int needed)
         {
             while (_slots.Count < needed)
@@ -84,11 +90,6 @@ namespace View.UI.Inventory
                 var s = new InventorySlotElement(InventorySlotElement.SlotKind.Backpack, "");
                 s.Source = SlotSource;
                 s.SourceLootableId = LootableId;
-                if ((_slots.Count + 1) % ColumnsPerRow == 0)
-                {
-                    s.AddToClassList("inv-slot--row-end");
-                    s.style.marginRight = 0;
-                }
                 _grid.Add(s);
                 _slots.Add(s);
                 _wire?.Invoke(s);

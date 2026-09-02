@@ -52,12 +52,27 @@
     flex-grow: 1;
 }
 
+/* Bottom badge row — price (left) + resource/stack (right) share one flex line
+ * so they can never overlap. Both used to be independently absolute-positioned,
+ * which collided in shop slots (e.g. "120¢" + "200/200" у 102px cell).
+ * Sits above `.inv-slot__durability` (bottom: 2px, 3px tall). */
+.inv-slot__footer {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 6px;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+
 .inv-slot__resource {
     font-size: var(--font-card-kind);
     color: var(--color-text-secondary);
-    position: absolute;
-    right: 6px;
-    bottom: 4px;
+    flex-shrink: 1;
+    /* Pushed right when no price badge is shown (footer is space-between, and a
+     * display:none price collapses the left side). */
+    margin-left: auto;
 }
 
 .inv-slot__key {
@@ -73,15 +88,18 @@
 }
 
 .inv-slot__price {
-    position: absolute;
-    left: 4px;
-    bottom: 4px;
-    padding: 1px 6px;
-    font-size: 12px;
+    /* Flow child of `.inv-slot__footer` — no absolute positioning. */
+    padding-top: 1px;
+    padding-right: 4px;
+    padding-bottom: 1px;
+    padding-left: 4px;
+    margin-right: 4px;
+    font-size: 11px;
     -unity-font-style: bold;
     color: rgb(255, 215, 90);
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: rgba(0, 0, 0, 0.6);
     border-radius: 4px;
+    flex-shrink: 0;
 }
 
 .inv-slot__quest {
@@ -192,6 +210,15 @@
 }
 
 .inv-slot--bp .inv-slot__name {
+    font-size: 12px;
+    /* Cap at two lines (12px font ≈ 17px line) so a very long name can't grow
+     * down into the footer badges. Slot has overflow: hidden. */
+    max-height: 36px;
+}
+
+/* 14px "200/200" plus a "4000¢" badge overruns a 102px cell — the compact grid
+ * variant drops the resource text a notch so both always fit the footer row. */
+.inv-slot--bp .inv-slot__resource {
     font-size: 12px;
 }
 
