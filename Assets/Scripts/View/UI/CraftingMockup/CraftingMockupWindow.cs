@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace View.UI.CraftingMockup
@@ -12,6 +13,11 @@ namespace View.UI.CraftingMockup
     public class CraftingMockupWindow : MonoBehaviour
     {
         public static CraftingMockupWindow Instance { get; private set; }
+
+        /// <summary>Raised when the window goes from visible to hidden (close button, Toggle, or Hide).</summary>
+        public event System.Action Closed;
+
+        public bool IsVisible => _isVisible;
 
         UIDocument _doc;
         PanelSettings _panelSettings;
@@ -57,6 +63,13 @@ namespace View.UI.CraftingMockup
             if (Instance == this) Instance = null;
         }
 
+        void Update()
+        {
+            if (!_isVisible) return;
+            var kb = Keyboard.current;
+            if (kb != null && kb[Key.Escape].wasPressedThisFrame) Hide();
+        }
+
         public void Toggle()
         {
             if (_isVisible) Hide(); else Show();
@@ -73,8 +86,10 @@ namespace View.UI.CraftingMockup
         public void Hide()
         {
             if (_root == null) return;
+            bool wasVisible = _isVisible;
             _root.style.display = DisplayStyle.None;
             _isVisible = false;
+            if (wasVisible) Closed?.Invoke();
         }
 
         // ── Setup ─────────────────────────────────────────────

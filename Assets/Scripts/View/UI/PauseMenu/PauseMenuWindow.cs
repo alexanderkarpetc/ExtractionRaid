@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using View.UI.Attachments;
 using View.UI.Controls;
+using View.UI.CraftingMockup;
 using View.UI.EndOfRaid;
 using View.UI.Inventory;
 using View.UI.Progression;
@@ -144,6 +145,7 @@ namespace View.UI.PauseMenu
             if (ControlsOverlay.Instance != null && ControlsOverlay.Instance.IsOpen) return false;
             if (EndOfRaidWindow.Instance != null && EndOfRaidWindow.Instance.IsVisible) return false;
             if (ProgressionWindow.Instance != null && ProgressionWindow.Instance.IsOpen) return false;
+            if (CraftingMockupWindow.Instance != null && CraftingMockupWindow.Instance.IsVisible) return false;
 
             return true;
         }

@@ -5,8 +5,7 @@ using Session;
 using State;
 using Systems;
 using UnityEngine;
-using View.UI;
-using View.UI.Craft;
+using View.UI.CraftingMockup;
 using View.UI.Dialogue;
 using View.UI.WeaponBuilder;
 
@@ -16,7 +15,7 @@ namespace View
     /// Interactable buildings now open a small dialogue (reusing <see cref="NpcDialogueWindow"/>)
     /// instead of jumping straight into a popup. The choice list depends on the
     /// building's <see cref="BuildingKind"/>:
-    ///   * Crafting       → "Craft" → CraftPopupView
+    ///   * Crafting       → "Craft" → CraftingMockupWindow (same window the F10 / DevCheats toggle opens)
     ///   * WeaponBuilder  → "Build Weapon" → WeaponBuilderWindow
     ///   * Stash / Supply / MedStation / QuestTerminal → placeholder log actions until
     ///     per-kind UIs land.
@@ -28,8 +27,7 @@ namespace View
     public class BuildingDialoguePresenter : MonoBehaviour
     {
         NpcDialogueWindow _window;
-        PopupManager _popupManager;
-        CraftPopupView _craftPopupView;
+        CraftingMockupWindow _craftWindow;
 
         bool _triedFind;
         EId _lastCraftTargetId = EId.None;
@@ -77,12 +75,6 @@ namespace View
             _triedFind = true;
             _window = NpcDialogueWindow.Instance
                       ?? FindObjectOfType<NpcDialogueWindow>(includeInactive: true);
-            _popupManager = FindObjectOfType<PopupManager>(includeInactive: true);
-            _craftPopupView = FindObjectOfType<CraftPopupView>(includeInactive: true);
-
-            if (_craftPopupView != null)
-                _craftPopupView.Closed += OnCraftPopupClosed;
-
             return _window != null;
         }
 
@@ -275,24 +267,26 @@ namespace View
 
         void OpenCraftPopup()
         {
-            if (_popupManager == null || _craftPopupView == null)
+            var craftWindow = CraftingMockupWindow.Instance;
+            if (craftWindow == null)
             {
-                Debug.LogWarning("[BuildingDialogue] Craft popup missing in scene — can't open.");
+                Debug.LogWarning("[BuildingDialogue] CraftingMockupWindow not initialized — can't open craft UI.");
                 return;
             }
             _expectingCraftReturn = true;
+            _craftWindow = craftWindow;
+            _craftWindow.Closed += OnCraftPopupClosed;
             _window.Hide();
-            _popupManager.Open(_craftPopupView);
-            _craftPopupView.Open();
+            _craftWindow.Show();
             App.Instance.SetGameplayInputBlocked(true);
         }
 
         void OnCraftPopupClosed()
         {
+            UnsubscribeCraftWindow();
             if (!_expectingCraftReturn) return;
             _expectingCraftReturn = false;
 
-            _popupManager?.Close();
             var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             if (player == null || player.CraftTargetId == EId.None)
             {
@@ -328,9 +322,21 @@ namespace View
             _expectingCraftReturn = false;
             _expectingBuilderReturn = false;
             if (_window != null) _window.Hide();
-            if (_popupManager != null && _craftPopupView != null && _popupManager.IsOpen(_craftPopupView))
-                _popupManager.Close();
+
+            // Unsubscribe first: Hide() raises Closed, and we don't want to re-enter the
+            // "return to dialogue" path while we're tearing the whole flow down.
+            var craftWindow = _craftWindow;
+            UnsubscribeCraftWindow();
+            if (craftWindow != null && craftWindow.IsVisible) craftWindow.Hide();
+
             App.Instance?.SetGameplayInputBlocked(false);
+        }
+
+        void UnsubscribeCraftWindow()
+        {
+            if (_craftWindow == null) return;
+            _craftWindow.Closed -= OnCraftPopupClosed;
+            _craftWindow = null;
         }
 
         static WorkbenchState FindWorkbench(RaidState state, EId id)
@@ -342,8 +348,7 @@ namespace View
 
         void OnDestroy()
         {
-            if (_craftPopupView != null)
-                _craftPopupView.Closed -= OnCraftPopupClosed;
+            UnsubscribeCraftWindow();
         }
     }
 }
