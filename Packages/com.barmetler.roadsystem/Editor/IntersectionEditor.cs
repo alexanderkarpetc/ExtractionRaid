@@ -25,7 +25,7 @@ namespace Barmetler.RoadSystem
         private void OnEnable()
         {
             _intersection = (Intersection)target;
-            _intersection.Invalidate();
+            _intersection.Invalidate(false);
             _affectedRoads = _intersection.AnchorPoints.Select(e => e.GetConnectedRoad()).Where(e => e).ToList();
             Undo.undoRedoPerformed += OnUndoRedo;
         }

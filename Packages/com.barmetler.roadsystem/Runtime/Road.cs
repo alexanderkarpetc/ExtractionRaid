@@ -207,7 +207,7 @@ namespace Barmetler.RoadSystem
                     this[-1] = transform.InverseTransformPoint(end.transform.position);
                     this[-2] = this[-1] + transform.InverseTransformDirection(end.transform.forward) * endLength;
                     normals[normals.Count - 1] = transform.InverseTransformDirection(end.transform.up);
-                    if (a != this[-1] || b != this[-2] || n == normals[normals.Count - 1])
+                    if (a != this[-1] || b != this[-2] || n != normals[normals.Count - 1])
                         OnCurveChanged(updatemesh);
                 }
             }

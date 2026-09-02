@@ -64,6 +64,7 @@ namespace Dev
             if (!string.IsNullOrEmpty(GetInactiveReason()))
                 return false;
 
+            RemoveTransientProBuilderOverrides();
             return PrefabUtility.HasPrefabInstanceAnyOverrides(gameObject, false);
         }
 
@@ -105,6 +106,7 @@ namespace Dev
             if (!string.IsNullOrEmpty(inactiveReason))
                 return false;
 
+            RemoveTransientProBuilderOverrides();
             if (!PrefabUtility.HasPrefabInstanceAnyOverrides(gameObject, false))
                 return false;
 
@@ -117,6 +119,26 @@ namespace Dev
             }
 
             return true;
+        }
+
+        void RemoveTransientProBuilderOverrides()
+        {
+            var modifications = PrefabUtility.GetPropertyModifications(gameObject);
+            if (modifications == null || modifications.Length == 0)
+                return;
+
+            var retained = new List<PropertyModification>(modifications.Length);
+            foreach (var modification in modifications)
+            {
+                if (modification?.propertyPath == "m_VersionIndex" &&
+                    modification.target?.GetType().FullName == "UnityEngine.ProBuilder.ProBuilderMesh")
+                    continue;
+
+                retained.Add(modification);
+            }
+
+            if (retained.Count != modifications.Length)
+                PrefabUtility.SetPropertyModifications(gameObject, retained.ToArray());
         }
 
         internal bool IsDue(double now)

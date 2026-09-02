@@ -38,7 +38,6 @@ namespace Barmetler.RoadSystem
         private void OnValidate()
         {
             RefreshData();
-            GenerateMesh();
         }
 
         private void RefreshData()
@@ -66,9 +65,12 @@ namespace Barmetler.RoadSystem
         public void Invalidate(bool updateMesh = true)
         {
             RefreshData();
+            if (updateMesh)
+                GenerateMesh();
+
             foreach (var p in anchorPoints)
             {
-                p.Invalidate();
+                p.Invalidate(updateMesh);
             }
         }
 

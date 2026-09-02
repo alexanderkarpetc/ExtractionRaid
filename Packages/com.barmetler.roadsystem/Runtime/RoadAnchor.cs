@@ -52,10 +52,10 @@ namespace Barmetler.RoadSystem
             return road;
         }
 
-        public void Invalidate()
+        public void Invalidate(bool updateMesh = true)
         {
             OnValidate();
-            if (road) road.RefreshEndPoints();
+            if (road) road.RefreshEndPoints(updateMesh);
         }
 
         private void OnValidate()
