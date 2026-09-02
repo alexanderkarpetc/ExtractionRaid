@@ -42,6 +42,8 @@ code/config and are intentionally not mirrored here.
 - `DamageSystem` and `ArmorSystem` are stateless.
 - Tunables arrive through `RaidContext` configs; systems do not read `DevCheats` directly.
 - Damage events carry values needed by presenters; view code does not recompute gameplay outcomes.
+- Weapon-fire events identify the shooter; player-only recoil, camera and crosshair feedback must
+  filter by that ID, while spatial audio and world effects may consume every shot.
 - Inventory durability is written back when equipment changes or the raid persists.
 - Equipment sync rebuilds raid armor from item durability and writes runtime wear back before swap.
 

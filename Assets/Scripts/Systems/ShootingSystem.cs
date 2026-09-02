@@ -328,7 +328,7 @@ namespace Systems
                     weapon.PayloadDefinition?.Archetype, chargeRatio);
             }
 
-            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio,
+            context.Events.WeaponFired(player.Id, spawnPos, dir, weapon.PayloadDefinition?.Archetype, chargeRatio,
                 weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
 
             // Ballistic Rifle signature (B1): increment barrel heat. Decay runs continuously
@@ -488,7 +488,7 @@ namespace Systems
                     weapon.PayloadDefinition?.Archetype, weapon.BurstChargeRatio);
             }
 
-            context.Events.WeaponFired(spawnPos, dir, weapon.PayloadDefinition?.Archetype,
+            context.Events.WeaponFired(player.Id, spawnPos, dir, weapon.PayloadDefinition?.Archetype,
                 weapon.BurstChargeRatio,
                 weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
             weapon.LastFireTime = state.ElapsedTime;

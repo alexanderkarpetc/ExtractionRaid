@@ -196,7 +196,7 @@ namespace Systems.Bot
             }
 
             weapon.LastFireTime = state.ElapsedTime;
-            ctx.Events.WeaponFired(spawnPos, aimDir, weapon.PayloadDefinition?.Archetype,
+            ctx.Events.WeaponFired(bot.Id, spawnPos, aimDir, weapon.PayloadDefinition?.Archetype,
                 deliveryPattern: weapon.DeliveryDefinition?.Pattern ?? FiringPattern.Single);
 
             if (tracksAmmo)

@@ -157,10 +157,12 @@ namespace View
             //                  fires, captured stays 0 so shader's flame-bars path (gated on _ChargeFill > 0)
             //                  doesn't accidentally light up over the 4 arms during ballistic Firing/Cooldown.
             //                  Note: WeaponFired packs ratio in Damage, ProjectileSpawned packs it in CurrentHp — different events, different packing.
+            var player = session.RaidState.PlayerEntity;
             foreach (var e in session.ConsumeEvents().All)
             {
                 if (e.Type == RaidEventType.HitConfirmed) TriggerHitPulse(e, cfg);
-                else if (e.Type == RaidEventType.WeaponFired && e.StringPayload == "Laser")
+                else if (e.Type == RaidEventType.WeaponFired && player != null && e.Id == player.Id &&
+                         e.StringPayload == "Laser")
                 {
                     _capturedChargeAtFire = e.Damage; // chargeRatio (see RaidEventBuffer.WeaponFired packing)
                     _firePulseT = 1f;

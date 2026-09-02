@@ -51,7 +51,7 @@ namespace View
                         _trackedId = e.Id;
                         SpawnView(session.RaidState.PlayerEntity, session);
                         break;
-                    case RaidEventType.WeaponFired:
+                    case RaidEventType.WeaponFired when e.Id == _trackedId:
                     {
                         var weapon = session.RaidState.PlayerEntity?.EquippedWeapon;
                         _playerView?.WeaponView?.PlayMuzzleFlash();

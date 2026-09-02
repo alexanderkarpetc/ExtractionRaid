@@ -181,12 +181,13 @@ namespace Adapters
             _events.Add(new RaidEvent { Type = RaidEventType.BotDespawned, Id = id });
         }
 
-        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
+        public void WeaponFired(EId shooterId, Vector3 position, Vector3 direction, string payloadArchetype = null,
             float chargeRatio = 1f, FiringPattern deliveryPattern = FiringPattern.Single)
         {
             _events.Add(new RaidEvent
             {
                 Type = RaidEventType.WeaponFired,
+                Id = shooterId,
                 Position = position,
                 Direction = direction,
                 Damage = chargeRatio, // 0..1 charge level — used by BeamFlashPresenter for VFX scaling

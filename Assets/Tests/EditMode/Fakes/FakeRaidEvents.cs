@@ -79,8 +79,15 @@ namespace Tests.EditMode.Fakes
             BotDespawnedCalled = true;
             BotDespawnedId = id;
         }
-        public void WeaponFired(Vector3 position, Vector3 direction, string payloadArchetype = null,
-            float chargeRatio = 1f, FiringPattern deliveryPattern = FiringPattern.Single) { }
+        public bool WeaponFiredCalled;
+        public EId WeaponFiredShooterId;
+        public void WeaponFired(EId shooterId, Vector3 position, Vector3 direction,
+            string payloadArchetype = null, float chargeRatio = 1f,
+            FiringPattern deliveryPattern = FiringPattern.Single)
+        {
+            WeaponFiredCalled = true;
+            WeaponFiredShooterId = shooterId;
+        }
 
         public bool WeaponEquipStartedCalled;
         public string WeaponEquipStartedPrefabId;

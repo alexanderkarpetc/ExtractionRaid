@@ -37,6 +37,20 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void Tick_BotWantsToFire_IdentifiesBotAsWeaponFiredShooter()
+        {
+            var state = CreateStateWithBotWantingToFire();
+            var events = new FakeRaidEvents();
+            var ctx = TestContextFactory.Create(events: events);
+
+            BotCombatSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(events.WeaponFiredCalled);
+            Assert.AreEqual(state.Bots[0].Id, events.WeaponFiredShooterId);
+            Assert.AreNotEqual(state.PlayerEntity.Id, events.WeaponFiredShooterId);
+        }
+
+        [Test]
         public void Tick_BotDoesNotWantToFire_NoProjectile()
         {
             var state = CreateStateWithBotWantingToFire();

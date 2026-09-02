@@ -272,6 +272,8 @@ namespace Tests.EditMode
 
             var fired = eventBuffer.All.Where(e => e.Type == RaidEventType.WeaponFired).ToList();
             Assert.AreEqual(1, fired.Count);
+            Assert.AreEqual(state.PlayerEntity.Id, fired[0].Id,
+                "Player fire feedback must identify the player as shooter");
         }
 
         [Test]

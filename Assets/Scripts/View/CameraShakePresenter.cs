@@ -41,7 +41,7 @@ namespace View
             {
                 switch (e.Type)
                 {
-                    case RaidEventType.WeaponFired:
+                    case RaidEventType.WeaponFired when player != null && e.Id == player.Id:
                         // RaidEventBuffer.WeaponFired packs:
                         //   Position        = origin
                         //   Direction       = fire direction
@@ -80,6 +80,7 @@ namespace View
                         if (player != null && e.Id == player.Id)
                         {
                             float hpDelta = ResolveHpDelta(e.CurrentHp, e.MaxHp);
+                            if (hpDelta <= 0f) break;
                             float magnitude = (cfg.DamageTremorMagnitude
                                                + cfg.DamageTremorPerHp * hpDelta) * scale;
                             _shake.Tremor(
