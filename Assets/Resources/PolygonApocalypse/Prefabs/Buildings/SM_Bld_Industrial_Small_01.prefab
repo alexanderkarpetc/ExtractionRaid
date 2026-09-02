@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4696068088075752}
   - component: {fileID: 33391570611544814}
   - component: {fileID: 23515093303918458}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: SM_Bld_Industrial_Small_01_Door_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: 4200848822413016}
   - component: {fileID: 33989748295943886}
   - component: {fileID: 23579205289961352}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: SM_Bld_Industrial_Small_01_Barricades_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -192,7 +192,8 @@ GameObject:
   - component: {fileID: 33238523982148334}
   - component: {fileID: 23118881517435952}
   - component: {fileID: 1683753559910621779}
-  m_Layer: 0
+  - component: {fileID: -6131527917038797677}
+  m_Layer: 15
   m_Name: SM_Bld_Industrial_Small_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -295,3 +296,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.0952387, y: 4.300202, z: 2.598284}
   m_Center: {x: 0.042679194, y: 1.8903072, z: 0.50712407}
+--- !u!114 &-6131527917038797677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1818683565446304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 1
+  m_Area: 1
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 0
+  m_ApplyToChildren: 1
+  m_AffectedAgents: 00000000

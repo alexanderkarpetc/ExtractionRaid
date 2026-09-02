@@ -4454,7 +4454,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game::Dev.PrefabAutoApplyOverrides
   _autoApplyInEditMode: 1
-  _applyIntervalSeconds: 30
+  _applyIntervalSeconds: 180
   _logEachApply: 0
 --- !u!1 &5068353923095571189
 GameObject:
@@ -28034,11 +28034,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalScale.x
-      value: 100.00002
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalScale.z
-      value: 100.000015
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -28046,7 +28046,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.172
+      value: -0.02
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalPosition.z
@@ -28054,37 +28054,38 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.18301094
+      value: 0.28761122
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.18301094
-      objectReference: {fileID: 0}
-    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.6830132
-      objectReference: {fileID: 0}
-    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0.6830132
-      objectReference: {fileID: 0}
-    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: -90
-      objectReference: {fileID: 0}
-    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9577473
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -146.57
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914874515114989607, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 165
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6471070442629016739, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
       propertyPath: m_Name
       value: ER_MilitaryTent_A
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1868472669277120133, guid: d0d3341e12632f84ebaf5c6dbba36cf4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

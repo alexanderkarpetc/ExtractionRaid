@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 33309888647738924}
   - component: {fileID: 23145360632514034}
   - component: {fileID: 8575766162185495597}
-  m_Layer: 0
+  m_Layer: 15
   m_Name: SM_Env_Tree_Dead_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -168,6 +168,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 4eb3658ae274c4846bd3721e10efd209, type: 3}
       propertyPath: m_Name
       value: Tree01
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4eb3658ae274c4846bd3721e10efd209, type: 3}
+      propertyPath: m_Layer
+      value: 15
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
