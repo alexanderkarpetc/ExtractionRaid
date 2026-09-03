@@ -28,9 +28,10 @@ namespace Systems.Bot
                 {
                     bb.CanSeeTarget = false;
                     if (bb.HasTarget)
+                    {
                         bb.TimeSinceTargetSeen += BotConstants.PerceptionTickInterval;
-                    if (bb.TimeSinceTargetSeen > config.TargetMemoryDuration)
-                        bb.ClearTarget();
+                        ExpireTargetMemory(bot, bb, in config);
+                    }
                     continue;
                 }
 
@@ -179,11 +180,27 @@ namespace Systems.Bot
                     if (bb.HasTarget)
                     {
                         bb.TimeSinceTargetSeen += BotConstants.PerceptionTickInterval;
-                        if (bb.TimeSinceTargetSeen > config.TargetMemoryDuration)
-                            bb.ClearTarget();
+                        ExpireTargetMemory(bot, bb, in config);
                     }
                 }
             }
+        }
+
+        static void ExpireTargetMemory(BotEntityState bot, BotBlackboard bb,
+            in BotTypeConfig config)
+        {
+            if (bb.TimeSinceTargetSeen <= config.TargetMemoryDuration || bb.SearchEndTime >= 0f)
+                return;
+
+            if (!config.Has(BotBehaviorFlags.Chase))
+            {
+                bb.ClearTarget();
+                return;
+            }
+
+            // Memory expiry ends the chase, not the whole investigation. Pin the last-known
+            // position to the bot so Chase yields and SearchNode owns a full bounded search.
+            bb.LastKnownTargetPos = bot.Position;
         }
     }
 }

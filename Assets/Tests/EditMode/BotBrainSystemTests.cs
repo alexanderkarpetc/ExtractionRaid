@@ -135,6 +135,85 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void Tick_TargetMemoryExpires_SearchStillRunsForItsFullWindow()
+        {
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            var bb = bot.Blackboard;
+            bb.HasTarget = true;
+            bb.CanSeeTarget = false;
+            bb.LastKnownTargetPos = Vector3.zero;
+            bb.TimeSinceTargetSeen = 4.9f;
+            bb.ReactionTimer = 999f;
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var ctx = TestContextFactory.Create(physics: physics);
+
+            BotPerceptionSystem.Tick(state, in ctx);
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(bb.HasTarget, "Memory expiry should enter search, not forget immediately");
+            Assert.AreEqual("Search", bb.DebugStatus);
+            float searchEnd = bb.SearchEndTime;
+
+            state.ElapsedTime = searchEnd - 0.1f;
+            bb.PerceptionTimer = 0f;
+            BotPerceptionSystem.Tick(state, in ctx);
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(bb.HasTarget, "Perception must not interrupt an active search");
+            Assert.AreEqual("Search", bb.DebugStatus);
+
+            state.ElapsedTime = searchEnd + 0.1f;
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bb.HasTarget);
+        }
+
+        [Test]
+        public void Tick_SearchEnds_ResumesAtNearestPatrolWaypoint()
+        {
+            var waypoints = new[] { Vector3.zero, new Vector3(0f, 0f, 12f) };
+            var state = CreateStateWithBot("Scav", new Vector3(0f, 0f, 10f), waypoints);
+            var bot = state.Bots[0];
+            var bb = bot.Blackboard;
+            bb.HasTarget = true;
+            bb.CanSeeTarget = false;
+            bb.LastKnownTargetPos = bot.Position;
+            bb.ReactionTimer = 999f;
+            var ctx = TestContextFactory.Create();
+
+            BotBrainSystem.Tick(state, in ctx);
+            state.ElapsedTime = bb.SearchEndTime + 0.1f;
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(1, bb.PatrolWaypointIndex);
+            Assert.Greater(bot.DesiredVelocity.z, 0f,
+                "Bot should resume toward the nearby patrol point, not the stale first point");
+        }
+
+        [Test]
+        public void Tick_SearchEnds_SingleSpawnFallbackBecomesLocalGuardPoint()
+        {
+            var waypoints = new[] { Vector3.zero };
+            var state = CreateStateWithBot("Scav", new Vector3(0f, 0f, 10f), waypoints);
+            var bot = state.Bots[0];
+            var bb = bot.Blackboard;
+            bb.HasTarget = true;
+            bb.CanSeeTarget = false;
+            bb.LastKnownTargetPos = bot.Position;
+            bb.ReactionTimer = 999f;
+            var ctx = TestContextFactory.Create();
+
+            BotBrainSystem.Tick(state, in ctx);
+            state.ElapsedTime = bb.SearchEndTime + 0.1f;
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(bot.Position, bb.PatrolWaypoints[0]);
+            Assert.AreEqual(Vector3.zero, bot.DesiredVelocity,
+                "A single spawn fallback must not pull the bot back across the map");
+        }
+
+        [Test]
         public void Tick_DeadBot_Skipped()
         {
             var state = CreateStateWithBot("Scav", Vector3.zero);

@@ -47,6 +47,7 @@ namespace Systems.Bot.Nodes
 
             if (state.ElapsedTime >= bb.SearchEndTime)
             {
+                PreparePatrolResume(bot, bb);
                 bb.SearchEndTime = -1f;
                 bb.ClearTarget(); // give up — patrol branch takes over next tick
                 return this.Traced(bot, BTStatus.Failure);
@@ -61,6 +62,41 @@ namespace Systems.Bot.Nodes
             bot.DesiredVelocity = Vector3.zero;
             bb.DebugStatus = "Search";
             return this.Traced(bot, BTStatus.Running);
+        }
+
+        static void PreparePatrolResume(BotEntityState bot, BotBlackboard bb)
+        {
+            var waypoints = bb.PatrolWaypoints;
+            if (waypoints == null || waypoints.Length == 0) return;
+
+            if (waypoints.Length == 1)
+            {
+                // A lone point is the boxed-in/spawn fallback. Rebase it after combat so
+                // the bot guards the search area instead of marching back across the map.
+                waypoints[0] = bot.Position;
+                bb.PatrolWaypointIndex = 0;
+            }
+            else
+            {
+                int nearest = 0;
+                float nearestSqr = (waypoints[0] - bot.Position).sqrMagnitude;
+                for (int i = 1; i < waypoints.Length; i++)
+                {
+                    float sqr = (waypoints[i] - bot.Position).sqrMagnitude;
+                    if (sqr >= nearestSqr) continue;
+                    nearest = i;
+                    nearestSqr = sqr;
+                }
+                bb.PatrolWaypointIndex = nearest;
+            }
+
+            bb.PatrolWaitTimer = 0f;
+            bb.PatrolPathCornerCount = 0;
+            bb.PatrolPathCornerIndex = 0;
+            bb.PatrolPathWaypointIndex = -1;
+            bb.PatrolRepathTimer = 0f;
+            bb.PatrolStuckTimer = 0f;
+            bb.PatrolLastPosition = bot.Position;
         }
     }
 }

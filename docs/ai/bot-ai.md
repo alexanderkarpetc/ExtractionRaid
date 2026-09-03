@@ -26,9 +26,11 @@ are per bot, never static.
 - Vision uses range, field of view and physics occlusion.
 - Hearing records an approximate last-known position; it does not grant exact tracking.
 - Damage alerts may acquire the attacker/impact direction without bypassing reaction delay.
-- Target memory decays after loss of contact; arriving at last-known position triggers a bounded
-  search before forgetting.
+- Target memory decays after loss of contact; expiry or arrival at the last-known position triggers
+  a bounded search before forgetting. Search owns its full window and cannot be cut short by memory.
 - Alert/reaction gates aiming, facing and firing so acquisition is readable to the player.
+- After search, patrol resumes from the nearest route point. A single spawn fallback is rebased to
+  the search area instead of pulling the bot back across the map.
 
 ## Combat behavior
 
