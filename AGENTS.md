@@ -24,8 +24,9 @@ defines release scope and `docs/ai/tasks.md` is the only task tracker.
 
 ## Tooling
 
-- Don't read `.unity` / `.prefab` / `.asset` files as text to reconstruct scene state — they're large
-  and binary-ish; inspect them in the Unity Editor.
+- Do not hand-edit or save `.unity`, `.prefab` or `.asset` files as text; make authored-content
+  changes through the Unity Editor. Reading their serialized text for static analysis is allowed,
+  but it does not replace Editor or runtime validation.
 - **If you have an editor/MCP bridge available, use it** to inspect scenes and run EditMode tests.
   Otherwise edit the `.cs` and run EditMode tests via the Unity Test Runner (or `-batchmode -runTests`),
   or hand the change to the maintainer to run. Don't claim tests pass unless you actually ran them.

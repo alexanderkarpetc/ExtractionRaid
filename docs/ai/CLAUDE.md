@@ -54,9 +54,11 @@ debugger.
 
 ## Unity Editor access
 
-Do not read `.unity`, `.prefab` or `.asset` files as text to reconstruct authored state. Use the
-Unity Editor/MCP bridge. Verify the bridge is available before relying on it. Play/stop, editor
-mutation, code execution and PlayMode test runs require explicit user confirmation.
+Do not hand-edit or save `.unity`, `.prefab` or `.asset` files as text; make authored-content changes
+through the Unity Editor/MCP bridge. Reading their serialized text for static analysis is allowed,
+but it does not replace Editor or runtime validation. Verify the bridge is available before relying
+on it. Play/stop, editor mutation, code execution and PlayMode test runs require explicit user
+confirmation.
 
 Without the bridge, edit source normally and use Unity Test Runner or batchmode. Never claim tests
 passed unless they actually ran.
