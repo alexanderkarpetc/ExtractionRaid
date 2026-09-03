@@ -22,8 +22,13 @@ MonoBehaviour:
   Tasks:
   - rid: 5821730921348112641
   Rewards:
+  - ItemId: Ammo_Rifle
+    Count: 60
   - ItemId: Medkit
-    Count: 1
+    Count: 2
+  - ItemId: Metal_Parts
+    Count: 15
+  UnlockNote:
   references:
     version: 2
     RefIds:

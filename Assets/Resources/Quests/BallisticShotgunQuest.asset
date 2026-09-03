@@ -23,8 +23,15 @@ MonoBehaviour:
   Tasks:
   - rid: 6912843204871923340
   Rewards:
+  - ItemId: Military_Components
+    Count: 4
+  - ItemId: Gyro_Stabilizer
+    Count: 2
+  - ItemId: Smart_Targeting_Unit
+    Count: 2
   - ItemId: Ammo_Rifle
-    Count: 30
+    Count: 60
+  UnlockNote:
   references:
     version: 2
     RefIds:

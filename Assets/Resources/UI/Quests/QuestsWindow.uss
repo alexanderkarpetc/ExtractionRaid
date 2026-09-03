@@ -486,12 +486,22 @@
     color: rgb(224, 228, 236);
 }
 
+.qp-reward-chip--unlock {
+    background-color: rgb(20, 34, 38);
+    border-color: rgb(38, 78, 84);
+    color: rgb(126, 216, 226);
+}
+
 .qp-reward-dot {
     width: 8px;
     height: 8px;
     margin-right: 7px;
     border-radius: 4px;
     background-color: rgb(212, 160, 23);
+}
+
+.qp-reward-dot--unlock {
+    background-color: rgb(80, 196, 210);
 }
 
 /* Actions */

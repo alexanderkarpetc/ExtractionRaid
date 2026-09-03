@@ -22,8 +22,15 @@ MonoBehaviour:
   Tasks:
   - rid: 5821730921348112742
   Rewards:
+  - ItemId: Gear_Cluster
+    Count: 5
+  - ItemId: Rotary_Motor
+    Count: 3
+  - ItemId: Camera_Optics
+    Count: 2
   - ItemId: Ammo_Rifle
-    Count: 30
+    Count: 60
+  UnlockNote:
   references:
     version: 2
     RefIds:

@@ -410,8 +410,9 @@ namespace View.UI.Quests
             }
 
             // Rewards.
-            if (quest.Rewards != null && quest.Rewards.Count > 0)
-                body.Add(BuildRewardsRow(quest.Rewards));
+            if ((quest.Rewards != null && quest.Rewards.Count > 0)
+                || !string.IsNullOrEmpty(quest.UnlockNote))
+                body.Add(BuildRewardsRow(quest.Rewards, quest.UnlockNote));
 
             // Actions.
             var actions = BuildActions(quest, p, status);
@@ -499,7 +500,7 @@ namespace View.UI.Quests
             return row;
         }
 
-        static VisualElement BuildRewardsRow(List<QuestReward> rewards)
+        static VisualElement BuildRewardsRow(List<QuestReward> rewards, string unlockNote)
         {
             var row = new VisualElement();
             row.AddToClassList("qp-rewards-row");
@@ -508,18 +509,36 @@ namespace View.UI.Quests
             label.AddToClassList("qp-rewards-label");
             row.Add(label);
 
-            foreach (var reward in rewards)
+            if (rewards != null)
             {
-                var def = ItemDefinition.Get(reward.ItemId);
-                string itemName = def?.DisplayName ?? reward.ItemId;
-                string chipText = reward.Count > 1 ? $"{itemName} ×{reward.Count}" : itemName;
+                foreach (var reward in rewards)
+                {
+                    var def = ItemDefinition.Get(reward.ItemId);
+                    string itemName = def?.DisplayName ?? reward.ItemId;
+                    string chipText = reward.Count > 1 ? $"{itemName} ×{reward.Count}" : itemName;
 
+                    var chip = new VisualElement();
+                    chip.AddToClassList("qp-reward-chip");
+                    var dot = new VisualElement();
+                    dot.AddToClassList("qp-reward-dot");
+                    chip.Add(dot);
+                    chip.Add(new Label(chipText));
+                    row.Add(chip);
+                }
+            }
+
+            // Non-item reward (e.g. a shop unlock) — same chip, accented so it reads as
+            // something other than loot going into the backpack.
+            if (!string.IsNullOrEmpty(unlockNote))
+            {
                 var chip = new VisualElement();
                 chip.AddToClassList("qp-reward-chip");
+                chip.AddToClassList("qp-reward-chip--unlock");
                 var dot = new VisualElement();
                 dot.AddToClassList("qp-reward-dot");
+                dot.AddToClassList("qp-reward-dot--unlock");
                 chip.Add(dot);
-                chip.Add(new Label(chipText));
+                chip.Add(new Label(unlockNote));
                 row.Add(chip);
             }
 

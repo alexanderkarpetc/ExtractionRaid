@@ -17,14 +17,20 @@ MonoBehaviour:
   Description: "\u201CHey. Got a problem. Dropped a warehouse key somewhere outside
     the perimeter when things went loud. Can\u2019t go myself \u2014 too many eyes.\nYou
     look capable enough. Go out, find it, and bring it back. Fast. That place holds
-    supplies I\u2019m not ready to lose.\u201D"
+    supplies I\u2019m not ready to lose.\n\nBring it back and I\u2019ll open the
+    stock to you \u2014 buying and selling, both ways. No key, no shop.\u201D"
   RequiredLevel: 0
   NpcId: AL
   Tasks:
   - rid: 2541323820743786570
   Rewards:
-  - ItemId: Medkit
-    Count: 1
+  - ItemId: Mechanical_Parts
+    Count: 10
+  - ItemId: Springs
+    Count: 8
+  - ItemId: Duct_Tape
+    Count: 10
+  UnlockNote: Unlocks Trading with AL
   references:
     version: 2
     RefIds:

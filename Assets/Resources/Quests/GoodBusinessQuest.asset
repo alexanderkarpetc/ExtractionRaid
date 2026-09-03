@@ -26,7 +26,16 @@ MonoBehaviour:
   NpcId: AL
   Tasks:
   - rid: 6912843015829473102
-  Rewards: []
+  Rewards:
+  - ItemId: Mechanical_Parts
+    Count: 10
+  - ItemId: Gunpowder
+    Count: 8
+  - ItemId: Adhesive
+    Count: 10
+  - ItemId: Ammo_Rifle
+    Count: 30
+  UnlockNote:
   references:
     version: 2
     RefIds:
