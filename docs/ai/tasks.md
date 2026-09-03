@@ -27,7 +27,7 @@
 
 ### Мінімальний обсяг slice
 
-- Один бункер і одна наявна бойова мапа (`Test_Map`); за потреби обмежити тестовий маршрут,
+- Один бункер і одна наявна бойова мапа (`Level_01`); за потреби обмежити тестовий маршрут,
   а не добудовувати всю мапу. Без другої мапи й нової художньої поліровки.
 - Короткий безпечніший маршрут і необов'язкова небезпечніша зона з цінною здобиччю;
   робочий вихід, який можна знайти без допомоги розробника. Кілька виходів — лише якщо цього
@@ -212,8 +212,8 @@ NPC marker, умови здачі, вимоги Builder, спосіб зібра
 | M2.1 | Завершити аудіошар | 🔄 active | L | Закрити відсутні weapon/UI/world sounds, ambience, music transitions і settings sliders; перевірити spatial mix. `GameAudioPresenter` і базова бібліотека вже працюють. |
 | M2.4 | Weapon visual polish | 🔄 active | M | Muzzle/socket alignment, ручний prefab pass, видалення stale Mecanim; реальні меші замість технічних заглушок. Procedural reload/equip/unequip уже є. |
 | M2.7 | Підключити ефекти progression | 🔄 active | M | Predator phase 1 вже працює: damage/penetration/armor/headshot, recoil/recovery, reload/equip, heat, Max HP і bleed проходять через player-only config та покриті EditMode-тестами. Завершення: решта Predator + Warden/Phantom/Prospector підключені без прямих progression-reads у Systems. |
-| M3.1 | Друга бойова мапа | ⬜ queued | L | Окрема сцена проходить повний loop: deploy → combat/loot → extraction; авторені spawns, loot і таймер. Поточне розширення `Test_Map` не рахується другою мапою. |
-| M3.6 | Контент бойових мап | 🔄 active | M | Узгоджені enemy roster, boss placement і loot tiers. Наповнення `Test_Map`/Rednek City триває окремим контентним потоком. |
+| M3.1 | Друга бойова мапа | ⬜ queued | L | Окрема сцена проходить повний loop: deploy → combat/loot → extraction; авторені spawns, loot і таймер. Поточне розширення `Level_01` не рахується другою мапою. |
+| M3.6 | Контент бойових мап | 🔄 active | M | Узгоджені enemy roster, boss placement і loot tiers. Наповнення `Level_01`/Rednek City триває окремим контентним потоком. |
 | M2.2 | Exotic hook + 3–4 exotics | ⬜ queued | M | Data-driven hook інтегрований у stat/fire/impact pipeline; 3–4 різні exotics доступні через loot/build flow і протестовані. |
 | M2.3 | Rocket payload + Rotary delivery | ⬜ queued | M | Нові cores мають behavior, stats, VFX, mesh, loot source і тести; матриця досягає 3×4. |
 | M2.5 | Per-archetype VFX/SFX | 🔄 active | M | Ballistic/Laser/Rocket мають послідовну власну мову пострілу, польоту й impact. Ballistic audio та частина VFX уже є. |
@@ -293,5 +293,5 @@ feature-доках.
 ## Паралельна відповідальність
 
 - `Systems/Meta` і progression/loot частково веде Олександр — узгоджувати перетини до правок.
-- Контент `Test_Map`/Rednek City ведеться окремим map-content потоком.
+- Контент `Level_01`/Rednek City ведеться окремим map-content потоком.
 - Рослинність і шейдери мають окремого власника; не змішувати з gameplay-задачами.

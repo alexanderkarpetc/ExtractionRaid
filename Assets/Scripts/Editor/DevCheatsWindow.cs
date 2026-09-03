@@ -57,7 +57,7 @@ namespace Editor
         // Section foldout states (persisted via EditorPrefs)
         readonly Dictionary<string, bool> _foldouts = new();
 
-        // Meta → Region raid simulator: cached scan of Test_Map's MapRegion polygons,
+        // Meta → Region raid simulator: cached scan of Level_01's MapRegion polygons,
         // last scan / last loot status lines. Cache is loaded lazily (persists via
         // EditorPrefs across the Play↔Edit boundary — see RaidSimRegions).
         RegionCache _metaCache;
@@ -869,7 +869,7 @@ namespace Editor
         }
 
         // ── Meta → Region raid simulator ───────────────────────
-        // Two-phase (see RaidSimRegions): SCAN Test_Map's MapRegion polygons in edit
+        // Two-phase (see RaidSimRegions): SCAN Level_01's MapRegion polygons in edit
         // mode → cache; then in Play Mode LOOT a region straight into the backpack,
         // grabbing the most valuable loot that fits. Lets you dry-run raids to feed
         // hideout / quest / craft / sell progression without playing them out.
@@ -877,14 +877,14 @@ namespace Editor
         {
             EditorGUILayout.Space(2);
             EditorGUILayout.LabelField(
-                "Author MapRegion polygons in Test_Map, scan them (edit mode), then in " +
+                "Author MapRegion polygons in Level_01, scan them (edit mode), then in " +
                 "Play Mode loot a region into your backpack to test meta progression.",
                 EditorStyles.wordWrappedMiniLabel);
 
             EditorGUILayout.Space(4);
             using (new EditorGUI.DisabledScope(Application.isPlaying))
             {
-                if (GUILayout.Button("Scan Test_Map regions"))
+                if (GUILayout.Button("Scan Level_01 regions"))
                 {
                     _metaCache = RaidSimRegions.Scan(out _metaScanInfo);
                     _metaCacheLoaded = true;
@@ -931,7 +931,7 @@ namespace Editor
             if (_metaCache?.regions == null || _metaCache.regions.Count == 0)
             {
                 EditorGUILayout.HelpBox(
-                    "No scanned regions yet. Add MapRegion components to Test_Map (≥3 points " +
+                    "No scanned regions yet. Add MapRegion components to Level_01 (≥3 points " +
                     "each), then press Scan.", MessageType.None);
                 return;
             }

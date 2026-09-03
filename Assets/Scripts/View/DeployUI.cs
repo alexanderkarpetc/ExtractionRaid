@@ -18,7 +18,7 @@ namespace View
         static readonly MapEntry[] Maps =
         {
             new("TestScene", "test_level", "Test Scene"),
-            new("Test_Map", "main_map", "Main Map"),
+            new("Level_01", "main_map", "Main Map"),
         };
 
         // Single deploy destination for now. When map selection returns, this becomes a

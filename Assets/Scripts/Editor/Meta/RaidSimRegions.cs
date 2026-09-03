@@ -50,7 +50,7 @@ namespace Editor.Meta
     public static class RaidSimRegions
     {
         const string PrefKey = "ExtractionRaid.Meta.RegionCache";
-        const string DefaultMapPath = "Assets/Scenes/Test_Map.unity";
+        const string DefaultMapPath = "Assets/Scenes/Level_01.unity";
 
         // ─────────────────────────────────────────── Cache I/O ──
 
@@ -70,11 +70,11 @@ namespace Editor.Meta
         static string ResolveMapPath()
         {
             if (System.IO.File.Exists(DefaultMapPath)) return DefaultMapPath;
-            var guids = AssetDatabase.FindAssets("Test_Map t:SceneAsset");
+            var guids = AssetDatabase.FindAssets("Level_01 t:SceneAsset");
             return guids.Length > 0 ? AssetDatabase.GUIDToAssetPath(guids[0]) : null;
         }
 
-        /// <summary>Opens Test_Map additively, buckets every loot/enemy spawn into the
+        /// <summary>Opens Level_01 additively, buckets every loot/enemy spawn into the
         /// region polygon that contains it, and caches the result. Edit mode only.</summary>
         public static RegionCache Scan(out string status)
         {
@@ -87,7 +87,7 @@ namespace Editor.Meta
             var path = ResolveMapPath();
             if (string.IsNullOrEmpty(path))
             {
-                status = "Test_Map.unity not found under the project.";
+                status = "Level_01.unity not found under the project.";
                 return null;
             }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -172,7 +172,7 @@ namespace Editor.Meta
 
             SaveCache(cache);
             status = cache.regions.Count == 0
-                ? "Scan complete — no MapRegion polygons found in Test_Map. Add some (≥3 points each)."
+                ? "Scan complete — no MapRegion polygons found in Level_01. Add some (≥3 points each)."
                 : $"Scanned {cache.regions.Count} region(s) from {System.IO.Path.GetFileName(path)}.";
             return cache;
         }
