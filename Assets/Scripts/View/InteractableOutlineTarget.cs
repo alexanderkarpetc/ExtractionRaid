@@ -1,4 +1,5 @@
 using ApplicationCore;
+using Systems;
 using UnityEngine;
 
 namespace View
@@ -11,7 +12,12 @@ namespace View
         [SerializeField] bool _hideWhilePlayerInMenu = true;
 
         [Header("Proximity")]
-        [SerializeField, Min(0f)] float _activationRadius = 3f;
+        [SerializeField]
+        [Tooltip("Use a custom outline radius instead of the shared loot interaction radius.")]
+        bool _overrideActivationRadius;
+        [SerializeField, Min(0f)]
+        [Tooltip("Used only when Override Activation Radius is enabled.")]
+        float _activationRadius = 3f;
 
         [Header("Fade")]
         [SerializeField, Min(0f)] float _fadeSeconds = 0.18f;
@@ -58,6 +64,15 @@ namespace View
             get => _activationRadius;
             set => _activationRadius = Mathf.Max(0f, value);
         }
+
+        public bool OverrideActivationRadius
+        {
+            get => _overrideActivationRadius;
+            set => _overrideActivationRadius = value;
+        }
+
+        public float EffectiveActivationRadius =>
+            _overrideActivationRadius ? _activationRadius : LootSystem.LootRange;
 
         public float CurrentOpacity => _currentOpacity;
 
@@ -189,7 +204,8 @@ namespace View
             if (_hideWhilePlayerInMenu && player.IsInMenu) return false;
 
             float sqrDist = (player.Position - transform.position).sqrMagnitude;
-            return sqrDist <= _activationRadius * _activationRadius;
+            float activationRadius = EffectiveActivationRadius;
+            return sqrDist <= activationRadius * activationRadius;
         }
 
         void ApplyOpacity(float opacity)
