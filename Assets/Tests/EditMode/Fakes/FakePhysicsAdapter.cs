@@ -15,6 +15,7 @@ namespace Tests.EditMode.Fakes
         public bool WallHit;
         public Vector3 WallHitPoint;
         public int RaycastFirstWallHitCallCount;
+        public int LineOfSightCallCount;
 
         public bool Linecast(Vector3 from, Vector3 to, int layerMask)
         {
@@ -35,9 +36,9 @@ namespace Tests.EditMode.Fakes
             return WallHit;
         }
 
-        public bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask,
-            Vector3 ignoreNearA, Vector3 ignoreNearB, float ignoreRadius)
+        public bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask)
         {
+            LineOfSightCallCount++;
             return Blocked;
         }
     }

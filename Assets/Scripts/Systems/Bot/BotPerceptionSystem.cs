@@ -63,31 +63,9 @@ namespace Systems.Bot
                     var eyePos = bot.Position + Vector3.up * 1.5f;
                     var targetPos = player.Position + Vector3.up * 1f;
 
-                    if (ctx.Physics == null)
-                    {
-                        hasLineOfSight = true;
-                    }
-                    else
-                    {
-                        // Use RaycastAll and ignore hits on bot/player colliders (by proximity to known positions).
-                        // This prevents character CapsuleColliders on Default layer from blocking vision.
-                        var dir = targetPos - eyePos;
-                        float maxDist = dir.magnitude;
-                        if (maxDist > 0.001f)
-                        {
-                            hasLineOfSight = true;
-                            var hits = Physics.RaycastAll(eyePos, dir / maxDist, maxDist, BotConstants.VisionBlockingMask);
-                            for (int h = 0; h < hits.Length; h++)
-                            {
-                                var hitPos = hits[h].collider.transform.position;
-                                // Skip colliders near bot or player position (character colliders)
-                                if ((hitPos - bot.Position).sqrMagnitude < 4f) continue;
-                                if ((hitPos - player.Position).sqrMagnitude < 4f) continue;
-                                hasLineOfSight = false;
-                                break;
-                            }
-                        }
-                    }
+                    hasLineOfSight = ctx.Physics == null
+                        || !ctx.Physics.IsLineOfSightBlocked(
+                            eyePos, targetPos, BotConstants.VisionBlockingMask);
                 }
 
                 bool visible = inCone && hasLineOfSight;

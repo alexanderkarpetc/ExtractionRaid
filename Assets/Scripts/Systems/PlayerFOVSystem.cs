@@ -45,7 +45,7 @@ namespace Systems
                 // Inner sphere — 360° close awareness (full visibility, no edge fade)
                 if (dist <= nearR)
                 {
-                    bool occ = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                    bool occ = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position);
                     bot.IsVisibleToPlayer = !occ;
                     bot.VisibilityFactor = occ ? 0f : 1f;
                     continue;
@@ -69,7 +69,7 @@ namespace Systems
                 }
 
                 // Inside cone+range — hard bool for gameplay, smooth factor for the view fade.
-                bool occluded = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                bool occluded = checkOcclusion && IsOccluded(ctx.Physics, eyePos, bot.Position);
                 bot.IsVisibleToPlayer = !occluded;
                 if (occluded)
                 {
@@ -102,7 +102,7 @@ namespace Systems
                     if (toCenter.sqrMagnitude > scopeR2) continue;
 
                     bool spotted = !checkOcclusion
-                        || !IsOccluded(ctx.Physics, eyePos, bot.Position, player.Position);
+                        || !IsOccluded(ctx.Physics, eyePos, bot.Position);
                     bot.IsVisibleToPlayer = spotted;
                     if (spotted) bot.VisibilityFactor = 1f;
                 }
@@ -117,18 +117,13 @@ namespace Systems
         const float EdgeFalloffMeters = 4f;
         const float EdgeFalloffDegrees = 12f;
 
-        // Character-collider ignore radius for FOV sight checks: CapsuleColliders on Default
-        // layer would otherwise spuriously block vision near player/bot positions.
-        const float CharacterIgnoreRadius = 2f;
-
-        static bool IsOccluded(IPhysicsAdapter physics, Vector3 eyePos, Vector3 botPos, Vector3 playerPos)
+        static bool IsOccluded(IPhysicsAdapter physics, Vector3 eyePos, Vector3 botPos)
         {
             if (physics == null) return false;
 
             var targetPos = botPos + Vector3.up * BotConstants.PlayerEyeHeight;
             return physics.IsLineOfSightBlocked(
-                eyePos, targetPos, BotConstants.VisionBlockingMask,
-                playerPos, botPos, CharacterIgnoreRadius);
+                eyePos, targetPos, BotConstants.VisionBlockingMask);
         }
     }
 }

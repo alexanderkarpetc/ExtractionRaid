@@ -63,23 +63,14 @@ namespace Adapters
             return true;
         }
 
-        public bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask,
-            Vector3 ignoreNearA, Vector3 ignoreNearB, float ignoreRadius)
+        public bool IsLineOfSightBlocked(Vector3 from, Vector3 to, int layerMask)
         {
             var dir = to - from;
             float maxDist = dir.magnitude;
             if (maxDist < 0.001f) return false;
 
-            int count = Physics.RaycastNonAlloc(from, dir / maxDist, HitBuffer, maxDist, layerMask);
-            float sqrIgnore = ignoreRadius * ignoreRadius;
-            for (int i = 0; i < count; i++)
-            {
-                var hitPos = HitBuffer[i].collider.transform.position;
-                if ((hitPos - ignoreNearA).sqrMagnitude < sqrIgnore) continue;
-                if ((hitPos - ignoreNearB).sqrMagnitude < sqrIgnore) continue;
-                return true;
-            }
-            return false;
+            return Physics.RaycastNonAlloc(from, dir / maxDist, HitBuffer, maxDist,
+                layerMask, QueryTriggerInteraction.Ignore) > 0;
         }
     }
 }

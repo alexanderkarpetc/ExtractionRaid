@@ -116,6 +116,45 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void Tick_WorldGeometryBlocksSight_DoesNotAcquireTarget()
+        {
+            var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 6f));
+            state.Bots[0].FacingDirection = -Vector3.forward;
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var ctx = TestContextFactory.Create(physics: physics);
+
+            BotPerceptionSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(1, physics.LineOfSightCallCount);
+            Assert.IsFalse(state.Bots[0].Blackboard.HasTarget);
+            Assert.IsFalse(state.Bots[0].Blackboard.CanSeeTarget);
+        }
+
+        [Test]
+        public void Tick_SightBecomesBlocked_StopsFireIntentAndChasesLastKnownPosition()
+        {
+            var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 6f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            var physics = new FakePhysicsAdapter();
+            var ctx = TestContextFactory.Create(physics: physics);
+
+            BotPerceptionSystem.Tick(state, in ctx);
+            Assert.IsTrue(bot.Blackboard.CanSeeTarget);
+
+            physics.Blocked = true;
+            bot.Blackboard.PerceptionTimer = 0f;
+            bot.Blackboard.ReactionTimer = 999f;
+            BotPerceptionSystem.Tick(state, in ctx);
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bot.Blackboard.CanSeeTarget);
+            Assert.IsFalse(bot.WantsToFire);
+            Assert.AreEqual("Chase", bot.Blackboard.DebugStatus);
+            Assert.AreNotEqual(Vector3.zero, bot.DesiredVelocity);
+        }
+
+        [Test]
         public void Tick_PlayerMovingNearby_HeardByBot()
         {
             var state = CreateStateWithPlayerAndBot(Vector3.zero, new Vector3(0, 0, 5f));
