@@ -39,7 +39,7 @@ namespace View.UI.Notifications
         void BuildDocument()
         {
             var tree = Resources.Load<VisualTreeAsset>("UI/Notifications/NotificationOverlay");
-            var styles = Resources.Load<StyleSheet>("UI/Notifications/NotificationOverlay");
+            var styles = LoadStyleSheet("UI/Notifications", "NotificationOverlay");
             var panel = Resources.Load<PanelSettings>("UI/Notifications/NotificationPanelSettings");
 
             if (tree == null || panel == null)
@@ -61,14 +61,53 @@ namespace View.UI.Notifications
             _doc.panelSettings = panel;
             _doc.visualTreeAsset = tree;
 
+            // Toasts belong to the overlay tier: they must stay readable while a modal is
+            // up (quest popup 90, inventory 100, attachment editor 200, end of raid 200),
+            // otherwise a banner raised *by* a window — "backpack full", say — renders
+            // behind the very window that raised it. Set in code because the asset's
+            // sorting order is both too low and unreliable across domain reloads
+            // (same reason the scale fields are re-applied above).
+            _doc.sortingOrder = 900; // below the tooltip layer (1000), above every window
+
             _root = _doc.rootVisualElement;
-            if (styles != null && !_root.styleSheets.Contains(styles))
-                _root.styleSheets.Add(styles);
+            if (styles != null)
+            {
+                if (!_root.styleSheets.Contains(styles)) _root.styleSheets.Add(styles);
+            }
+            else
+            {
+                // Without the sheet the toasts still build and lay out — full-width, no
+                // background, default dark text — so they're invisible rather than absent.
+                // Make that loud instead of shipping a silent no-op notification system.
+                Debug.LogError("[NotificationOverlay] NotificationOverlay.uss failed to load; " +
+                               "toasts will render unstyled and invisible.");
+            }
 
             _root.style.flexGrow = 1;
             _root.pickingMode = PickingMode.Ignore;
 
             _stack = _root.Q<VisualElement>("stack");
+        }
+
+        /// <summary>
+        /// Loads a USS out of Resources by folder + asset name.
+        ///
+        /// A plain <c>Resources.Load&lt;StyleSheet&gt;("UI/Notifications/NotificationOverlay")</c>
+        /// is not reliable here: Resources keys assets by their extension-less path, and this
+        /// folder holds both NotificationOverlay.uxml and NotificationOverlay.uss under that
+        /// same key. The lookup can settle on the VisualTreeAsset and hand back null for the
+        /// StyleSheet — which is what left every toast unstyled (and therefore invisible).
+        /// LoadAll filters by type first, so the sheet is found regardless of the collision.
+        /// </summary>
+        static StyleSheet LoadStyleSheet(string folder, string assetName)
+        {
+            var direct = Resources.Load<StyleSheet>($"{folder}/{assetName}");
+            if (direct != null) return direct;
+
+            foreach (var sheet in Resources.LoadAll<StyleSheet>(folder))
+                if (sheet != null && sheet.name == assetName) return sheet;
+
+            return null;
         }
 
         public void Push(NotificationKind kind, string kicker, string title, string desc,

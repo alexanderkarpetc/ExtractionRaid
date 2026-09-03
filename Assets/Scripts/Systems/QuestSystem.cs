@@ -494,10 +494,22 @@ namespace Systems
         }
 
         public static bool CanFitRewards(List<QuestReward> rewards, InventoryState inventory)
+            => CanFitRewards(rewards, inventory, out _, out _);
+
+        /// <summary>
+        /// Same check, but reports how many backpack slots the reward needs against how
+        /// many are free — so callers can tell the player exactly how much to drop.
+        /// </summary>
+        public static bool CanFitRewards(List<QuestReward> rewards, InventoryState inventory,
+            out int slotsNeeded, out int freeSlots)
         {
+            slotsNeeded = 0;
+            freeSlots = 0;
+            for (int i = 0; i < InventoryState.BackpackSize; i++)
+                if (inventory.Backpack[i] == null) freeSlots++;
+
             if (rewards == null || rewards.Count == 0) return true;
 
-            int slotsNeeded = 0;
             foreach (var reward in rewards)
             {
                 var def = ItemDefinition.Get(reward.ItemId);
@@ -523,10 +535,6 @@ namespace Systems
                         slotsNeeded += remaining;
                 }
             }
-
-            int freeSlots = 0;
-            for (int i = 0; i < InventoryState.BackpackSize; i++)
-                if (inventory.Backpack[i] == null) freeSlots++;
 
             return freeSlots >= slotsNeeded;
         }

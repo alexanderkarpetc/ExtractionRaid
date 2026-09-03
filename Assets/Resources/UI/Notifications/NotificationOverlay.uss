@@ -6,6 +6,10 @@
     flex-grow: 1;
 }
 
+/* Anchoring lives here; NotificationOverlay.BuildDocument only sets flex-grow on the
+ * document root. If toasts ever render full-width at the top-left, this sheet is not
+ * reaching them — check the console for a USS import error before touching layout code. */
+
 /* Bottom-right anchor; newest toast sits at the bottom, older ones pushed up.
  * column-reverse + inserting at index 0 keeps newest visually lowest. */
 .toast-stack {

@@ -6,6 +6,7 @@ using State;
 using Systems;
 using UnityEngine;
 using UnityEngine.UIElements;
+using View.UI.Notifications;
 
 namespace View.UI.Quests
 {
@@ -579,9 +580,26 @@ namespace View.UI.Quests
                 {
                     var session = App.Instance?.RaidSession;
                     if (session == null) return;
+                    var inventory = App.Instance.Player.Inventory;
+
+                    // Full backpack: nothing is granted and the quest stays claimable, so
+                    // the button stays live — just tell the player why the click did nothing.
+                    if (!QuestSystem.CanFitRewards(quest.Rewards, inventory,
+                            out int slotsNeeded, out int freeSlots))
+                    {
+                        int missing = Mathf.Max(1, slotsNeeded - freeSlots);
+                        string desc = $"Free up {missing} slot{(missing == 1 ? "" : "s")} to claim {quest.DisplayName}.";
+                        if (NotificationOverlay.Instance != null)
+                            NotificationOverlay.Instance.Push(
+                                NotificationKind.Danger, "Not enough space", "Backpack full", desc);
+                        else
+                            Debug.LogWarning($"[QuestsWindow] No NotificationOverlay to warn on: {desc}");
+                        return;
+                    }
+
                     QuestSystem.TryCompleteAndGrantRewards(
                         App.Instance.Player.QuestProgress, quest,
-                        session.RaidState, App.Instance.Player.Inventory);
+                        session.RaidState, inventory);
                     Refresh();
                 };
                 actions.Add(claim);
