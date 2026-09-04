@@ -391,10 +391,11 @@ namespace Constants
         public const float BotWeaponUncommonWeight = 40f;
         public const float BotWeaponRareWeight     = 10f;
 
-        // Layer mask for vision raycasts — only these layers block line of sight.
-        // Default: layer 0 ("Default"). Set via BotConstants or a ScriptableObject
-        // if your obstacles live on a different layer.
-        public static LayerMask VisionBlockingMask = 1 << 0;
+        // Static environment that blocks both sight and physical projectiles.
+        // Keep character/equipment layers out: actors must not become opaque walls
+        // for perception, cover selection, fog of war, or sound propagation.
+        public static LayerMask VisionBlockingMask = LayerMask.GetMask(
+            "Default", "NonXRay", "Ground", "NavigationObstacle", "PropsStatic");
 
         // --- Patrol ---
         public const float WaypointArrivalDistance = 1f;

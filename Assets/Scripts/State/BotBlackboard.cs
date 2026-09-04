@@ -98,6 +98,7 @@ namespace State
         // Effective accuracy computed by ShootNode (settle/movement/pressure applied);
         // 0 = unset → BotCombatSystem falls back to raw config.Accuracy.
         public float EffectiveAccuracy;
+        public bool IsInsideEngagementView;
 
         // Heal cast — medkit takes time; bot is vulnerable (retreats, can't fire) while it runs
         public float HealCastEndTime = -1f; // -1 = idle; ElapsedTime at which heal completes
@@ -180,6 +181,7 @@ namespace State
             CombatStanceEndTime = 0f;
             AimSettle01 = 0f;
             EffectiveAccuracy = 0f;
+            IsInsideEngagementView = false;
             BurstShotsLeft = 0;
             NextBurstTime = 0f;
             ChasePathCornerCount = 0;
@@ -246,6 +248,7 @@ namespace State
             NextBurstTime = 0f;
             AimSettle01 = 0f;
             EffectiveAccuracy = 0f;
+            IsInsideEngagementView = false;
             HealCastEndTime = -1f;
             ChasePathCornerCount = 0;
             ChasePathCornerIndex = 0;

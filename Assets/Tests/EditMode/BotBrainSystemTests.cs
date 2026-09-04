@@ -246,36 +246,9 @@ namespace Tests.EditMode
 
         // (Scav_CannotHeal covered by BotHealTests.Scav_CannotHeal)
 
-        // Scav default EngageRange = 20m. Tests pick distances that exercise gate without
-        // tripping per-type EngageRange — gate effect is isolated.
-
         [Test]
-        public void Tick_EngagementGate_OutsideRadius_BotDoesNotFire()
+        public void Tick_EngagementGate_OutsideViewport_BotApproachesWithoutFiring()
         {
-            // Bot inside per-type EngageRange (20) but outside global player-screen radius (15) → no fire.
-            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 18f));
-            var bot = state.Bots[0];
-            bot.FacingDirection = -Vector3.forward;
-            bot.Blackboard.HasTarget = true;
-            bot.Blackboard.CanSeeTarget = true;
-            bot.Blackboard.DistanceToTarget = 18f;
-            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
-            bot.Blackboard.ReactionTimer = 999f;
-            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
-            {
-                Enabled = true,
-                MaxEngagementRadius = 15f,
-            });
-
-            BotBrainSystem.Tick(state, in ctx);
-
-            Assert.IsFalse(bot.WantsToFire, "Bot outside gate radius should not fire even з visible target");
-        }
-
-        [Test]
-        public void Tick_EngagementGate_InsideRadius_BotFires()
-        {
-            // Bot inside global radius → gate doesn't trigger, fires normally.
             var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
             var bot = state.Bots[0];
             bot.FacingDirection = -Vector3.forward;
@@ -284,38 +257,105 @@ namespace Tests.EditMode
             bot.Blackboard.DistanceToTarget = 10f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             bot.Blackboard.ReactionTimer = 999f;
+            var viewport = new FakeCombatViewportAdapter
+            {
+                IsInsideHandler = (_, _) => false,
+            };
             var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
             {
                 Enabled = true,
-                MaxEngagementRadius = 15f,
-            });
+                ViewportEnterMargin = 0.12f,
+                ViewportExitMargin = 0.05f,
+            }, combatViewport: viewport);
 
             BotBrainSystem.Tick(state, in ctx);
 
-            Assert.IsTrue(bot.WantsToFire, "Bot inside gate radius should fire normally");
+            Assert.IsFalse(bot.WantsToFire);
+            Assert.Less(bot.DesiredVelocity.z, 0f, "Off-screen bot should approach the player");
+            Assert.AreEqual("Enter view", bot.Blackboard.DebugStatus);
         }
 
         [Test]
-        public void Tick_EngagementGate_Disabled_FiresAtAnyDistanceWithinEngageRange()
+        public void Tick_EngagementGate_InsideViewport_BotFires()
         {
-            // Gate disabled — fall through to per-type EngageRange only. Bot at 18m (within Scav's 20m).
-            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 18f));
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
             var bot = state.Bots[0];
             bot.FacingDirection = -Vector3.forward;
             bot.Blackboard.HasTarget = true;
             bot.Blackboard.CanSeeTarget = true;
-            bot.Blackboard.DistanceToTarget = 18f;
+            bot.Blackboard.DistanceToTarget = 10f;
             bot.Blackboard.LastKnownTargetPos = Vector3.zero;
             bot.Blackboard.ReactionTimer = 999f;
+            var viewport = new FakeCombatViewportAdapter();
             var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
             {
-                Enabled = false,
-                MaxEngagementRadius = 15f, // irrelevant — gate off
-            });
+                Enabled = true,
+                ViewportEnterMargin = 0.12f,
+                ViewportExitMargin = 0.05f,
+            }, combatViewport: viewport);
 
             BotBrainSystem.Tick(state, in ctx);
 
-            Assert.IsTrue(bot.WantsToFire, "Gate disabled = per-type EngageRange is the only check");
+            Assert.IsTrue(bot.WantsToFire);
+            Assert.IsTrue(bot.Blackboard.IsInsideEngagementView);
+        }
+
+        [Test]
+        public void Tick_EngagementGate_UsesExitMarginAfterBotEntered()
+        {
+            var state = CreateStateWithBot("Scav", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 999f;
+            bot.Blackboard.IsInsideEngagementView = true;
+            var viewport = new FakeCombatViewportAdapter
+            {
+                IsInsideHandler = (_, margin) => margin <= 0.05f,
+            };
+            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
+            {
+                Enabled = true,
+                ViewportEnterMargin = 0.12f,
+                ViewportExitMargin = 0.05f,
+            }, combatViewport: viewport);
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsTrue(bot.WantsToFire,
+                "Bot already engaged should remain active inside the wider exit zone");
+        }
+
+        [Test]
+        public void Tick_EngagementGate_OutsideViewport_PreemptsPmcCoverFire()
+        {
+            var state = CreateStateWithBot("PMC", new Vector3(0, 0, 10f));
+            var bot = state.Bots[0];
+            bot.FacingDirection = -Vector3.forward;
+            bot.Blackboard.HasTarget = true;
+            bot.Blackboard.CanSeeTarget = true;
+            bot.Blackboard.DistanceToTarget = 10f;
+            bot.Blackboard.LastKnownTargetPos = Vector3.zero;
+            bot.Blackboard.ReactionTimer = 999f;
+            var viewport = new FakeCombatViewportAdapter
+            {
+                IsInsideHandler = (_, _) => false,
+            };
+            var ctx = TestContextFactory.Create(botEngagementConfig: new BotEngagementConfig
+            {
+                Enabled = true,
+                ViewportEnterMargin = 0.12f,
+                ViewportExitMargin = 0.05f,
+            }, combatViewport: viewport);
+
+            BotBrainSystem.Tick(state, in ctx);
+
+            Assert.IsFalse(bot.WantsToFire);
+            Assert.AreEqual(CoverPhase.None, bot.Blackboard.CoverPhase);
+            Assert.AreEqual("Enter view", bot.Blackboard.DebugStatus);
         }
     }
 }

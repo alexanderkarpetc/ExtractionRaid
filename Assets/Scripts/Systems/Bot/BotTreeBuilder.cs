@@ -61,6 +61,11 @@ namespace Systems.Bot
             {
                 var combatBranches = new List<IBTNode>();
 
+                // Off-screen ranged bots must enter the real camera viewport before any
+                // grenade, cover or shoot branch can own the tick.
+                if (config.Has(BotBehaviorFlags.Shoot))
+                    combatBranches.Add(new EnterEngagementViewNode());
+
                 if (config.Has(BotBehaviorFlags.ThrowGrenade))
                 {
                     combatBranches.Add(new BTCooldown("Grenade CD",

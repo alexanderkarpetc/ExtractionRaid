@@ -290,6 +290,7 @@ namespace Editor
                     Field("Status", bb.DebugStatus ?? "—");
                     Field("HasTarget", bb.HasTarget);
                     Field("CanSeeTarget", bb.CanSeeTarget);
+                    Field("Inside Combat View", bb.IsInsideEngagementView);
                     if (bb.HasTarget)
                     {
                         Field("Distance", $"{bb.DistanceToTarget:F1}");

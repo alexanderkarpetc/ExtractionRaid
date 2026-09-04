@@ -1,4 +1,5 @@
 using Adapters;
+using Constants;
 using NUnit.Framework;
 using Session;
 using State;
@@ -46,6 +47,37 @@ namespace Tests.EditMode
                 "God Mode should preserve the normal feedback event pipeline.");
             Assert.IsTrue(events.GrenadeExplodedCalled);
             Assert.AreEqual(0, state.Grenades.Count);
+        }
+
+        [Test]
+        public void TickExplosions_OcclusionUsesEnvironmentBlockingMask()
+        {
+            int nextId = 10;
+            var state = RaidState.Create(() => new EId(nextId++));
+            state.ElapsedTime = 2f;
+
+            var playerId = new EId(1);
+            state.PlayerEntity = PlayerEntityState.Create(playerId, Vector3.zero);
+            state.HealthMap[playerId] = HealthState.Create(100f);
+            state.Grenades.Add(GrenadeEntityState.Create(
+                new EId(2), new EId(3), spawnTime: 0f, fuseTime: 1f,
+                damage: 80f, explosionRadius: 5f));
+
+            var physics = new FakePhysicsAdapter { Blocked = true };
+            var context = new RaidContext(
+                deltaTime: 1f / 60f,
+                events: new FakeRaidEvents(),
+                time: new FakeTimeAdapter(),
+                input: new FakeInputAdapter(),
+                physics: physics,
+                navMesh: new FakeNavMeshAdapter(),
+                grenadePositions: new FixedGrenadePositionAdapter(Vector3.zero));
+
+            GrenadeSystem.TickExplosions(state, in context);
+
+            Assert.AreEqual(BotConstants.VisionBlockingMask.value,
+                physics.LastLinecastLayerMask);
+            Assert.AreEqual(100f, state.HealthMap[playerId].CurrentHp);
         }
 
         sealed class FixedGrenadePositionAdapter : IGrenadePositionAdapter

@@ -46,6 +46,7 @@ namespace ApplicationCore
         readonly UnityInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
+        readonly UnityCombatViewportAdapter _combatViewportAdapter;
         readonly GrenadePositionAdapter _grenadePositionAdapter;
         readonly PlayerPresenter _playerPresenter;
         readonly ProjectilePresenter _projectilePresenter;
@@ -76,6 +77,7 @@ namespace ApplicationCore
             _inputAdapter = new UnityInputAdapter();
             _navMeshAdapter = new UnityNavMeshAdapter();
             _physicsAdapter = new UnityPhysicsAdapter();
+            _combatViewportAdapter = new UnityCombatViewportAdapter();
             _grenadePositionAdapter = new GrenadePositionAdapter();
             _playerPresenter = new PlayerPresenter(_inputAdapter.SetMuzzlePoint);
             _projectilePresenter = new ProjectilePresenter();
@@ -157,12 +159,16 @@ namespace ApplicationCore
             }
 
             RaidSession = new RaidSession(levelId, AllocateEId, _timeAdapter, _inputAdapter,
-                _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter, CoreDefinitions);
+                _navMeshAdapter, _physicsAdapter, _grenadePositionAdapter, CoreDefinitions,
+                _combatViewportAdapter);
             RaidSession.Start();
 
             var cam = Camera.main;
+            _combatViewportAdapter.SetCamera(cam);
             if (cam != null)
+            {
                 _inputAdapter.SetCamera(cam);
+            }
 
             Debug.Log($"[App] Raid started on level '{levelId}'.");
         }
@@ -181,8 +187,11 @@ namespace ApplicationCore
             await SceneManager.LoadSceneAsync(sceneName);
 
             var cam = Camera.main;
+            _combatViewportAdapter.SetCamera(cam);
             if (cam != null)
+            {
                 _inputAdapter.SetCamera(cam);
+            }
 
             StartRaid(levelId);
         }
@@ -214,8 +223,11 @@ namespace ApplicationCore
             await SceneManager.LoadSceneAsync("HideoutScene");
 
             var cam = Camera.main;
+            _combatViewportAdapter.SetCamera(cam);
             if (cam != null)
+            {
                 _inputAdapter.SetCamera(cam);
+            }
 
             EnterHideout();
             LastRaidOutcome = RaidOutcome.None;

@@ -31,7 +31,7 @@ namespace Systems.Bot
                 bool staggered = ctx.StaggerConfig.Enabled
                                  && ctx.StaggerConfig.AIShootingLockout
                                  && bot.StaggerEndTime > ctx.Time.Time;
-                if (bot.WantsToFire && !staggered)
+                if (bot.WantsToFire && !staggered && CanFireFromViewport(bot, in ctx, in config))
                     ProcessFire(bot, state, in ctx, in config);
 
                 if (bot.WantsToThrowGrenade && !staggered)
@@ -40,6 +40,21 @@ namespace Systems.Bot
                 if (bot.WantsToMeleeAttack && !staggered)
                     ProcessMeleeAttack(bot, state, in ctx, in config);
             }
+        }
+
+        static bool CanFireFromViewport(BotEntityState bot, in RaidContext ctx,
+            in BotTypeConfig config)
+        {
+            if (config.Has(BotBehaviorFlags.FireForward)
+                || !ctx.BotEngagementConfig.Enabled
+                || ctx.CombatViewport == null)
+                return true;
+
+            var samplePosition = bot.Position + Vector3.up * BotConstants.PlayerEyeHeight;
+            float exitMargin = Mathf.Min(ctx.BotEngagementConfig.ViewportExitMargin,
+                ctx.BotEngagementConfig.ViewportEnterMargin);
+            return ctx.CombatViewport.IsInside(
+                samplePosition, exitMargin);
         }
 
         static void ProcessMeleeAttack(BotEntityState bot, RaidState state, in RaidContext ctx, in BotTypeConfig config)

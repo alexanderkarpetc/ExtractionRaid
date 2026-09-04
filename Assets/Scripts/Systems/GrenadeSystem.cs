@@ -155,8 +155,8 @@ namespace Systems
             {
                 var eyePos = targetPos + Vector3.up * 1f;
                 var explosionEye = center + Vector3.up * 0.2f;
-                int wallMask = LayerMask.GetMask("Default");
-                if (context.Physics.Linecast(explosionEye, eyePos, wallMask))
+                if (context.Physics.Linecast(
+                        explosionEye, eyePos, BotConstants.VisionBlockingMask))
                     return;
             }
 

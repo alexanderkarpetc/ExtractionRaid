@@ -23,7 +23,7 @@ are per bot, never static.
 
 ## Perception and memory
 
-- Vision uses range, field of view and physics occlusion.
+- Vision uses range, field of view and static-environment occlusion (`Default`, `NonXRay`, `Ground`, `NavigationObstacle`, `PropsStatic`). The same mask gates cover/FOV/sound/grenade occlusion.
 - Hearing records an approximate last-known position; it does not grant exact tracking.
 - Damage alerts may acquire the attacker/impact direction without bypassing reaction delay.
 - Target memory decays after loss of contact; expiry or arrival at the last-known position triggers
@@ -41,7 +41,9 @@ are per bot, never static.
   threat. Peek/fire/duck behavior remains interruptible by damage and reload.
 - Heal and grenade actions expose cast/commit windows and cannot secretly execute while another
   incompatible action is active.
-- Engagement limits prevent untelegraphed fire from far outside the player view.
+- Ranged bots must enter an inset camera viewport before combat tactics may fire. A wider exit
+  boundary prevents edge flicker, while combat execution independently rejects off-screen fire
+  intents produced by any behavior branch. Test-only `FireForward` turrets are exempt.
 
 ## Movement
 

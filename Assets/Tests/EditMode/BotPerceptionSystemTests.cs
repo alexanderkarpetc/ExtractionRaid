@@ -11,6 +11,24 @@ namespace Tests.EditMode
     [TestFixture]
     public class BotPerceptionSystemTests
     {
+        [TestCase("Default", true)]
+        [TestCase("NonXRay", true)]
+        [TestCase("Ground", true)]
+        [TestCase("NavigationObstacle", true)]
+        [TestCase("PropsStatic", true)]
+        [TestCase("Player", false)]
+        [TestCase("Bot", false)]
+        [TestCase("CharacterEquipment", false)]
+        [TestCase("Weapon", false)]
+        public void VisionBlockingMask_ContainsOnlyStaticEnvironment(
+            string layerName, bool expected)
+        {
+            int layer = LayerMask.NameToLayer(layerName);
+
+            Assert.GreaterOrEqual(layer, 0, $"Project layer '{layerName}' must exist");
+            Assert.AreEqual(expected,
+                (BotConstants.VisionBlockingMask.value & (1 << layer)) != 0);
+        }
 
         static RaidState CreateStateWithPlayerAndBot(Vector3 playerPos, Vector3 botPos,
             string botType = "Scav")

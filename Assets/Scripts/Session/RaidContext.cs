@@ -193,20 +193,20 @@ namespace Session
     }
 
     /// <summary>
-    /// Player-centric global cap on bot fire range. Closes "off-screen damage without telegraph"
-    /// UX gap — bots whose distance to player exceeds <see cref="MaxEngagementRadius"/> won't
-    /// emit <c>WantsToFire</c> even if their per-type <c>EngageRange</c> allows it.
-    /// Default = disabled (0) so unit tests + legacy paths keep working unchanged.
+    /// Camera-space gate for ranged combat. Separate enter/exit margins provide hysteresis at
+    /// the screen edge. Default is disabled so isolated tests opt in explicitly.
     /// </summary>
     public struct BotEngagementConfig
     {
         public bool  Enabled;
-        public float MaxEngagementRadius;
+        public float ViewportEnterMargin;
+        public float ViewportExitMargin;
 
         public static BotEngagementConfig Default => new BotEngagementConfig
         {
             Enabled = false,
-            MaxEngagementRadius = 0f,
+            ViewportEnterMargin = 0.12f,
+            ViewportExitMargin = 0.05f,
         };
     }
 
@@ -372,6 +372,7 @@ namespace Session
         public readonly IInputAdapter Input;
         public readonly INavMeshAdapter NavMesh;
         public readonly IPhysicsAdapter Physics;
+        public readonly ICombatViewportAdapter CombatViewport;
         public readonly IGrenadePositionAdapter GrenadePositions;
         public readonly ICoreDefinitionRegistry CoreDefinitions;
         public readonly AimConfig AimConfig;
@@ -390,6 +391,7 @@ namespace Session
 
         public RaidContext(float deltaTime, IRaidEvents events, ITimeAdapter time,
             IInputAdapter input, INavMeshAdapter navMesh, IPhysicsAdapter physics = null,
+            ICombatViewportAdapter combatViewport = null,
             IGrenadePositionAdapter grenadePositions = null,
             ICoreDefinitionRegistry coreDefinitions = null,
             AimConfig? aimConfig = null,
@@ -412,6 +414,7 @@ namespace Session
             Input = input;
             NavMesh = navMesh;
             Physics = physics;
+            CombatViewport = combatViewport;
             GrenadePositions = grenadePositions;
             CoreDefinitions = coreDefinitions;
             AimConfig = aimConfig ?? AimConfig.Default;

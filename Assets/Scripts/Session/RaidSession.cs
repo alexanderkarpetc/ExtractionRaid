@@ -24,6 +24,7 @@ namespace Session
         readonly IInputAdapter _inputAdapter;
         readonly INavMeshAdapter _navMeshAdapter;
         readonly IPhysicsAdapter _physicsAdapter;
+        readonly ICombatViewportAdapter _combatViewportAdapter;
         readonly IGrenadePositionAdapter _grenadePositionAdapter;
         readonly ICoreDefinitionRegistry _coreDefinitions;
         readonly System.Func<EId> _allocateEId;
@@ -34,12 +35,14 @@ namespace Session
             ITimeAdapter timeAdapter, IInputAdapter inputAdapter, INavMeshAdapter navMeshAdapter,
             IPhysicsAdapter physicsAdapter = null,
             IGrenadePositionAdapter grenadePositionAdapter = null,
-            ICoreDefinitionRegistry coreDefinitions = null)
+            ICoreDefinitionRegistry coreDefinitions = null,
+            ICombatViewportAdapter combatViewportAdapter = null)
         {
             _timeAdapter = timeAdapter;
             _inputAdapter = inputAdapter;
             _navMeshAdapter = navMeshAdapter;
             _physicsAdapter = physicsAdapter;
+            _combatViewportAdapter = combatViewportAdapter;
             _grenadePositionAdapter = grenadePositionAdapter;
             _coreDefinitions = coreDefinitions;
             _allocateEId = allocateEId;
@@ -587,6 +590,7 @@ namespace Session
                 input: _inputAdapter,
                 navMesh: _navMeshAdapter,
                 physics: _physicsAdapter,
+                combatViewport: _combatViewportAdapter,
                 grenadePositions: _grenadePositionAdapter,
                 coreDefinitions: _coreDefinitions,
                 aimConfig: new AimConfig
@@ -656,7 +660,8 @@ namespace Session
                 botEngagementConfig: new BotEngagementConfig
                 {
                     Enabled             = DevCheats.Config.BotEngagement.Enabled,
-                    MaxEngagementRadius = DevCheats.Config.BotEngagement.MaxEngagementRadius,
+                    ViewportEnterMargin = DevCheats.Config.BotEngagement.ViewportEnterMargin,
+                    ViewportExitMargin  = DevCheats.Config.BotEngagement.ViewportExitMargin,
                 },
                 laserConfig: new LaserConfig
                 {

@@ -3,25 +3,18 @@ using UnityEngine;
 namespace Dev
 {
     /// <summary>
-    /// Bot engagement gate — global player-centric radius cap для bot fire eligibility.
-    /// Solves "bots stream damage from off-screen" UX gap: top-down camera з vision range
-    /// of 35-70m well exceeds visible screen extent, so player ловить damage without
-    /// telegraph. Cap restricts fire to a radius slightly less than half-screen-width.
-    ///
-    /// Orthogonal to per-bot <c>BotTypeConfig.EngageRange</c> — that field is bot identity
-    /// ("how far am I willing to fight"); this cap is camera-driven ("how close must they
-    /// be для player to see them"). Effective range = <c>min(EngageRange, MaxEngagementRadius)</c>.
-    ///
-    /// Trade-off (acknowledged): на 16:9 верх/низ екрану може мати випадки де bot fires
-    /// from just off-screen vertically. Tunable радіус мінімізує це до прийнятного.
+    /// Camera-space engagement gate. Bots approach the visible play area before ranged combat;
+    /// hysteresis keeps camera motion from toggling fire every frame at the screen edge.
     /// </summary>
     public class DevCheatsBotEngagementSection : ScriptableObject
     {
-        [Tooltip("Master switch. False = no extra gate, bots fire purely on per-type EngageRange.")]
+        [Tooltip("Require ranged bots to enter the camera viewport before they can fire.")]
         public bool Enabled = true;
 
-        [Tooltip("Max world-space distance from player at which a bot can fire. " +
-                 "Tune so that ~half-screen-width у typical play. 0 = no cap (gate off).")]
-        [Range(0f, 50f)] public float MaxEngagementRadius = 18f;
+        [Tooltip("Normalized inset required before a bot starts ranged combat.")]
+        [Range(0f, 0.49f)] public float ViewportEnterMargin = 0.12f;
+
+        [Tooltip("Smaller inset used after entry; creates hysteresis near the screen edge.")]
+        [Range(0f, 0.49f)] public float ViewportExitMargin = 0.05f;
     }
 }

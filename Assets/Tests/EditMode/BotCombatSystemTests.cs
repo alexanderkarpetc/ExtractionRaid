@@ -1,5 +1,6 @@
 using Adapters;
 using NUnit.Framework;
+using Session;
 using State;
 using Systems.Bot;
 using Tests.EditMode.Fakes;
@@ -60,6 +61,29 @@ namespace Tests.EditMode
             BotCombatSystem.Tick(state, in ctx);
 
             Assert.AreEqual(0, state.Projectiles.Count);
+        }
+
+        [Test]
+        public void Tick_BotOutsideCombatViewport_DoesNotSpawnProjectile()
+        {
+            var state = CreateStateWithBotWantingToFire();
+            var viewport = new FakeCombatViewportAdapter
+            {
+                IsInsideHandler = (_, _) => false,
+            };
+            var ctx = TestContextFactory.Create(
+                combatViewport: viewport,
+                botEngagementConfig: new BotEngagementConfig
+                {
+                    Enabled = true,
+                    ViewportEnterMargin = 0.12f,
+                    ViewportExitMargin = 0.05f,
+                });
+
+            BotCombatSystem.Tick(state, in ctx);
+
+            Assert.AreEqual(0, state.Projectiles.Count,
+                "Combat execution must guard fire intents from any BT node");
         }
 
         [Test]
