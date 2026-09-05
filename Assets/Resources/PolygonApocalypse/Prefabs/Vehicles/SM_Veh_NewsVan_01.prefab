@@ -372,6 +372,7 @@ GameObject:
   - component: {fileID: 33670087029566720}
   - component: {fileID: 23177614921988692}
   - component: {fileID: 7099072355947528630}
+  - component: {fileID: 7243276183132964530}
   m_Layer: 15
   m_Name: SM_Veh_NewsVan_01
   m_TagString: Untagged
@@ -486,6 +487,26 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.4726083, y: 1.7831539, z: 5.2941256}
   m_Center: {x: 0, y: 1.1358305, z: -0.050666112}
+--- !u!114 &7243276183132964530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290022197473952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 1
+  m_Area: 1
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 0
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
 --- !u!1 &1336627844345348
 GameObject:
   m_ObjectHideFlags: 0
