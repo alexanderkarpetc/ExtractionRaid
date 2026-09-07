@@ -24,8 +24,10 @@ MonoBehaviour:
   _magazineAmmo: 30
   _helmetDefinitionId: 
   _bodyArmorDefinitionId: 
+  _helmetDurability: {x: 1, y: 1}
+  _bodyArmorDurability: {x: 1, y: 1}
   _loot: {fileID: 0}
-  _maxHp: 80
+  _maxHp: 40
   _healAmount: 0
   _healThreshold: 0
   _healCooldown: 0

@@ -33,7 +33,7 @@ namespace Tests.EditMode
 
             var botId = state.Bots[0].Id;
             Assert.IsTrue(state.HealthMap.ContainsKey(botId));
-            Assert.AreEqual(80f, state.HealthMap[botId].MaxHp, 0.01f);
+            Assert.AreEqual(40f, state.HealthMap[botId].MaxHp, 0.01f);
         }
 
         [Test]

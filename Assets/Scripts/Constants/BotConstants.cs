@@ -543,7 +543,7 @@ namespace Constants
 
         public static readonly BotTypeConfig Scav = new(
             typeId: "Scav", prefabId: "BotShell", weaponConfig: PistolWeapon,
-            maxHp: 80f, moveSpeed: 3.5f, chaseSpeed: 4f,
+            maxHp: 40f, moveSpeed: 3.5f, chaseSpeed: 4f,
             visionRange: 25f, visionAngle: 110f,
             targetMemoryDuration: 5f, reactionTime: 0.8f, accuracy: 0.5f,
             helmetDefinitionId: "Helmet_Basic"
