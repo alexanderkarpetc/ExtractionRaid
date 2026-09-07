@@ -3,24 +3,23 @@ Shader "ExtractionRaid/Glass Advanced Cubemap"
     Properties
     {
         [Header(Glass)]
-        [HDR] _GlassColor("Glass Color", Color) = (0.65, 0.85, 1.0, 1.0)
-        _Opacity("Opacity", Range(0.0, 1.0)) = 0.12
+        [MainTexture] _BaseMap("Glass Texture (RGB)", 2D) = "white" {}
+        [MainColor] _GlassColor("Glass Color", Color) = (1, 1, 1, 1)
+        _Opacity("Opacity", Range(0, 1)) = 0.5
+        _MaskMap("Opacity Mask (White Visible - Black Transparent)", 2D) = "white" {}
 
         [Header(Reflection)]
         [NoScaleOffset] _ReflectionCube("Reflection Cubemap", Cube) = "black" {}
-        [HDR] _ReflectionColor("Reflection Color", Color) = (1.0, 1.0, 1.0, 1.0)
-        _ReflectionStrength("Reflection Strength", Range(0.0, 3.0)) = 1.0
-        _Smoothness("Smoothness", Range(0.0, 1.0)) = 0.9
-        _CubemapRotation("Cubemap Rotation", Range(0.0, 360.0)) = 0.0
+        [HDR] _ReflectionColor("Reflection Color", Color) = (1, 1, 1, 1)
+        _ReflectionStrength("Reflection Strength", Range(0, 3)) = 0.5
+        _CubemapRotation("Cubemap Rotation", Range(0, 360)) = 0
 
         [Header(Fresnel)]
-        _ReflectionAtNormal("Reflection Facing Camera", Range(0.0, 1.0)) = 0.3
-        _FresnelPower("Fresnel Power", Range(0.5, 10.0)) = 5.0
+        _ReflectionAtNormal("Reflection Facing Camera", Range(0, 1)) = 0.1
+        _FresnelPower("Fresnel Power", Range(0.5, 10)) = 5
 
-        [Header(Surface)]
-        [Normal] _NormalMap("Normal Map", 2D) = "bump" {}
-        _NormalStrength("Normal Strength", Range(0.0, 2.0)) = 0.25
-        [NoScaleOffset] _MaskMap("Mask (R Opacity, G Reflection, B Smoothness)", 2D) = "white" {}
+        [Header(Rendering)]
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Culling", Float) = 0
     }
 
     SubShader
@@ -36,12 +35,11 @@ Shader "ExtractionRaid/Glass Advanced Cubemap"
         Pass
         {
             Name "Forward"
-            Tags { "LightMode" = "UniversalForward" }
-
+            Tags { "LightMode" = "UniversalForwardOnly" }
             Blend One OneMinusSrcAlpha
             ZWrite Off
             ZTest LEqual
-            Cull Off
+            Cull [_Cull]
 
             HLSLPROGRAM
             #pragma target 3.5
@@ -51,13 +49,30 @@ Shader "ExtractionRaid/Glass Advanced Cubemap"
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_MaskMap);
+            SAMPLER(sampler_MaskMap);
+            TEXTURECUBE(_ReflectionCube);
+            SAMPLER(sampler_ReflectionCube);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _MaskMap_ST;
+                half4 _GlassColor;
+                half4 _ReflectionColor;
+                half _Opacity;
+                half _ReflectionStrength;
+                float _CubemapRotation;
+                half _ReflectionAtNormal;
+                half _FresnelPower;
+            CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
-                float4 tangentOS : TANGENT;
                 float2 uv : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -67,33 +82,10 @@ Shader "ExtractionRaid/Glass Advanced Cubemap"
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
                 half3 normalWS : TEXCOORD1;
-                half3 tangentWS : TEXCOORD2;
-                half3 bitangentWS : TEXCOORD3;
-                float2 uv : TEXCOORD4;
-                half fogFactor : TEXCOORD5;
+                float2 uv : TEXCOORD2;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
-            TEXTURE2D(_NormalMap);
-            SAMPLER(sampler_NormalMap);
-            TEXTURE2D(_MaskMap);
-            SAMPLER(sampler_MaskMap);
-            TEXTURECUBE(_ReflectionCube);
-            SAMPLER(sampler_ReflectionCube);
-
-            CBUFFER_START(UnityPerMaterial)
-                half4 _GlassColor;
-                half4 _ReflectionColor;
-                half _Opacity;
-                half _ReflectionStrength;
-                half _Smoothness;
-                half _CubemapRotation;
-                half _ReflectionAtNormal;
-                half _FresnelPower;
-                half _NormalStrength;
-                float4 _NormalMap_ST;
-            CBUFFER_END
 
             Varyings Vert(Attributes input)
             {
@@ -101,79 +93,52 @@ Shader "ExtractionRaid/Glass Advanced Cubemap"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-
-                VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
-                VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS, input.tangentOS);
-
-                output.positionCS = positionInputs.positionCS;
-                output.positionWS = positionInputs.positionWS;
-                output.normalWS = normalInputs.normalWS;
-                output.tangentWS = normalInputs.tangentWS;
-                output.bitangentWS = normalInputs.bitangentWS;
+                VertexPositionInputs position = GetVertexPositionInputs(input.positionOS.xyz);
+                output.positionCS = position.positionCS;
+                output.positionWS = position.positionWS;
+                output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.uv = input.uv;
-                output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
                 return output;
             }
 
-            half3 RotateAroundY(half3 direction, half degrees)
-            {
-                half angle = radians(degrees);
-                half sine;
-                half cosine;
-                sincos(angle, sine, cosine);
-                half2 rotatedXZ = half2(
-                    direction.x * cosine - direction.z * sine,
-                    direction.x * sine + direction.z * cosine);
-                return half3(rotatedXZ.x, direction.y, rotatedXZ.y);
-            }
-
-            half4 Frag(Varyings input, FRONT_FACE_TYPE isFrontFace : FRONT_FACE_SEMANTIC) : SV_Target
+            half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-                half4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, input.uv);
-                float2 normalUV = input.uv * _NormalMap_ST.xy + _NormalMap_ST.zw;
-                half3 normalTS = UnpackNormalScale(
-                    SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, normalUV),
-                    _NormalStrength);
+                // Base texture alpha is ignored; the grayscale mask controls coverage.
+                half3 baseColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap,
+                    TRANSFORM_TEX(input.uv, _BaseMap)).rgb;
+                half mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap,
+                    TRANSFORM_TEX(input.uv, _MaskMap)).r;
+                half alpha = saturate(_Opacity * _GlassColor.a * mask);
 
-                half3x3 tangentToWorld = half3x3(
-                    normalize(input.tangentWS),
-                    normalize(input.bitangentWS),
-                    normalize(input.normalWS));
-                half3 normalWS = normalize(TransformTangentToWorld(normalTS, tangentToWorld));
-                half faceSign = IS_FRONT_VFACE(isFrontFace, 1.0h, -1.0h);
-                normalWS *= faceSign;
+                half3 normalWS = NormalizeNormalPerPixel(input.normalWS);
+                half3 viewWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+                // Absolute dot gives matching Fresnel on both sides of a glass pane.
+                half facing = saturate(abs(dot(normalWS, viewWS)));
+                half fresnel = pow(1.0h - facing, max(_FresnelPower, 0.5h));
+                half reflectionWeight = saturate(_ReflectionStrength
+                    * lerp(saturate(_ReflectionAtNormal), 1.0h, fresnel));
 
-                half3 viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
-                half3 reflectionDirectionWS = reflect(-viewDirectionWS, normalWS);
-                reflectionDirectionWS = RotateAroundY(reflectionDirectionWS, _CubemapRotation);
+                float3 reflectionDirection = reflect(-viewWS, normalWS);
+                float sine, cosine;
+                sincos(radians(_CubemapRotation), sine, cosine);
+                reflectionDirection.xz = float2(
+                    reflectionDirection.x * cosine - reflectionDirection.z * sine,
+                    reflectionDirection.x * sine + reflectionDirection.z * cosine);
+                half3 reflection = SAMPLE_TEXTURECUBE(_ReflectionCube,
+                    sampler_ReflectionCube, reflectionDirection).rgb * _ReflectionColor.rgb;
 
-                half smoothness = saturate(_Smoothness * mask.b);
-                half reflectionMip = (1.0h - smoothness) * 6.0h;
-                half3 reflection = SAMPLE_TEXTURECUBE_LOD(
-                    _ReflectionCube,
-                    sampler_ReflectionCube,
-                    reflectionDirectionWS,
-                    reflectionMip).rgb;
-
-                half viewDotNormal = saturate(dot(normalWS, viewDirectionWS));
-                half fresnel = pow(1.0h - viewDotNormal, _FresnelPower);
-                half reflectionShape = lerp(_ReflectionAtNormal, 1.0h, fresnel);
-                half reflectionAmount = _ReflectionStrength * reflectionShape * mask.g;
-
-                half alpha = saturate(_Opacity * _GlassColor.a * mask.r);
-                half3 color = _GlassColor.rgb * alpha;
-                color += reflection * _ReflectionColor.rgb * reflectionAmount;
-
-                half fogIntensity = ComputeFogIntensity(input.fogFactor);
-                color = lerp(unity_FogColor.rgb * alpha, color, fogIntensity);
-                return half4(color, alpha);
+                // Keep the base texture at every angle and apply glass tint to the whole surface.
+                half3 color = (baseColor + reflection * reflectionWeight) * _GlassColor.rgb;
+                half fogFactor = InitializeInputDataFog(float4(input.positionWS, 1.0), 0.0h);
+                // MixFog preserves color when fog is disabled. Premultiply exactly once afterwards.
+                color = MixFog(color, fogFactor);
+                return half4(color * alpha, alpha);
             }
             ENDHLSL
         }
     }
-
     FallBack Off
 }

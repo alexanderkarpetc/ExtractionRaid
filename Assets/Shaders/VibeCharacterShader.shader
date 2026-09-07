@@ -142,7 +142,8 @@ Shader "ExtractShaders/VibeCharacterShader"
 
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
-            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
             #pragma multi_compile _ LIGHTMAP_ON
@@ -178,6 +179,7 @@ Shader "ExtractShaders/VibeCharacterShader"
                 float3 normalWS    : TEXCOORD1;
                 float3 positionWS  : TEXCOORD2;
                 float  fogCoord    : TEXCOORD3;
+                half3  vertexLight : TEXCOORD4;
             };
 
             Varyings Vert(Attributes IN)
@@ -191,6 +193,7 @@ Shader "ExtractShaders/VibeCharacterShader"
                 OUT.normalWS    = vn.normalWS;
                 OUT.uv          = TRANSFORM_TEX(IN.uv, _Texture);
                 OUT.fogCoord    = ComputeFogFactor(vp.positionCS.z);
+                OUT.vertexLight = VertexLighting(vp.positionWS, vn.normalWS);
                 return OUT;
             }
 
@@ -300,6 +303,39 @@ Shader "ExtractShaders/VibeCharacterShader"
                 half NdotL = saturate(dot(N, mainLight.direction));
                 half3 directDiffuse = albedo * mainLight.color
                                     * NdotL * mainLight.shadowAttenuation;
+
+                #if defined(_ADDITIONAL_LIGHTS_VERTEX)
+                    directDiffuse += albedo * IN.vertexLight;
+                #endif
+
+                #if defined(_ADDITIONAL_LIGHTS)
+                    InputData inputData = (InputData)0;
+                    inputData.positionWS = IN.positionWS;
+                    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.positionHCS);
+
+                    uint pixelLightCount = GetAdditionalLightsCount();
+
+                    #if USE_CLUSTER_LIGHT_LOOP
+                    [loop]
+                    for (uint lightIndex = 0;
+                         lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS);
+                         ++lightIndex)
+                    {
+                        CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK
+                        Light light = GetAdditionalLight(lightIndex, IN.positionWS, half4(1, 1, 1, 1));
+                        half lightNdotL = saturate(dot(N, light.direction));
+                        directDiffuse += albedo * light.color * lightNdotL
+                                       * light.distanceAttenuation * light.shadowAttenuation;
+                    }
+                    #endif
+
+                    LIGHT_LOOP_BEGIN(pixelLightCount)
+                        Light light = GetAdditionalLight(lightIndex, IN.positionWS, half4(1, 1, 1, 1));
+                        half lightNdotL = saturate(dot(N, light.direction));
+                        directDiffuse += albedo * light.color * lightNdotL
+                                       * light.distanceAttenuation * light.shadowAttenuation;
+                    LIGHT_LOOP_END
+                #endif
 
                 half3 ambient = albedo * SampleSH(N);
 
