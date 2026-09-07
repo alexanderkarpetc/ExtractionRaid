@@ -310,7 +310,7 @@ namespace Game.Editor
             var legendary = new DeliveryStats
             {
                 // Values sourced from pre-migration Pistol stats (Ballistic + SingleAction, Common tier)
-                FireInterval        = 0.4f,
+                FireInterval        = 0.22f,
                 ProjectilesPerShot  = 1,
                 SpreadAngle         = 0f,
                 ConeHalfAngle       = 35f,
@@ -346,7 +346,7 @@ namespace Game.Editor
             var legendary = new DeliveryStats
             {
                 // Values sourced from pre-migration Rifle stats (Ballistic + Auto, Common tier)
-                FireInterval        = 0.2f,
+                FireInterval        = 0.12f,
                 ProjectilesPerShot  = 1,
                 SpreadAngle         = 0f,
                 ConeHalfAngle       = 45f,
