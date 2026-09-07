@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1230633042591489479}
   - component: {fileID: 38645464494662507}
   - component: {fileID: 2516965072612494393}
+  - component: {fileID: 2024536373756339466}
   m_Layer: 15
   m_Name: ER_CampingTent_A02
   m_TagString: Untagged
@@ -112,3 +113,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 2.417894, y: 1.7950127, z: 2.376046}
   m_Center: {x: 0.062152736, y: 1.1024755, z: 0.07982999}
+--- !u!114 &2024536373756339466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6756270731173958316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 1
+  m_Area: 1
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 0
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
