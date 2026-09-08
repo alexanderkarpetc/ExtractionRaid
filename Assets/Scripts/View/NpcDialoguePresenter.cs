@@ -55,17 +55,15 @@ namespace View
             }
 
             // Shop session lifecycle: when the player closes the inventory window
-            // (Esc / Tab) while a shop is up, despawn the shop and bring the
-            // dialogue back. NpcTargetId is still set, so this is the same return
-            // path as the quest popup.
+            // (Esc / Tab) while a shop is up, end the whole NPC interaction. Coming
+            // back to the dialogue after trading is almost never what the player
+            // wants — closing the trade window means "I'm done here".
             if (!string.IsNullOrEmpty(_activeShopOwnerId)
                 && (InventoryWindow.Instance == null || !InventoryWindow.Instance.IsOpen))
             {
-                ShopSystem.CloseShopFor(session.RaidState, _activeShopOwnerId);
-                _activeShopOwnerId = null;
-                player.LootTargetId = EId.None;
-                if (player.NpcTargetId != EId.None)
-                    OpenDialogueFor(session.RaidState, player.NpcTargetId);
+                player.NpcTargetId = EId.None; // CloseEverything despawns the shop
+                _lastNpcTargetId = EId.None;
+                CloseEverything();
             }
 
             // Keep gameplay input blocked while either UI is up.
@@ -219,12 +217,15 @@ namespace View
             if (!_expectingQuestPopupReturn) return;
             _expectingQuestPopupReturn = false;
 
-            // If player still has the NPC targeted, hand control back to dialogue.
-            // Otherwise the NpcTargetId watcher will tear everything down next frame.
+            // Closing the quest popup ends the whole NPC interaction — same rationale
+            // as the trade window: dropping back into the dialogue is almost never
+            // what the player wanted.
             var player = App.Instance?.RaidSession?.RaidState?.PlayerEntity;
             if (player == null || player.NpcTargetId == EId.None) return;
 
-            OpenDialogueFor(App.Instance.RaidSession.RaidState, player.NpcTargetId);
+            player.NpcTargetId = EId.None;
+            _lastNpcTargetId = EId.None;
+            CloseEverything();
         }
 
         void ExitDialogue()
