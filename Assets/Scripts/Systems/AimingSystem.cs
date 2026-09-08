@@ -32,6 +32,14 @@ namespace Systems
             // movement inside the zone (no sticky feel), but aimPoint never gets close enough to
             // produce jitter. Fallback to previous AimDirection if cursor is exactly on player.
             // RawAimPoint (cursor overlay) is NOT clamped — the white dot keeps following the mouse.
+            // How much the clamp below shortened the aim distance (1 = untouched). The reticle
+            // re-applies this shrink to the smoothed weapon aim (via AimVisualPoint) so it can
+            // come right up to the player instead of orbiting him on the min-radius circle,
+            // while gameplay keeps the stable clamped point. Scaling (rather than subtracting a
+            // fixed push) keeps the reticle continuous while the smoothed aim is still catching
+            // up from outside the zone.
+            float visualShrink = 1f;
+
             float minAimDist = context.AimConfig.MinAimDistance;
             if (minAimDist > 0f)
             {
@@ -47,10 +55,12 @@ namespace Systems
 
                     if (dir.sqrMagnitude > 0.01f)
                     {
-                        aimPoint = new Vector3(
+                        var clamped = new Vector3(
                             player.Position.x + dir.x * minAimDist,
                             aimPoint.y,
                             player.Position.z + dir.z * minAimDist);
+                        visualShrink = Mathf.Clamp01(Mathf.Sqrt(sqrDist) / minAimDist);
+                        aimPoint = clamped;
                     }
                 }
             }
@@ -58,7 +68,11 @@ namespace Systems
             var origin = player.Position;
             var toRaw = new Vector3(aimPoint.x - origin.x, 0f, aimPoint.z - origin.z);
 
-            if (toRaw.sqrMagnitude < 0.001f) return;
+            if (toRaw.sqrMagnitude < 0.001f)
+            {
+                player.AimVisualPoint = player.RawAimPoint;
+                return;
+            }
 
             float rawDist = toRaw.magnitude;
             var rawDir = toRaw / rawDist;
@@ -124,6 +138,23 @@ namespace Systems
 
                 // Final aim = base + decayed recoil
                 player.WeaponAimPoint = cleanAim + (weapon != null ? weapon.RecoilOffset : Vector3.zero);
+
+                // Reticle anchor — the weapon aim pulled back in toward the player by however
+                // much the min-distance clamp pushed it out (see AimVisualPoint). Outside the
+                // clamp zone this is exactly WeaponAimPoint; the direction is the same either
+                // way, so the reticle never lies about where the shot goes.
+                if (visualShrink < 0.999f)
+                {
+                    var toAimXZ = player.WeaponAimPoint - player.Position;
+                    player.AimVisualPoint = new Vector3(
+                        player.Position.x + toAimXZ.x * visualShrink,
+                        player.WeaponAimPoint.y,
+                        player.Position.z + toAimXZ.z * visualShrink);
+                }
+                else
+                {
+                    player.AimVisualPoint = player.WeaponAimPoint;
+                }
 
                 // Feed weapon aim screen position to input adapter for convergence raycast
                 // (so convergence accounts for recoil — affects headshot detection)

@@ -37,7 +37,7 @@ can make the fog disappear or invert.
 
 ## Sniper scope
 
-ADS scope reveal is a second screen-space SDF circle centered on `WeaponAimPoint`. Gameplay computes
+ADS scope reveal is a second screen-space SDF circle centered on `AimVisualPoint`. Gameplay computes
 the reveal strength from ADS blend and aim distance; the composite shader renders that resolved
 value. Scope visuals must follow the same smoothed/recoiling weapon aim as the crosshair.
 
@@ -46,4 +46,4 @@ value. Scope visuals must follow the same smoothed/recoiling weapon aim as the c
 - No mask: verify FOV camera, layer mask and imported texture handles.
 - Mask works but composite does not: inspect renderer-feature ordering and camera color handles.
 - Flicker/ghosting: verify temporal buffers reset on scene/resolution change.
-- Scope offset: compare screen projection of `WeaponAimPoint` with cursor/camera coordinates.
+- Scope offset: compare screen projection of `AimVisualPoint` with cursor/camera coordinates.

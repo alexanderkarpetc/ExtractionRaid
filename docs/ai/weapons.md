@@ -44,8 +44,12 @@ caliber is usable and restockable.
 ## Aiming
 
 Player intent is `RawAimPoint`; `WeaponAimPoint` is the smoothed, recoil-affected point used by
-shooting, crosshair and scope reveal. `AimDirection` is derived from weapon origin to that point.
+shooting and scope reveal. `AimDirection` is derived from weapon origin to that point.
 This keeps projectile convergence and visuals on the same model.
+
+Inside `MinAimDistance` the weapon aim is pushed out onto that radius (anti-flip). `AimVisualPoint`
+undoes only that push and is what the crosshair and scope circle are drawn at, so the reticle can
+reach the player instead of orbiting him. Direction is unchanged, so it never lies about the shot.
 
 ADS blends authored weapon handling/vision values. Low ergonomics may lag and overshoot through the
 aim spring; views must not add a second smoothing layer.

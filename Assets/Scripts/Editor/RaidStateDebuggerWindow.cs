@@ -136,6 +136,7 @@ namespace Editor
             Field("Aim", p.AimDirection);
             Field("Raw Aim Point", p.RawAimPoint);
             Field("Weapon Aim Point", p.WeaponAimPoint);
+            Field("Aim Visual Point", p.AimVisualPoint);
             if (p.ScopeReveal > 0f || p.ScopeRadius > 0f)
             {
                 Field("Scope Reveal", $"{p.ScopeReveal:F2}");

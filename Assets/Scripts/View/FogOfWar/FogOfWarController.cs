@@ -152,15 +152,15 @@ namespace View.FogOfWar
         {
             float scopeReveal = player != null ? Mathf.Clamp01(player.ScopeReveal) : 0f;
 
-            // Anchor the scope circle to the crosshair dot — the weapon aim point projected to
-            // screen (CrosshairPresenter uses this too). The scope "lag" now lives in the aim
+            // Anchor the scope circle to the crosshair dot — AimVisualPoint projected to screen
+            // (CrosshairPresenter uses this too, so circle and dot never split). The scope "lag" now lives in the aim
             // itself (AimingSystem slows WeaponAimPoint under scope by ergo), so the circle, dot
             // and bullet all lag together as one — no separate view-side smoothing needed here.
             Vector2 centerUV = new Vector2(0.5f, 0.5f);
             var cam = Camera.main;
             if (cam != null && player != null && Screen.width > 0 && Screen.height > 0)
             {
-                var sp = cam.WorldToScreenPoint(player.WeaponAimPoint);
+                var sp = cam.WorldToScreenPoint(player.AimVisualPoint);
                 centerUV = new Vector2(sp.x / Screen.width, sp.y / Screen.height);
             }
             float aspect = Screen.height > 0 ? (float)Screen.width / Screen.height : 16f / 9f;

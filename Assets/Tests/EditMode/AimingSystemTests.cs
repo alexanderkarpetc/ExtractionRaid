@@ -387,6 +387,55 @@ namespace Tests.EditMode
                 "Position lerp should follow straight line, no lateral deviation");
         }
 
+        // ── AimVisualPoint (reticle anchor) vs the MinAimDistance clamp ──
+
+        [Test]
+        public void Tick_CursorOutsideMinAimDistance_VisualPointMatchesWeaponAim()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var input = new FakeInputAdapter { AimWorldPoint = new Vector3(10f, 0f, 0f) };
+            var context = TestContextFactory.Create(input, deltaTime: 1f / 60f);
+
+            AimingSystem.Tick(state, in context);
+
+            Assert.AreEqual(state.PlayerEntity.WeaponAimPoint, state.PlayerEntity.AimVisualPoint,
+                "Outside the clamp zone the reticle anchor must be exactly the weapon aim point");
+        }
+
+        [Test]
+        public void Tick_CursorInsideMinAimDistance_VisualPointReachesCursor_WhileWeaponAimStaysClamped()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var context = TestContextFactory.Create(
+                new FakeInputAdapter { AimWorldPoint = new Vector3(0.4f, 0f, 0f) },
+                deltaTime: 1f / 60f);
+            float minAimDist = context.AimConfig.MinAimDistance;
+
+            for (int i = 0; i < 240; i++) AimingSystem.Tick(state, in context);
+
+            var p = state.PlayerEntity;
+            Assert.AreEqual(minAimDist, p.WeaponAimPoint.x, 0.01f,
+                "Gameplay aim must stay pushed out onto the min-distance circle");
+            Assert.AreEqual(0.4f, p.AimVisualPoint.x, 0.01f,
+                "Reticle must be able to sit on the cursor inside the clamp zone");
+        }
+
+        [Test]
+        public void Tick_CursorInsideMinAimDistance_VisualPointKeepsWeaponAimDirection()
+        {
+            var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            var context = TestContextFactory.Create(
+                new FakeInputAdapter { AimWorldPoint = new Vector3(0.5f, 0f, 0.5f) },
+                deltaTime: 1f / 60f);
+
+            for (int i = 0; i < 240; i++) AimingSystem.Tick(state, in context);
+
+            var p = state.PlayerEntity;
+            var visualDir = (p.AimVisualPoint - p.Position).normalized;
+            Assert.AreEqual(1f, Vector3.Dot(visualDir, p.AimDirection), 0.001f,
+                "Reticle must lie on the same ray as the shot — only the distance is scaled back");
+        }
+
         // ── Sniper-scope aim spring (weight: low ergo → lag + overshoot) ──
 
         // Worst-ergo weapon (bad equip/unequip + slow turn) → ErgonomicsGoodness ≈ 0 → the

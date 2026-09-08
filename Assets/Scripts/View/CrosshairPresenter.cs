@@ -205,11 +205,12 @@ namespace View
             float adsTarget = player.IsADS ? 1f : 0f;
             _adsAmount = Mathf.MoveTowards(_adsAmount, adsTarget, Time.unscaledDeltaTime * 8f);
 
-            // Resolve cursor screen position. Use cam.WorldToScreenPoint of WeaponAimPoint
-            // — mirrors v1 behavior + accounts for parallax/aim drift у same system.
+            // Resolve cursor screen position from AimVisualPoint — WeaponAimPoint with the
+            // MinAimDistance push undone, so the reticle can sit on / near the player instead
+            // of orbiting him on the clamp circle. Identical to WeaponAimPoint outside the zone.
             var cam = Camera.main;
             Vector3 sp = cam != null
-                ? cam.WorldToScreenPoint(player.WeaponAimPoint)
+                ? cam.WorldToScreenPoint(player.AimVisualPoint)
                 : new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f);
 
             // Phase-driven params

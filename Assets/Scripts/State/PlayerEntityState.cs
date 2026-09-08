@@ -15,6 +15,13 @@ namespace State
         public Vector3 AimDirection;
         public Vector3 RawAimPoint;
         public Vector3 WeaponAimPoint;
+        // Where the reticle is DRAWN. Same as WeaponAimPoint everywhere except inside the
+        // MinAimDistance zone: there WeaponAimPoint is pushed out onto the min-radius circle
+        // (gameplay stability — see AimingSystem), which made the crosshair refuse to come
+        // near the player and slide around him instead of following the mouse. This point
+        // undoes only that outward push, so the reticle sits on the cursor again. Direction
+        // from the player is identical either way, so the shot still goes where it's drawn.
+        public Vector3 AimVisualPoint;
         public WeaponEntityState EquippedWeapon;
 
         public WeaponEntityState[] Hotbar = new WeaponEntityState[HotbarSize];
@@ -105,6 +112,7 @@ namespace State
                 AimDirection = Vector3.forward,
                 RawAimPoint = spawnPosition + Vector3.forward,
                 WeaponAimPoint = spawnPosition + Vector3.forward,
+                AimVisualPoint = spawnPosition + Vector3.forward,
                 Stamina = StaminaConstants.MaxStamina,
                 MaxStamina = StaminaConstants.MaxStamina,
             };
