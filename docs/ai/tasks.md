@@ -20,6 +20,21 @@
 
 ## Поточний фокус
 
+### Editor tooling (2026-09-08)
+
+- 🔄 active **LD01 — Environment Scatter / Map Analysis v0.1.** Реалізовано ізольовані Editor-вікна,
+  scatter, Preview/Clear/Bake/Undo, avoidance, NavMesh sampling, overlays і traversal clusters.
+  [Інструкція](level-design-tools.md). Ізольований Unity 6000.3.10f1 EditMode прогін: **12/12 passed**,
+  включно з 500/2000 props, seed/scale/rotation, Undo, persistence, exclusion і синтетичним NavMesh.
+  Звіти локально: `Logs/LevelDesign-Final.xml`, `Logs/LevelDesign-Final.log`.
+  Приймання handles/overlay та продуктивності на робочій карті ще потрібне; основний проєкт був
+  відкритий іншим Unity-процесом, MCP у сесії недоступний.
+  Виправлено блокування полів обох вікон у Edit Mode: `HideAndDontSave` містив `NotEditable`.
+  Відновлені після reload налаштування також виправляються. Регресія відтворена двома тестами;
+  після виправлення **14/14 passed**, звіт `Logs/LevelDesign-Window-Fixed.xml`.
+  Додано [повний користувацький посібник](../guides/level-design-tools.md): запуск, усі параметри,
+  приклади, інтерпретація метрик, persistence, troubleshooting та навігація скриптами.
+
 **Найближча ціль — замкнений vertical slice, не весь v1.0.** Нижче — запропонована черга
 роботи; її задачі ще не виконані. Межі повного релізу в `release-scope.md` не змінюються.
 

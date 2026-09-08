@@ -88,4 +88,5 @@ passed unless they actually ran.
 | Fog of War | `fog-of-war.md` |
 | Interactable outline / lifecycle | `architecture.md` |
 | UI Toolkit | `ui-styling.md` |
+| Level design scatter / map diagnostics | `level-design-tools.md` |
 | Impact/armor FX authoring | `combat.md` |
