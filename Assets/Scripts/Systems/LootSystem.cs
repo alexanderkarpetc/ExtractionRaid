@@ -376,6 +376,40 @@ namespace Systems
             return null;
         }
 
+        /// <summary>
+        /// Removes depleted bot drops. Authored containers and shops remain in the world
+        /// after being emptied; only the temporary corpse-loot marker owns this lifecycle.
+        /// </summary>
+        public static void RemoveEmptyCorpseLootables(RaidState state, IRaidEvents events)
+        {
+            for (int i = state.Lootables.Count - 1; i >= 0; i--)
+            {
+                var lootable = state.Lootables[i];
+                if (lootable.IsContainer || lootable.IsShop || HasAnyItem(lootable.Inventory))
+                    continue;
+
+                if (state.PlayerEntity != null && state.PlayerEntity.LootTargetId == lootable.Id)
+                    state.PlayerEntity.LootTargetId = EId.None;
+
+                state.Lootables.RemoveAt(i);
+                events.LootableDespawned(lootable.Id);
+            }
+        }
+
+        static bool HasAnyItem(InventoryState inventory)
+        {
+            if (inventory == null) return false;
+            if (inventory.HelmetSlot != null || inventory.BodyArmorSlot != null) return true;
+
+            for (int i = 0; i < inventory.WeaponSlots.Length; i++)
+                if (inventory.WeaponSlots[i] != null) return true;
+
+            for (int i = 0; i < inventory.Backpack.Length; i++)
+                if (inventory.Backpack[i] != null) return true;
+
+            return false;
+        }
+
         public static bool TryTransfer(InventoryState from, InventorySlotRef fromSlot,
             InventoryState to, InventorySlotRef toSlot)
         {

@@ -110,6 +110,40 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void RemoveEmptyCorpseLootables_RemovesDropAndClosesLootWindow()
+        {
+            var id = _state.AllocateEId();
+            _state.PlayerEntity = new PlayerEntityState { LootTargetId = id };
+            _state.Lootables.Add(LootableContainerState.Create(
+                id, Vector3.zero, "Scav", new InventoryState()));
+
+            LootSystem.RemoveEmptyCorpseLootables(_state, _events);
+
+            Assert.That(_state.Lootables, Is.Empty);
+            Assert.That(_state.PlayerEntity.LootTargetId, Is.EqualTo(EId.None));
+            Assert.That(_events.LootableDespawnedCalled, Is.True);
+            Assert.That(_events.LootableDespawnedId, Is.EqualTo(id));
+        }
+
+        [Test]
+        public void RemoveEmptyCorpseLootables_KeepsContainersAndNonEmptyDrops()
+        {
+            var containerId = _state.AllocateEId();
+            var dropId = _state.AllocateEId();
+            var dropInventory = new InventoryState();
+            dropInventory.Backpack[0] = ItemState.Create(_state.AllocateEId(), "Medkit");
+            _state.Lootables.Add(LootableContainerState.Create(
+                containerId, Vector3.zero, "AmmoBox", new InventoryState(), isContainer: true));
+            _state.Lootables.Add(LootableContainerState.Create(
+                dropId, Vector3.one, "Scav", dropInventory));
+
+            LootSystem.RemoveEmptyCorpseLootables(_state, _events);
+
+            Assert.That(_state.Lootables.Count, Is.EqualTo(2));
+            Assert.That(_events.LootableDespawnedCalled, Is.False);
+        }
+
+        [Test]
         public void TryTransfer_MovesItemBetweenInventories()
         {
             var from = new InventoryState();

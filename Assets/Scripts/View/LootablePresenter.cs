@@ -17,7 +17,11 @@ namespace View
     /// </summary>
     public class LootablePresenter
     {
+        const string CorpseLootPrefabPath =
+            "PolygonApocalypse/Prefabs/Item/SM_Item_Duffle_Bag_01";
+
         readonly Dictionary<EId, GameObject> _views = new();
+        GameObject _corpseLootPrefab;
 
         public void LateTick(RaidSession session)
         {
@@ -31,14 +35,13 @@ namespace View
                 {
                     case RaidEventType.LootableSpawned:
                     {
-                        // Only scene containers get a spawned view. Bot corpses are now
-                        // represented visually by the ragdoll body (Gunplay A.9), so we no
-                        // longer spawn the old brown capsule loot marker for them. Looting
-                        // still works — interaction is state-based (LootSystem.FindNearest-
-                        // Interactable reads LootableState positions, not this GameObject).
                         var lootable = LootSystem.GetLootable(session.RaidState, e.Id);
-                        if (lootable != null && lootable.IsContainer)
+                        if (lootable == null) break;
+
+                        if (lootable.IsContainer)
                             SpawnContainerView(e.Id, e.Position, e.StringPayload);
+                        else
+                            SpawnCorpseLootView(e.Id, e.Position, e.StringPayload);
                         break;
                     }
                     case RaidEventType.LootableDespawned:
@@ -47,6 +50,25 @@ namespace View
                 }
             }
 
+        }
+
+        void SpawnCorpseLootView(EId id, Vector3 position, string typeId)
+        {
+            if (_views.ContainsKey(id)) return;
+
+            _corpseLootPrefab ??= Resources.Load<GameObject>(CorpseLootPrefabPath);
+            if (_corpseLootPrefab == null)
+            {
+                Debug.LogError($"Corpse loot prefab is missing at Resources/{CorpseLootPrefabPath}.");
+                return;
+            }
+
+            var go = Object.Instantiate(_corpseLootPrefab, position, Quaternion.identity);
+            go.name = $"CorpseLoot_{typeId}_{id}";
+            if (go.GetComponent<InteractableOutlineTarget>() == null)
+                go.AddComponent<InteractableOutlineTarget>();
+            NonXRayRenderQueue.Apply(go);
+            _views[id] = go;
         }
 
         void SpawnContainerView(EId id, Vector3 position, string typeId)

@@ -777,6 +777,7 @@ namespace Session
             _collisionInbox.Clear();
             ProcessDamageAlerts();
             ProcessDeathEvents();
+            LootSystem.RemoveEmptyCorpseLootables(RaidState, _eventBuffer);
 
             if (context.Input.PickUpPressed && RaidState.PlayerEntity != null && !RaidState.PlayerEntity.IsInventoryOpen)
             {
