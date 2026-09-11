@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7053204945625178126}
   - component: {fileID: 4852236459189326732}
   - component: {fileID: 403696358389527327}
+  - component: {fileID: 7702869648166833907}
   m_Layer: 15
   m_Name: ER_TreeStump_Rotten_A
   m_TagString: Untagged
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &7702869648166833907
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 252773769698411683}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.013797283, y: 0.013741907, z: 0.010000002}
+  m_Center: {x: -0.00045108318, y: 0.000032217504, z: 0.005000002}

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 9140506113579003092}
   - component: {fileID: 8305640574143109886}
   - component: {fileID: 6926691503676113332}
+  - component: {fileID: 1288463000779321591}
   m_Layer: 15
   m_Name: ER_Ambulance_A
   m_TagString: Untagged
@@ -112,3 +113,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.06386702, y: 0.028565552, z: 0.030000005}
   m_Center: {x: 0, y: 0.0002494646, z: 0.015000002}
+--- !u!114 &1288463000779321591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6344220591015207909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 1
+  m_Area: 1
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 0
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
