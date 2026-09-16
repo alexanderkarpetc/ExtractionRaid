@@ -1,13 +1,13 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1102 &-8451105752324565258
+--- !u!1102 &-2972379636749856770
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: A_CargoLiftPlatform_A_UP
+  m_Name: ER_Wall_Door_Bunker_A_Open
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -20,53 +20,25 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 6c1446c1d8fc2884ca1727687bab7db7, type: 2}
+  m_Motion: {fileID: 7400000, guid: e6d215bf206b31540801f5dba0a959c9, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
---- !u!1107 &-1464150405669527857
-AnimatorStateMachine:
-  serializedVersion: 6
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Base Layer
-  m_ChildStates:
-  - serializedVersion: 1
-    m_State: {fileID: 3367624161619302148}
-    m_Position: {x: 130, y: 420, z: 0}
-  - serializedVersion: 1
-    m_State: {fileID: -8451105752324565258}
-    m_Position: {x: -110, y: 420, z: 0}
-  - serializedVersion: 1
-    m_State: {fileID: 4483218963700889515}
-    m_Position: {x: 30, y: 260, z: 0}
-  m_ChildStateMachines: []
-  m_AnyStateTransitions: []
-  m_EntryTransitions: []
-  m_StateMachineTransitions: {}
-  m_StateMachineBehaviours: []
-  m_AnyStatePosition: {x: 50, y: 20, z: 0}
-  m_EntryPosition: {x: 50, y: 120, z: 0}
-  m_ExitPosition: {x: 800, y: 120, z: 0}
-  m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
-  m_DefaultState: {fileID: 4483218963700889515}
 --- !u!91 &9100000
 AnimatorController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: A_CargoLiftPlatform_A
+  m_Name: A_Wall_Door_Bunker_A
   serializedVersion: 5
   m_AnimatorParameters: []
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer
-    m_StateMachine: {fileID: -1464150405669527857}
+    m_StateMachine: {fileID: 2738087508755801670}
     m_Mask: {fileID: 0}
     m_Motions: []
     m_Behaviours: []
@@ -76,14 +48,14 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
---- !u!1102 &3367624161619302148
+--- !u!1102 &1702589786522569913
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: A_CargoLiftPlatform_A_Down
+  m_Name: ER_Wall_Door_Bunker_A_Idle
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -96,20 +68,48 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 2e3b10dd1aca0694dbdeb7d0d1cb93fe, type: 2}
+  m_Motion: {fileID: 7400000, guid: 55b6c8ffd7632ee4686a297431f52dc0, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
---- !u!1102 &4483218963700889515
+--- !u!1107 &2738087508755801670
+AnimatorStateMachine:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Base Layer
+  m_ChildStates:
+  - serializedVersion: 1
+    m_State: {fileID: 4887485445697815419}
+    m_Position: {x: -50, y: 250, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: -2972379636749856770}
+    m_Position: {x: 310, y: 240, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: 1702589786522569913}
+    m_Position: {x: 270, y: 170, z: 0}
+  m_ChildStateMachines: []
+  m_AnyStateTransitions: []
+  m_EntryTransitions: []
+  m_StateMachineTransitions: {}
+  m_StateMachineBehaviours: []
+  m_AnyStatePosition: {x: 50, y: 20, z: 0}
+  m_EntryPosition: {x: 50, y: 120, z: 0}
+  m_ExitPosition: {x: 800, y: 120, z: 0}
+  m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
+  m_DefaultState: {fileID: 1702589786522569913}
+--- !u!1102 &4887485445697815419
 AnimatorState:
   serializedVersion: 6
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: A_CargoLiftPlatform_A_Idle
+  m_Name: ER_Wall_Door_Bunker_A_Close
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -122,7 +122,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 49fa324661387b44ba3233b163ca0620, type: 2}
+  m_Motion: {fileID: 7400000, guid: 7cb3c20ab4a25d44b8c6df9de203d4cb, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
