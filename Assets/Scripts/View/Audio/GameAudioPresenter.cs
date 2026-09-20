@@ -125,7 +125,14 @@ namespace View.Audio
                 case RaidEventType.WeaponFired:
                     if (e.StringPayload == "Ballistic")
                     {
-                        if (e.DeliveryPattern == FiringPattern.Single)
+                        bool isPlayerShot = player != null && e.Id == player.Id;
+                        if (isPlayerShot && e.DeliveryPattern == FiringPattern.Single)
+                            PlayLocal(_clips.PistolClose, Volume(1f, Audio.CloseShot));
+                        else if (isPlayerShot && e.DeliveryPattern == FiringPattern.Auto)
+                            PlayLocal(_clips.RifleFire, Volume(1f, Audio.RifleShot));
+                        else if (isPlayerShot && e.DeliveryPattern == FiringPattern.Scatter)
+                            PlayLocal(_clips.ShotgunFire, Volume(1f, Audio.ShotgunShot));
+                        else if (e.DeliveryPattern == FiringPattern.Single)
                             PlayPistolShot(e.Position, listenerPosition);
                         else if (e.DeliveryPattern == FiringPattern.Auto)
                             PlayWeaponShot(_clips.RifleFire, e.Position, listenerPosition,
@@ -457,6 +464,7 @@ namespace View.Audio
             voice.Source.pitch = Random.Range(0.98f, 1.02f);
             voice.Source.maxDistance = BotVoiceMaxDistance;
             voice.Source.minDistance = 2f;
+            voice.LowPass.enabled = true;
             voice.LowPass.cutoffFrequency = cutoff;
             voice.Source.Play();
             voice.StartedAt = now;
@@ -604,9 +612,27 @@ namespace View.Audio
             voice.Source.clip = clip;
             voice.Source.volume = Mathf.Clamp01(volume);
             voice.Source.pitch = Random.Range(minPitch, maxPitch);
+            voice.Source.spatialBlend = 1f;
             voice.Source.maxDistance = maxDistance;
             voice.Source.minDistance = 2f;
+            voice.LowPass.enabled = true;
             voice.LowPass.cutoffFrequency = lowPassCutoff;
+            voice.Source.Play();
+            voice.StartedAt = Time.unscaledTime;
+        }
+
+        void PlayLocal(AudioClip[] clips, float volume)
+        {
+            if (clips == null || clips.Length == 0 || volume <= 0.001f) return;
+            var clip = PickClip(clips);
+            if (clip == null) return;
+
+            var voice = AcquireVoice();
+            voice.Source.clip = clip;
+            voice.Source.volume = Mathf.Clamp01(volume);
+            voice.Source.pitch = 1f;
+            voice.Source.spatialBlend = 0f;
+            voice.LowPass.enabled = false;
             voice.Source.Play();
             voice.StartedAt = Time.unscaledTime;
         }
