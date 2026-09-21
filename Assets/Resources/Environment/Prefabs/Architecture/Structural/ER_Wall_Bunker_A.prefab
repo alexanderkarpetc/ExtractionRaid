@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8341292915285515687}
   - component: {fileID: 8943005966777452485}
   - component: {fileID: 1375163338948740709}
+  - component: {fileID: 980678555950792658}
   m_Layer: 0
   m_Name: ER_Wall_Bunker_A
   m_TagString: Untagged
@@ -92,6 +93,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &980678555950792658
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794064838369009227}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.000002, y: 2.9999995, z: 0.15000054}
+  m_Center: {x: -0.000015258789, y: 1.4999831, z: -0.0000078603625}
 --- !u!1 &8471899286167477467
 GameObject:
   m_ObjectHideFlags: 0
