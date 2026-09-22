@@ -22,6 +22,7 @@ namespace View.Audio
         const float OccludedFarCutoff = 2600f;
         const float WalkStepInterval = 0.5f;
         const float SprintStepInterval = 0.32f;
+        const float PlayerRifleShotGain = 1.67f;
         const float MusicFadeDuration = 1.5f;
         const float BotVoiceMaxDistance = 36f;
         const float LostVisualDelay = 1.25f;
@@ -127,9 +128,12 @@ namespace View.Audio
                     {
                         bool isPlayerShot = player != null && e.Id == player.Id;
                         if (isPlayerShot && e.DeliveryPattern == FiringPattern.Single)
+                        {
                             PlayLocal(_clips.PistolClose, Volume(1f, Audio.CloseShot));
+                            QueuePistolCasing(e.Position);
+                        }
                         else if (isPlayerShot && e.DeliveryPattern == FiringPattern.Auto)
-                            PlayLocal(_clips.RifleFire, Volume(1f, Audio.RifleShot));
+                            PlayLocal(_clips.PlayerRifleFire, Volume(PlayerRifleShotGain, Audio.RifleShot));
                         else if (isPlayerShot && e.DeliveryPattern == FiringPattern.Scatter)
                             PlayLocal(_clips.ShotgunFire, Volume(1f, Audio.ShotgunShot));
                         else if (e.DeliveryPattern == FiringPattern.Single)
@@ -204,6 +208,17 @@ namespace View.Audio
             PlaySpatial(_clips.PistolDistant, position,
                 Volume(blend * 0.9f * volume, Audio.DistantShot),
                 PistolMaxDistance, 0.97f, 1.01f, cutoff);
+        }
+
+        void QueuePistolCasing(Vector3 position)
+        {
+            _delayed.Add(new DelayedSound
+            {
+                PlayAt = Time.unscaledTime + Random.Range(0.18f, 0.28f),
+                Position = position,
+                Clips = _clips.PistolCasings,
+                Volume = Volume(1f, Audio.PistolCasing),
+            });
         }
 
         void PlayWeaponShot(AudioClip[] clips, Vector3 position, Vector3 listenerPosition,

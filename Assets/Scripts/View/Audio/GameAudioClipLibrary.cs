@@ -4,12 +4,16 @@ namespace View.Audio
 {
     public sealed class GameAudioClipLibrary
     {
-        public readonly AudioClip[] PistolClose = Load("Audio/Weapons/Pistol/Close");
-        public readonly AudioClip[] PistolDistant = Load("Audio/Weapons/Pistol/Distant");
+        public readonly AudioClip[] PistolClose = LoadNamed("Audio/Weapons/Pistol/TestClose",
+            "pistol_close_duckov_01");
+        public readonly AudioClip[] PistolDistant = Load("Audio/Weapons/Pistol/TestDistant");
         public readonly AudioClip[] PistolDryFire = Load("Audio/Weapons/Pistol/DryFire");
         public readonly AudioClip[] PistolReload = Load("Audio/Weapons/Pistol/Reload");
         public readonly AudioClip[] PistolHolster = Load("Audio/Weapons/Pistol/Holster");
         public readonly AudioClip[] PistolUnholster = Load("Audio/Weapons/Pistol/Unholster");
+        public readonly AudioClip[] PistolCasings = Load("Audio/Weapons/Pistol/Casing");
+        public readonly AudioClip[] PlayerRifleFire = LoadNamed("Audio/Weapons/Rifle/Selected",
+            "rifle_close_01", "rifle_close_02");
         public readonly AudioClip[] RifleFire = Load("Audio/Weapons/Rifle/Fire");
         public readonly AudioClip[] RifleDryFire = Load("Audio/Weapons/Rifle/DryFire");
         public readonly AudioClip[] RifleReload = Load("Audio/Weapons/Rifle/Reload");

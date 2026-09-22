@@ -19,6 +19,7 @@ namespace Dev
         [Range(0f, 1f)] public float Reload = 1f;
         [Range(0f, 1f)] public float Holster = 1f;
         [Range(0f, 1f)] public float Unholster = 1f;
+        [Range(0f, 1f)] public float PistolCasing = 1f;
 
         [Header("Rifle")]
         [Range(0f, 1f)] public float RifleShot = 0.3f;
