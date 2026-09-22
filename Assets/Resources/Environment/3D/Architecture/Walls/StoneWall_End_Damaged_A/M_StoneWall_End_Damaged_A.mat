@@ -24,13 +24,13 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Texture:
-        m_Texture: {fileID: 2800000, guid: 6175b718c01f87d41b33fe80bb35061e, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1c1d2e72b02630646880ef2029b7de24, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - Dither: 0
-    - _ColorStreng: 0
+    - _ColorStreng: 1
     - _Cull: 2
     - _Dither: 0
     - _DitherEnabled: 0
@@ -38,7 +38,7 @@ Material:
     - _Emission: 0
     - _Metallic: 0
     - _Occlusion: 1
-    - _Saturate: -0.24
+    - _Saturate: 1
     - _Smoothness: 0
     - _ZoneDitherEnabled: 1
     m_Colors:
