@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2707104885936475905}
   - component: {fileID: 1352538338438504147}
   - component: {fileID: 5660363171210983239}
+  - component: {fileID: 6310352701152093275}
   m_Layer: 15
   m_Name: ER_MetalBed_A
   m_TagString: Untagged
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &6310352701152093275
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094480362210456467}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.390429, y: 0.9843748, z: 2.1000001}
+  m_Center: {x: 0.002050698, y: 0.5162177, z: 0}
