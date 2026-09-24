@@ -13,6 +13,9 @@ namespace View.Audio
         public static string Resolve(Collider collider)
         {
             if (collider == null) return "surface";
+            var authoredSurface = collider.GetComponentInParent<ImpactSurface>();
+            if (authoredSurface != null) return authoredSurface.SurfaceId;
+
             if (ContainsMetalKeyword(collider.sharedMaterial != null ? collider.sharedMaterial.name : null))
                 return "metal";
 

@@ -60,5 +60,11 @@ FX consumes the resolved event; it must not infer penetration or damage from par
 | World surface | Material-appropriate impact without character blood. |
 
 Keep effects readable from the top-down camera, pool-safe, and driven by supplied direction/normal.
+For world surfaces, add `ImpactSurface` on the collider object or a parent; the nearest component
+overrides material-name detection, including an explicit generic `Default`. Without the component,
+the existing metal-name classifier remains the fallback. Assign surface VFX in
+`Assets/Resources/Configs/ViewCheats/ImpactVfx.asset`; missing prefabs or disabled impact config use
+`BulletImpact`. Surface IDs travel through the existing collision/event path without Unity references.
+Wood and concrete currently retain the generic hard-surface audio.
 Do not encode gameplay values or formulas in VFX graphs. Validate pooled replay, ragdoll transition,
 simultaneous hits and the active post-processing profile.

@@ -14,6 +14,24 @@ namespace Dev
     {
         public bool Enabled = true;
 
+        [Header("World surface impact prefabs (optional — null = BulletImpact)")]
+        public GameObject WoodImpactPrefab;
+        public GameObject ConcreteImpactPrefab;
+        public GameObject MetalImpactPrefab;
+
+        public GameObject ResolveSurfaceImpact(string surfaceId, GameObject fallback)
+        {
+            if (!Enabled) return fallback;
+            var prefab = surfaceId switch
+            {
+                "wood" => WoodImpactPrefab,
+                "concrete" => ConcreteImpactPrefab,
+                "metal" => MetalImpactPrefab,
+                _ => null,
+            };
+            return prefab != null ? prefab : fallback;
+        }
+
         [Header("Laser impact prefabs (optional — null = programmatic tint of ballistic prefab)")]
         public GameObject LaserBodyImpactPrefab;
         public GameObject LaserHeadImpactPrefab;

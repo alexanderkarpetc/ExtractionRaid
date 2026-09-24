@@ -151,6 +151,9 @@ namespace View
             // A2 — Laser archetype: prefer authored LaserBodyImpact/LaserHeadImpact prefab,
             // otherwise fall back to ballistic prefab з runtime recolor (Approach C hybrid).
             var impactCfg = ViewCheats.Config?.ImpactVfx;
+            var surfacePrefab = impactCfg != null
+                ? impactCfg.ResolveSurfaceImpact(baseType, _surfaceImpactPrefab)
+                : _surfaceImpactPrefab;
             bool isLaser = archetype == PayloadArchetypeKey.Laser
                            && impactCfg != null && impactCfg.Enabled;
 
@@ -167,7 +170,7 @@ namespace View
                                     ? impactCfg.LaserHeadImpactPrefab : _headImpactPrefab,
                         "body" => impactCfg.LaserBodyImpactPrefab != null
                                     ? impactCfg.LaserBodyImpactPrefab : _bodyImpactPrefab,
-                        _      => _surfaceImpactPrefab,
+                        _      => surfacePrefab,
                     };
                 }
                 else
@@ -176,7 +179,7 @@ namespace View
                     {
                         "head" => _headImpactPrefab,
                         "body" => _bodyImpactPrefab,
-                        _      => _surfaceImpactPrefab,
+                        _      => surfacePrefab,
                     };
                 }
 
