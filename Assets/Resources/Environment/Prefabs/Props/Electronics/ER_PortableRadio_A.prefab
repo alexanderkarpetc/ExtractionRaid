@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1551026074685693980}
   - component: {fileID: 4190844220605562229}
   - component: {fileID: 8205452889192465226}
+  - component: {fileID: 3481294874799348940}
   m_Layer: 15
   m_Name: ER_PortableRadio_A
   m_TagString: Untagged
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &3481294874799348940
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 720299470079271404}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.9999999, y: 0.76171803, z: 0.47753894}
+  m_Center: {x: 0, y: -0.0019529909, z: -0.00048851216}
