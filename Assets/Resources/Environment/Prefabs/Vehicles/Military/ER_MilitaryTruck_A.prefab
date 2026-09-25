@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5946128919665989055}
   - component: {fileID: 7636099956756438795}
   - component: {fileID: 2310892910963189535}
+  - component: {fileID: 2941833464551602463}
   m_Layer: 15
   m_Name: ER_MilitaryTruck_A
   m_TagString: Untagged
@@ -133,3 +134,16 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &2941833464551602463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3460296837689438713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

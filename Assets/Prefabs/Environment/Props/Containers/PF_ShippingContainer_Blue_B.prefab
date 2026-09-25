@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4045331371569281546}
   - component: {fileID: 3951703471300581874}
   - component: {fileID: 161774212789928408}
+  - component: {fileID: 6897344342581625170}
   m_Layer: 0
   m_Name: PF_ShippingContainer_Blue_B
   m_TagString: Untagged
@@ -112,3 +113,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.0033624, y: 0.4908194, z: 0.49023414}
   m_Center: {x: 0, y: 0.25, z: 0}
+--- !u!114 &6897344342581625170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7400646091118283220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

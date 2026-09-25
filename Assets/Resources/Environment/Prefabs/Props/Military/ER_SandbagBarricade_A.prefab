@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1502115725143697923}
   - component: {fileID: 4770133683139814993}
   - component: {fileID: 2154950595307340838}
+  - component: {fileID: 218340936443125107}
   m_Layer: 15
   m_Name: ER_SandbagBarricade_A
   m_TagString: Untagged
@@ -112,3 +113,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.025791433, y: 0.0046892352, z: 0.009999999}
   m_Center: {x: 0.00005016567, y: 0.00023644684, z: 0.0050000004}
+--- !u!114 &218340936443125107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1109332137354761718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

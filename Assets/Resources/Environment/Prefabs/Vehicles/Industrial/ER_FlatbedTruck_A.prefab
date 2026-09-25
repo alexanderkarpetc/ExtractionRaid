@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 496560690152072319}
   - component: {fileID: 5030016745913912003}
   - component: {fileID: -3355111994954666196}
+  - component: {fileID: 7609495918395222567}
   m_Layer: 15
   m_Name: ER_FlatbedTruck_A
   m_TagString: Untagged
@@ -133,3 +134,16 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: 00000000
+--- !u!114 &7609495918395222567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2154091855409595818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

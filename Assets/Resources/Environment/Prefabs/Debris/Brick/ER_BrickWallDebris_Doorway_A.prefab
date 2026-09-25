@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1357094972597857142}
   - component: {fileID: 6044720555226800390}
   - component: {fileID: 1268482138541710521}
+  - component: {fileID: 110603699968549281}
   m_Layer: 15
   m_Name: ER_BrickWallDebris_Doorway_A
   m_TagString: Untagged
@@ -112,3 +113,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 6.109517, y: 3.0726898, z: 0.5165024}
   m_Center: {x: 0, y: 1.5363449, z: 0.17319107}
+--- !u!114 &110603699968549281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6387495669612917026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

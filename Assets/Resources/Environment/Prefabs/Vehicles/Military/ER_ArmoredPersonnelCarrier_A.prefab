@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1122885196950108766}
   - component: {fileID: 1752105630423361781}
   - component: {fileID: 4569305843530409099}
+  - component: {fileID: 7687311544604782861}
   m_Layer: 15
   m_Name: ER_ArmoredPersonnelCarrier_A
   m_TagString: Untagged
@@ -133,3 +134,16 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &7687311544604782861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 267311619257383276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0

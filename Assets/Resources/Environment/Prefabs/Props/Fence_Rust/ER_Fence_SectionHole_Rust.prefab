@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2248543353785661863}
   - component: {fileID: 5250998698840197386}
   - component: {fileID: 6185453082453214829}
+  - component: {fileID: 3002732700463806304}
   m_Layer: 15
   m_Name: ER_Fence_SectionHole_Rust
   m_TagString: Untagged
@@ -117,6 +118,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.74023, y: 3.73046, z: 0.15419199}
   m_Center: {x: 0.004892588, y: 0, z: -0.00078058965}
+--- !u!114 &3002732700463806304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696303691913784023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0
 --- !u!1 &2500693133579754853
 GameObject:
   m_ObjectHideFlags: 0
