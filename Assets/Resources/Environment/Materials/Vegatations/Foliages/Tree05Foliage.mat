@@ -15,6 +15,7 @@ Material:
   m_InvalidKeywords:
   - _ALPHATEST_ON
   - _DITHERENABLED_ON
+  - _DITHERTEXTUREENABLED_ON
   - _TWOSIDEDLIGHTING_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -46,6 +47,10 @@ Material:
     - _DetailNormalMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DitherTexture:
+        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
+        m_Scale: {x: 2, y: 2}
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
@@ -103,6 +108,8 @@ Material:
     - _DetailNormalMapScale: 1
     - _Dither: 0
     - _DitherEnabled: 1
+    - _DitherSoftness: 1
+    - _DitherTextureEnabled: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1

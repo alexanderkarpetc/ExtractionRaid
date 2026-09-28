@@ -19,6 +19,9 @@ Shader "ExtractShaders/EnvironmentPropDither"
         _Dither("Dither Fallback", Range(0, 1)) = 0
         [HideInInspector] _ZoneDitherEnabled("Zone Dither Enabled", Float) = 1
         _DitherPatternScale("Dither Pattern Scale", Range(0, 0.03)) = 0.003
+        [Toggle] _DitherTextureEnabled("Texture Dissolve Enabled", Float) = 0
+        _DitherTexture("Dissolve Mask (R)", 2D) = "gray" {}
+        _DitherSoftness("Dissolve Edge Softness", Range(0.001, 1)) = 0.1
 
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 2
     }
@@ -50,9 +53,12 @@ Shader "ExtractShaders/EnvironmentPropDither"
 
         TEXTURE2D(_Texture);
         SAMPLER(sampler_Texture);
+        TEXTURE2D(_DitherTexture);
+        SAMPLER(sampler_DitherTexture);
 
         CBUFFER_START(UnityPerMaterial)
             float4 _Texture_ST;
+            float4 _DitherTexture_ST;
             half4 _Color2;
             half4 _ColorEmission;
             half _ColorStreng;
@@ -66,6 +72,8 @@ Shader "ExtractShaders/EnvironmentPropDither"
             half _Dither;
             half _ZoneDitherEnabled;
             float _DitherPatternScale;
+            half _DitherTextureEnabled;
+            half _DitherSoftness;
         CBUFFER_END
 
         float3 _LightDirection;
@@ -113,10 +121,19 @@ Shader "ExtractShaders/EnvironmentPropDither"
             return (1.0h - smoothstep(radius, radius + softness, dist)) * amount;
         }
 
-        void ClipDither(float4 positionCS, half dither)
+        void ClipDither(float4 positionCS, float2 dissolveUV, half dither)
         {
             if (dither <= 0.001h)
                 return;
+
+            if (_DitherTextureEnabled > 0.5h)
+            {
+                half mask = saturate(SAMPLE_TEXTURE2D(_DitherTexture, sampler_DitherTexture, dissolveUV).r);
+                half softness = max(_DitherSoftness, 0.001h);
+                // Sweep past both mask endpoints so 0 is intact and 1 fully dissolves.
+                half threshold = lerp(-softness, 1.0h, dither);
+                dither = 1.0h - smoothstep(threshold, threshold + softness, mask);
+            }
 
             clip(ScreenDither4x4(positionCS.xy) - dither);
         }
@@ -145,6 +162,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             half3 normalWS : TEXCOORD1;
             float2 uv : TEXCOORD2;
             half fogFactor : TEXCOORD3;
+            float2 dissolveUV : TEXCOORD5;
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             float4 shadowCoord : TEXCOORD4;
             #endif
@@ -166,6 +184,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             output.positionWS = positionInputs.positionWS;
             output.normalWS = normalInputs.normalWS;
             output.uv = TRANSFORM_TEX(input.texcoord, _Texture);
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             output.shadowCoord = GetShadowCoord(positionInputs);
@@ -179,7 +198,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
             half dither = saturate(max(max(MaterialDither(), PlayerZoneDither(input.positionCS)), CursorZoneDither(input.positionCS)));
-            ClipDither(input.positionCS, dither);
+            ClipDither(input.positionCS, input.dissolveUV, dither);
 
             half3 normalWS = NormalizeNormalPerPixel(input.normalWS);
             half3 albedo = ApplyColorControls(SAMPLE_TEXTURE2D(_Texture, sampler_Texture, input.uv).rgb);
@@ -224,6 +243,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
         {
             float4 positionCS : SV_POSITION;
             half3 normalWS : TEXCOORD0;
+            float2 dissolveUV : TEXCOORD1;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -238,6 +258,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
             output.positionCS = positionInputs.positionCS;
             output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             return output;
         }
 
@@ -260,6 +281,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             output.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
             output.positionCS = ApplyShadowClamping(output.positionCS);
             output.normalWS = normalWS;
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             return output;
         }
 
@@ -268,7 +290,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            ClipDither(input.positionCS, MaterialDither());
+            ClipDither(input.positionCS, input.dissolveUV, MaterialDither());
             return 0;
         }
 
@@ -277,7 +299,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            ClipDither(input.positionCS, MaterialDither());
+            ClipDither(input.positionCS, input.dissolveUV, MaterialDither());
 
             float3 normalWS = NormalizeNormalPerPixel(input.normalWS);
             #if defined(_GBUFFER_NORMALS_OCT)

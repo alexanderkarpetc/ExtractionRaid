@@ -7,14 +7,12 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_MilitaryTentD_A
+  m_Name: M_MilitaryTent_B
   m_Shader: {fileID: 4800000, guid: 9f574f0a1f1b7be4f9cb60d4d69f3e42, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _DITHERENABLED_ON
-  - _DITHERTEXTUREENABLED_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,32 +23,26 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _DitherTexture:
-        m_Texture: {fileID: 2800000, guid: f4be1c1bf48010240b5d901e2f015a27, type: 3}
-        m_Scale: {x: 2, y: 2}
-        m_Offset: {x: 0, y: 0}
     - _Texture:
-        m_Texture: {fileID: 2800000, guid: 8ecf03ccba72cd64e9b2d67da493e017, type: 3}
+        m_Texture: {fileID: 2800000, guid: b34ff3bfabb2b6842adf3a2937b8293f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - Dither: 0
-    - _ColorStreng: 0.5
+    - _ColorStreng: 0
     - _Cull: 2
     - _Dither: 0
-    - _DitherEnabled: 1
-    - _DitherPatternScale: 0.0019
-    - _DitherSoftness: 1
-    - _DitherTextureEnabled: 1
+    - _DitherEnabled: 0
+    - _DitherPatternScale: 0.003
     - _Emission: 0
     - _Metallic: 0
     - _Occlusion: 1
-    - _Saturate: 0.2
+    - _Saturate: 0.5
     - _Smoothness: 0
     - _ZoneDitherEnabled: 1
     m_Colors:
-    - _Color2: {r: 0.2830189, g: 0.27999, b: 0, a: 1}
+    - _Color2: {r: 1, g: 1, b: 1, a: 1}
     - _ColorEmission: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -26,6 +26,9 @@ Shader "ExtractShaders/BushWindCutout"
         _Dither("Dither Fallback", Range(0, 1)) = 0
         [HideInInspector] _ZoneDitherEnabled("Zone Dither Enabled", Float) = 1
         _FoliageDitherPatternScale("Dither Pattern Scale", Range(0, 0.03)) = 0.003
+        [Toggle] _DitherTextureEnabled("Texture Dissolve Enabled", Float) = 0
+        _DitherTexture("Dissolve Mask (R)", 2D) = "gray" {}
+        _DitherSoftness("Dissolve Edge Softness", Range(0.001, 1)) = 0.1
         [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull", Float) = 0
     }
 
@@ -54,9 +57,12 @@ Shader "ExtractShaders/BushWindCutout"
 
         TEXTURE2D(_BaseMap);
         SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_DitherTexture);
+        SAMPLER(sampler_DitherTexture);
 
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
+            float4 _DitherTexture_ST;
             half4 _BaseColor;
             half _Cutoff;
             half _WindStrength;
@@ -77,6 +83,8 @@ Shader "ExtractShaders/BushWindCutout"
             half _Dither;
             half _ZoneDitherEnabled;
             float _FoliageDitherPatternScale;
+            half _DitherTextureEnabled;
+            half _DitherSoftness;
         CBUFFER_END
 
         float3 _LightDirection;
@@ -124,10 +132,19 @@ Shader "ExtractShaders/BushWindCutout"
             return (1.0h - smoothstep(radius, radius + softness, dist)) * amount;
         }
 
-        void ClipDither(float4 positionCS, half dither)
+        void ClipDither(float4 positionCS, float2 dissolveUV, half dither)
         {
             if (dither <= 0.0h)
                 return;
+
+            if (_DitherTextureEnabled > 0.5h)
+            {
+                half mask = saturate(SAMPLE_TEXTURE2D(_DitherTexture, sampler_DitherTexture, dissolveUV).r);
+                half softness = max(_DitherSoftness, 0.001h);
+                // Sweep past both mask endpoints so 0 is intact and 1 fully dissolves.
+                half threshold = lerp(-softness, 1.0h, dither);
+                dither = 1.0h - smoothstep(threshold, threshold + softness, mask);
+            }
 
             clip(ScreenDither4x4(positionCS.xy) - dither);
         }
@@ -150,6 +167,7 @@ Shader "ExtractShaders/BushWindCutout"
             half4 tangentWS : TEXCOORD2;
             float2 uv : TEXCOORD3;
             half fogFactor : TEXCOORD4;
+            float2 dissolveUV : TEXCOORD6;
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             float4 shadowCoord : TEXCOORD5;
             #endif
@@ -189,6 +207,7 @@ Shader "ExtractShaders/BushWindCutout"
             output.normalWS = normalInputs.normalWS;
             output.tangentWS = half4(normalInputs.tangentWS, input.tangentOS.w * GetOddNegativeScale());
             output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             output.shadowCoord = GetShadowCoord(positionInputs);
@@ -205,6 +224,7 @@ Shader "ExtractShaders/BushWindCutout"
             clip(tex.a - _Cutoff);
             ClipDither(
                 input.positionCS,
+                input.dissolveUV,
                 saturate(max(max(MaterialDither(), PlayerZoneDither(input.positionCS)), CursorZoneDither(input.positionCS))));
 
             half facingSign = IS_FRONT_VFACE(facing, 1.0h, -1.0h);
@@ -257,6 +277,7 @@ Shader "ExtractShaders/BushWindCutout"
             float4 positionCS : SV_POSITION;
             float3 positionWS : TEXCOORD1;
             float2 uv : TEXCOORD0;
+            float2 dissolveUV : TEXCOORD2;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -272,6 +293,7 @@ Shader "ExtractShaders/BushWindCutout"
             output.positionWS = TransformObjectToWorld(windPositionOS);
             output.positionCS = TransformWorldToHClip(output.positionWS);
             output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             return output;
         }
 
@@ -296,6 +318,7 @@ Shader "ExtractShaders/BushWindCutout"
             output.positionCS = ApplyShadowClamping(output.positionCS);
             output.positionWS = positionWS;
             output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
+            output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             return output;
         }
 
@@ -306,7 +329,7 @@ Shader "ExtractShaders/BushWindCutout"
 
             half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
             clip(alpha - _Cutoff);
-            ClipDither(input.positionCS, MaterialDither());
+            ClipDither(input.positionCS, input.dissolveUV, MaterialDither());
             return 0;
         }
         ENDHLSL
