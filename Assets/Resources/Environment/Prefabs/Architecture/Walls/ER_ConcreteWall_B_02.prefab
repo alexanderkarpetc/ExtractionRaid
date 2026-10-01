@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8280483820584323723}
   - component: {fileID: 6667088597983908875}
   - component: {fileID: 3687134482959653306}
+  - component: {fileID: 1023291505905819146}
+  - component: {fileID: 5476978765662467418}
   m_Layer: 0
   m_Name: ER_ConcreteWall_B_02
   m_TagString: Untagged
@@ -90,3 +92,37 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1023291505905819146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2362504411878707069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game::View.ImpactSurface
+  Surface: 0
+--- !u!65 &5476978765662467418
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2362504411878707069}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9.999998, y: 4.80747, z: 1.6431097}
+  m_Center: {x: 0, y: -0.01535511, z: -0.0011250078}
