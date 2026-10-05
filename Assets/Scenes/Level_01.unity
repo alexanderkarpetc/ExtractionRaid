@@ -42886,7 +42886,7 @@ MonoBehaviour:
   m_Center: {x: 0, y: 2, z: 0}
   m_LayerMask:
     serializedVersion: 2
-    m_Bits: 57344
+    m_Bits: 57345
   m_UseGeometry: 1
   m_DefaultArea: 0
   m_GenerateLinks: 0
@@ -87814,6 +87814,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 900000004}
     m_Modifications:
+    - target: {fileID: 2792379563194573629, guid: fd2a736ba3e841542b01eea1307de7f4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 6065211146938887544, guid: fd2a736ba3e841542b01eea1307de7f4, type: 3}
       propertyPath: m_Name
       value: Army_Base

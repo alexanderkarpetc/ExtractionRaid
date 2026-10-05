@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3687134482959653306}
   - component: {fileID: 1023291505905819146}
   - component: {fileID: 5476978765662467418}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: ER_ConcreteWall_B_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3caf3c2326624483b8b5cd6a9a74e02f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Game::View.ImpactSurface
-  Surface: 0
+  Surface: 2
 --- !u!65 &5476978765662467418
 BoxCollider:
   m_ObjectHideFlags: 0
