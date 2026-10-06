@@ -7,6 +7,15 @@
 Реалізація та тести в [Editor-only assembly](../../Assets/Tools/LevelDesign/Editor).
 Runtime-збірки не змінені; prefab assets і NavMesh інструменти не перезаписують.
 
+## Splat Map Painter
+
+Малювання RGBA-карти по UV статичного меша для `ExtractShaders/SplatRGBA`:
+[інструкція та обмеження](../guides/splat-map-painter.md).
+Інструмент має окрему Editor-only збірку `SplatMap.Editor`; робочий матеріал і
+raycast-колайдер тимчасові, PNG та призначення матеріалу зберігаються явно кнопкою.
+Undo/Redo працює з робочим буфером, не повертає попередній вміст PNG на диску.
+EditMode slice: `SplatMap.Editor.Tests`.
+
 ## Environment Scatter
 
 1. Відкрити й зберегти звичайну сцену. Задати Center, Size X/Z, Rotation Y. Edit Area Handles

@@ -20,6 +20,14 @@
 
 ## Поточний фокус
 
+- 🔄 active **Level Design — Splat Map Painter (2026-10-06).** Додано RGBA Splat-шейдер
+  та Editor-інструмент малювання на статичному меші: шари, м’яка/тверда кисть,
+  Undo/Redo, тимчасовий перегляд і збереження PNG. Інструкція:
+  [Splat Map Painter](../guides/splat-map-painter.md). C# компілюється з бібліотеками
+  Unity 6000.3.10f1; 8 перевірок кисті пройшли в standalone .NET harness, поза Unity.
+  Потрібні компіляція шейдера,
+  запуск `SplatMap.Editor.Tests` і ручна перевірка Scene View, Undo та save/reload у Unity.
+
 - 🔄 active **VFX — вибір поверхні імпакту (2026-09-24).** Додано `ImpactSurface` для
   колайдера або його батьківського об’єкта та вибір префабів у `ImpactVfx` config із fallback
   на `BulletImpact`. Додано EditMode-покриття визначення поверхні й вибору префаба.
