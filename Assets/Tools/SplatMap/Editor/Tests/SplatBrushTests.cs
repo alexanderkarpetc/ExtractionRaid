@@ -53,5 +53,36 @@ namespace ExtractionRaid.Editor.SplatMap.Tests
             Assert.That(pixels[4 * 9 + 6].g, Is.GreaterThan(0).And.LessThan(1));
             Assert.That(pixels[4 * 9 + 7].g, Is.EqualTo(0));
         }
+
+        [TestCase(0, 0)]
+        [TestCase(1, 1)]
+        [TestCase(0.5f, 0.5f)]
+        public void MaskFullStrengthPaintsIndependentVisibility(float visibility, float expected)
+        {
+            Color result = SplatBrush.BlendMask(new Color(0.8f, 0.1f, 0.2f, 0.3f), visibility, 1);
+            Assert.That(result, Is.EqualTo(new Color(expected, expected, expected, 1)));
+        }
+
+        [Test]
+        public void MaskCanFadeOutAndRestoreWithoutNormalizingToSplatWeights()
+        {
+            Color faded = SplatBrush.BlendMask(Color.white, 0, 0.25f);
+            Assert.That(faded.r, Is.EqualTo(0.75f));
+            Color restored = SplatBrush.BlendMask(faded, 1, 0.5f);
+            Assert.That(restored.r, Is.EqualTo(0.875f));
+            Assert.That(restored.a, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SoftMaskStampFadesCenterAndPreservesPixelsOutsideBrush()
+        {
+            var pixels = new Color[9 * 9];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+            SplatBrush.Stamp(pixels, 9, new Vector2(0.5f, 0.5f), 3f / 9, 1, true, 0, true, 0);
+            Assert.That(pixels[4 * 9 + 4], Is.EqualTo(new Color(0, 0, 0, 1)));
+            Assert.That(pixels[4 * 9 + 6].r, Is.GreaterThan(0).And.LessThan(1));
+            Assert.That(pixels[4 * 9 + 7], Is.EqualTo(Color.white));
+            Assert.That(pixels[0], Is.EqualTo(Color.white));
+        }
     }
 }

@@ -16,7 +16,14 @@ namespace ExtractionRaid.Editor.SplatMap
             return new Color(weights.x, weights.y, weights.z, weights.w);
         }
 
-        public static void Stamp(Color[] pixels, int size, Vector2 uv, float radius, float strength, bool soft, int channel)
+        public static Color BlendMask(Color source, float visibility, float amount)
+        {
+            float value = Mathf.Lerp(Mathf.Clamp01(source.r), Mathf.Clamp01(visibility), Mathf.Clamp01(amount));
+            return new Color(value, value, value, 1);
+        }
+
+        public static void Stamp(Color[] pixels, int size, Vector2 uv, float radius, float strength, bool soft, int channel,
+            bool mask = false, float visibility = 1)
         {
             float centerX = uv.x * size - 0.5f;
             float centerY = uv.y * size - 0.5f;
@@ -32,7 +39,9 @@ namespace ExtractionRaid.Editor.SplatMap
                 if (distance > 1) continue;
                 float falloff = soft ? 1 - Mathf.SmoothStep(0, 1, distance) : 1;
                 int index = y * size + x;
-                pixels[index] = Blend(pixels[index], channel, strength * falloff);
+                pixels[index] = mask
+                    ? BlendMask(pixels[index], visibility, strength * falloff)
+                    : Blend(pixels[index], channel, strength * falloff);
             }
         }
     }
