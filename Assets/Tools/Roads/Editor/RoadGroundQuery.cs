@@ -27,7 +27,7 @@ namespace ExtractionRaid.Editor.Roads
             for (int i = 0; i < count; i++)
             {
                 Collider collider = hits[i].collider;
-                if (!collider || collider.GetComponentInParent<SplatRoad>()) continue;
+                if (!collider || collider.GetComponentInParent<SplatRoad>() || collider.GetComponentInParent<RoadIntersection>()) continue;
                 if ((collider.gameObject.hideFlags & HideFlags.DontSaveInEditor) != 0) continue;
                 if (hits[i].distance >= nearest) continue;
                 nearest = hits[i].distance;

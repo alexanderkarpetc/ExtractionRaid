@@ -17,6 +17,8 @@ namespace ExtractionRaid.Editor.Roads
             if (!road || EditorUtility.IsPersistent(road) || EditorApplication.isPlayingOrWillChangePlaymode ||
                 PrefabStageUtility.GetPrefabStage(road.gameObject) != null || string.IsNullOrEmpty(road.gameObject.scene.path))
                 throw new InvalidOperationException("Build a road in a saved regular scene, outside Play/Prefab Mode.");
+            if (IntersectionAssets.Owner(road))
+                throw new InvalidOperationException("This road belongs to an intersection. Select the intersection and use Build / Rebuild Intersection.");
             var renderer = road.GetComponent<MeshRenderer>();
             if (SplatMapPainterWindow.HasOpenMapFor(renderer))
                 throw new InvalidOperationException("Save your maps and close Splat Map Painter before rebuilding this road.");
@@ -37,12 +39,7 @@ namespace ExtractionRaid.Editor.Roads
                 throw new InvalidOperationException("Assign a regular material template, for example ExtractionRaid/Road Marking Unlit. Enable Use Splat Maps for SplatRGBA.");
             if (road.useSplatMaps && road.mapResolution != 256 && road.mapResolution != 512 && road.mapResolution != 1024 && road.mapResolution != 2048)
                 throw new ArgumentException("Map Resolution must be 256, 512, 1024 or 2048.");
-            Physics.SyncTransforms();
-            var worldPoints = new Vector3[road.points.Count];
-            for (int i = 0; i < worldPoints.Length; i++) worldPoints[i] = road.transform.TransformPoint(road.points[i]);
-            var ground = new RoadGroundQuery(road);
-            RoadMeshData data = RoadGeometry.Build(worldPoints, road.width, road.sampleSpacing, road.smooth,
-                road.widthSegments, road.textureTileSize, road.surfaceLift, road.snapToGround ? ground.Project : null, road.lateralOffset);
+            RoadMeshData data = Generate(road);
             bool firstBuild = !road.generatedMesh;
             if (!firstBuild && !EditorUtility.DisplayDialog("Rebuild Road", road.useSplatMaps ? "Rebuild the geometry? Existing Splat and Mask PNGs will be kept, but paint positions can shift when the shape or length changes." : "Rebuild the mesh? The generated material will be kept.", "Rebuild", "Cancel")) return false;
             string folder = road.assetFolder;
@@ -65,17 +62,7 @@ namespace ExtractionRaid.Editor.Roads
             try
             {
                 if (!firstBuild) Undo.RegisterCompleteObjectUndo(mesh, "Rebuild road mesh");
-                var localVertices = new Vector3[data.vertices.Length];
-                for (int i = 0; i < localVertices.Length; i++) localVertices[i] = road.transform.InverseTransformPoint(data.vertices[i]);
-                mesh.Clear();
-                mesh.indexFormat = localVertices.Length > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16;
-                mesh.vertices = localVertices;
-                mesh.uv = road.useSplatMaps ? data.paintUV : data.markingUV;
-                mesh.SetUVs(3, data.detailUV);
-                mesh.uv2 = data.paintUV;
-                mesh.triangles = data.triangles;
-                mesh.RecalculateNormals();
-                mesh.RecalculateBounds();
+                WriteMesh(mesh, data, road.transform, road.useSplatMaps);
                 if (firstBuild)
                 {
                     AssetDatabase.CreateAsset(mesh, folder + "/RoadMesh.asset");
@@ -140,7 +127,33 @@ namespace ExtractionRaid.Editor.Roads
             }
         }
 
-        static Texture2D SaveMap(string path, int size, Color[] pixels)
+        public static RoadMeshData Generate(SplatRoad road)
+        {
+            Physics.SyncTransforms();
+            var points = new Vector3[road.points.Count];
+            for (int i = 0; i < points.Length; i++) points[i] = road.transform.TransformPoint(road.points[i]);
+            var ground = new RoadGroundQuery(road);
+            return RoadGeometry.Build(points, road.width, road.sampleSpacing, road.smooth,
+                road.widthSegments, road.textureTileSize, road.surfaceLift,
+                road.snapToGround ? ground.Project : null, road.lateralOffset);
+        }
+
+        public static void WriteMesh(Mesh mesh, RoadMeshData data, Transform transform, bool splat)
+        {
+            var vertices = new Vector3[data.vertices.Length];
+            for (int i = 0; i < vertices.Length; i++) vertices[i] = transform.InverseTransformPoint(data.vertices[i]);
+            mesh.Clear();
+            mesh.indexFormat = vertices.Length > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16;
+            mesh.vertices = vertices;
+            mesh.uv = splat ? data.paintUV : data.markingUV;
+            mesh.uv2 = data.paintUV;
+            mesh.SetUVs(3, data.detailUV);
+            mesh.triangles = data.triangles;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+        }
+
+        public static Texture2D SaveMap(string path, int size, Color[] pixels)
         {
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false, true);
             try

@@ -60,11 +60,18 @@ namespace ExtractionRaid.Editor.Roads
             rootVisualElement.Add(root);
             root.Add(new HelpBox("Place road points on ground colliders, then build a mesh and paint it with Splat Map Painter. The scene must be saved first.", HelpBoxMessageType.Info));
             root.Add(new Button(CreateRoad) { text = "Create New Road" });
+            root.Add(new Button(RoadIntersectionEditor.CreateFromSelection) { text = "Create Intersection from Selected Roads" });
             var roadField = new ObjectField("Road") { objectType = typeof(SplatRoad), allowSceneObjects = true, value = road };
             roadField.RegisterValueChangedCallback(e => SetRoad(e.newValue as SplatRoad));
             root.Add(roadField);
             if (road)
             {
+                var owner = IntersectionAssets.Owner(road);
+                if (owner)
+                {
+                    root.Add(new HelpBox("This road is connected to an intersection. Rebuild the intersection after changing road settings or points.", HelpBoxMessageType.Info));
+                    root.Add(new Button(() => Selection.activeGameObject = owner.gameObject) { text = "Select Connected Intersection" });
+                }
                 var addToggle = new Toggle("Place Points (Left Click)") { value = placePoints };
                 addToggle.RegisterValueChangedCallback(e => { placePoints = e.newValue; SceneView.RepaintAll(); });
                 root.Add(addToggle);
