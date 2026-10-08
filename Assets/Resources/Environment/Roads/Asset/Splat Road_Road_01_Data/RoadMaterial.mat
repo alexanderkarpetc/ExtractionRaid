@@ -64,13 +64,13 @@ Material:
     - _Layer3:
         m_Texture: {fileID: 2800000, guid: bc45c12117cd32648a8c28e45468c86e, type: 3}
         m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
+        m_Offset: {x: -0.14, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskMap:
-        m_Texture: {fileID: 2800000, guid: 9a302f0842bc53044b72aee7af3f310d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 393c5dd91abf5d847bf28bdcc2047680, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -90,7 +90,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SplatMap:
-        m_Texture: {fileID: 2800000, guid: 27edc608d93429542b9381bf129b91eb, type: 3}
+        m_Texture: {fileID: 2800000, guid: beaf2dde9783c584c9a5d9ac6370d8c5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -117,7 +117,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DepthOffset: 0
+    - _DepthOffset: -1
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 10
