@@ -20,6 +20,28 @@ namespace ExtractionRaid.Editor.SplatMap.Tests
             return pixels;
         }
 
+        [TestCase(128, 32, false)]
+        [TestCase(32, 128, false)]
+        [TestCase(128, 32, true)]
+        [TestCase(32, 128, true)]
+        public void RectangularMapMatchesWorldSpaceFootprint(int width, int height, bool mask)
+        {
+            var vertices = new[] { Vector3.zero, new Vector3(4, 0, 0), new Vector3(0, 0, 4), new Vector3(4, 0, 4) };
+            var uv = new[] { Vector2.zero, Vector2.right, Vector2.up, Vector2.one };
+            var brush = new SplatSurfaceBrush(vertices, uv, new[] { 0, 2, 1, 1, 2, 3 }, width, height);
+            var pixels = new Color[width * height];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = mask ? Color.white : new Color(1, 0, 0, 0);
+            var center = new Vector3(3.7f, 0, 2.3f);
+            Assert.That(brush.Stamp(pixels, center, Vector3.up, 0.8f, 1, true, 1, mask, 0), Is.True);
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                var world = new Vector3((x + 0.5f) / width * 4, 0, (y + 0.5f) / height * 4);
+                float amount = 1 - Mathf.SmoothStep(0, 1, Vector3.Distance(world, center) / 0.8f);
+                float actual = mask ? 1 - pixels[y * width + x].r : pixels[y * width + x].g;
+                Assert.That(actual, Is.EqualTo(amount).Within(0.00001f), $"Texel {x},{y}");
+            }
+        }
         [TestCase(false)]
         [TestCase(true)]
         public void LongScaledRoadHasEqualFalloffAtEqualWorldDistances(bool mask)

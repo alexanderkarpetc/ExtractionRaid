@@ -8,6 +8,7 @@ Shader "ExtractionRaid/Road Marking Unlit"
         _ShadowStrength("Main Light Shadow Strength", Range(0, 1)) = 0.75
         _Opacity("Opacity", Range(0, 1)) = 1
         _MaskMap("Mask (White = Visible)", 2D) = "white" {}
+        [ToggleUI] _UseRoadMaskUV("Use UV2 for Painted Mask", Float) = 0
         [Enum(R,0,G,1,B,2,A,3)] _MaskChannel("Mask Channel", Float) = 0
         [Enum(Alpha,0,Premultiply,1,Additive,2)] _BlendMode("Blending", Float) = 0
         [Toggle] _AlphaClip("Alpha Clipping", Float) = 0
@@ -58,6 +59,7 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 float _ShadowStrength;
                 float _Opacity;
                 float _MaskChannel;
+                float _UseRoadMaskUV;
                 float _BlendMode;
                 float _AlphaClip;
                 float _Cutoff;
@@ -70,6 +72,7 @@ Shader "ExtractionRaid/Road Marking Unlit"
             {
                 float4 positionOS : POSITION;
                 float2 uv : TEXCOORD0;
+                float2 paintUV : TEXCOORD1;
                 half4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -93,7 +96,8 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
                 output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 output.baseUV = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.maskUV = TRANSFORM_TEX(input.uv, _MaskMap);
+                float2 maskUV = _UseRoadMaskUV > 0.5 ? input.paintUV : input.uv;
+                output.maskUV = TRANSFORM_TEX(maskUV, _MaskMap);
                 output.fogFactor = ComputeFogFactor(output.positionCS.z);
                 output.vertexColor = input.color;
                 return output;

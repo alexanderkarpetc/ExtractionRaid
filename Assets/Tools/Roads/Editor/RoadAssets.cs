@@ -72,6 +72,7 @@ namespace ExtractionRaid.Editor.Roads
                 mesh.vertices = localVertices;
                 mesh.uv = road.useSplatMaps ? data.paintUV : data.markingUV;
                 mesh.SetUVs(3, data.detailUV);
+                mesh.uv2 = data.paintUV;
                 mesh.triangles = data.triangles;
                 mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
@@ -98,6 +99,8 @@ namespace ExtractionRaid.Editor.Roads
                     AssetDatabase.CreateAsset(material, folder + "/RoadMaterial.mat");
                 }
                 Undo.RecordObject(material, "Configure road material");
+                if (firstBuild && material.HasProperty("_UseRoadMaskUV") && !material.GetTexture("_MaskMap"))
+                    material.SetFloat("_UseRoadMaskUV", 1);
                 if (material.HasProperty("_DepthOffset")) material.SetFloat("_DepthOffset", road.depthOffset);
                 if (road.useSplatMaps)
                 {

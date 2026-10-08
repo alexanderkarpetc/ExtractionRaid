@@ -12,11 +12,13 @@ namespace ExtractionRaid.Editor.SplatMap
     public sealed class SplatMapPainterWindow : EditorWindow
     {
         const string ShaderName = "ExtractShaders/SplatRGBA";
+        bool IsRoadMarking => PaintMaterial.IsRoad(original ? original : (target ? target.sharedMaterial : null));
         [SerializeField] MeshRenderer target;
         [SerializeField] Material original;
         [SerializeField] SplatPaintBuffer buffer;
         [SerializeField] string savePath;
         [SerializeField] int resolution = 1024;
+        [SerializeField] int mapHeight = 1024;
         [SerializeField] int channel;
         [SerializeField] float brushRadius = 0.5f;
         [SerializeField] float strength = 0.3f;
@@ -91,21 +93,24 @@ namespace ExtractionRaid.Editor.SplatMap
 
         public void CreateGUI()
         {
+            if (IsRoadMarking) paintMask = true;
             rootVisualElement.Clear();
             var root = new ScrollView();
             rootVisualElement.Add(root);
-            root.Add(new HelpBox("Requires a mesh with UV0 in the 0–1 range and one SplatRGBA material. Overlapping UV islands are painted together.", HelpBoxMessageType.Info));
+            root.Add(new HelpBox("Requires unique mask UVs in the 0–1 range and one SplatRGBA or Road Marking Unlit material. Overlapping UV islands are painted together.", HelpBoxMessageType.Info));
             var targetField = new ObjectField("Model") { objectType = typeof(MeshRenderer), allowSceneObjects = true, value = target };
             targetField.RegisterValueChangedCallback(e =>
             {
                 SetTarget(e.newValue as MeshRenderer);
                 targetField.SetValueWithoutNotify(target);
+                rootVisualElement.schedule.Execute(CreateGUI);
             });
             root.Add(targetField);
             root.Add(new Button(() =>
             {
                 SetTarget(Selection.activeGameObject ? Selection.activeGameObject.GetComponent<MeshRenderer>() : null);
                 targetField.SetValueWithoutNotify(target);
+                rootVisualElement.schedule.Execute(CreateGUI);
             }) { text = "Use Selected Model" });
             var mode = new PopupField<string>("Map", new System.Collections.Generic.List<string> { "Splat RGBA", "Visibility Mask" }, paintMask ? 1 : 0);
             mode.RegisterValueChangedCallback(e =>
@@ -121,12 +126,17 @@ namespace ExtractionRaid.Editor.SplatMap
                 painting = false;
                 CreateGUI();
             });
+            mode.SetEnabled(!IsRoadMarking);
             root.Add(mode);
-            var sizes = new System.Collections.Generic.List<int> { 256, 512, 1024, 2048 };
-            var sizeField = new PopupField<int>("New Map Resolution", sizes, Mathf.Max(0, sizes.IndexOf(resolution)));
-            sizeField.RegisterValueChangedCallback(e => resolution = e.newValue);
-            root.Add(sizeField);
-            root.Add(new Button(() => BeginMap(false)) { text = paintMask ? "Create White Mask (Fully Visible)" : "Create New Splat Map (Base Layer R)" });
+            if (IsRoadMarking) root.Add(new HelpBox("Road Marking supports Visibility Mask only. Existing R/G/B/A masks are read from the selected channel; saved masks use R. For Road Builder meshes, rebuild once and enable Use UV2 for Painted Mask on the material before painting.", HelpBoxMessageType.Info));
+            var sizes = new System.Collections.Generic.List<int> { 32, 64, 128, 256, 512, 1024, 2048 };
+            var widthField = new PopupField<int>("New Map Width", sizes, Mathf.Max(0, sizes.IndexOf(resolution)));
+            widthField.RegisterValueChangedCallback(e => resolution = e.newValue);
+            root.Add(widthField);
+            var heightField = new PopupField<int>("New Map Height", sizes, Mathf.Max(0, sizes.IndexOf(mapHeight)));
+            heightField.RegisterValueChangedCallback(e => mapHeight = e.newValue);
+            root.Add(heightField);
+            root.Add(new HelpBox("Width follows U; Height follows V. Road Builder length follows V (for example 128 x 1024). These settings apply to new maps; opening a map preserves its dimensions.", HelpBoxMessageType.Info));            root.Add(new Button(() => BeginMap(false)) { text = paintMask ? "Create White Mask (Fully Visible)" : "Create New Splat Map (Base Layer R)" });
             root.Add(new Button(() => BeginMap(true)) { text = "Edit Map from Material" });
             var layers = new PopupField<string>("Layer", new System.Collections.Generic.List<string> { "R — Base", "G — Layer 1", "B — Layer 2", "A — Layer 3" }, channel);
             layers.RegisterValueChangedCallback(e => channel = layers.index);
@@ -184,6 +194,7 @@ namespace ExtractionRaid.Editor.SplatMap
             buffer = null;
             target = next;
             original = null;
+            if (IsRoadMarking) paintMask = true;
             savePath = null;
             painting = false;
             paintToggle?.SetValueWithoutNotify(false);
@@ -201,8 +212,8 @@ namespace ExtractionRaid.Editor.SplatMap
             var filter = target.GetComponent<MeshFilter>();
             mesh = filter ? filter.sharedMesh : null;
             Material material = original ? original : target.sharedMaterial;
-            if (!mesh || target.sharedMaterials.Length != 1 || !material || material.shader.name != ShaderName)
-            { Message("Requires a MeshFilter and one ExtractShaders/SplatRGBA material."); return false; }
+            if (!mesh || target.sharedMaterials.Length != 1 || !material || (material.shader.name != ShaderName && !PaintMaterial.IsRoad(material)))
+            { Message("Requires a MeshFilter and one SplatRGBA or Road Marking Unlit material."); return false; }
             if (material.GetTextureScale(MapProperty) != Vector2.one || material.GetTextureOffset(MapProperty) != Vector2.zero)
             { Message("Set the painted map to Tiling (1,1) and Offset (0,0). Layer textures can use any tiling."); return false; }
             return true;
@@ -212,8 +223,8 @@ namespace ExtractionRaid.Editor.SplatMap
         {
             if (!ValidateTarget(out Mesh mesh) || !ResolvePending()) return;
             Texture2D source = loadExisting ? (original ? original : target.sharedMaterial).GetTexture(MapProperty) as Texture2D : null;
-            if (loadExisting && (!source || source.width != source.height || source.width > 2048))
-            { Message("Assign a square map up to 2048×2048 to the matching material field."); return; }
+            if (loadExisting && (!source || source.width > 2048 || source.height > 2048))
+            { Message("Assign a map with each side up to 2048 pixels to the matching material field."); return; }
             var sourceImporter = source ? AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(source)) as TextureImporter : null;
             if (sourceImporter && (sourceImporter.sRGBTexture || sourceImporter.alphaIsTransparency))
             { Message("Disable sRGB and Alpha Is Transparency in Import Settings for the existing map first."); return; }
@@ -222,14 +233,14 @@ namespace ExtractionRaid.Editor.SplatMap
             {
                 // Probe mesh readability before replacing the current painting session.
                 _ = mesh.vertices;
-                Vector2[] uv = mesh.uv;
-                if (uv.Length != mesh.vertexCount) throw new InvalidOperationException("The model has no UV0.");
+                Vector2[] uv = PaintMaterial.UV(mesh, original ? original : target.sharedMaterial);
+                if (uv.Length != mesh.vertexCount) throw new InvalidOperationException("The selected mask UV channel is missing. Rebuild Road Builder meshes to create UV2.");
                 foreach (Vector2 p in uv)
                     if (p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1)
-                        throw new InvalidOperationException("UV0 extends outside 0–1. A unique UV layout is required.");
-                pixels = source ? ReadPixels(source) : new Color[resolution * resolution];
+                        throw new InvalidOperationException("Paint UVs extend outside 0–1. Road Builder: rebuild the mesh and enable Use UV2 for Painted Mask on the material.");
+                pixels = source ? ReadPixels(source) : new Color[resolution * mapHeight];
                 if (!source) for (int i = 0; i < pixels.Length; i++) pixels[i] = paintMask ? Color.white : new Color(1, 0, 0, 0);
-                if (paintMask) for (int i = 0; i < pixels.Length; i++) pixels[i] = SplatBrush.BlendMask(pixels[i], 1, 0);
+                if (paintMask) for (int i = 0; i < pixels.Length; i++) pixels[i] = PaintMaterial.Grayscale(pixels[i], IsRoadMarking ? (original ? original : target.sharedMaterial).GetFloat("_MaskChannel") : 0);
             }
             catch (Exception e) { Message(e.Message); return; }
             ReleasePreview();
@@ -238,12 +249,13 @@ namespace ExtractionRaid.Editor.SplatMap
             buffer = CreateInstance<SplatPaintBuffer>();
             buffer.hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
             buffer.size = source ? source.width : resolution;
+            buffer.height = source ? source.height : mapHeight;
             buffer.pixels = pixels;
             string sourcePath = source ? AssetDatabase.GetAssetPath(source) : null;
-            savePath = sourcePath != null && sourcePath.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? sourcePath : null;
+            savePath = !IsRoadMarking && sourcePath != null && sourcePath.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? sourcePath : null;
             hasUnsavedChanges = !source;
             RestorePreview();
-            Message("Map ready. Enable Paint in Scene View.");
+            Message($"Map ready: {buffer.Width} x {buffer.Height}. Enable Paint in Scene View.");
         }
 
         static Color[] ReadPixels(Texture2D source)
@@ -267,16 +279,16 @@ namespace ExtractionRaid.Editor.SplatMap
             if (!buffer || !target || !original || EditorApplication.isPlayingOrWillChangePlaymode) return;
             try
             {
-                working = new Texture2D(buffer.size, buffer.size, TextureFormat.RGBA32, false, true)
+                working = new Texture2D(buffer.Width, buffer.Height, TextureFormat.RGBA32, false, true)
                 { name = "Splat painting preview", hideFlags = HideFlags.HideAndDontSave, wrapMode = TextureWrapMode.Clamp };
                 preview = new Material(original) { hideFlags = HideFlags.HideAndDontSave };
                 preview.SetTexture(MapProperty, working);
-                if (paintMask) preview.SetFloat("_UseOpacityMask", 1);
-                SplatShaderGUI.Configure(preview);
+                PaintMaterial.Configure(preview, paintMask);
+
                 target.sharedMaterial = preview;
                 var source = target.GetComponent<MeshFilter>().sharedMesh;
                 sourceVertices = source.vertices;
-                meshUV = source.uv;
+                meshUV = PaintMaterial.UV(source, original);
                 triangles = source.triangles;
                 rayMesh = Instantiate(source);
                 rayMesh.hideFlags = HideFlags.HideAndDontSave;
@@ -299,7 +311,7 @@ namespace ExtractionRaid.Editor.SplatMap
             if (bakedMatrix.determinant < 0)
                 for (int i = 0; i < indices.Length; i += 3) (indices[i], indices[i + 1]) = (indices[i + 1], indices[i]);
             rayMesh.triangles = indices;
-            surfaceBrush = new SplatSurfaceBrush(vertices, meshUV, indices, buffer.size);
+            surfaceBrush = new SplatSurfaceBrush(vertices, meshUV, indices, buffer.Width, buffer.Height);
             rayMesh.RecalculateBounds();
             rayCollider.sharedMesh = null;
             rayCollider.sharedMesh = rayMesh;
@@ -427,14 +439,15 @@ namespace ExtractionRaid.Editor.SplatMap
                 importer.alphaIsTransparency = false;
                 importer.mipmapEnabled = false;
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
-                importer.maxTextureSize = Mathf.Max(32, Mathf.NextPowerOfTwo(buffer.size));
+                importer.maxTextureSize = Mathf.Max(32, Mathf.NextPowerOfTwo(Mathf.Max(buffer.Width, buffer.Height)));
+                importer.npotScale = TextureImporterNPOTScale.None;
                 importer.wrapMode = TextureWrapMode.Clamp;
                 importer.SaveAndReimport();
                 var saved = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 Undo.RecordObject(original, "Assign painted map");
                 original.SetTexture(MapProperty, saved);
-                if (paintMask) original.SetFloat("_UseOpacityMask", 1);
-                SplatShaderGUI.Configure(original);
+                PaintMaterial.Configure(original, paintMask);
+
                 EditorUtility.SetDirty(original);
                 AssetDatabase.SaveAssetIfDirty(original);
                 savePath = path;

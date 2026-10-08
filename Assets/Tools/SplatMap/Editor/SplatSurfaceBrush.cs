@@ -15,16 +15,20 @@ namespace ExtractionRaid.Editor.SplatMap
         }
 
         readonly Triangle[] triangles;
-        readonly int size;
+        readonly int width, height;
         readonly float[] coverage;
         readonly int[] touched;
 
         public SplatSurfaceBrush(Vector3[] worldVertices, Vector2[] uv, int[] indices, int size)
+            : this(worldVertices, uv, indices, size, size) { }
+
+        public SplatSurfaceBrush(Vector3[] worldVertices, Vector2[] uv, int[] indices, int width, int height)
         {
-            if (worldVertices == null || uv == null || indices == null || uv.Length != worldVertices.Length || indices.Length % 3 != 0 || size < 1)
+            if (worldVertices == null || uv == null || indices == null || uv.Length != worldVertices.Length || indices.Length % 3 != 0 || width < 1 || height < 1 || width > 2048 || height > 2048)
                 throw new ArgumentException("Invalid surface brush geometry or map size.");
-            this.size = size;
-            coverage = new float[size * size];
+            this.width = width;
+            this.height = height;
+            coverage = new float[width * height];
             touched = new int[coverage.Length];
             triangles = new Triangle[indices.Length / 3];
             for (int i = 0; i < triangles.Length; i++)
@@ -72,14 +76,14 @@ namespace ExtractionRaid.Editor.SplatMap
                 Vector2 centerUV = t.uv + new Vector2(Vector3.Dot(t.gradientU, delta), Vector3.Dot(t.gradientV, delta));
                 Vector2 extent = new Vector2(t.gradientU.magnitude, t.gradientV.magnitude) * radius;
                 Vector2 minUV = Vector2.Max(t.uvMin, centerUV - extent), maxUV = Vector2.Min(t.uvMax, centerUV + extent);
-                int minX = Mathf.Max(0, Mathf.CeilToInt(minUV.x * size - 0.5f));
-                int maxX = Mathf.Min(size - 1, Mathf.FloorToInt(maxUV.x * size - 0.5f));
-                int minY = Mathf.Max(0, Mathf.CeilToInt(minUV.y * size - 0.5f));
-                int maxY = Mathf.Min(size - 1, Mathf.FloorToInt(maxUV.y * size - 0.5f));
+                int minX = Mathf.Max(0, Mathf.CeilToInt(minUV.x * width - 0.5f));
+                int maxX = Mathf.Min(width - 1, Mathf.FloorToInt(maxUV.x * width - 0.5f));
+                int minY = Mathf.Max(0, Mathf.CeilToInt(minUV.y * height - 0.5f));
+                int maxY = Mathf.Min(height - 1, Mathf.FloorToInt(maxUV.y * height - 0.5f));
                 for (int y = minY; y <= maxY; y++)
                 for (int x = minX; x <= maxX; x++)
                 {
-                    Vector2 offset = new Vector2((x + 0.5f) / size, (y + 0.5f) / size) - t.uv;
+                    Vector2 offset = new Vector2((x + 0.5f) / width, (y + 0.5f) / height) - t.uv;
                     float b = (offset.x * t.uvEdge2.y - offset.y * t.uvEdge2.x) * t.inverseUVDeterminant;
                     float c = (t.uvEdge1.x * offset.y - t.uvEdge1.y * offset.x) * t.inverseUVDeterminant;
                     if (b < -0.00001f || c < -0.00001f || b + c > 1.00001f) continue;
@@ -88,7 +92,7 @@ namespace ExtractionRaid.Editor.SplatMap
                     if (distanceSquared > radiusSquared) continue;
                     float amount = strength * (soft ? 1 - Mathf.SmoothStep(0, 1, Mathf.Sqrt(distanceSquared) / radius) : 1);
                     if (amount <= 0) continue;
-                    int index = y * size + x;
+                    int index = y * width + x;
                     // Shared triangle edges and UV overlaps receive at most one application per stamp.
                     if (coverage[index] == 0) touched[count++] = index;
                     coverage[index] = Mathf.Max(coverage[index], amount);

@@ -106,7 +106,7 @@ namespace ExtractionRaid.Editor.Roads
                 }
                 root.Bind(serializedRoad);
                 root.Add(new Button(BuildRoad) { text = road.useSplatMaps ? (road.generatedMesh ? "Rebuild Road (Keep Paint Maps)" : "Build Road and Create Paint Maps") : (road.generatedMesh ? "Rebuild Mesh" : "Build Mesh") });
-                if (road.useSplatMaps) root.Add(new Button(OpenPainter) { text = "Open Splat Map Painter" });
+                if (road.useSplatMaps || (road.generatedMaterial && road.generatedMaterial.shader.name == "ExtractionRaid/Road Marking Unlit")) root.Add(new Button(OpenPainter) { text = "Open Splat Map Painter" });
                 root.Add(new Button(() => { Selection.activeGameObject = road.gameObject; SceneView.lastActiveSceneView?.FrameSelected(); }) { text = "Select and Frame Road" });
             }
             status = new HelpBox("", HelpBoxMessageType.Info);
