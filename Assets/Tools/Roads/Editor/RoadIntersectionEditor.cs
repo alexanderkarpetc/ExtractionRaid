@@ -66,6 +66,7 @@ namespace ExtractionRaid.Editor.Roads
             var node = (RoadIntersection)target;
             var root = new VisualElement();
             root.Add(new HelpBox("Start selects the first point; unchecked selects the last. Place connected ends near the same center. Cutback is measured along each road and snaps to its mesh rows. Rebuild here after editing approaches. Existing PNGs are kept. One intersection per road object.", HelpBoxMessageType.Info));
+            root.Add(new HelpBox("Edge Fade is in world metres and affects exposed outer edges only. Normal rebuild preserves the mask. Rebuild and Create Edge Fade Mask assigns a new PNG and keeps the previous file.", HelpBoxMessageType.Info));
             InspectorElement.FillDefaultInspector(root, serializedObject, this);
             var status = new HelpBox("Build to trim approaches and create the intersection.", HelpBoxMessageType.Info);
             root.Add(new Button(() =>
@@ -77,6 +78,15 @@ namespace ExtractionRaid.Editor.Roads
                 }
                 catch (Exception e) { status.text = e.Message; }
             }) { text = "Build / Rebuild Intersection" });
+            root.Add(new Button(() =>
+            {
+                try
+                {
+                    serializedObject.ApplyModifiedProperties();
+                    if (IntersectionAssets.Build(node, true)) status.text = "Intersection rebuilt with a new edge fade mask. Previous PNGs were kept.";
+                }
+                catch (Exception e) { status.text = e.Message; }
+            }) { text = "Rebuild and Create Edge Fade Mask" });
             root.Add(new Button(() =>
             {
                 if (node.generatedMesh) SplatMapPainterWindow.OpenFor(node.GetComponent<MeshRenderer>());

@@ -14,6 +14,7 @@ namespace ExtractionRaid.Editor.Roads
         public Vector2[] markingUV;
         public int[] triangles;
         public float length;
+        public Vector2[] exposedEdgePairs;
     }
 
     public static class RoadGeometry

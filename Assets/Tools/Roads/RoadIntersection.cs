@@ -22,6 +22,8 @@ namespace ExtractionRaid.View.Authoring
         [Range(1, 32)] public int surfaceSegments = 8;
         public Material materialTemplate;
         public int mapResolution = 512;
+        [Tooltip("Initial outer-edge fade in world XZ metres. Rebuild keeps painted maps; use Rebuild and Create Edge Fade Mask to replace the assigned mask with a new PNG.")]
+        [Min(0)] public float edgeFade = 0.25f;
         [HideInInspector] public Mesh generatedMesh;
         [HideInInspector] public Material generatedMaterial;
         [HideInInspector] public string assetFolder;

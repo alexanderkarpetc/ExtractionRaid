@@ -66,10 +66,12 @@ namespace ExtractionRaid.Editor.Roads
             }
             ports.Sort((a, b) => Angle(Mid(a) - center).CompareTo(Angle(Mid(b) - center)));
             var boundary = new List<Vector3>();
+            var exposed = new List<bool>();
             for (int i = 0; i < ports.Count; i++)
             {
                 var port = ports[i]; var next = ports[(i + 1) % ports.Count];
                 boundary.AddRange(port);
+                for (int j = 0; j < port.Length; j++) exposed.Add(j == port.Length - 1);
                 Vector3 a = port[port.Length - 1], b = next[0];
                 Vector3 control = (a + b) * 0.5f;
                 Vector3 d1 = Mid(port) - center, d2 = Mid(next) - center;
@@ -87,6 +89,7 @@ namespace ExtractionRaid.Editor.Roads
                 for (int j = 1; j < cornerSegments; j++)
                 {
                     float t = (float)j / cornerSegments;
+                    exposed.Add(true);
                     boundary.Add((1 - t) * (1 - t) * a + 2 * (1 - t) * t * control + t * t * b);
                 }
             }
@@ -136,8 +139,56 @@ namespace ExtractionRaid.Editor.Roads
                 data.detailUV[i] = new Vector2(p.x / tileSize, p.z / tileSize);
                 data.markingUV[i] = data.paintUV[i];
             }
+            var edges = new List<Vector2>();
+            for (int i = 0; i < boundary.Count; i++)
+                if (exposed[i])
+                {
+                    var a = boundary[i]; var b = boundary[(i + 1) % boundary.Count];
+                    edges.Add(new Vector2(a.x, a.z)); edges.Add(new Vector2(b.x, b.z));
+                }
+            data.exposedEdgePairs = edges.ToArray();
             data.length = Mathf.Max(max.x - min.x, max.z - min.z);
             return data;
+        }
+
+        public static Color[] InitialMask(RoadMeshData data, int size, float fade)
+        {
+            if (data == null || data.vertices == null || data.vertices.Length == 0 ||
+                data.exposedEdgePairs == null || data.exposedEdgePairs.Length % 2 != 0 ||
+                size < 2 || size > 2048 || !Finite(fade) || fade < 0)
+                throw new ArgumentException("Invalid intersection mask dimensions or Edge Fade.");
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+            if (fade == 0) return pixels;
+            Vector2 min = new Vector2(data.vertices[0].x, data.vertices[0].z), max = min;
+            foreach (var p in data.vertices)
+            {
+                var xz = new Vector2(p.x, p.z);
+                min = Vector2.Min(min, xz); max = Vector2.Max(max, xz);
+            }
+            Vector2 span = max - min;
+            if (span.x <= 0 || span.y <= 0) throw new ArgumentException("Intersection mask bounds are empty.");
+            // Visit only the texels within the fade strip of each exposed segment.
+            for (int e = 0; e < data.exposedEdgePairs.Length; e += 2)
+            {
+                Vector2 a = data.exposedEdgePairs[e], b = data.exposedEdgePairs[e + 1], ab = b - a;
+                Vector2 lo = Vector2.Min(a, b) - Vector2.one * fade, hi = Vector2.Max(a, b) + Vector2.one * fade;
+                int minX = Mathf.Max(0, Mathf.CeilToInt((lo.x - min.x) / span.x * (size - 1)));
+                int maxX = Mathf.Min(size - 1, Mathf.FloorToInt((hi.x - min.x) / span.x * (size - 1)));
+                int minY = Mathf.Max(0, Mathf.CeilToInt((lo.y - min.y) / span.y * (size - 1)));
+                int maxY = Mathf.Min(size - 1, Mathf.FloorToInt((hi.y - min.y) / span.y * (size - 1)));
+                for (int y = minY; y <= maxY; y++)
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Vector2 p = min + new Vector2((float)x / (size - 1) * span.x, (float)y / (size - 1) * span.y);
+                    float t = ab.sqrMagnitude > 0 ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude) : 0;
+                    float visibility = Mathf.SmoothStep(0, 1, Vector2.Distance(p, a + ab * t) / fade);
+                    int index = y * size + x;
+                    visibility = Mathf.Min(pixels[index].r, visibility);
+                    pixels[index] = new Color(visibility, visibility, visibility, 1);
+                }
+            }
+            return pixels;
         }
 
         static Vector3 Project(Vector3 p, RoadSurfaceProjector project, float lift)

@@ -7,6 +7,57 @@ namespace ExtractionRaid.Editor.Roads.Tests
 {
     public class IntersectionGeometryTests
     {
+        [TestCase(3)]
+        [TestCase(4)]
+        public void EdgeMaskKeepsRoadMouthCentersVisible(int count)
+        {
+            var mouths = Mouths(count);
+            var data = IntersectionGeometry.Build(mouths, Vector3.zero, 1, 8, 4, 2);
+            var mask = IntersectionGeometry.InitialMask(data, 97, 0.5f);
+            Vector3 min = data.vertices[0], max = min;
+            foreach (var p in data.vertices) { min = Vector3.Min(min, p); max = Vector3.Max(max, p); }
+            foreach (var mouth in mouths)
+            {
+                var center = (mouth[0] + mouth[mouth.Length - 1]) * 0.5f;
+                int x = Mathf.RoundToInt((center.x - min.x) / (max.x - min.x) * 96);
+                int y = Mathf.RoundToInt((center.z - min.z) / (max.z - min.z) * 96);
+                Assert.That(mask[y * 97 + x], Is.EqualTo(Color.white));
+            }
+            Assert.That(Array.Exists(mask, p => p.r < 0.1f), Is.True);
+        }
+
+        [Test]
+        public void EdgeFadeUsesWorldDistanceAndLeavesInteriorOpaque()
+        {
+            var data = IntersectionGeometry.Build(Mouths(3), Vector3.zero, 1, 8, 4, 2);
+            var mask = IntersectionGeometry.InitialMask(data, 97, 0.5f);
+            // T bounds: X [-6,6], Z [-2,6]. Exposed southern edge is Z=-2.
+            Assert.That(mask[48].r, Is.Zero);
+            Assert.That(mask[3 * 97 + 48].r, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(mask[6 * 97 + 48], Is.EqualTo(Color.white));
+            Assert.That(mask[24 * 97 + 48], Is.EqualTo(Color.white));
+        }
+
+        [Test]
+        public void EdgeMaskIsIndependentOfWorldPosition()
+        {
+            var data = IntersectionGeometry.Build(Mouths(4), Vector3.zero, 0.75f, 8, 4, 2);
+            var before = IntersectionGeometry.InitialMask(data, 65, 0.75f);
+            for (int i = 0; i < data.vertices.Length; i++) data.vertices[i] += new Vector3(30, 20, -40);
+            for (int i = 0; i < data.exposedEdgePairs.Length; i++) data.exposedEdgePairs[i] += new Vector2(30, -40);
+            var after = IntersectionGeometry.InitialMask(data, 65, 0.75f);
+            for (int i = 0; i < before.Length; i++)
+                Assert.That(after[i].r, Is.EqualTo(before[i].r).Within(0.00002f));
+        }
+
+        [Test]
+        public void ZeroFadeIsWhiteAndInvalidFadeIsRejected()
+        {
+            var data = IntersectionGeometry.Build(Mouths(3), Vector3.zero, 1, 8, 4, 2);
+            foreach (var pixel in IntersectionGeometry.InitialMask(data, 33, 0)) Assert.That(pixel, Is.EqualTo(Color.white));
+            Assert.Throws<ArgumentException>(() => IntersectionGeometry.InitialMask(data, 33, -1));
+            Assert.Throws<ArgumentException>(() => IntersectionGeometry.InitialMask(data, 33, float.NaN));
+        }
         [Test]
         public void MixedStartEndApproachesWorkAfterRotationAndTranslation()
         {

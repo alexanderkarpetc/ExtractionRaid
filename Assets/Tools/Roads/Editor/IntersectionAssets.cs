@@ -45,7 +45,7 @@ namespace ExtractionRaid.Editor.Roads
                     throw new InvalidOperationException("An approach shares its mesh with a duplicate. Use independently built roads.");
         }
 
-        public static bool Build(RoadIntersection node)
+        public static bool Build(RoadIntersection node, bool regenerateMask = false)
         {
             ValidateScene(node);
             if (node.approaches.Count < 3 || node.approaches.Count > 4)
@@ -93,11 +93,14 @@ namespace ExtractionRaid.Editor.Roads
                 if (previous && !prepared.ContainsKey(previous))
                 { ValidateRoad(previous, node); prepared.Add(previous, RoadAssets.Generate(previous)); }
             bool firstBuild = !node.generatedMesh;
+            Color[] maskPixels = firstBuild || regenerateMask ? IntersectionGeometry.InitialMask(data, node.mapResolution, node.edgeFade) : null;
             Shader shader = Shader.Find("ExtractShaders/SplatRGBA");
             Material template = node.materialTemplate ? node.materialTemplate : reference.generatedMaterial;
             if (!shader || (firstBuild ? template.shader != shader : node.generatedMaterial.shader != shader))
                 throw new ArgumentException("Use an ExtractShaders/SplatRGBA material.");
             string folder = node.assetFolder;
+            if (regenerateMask && !firstBuild && (string.IsNullOrEmpty(folder) || !folder.StartsWith("Assets/") || !AssetDatabase.IsValidFolder(folder)))
+                throw new InvalidOperationException("Restore the intersection asset folder before creating a new mask.");
             if (firstBuild)
             {
                 string chosen = EditorUtility.SaveFilePanelInProject("Intersection Asset Location", "Intersection", "asset", "Create a separate mesh, material and paint maps.");
@@ -112,6 +115,7 @@ namespace ExtractionRaid.Editor.Roads
             Undo.SetCurrentGroupName("Build Road Intersection");
             Mesh mesh = null;
             Material material = null;
+            string createdMaskPath = null;
             try
             {
                 mesh = firstBuild ? new Mesh { name = "Intersection Mesh" } : node.generatedMesh;
@@ -124,7 +128,7 @@ namespace ExtractionRaid.Editor.Roads
                     var pixels = new Color[node.mapResolution * node.mapResolution];
                     for (int i = 0; i < pixels.Length; i++) pixels[i] = new Color(1, 0, 0, 0);
                     material.SetTexture("_SplatMap", RoadAssets.SaveMap(folder + "/Splat.png", node.mapResolution, pixels));
-                    for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+                    pixels = maskPixels;
                     material.SetTexture("_MaskMap", RoadAssets.SaveMap(folder + "/Mask.png", node.mapResolution, pixels));
                     foreach (string property in new[] { "_SplatMap", "_MaskMap" })
                     { material.SetTextureScale(property, Vector2.one); material.SetTextureOffset(property, Vector2.zero); }
@@ -133,7 +137,17 @@ namespace ExtractionRaid.Editor.Roads
                     SplatShaderGUI.Configure(material);
                     AssetDatabase.CreateAsset(material, folder + "/IntersectionMaterial.mat");
                 }
-                foreach (var pair in prepared)
+                if (!firstBuild && regenerateMask)
+                {
+                    createdMaskPath = AssetDatabase.GenerateUniqueAssetPath(folder + "/Mask_EdgeFade.png");
+                    var mask = RoadAssets.SaveMap(createdMaskPath, node.mapResolution, maskPixels);
+                    Undo.RegisterCompleteObjectUndo(material, "Assign edge fade mask");
+                    material.SetTexture("_MaskMap", mask);
+                    material.SetTextureScale("_MaskMap", Vector2.one);
+                    material.SetTextureOffset("_MaskMap", Vector2.zero);
+                    material.SetFloat("_UseOpacityMask", 1);
+                    SplatShaderGUI.Configure(material);
+                }                foreach (var pair in prepared)
                 {
                     Undo.RegisterCompleteObjectUndo(pair.Key.generatedMesh, "Trim / restore road");
                     RoadAssets.WriteMesh(pair.Key.generatedMesh, pair.Value, pair.Key.transform, pair.Key.useSplatMaps);
@@ -156,6 +170,11 @@ namespace ExtractionRaid.Editor.Roads
             catch
             {
                 Undo.RevertAllDownToGroup(group);
+                if (createdMaskPath != null)
+                {
+                    AssetDatabase.DeleteAsset(createdMaskPath);
+                    if (material) { EditorUtility.SetDirty(material); AssetDatabase.SaveAssetIfDirty(material); }
+                }
                 foreach (var pair in prepared) if (pair.Key.generatedMesh) { EditorUtility.SetDirty(pair.Key.generatedMesh); AssetDatabase.SaveAssetIfDirty(pair.Key.generatedMesh); }
                 if (firstBuild)
                 {
