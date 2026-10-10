@@ -95,6 +95,37 @@ Layer перевіряється на GameObject, де знаходиться в
 
 ## 5. Scatter: усі параметри
 
+### Presets: каміння, папір та інші набори
+
+Панель **Presets** розташована над областю та списком prefab. Один раз налаштуй каміння,
+натисни **Save New…** і збережи asset, наприклад `Rocks.asset`. Потім налаштуй папір і
+збережи `Paper.asset`. Для перемикання вибери потрібний запис у **Preset** та натисни **Apply**.
+Сам вибір у списку не змінює налаштувань. Після Apply натисни **Generate Preview**.
+
+| Дія | Результат |
+|---|---|
+| Save New… | Створює окремий preset asset із поточними prefab і правилами. Вибери нове ім'я у папці Editor. |
+| Update Selected | Записує поточні prefab та правила у вибраний asset. Зміну його вмісту можна скасувати Undo. |
+| Apply | Замінює prefab list і правила генерації значеннями пресета; підтримує Undo. |
+| Add Prefabs | Додає prefab-записи з пресета до поточного списку; ті самі prefab повторно не додає. Наявні ваги й глобальні правила залишаються; підтримує Undo. |
+
+Пресет містить ваги, масштаби й overrides кожного prefab, count, seed, дистанцію, rotation/scale,
+surface/collision/avoidance masks та правила, а також ліміти генерації. **Area, Show Area,
+Edit Area Handles, явний список Exclusion Colliders і поточний Preview не переносяться.**
+Отже, перемикання набору не пересуває робочу ділянку та не видаляє створені об'єкти.
+Preview оновиться лише після Generate Preview; якщо потрібні обидва шари, спочатку Bake попередній.
+
+Для суміші каміння й паперу застосуй Rocks через Apply, потім вибери Paper і натисни Add Prefabs.
+Записи паперу збережуть свої per-prefab ваги/масштаби; глобальні правила залишаться від Rocks.
+Зміна робочих налаштувань не змінює asset, доки не натиснуто Update Selected.
+
+Assets зберігаються через Unity Editor, типове місце — `Assets/Tools/LevelDesign/Editor`.
+Їх можна перейменовувати, дублювати або видаляти у Project. Список автоматично оновлюється
+після зміни assets; вибраний пресет запам'ятовується після закриття вікна.
+Новий asset — окремий файл проєкту: його створення/видалення керується через Project,
+а Undo стосується застосування, додавання prefab і змін вмісту. Для передачі набору іншому
+дизайнеру додай preset asset, його `.meta` та потрібні prefab до репозиторію.
+
 ### Prefabs
 
 | Поле запису | Що робить |
@@ -417,7 +448,7 @@ Display-параметри можна змінювати без нового а�
 
 ### Що зберігається
 
-Налаштування зберігаються у локальних EditorPrefs окремо для користувача та шляху проєкту. Закриття й повторне відкриття вікна не має скидати їх. Це не спільний asset preset: інший дизайнер або інша копія репозиторію може мати інші значення. Кнопок експорту, імпорту чи повного reset немає.
+Поточні робочі налаштування зберігаються у локальних EditorPrefs окремо для користувача та шляху проєкту. Закриття й повторне відкриття вікна не має скидати їх. Для спільних наборів Scatter використовуй Presets: вони є окремими assets проєкту. Map Analysis продовжує використовувати локальні налаштування. Кнопки повного reset немає.
 
 Посилання на prefab та сценові об'єкти зберігаються через GlobalObjectId. Для сценових об'єктів потрібна збережена сцена; після рестарту її треба завантажити. Для довготривалого використання новостворених exclusion/POI об'єктів збережи сцену після їх створення. Видалений об'єкт або незавантажена сцена можуть дати порожнє поле.
 
@@ -482,6 +513,7 @@ Geometry snapshot збирається з **усіх завантажених с
 | [EditorBatch.cs](../../Assets/Tools/LevelDesign/Editor/EditorBatch.cs) | Поступове виконання iterator через Editor update, завершення, скасування та обробка exception. |
 | [EnvironmentScatterWindow.cs](../../Assets/Tools/LevelDesign/Editor/EnvironmentScatterWindow.cs) | Меню Scatter, кнопки, перевірка перед запуском та seed. |
 | [ScatterSettings.cs](../../Assets/Tools/LevelDesign/Editor/ScatterSettings.cs) | Налаштування Scatter і записи prefab list. |
+| [ScatterPreset.cs](../../Assets/Tools/LevelDesign/Editor/ScatterPreset.cs) | Незалежні знімки правил і prefab, застосування пресета та додавання записів без перенесення сценового стану. |
 | [ScatterGenerator.cs](../../Assets/Tools/LevelDesign/Editor/ScatterGenerator.cs) | Послідовність placement, фізичні запити, створення scene instances, Clear та Bake. |
 | [ScatterGeometry.cs](../../Assets/Tools/LevelDesign/Editor/ScatterGeometry.cs) | Випадкові ваги/діапазони, перетворення bounds, мінімальні дистанції та перетини нових props. |
 | [ScatterAvoidance.cs](../../Assets/Tools/LevelDesign/Editor/ScatterAvoidance.cs) | Exclusion-перевірки явних colliders та layer mask. |

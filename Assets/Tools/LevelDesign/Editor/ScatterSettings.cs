@@ -44,5 +44,6 @@ namespace LevelDesign.Editor
         [Min(1)] public int maxPlacementAttempts = 50000;
         [Range(1, 10000)] public int maximumGeneratedObjects = 2000;
         [HideInInspector] public SceneReference preview = new SceneReference();
+        [HideInInspector] public SceneReference selectedPreset = new SceneReference();
     }
 }

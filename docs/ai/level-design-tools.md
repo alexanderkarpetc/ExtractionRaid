@@ -53,6 +53,13 @@ Edge Fade початкової маски обчислюється за відс
 
 ## Environment Scatter
 
+Панель Presets зберігає набори prefab і generation rules в окремих Editor-only assets.
+Apply замінює набір і правила; Add Prefabs додає відсутні prefab без зміни глобальних правил.
+Обидві дії та Update Selected підтримують Undo. Area, її display-прапорці, явні сценові
+Exclusion Colliders і tracked Preview не входять у переносимий стан. Застосування пресета
+не запускає генерацію та не змінює його asset. Save New створює asset через Editor API;
+створення/видалення самого файла керується звичайним Project workflow.
+
 1. Відкрити й зберегти звичайну сцену. Задати Center, Size X/Z, Rotation Y. Edit Area Handles
    дозволяє змінювати область у Scene View. Center Y — центр вертикального діапазону raycast.
 2. Додати активні prefab asset roots у Prefabs; вони повинні мати Renderer із bounds.
@@ -118,7 +125,8 @@ Analyze/Clear підтримують Undo. Cancel залишає поперед�
 
 Налаштування зберігаються в EditorPrefs окремо для проєкту й користувача. Посилання мають
 GlobalObjectId; після рестарту відповідні сцени повинні бути завантажені. Це локальні
-налаштування, не спільний version-controlled preset. Нових singleton чи runtime state немає.
+робочі налаштування. Для спільних наборів Scatter додатково є version-controlled preset assets.
+Нових singleton чи runtime state немає.
 Об'єкти налаштувань мають бути прихованими й тимчасовими, але без `NotEditable`:
 `HideAndDontSave` блокує їхні SerializedProperty-поля. Прапорці нормалізуються також після reload.
 

@@ -99,6 +99,7 @@ namespace LevelDesign.Editor
         {
             using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode || Busy))
             {
+                HeaderGUI();
                 scroll = EditorGUILayout.BeginScrollView(scroll);
                 using var serialized = new SerializedObject(settings);
                 serialized.Update();
@@ -120,6 +121,7 @@ namespace LevelDesign.Editor
             EditorGUILayout.HelpBox(message, MessageType.Info);
         }
         protected abstract void Buttons();
+        protected virtual void HeaderGUI() { }
         protected void StartJob(System.Collections.IEnumerator routine)
         {
             job?.Dispose();

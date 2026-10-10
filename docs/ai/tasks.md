@@ -106,6 +106,10 @@
   після виправлення **14/14 passed**, звіт `Logs/LevelDesign-Window-Fixed.xml`.
   Додано [повний користувацький посібник](../guides/level-design-tools.md): запуск, усі параметри,
   приклади, інтерпретація метрик, persistence, troubleshooting та навігація скриптами.
+  **2026-10-11:** додано Scatter preset assets та панель Save New / Update Selected / Apply /
+  Add Prefabs. Зберігаються набори й правила; scene context лишається на місці. Ізольований
+  Unity EditMode прогін: **18/18 passed**, включно з preset persistence, merge, незалежністю
+  копій, збереженням scene context та Undo; звіт `Logs/LevelDesign-Presets.xml`.
 
 **Найближча ціль — замкнений vertical slice, не весь v1.0.** Нижче — запропонована черга
 роботи; її задачі ще не виконані. Межі повного релізу в `release-scope.md` не змінюються.
