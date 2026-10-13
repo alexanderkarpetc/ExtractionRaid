@@ -67,6 +67,7 @@ namespace ExtractionRaid.Editor.Roads
             var root = new VisualElement();
             root.Add(new HelpBox("Start selects the first point; unchecked selects the last. Place connected ends near the same center. Cutback is measured along each road and snaps to its mesh rows. Rebuild here after editing approaches. Existing PNGs are kept. One intersection per road object.", HelpBoxMessageType.Info));
             root.Add(new HelpBox("Edge Fade is in world metres and affects exposed outer edges only. Normal rebuild preserves the mask. Rebuild and Create Edge Fade Mask assigns a new PNG and keeps the previous file.", HelpBoxMessageType.Info));
+            root.Add(new HelpBox("Overlap extends the intersection over the roads without changing Cutback. Try 0.3 m, rebuild, then paint the mask at the seam. UV bounds can change; PNGs are preserved. Use a different material Depth Offset if the overlapping surfaces flicker.", HelpBoxMessageType.Info));
             InspectorElement.FillDefaultInspector(root, serializedObject, this);
             var status = new HelpBox("Build to trim approaches and create the intersection.", HelpBoxMessageType.Info);
             root.Add(new Button(() =>

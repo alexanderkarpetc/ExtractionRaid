@@ -151,6 +151,87 @@ namespace ExtractionRaid.Editor.Roads
             return data;
         }
 
+        public static RoadMeshData AddOverlap(RoadMeshData core, IReadOnlyList<RoadMeshData> roads,
+            IReadOnlyList<int> strides, IReadOnlyList<bool> starts, float overlap, float tileSize)
+        {
+            if (!Finite(overlap) || overlap < 0 || !Finite(tileSize) || tileSize < 0.1f ||
+                roads == null || strides == null || starts == null || roads.Count != strides.Count || roads.Count != starts.Count)
+                throw new ArgumentException("Invalid Overlap or road geometry.");
+            if (overlap == 0) return core;
+            var vertices = new List<Vector3>(core.vertices);
+            var triangles = new List<int>(core.triangles);
+            var edges = new List<Vector2>(core.exposedEdgePairs);
+            for (int roadIndex = 0; roadIndex < roads.Count; roadIndex++)
+            {
+                var road = roads[roadIndex];
+                int stride = strides[roadIndex];
+                if (stride < 2 || road == null || road.vertices == null || road.vertices.Length % stride != 0 || road.vertices.Length < stride * 2)
+                    throw new ArgumentException("Invalid overlap road cross sections.");
+                int rows = road.vertices.Length / stride;
+                var distance = new float[rows];
+                bool start = starts[roadIndex];
+                for (int step = 1; step < rows; step++)
+                {
+                    int row = start ? step : rows - 1 - step, previous = start ? row - 1 : row + 1;
+                    distance[row] = distance[previous] + Vector3.Distance(Center(road, row, stride), Center(road, previous, stride));
+                }
+                if (overlap > distance[start ? rows - 1 : 0])
+                    throw new ArgumentException("Overlap exceeds a remaining road length. Reduce Overlap.");
+                // Clip the actual road triangles, including diagonal edges, so the overlap is
+                // coplanar with the road even on non-planar quads and partial sample intervals.
+                for (int t = 0; t < road.triangles.Length; t += 3)
+                {
+                    if (Mathf.Min(distance[road.triangles[t] / stride],
+                        Mathf.Min(distance[road.triangles[t + 1] / stride], distance[road.triangles[t + 2] / stride])) >= overlap) continue;
+                    var polygon = new List<Vector3>(4);
+                    for (int j = 0; j < 3; j++)
+                    {
+                        int a = road.triangles[t + j], b = road.triangles[t + (j + 1) % 3];
+                        float da = distance[a / stride], db = distance[b / stride];
+                        bool insideA = da <= overlap, insideB = db <= overlap;
+                        if (insideA) polygon.Add(road.vertices[a]);
+                        if (insideA != insideB)
+                            polygon.Add(Vector3.Lerp(road.vertices[a], road.vertices[b], (overlap - da) / (db - da)));
+                    }
+                    if (polygon.Count < 3) continue;
+                    for (int j = 1; j < polygon.Count - 1; j++)
+                    {
+                        if (Vector3.Cross(polygon[j] - polygon[0], polygon[j + 1] - polygon[0]).sqrMagnitude < 1e-14f) continue;
+                        int index = vertices.Count;
+                        vertices.Add(polygon[0]); vertices.Add(polygon[j]); vertices.Add(polygon[j + 1]);
+                        triangles.Add(index); triangles.Add(index + 1); triangles.Add(index + 2);
+                    }
+                }
+                for (int step = 1; step < rows; step++)
+                {
+                    int row = start ? step : rows - 1 - step, previous = start ? row - 1 : row + 1;
+                    if (distance[previous] >= overlap) break;
+                    float fraction = Mathf.Clamp01((overlap - distance[previous]) / Mathf.Max(1e-8f, distance[row] - distance[previous]));
+                    foreach (int column in new[] { 0, stride - 1 })
+                    {
+                        Vector3 a = road.vertices[previous * stride + column];
+                        Vector3 b = Vector3.Lerp(a, road.vertices[row * stride + column], fraction);
+                        edges.Add(new Vector2(a.x, a.z)); edges.Add(new Vector2(b.x, b.z));
+                    }
+                }
+            }
+            var result = new RoadMeshData
+            {
+                vertices = vertices.ToArray(), triangles = triangles.ToArray(), exposedEdgePairs = edges.ToArray(),
+                paintUV = new Vector2[vertices.Count], detailUV = new Vector2[vertices.Count], markingUV = new Vector2[vertices.Count]
+            };
+            Vector3 min = vertices[0], max = min;
+            foreach (var p in vertices) { min = Vector3.Min(min, p); max = Vector3.Max(max, p); }
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                var p = vertices[i];
+                result.paintUV[i] = new Vector2((p.x - min.x) / (max.x - min.x), (p.z - min.z) / (max.z - min.z));
+                result.detailUV[i] = new Vector2(p.x / tileSize, p.z / tileSize);
+                result.markingUV[i] = result.paintUV[i];
+            }
+            result.length = Mathf.Max(max.x - min.x, max.z - min.z);
+            return result;
+        }
         public static Color[] InitialMask(RoadMeshData data, int size, float fade)
         {
             if (data == null || data.vertices == null || data.vertices.Length == 0 ||

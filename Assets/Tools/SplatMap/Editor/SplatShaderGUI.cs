@@ -23,7 +23,7 @@ namespace ExtractionRaid.Editor.SplatMap
             if (transparent) material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             else material.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
             material.SetOverrideTag("RenderType", transparent ? "Transparent" : "Opaque");
-            material.renderQueue = (int)(transparent ? RenderQueue.Transparent : RenderQueue.Geometry);
+            material.renderQueue = transparent ? Mathf.Max(material.renderQueue, (int)RenderQueue.Transparent) : (int)RenderQueue.Geometry;
             // Smooth transparency must not leave a solid depth/normal/shadow silhouette.
             material.SetShaderPassEnabled("ShadowCaster", !transparent);
             material.SetShaderPassEnabled("DepthOnly", !transparent);

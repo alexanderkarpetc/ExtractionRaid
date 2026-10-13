@@ -88,6 +88,16 @@ namespace ExtractionRaid.Editor.Roads
             var ground = new RoadGroundQuery(reference);
             RoadMeshData data = IntersectionGeometry.Build(mouths, center, node.cornerRounding, node.cornerSegments,
                 node.surfaceSegments, reference.textureTileSize, reference.snapToGround ? ground.Project : null, reference.surfaceLift);
+            var overlapRoads = new List<RoadMeshData>();
+            var overlapStrides = new List<int>();
+            var overlapStarts = new List<bool>();
+            foreach (var end in node.approaches)
+            {
+                overlapRoads.Add(prepared[end.road]);
+                overlapStrides.Add(end.road.widthSegments + 1);
+                overlapStarts.Add(end.start);
+            }
+            data = IntersectionGeometry.AddOverlap(data, overlapRoads, overlapStrides, overlapStarts, node.overlap, reference.textureTileSize);
             // Removed approaches are restored in the same operation.
             foreach (var previous in node.builtRoads)
                 if (previous && !prepared.ContainsKey(previous))
@@ -98,6 +108,16 @@ namespace ExtractionRaid.Editor.Roads
             Material template = node.materialTemplate ? node.materialTemplate : reference.generatedMaterial;
             if (!shader || (firstBuild ? template.shader != shader : node.generatedMaterial.shader != shader))
                 throw new ArgumentException("Use an ExtractShaders/SplatRGBA material.");
+            int overlapQueue = 0;
+            if (node.overlap > 0)
+            {
+                foreach (var road in roads)
+                {
+                    var renderedMaterial = road.GetComponent<MeshRenderer>().sharedMaterial;
+                    if (renderedMaterial) overlapQueue = Mathf.Max(overlapQueue, renderedMaterial.renderQueue + 1);
+                }
+                if (overlapQueue > 5000) throw new InvalidOperationException("Lower the approach material Render Queue below 5000 to draw the intersection above it.");
+            }
             string folder = node.assetFolder;
             if (regenerateMask && !firstBuild && (string.IsNullOrEmpty(folder) || !folder.StartsWith("Assets/") || !AssetDatabase.IsValidFolder(folder)))
                 throw new InvalidOperationException("Restore the intersection asset folder before creating a new mask.");
@@ -147,7 +167,13 @@ namespace ExtractionRaid.Editor.Roads
                     material.SetTextureOffset("_MaskMap", Vector2.zero);
                     material.SetFloat("_UseOpacityMask", 1);
                     SplatShaderGUI.Configure(material);
-                }                foreach (var pair in prepared)
+                }
+                if (node.overlap > 0)
+                {
+                    if (!firstBuild) Undo.RegisterCompleteObjectUndo(material, "Set intersection overlap render queue");
+                    material.renderQueue = Mathf.Max(material.renderQueue, overlapQueue);
+                }
+                foreach (var pair in prepared)
                 {
                     Undo.RegisterCompleteObjectUndo(pair.Key.generatedMesh, "Trim / restore road");
                     RoadAssets.WriteMesh(pair.Key.generatedMesh, pair.Value, pair.Key.transform, pair.Key.useSplatMaps);

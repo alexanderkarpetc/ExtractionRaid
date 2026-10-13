@@ -7,6 +7,56 @@ namespace ExtractionRaid.Editor.Roads.Tests
 {
     public class IntersectionGeometryTests
     {
+        [TestCase(true)]
+        [TestCase(false)]
+        public void OverlapFollowsRoadTrianglesWithoutChangingCutback(bool start)
+        {
+            var points = start ? new[] { Vector3.zero, Vector3.forward * 20 } : new[] { Vector3.forward * 20, Vector3.zero };
+            var full = RoadGeometry.Build(points, 4, 1, false, 2, 2, 0);
+            for (int i = 0; i < full.vertices.Length; i++)
+            {
+                var p = full.vertices[i]; p.y = p.x * p.z * 0.1f; full.vertices[i] = p;
+            }
+            var road = IntersectionGeometry.Trim(full, 3, start, 6, out _);
+            var original = (Vector3[])road.vertices.Clone();
+            var core = IntersectionGeometry.Build(Mouths(3), Vector3.zero, 1, 8, 4, 2);
+            var combined = IntersectionGeometry.AddOverlap(core, new[] { road }, new[] { 3 }, new[] { start }, 0.3f, 2);
+            Assert.That(combined.vertices.Length, Is.GreaterThan(core.vertices.Length));
+            float farthest = 0;
+            for (int i = core.vertices.Length; i < combined.vertices.Length; i++)
+            {
+                var p = combined.vertices[i];
+                Assert.That(p.z, Is.InRange(5.9999f, 6.3001f));
+                farthest = Mathf.Max(farthest, p.z);
+                bool onSurface = false;
+                for (int t = 0; t < road.triangles.Length; t += 3)
+                {
+                    Vector3 a = road.vertices[road.triangles[t]], b = road.vertices[road.triangles[t + 1]], c = road.vertices[road.triangles[t + 2]];
+                    Vector3 n = Vector3.Cross(b - a, c - a);
+                    if (Mathf.Abs(Vector3.Dot(p - a, n.normalized)) > 0.0001f) continue;
+                    if (Vector3.Dot(Vector3.Cross(b - a, p - a), n) >= -0.0001f &&
+                        Vector3.Dot(Vector3.Cross(c - b, p - b), n) >= -0.0001f &&
+                        Vector3.Dot(Vector3.Cross(a - c, p - c), n) >= -0.0001f) { onSurface = true; break; }
+                }
+                Assert.That(onSurface, Is.True, "Overlap must lie on the original road triangle, including partial diagonals.");
+            }
+            Assert.That(farthest, Is.EqualTo(6.3f).Within(0.0001f));
+            CollectionAssert.AreEqual(original, road.vertices);
+            for (int i = 0; i < core.vertices.Length; i++) Assert.That(combined.vertices[i], Is.EqualTo(core.vertices[i]));
+            foreach (var uv in combined.paintUV)
+            { Assert.That(uv.x, Is.InRange(0, 1)); Assert.That(uv.y, Is.InRange(0, 1)); }
+        }
+
+        [Test]
+        public void ZeroOverlapPreservesGeometryAndInvalidOverlapIsRejected()
+        {
+            var core = IntersectionGeometry.Build(Mouths(3), Vector3.zero, 1, 8, 4, 2);
+            var full = RoadGeometry.Build(new[] { Vector3.zero, Vector3.forward * 20 }, 4, 1, false, 2, 2, 0);
+            var road = IntersectionGeometry.Trim(full, 3, true, 6, out _);
+            Assert.That(IntersectionGeometry.AddOverlap(core, new[] { road }, new[] { 3 }, new[] { true }, 0, 2), Is.SameAs(core));
+            foreach (float value in new[] { -1f, float.NaN, float.PositiveInfinity, 15f })
+                Assert.Throws<ArgumentException>(() => IntersectionGeometry.AddOverlap(core, new[] { road }, new[] { 3 }, new[] { true }, value, 2));
+        }
         [TestCase(3)]
         [TestCase(4)]
         public void EdgeMaskKeepsRoadMouthCentersVisible(int count)

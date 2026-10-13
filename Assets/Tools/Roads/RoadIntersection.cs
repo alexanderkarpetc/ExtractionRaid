@@ -20,6 +20,9 @@ namespace ExtractionRaid.View.Authoring
         [Range(0, 1)] public float cornerRounding = 0.75f;
         [Range(1, 32)] public int cornerSegments = 8;
         [Range(1, 32)] public int surfaceSegments = 8;
+        [InspectorName("Overlap (m)")]
+        [Tooltip("Extend the intersection over each trimmed road by this world-space distance. Zero keeps a butt joint. Rebuild after changing; existing paint may shift with UV bounds.")]
+        [Min(0)] public float overlap;
         public Material materialTemplate;
         public int mapResolution = 512;
         [Tooltip("Initial outer-edge fade in world XZ metres. Rebuild keeps painted maps; use Rebuild and Create Edge Fade Mask to replace the assigned mask with a new PNG.")]

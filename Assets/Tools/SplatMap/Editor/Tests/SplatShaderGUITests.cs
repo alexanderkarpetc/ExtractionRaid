@@ -7,6 +7,21 @@ namespace ExtractionRaid.Editor.SplatMap.Tests
     public class SplatShaderGUITests
     {
         [Test]
+        public void TransparentMaterialKeepsIntersectionRenderQueue()
+        {
+            var material = new Material(Shader.Find("ExtractShaders/SplatRGBA"));
+            try
+            {
+                material.SetFloat("_UseOpacityMask", 1);
+                material.renderQueue = 3001;
+                SplatShaderGUI.Configure(material);
+                Assert.That(material.renderQueue, Is.EqualTo(3001));
+                PaintMaterial.Configure(material, true);
+                Assert.That(material.renderQueue, Is.EqualTo(3001));
+            }
+            finally { Object.DestroyImmediate(material); }
+        }
+        [Test]
         public void MaskToggleEnablesTransparencyAndRestoresOpaquePasses()
         {
             Shader shader = Shader.Find("ExtractShaders/SplatRGBA");
