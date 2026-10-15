@@ -144,6 +144,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _LightingInfluence: 1
     - _MaskChannel: 0
     - _Metallic: 0
     - _Occlusion: 1
@@ -163,13 +164,14 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _UseAlpha: 0
+    - _UseRoadMaskUV: 0
     - _Vertex_Coord: 0
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     - _ZoneDitherEnabled: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.8490566, g: 0.80298996, b: 0.748932, a: 1}
     - _Bias_Scale_PowerFrensel: {r: 0, g: 1, b: 5, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color2: {r: 1, g: 1, b: 1, a: 1}

@@ -15360,7 +15360,7 @@ MonoBehaviour:
   surfaceLift: 0.03
   textureTileSize: 2
   depthOffset: -1
-  lateralOffset: -5
+  lateralOffset: -5.3
   materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
   useSplatMaps: 0
   mapResolution: 1024
@@ -15499,7 +15499,7 @@ MonoBehaviour:
   surfaceLift: 0.03
   textureTileSize: 2
   depthOffset: -1
-  lateralOffset: 5
+  lateralOffset: 5.3
   materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
   useSplatMaps: 0
   mapResolution: 1024
@@ -27537,140 +27537,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1282309443094789680, guid: 4658366cf57152249bce326b62f58fb3, type: 3}
   m_PrefabInstance: {fileID: 391810429}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &409082670
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 409082674}
-  - component: {fileID: 409082673}
-  - component: {fileID: 409082672}
-  - component: {fileID: 409082671}
-  m_Layer: 0
-  m_Name: Splat Road
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &409082671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 409082670}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -23.711151, y: 0, z: 61.45697}
-  - {x: -40.3862, y: 0, z: 66.56128}
-  - {x: -57.71942, y: 0, z: 71.047}
-  - {x: -72.33801, y: 0, z: 73.71307}
-  - {x: -93.75488, y: 0, z: 74.95941}
-  width: 8
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.02
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: 0
-  materialTemplate: {fileID: 0}
-  useSplatMaps: 1
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: baba659aa27ec2847bba85aa1cc03420, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: 5b3b76de0c1bb8c4a8b28c40dd9a51fe, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
-    Road_Road_Data
---- !u!23 &409082672
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 409082670}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 5b3b76de0c1bb8c4a8b28c40dd9a51fe, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &409082673
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 409082670}
-  m_Mesh: {fileID: 4300000, guid: baba659aa27ec2847bba85aa1cc03420, type: 2}
---- !u!4 &409082674
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 409082670}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 824915414}
-  - {fileID: 1578752245}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -34795,143 +34661,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7098840337566113502, guid: 4a252a5888cff7b479f796aaf3359256, type: 3}
   m_PrefabInstance: {fileID: 633471415}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &636833826
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 636833830}
-  - component: {fileID: 636833829}
-  - component: {fileID: 636833828}
-  - component: {fileID: 636833827}
-  m_Layer: 0
-  m_Name: Splat Road Markings
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &636833827
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636833826}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -0.81903076, y: 0, z: 150.56061}
-  - {x: -25.70102, y: 0, z: 145.23853}
-  - {x: -42.078674, y: 0, z: 141.97473}
-  - {x: -58.858948, y: 0, z: 139.15851}
-  - {x: -81.92346, y: 0, z: 136.05096}
-  - {x: -89.456024, y: 0, z: 132.60211}
-  - {x: -95.51773, y: 0, z: 126.68677}
-  - {x: -99.26053, y: 0.00000047683716, z: 118.77124}
-  - {x: -97.82379, y: 0.00000047683716, z: 103.36853}
-  - {x: -95.890015, y: 0, z: 85.00238}
-  width: 0.5
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.03
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: 2.8
-  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
-  useSplatMaps: 0
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: 64075da7a8e66ed4c87939d2b34c11d7, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: 7f07286cb66033547afb72ae1b66e83e, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_GasStation_Data/Splat
-    Road Markings_Road_Data 8
---- !u!23 &636833828
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636833826}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 7f07286cb66033547afb72ae1b66e83e, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &636833829
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636833826}
-  m_Mesh: {fileID: 4300000, guid: 64075da7a8e66ed4c87939d2b34c11d7, type: 2}
---- !u!4 &636833830
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 636833826}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1614877807}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &645088530
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44387,143 +44116,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9ae575d0a06afa24185295e54d28a8fe, type: 3}
---- !u!1 &705312973
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 705312974}
-  - component: {fileID: 705312977}
-  - component: {fileID: 705312976}
-  - component: {fileID: 705312975}
-  m_Layer: 0
-  m_Name: Splat Road Markings
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &705312974
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 705312973}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1614877807}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &705312975
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 705312973}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -5.4061584, y: 0, z: 149.71838}
-  - {x: -25.70102, y: 0, z: 145.23853}
-  - {x: -42.078674, y: 0, z: 141.97473}
-  - {x: -58.858948, y: 0, z: 139.15851}
-  - {x: -81.92346, y: 0, z: 136.05096}
-  - {x: -89.456024, y: 0, z: 132.60211}
-  - {x: -95.51773, y: 0, z: 126.68677}
-  - {x: -99.26053, y: 0.00000047683716, z: 118.77124}
-  - {x: -97.82379, y: 0.00000047683716, z: 103.36853}
-  - {x: -95.890015, y: 0, z: 85.00238}
-  width: 0.5
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.03
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: 0
-  materialTemplate: {fileID: 2100000, guid: 607ecc47cb4e49b4796ffddeb17d8635, type: 2}
-  useSplatMaps: 0
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: cdedfc3996920f744b9f1df419d955b3, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: a4b278e8ea67a1c41bb70d167f7ab8bb, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_GasStation_Data/Splat
-    Road Markings_Road_Data 9
---- !u!23 &705312976
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 705312973}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: a4b278e8ea67a1c41bb70d167f7ab8bb, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &705312977
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 705312973}
-  m_Mesh: {fileID: 4300000, guid: cdedfc3996920f744b9f1df419d955b3, type: 2}
 --- !u!1001 &711919433
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47822,138 +47414,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5705942722606277998, guid: ca0bc9937c7dadc47a900e4c18dc9e2e, type: 3}
   m_PrefabInstance: {fileID: 823183158}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &824915410
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 824915414}
-  - component: {fileID: 824915413}
-  - component: {fileID: 824915412}
-  - component: {fileID: 824915411}
-  m_Layer: 0
-  m_Name: Splat Road Markings
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &824915411
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824915410}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -23.711151, y: 0, z: 61.45697}
-  - {x: -40.3862, y: 0, z: 66.56128}
-  - {x: -57.71942, y: 0, z: 71.047}
-  - {x: -72.33801, y: 0, z: 73.71307}
-  - {x: -93.75488, y: 0, z: 74.95941}
-  width: 0.3
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.03
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: 3.4
-  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
-  useSplatMaps: 0
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: 0d017ff3321f9a742925c81072006fab, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: 6f8beef4462914f43a8df3a6d5fa5164, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
-    Road Markings_Road_Data
---- !u!23 &824915412
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824915410}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 6f8beef4462914f43a8df3a6d5fa5164, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &824915413
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824915410}
-  m_Mesh: {fileID: 4300000, guid: 0d017ff3321f9a742925c81072006fab, type: 2}
---- !u!4 &824915414
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824915410}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 409082674}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &825458136
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49398,7 +48858,7 @@ MonoBehaviour:
   - {x: -128.29892, y: 0, z: 57.80652}
   - {x: -119.06897, y: 0, z: 62.8573}
   - {x: -106.799225, y: 0, z: 71.64801}
-  - {x: -101.71942, y: 0, z: 74.421875}
+  - {x: -95.81252, y: 0, z: 77.27616}
   width: 13
   sampleSpacing: 0.5
   smooth: 1
@@ -55431,6 +54891,142 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1668322057}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1032344258
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1032344262}
+  - component: {fileID: 1032344261}
+  - component: {fileID: 1032344260}
+  - component: {fileID: 1032344259}
+  m_Layer: 0
+  m_Name: Splat Road Markings
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1032344259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032344258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
+  points:
+  - {x: -108.3938, y: 0, z: 127.79547}
+  - {x: -102.3378, y: 0, z: 121.41559}
+  - {x: -97.839355, y: 0, z: 110.36957}
+  - {x: -96.17642, y: 0, z: 88.65784}
+  - {x: -92.43231, y: 0, z: 76.610596}
+  - {x: -70.11807, y: 0, z: 74.68622}
+  - {x: -54.56711, y: -0.0000009536743, z: 70.76807}
+  - {x: -39.525818, y: 0, z: 66.94208}
+  - {x: -25.327026, y: 0, z: 60.871826}
+  width: 0.5
+  sampleSpacing: 1
+  smooth: 1
+  widthSegments: 1
+  snapToGround: 1
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8192
+  rayHeight: 10
+  rayDistance: 30
+  surfaceLift: 0.03
+  textureTileSize: 2
+  depthOffset: -1
+  lateralOffset: 0
+  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
+  useSplatMaps: 0
+  mapResolution: 1024
+  edgeFade: 0.25
+  fadeEnds: 1
+  generatedMesh: {fileID: 4300000, guid: 71b54b39e60c3b146b91d8955482ed3e, type: 2}
+  generatedMaterial: {fileID: 2100000, guid: 8f22ff93ce93a28498aebe07cc5351c7, type: 2}
+  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
+    Road Markings_Road_Data 4
+--- !u!23 &1032344260
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032344258}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 8f22ff93ce93a28498aebe07cc5351c7, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1032344261
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032344258}
+  m_Mesh: {fileID: 4300000, guid: 71b54b39e60c3b146b91d8955482ed3e, type: 2}
+--- !u!4 &1032344262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032344258}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1609842259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1035325899
 Mesh:
@@ -74209,6 +73805,142 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8894731452455955457, guid: 7a3882fb8e523e34aace501bb84464a0, type: 3}
   m_PrefabInstance: {fileID: 1434933261}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1438773183
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1438773187}
+  - component: {fileID: 1438773186}
+  - component: {fileID: 1438773185}
+  - component: {fileID: 1438773184}
+  m_Layer: 0
+  m_Name: Splat Road Markings
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1438773184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438773183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
+  points:
+  - {x: -108.3938, y: 0, z: 127.79547}
+  - {x: -102.3378, y: 0, z: 121.41559}
+  - {x: -97.839355, y: 0, z: 110.36957}
+  - {x: -96.17642, y: 0, z: 88.65784}
+  - {x: -92.4993, y: 0, z: 76.6427}
+  - {x: -70.11807, y: 0, z: 74.68622}
+  - {x: -54.56711, y: -0.0000009536743, z: 70.76807}
+  - {x: -39.525818, y: 0, z: 66.94208}
+  - {x: -25.959381, y: -0.0000009536743, z: 61.32904}
+  width: 0.5
+  sampleSpacing: 1
+  smooth: 1
+  widthSegments: 1
+  snapToGround: 1
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8192
+  rayHeight: 10
+  rayDistance: 30
+  surfaceLift: 0.03
+  textureTileSize: 2
+  depthOffset: -1
+  lateralOffset: 4.4
+  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
+  useSplatMaps: 0
+  mapResolution: 1024
+  edgeFade: 0.25
+  fadeEnds: 1
+  generatedMesh: {fileID: 4300000, guid: af0912913c0649c46a2633ddce210698, type: 2}
+  generatedMaterial: {fileID: 2100000, guid: 3dafee3d65416ea478b0e7bdc0656ff8, type: 2}
+  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
+    Road Markings_Road_Data 2
+--- !u!23 &1438773185
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438773183}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3dafee3d65416ea478b0e7bdc0656ff8, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1438773186
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438773183}
+  m_Mesh: {fileID: 4300000, guid: af0912913c0649c46a2633ddce210698, type: 2}
+--- !u!4 &1438773187
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438773183}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1609842259}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1440947655
 Mesh:
   m_ObjectHideFlags: 0
@@ -74627,143 +74359,6 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
---- !u!1 &1450322745
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1450322749}
-  - component: {fileID: 1450322748}
-  - component: {fileID: 1450322747}
-  - component: {fileID: 1450322746}
-  m_Layer: 0
-  m_Name: Splat Road Markings
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1450322746
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450322745}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -0.81903076, y: 0, z: 150.56061}
-  - {x: -25.70102, y: 0, z: 145.23853}
-  - {x: -42.078674, y: 0, z: 141.97473}
-  - {x: -58.858948, y: 0, z: 139.15851}
-  - {x: -81.92346, y: 0, z: 136.05096}
-  - {x: -89.456024, y: 0, z: 132.60211}
-  - {x: -95.51773, y: 0, z: 126.68677}
-  - {x: -99.26053, y: 0.00000047683716, z: 118.77124}
-  - {x: -97.82379, y: 0.00000047683716, z: 103.36853}
-  - {x: -95.890015, y: 0, z: 85.00238}
-  width: 0.5
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.03
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: -2.8
-  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
-  useSplatMaps: 0
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: a72b8d00bf100c8468ce9287e5bf09d1, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: 49454c8e20a0f58419306bc6587a6be7, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_GasStation_Data/Splat
-    Road Markings_Road_Data 7
---- !u!23 &1450322747
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450322745}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 49454c8e20a0f58419306bc6587a6be7, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1450322748
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450322745}
-  m_Mesh: {fileID: 4300000, guid: a72b8d00bf100c8468ce9287e5bf09d1, type: 2}
---- !u!4 &1450322749
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1450322745}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1614877807}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1455079051
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78063,138 +77658,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5705942722606277998, guid: ca0bc9937c7dadc47a900e4c18dc9e2e, type: 3}
   m_PrefabInstance: {fileID: 1571371088}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1578752241
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1578752245}
-  - component: {fileID: 1578752244}
-  - component: {fileID: 1578752243}
-  - component: {fileID: 1578752242}
-  m_Layer: 0
-  m_Name: Splat Road Markings
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1578752242
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1578752241}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -23.711151, y: 0, z: 61.45697}
-  - {x: -40.3862, y: 0, z: 66.56128}
-  - {x: -57.71942, y: 0, z: 71.047}
-  - {x: -72.33801, y: 0, z: 73.71307}
-  - {x: -93.75488, y: 0, z: 74.95941}
-  width: 0.3
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 1
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.03
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: -3.4
-  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
-  useSplatMaps: 0
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: 87ad2205ea41ec3418a3aa5053db6739, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: c937f143f4d83c44d9a5e973c20c8023, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
-    Road Markings_Road_Data 1
---- !u!23 &1578752243
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1578752241}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: c937f143f4d83c44d9a5e973c20c8023, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1578752244
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1578752241}
-  m_Mesh: {fileID: 4300000, guid: 87ad2205ea41ec3418a3aa5053db6739, type: 2}
---- !u!4 &1578752245
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1578752241}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 409082674}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1581367872
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78637,6 +78100,145 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c3d2fb617a1bf3f40b3da1514d040a2a, type: 3}
+--- !u!1 &1609842255
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1609842259}
+  - component: {fileID: 1609842258}
+  - component: {fileID: 1609842257}
+  - component: {fileID: 1609842256}
+  m_Layer: 0
+  m_Name: Splat Road
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1609842256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609842255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
+  points:
+  - {x: -108.3938, y: 0, z: 127.79547}
+  - {x: -102.3378, y: 0, z: 121.41559}
+  - {x: -97.839355, y: 0, z: 110.36957}
+  - {x: -96.17642, y: 0, z: 88.65784}
+  - {x: -92.43231, y: 0, z: 76.610596}
+  - {x: -70.11807, y: 0, z: 74.68622}
+  - {x: -54.56711, y: -0.0000009536743, z: 70.76807}
+  - {x: -39.525818, y: 0, z: 66.94208}
+  - {x: -25.327026, y: 0, z: 60.871826}
+  width: 10
+  sampleSpacing: 1
+  smooth: 1
+  widthSegments: 1
+  snapToGround: 1
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8192
+  rayHeight: 10
+  rayDistance: 30
+  surfaceLift: 0.02
+  textureTileSize: 2
+  depthOffset: -1
+  lateralOffset: 0
+  materialTemplate: {fileID: 0}
+  useSplatMaps: 1
+  mapResolution: 1024
+  edgeFade: 0.25
+  fadeEnds: 1
+  generatedMesh: {fileID: 4300000, guid: ec2b6a01dacaf57488ad83ac128fb9ac, type: 2}
+  generatedMaterial: {fileID: 2100000, guid: 3f29de9229dc47f4d9d6ba9a914a93bd, type: 2}
+  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
+    Road_Road_Data 1
+--- !u!23 &1609842257
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609842255}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 3f29de9229dc47f4d9d6ba9a914a93bd, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1609842258
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609842255}
+  m_Mesh: {fileID: 4300000, guid: ec2b6a01dacaf57488ad83ac128fb9ac, type: 2}
+--- !u!4 &1609842259
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609842255}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1438773187}
+  - {fileID: 1628735194}
+  - {fileID: 1032344262}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1613238915
 Mesh:
   m_ObjectHideFlags: 0
@@ -78815,145 +78417,6 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
---- !u!1 &1614877803
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1614877807}
-  - component: {fileID: 1614877806}
-  - component: {fileID: 1614877805}
-  - component: {fileID: 1614877804}
-  m_Layer: 0
-  m_Name: Splat Road
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1614877804
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614877803}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
-  points:
-  - {x: -0.81903076, y: 0, z: 150.56061}
-  - {x: -25.70102, y: 0, z: 145.23853}
-  - {x: -42.078674, y: 0, z: 141.97473}
-  - {x: -58.858948, y: 0, z: 139.15851}
-  - {x: -81.92346, y: 0, z: 136.05096}
-  - {x: -89.456024, y: 0, z: 132.60211}
-  - {x: -95.51773, y: 0, z: 126.68677}
-  - {x: -99.26053, y: 0.00000047683716, z: 118.77124}
-  - {x: -97.82379, y: 0.00000047683716, z: 103.36853}
-  - {x: -95.890015, y: 0, z: 85.00238}
-  width: 7
-  sampleSpacing: 0.5
-  smooth: 1
-  widthSegments: 4
-  snapToGround: 1
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 8192
-  rayHeight: 10
-  rayDistance: 30
-  surfaceLift: 0.02
-  textureTileSize: 2
-  depthOffset: -1
-  lateralOffset: 0
-  materialTemplate: {fileID: 2100000, guid: 96536c654ecf58b41b8da47255be3b6a, type: 2}
-  useSplatMaps: 1
-  mapResolution: 1024
-  edgeFade: 0.25
-  fadeEnds: 1
-  generatedMesh: {fileID: 4300000, guid: e72f5f64537457940b60962a47fe375d, type: 2}
-  generatedMaterial: {fileID: 2100000, guid: 96536c654ecf58b41b8da47255be3b6a, type: 2}
-  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_GasStation_Data
---- !u!23 &1614877805
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614877803}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 96536c654ecf58b41b8da47255be3b6a, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1614877806
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614877803}
-  m_Mesh: {fileID: 4300000, guid: e72f5f64537457940b60962a47fe375d, type: 2}
---- !u!4 &1614877807
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1614877803}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1450322749}
-  - {fileID: 636833830}
-  - {fileID: 705312974}
-  m_Father: {fileID: 900000028}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1616605676
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -79738,6 +79201,142 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!1 &1628735190
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1628735194}
+  - component: {fileID: 1628735193}
+  - component: {fileID: 1628735192}
+  - component: {fileID: 1628735191}
+  m_Layer: 0
+  m_Name: Splat Road Markings
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1628735191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1628735190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fb409f33cdd23c48b2b7dc2b597520e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SplatRoads::ExtractionRaid.View.Authoring.SplatRoad
+  points:
+  - {x: -108.3938, y: 0, z: 127.79547}
+  - {x: -102.3378, y: 0, z: 121.41559}
+  - {x: -97.839355, y: 0, z: 110.36957}
+  - {x: -96.17642, y: 0, z: 88.65784}
+  - {x: -92.4993, y: 0, z: 76.6427}
+  - {x: -70.11807, y: 0, z: 74.68622}
+  - {x: -54.56711, y: -0.0000009536743, z: 70.76807}
+  - {x: -39.525818, y: 0, z: 66.94208}
+  - {x: -25.959381, y: -0.0000009536743, z: 61.32904}
+  width: 0.5
+  sampleSpacing: 1
+  smooth: 1
+  widthSegments: 1
+  snapToGround: 1
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8192
+  rayHeight: 10
+  rayDistance: 30
+  surfaceLift: 0.03
+  textureTileSize: 2
+  depthOffset: -1
+  lateralOffset: -4.4
+  materialTemplate: {fileID: 2100000, guid: ca4ff079099319e41ba4e36a080d5289, type: 2}
+  useSplatMaps: 0
+  mapResolution: 1024
+  edgeFade: 0.25
+  fadeEnds: 1
+  generatedMesh: {fileID: 4300000, guid: 2fcb56ab075e4a043a81c07c07a628e9, type: 2}
+  generatedMaterial: {fileID: 2100000, guid: c4d53877ddcecff4089cfd40ddb5aefa, type: 2}
+  assetFolder: Assets/Resources/Environment/Roads/Asset/Splat Road_Road_ArmyBase_Data/Splat
+    Road Markings_Road_Data 3
+--- !u!23 &1628735192
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1628735190}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c4d53877ddcecff4089cfd40ddb5aefa, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1628735193
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1628735190}
+  m_Mesh: {fileID: 4300000, guid: 2fcb56ab075e4a043a81c07c07a628e9, type: 2}
+--- !u!4 &1628735194
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1628735190}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1609842259}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1636163862
 GameObject:
   m_ObjectHideFlags: 0
@@ -90088,10 +89687,7 @@ PrefabInstance:
       objectReference: {fileID: 1449028569}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 7136199032449808363, guid: 0df4d4faf4e34cd4b82c9e51b9b2978d, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1614877807}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0df4d4faf4e34cd4b82c9e51b9b2978d, type: 3}
 --- !u!1001 &1949674997
@@ -101937,5 +101533,5 @@ SceneRoots:
   - {fileID: 900148158}
   - {fileID: 1623863621}
   - {fileID: 750284339}
-  - {fileID: 409082674}
   - {fileID: 916761314}
+  - {fileID: 1609842259}
