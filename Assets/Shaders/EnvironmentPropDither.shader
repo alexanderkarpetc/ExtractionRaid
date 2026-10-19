@@ -11,6 +11,7 @@ Shader "ExtractShaders/EnvironmentPropDither"
         _Smoothness("Smoothness", Range(0, 1)) = 0.35
         _Occlusion("Occlusion", Range(0, 1)) = 1
 
+        _EmissionMap("Emission Map", 2D) = "white" {}
         [HDR] _ColorEmission("Emission Color", Color) = (1, 1, 1, 0)
         _Emission("Emission", Float) = 0
 
@@ -53,11 +54,14 @@ Shader "ExtractShaders/EnvironmentPropDither"
 
         TEXTURE2D(_Texture);
         SAMPLER(sampler_Texture);
+        TEXTURE2D(_EmissionMap);
+        SAMPLER(sampler_EmissionMap);
         TEXTURE2D(_DitherTexture);
         SAMPLER(sampler_DitherTexture);
 
         CBUFFER_START(UnityPerMaterial)
             float4 _Texture_ST;
+            float4 _EmissionMap_ST;
             float4 _DitherTexture_ST;
             half4 _Color2;
             half4 _ColorEmission;
@@ -152,6 +156,8 @@ Shader "ExtractShaders/EnvironmentPropDither"
             half3 normalOS : NORMAL;
             half4 tangentOS : TANGENT;
             float2 texcoord : TEXCOORD0;
+            float2 lightmapUV : TEXCOORD1;
+            float2 dynamicLightmapUV : TEXCOORD2;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
@@ -163,6 +169,10 @@ Shader "ExtractShaders/EnvironmentPropDither"
             float2 uv : TEXCOORD2;
             half fogFactor : TEXCOORD3;
             float2 dissolveUV : TEXCOORD5;
+            float2 emissionUV : TEXCOORD6;
+            #if defined(LIGHTMAP_ON)
+            float2 lightmapUV : TEXCOORD7;
+            #endif
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             float4 shadowCoord : TEXCOORD4;
             #endif
@@ -184,8 +194,12 @@ Shader "ExtractShaders/EnvironmentPropDither"
             output.positionWS = positionInputs.positionWS;
             output.normalWS = normalInputs.normalWS;
             output.uv = TRANSFORM_TEX(input.texcoord, _Texture);
+            output.emissionUV = TRANSFORM_TEX(input.texcoord, _EmissionMap);
             output.dissolveUV = TRANSFORM_TEX(input.texcoord, _DitherTexture);
             output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
+            #if defined(LIGHTMAP_ON)
+            OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
+            #endif
             #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             output.shadowCoord = GetShadowCoord(positionInputs);
             #endif
@@ -211,7 +225,8 @@ Shader "ExtractShaders/EnvironmentPropDither"
             surfaceData.smoothness = _Smoothness;
             surfaceData.normalTS = half3(0, 0, 1);
             surfaceData.occlusion = _Occlusion;
-            surfaceData.emission = _ColorEmission.rgb * _Emission;
+            surfaceData.emission = SAMPLE_TEXTURE2D(_EmissionMap, sampler_EmissionMap, input.emissionUV).rgb
+                * _ColorEmission.rgb * _Emission;
             surfaceData.clearCoatMask = 0;
             surfaceData.clearCoatSmoothness = 0;
 
@@ -229,9 +244,14 @@ Shader "ExtractShaders/EnvironmentPropDither"
             #endif
             inputData.fogCoord = input.fogFactor;
             inputData.vertexLighting = VertexLighting(input.positionWS, normalWS);
+            #if defined(LIGHTMAP_ON)
+            inputData.bakedGI = SAMPLE_GI(input.lightmapUV, half3(0, 0, 0), normalWS);
+            inputData.shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
+            #else
             inputData.bakedGI = SampleSH(normalWS);
+            inputData.shadowMask = unity_ProbesOcclusion;
+            #endif
             inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-            inputData.shadowMask = half4(1, 1, 1, 1);
 
             half4 color = UniversalFragmentPBR(inputData, surfaceData);
             color.rgb = MixFog(color.rgb, inputData.fogCoord);
@@ -329,6 +349,12 @@ Shader "ExtractShaders/EnvironmentPropDither"
             #pragma fragment LitFragment
             #pragma multi_compile_instancing
             #pragma multi_compile_fog
+            #pragma multi_compile _ LIGHTMAP_ON
+            #pragma multi_compile _ DIRLIGHTMAP_COMBINED
+            #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
+            #pragma multi_compile _ SHADOWS_SHADOWMASK
+            #pragma multi_compile _ USE_LEGACY_LIGHTMAPS
+            #pragma multi_compile_fragment _ LIGHTMAP_BICUBIC_SAMPLING
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
@@ -337,6 +363,50 @@ Shader "ExtractShaders/EnvironmentPropDither"
             #pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
             #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "Meta"
+            Tags { "LightMode" = "Meta" }
+            Cull Off
+
+            HLSLPROGRAM
+            #pragma vertex PropMetaVertex
+            #pragma fragment PropMetaFragment
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+
+            struct PropMetaVaryings
+            {
+                float4 positionCS : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float2 emissionUV : TEXCOORD1;
+            };
+
+            PropMetaVaryings PropMetaVertex(Attributes input)
+            {
+                PropMetaVaryings output = (PropMetaVaryings)0;
+                output.positionCS = MetaVertexPosition(input.positionOS, input.lightmapUV,
+                    input.dynamicLightmapUV, unity_LightmapST, unity_DynamicLightmapST);
+                output.uv = TRANSFORM_TEX(input.texcoord, _Texture);
+                output.emissionUV = TRANSFORM_TEX(input.texcoord, _EmissionMap);
+                return output;
+            }
+
+            half4 PropMetaFragment(PropMetaVaryings input) : SV_Target
+            {
+                half3 albedo = ApplyColorControls(SAMPLE_TEXTURE2D(_Texture, sampler_Texture, input.uv).rgb);
+                BRDFData brdfData;
+                half alpha = 1.0h;
+                InitializeBRDFData(albedo, _Metallic, half3(0, 0, 0), _Smoothness, alpha, brdfData);
+                MetaInput metaInput = (MetaInput)0;
+                metaInput.Albedo = brdfData.diffuse + brdfData.specular * brdfData.roughness * 0.5h;
+                metaInput.Emission = SAMPLE_TEXTURE2D(_EmissionMap, sampler_EmissionMap, input.emissionUV).rgb
+                    * _ColorEmission.rgb * _Emission;
+                return MetaFragment(metaInput);
+            }
             ENDHLSL
         }
 

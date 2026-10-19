@@ -23,6 +23,14 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _DitherTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Texture:
         m_Texture: {fileID: 2800000, guid: 309fe7d526339a5468b0256f3442e0dc, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -35,6 +43,8 @@ Material:
     - _Dither: 0
     - _DitherEnabled: 0
     - _DitherPatternScale: 0.003
+    - _DitherSoftness: 0.1
+    - _DitherTextureEnabled: 0
     - _Emission: 2
     - _Metallic: 0
     - _Occlusion: 1
@@ -43,6 +53,6 @@ Material:
     - _ZoneDitherEnabled: 1
     m_Colors:
     - _Color2: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorEmission: {r: 28.51895, g: 10.0863285, b: 0.4035693, a: 1}
+    - _ColorEmission: {r: 11.984315, g: 4.238506, b: 0.16958906, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

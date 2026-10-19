@@ -13,7 +13,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
-  - _ALPHACLIP_ON
   - _ALPHATEST_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -63,9 +62,9 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskMap:
-        m_Texture: {fileID: 2800000, guid: 8fc8734ca7b861b42af2e395c3dfafba, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
+        m_Texture: {fileID: 2800000, guid: ee091dca9e02a4a41b49a97580d3b573, type: 3}
+        m_Scale: {x: 0.22, y: 20}
+        m_Offset: {x: 0.3, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -114,7 +113,7 @@ Material:
     m_Floats:
     - Dither: 0
     - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 1
+    - _AlphaClip: 0
     - _AlphaCutoff: 0.5
     - _AlphaToMask: 1
     - _Blend: 0
@@ -144,6 +143,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _LightingInfluence: 1
     - _MaskChannel: 0
     - _Metallic: 0
     - _Occlusion: 1
