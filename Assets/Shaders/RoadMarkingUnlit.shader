@@ -23,6 +23,38 @@ Shader "ExtractionRaid/Road Marking Unlit"
     {
         Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" "Queue" = "Transparent" }
 
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        TEXTURE2D(_BaseMap);
+        SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_MaskMap);
+        SAMPLER(sampler_MaskMap);
+        CBUFFER_START(UnityPerMaterial)
+            float4 _BaseMap_ST;
+            float4 _MaskMap_ST;
+            half4 _BaseColor;
+            float _Brightness;
+            float _LightingInfluence;
+            float _ShadowStrength;
+            float _Opacity;
+            float _MaskChannel;
+            float _UseRoadMaskUV;
+            float _BlendMode;
+            float _AlphaClip;
+            float _Cutoff;
+            float _DepthOffset;
+            float _SrcBlend;
+            float _DstBlend;
+        CBUFFER_END
+
+        half RoadMask(half4 maskSample)
+        {
+            return _MaskChannel < 0.5 ? maskSample.r
+                : _MaskChannel < 1.5 ? maskSample.g
+                : _MaskChannel < 2.5 ? maskSample.b : maskSample.a;
+        }
+        ENDHLSL
+
         Pass
         {
             Name "RoadMarkingUnlit"
@@ -39,6 +71,10 @@ Shader "ExtractionRaid/Road Marking Unlit"
             #pragma fragment Frag
             #pragma multi_compile_instancing
             #pragma multi_compile_fog
+            #pragma multi_compile _ LIGHTMAP_ON
+            #pragma multi_compile _ DIRLIGHTMAP_COMBINED
+            #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
+            #pragma multi_compile _ SHADOWS_SHADOWMASK
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
@@ -49,29 +85,6 @@ Shader "ExtractionRaid/Road Marking Unlit"
             #define _SURFACE_TYPE_TRANSPARENT 1
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-
-            TEXTURE2D(_BaseMap);
-            SAMPLER(sampler_BaseMap);
-            TEXTURE2D(_MaskMap);
-            SAMPLER(sampler_MaskMap);
-
-            CBUFFER_START(UnityPerMaterial)
-                float4 _BaseMap_ST;
-                float4 _MaskMap_ST;
-                half4 _BaseColor;
-                float _Brightness;
-                float _LightingInfluence;
-                float _ShadowStrength;
-                float _Opacity;
-                float _MaskChannel;
-                float _UseRoadMaskUV;
-                float _BlendMode;
-                float _AlphaClip;
-                float _Cutoff;
-                float _DepthOffset;
-                float _SrcBlend;
-                float _DstBlend;
-            CBUFFER_END
 
             struct Attributes
             {
@@ -93,6 +106,9 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 float3 positionWS : TEXCOORD4;
                 half3 normalWS : TEXCOORD5;
                 half3 vertexLighting : TEXCOORD6;
+                #if defined(LIGHTMAP_ON)
+                    float2 lightmapUV : TEXCOORD7;
+                #endif
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -110,6 +126,10 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 output.baseUV = TRANSFORM_TEX(input.uv, _BaseMap);
                 float2 maskUV = _UseRoadMaskUV > 0.5 ? input.paintUV : input.uv;
                 output.maskUV = TRANSFORM_TEX(maskUV, _MaskMap);
+                // UV2 is shared with painting; only the lightmap gets the atlas transform.
+                #if defined(LIGHTMAP_ON)
+                    OUTPUT_LIGHTMAP_UV(input.paintUV, unity_LightmapST, output.lightmapUV);
+                #endif
                 output.fogFactor = ComputeFogFactor(output.positionCS.z);
                 output.vertexColor = input.color;
                 return output;
@@ -127,9 +147,7 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half4 baseSample = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV);
                 half4 maskSample = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, input.maskUV);
-                half mask = _MaskChannel < 0.5 ? maskSample.r
-                    : _MaskChannel < 1.5 ? maskSample.g
-                    : _MaskChannel < 2.5 ? maskSample.b : maskSample.a;
+                half mask = RoadMask(maskSample);
                 half alpha = saturate(baseSample.a * _BaseColor.a * input.vertexColor.a * _Opacity * mask);
                 if (_AlphaClip > 0.5)
                     clip(alpha - _Cutoff);
@@ -137,24 +155,25 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 half3 color = baseSample.rgb * _BaseColor.rgb * input.vertexColor.rgb * _Brightness;
                 half3 normalWS = NormalizeNormalPerPixel(input.normalWS)
                     * IS_FRONT_VFACE(face, 1.0h, -1.0h);
-                half shadow = 1.0h;
                 // Compute shadow coordinates per pixel so large road meshes cross cascades correctly.
-                #if defined(MAIN_LIGHT_CALCULATE_SHADOWS)
-                    float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-                    shadow = MainLightRealtimeShadow(shadowCoord);
-                    shadow = lerp(shadow, 1.0h, GetMainLightShadowFade(input.positionWS));
-                #endif
-                half mainShadow = lerp(1.0h, shadow, _ShadowStrength);
-                Light mainLight = GetMainLight();
+                float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+                half4 shadowMask = SAMPLE_SHADOWMASK(input.lightmapUV);
+                Light mainLight = GetMainLight(shadowCoord, input.positionWS, shadowMask);
+                half mainShadow = lerp(1.0h, mainLight.shadowAttenuation, _ShadowStrength);
                 mainLight.shadowAttenuation = mainShadow;
-                half3 lighting = SampleSH(normalWS) + RoadDiffuse(mainLight, normalWS);
+                #if defined(LIGHTMAP_ON)
+                    half3 bakedGI = SampleLightmap(input.lightmapUV, float2(0, 0), normalWS);
+                #else
+                    half3 bakedGI = SampleSH(normalWS);
+                #endif
+                MixRealtimeAndBakedGI(mainLight, normalWS, bakedGI);
+                half3 lighting = bakedGI + RoadDiffuse(mainLight, normalWS);
 
                 #if defined(_ADDITIONAL_LIGHTS)
                     // URP's clustered loop reads these fields from inputData.
                     InputData inputData = (InputData)0;
                     inputData.positionWS = input.positionWS;
                     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-                    half4 shadowMask = half4(1, 1, 1, 1);
                     #if USE_CLUSTER_LIGHT_LOOP
                         UNITY_LOOP for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
                         {
@@ -179,6 +198,61 @@ Shader "ExtractionRaid/Road Marking Unlit"
                 if (_BlendMode > 0.5 && _BlendMode < 1.5)
                     color *= alpha;
                 return half4(color, alpha);
+            }
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "Meta"
+            Tags { "LightMode" = "Meta" }
+            Cull Off
+
+            HLSLPROGRAM
+            #pragma vertex MetaVert
+            #pragma fragment MetaFrag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+
+            struct MetaAttributes
+            {
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+                float2 uv2 : TEXCOORD1;
+                float2 uv3 : TEXCOORD2;
+                half4 color : COLOR;
+            };
+
+            struct MetaVaryings
+            {
+                float4 positionCS : SV_POSITION;
+                float2 baseUV : TEXCOORD0;
+                float2 maskUV : TEXCOORD1;
+                half4 color : TEXCOORD2;
+            };
+
+            MetaVaryings MetaVert(MetaAttributes input)
+            {
+                MetaVaryings output;
+                output.positionCS = MetaVertexPosition(input.positionOS, input.uv2, input.uv3,
+                    unity_LightmapST, unity_DynamicLightmapST);
+                output.baseUV = TRANSFORM_TEX(input.uv, _BaseMap);
+                float2 maskUV = _UseRoadMaskUV > 0.5 ? input.uv2 : input.uv;
+                output.maskUV = TRANSFORM_TEX(maskUV, _MaskMap);
+                output.color = input.color;
+                return output;
+            }
+
+            half4 MetaFrag(MetaVaryings input) : SV_Target
+            {
+                half4 baseSample = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV);
+                half mask = RoadMask(SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, input.maskUV));
+                half alpha = saturate(baseSample.a * _BaseColor.a * input.color.a * _Opacity * mask);
+                if (_AlphaClip > 0.5)
+                    clip(alpha - _Cutoff);
+                MetaInput meta = (MetaInput)0;
+                // Approximate transparent coverage for bounced diffuse light; brightness is not emission.
+                meta.Albedo = baseSample.rgb * _BaseColor.rgb * input.color.rgb * _Brightness * alpha;
+                return MetaFragment(meta);
             }
             ENDHLSL
         }
