@@ -149,6 +149,8 @@ Shader "ExtractShaders/VibeCharacterShader"
             #pragma multi_compile _ LIGHTMAP_ON
             #pragma multi_compile_fog
 
+            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ProbeVolumeVariants.hlsl"
+
             #pragma shader_feature_local _USEALPHA_ON
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -180,6 +182,9 @@ Shader "ExtractShaders/VibeCharacterShader"
                 float3 positionWS  : TEXCOORD2;
                 float  fogCoord    : TEXCOORD3;
                 half3  vertexLight : TEXCOORD4;
+                #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
+                    half3 vertexProbeLighting : TEXCOORD5;
+                #endif
             };
 
             Varyings Vert(Attributes IN)
@@ -194,6 +199,11 @@ Shader "ExtractShaders/VibeCharacterShader"
                 OUT.uv          = TRANSFORM_TEX(IN.uv, _Texture);
                 OUT.fogCoord    = ComputeFogFactor(vp.positionCS.z);
                 OUT.vertexLight = VertexLighting(vp.positionWS, vn.normalWS);
+                #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
+                    OUT.vertexProbeLighting = SampleProbeSHVertex(
+                        GetAbsolutePositionWS(vp.positionWS), vn.normalWS,
+                        GetWorldSpaceNormalizeViewDir(vp.positionWS));
+                #endif
                 return OUT;
             }
 
@@ -337,7 +347,15 @@ Shader "ExtractShaders/VibeCharacterShader"
                     LIGHT_LOOP_END
                 #endif
 
-                half3 ambient = albedo * SampleSH(N);
+                // APV samples the baked volume at the character's world position.
+                // Keep legacy Light Probe / ambient SH sampling when APV is disabled.
+                #if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
+                    half3 bakedGI = SampleProbeVolumePixel(IN.vertexProbeLighting,
+                        GetAbsolutePositionWS(IN.positionWS), N, V, IN.positionHCS.xy);
+                #else
+                    half3 bakedGI = SampleSH(N);
+                #endif
+                half3 ambient = albedo * bakedGI;
 
                 half3 emission = (_ColorEmission.rgb * _BrightnessEmission)
                                + ComputeRimFlash(N, V);
