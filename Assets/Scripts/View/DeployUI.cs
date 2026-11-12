@@ -87,20 +87,12 @@ namespace View
             {
                 InteractableType.Lootable    => "Press F to loot",
                 InteractableType.GroundItem  => "Press F to pick up",
-                InteractableType.Workbench   => "Press F to craft",
+                InteractableType.Workbench   => $"Press F — {GetBuildingName(state, nearest.Id)}",
                 InteractableType.DeployPoint => "Press F to deploy",
                 InteractableType.Npc         => "Press F to talk",
                 _ => null,
             };
             if (label == null) return;
-
-            float w = 220f;
-            float h = 32f;
-            float x = (Screen.width - w) * 0.5f;
-            float y = Screen.height * 0.78f;
-
-            var rect = new Rect(x, y, w, h);
-            GUI.DrawTexture(rect, _promptBg);
 
             if (_promptStyle == null)
             {
@@ -113,7 +105,32 @@ namespace View
                 _promptStyle.normal.textColor = new Color(1f, 0.9f, 0.6f);
             }
 
+            float w = Mathf.Max(220f, _promptStyle.CalcSize(new GUIContent(label)).x + 24f);
+            float h = 32f;
+            float x = (Screen.width - w) * 0.5f;
+            float y = Screen.height * 0.78f;
+            var rect = new Rect(x, y, w, h);
+            GUI.DrawTexture(rect, _promptBg);
             GUI.Label(rect, label, _promptStyle);
+        }
+
+        static string GetBuildingName(RaidState state, EId id)
+        {
+            foreach (var workbench in state.Workbenches)
+            {
+                if (workbench.Id != id) continue;
+                return workbench.Kind switch
+                {
+                    BuildingKind.Crafting => "Crafting",
+                    BuildingKind.WeaponBuilder => "Weapon Builder",
+                    BuildingKind.Stash => "Stash",
+                    BuildingKind.SupplyTerminal => "Supply Terminal",
+                    BuildingKind.MedStation => "Med Station",
+                    BuildingKind.QuestTerminal => "Quest Terminal",
+                    _ => "Workbench",
+                };
+            }
+            return "Workbench";
         }
 
         static Texture2D MakeTex(Color color)
