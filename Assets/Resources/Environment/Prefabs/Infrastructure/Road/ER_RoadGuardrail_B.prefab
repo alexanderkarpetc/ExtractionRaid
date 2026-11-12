@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8625221594802938843}
   - component: {fileID: 4619895809042738302}
   - component: {fileID: 7492263045240854708}
+  - component: {fileID: 8257816456868954667}
   m_Layer: 15
   m_Name: ER_RoadGuardrail_B
   m_TagString: Untagged
@@ -90,3 +91,24 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &8257816456868954667
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9005266291991361889}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.62242705, y: 6.98634, z: 1.5175781}
+  m_Center: {x: -0.092106596, y: -3.1193448e-10, z: 0.75878906}
