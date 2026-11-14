@@ -68,6 +68,15 @@ rules or hidden state.
 
 ## Interactable outline
 
+Buildings authored with `WorkbenchSpawnPoint` use an oriented interaction box. Its offset and size
+are edited per point in the Inspector or with Scene View bounds handles. Local +Z is forward;
+dimensions are in world meters and ignore Transform scale. `RaidSession` snapshots the zone into
+value-only state at startup; `LootSystem` resolves eligibility from that box instead of loot radius.
+Zone authoring must keep the box on the accessible side of walls; this is not an occlusion check.
+`InteractableOutlineTarget` can reference that point explicitly, or discover it on its own object
+or parents. For these targets, outline and proximity tweeners consume the zone eligibility
+resolved by `LootSystem` after player movement; the radius is used only by targets without a zone.
+
 The outline renderer is presentation-only: targets register renderers with the static view registry,
 and the URP feature renders mask/composite passes. Registration must tolerate disabled/destroyed
 objects and reset across play sessions because Reload Domain is off. Eligibility must arrive as

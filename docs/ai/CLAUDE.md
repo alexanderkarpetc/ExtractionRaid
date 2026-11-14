@@ -52,6 +52,12 @@ debugger.
 - A new section requires its class, config reference/accessor, asset creation and editor UI wiring.
 - Use `Raid → Dev Cheats — Create Section Assets` after section changes.
 
+## Art source files
+
+Store art source files (Blender/Maya scenes, rigging and animation working files) in
+`E:\ExtractionRaid\ArtRepo\ArtSource`, not in this DevRepo. Use that location for future art
+authoring work; DevRepo holds the game-ready assets used by Unity.
+
 ## Unity Editor access
 
 Do not hand-edit or save `.unity`, `.prefab` or `.asset` files as text; make authored-content changes

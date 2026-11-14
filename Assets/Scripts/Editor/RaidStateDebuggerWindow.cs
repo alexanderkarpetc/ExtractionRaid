@@ -567,6 +567,10 @@ namespace Editor
             {
                 var wb = state.Workbenches[i];
                 Field($"[{i}] Id={wb.Id}", wb.Position);
+                Field("Interaction center", wb.InteractionCenter);
+                Field("Interaction size", wb.InteractionSize);
+                Field("Interaction rotation", wb.InteractionRotation.eulerAngles);
+                Field("Player in interaction zone", wb.IsPlayerInInteractionZone);
             }
             EditorGUI.indentLevel--;
             EditorGUILayout.Space(4);

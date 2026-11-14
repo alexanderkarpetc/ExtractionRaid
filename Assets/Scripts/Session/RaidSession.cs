@@ -162,7 +162,11 @@ namespace Session
             {
                 var id = RaidState.AllocateEId();
                 var wb = WorkbenchState.Create(id, sp.transform.position, sp.kind);
+                wb.InteractionCenter = sp.transform.position + sp.transform.rotation * sp.interactionOffset;
+                wb.InteractionSize = sp.interactionSize;
+                wb.InteractionRotation = sp.transform.rotation;
                 RaidState.Workbenches.Add(wb);
+                sp.Bind(wb);
             }
 
             var deployPoints = Object.FindObjectsByType<DeploySpawnPoint>(FindObjectsSortMode.None);
@@ -741,6 +745,7 @@ namespace Session
             StaminaSystem.Tick(RaidState, in context);
             RollSystem.Tick(RaidState, in context);
             MovementSystem.Tick(RaidState, in context);
+            LootSystem.UpdateWorkbenchInteractionZones(RaidState);
             WeaponSyncSystem.Tick(RaidState, in context);
             WeaponEquipSystem.Tick(RaidState, in context);
             WeaponStateMachineSystem.Tick(RaidState, in context);

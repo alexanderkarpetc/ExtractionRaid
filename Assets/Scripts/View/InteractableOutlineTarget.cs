@@ -1,6 +1,7 @@
 using ApplicationCore;
 using Systems;
 using UnityEngine;
+using View.SpawnPoints;
 
 namespace View
 {
@@ -12,6 +13,9 @@ namespace View
         [SerializeField] bool _hideWhilePlayerInMenu = true;
 
         [Header("Proximity")]
+        [SerializeField]
+        [Tooltip("Use this building's interaction box for outline and tweeners. If empty, finds a WorkbenchSpawnPoint on this object or its parents. Radius settings apply only when no zone is found.")]
+        WorkbenchSpawnPoint _interactionZone;
         [SerializeField]
         [Tooltip("Use a custom outline radius instead of the shared loot interaction radius.")]
         bool _overrideActivationRadius;
@@ -28,9 +32,9 @@ namespace View
         [Header("Material Tweeners")]
         [Tooltip("Simple case: these tweeners play forward on enter and reverse on exit.")]
         [SerializeField] MaterialPropertyTweener[] _proximityTweeners;
-        [Tooltip("Custom enter effects: these tweeners restart and play forward when the player enters radius.")]
+        [Tooltip("Custom enter effects: these tweeners restart and play forward when the player enters the zone or radius.")]
         [SerializeField] MaterialPropertyTweener[] _activationTweeners;
-        [Tooltip("Custom exit effects: these tweeners restart and play forward when the player exits radius.")]
+        [Tooltip("Custom exit effects: these tweeners restart and play forward when the player exits the zone or radius.")]
         [SerializeField] MaterialPropertyTweener[] _deactivationTweeners;
 
         Renderer[] _renderers;
@@ -38,6 +42,18 @@ namespace View
         float _currentOpacity;
         bool _hasTweenState;
         bool _lastTweenActive;
+        WorkbenchSpawnPoint _parentInteractionZone;
+
+        public WorkbenchSpawnPoint InteractionZone
+        {
+            get => _interactionZone != null ? _interactionZone : _parentInteractionZone;
+            set => _interactionZone = value;
+        }
+
+        // A configured but unbound zone stays hidden until the session supplies its state.
+        public bool IsInteractionZoneActive =>
+            InteractionZone != null && InteractionZone.RuntimeState != null
+            && InteractionZone.RuntimeState.IsPlayerInInteractionZone;
 
         // ApplyOpacity does a GetPropertyBlock/SetPropertyBlock round trip per renderer.
         // With ~135 of these components in the scene that ran every frame even though most
@@ -121,6 +137,12 @@ namespace View
         void CacheRenderers()
         {
             _renderers = GetComponentsInChildren<Renderer>(_includeInactiveChildren);
+            _parentInteractionZone = GetComponentInParent<WorkbenchSpawnPoint>(true);
+        }
+
+        void OnTransformParentChanged()
+        {
+            _parentInteractionZone = GetComponentInParent<WorkbenchSpawnPoint>(true);
         }
 
         void UpdateFade(float deltaTime)
@@ -202,6 +224,8 @@ namespace View
             var player = App.Instance.RaidSession?.RaidState?.PlayerEntity;
             if (player == null) return false;
             if (_hideWhilePlayerInMenu && player.IsInMenu) return false;
+
+            if (InteractionZone != null) return IsInteractionZoneActive;
 
             float sqrDist = (player.Position - transform.position).sqrMagnitude;
             float activationRadius = EffectiveActivationRadius;

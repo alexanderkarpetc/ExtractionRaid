@@ -315,8 +315,9 @@ namespace Systems
 
             for (int i = 0; i < state.Workbenches.Count; i++)
             {
-                float dist = Vector3.Distance(playerPosition, state.Workbenches[i].Position);
-                if (dist > LootRange) continue;
+                var workbench = state.Workbenches[i];
+                if (!IsInsideWorkbenchZone(workbench, playerPosition)) continue;
+                float dist = Vector3.Distance(playerPosition, workbench.Position);
                 float score = ScoreInteractable(playerPosition, facingDirection, state.Workbenches[i].Position, dist);
                 if (score < bestScore)
                 {
@@ -353,6 +354,29 @@ namespace Systems
             }
 
             return result;
+        }
+
+        public static bool IsInsideWorkbenchZone(WorkbenchState workbench, Vector3 playerPosition)
+        {
+            var size = workbench.InteractionSize;
+            if (size.x <= 0f || size.y <= 0f || size.z <= 0f) return false;
+            var local = Quaternion.Inverse(workbench.InteractionRotation)
+                * (playerPosition - workbench.InteractionCenter);
+            var half = size * 0.5f;
+            return Mathf.Abs(local.x) <= half.x
+                && Mathf.Abs(local.y) <= half.y
+                && Mathf.Abs(local.z) <= half.z;
+        }
+
+        public static void UpdateWorkbenchInteractionZones(RaidState state)
+        {
+            var player = state.PlayerEntity;
+            for (int i = 0; i < state.Workbenches.Count; i++)
+            {
+                var workbench = state.Workbenches[i];
+                workbench.IsPlayerInInteractionZone = player != null
+                    && IsInsideWorkbenchZone(workbench, player.Position);
+            }
         }
 
         static float ScoreInteractable(Vector3 playerPos, Vector3 facing, Vector3 targetPos, float distance)

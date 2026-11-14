@@ -16,6 +16,24 @@ namespace View.SpawnPoints
                  "actions; real logic is wired in per-kind tickets.")]
         public BuildingKind kind = BuildingKind.Crafting;
 
+        [Header("Interaction Zone")]
+        [Tooltip("Box center relative to this point, in meters. Local +Z is forward. Transform scale is ignored.")]
+        public Vector3 interactionOffset = new Vector3(0f, 0f, 1f);
+
+        [Tooltip("Box width (X), height (Y), depth (Z), in meters. Rotate the point to rotate the zone. Transform scale is ignored.")]
+        public Vector3 interactionSize = new Vector3(2f, 3f, 2f);
+
+        public WorkbenchState RuntimeState { get; private set; }
+
+        public void Bind(WorkbenchState state) => RuntimeState = state;
+
+        void OnDestroy() => RuntimeState = null;
+
+        void OnValidate()
+        {
+            interactionSize = Vector3.Max(interactionSize, Vector3.one * 0.01f);
+        }
+
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {
@@ -26,6 +44,15 @@ namespace View.SpawnPoints
             Gizmos.DrawWireCube(transform.position + Vector3.up * 0.35f, new Vector3(0.9f, 0.7f, 0.6f));
 
             UnityEditor.Handles.Label(transform.position + Vector3.up * 1f, $"Building ({kind})");
+
+            var previousMatrix = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+            Gizmos.color = new Color(tint.r, tint.g, tint.b, 0.12f);
+            Gizmos.DrawCube(interactionOffset, interactionSize);
+            Gizmos.color = tint;
+            Gizmos.DrawWireCube(interactionOffset, interactionSize);
+            Gizmos.DrawRay(Vector3.zero, Vector3.forward);
+            Gizmos.matrix = previousMatrix;
         }
 
         static Color GizmoTintFor(BuildingKind k)
