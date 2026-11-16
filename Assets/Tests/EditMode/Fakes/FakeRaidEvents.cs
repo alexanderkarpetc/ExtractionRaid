@@ -22,7 +22,7 @@ namespace Tests.EditMode.Fakes
             string payloadArchetype = null, float chargeRatio = 1f) { }
         public void ProjectileDespawned(EId id) { }
         public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface",
-            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic) { }
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic, Vector3 impactImpulse = default) { }
 
         public bool EntityDamagedCalled;
         public EId EntityDamagedId;

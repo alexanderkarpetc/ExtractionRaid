@@ -18,6 +18,7 @@ MonoBehaviour:
   _ammoType: Ammo_Rifle
   _statsByTier:
   - Damage: 7.5
+    ImpactImpulse: 10
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2
@@ -25,6 +26,7 @@ MonoBehaviour:
     BaseArmorDamage: 2.5
     BaseBleedChance: 0
   - Damage: 7.96875
+    ImpactImpulse: 10
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2
@@ -32,6 +34,7 @@ MonoBehaviour:
     BaseArmorDamage: 2.65625
     BaseBleedChance: 0
   - Damage: 9.375
+    ImpactImpulse: 10
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2
@@ -39,6 +42,7 @@ MonoBehaviour:
     BaseArmorDamage: 3.125
     BaseBleedChance: 0
   - Damage: 11.71875
+    ImpactImpulse: 1
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2
@@ -46,6 +50,7 @@ MonoBehaviour:
     BaseArmorDamage: 3.90625
     BaseBleedChance: 0
   - Damage: 15
+    ImpactImpulse: 1
     ProjectileSpeed: 25
     ProjectileLifetime: 2.5
     HeadshotDamageMultiplier: 2

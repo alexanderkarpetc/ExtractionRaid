@@ -17,6 +17,7 @@ namespace View
         float _armorDamage;
         float _bleedChance;
         bool _hit;
+        ImpactReactiveProp _impactTarget;
         EId _targetedEntityId;
         EId _ownerId;
 
@@ -24,6 +25,8 @@ namespace View
             float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f,
             EId ownerId = default)
         {
+            _hit = false;
+            _impactTarget = null;
             EId = id;
             _damage = damage;
             _penetration = penetration;
@@ -54,11 +57,13 @@ namespace View
                 if (col == null) continue;
                 if (col.GetComponent<ProjectileView>() != null) continue;
                 var dmg = col.GetComponent<IDamageableView>();
-                if (dmg == null) continue;
+                var prop = col.attachedRigidbody != null
+                    ? col.attachedRigidbody.GetComponent<ImpactReactiveProp>() : null;
+                if (dmg == null && (prop == null || !prop.isActiveAndEnabled || col.isTrigger)) continue;
                 // Skip the shooter's own capsule — spawn pos sits inside it when the bot fires
                 // straight forward (FeedbackRange turrets, point-blank shots). Without this gate
                 // the projectile self-hits on frame 0 and stalls visually.
-                if (dmg.EId == _ownerId) continue;
+                if (dmg != null && dmg.EId == _ownerId) continue;
 
                 _hit = true;
                 var startDelta = newPos - oldPos;
@@ -97,6 +102,12 @@ namespace View
             transform.position = newPos;
         }
 
+        public void ApplyImpact(Vector3 impulse, Vector3 point)
+        {
+            if (_impactTarget != null) _impactTarget.ApplyImpulse(impulse, point);
+            _impactTarget = null;
+        }
+
         void ReportHit(Collider other, Vector3 hitPoint, Vector3 hitNormal)
         {
             var session = App.Instance.RaidSession;
@@ -119,6 +130,8 @@ namespace View
             }
             else
             {
+                _impactTarget = other.attachedRigidbody != null
+                    ? other.attachedRigidbody.GetComponent<ImpactReactiveProp>() : null;
                 session.ReportCollision(new CollisionSignal
                 {
                     ProjectileId = EId,

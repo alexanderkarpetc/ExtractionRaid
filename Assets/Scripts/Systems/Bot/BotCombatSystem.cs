@@ -203,7 +203,8 @@ namespace Systems.Bot
                     penetration:      weapon.Stats.BasePenetration,
                     armorDamage:      weapon.Stats.BaseArmorDamage,
                     bleedChance:      totalBleedChance,
-                    archetype:        PayloadArchetypeKeyExt.FromArchetypeString(weapon.PayloadDefinition?.Archetype));
+                    archetype:        PayloadArchetypeKeyExt.FromArchetypeString(weapon.PayloadDefinition?.Archetype),
+                    impactImpulse: weapon.Stats.ImpactImpulse);
 
                 state.Projectiles.Add(projectile);
                 ctx.Events.ProjectileSpawned(projectileId, spawnPos, pelletDir.normalized,

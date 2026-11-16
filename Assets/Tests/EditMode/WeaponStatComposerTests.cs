@@ -17,6 +17,7 @@ namespace Tests.EditMode
             var payload = MakePayloadWithStats(RarityTier.Common, new CommonPayloadStats
             {
                 Damage                   = 15f,
+                ImpactImpulse            = 2.5f,
                 ProjectileSpeed          = 25f,
                 ProjectileLifetime       = 2.5f,
                 HeadshotDamageMultiplier = 2.0f,
@@ -30,6 +31,7 @@ namespace Tests.EditMode
                 var stats = WeaponStatComposer.Compose(payload, RarityTier.Common, delivery, RarityTier.Common);
 
                 Assert.AreEqual(15f,  stats.Damage);
+                Assert.AreEqual(2.5f, stats.ImpactImpulse);
                 Assert.AreEqual(25f,  stats.ProjectileSpeed);
                 Assert.AreEqual(2.5f, stats.ProjectileLifetime);
                 Assert.AreEqual(2.0f, stats.HeadshotDamageMultiplier);

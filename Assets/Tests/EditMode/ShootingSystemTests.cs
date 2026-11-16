@@ -18,6 +18,7 @@ namespace Tests.EditMode
         public void Tick_WithAttackPressedAndValidFacing_SpawnsProjectile()
         {
             var state = EditModeTestsUtils.CreateStateWithPlayer(Vector3.zero);
+            state.PlayerEntity.EquippedWeapon.Stats.ImpactImpulse = 2.5f;
             state.PlayerEntity.FacingDirection = Vector3.forward;
             var input = new FakeInputAdapter { AttackPressed = true };
             var context = TestContextFactory.Create(input);
@@ -25,6 +26,7 @@ namespace Tests.EditMode
             ShootingSystem.Tick(state, in context);
 
             Assert.AreEqual(1, state.Projectiles.Count);
+            Assert.AreEqual(2.5f, state.Projectiles[0].ImpactImpulse);
         }
 
         [Test]

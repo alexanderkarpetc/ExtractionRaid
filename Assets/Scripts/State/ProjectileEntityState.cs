@@ -12,6 +12,7 @@ namespace State
         public float SpawnTime;
         public float Lifetime;
         public float Damage;
+        public float ImpactImpulse;
         public float HeadshotDamageMultiplier;
         public float Penetration;
         public float ArmorDamage;
@@ -24,7 +25,7 @@ namespace State
             float speed, float spawnTime, float lifetime,
             float damage, float headshotDamageMultiplier = 1f, EId targetedEntityId = default,
             float penetration = 0f, float armorDamage = 0f, float bleedChance = 0f,
-            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic, float impactImpulse = 0f)
         {
             return new ProjectileEntityState
             {
@@ -36,6 +37,7 @@ namespace State
                 SpawnTime = spawnTime,
                 Lifetime = lifetime,
                 Damage = damage,
+                ImpactImpulse = impactImpulse,
                 HeadshotDamageMultiplier = headshotDamageMultiplier,
                 Penetration = penetration,
                 ArmorDamage = armorDamage,

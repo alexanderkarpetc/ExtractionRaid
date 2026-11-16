@@ -41,6 +41,23 @@ caliber is usable and restockable.
 - Resolve the earliest valid hit and emit one authoritative hit result.
 - Systems calculate damage; projectile views/adapters report geometry and render the outcome.
 
+## Physical prop impacts
+
+Payload tier stats author `ImpactImpulse` independently of damage, in N*s per projectile
+(each scatter pellet carries this amount). Zero disables pushing; existing assets default to zero.
+Player, burst and bot shots snapshot the composed value into projectile state at spawn.
+`ProjectileSystem.ResolveCollision` resolves the impulse along travel direction and emits it
+with the surface-hit event before despawning; duplicate collision signals cannot apply it twice.
+The projectile view retains the hit prop binding until that event is presented, keeping Unity
+references out of state. Destroyed/disabled targets safely ignore the delayed response.
+
+To opt in a scenery object, add `ImpactReactiveProp` on its non-kinematic `Rigidbody` object,
+with a non-trigger collider on that object or its children (convex if using a MeshCollider).
+Author this through Unity Editor. Mass, damping and constraints control displacement/rotation;
+the impulse applies at the hit point. Do not mark moving props static or bake them as fixed
+navigation/lighting geometry. This response is for scenery, not character knockback or
+domain-owned loot/interaction objects whose positions are snapshotted at raid startup.
+
 ## Aiming
 
 Player intent is `RawAimPoint`; `WeaponAimPoint` is the smoothed, recoil-affected point used by

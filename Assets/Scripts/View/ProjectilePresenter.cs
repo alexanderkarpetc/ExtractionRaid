@@ -72,6 +72,8 @@ namespace View
                         break;
                     }
                     case RaidEventType.ProjectileHit:
+                        if (_views.TryGetValue(e.Id, out var hitView))
+                            hitView.ApplyImpact(e.ImpactImpulse, e.Position);
                         SpawnImpactVfx(e.Position, e.Direction, e.StringPayload, e.Archetype);
                         break;
                     case RaidEventType.ProjectileRicochet:

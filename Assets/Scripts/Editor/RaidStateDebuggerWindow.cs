@@ -376,6 +376,7 @@ namespace Editor
                 Field("Direction", proj.Direction);
                 Field("Speed", proj.Speed);
                 Field("Damage", proj.Damage);
+                Field("Impact Impulse", proj.ImpactImpulse);
                 EditorGUI.indentLevel--;
             }
 
@@ -673,6 +674,7 @@ namespace Editor
             Field("Proj Speed", w.Stats.ProjectileSpeed);
             Field("Proj Lifetime", w.Stats.ProjectileLifetime);
             Field("Proj Damage", w.Stats.Damage);
+            Field("Impact Impulse", w.Stats.ImpactImpulse);
             Field("ConeHalfAngle", $"{w.Stats.ConeHalfAngle}°");
             Field("BodyRotSpeed", w.Stats.BodyRotationSpeed);
             Field("AimFollowSharpness", w.Stats.AimFollowSharpness);

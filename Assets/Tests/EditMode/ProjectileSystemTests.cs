@@ -11,6 +11,71 @@ namespace Tests.EditMode
     [TestFixture]
     public class ProjectileSystemTests
     {
+        [TestCase(2.5f, 2.5f)]
+        [TestCase(0f, 0f)]
+        [TestCase(-1f, 0f)]
+        [TestCase(float.NaN, 0f)]
+        [TestCase(float.PositiveInfinity, 0f)]
+        public void ResolveCollision_EmitsResolvedImpulseOnce(float magnitude, float expected)
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var projectile = CreateProjectile(state, Vector3.zero, Vector3.right * 3f);
+            projectile.ImpactImpulse = magnitude;
+            projectile.Archetype = PayloadArchetypeKey.Laser;
+            var events = new RaidEventBuffer();
+            var context = TestContextFactory.Create(events: events);
+            var collision = new CollisionSignal
+            {
+                ProjectileId = projectile.Id,
+                Position = Vector3.one,
+                Normal = Vector3.up,
+                SurfaceType = "metal",
+            };
+
+            ProjectileSystem.ResolveCollision(state, in collision, in context);
+            ProjectileSystem.ResolveCollision(state, in collision, in context);
+
+            Assert.IsEmpty(state.Projectiles);
+            Assert.AreEqual(2, events.All.Count);
+            var hit = events.All[0];
+            Assert.AreEqual(RaidEventType.ProjectileHit, hit.Type);
+            Assert.AreEqual(Vector3.right * expected, hit.ImpactImpulse);
+            Assert.AreEqual(collision.Position, hit.Position);
+            Assert.AreEqual(collision.Normal, hit.Direction);
+            Assert.AreEqual("metal", hit.StringPayload);
+            Assert.AreEqual(PayloadArchetypeKey.Laser, hit.Archetype);
+            Assert.AreEqual(RaidEventType.ProjectileDespawned, events.All[1].Type);
+        }
+
+        [Test]
+        public void ResolveCollision_UnknownProjectile_DoesNotAffectLiveProjectile()
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var projectile = CreateProjectile(state, Vector3.zero, Vector3.forward);
+            var events = new RaidEventBuffer();
+            var context = TestContextFactory.Create(events: events);
+            var collision = new CollisionSignal { ProjectileId = state.AllocateEId() };
+
+            ProjectileSystem.ResolveCollision(state, in collision, in context);
+
+            Assert.AreSame(projectile, state.Projectiles.Single());
+            Assert.IsEmpty(events.All);
+        }
+
+        [Test]
+        public void ResolveCollision_ZeroDirection_EmitsNoImpulse()
+        {
+            var state = RaidState.Create(EditModeTestsUtils.NewAllocator());
+            var projectile = CreateProjectile(state, Vector3.zero, Vector3.zero);
+            projectile.ImpactImpulse = 5f;
+            var events = new RaidEventBuffer();
+            var context = TestContextFactory.Create(events: events);
+            var collision = new CollisionSignal { ProjectileId = projectile.Id };
+
+            ProjectileSystem.ResolveCollision(state, in collision, in context);
+
+            Assert.AreEqual(Vector3.zero, events.All[0].ImpactImpulse);
+        }
 
         static ProjectileEntityState CreateProjectile(
             RaidState state, Vector3 position, Vector3 direction,

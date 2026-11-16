@@ -20,6 +20,21 @@
 
 ## Поточний фокус
 
+- 🔄 active **Імпульс влучань у предмети (2026-11-16).** Додано незалежний від шкоди
+  `ImpactImpulse` у payload stats, передачу у снаряди гравця/ботів/черг та реакцію
+  `ImpactReactiveProp` через підтверджену подію зіткнення. Оновлено Raid State Debugger
+  і EditMode-перевірки композиції, пострілу, меж імпульсу та повторних сигналів.
+  Компіляція/тести ще не виконані: автоматична перевірка дозволів відхилила recompile
+  без явного підтвердження зміни стану Editor. Потрібні запуск тестів, вибір предметів,
+  налаштування payload assets/фізики через Editor і візуальне приймання.
+
+- ✅ done **PlayerCat_A — прототип ригу та локомоції (2026-11-16).** Окремий
+  `SK_PlayerCat_A_Rigged.fbx`: 24 кістки, цикли `Idle` / `Run`, рух хвоста й вух.
+  `PlayerCat_A_Animated.prefab` і контролер із параметром `Speed`; Blender-джерело
+  збережено в `ArtRepo/ArtSource/PlayerCat_A`. Перевірено пози в Blender та імпорт
+  у Unity: валідний Generic avatar, обидва кліпи loop, початкові й кінцеві локальні
+  трансформації збігаються. Інтеграція з ігровим рухом і PlayMode не виконувалися.
+
 - 🔄 active **Building interaction zones (2026-11-14).** Додано зони взаємодії для
   `WorkbenchSpawnPoint`: розмір/зміщення в Inspector, поворот разом із точкою,
   gizmo та Scene View handles. Перевірка в `LootSystem`, поля в Raid State Debugger,

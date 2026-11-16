@@ -10,7 +10,7 @@ namespace Systems
     /// the definitions (typically via <see cref="Adapters.ICoreDefinitionRegistry"/>).
     ///
     /// Field mapping:
-    ///   - 7 numeric stats come from Payload
+    ///   - common projectile stats come from Payload
     ///   - 13 stats come from Delivery
     ///   - no overlap; each field is sourced from exactly one side
     ///
@@ -34,8 +34,9 @@ namespace Systems
 
             var stats = new WeaponStats
             {
-                // From Payload (7 numeric)
+                // From Payload
                 Damage                   = ps.Damage,
+                ImpactImpulse            = ps.ImpactImpulse,
                 ProjectileSpeed          = ps.ProjectileSpeed,
                 ProjectileLifetime       = ps.ProjectileLifetime,
                 HeadshotDamageMultiplier = ps.HeadshotDamageMultiplier,

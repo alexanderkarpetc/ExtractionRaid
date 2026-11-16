@@ -12,6 +12,7 @@ namespace State
     public struct CommonPayloadStats
     {
         public float Damage;
+        [UnityEngine.Min(0f)] public float ImpactImpulse; // N*s per projectile; 0 disables prop push.
         public float ProjectileSpeed;
         public float ProjectileLifetime;
         public float HeadshotDamageMultiplier;
@@ -62,8 +63,9 @@ namespace State
     [Serializable]
     public struct WeaponStats
     {
-        // ---- From Payload (7 numeric; AmmoType identifier lives on PayloadCoreDefinition) ----
+        // ---- From Payload (AmmoType identifier lives on PayloadCoreDefinition) ----
         public float Damage;
+        public float ImpactImpulse;
         public float ProjectileSpeed;
         public float ProjectileLifetime;
         public float HeadshotDamageMultiplier;

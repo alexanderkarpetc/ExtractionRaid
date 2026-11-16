@@ -827,19 +827,7 @@ namespace Session
         void ProcessCollisions(in RaidContext context)
         {
             foreach (var col in _collisionInbox)
-            {
-                for (int i = RaidState.Projectiles.Count - 1; i >= 0; i--)
-                {
-                    if (RaidState.Projectiles[i].Id == col.ProjectileId)
-                    {
-                        context.Events.ProjectileHit(col.ProjectileId, col.Position, col.Normal,
-                            col.SurfaceType ?? "surface");
-                        context.Events.ProjectileDespawned(col.ProjectileId);
-                        RaidState.Projectiles.RemoveAt(i);
-                        break;
-                    }
-                }
-            }
+                ProjectileSystem.ResolveCollision(RaidState, in col, in context);
         }
 
         void ProcessDamageAlerts()

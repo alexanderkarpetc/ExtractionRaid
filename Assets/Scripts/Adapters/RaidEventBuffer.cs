@@ -53,6 +53,7 @@ namespace Adapters
         public Vector3 Position;
         public Vector3 Direction;
         public Vector3 Velocity;
+        public Vector3 ImpactImpulse;
         public float CurrentHp;
         public float MaxHp;
         public float Damage;
@@ -108,7 +109,7 @@ namespace Adapters
         }
 
         public void ProjectileHit(EId id, Vector3 position, Vector3 normal, string hitType = "surface",
-            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic)
+            PayloadArchetypeKey archetype = PayloadArchetypeKey.Ballistic, Vector3 impactImpulse = default)
         {
             _events.Add(new RaidEvent
             {
@@ -116,6 +117,7 @@ namespace Adapters
                 Id = id,
                 Position = position,
                 Direction = normal,
+                ImpactImpulse = impactImpulse,
                 StringPayload = hitType,
                 Archetype = archetype,
             });
